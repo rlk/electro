@@ -18,6 +18,7 @@
 #include "server.h"
 #include "camera.h"
 #include "sprite.h"
+#include "object.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/

@@ -1,4 +1,5 @@
-remove MPI_BYTE uses
+remove MPI_BYTE uses (separate hostname from viewport)
+abstract pos/rot/siz to entity?
 move data to dir
 audio
 audit includes
