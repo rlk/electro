@@ -17,7 +17,7 @@
 
 int  init_script(void);
 void free_script(void);
-void load_script(const char *);
+void load_script(const char *, int);
 
 int  do_start_script(void);
 

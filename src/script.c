@@ -11,7 +11,8 @@
 /*    General Public License for more details.                               */
 
 #ifdef _WIN32
-#endif
+#include <something.h>
+#else
 #include <unistd.h>
 #endif
 
@@ -778,18 +779,6 @@ static int script_get_entity_debug_id(lua_State *L)
     return 1;
 }
 
-static int script_set_directory(lua_State *L)
-{
-    const char *pathname = script_getstring("set_directory", L, -1);
-
-    const char *path = get_file_path(pathname);
-    const char *name = get_file_name(pathname);
-
-    chdir(path);
-
-    return 0;
-}
-
 /*---------------------------------------------------------------------------*/
 /* Script callback backcallers                                               */
 
@@ -996,7 +985,6 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);
     lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
-    lua_function(L, "set_directory",        script_set_directory);
 
     /* Constants. */
 
@@ -1041,12 +1029,16 @@ void free_script(void)
     lua_close(L);
 }
 
-void load_script(const char *pathname)
+void load_script(const char *file, int push)
 {
+    char cwd[MAXSTR];
+
     /* Change the CWD to the directory of the named script. */
 
-    const char *path = get_file_path(pathname);
-    const char *name = get_file_name(pathname);
+    const char *path = get_file_path(file);
+    const char *name = get_file_name(file);
+
+    if (push) getcwd(cwd, MAXSTR);
 
     chdir(path);
 
@@ -1065,6 +1057,8 @@ void load_script(const char *pathname)
         }
     }
     else lua_pop(L, 1);
+
+    if (push) chdir(cwd);
 }
 
 /*---------------------------------------------------------------------------*/

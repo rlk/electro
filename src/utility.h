@@ -38,8 +38,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-const char *get_path_name(const char *);
-const char *get_path_file(const char *);
+const char *get_file_name(const char *);
+const char *get_file_path(const char *);
 
 float htonf(float);
 float ntohf(float);

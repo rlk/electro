@@ -1,8 +1,6 @@
 console
-directory fixes (can't use manual CWD because of lua state)
-    on script load, chdir path, dofile filename
-    (thus LAST script will set cwd)
-    (don't forget PWD env)
+css print
+GL fix on missing VP?
 
 arguments to lua script?
 fp/vp per entity (also fixes standard string length)

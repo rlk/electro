@@ -20,8 +20,7 @@
 * Running
 
     The run scripts take a list of Lua files as parameters.  Each file
-    is executed in turn.  By default, application data is loaded from
-    the current working directory.
+    is executed in turn.
 
     To run Asteroids on nico:
 

@@ -1,4 +1,4 @@
-dofile(E.get_directory().."../keyboard.lua")
+dofile("../keyboard.lua")
 
 camera  = nil
 light   = nil

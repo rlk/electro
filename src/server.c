@@ -219,7 +219,7 @@ static int server_loop(void)
 
     /* Redraw a dirty buffer. */
 
-    if (server_grab)
+    if (server_grab || dirty)
     {
         if (dirty)
             pack_event(EVENT_DRAW);
@@ -246,8 +246,6 @@ void server(int argc, char *argv[])
 {
     int argi;
 
-    set_cwd(".");
-    
     /*
     prep_tyc_galaxy();
     prep_hip_galaxy();
@@ -260,7 +258,7 @@ void server(int argc, char *argv[])
         /* Read and execute all scripts given on the command line. */
 
         for (argi = 1; argi < argc; argi++)
-            load_script(argv[argi]);
+            load_script(argv[argi], argi < argc - 1);
 
         sync_viewport();
 
@@ -286,7 +284,7 @@ void server(int argc, char *argv[])
             {
                 /* Initialize all subsystems. */
 	
-				init_opengl();
+                init_opengl();
                 init_joystick();
                 init_buffer();
                 init_sound();

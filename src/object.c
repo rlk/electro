@@ -195,7 +195,7 @@ static void read_mtl(const char *filename)
     char line[MAXSTR];
     FILE *fin;
 
-    if ((fin = fopen(get_cwd(filename), "r")))
+    if ((fin = fopen(filename, "r")))
     {
         /* Process each line, invoking the handler for each keyword. */
 
@@ -482,7 +482,7 @@ static int read_obj(const char *filename, struct object *o)
     edgec =  0;
     surfc = -1;
 
-    if ((fin = fopen(get_cwd(filename), "r")))
+    if ((fin = fopen(filename, "r")))
     {
         /* Process each line, invoking the handler for each keyword. */
 

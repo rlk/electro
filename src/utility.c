@@ -23,39 +23,52 @@
 #include "utility.h"
 
 /*---------------------------------------------------------------------------*/
-/* Current working directory management                                      */
+/* File path parsing                                                         */
 
-static char path[MAXSTR];
+#ifdef _WIN32
+#define is_separator(c) (((c) == '/' || ((c) == '\\'))
+#else
+#define is_separator(c)  ((c) == '/')
+#endif
 
-const char *get_cwd(const char *file)
+static int get_file_split(const char *path)
 {
-    /*
-    static char absolute[MAXSTR];
+    int l = strlen(path);
 
-    size_t d = strlen(path);
+    while (l >= 0 && !is_separator(path[l]))
+        l--;
 
-    strncpy(absolute, path, MAXSTR - 1);
-    strncat(absolute, "/",  MAXSTR - d - 1);
-    strncat(absolute, file, MAXSTR - d - 2);
-
-    return absolute;
-    */
-    return file;
+    return l;
 }
 
-void set_cwd(const char *pathname)
+const char *get_file_path(const char *file)
 {
-    int l = strlen(pathname);
+    static char path[MAXSTR];
+    int l;
 
-    strncpy(path, pathname, MAXSTR);
+    memset(path, 0, MAXSTR);
 
-    /* Strip everything beyond the last directory divider. */
+    if ((l = get_file_split(file)) >= 0)
+        strncpy(path, file, l);
+    else
+        strcpy(path, ".");
 
-    while (l >= 0 && path[l] != '/' &&
-                     path[l] != '\\')
-        path[l--] = '\0';
+    return path;
+}
 
-    chdir(path);
+const char *get_file_name(const char *file)
+{
+    static char name[MAXSTR];
+    int l;
+
+    memset(name, 0, MAXSTR);
+
+    if ((l = get_file_split(file)) >= 0)
+        strncpy(name, file + l + 1, MAXSTR);
+    else
+        strncpy(name, file, MAXSTR);
+
+    return name;
 }
 
 /*---------------------------------------------------------------------------*/

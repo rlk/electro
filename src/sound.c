@@ -149,7 +149,7 @@ int create_sound(const char *filename)
 
     if (S && (sd = alloc_sound()) >= 0)
     {
-        if ((fp = fopen(get_cwd(filename), FMODE_RB)))
+        if ((fp = fopen(filename, FMODE_RB)))
         {
             if (ov_open(fp, &S[sd].file, NULL, 0) == 0)
             {
