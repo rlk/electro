@@ -17,6 +17,7 @@
 #include <ctype.h>
 
 #include "opengl.h"
+#include "version.h"
 #include "utility.h"
 #include "display.h"
 #include "console.h"
@@ -114,30 +115,6 @@ static void write_console(const char *str)
             console_x = 0;
         }
     }
-}
-
-static void fade(const char *str)
-{
-    int i, l = strlen(str);
-    char buf[2];
-
-    for (i = 0; i < l; i++)
-    {
-        float k = (float) i / l;
-
-        buf[0] = str[i];
-        buf[1] = '\0';
-
-        color_console((1.0f - k), k, 0.0f);
-        write_console(buf);
-    }
-}
-
-static void ident(void)
-{
-    fade("  |||  ELECTRO                           \n");
-    fade("  O o  Copyright (C) 2005  Robert Kooima \n");
-    fade("   -   http://www.evl.uic.edu/rlk/electro\n");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -255,8 +232,15 @@ int init_console(int w, int h)
         image_w = W;
         image_h = H;
 
-        ident();
+        color_console(1.0f, 1.0f, 0.0f);
 
+        print("  |||  ELECTRO %s\n", version());
+        print("  O o  Copyright (C) 2005  Robert Kooima \n");
+        print("   -   http://www.evl.uic.edu/rlk/electro\n");
+
+        color_console(0.0f, 1.0f, 0.0f);
+
+        console_enable = 0;
         return 1;
     }
     return 0;

@@ -139,7 +139,7 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%s %s - %d FPS", TITLE, version(), fps_new);
+        sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;

@@ -1146,6 +1146,7 @@ int init_script(void)
         luaopen_base(L);
         luaopen_math(L);
         luaopen_table(L);
+        luaopen_debug(L);
         luaopen_string(L);
         luaopen_electro(L);
 

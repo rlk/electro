@@ -98,13 +98,23 @@ install : $(TARG)
 	cp config/* $(PREFIX)/config
 
 #------------------------------------------------------------------------------
+# If Subversion is installed report the revision number in the source.
+
+ifneq ($(shell which svnversion),)
 
 src/version.c : FORCE
-	echo -n 'const char* version(void) { const char *str = "' \
+	echo -n 'const char *version(void) { const char *str = "' \
 	                         > src/version.c
 	svnversion -n .         >> src/version.c
 	echo '"; return str; }' >> src/version.c
 
-FORCE :
+else
+
+src/version.c : FORCE
+	echo 'const char *version(void) { return ""; }' > src/version.c
+
+endif
 
 #------------------------------------------------------------------------------
+
+FORCE :
