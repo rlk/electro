@@ -24,13 +24,50 @@
 
 static lua_State *L;
 
+#define TYPE_SPRITE 1
+#define TYPE_OBJECT 2
+
 /*---------------------------------------------------------------------------*/
+/* Sprite descriptor userdata handlers                                       */
+
+static int lua_issprite(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && ((int *) lua_touserdata(L, i))[0] == TYPE_SPRITE;
+}
+
+static int lua_tosprite(lua_State *L, int i)
+{
+    return ((int *) lua_touserdata(L, i))[1];
+}
+
+static void lua_pushsprite(lua_State *L, int id)
+{
+    int *p = lua_newuserdata(L, sizeof (int) * 2);
+
+    p[0] = TYPE_SPRITE;
+    p[1] = id;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Function argument error reporters                                         */
 
 static void script_type_error(const char *name,
                               const char *type, lua_State *L, int i)
 {
-    lua_pushfstring(L, "'%s' expected %s, got %s", name, type,
-                    lua_typename(L, lua_type(L, i)));
+    const char *got = "unknown";
+
+    if (lua_isuserdata(L, i))
+    {
+        switch (((int *) lua_touserdata(L, i))[0])
+        {
+        case TYPE_SPRITE: got = "sprite"; break;
+        case TYPE_OBJECT: got = "object"; break;
+        }
+    }
+    else got = lua_typename(L, lua_type(L, i));
+
+    lua_pushfstring(L, "'%s' expected %s, got %s", name, type, got);
     lua_error(L);
 }
 
@@ -41,6 +78,7 @@ static void script_arity_error(const char *name, lua_State *L, int i, int n)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Function argument type and arity checkers                                 */
 
 static const char *script_getstring(const char *name, lua_State *L, int i)
 {
@@ -90,6 +128,24 @@ static int script_getboolean(const char *name, lua_State *L, int i)
             return lua_toboolean(L, i);
         else
             script_type_error(name, "boolean", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
+static int script_getsprite(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a sprite, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_issprite(L, i))
+            return lua_tosprite(L, i);
+        else
+            script_type_error(name, "sprite", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -172,7 +228,7 @@ static int script_sprite_load(lua_State *L)
 {
     const char *name = "sprite_load";
 
-    lua_pushnumber(L, (lua_Number) sprite_load(script_getstring(name, L, -1)));
+    lua_pushsprite(L, sprite_load(script_getstring(name, L, -1)));
     return 1;
 }
 
@@ -180,7 +236,7 @@ static int script_sprite_free(lua_State *L)
 {
     const char *name = "sprite_free";
 
-    sprite_free((int) script_getnumber(name, L, -1));
+    sprite_free(script_getsprite(name, L, -1));
     return 0;
 }
 
@@ -188,9 +244,9 @@ static int script_sprite_move(lua_State *L)
 {
     const char *name = "sprite_move";
 
-    sprite_move((int) script_getnumber(name, L, -3),
-                      script_getnumber(name, L, -2),
-                      script_getnumber(name, L, -1));
+    sprite_move(script_getsprite(name, L, -3),
+                script_getnumber(name, L, -2),
+                script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -198,8 +254,8 @@ static int script_sprite_turn(lua_State *L)
 {
     const char *name = "sprite_turn";
 
-    sprite_turn((int) script_getnumber(name, L, -2),
-                      script_getnumber(name, L, -1));
+    sprite_turn(script_getsprite(name, L, -2),
+                script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -207,8 +263,8 @@ static int script_sprite_size(lua_State *L)
 {
     const char *name = "sprite_size";
 
-    sprite_size((int) script_getnumber(name, L, -2),
-                      script_getnumber(name, L, -1));
+    sprite_size(script_getsprite(name, L, -2),
+                script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -216,12 +272,13 @@ static int script_sprite_fade(lua_State *L)
 {
     const char *name = "sprite_fade";
 
-    sprite_fade((int) script_getnumber(name, L, -2),
-                      script_getnumber(name, L, -1));
+    sprite_fade(script_getsprite(name, L, -2),
+                script_getnumber(name, L, -1));
     return 0;
 }
 
 /*---------------------------------------------------------------------------*/
+/* Script setup/shutdown                                                     */
 
 int script_init(void)
 {
@@ -276,6 +333,7 @@ void script_file(const char *filename)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Script callback backcallers                                               */
 
 int script_point(int x, int y)
 {
