@@ -305,6 +305,14 @@ entity's parent. </p>
 <!---------------------------------------------------------------------------->
 
 <h4> Relative Transformation </h4>
+
+<p class="note"> Strictly speaking, to provide both absolute and
+relative transformation functions is to violate the principle of
+orthogonality.  In this case, I just couldn't resist.  Inspiration for
+this feature is drawn from Blitz3D, which showed that relative
+transform is very beginner-friendly, leading to a very intuitive
+turtle-style system of entity control. </p>
+
 <dl>
 
 <dt><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Move the
@@ -323,13 +331,6 @@ entity relative to its current orientation.  Rotation about the X, Y,
 and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
 
 </dl>
-
-<p class="note"> Strictly speaking, to provide both absolute and
-relative transformation functions is to violate the principle of
-orthogonality.  In this case, I just couldn't resist.  Inspiration for
-this feature is drawn from Blitz3D, which showed that relative
-transform is very beginner-friendly, leading to a very intuitive
-turtle-style system of entity control. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -552,7 +553,7 @@ resources.  The stream may be restarted from the beginning.
 run-time interaction with Lua state.  This console can be enabled and disabled
 by pressing F1. It also appears automatically whenever anything is printed to
 it.  Applications are free to use this console for their own purposes as well.
-For example, debugging information may be send there. </p>
+For example, debugging information may be sent there. </p>
 
 <dl>
 
@@ -644,17 +645,6 @@ The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>
 <tt>do_timer</tt> callback.  If <i>enabled</i> has value <tt>true</tt>
 then callback will occur.  </p>
 
-<dt><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>
-Return the current value of the X and Y axes of joystick <i>number</i>.</p>
-
-<p class="note"> There is no direct mechanism provided to determine
-the number of joysticks connected to the system.  The capability
-exists in SDL, but it isn't really necessary in Electro.  If an
-application needs to count joysticks, it should observe the device
-numbers recieved by the <tt>do_joystick</tt> callback.  For example,
-allow the user to select the number of active joysticks by pressing
-Start on each.</p>
-
 <dt><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>
 Return the current state of a keyboard modifier.  The return value is
 <tt>true</tt> if the modifier key is down.  The queryable modifiers
@@ -666,6 +656,17 @@ are:
 <li><tt>key_modifier_alt</tt>
 </ul>
 </p>
+
+<dt><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>
+Return the current value of the X and Y axes of joystick <i>number</i>.</p>
+
+<p class="note"> There is no direct mechanism provided to determine
+the number of joysticks connected to the system.  The capability
+exists in SDL, but it isn't really necessary in Electro.  If an
+application needs to count joysticks, it should observe the device
+numbers recieved by the <tt>do_joystick</tt> callback.  For example,
+allow the user to select the number of active joysticks by pressing
+Start on each.</p>
 
 </dl>
 
@@ -1057,8 +1058,8 @@ be mapped onto each sprite. </p>
 <!---------------------------------------------------------------------------->
 
 <h2> The full source of the Fifteen Puzzle example </h2>
-<pre>
 
+<pre>
 image_file = "venus.jpg"
 
 view_x = 0

@@ -45,6 +45,8 @@ static void default_host(struct host *H)
 
     H->win_w = DEFAULT_W;
     H->win_h = DEFAULT_H;
+    H->pix_w = DEFAULT_W;
+    H->pix_h = DEFAULT_H;
     H->n     = 1;
 
     H->tile[0].win_w = DEFAULT_W;

@@ -1,10 +1,11 @@
+fix asteroids
+stereo
 camera offset per tile (for geowall and planar)
 
-CSS media
 Scale and billboard frustum (thorough test)
-camera near/far (automatic? (entity bounding sphere?))
+camera near/far (automatic using entity bounding sphere?))
 
 Improve assertions (delineate necessary thing_exists vs thing_assert)
 
-Particle system? (stars?)
-TTF support (distribute the ttf?  Just the image?)
+Particle system
+TTF support

@@ -6,11 +6,8 @@ camera_hip = nil
 galaxy_tyc = nil
 galaxy_hip = nil
 
-zoom     =   1.0
 hip_magn = 100.0
 tyc_magn = 100.0
-hip_dist =   0.0
-tyc_dist =   0.0
 spin     =   0.0
 
 count = 0
@@ -33,11 +30,6 @@ function do_start()
     E.parent_entity(galaxy_hip, camera_hip)
     E.parent_entity(galaxy_tyc, camera_tyc)
 
-    E.set_camera_zoom    (camera_hip, zoom)
-    E.set_camera_zoom    (camera_tyc, zoom)
-    E.set_camera_distance(camera_hip, hip_dist)
-    E.set_camera_distance(camera_tyc, tyc_dist)
-
     E.set_galaxy_magnitude(galaxy_hip, hip_magn)
     E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
 
@@ -54,7 +46,7 @@ function do_frame()
     E.set_entity_rotation(camera_hip, x, y + 0.1, z)
     E.set_entity_rotation(camera_tyc, x, y + 0.1, z)
 
-    if (count > 2000) then
+    if (count > 3600) then
         E.exit()
     end
 

@@ -38,12 +38,12 @@ int node_parse_bin(struct node *, FILE *);
 
 /*---------------------------------------------------------------------------*/
 
-int  node_sort(struct node *, int, int,
-               struct star *, int, int, int);
-int  node_pick(const struct node *, int,
-               const struct star *, int,
-               const float[3], const float[3], float *);
-void node_draw(const struct node *, int, int, const struct frustum *);
+int node_sort(struct node *, int, int,
+              struct star *, int, int, int);
+int node_pick(const struct node *, int,
+              const struct star *, int,
+              const float[3], const float[3], float *);
+int node_draw(const struct node *, int, int, const struct frustum *);
 
 /*---------------------------------------------------------------------------*/
 

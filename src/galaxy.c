@@ -133,7 +133,7 @@ void draw_galaxy(int id, int gd, const struct frustum *F0, float a)
 
                 /* Render all stars. */
 
-                node_draw(G[gd].N, 0, 0, &F1);
+                (void) node_draw(G[gd].N, 0, 0, &F1);
             }
             glPopClientAttrib();
             glPopAttrib();

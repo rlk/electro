@@ -144,26 +144,24 @@ int node_sort(struct node *N, int n0, int n1,
 
 /*---------------------------------------------------------------------------*/
 
-void node_draw(const struct node *N, int n, int i, const struct frustum *F)
+int node_draw(const struct node *N, int n, int i, const struct frustum *F)
 {
     int r = test_frustum(F, N[n].bound);
 
     /* If this node is entirely invisible, prune the tree. */
 
-    if (r < 0) return;
+    if (r < 0) return 0;
 
     /* If this node is entirely visible, or is a leaf, draw it. */
 
     if (r > 0 || N[n].nodeL == 0 || N[n].nodeR == 0)
-        glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
-
-    else
     {
-        /* We're at necessary a branch.  Render the subtrees. */
-
-        node_draw(N, N[n].nodeL, (i + 1) % 3, F);
-        node_draw(N, N[n].nodeR, (i + 1) % 3, F);
+        glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
+        return N[n].starc;
     }
+    else
+        return (node_draw(N, N[n].nodeL, (i + 1) % 3, F) +
+                node_draw(N, N[n].nodeR, (i + 1) % 3, F));
 }
 
 int node_pick(const struct node *N, int n,
