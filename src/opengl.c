@@ -90,8 +90,6 @@ PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 
 void init_opengl(void)
 {
-    print_console(glGetString(GL_EXTENSIONS));
-
     glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
         opengl_proc("glProgramStringARB");
     glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
@@ -150,6 +148,13 @@ void init_opengl(void)
     if (opengl_need("GL_ARB_point_sprite"))
     {
         GL_has_point_sprite = GL_TRUE;
+    }
+
+    if (!GL_has_vertex_program ||
+        !GL_has_fragment_program)
+    {
+        GL_has_vertex_program = 0;
+        GL_has_fragment_program = 0;
     }
 }
 

@@ -104,6 +104,10 @@ SOURCE=..\src\client.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\console.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\entity.c
 # End Source File
 # Begin Source File
@@ -156,10 +160,6 @@ SOURCE=..\src\server.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\shared.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\sound.c
 # End Source File
 # Begin Source File
@@ -193,6 +193,10 @@ SOURCE=..\src\camera.h
 # Begin Source File
 
 SOURCE=..\src\client.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\console.h
 # End Source File
 # Begin Source File
 
@@ -245,10 +249,6 @@ SOURCE=..\src\script.h
 # Begin Source File
 
 SOURCE=..\src\server.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\shared.h
 # End Source File
 # Begin Source File
 
