@@ -18,7 +18,7 @@ time   = 0
 
 -------------------------------------------------------------------------------
 
-function sprite_position(sprite, i, j)
+function move_sprite(sprite, i, j)
     E.set_entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
                                   view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
 end
@@ -55,8 +55,8 @@ function move_piece(di, dj)
 
         -- Set the new on-screen locations of the moving sprites.
 
-        sprite_position(sprites[numbers[curr_i][curr_j]], curr_i, curr_j)
-        sprite_position(sprites[numbers[next_i][next_j]], next_i, next_j)
+        move_sprite(sprites[numbers[curr_i][curr_j]], curr_i, curr_j)
+        move_sprite(sprites[numbers[next_i][next_j]], next_i, next_j)
 
         curr_i = next_i
         curr_j = next_j
@@ -71,7 +71,7 @@ function move_piece(di, dj)
     end
 end
 
-function random_move()
+function move_random()
     while true do
         local d = math.random(-1, 1)
 
@@ -126,7 +126,7 @@ function do_start()
             local y0 = (4 - i) / 4
             local y1 = (5 - i) / 4
 
-            sprite_position(sprites[numbers[i][j]], i, j)
+            move_sprite(sprites[numbers[i][j]], i, j)
             E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
     end
@@ -155,7 +155,7 @@ function do_timer(dt)
     time = time + dt
 
     if time > 0.25 then
-        random_move()
+        move_random()
         time = 0
         return true
     end

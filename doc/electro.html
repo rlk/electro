@@ -21,38 +21,38 @@
    -
 </pre>
 
-<p> Electro is an application development framework designed for use
-on cluster-driven tiled displays.  Electro is based upon the MPI
-process model and is bound to the Lua programming language.  With
-support for 3D graphics, 2D graphics, audio, and input handling,
-Electro provides an easy-to-use scripting system for interactive
-applications spanning multiple processors and displays. </p>
+<p> Electro is an application development framework designed for use on
+cluster-driven tiled displays.  Electro is based upon the MPI process model
+and is bound to the Lua programming language.  With support for 3D graphics,
+2D graphics, audio, and input handling, Electro provides an easy-to-use
+scripting system for interactive applications spanning multiple processors and
+displays. </p>
 
 <h1> This Document </h1>
 
-<p> This document details the functions and data types of the Electro
-API.  A knowledge of the Lua Programming Language, version 5.0, is
-prerequisite.  Lua documentation and tutorials may be found at <a
+<p> This document details the functions and data types of the Electro API.  A
+knowledge of the Lua Programming Language, version 5.0, is prerequisite.  Lua
+documentation and tutorials may be found at <a
 href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
 
-<p> This document includes a number of Lua code examples.  These
-examples are distinguished from the main text as follows: </p>
+<p> This document includes a number of Lua code examples.  These examples are
+distinguished from the main text as follows: </p>
 
 <pre>
 print("Hello, World!")
 </pre>
 
 <p> This document also includes a number of paragraphs giving design
-rationale.  These describe some of the trade-offs and design decisions
-made during the development of Electro.  They are presented here in
-the hope that they will provide the reader with a more thorough
-understanding of the details of the implementation.  Rationale
-paragraphs are distinguished from the main text as follows: </p>
+rationale.  These describe some of the trade-offs and design decisions made
+during the development of Electro.  They are presented here in the hope that
+they will provide the reader with a more thorough understanding of the details
+of the implementation.  Rationale paragraphs are distinguished from the main
+text as follows: </p>
 
 <p class="note"> Electro adheres to a number of closely-held design
 principles.  The primary principles are simplicity, orthogonality, and
-efficiency.  Violations of these principles do appear, but not without
-serious consideration. </p>
+efficiency.  Violations of these principles do appear, but not without serious
+consideration. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -86,56 +86,51 @@ serious consideration. </p>
 
 <h2> Entity Functions </h2>
 
-<p> The following functions act on entities.  The entity argument of
-each function may take any entity value, including object, sprite,
-lightsource, and camera. </p>
+<p> The following functions act on entities.  The entity argument of each
+function may take any entity value, including object, sprite, lightsource, and
+camera. </p>
 
 <h3> Absolute Transformation </h3>
 
 <dl>
 
-    <dt><tt> entity_position(entity, x, y, z) </tt><dd><p> Specify the
-    position of the entity.  Position is given in the coordinate
-    system of the entity's parent. </p>
+<dt><tt> entity_position(entity, x, y, z) </tt><dd><p> Specify the position of
+the entity.  Position is given in the coordinate system of the entity's
+parent. </p>
 
-    <dt><tt> entity_rotation(entity, x, y, z) </tt><dd><p> Specify the
-    rotation of the entity.  The 3 values give the angles of rotation
-    in degrees about the X, Y, and Z axes.  Rotation is given in the
-    coordinate system of the entity's parent. </p>
+<dt><tt> entity_rotation(entity, x, y, z) </tt><dd><p> Specify the rotation of
+the entity.  The 3 values give the angles of rotation in degrees about the X,
+Y, and Z axes.  Rotation is given in the coordinate system of the entity's
+parent. </p>
 
-    <dt><tt> entity_scale(entity, x, y, z) </tt><dd><p> Specify the
-    scale of the entity.  The 3 values give scale multipliers along
-    the X, Y, and Z axes.  Scale is given in the coordinate system of
-    the entity's parent. </p>
+<dt><tt> entity_scale(entity, x, y, z) </tt><dd><p> Specify the scale of the
+entity.  The 3 values give scale multipliers along the X, Y, and Z axes.
+Scale is given in the coordinate system of the entity's parent. </p>
 
 </dl>
 
 <h3> Relative Transformation </h3>
 
-<p class="note"> Strictly speaking, to provide both absolute and
-relative transformation functions is to violate the principle of
-orthogonality.  In this case, I just couldn't resist.  Inspiration for
-this feature is drawn from Blitz3D, which showed that relative
-transform is very beginner-friendly, leading to a very intuitive
-turtle-style system of entity control. </p>
+<p class="note"> Strictly speaking, to provide both absolute and relative
+transformation functions is to violate the principle of orthogonality.  In
+this case, I just couldn't resist.  Inspiration for this feature is drawn from
+Blitz3D, which showed that relative transform is very beginner-friendly,
+leading to a very intuitive turtle-style system of entity control. </p>
 
 <dl>
 
-    <dt><tt> entity_move(entity, x, y, z) </tt><dd><p> Move the entity
-    relative to its current position.  X is to the right, Y is up, and
-    Z axis is to the rear, as defined by the entity's current
-    orientation. </p>
+<dt><tt> entity_move(entity, x, y, z) </tt><dd><p> Move the entity relative to
+its current position.  X is to the right, Y is up, and Z axis is to the rear,
+as defined by the entity's current orientation. </p>
 
-    <p class="note"> It might be more clear to the beginner if the Z
-    axis to pointed forward rather than back.  However, this would be
-    in conflict with the normal right-handed coordinate system, and
-    would only lead to inconsistency and confusion for the experienced
-    3D user. </p>
+<p class="note"> It might be more clear to the beginner if the Z axis to
+pointed forward rather than back.  However, this would be in conflict with the
+normal right-handed coordinate system, and would only lead to inconsistency
+and confusion for the experienced 3D user. </p>
 
-    <dt><tt> entity_turn(entity, x, y, z) </tt><dd><p> Rotate the
-    entity relative to its current orientation.  Rotation about the X,
-    Y, and Z axes corresponds to pitch, yaw, and roll,
-    respectively. </p>
+<dt><tt> entity_turn(entity, x, y, z) </tt><dd><p> Rotate the entity relative
+to its current orientation.  Rotation about the X, Y, and Z axes corresponds
+to pitch, yaw, and roll, respectively. </p>
 
 </dl>
 
@@ -143,50 +138,43 @@ turtle-style system of entity control. </p>
 
 <dl>
 
-    <dt><tt> entity_flag(entity, flag, value) </tt><dd><p> Set or
-    clear a flag on the given entity.  Entity flags enable and disable
-    extra features in the entity hierarchy.  These flags act not only
-    on the entity that carries them, but also on the children of that
-    entity.  The <tt>flag</tt> parameter gives the set of flags to be
-    modified, and may be the sum of multiple flags.  The
-    <tt>value</tt> parameter is a boolean giving the desired state.  A
-    value of <tt>true</tt> will set the given flags, and
-    <tt>false</tt> will clear them. <p>
+<dt><tt> entity_flag(entity, flag, value) </tt><dd><p> Set or clear a flag on
+the given entity.  Entity flags enable and disable extra features in the
+entity hierarchy.  These flags act not only on the entity that carries them,
+but also on the children of that entity.  The <tt>flag</tt> parameter gives
+the set of flags to be modified, and may be the sum of multiple flags.  The
+<tt>value</tt> parameter is a boolean giving the desired state.  A value of
+<tt>true</tt> will set the given flags, and <tt>false</tt> will clear
+them. <p>
 
-    <dl>
+<dl>
 
-        <dt><tt> entity_flag_wireframe </tt><dd><p> The wireframe flag
-        causes an entity and its descendants to be rendered in
-        wireframe.  An entire scene may be rendered in wireframe by
-        setting the wireframe flag on a camera or light. The
-        application is free to set or clear a wireframe flag value at
-        one point in the hierarchy and set an opposite value at a
-        lower point.  Entities will appear as expected. </p>
+<dt><tt> entity_flag_wireframe </tt><dd><p> The wireframe flag causes an
+entity and its descendants to be rendered in wireframe.  An entire scene may
+be rendered in wireframe by setting the wireframe flag on a camera or
+light. The application is free to set or clear a wireframe flag value at one
+point in the hierarchy and set an opposite value at a lower point.  Entities
+will appear as expected. </p>
 
-        <dt><tt> entity_flag_hidden </tt><dd><p> The hidden flag
-        causes an entity and its descendants to be omitted from
-        rendering.  Unlike the wireframe flag, the hidden flag
-        <i>cannot</i> be reversed lower in the hierarchy, as it
-        actually causes traversal of the hierarchy to be pruned.</p>
+<dt><tt> entity_flag_hidden </tt><dd><p> The hidden flag causes an entity and
+its descendants to be omitted from rendering.  Unlike the wireframe flag, the
+hidden flag <i>cannot</i> be reversed lower in the hierarchy, as it actually
+causes traversal of the hierarchy to be pruned.</p>
 
-        <dt><tt> entity_flag_billboard </tt><dd><p> Entities with the
-        billboard flag are drawn facing the camera, regardless of
-        their actual orientation.  In effect, all rotations and
-        translations are applied as usual, so the entity will be
-        positioned in space as expected, but an extra rotation is
-        applied in order to re-aim the entity's Z axis toward the
-        camera.  </p>
+<dt><tt> entity_flag_billboard </tt><dd><p> Entities with the billboard flag
+are drawn facing the camera, regardless of their actual orientation.  In
+effect, all rotations and translations are applied as usual, so the entity
+will be positioned in space as expected, but an extra rotation is applied in
+order to re-aim the entity's Z axis toward the camera.  </p>
 
-        <p class="note"> Due to the manner in which the billboard
-        transformation is implemented, scaling operations will
-        <i>not</i> transform billboard entities below them in the
-        hierarchy.  This is a minor limitation in practice, as scaling
-        is normally applied near the leaves of the scene hierarchy
-        anyway.  The common case of an entity with local scaling
-        <i>and</i> a local billboard flag will work properly, but when
-        in doubt, scale below billboarding. </p>
+<p class="note"> Due to the manner in which the billboard transformation is
+implemented, scaling operations will <i>not</i> transform billboard entities
+below them in the hierarchy.  This is a minor limitation in practice, as
+scaling is normally applied near the leaves of the scene hierarchy anyway.
+The common case of an entity with local scaling <i>and</i> a local billboard
+flag will work properly, but when in doubt, scale below billboarding. </p>
 
-    </dl>
+</dl>
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -195,8 +183,9 @@ turtle-style system of entity control. </p>
 
 <dl>
 
-    <dt><tt> add_tile(local_x, local_y, global_x, global_y, width,
-    height) </tt> <dd><p> Make a tile. </p>
+<dt><tt> add_tile(local_x, local_y, global_x, global_y, width, height) </tt>
+
+<dd><p> Make a tile. </p>
 
 </dl>
 
@@ -221,38 +210,34 @@ add_tile("nico2-10", 1600, 0, global_x + dx * 3, global_y + dy,     w, h)
 
 <h1> Callbacks </h1>
 
-<p> Callback functions are the mechanism by which Electro Lua
-applications respond to user interface events.  An application may
-define these functions as needed.  If a function exists then it is
-invoked when the corresponding event occurs.  Callback functions
-should return a boolean value to indicate whether the event resulted
-in a dirty screen.  Returning <tt>true</tt> schedules a screen update
-to occur at the next opportunity. </p>
+<p> Callback functions are the mechanism by which Electro Lua applications
+respond to user interface events.  An application may define these functions
+as needed.  If a function exists then it is invoked when the corresponding
+event occurs.  Callback functions should return a boolean value to indicate
+whether the event resulted in a dirty screen.  Returning <tt>true</tt>
+schedules a screen update to occur at the next opportunity. </p>
 
 <dl>
 
-    <dt><tt> do_start() </tt> <dd><p> This callback is invoked
-    precisely once at the beginning of a run.  It occurs after all of
-    the scripts named on the command line have finished executing, but
-    before any event processing begins.  Applications are free to
-    perform Lua state initialization upon initial execution, but
-    Electro object initialization <i>must</i> be performed in the
-    <tt>do_start</tt> function.</p>
+<dt><tt> do_start() </tt> <dd><p> This callback is invoked precisely once at
+the beginning of a run.  It occurs after all of the scripts named on the
+command line have finished executing, but before any event processing begins.
+Applications are free to perform Lua state initialization upon initial
+execution, but Electro object initialization <i>must</i> be performed in the
+<tt>do_start</tt> function.</p>
 
-    <p class="note"> This callback is a bit of a hack.  It is
-    necessary because Electro objects cannot be initialized until the
-    OpenGL context exists.  However, the OpenGL context cannot be
-    created until the viewport configuration is known.  So, startup
-    must proceed in two distinct phases, one before context creation,
-    and one after.  The <tt>do_start</tt> callback is this second
-    phase. </p>
+<p class="note"> This callback is a bit of a hack.  It is necessary because
+Electro objects cannot be initialized until the OpenGL context exists.
+However, the OpenGL context cannot be created until the viewport configuration
+is known.  So, startup must proceed in two distinct phases, one before context
+creation, and one after.  The <tt>do_start</tt> callback is this second
+phase. </p>
 
-    <dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
-    whenever the mouse pointer moves within the Electro main window.
-    Motion is reported relatively, so the pointer may move an
-    unlimited distance in any direction.  Absolute position is not
-    reported.  If absolute mouse position is necessary, then it must
-    be tracked manually, as follows: </p>
+<dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked whenever the
+mouse pointer moves within the Electro main window.  Motion is reported
+relatively, so the pointer may move an unlimited distance in any direction.
+Absolute position is not reported.  If absolute mouse position is necessary,
+then it must be tracked manually, as follows: </p>
 
 <pre>
 mouse_x = 0
@@ -265,48 +250,42 @@ function do_point(dx, dy)
 end
 </pre>
 
-    <dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked
-    whenever a mouse button is pressed or released.  The <tt>b</tt>
-    argument gives the button number, 1, 2, 3, etc.  The <tt>s</tt>
-    argument is a boolean giving button state.  A value of
-    <tt>true</tt> indicates the button has been pressed, and
-    <tt>false</tt> indicates it has been released.  Note, on most
-    modern systems mouse wheel up and down are reported as presses of
-    buttons 4 and 5.  Button press events on wheel buttons do not have
-    accompanying release events. </p>
+<dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked whenever a mouse
+button is pressed or released.  The <tt>b</tt> argument gives the button
+number, 1, 2, 3, etc.  The <tt>s</tt> argument is a boolean giving button
+state.  A value of <tt>true</tt> indicates the button has been pressed, and
+<tt>false</tt> indicates it has been released.  Note, on most modern systems
+mouse wheel up and down are reported as presses of buttons 4 and 5.  Button
+press events on wheel buttons do not have accompanying release events. </p>
 
-    <dt><tt> do_timer(t) </tt><dd><p> The <tt>do_timer</tt> callback
-    is invoked regularly while idling is enabled.  The <tt>t</tt>
-    argument gives the amount of time, in seconds, that has passed
-    since the last time the callback was invoked.  The rate of
-    callback is not defined, though it may be inferred to be "often
-    enough."  In practice it is usually around 30 times per second,
-    though this will decrease with graphical complexity.  The
-    <tt>do_timer</tt> function is intended to be used to update
-    animations and other background processes.  Applications should be
-    sure to return <tt>true</tt> in order to force an update to the
-    display.</p>
+<dt><tt> do_timer(t) </tt><dd><p> The <tt>do_timer</tt> callback is invoked
+regularly while idling is enabled.  The <tt>t</tt> argument gives the amount
+of time, in seconds, that has passed since the last time the callback was
+invoked.  The rate of callback is not defined, though it may be inferred to be
+"often enough."  In practice it is usually around 30 times per second, though
+this will decrease with graphical complexity.  The <tt>do_timer</tt> function
+is intended to be used to update animations and other background processes.
+Applications should be sure to return <tt>true</tt> in order to force an
+update to the display.</p>
 
-    <p class="note"> The update rate of the <tt>do_timer</tt> callback
-    is deliberately obscured because it is nearly impossible to
-    guarantee.  While it might make sense to allow an application to
-    request a callback rate, this request can only be precisely filled
-    in a limited number of cases.  The idle timer does <i>not</i>
-    free-run.  Free-running in Electro is bad because MPI
-    synchronization is unpredictable and events tend to queue up,
-    leading to sluggish behavior.  The application developer may count
-    on the fact that <tt>do_timer</tt> is invoked as often as is
-    possible, such that performance will not suffer. </p>
+<p class="note"> The update rate of the <tt>do_timer</tt> callback is
+deliberately obscured because it is nearly impossible to guarantee.  While it
+might make sense to allow an application to request a callback rate, this
+request can only be precisely filled in a limited number of cases.  The idle
+timer does <i>not</i> free-run.  Free-running in Electro is bad because MPI
+synchronization is unpredictable and events tend to queue up, leading to
+sluggish behavior.  The application developer may count on the fact that
+<tt>do_timer</tt> is invoked as often as is possible, such that performance
+will not suffer. </p>
 
-    <dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
-    whenever a key is pressed or released.  The <tt>s</tt> argument is
-    a boolean giving the key state.  The <tt>k</tt> argument gives a
-    key identifier.  For most keys, this gives the ASCII value of the
-    unshifted character.  For non-ASCII keys and modifiers it is a
-    unique identifier outside of the range of ASCII.  A full listing
-    of keys and their associated values would be lengthy and
-    uninteresting.  When in doubt about the value of a key, query it
-    interactively as follows: </p>
+<dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked whenever a
+key is pressed or released.  The <tt>s</tt> argument is a boolean giving the
+key state.  The <tt>k</tt> argument gives a key identifier.  For most keys,
+this gives the ASCII value of the unshifted character.  For non-ASCII keys and
+modifiers it is a unique identifier outside of the range of ASCII.  A full
+listing of keys and their associated values would be lengthy and
+uninteresting.  When in doubt about the value of a key, query it interactively
+as follows: </p>
 
 <pre>
 function do_keyboard(k, s)
@@ -319,17 +298,180 @@ function do_keyboard(k, s)
 end
 </pre>
 
-    <dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is
-    invoked whenever a joystick button is pressed or released.  The
-    <tt>n</tt> argument gives the joystick device number.  The
-    <tt>b</tt> argument gives the button number.  The <tt>s</tt>
-    argument is a boolean giving button state.  Applications respond
-    to button presses in an event-driven fashion, but they should read
-    joystick axis input more continuously.  Usually joystick axes are
-    aquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt>
-    callback. </p>
+<dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is invoked whenever a
+joystick button is pressed or released.  The <tt>n</tt> argument gives the
+joystick device number.  The <tt>b</tt> argument gives the button number.  The
+<tt>s</tt> argument is a boolean giving button state.  Applications respond to
+button presses in an event-driven fashion, but they should read joystick axis
+input more continuously.  Usually joystick axes are aquired by calling
+<tt>joystick_axis</tt> in a <tt>do_timer</tt> callback. </p>
 
 </dl>
+
+<!---------------------------------------------------------------------------->
+
+<pre>
+image_file = "venus.png"
+
+view_l = 0
+view_r = 0
+view_b = 0
+view_t = 0
+view_w = 0
+view_h = 0
+
+camera  = nil
+numbers = { }
+sprites = { }
+
+curr_i = 4
+curr_j = 4
+time   = 0
+
+function move_sprite(sprite, i, j)
+    E.set_entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
+end
+
+function solved()
+    local k = 1
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            if numbers[i][j] == k then
+                k = k + 1
+            else
+                return false
+            end
+        end
+    end
+    return true
+end
+
+function move_piece(di, dj)
+    local next_i = curr_i + di
+    local next_j = curr_j + dj
+
+    -- Confirm that the move is valid.
+
+    if 1 <= next_i and next_i <= 4 and
+       1 <= next_j and next_j <= 4 then
+
+        -- Swap the moving piece with the blank piece.
+
+        temp                    = numbers[curr_i][curr_j]
+        numbers[curr_i][curr_j] = numbers[next_i][next_j]
+        numbers[next_i][next_j] = temp
+
+        -- Set the new on-screen locations of the moving sprites.
+
+        move_sprite(sprites[numbers[curr_i][curr_j]], curr_i, curr_j)
+        move_sprite(sprites[numbers[next_i][next_j]], next_i, next_j)
+
+        curr_i = next_i
+        curr_j = next_j
+
+        -- Set the visibility of the 16th piece to indicate solution.
+
+        E.set_entity_flag(sprites[16], E.entity_flag_hidden, not solved())
+
+        return true
+    else
+        return false
+    end
+end
+
+function move_random()
+    while true do
+        local d = math.random(-1, 1)
+
+        if math.random(0, 1) == 0 then
+            if move_piece(d, 0) then
+                return
+            end
+        else
+            if move_piece(0, d) then
+                return
+            end
+        end
+    end
+end
+
+function do_start()
+
+    view_l, view_r, view_b, view_t = E.get_viewport()
+    view_w = view_r - view_l
+    view_h = view_t - view_b
+
+    camera = E.create_camera(E.camera_type_orthogonal)
+    E.set_entity_flag(camera, E.entity_flag_unlit, true);
+
+    -- Initialize an array that maps rows and columns onto puzzle pieces.
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
+
+    -- Add 16 sprites and scale each to 1/16th the size of the display.
+
+    for i = 1, 16 do
+        sprites[i] = E.create_sprite(image_file)
+
+        local sw, sh = E.get_sprite_size(sprites[i])
+
+        E.parent_entity(sprites[i], camera)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
+                                       0.25 * view_h / sh, 1.0)
+    end
+
+    -- Assign 1/16th of the image to each sprite.
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            local x0 = (j - 1) / 4
+            local x1 = (j - 0) / 4
+            local y0 = (4 - i) / 4
+            local y1 = (5 - i) / 4
+
+            move_sprite(sprites[numbers[i][j]], i, j)
+            E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
+        end
+    end
+
+    return true
+end
+
+function do_keyboard(k, s)
+    if s then
+        -- If an arrow key has been pressed, move a puzzle piece.
+
+        if k == 276 then move_piece( 0,  1) end
+        if k == 275 then move_piece( 0, -1) end
+        if k == 273 then move_piece( 1,  0) end
+        if k == 274 then move_piece(-1,  0) end
+
+        -- If autoplay has been switched, toggle the idle function.
+
+        if k == 282 then E.set_idle(true)  end
+        if k == 283 then E.set_idle(false) end
+    end
+    return true
+end
+
+function do_timer(dt)
+    time = time + dt
+
+    if time > 0.25 then
+        move_random()
+        time = 0
+        return true
+    end
+
+    return false
+end
+
+</pre>
 
 <!---------------------------------------------------------------------------->
 
