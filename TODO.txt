@@ -1,8 +1,6 @@
 object entity
 light entity
-camera entity? (many cameras)
 separate electro/galaxy
-doc
 remove MPI_BYTE uses (separate hostname from viewport)
 move data to dir
 audio
