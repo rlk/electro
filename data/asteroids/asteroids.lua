@@ -231,15 +231,18 @@ end
 function player_step()
 
     local rot_x, rot_y, rot_z = entity_get_rotation(ship)
+    local changed = false
 
     if (joystick_axis(0, 0) < -0.5) then
         rot_z = rot_z + global_dt * 180
+        changed = true
     end
     if (joystick_axis(0, 0) >  0.5) then
         rot_z = rot_z - global_dt * 180
+        changed = true
     end
 
-    entity_rotation(ship, rot_x, rot_y, rot_z)
+    if changed then entity_rotation(ship, rot_x, rot_y, rot_z) end
 end
 
 -------------------------------------------------------------------------------
@@ -287,10 +290,13 @@ function do_timer(dt)
 
     global_dt = dt
 
-    level_step()
-    player_step()
-
-    return true
+    if global_dt > 0 then
+        level_step()
+        player_step()
+        return true
+    else
+        return false
+    end
 end
 
 function do_joystick(n, b, s)

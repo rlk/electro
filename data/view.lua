@@ -50,11 +50,20 @@ function do_start()
     init_2D()
     init_3D()
 
+    enable_idle(true)
+
     return true
 end
 
 function do_click(b, s)
    btn[b] = s
+end
+
+function do_timer(dt)
+    rot_y = rot_y + dt * 90
+    if (pivot) then entity_rotation(pivot, rot_x, rot_y, 0) end
+    print("foo")
+    return true
 end
 
 function do_point(dx, dy)

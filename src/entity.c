@@ -296,6 +296,32 @@ void entity_delete(int id)
 
 /*---------------------------------------------------------------------------*/
 
+void entity_set_position(int id, float x, float y, float z)
+{
+    pack_event(EVENT_ENTITY_MOVE);
+    pack_index(id);
+    pack_float(x);
+    pack_float(y);
+    pack_float(z);
+}
+
+void entity_get_position(void)
+{
+    int  id = unpack_index();
+    float x = unpack_float();
+    float y = unpack_float();
+    float z = unpack_float();
+
+    if (entity_exists(id))
+    {
+        E[id].position[0] = x;
+        E[id].position[1] = x;
+        E[id].position[2] = x;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 void entity_position(int id, float x, float y, float z)
 {
     if (mpi_isroot())
