@@ -12,6 +12,8 @@ global_shockwave = nil
 
 -------------------------------------------------------------------------------
 
+state     = "start"
+
 serial    = 1
 camera    = nil
 above     = nil
@@ -19,6 +21,7 @@ below     = nil
 light     = nil
 ship      = nil
 
+undone     = 0
 bullets    = { }
 asteroids  = { }
 explosions = { }
@@ -30,6 +33,7 @@ velocity_dx = 0
 velocity_dy = 0
 
 level      = 1
+ships      = 0
 curr_score = 0
 high_score = 100
 speed      = 5
@@ -43,6 +47,20 @@ global_t = 0
 global_w = 0
 global_h = 0
 global_z = 1
+
+function player_reset()
+
+    thrusting   = false
+    velocity_dx = 0
+    velocity_dy = 0
+
+    if ship then
+        E.entity_flag(ship, E.entity_flag_hidden, false)
+
+        E.entity_position(ship, 0, 0, 0)
+        E.entity_rotation(ship, 0, 0, 0)
+    end
+end
 
 -------------------------------------------------------------------------------
 
@@ -151,11 +169,17 @@ function add_asteroid(entity, size)
     E.entity_position(asteroid.entity, x, y, 0)
 
     table.insert(asteroids, asteroid)
+    undone = undone + 1
 end
 
 function del_asteroid(id, asteroid)
     E.entity_delete(asteroid.entity)
     table.remove(asteroids, id)
+    undone = undone - 1
+
+    if undone == 0 then
+        state = "done"
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -288,6 +312,31 @@ end
 
 global_dt = 0
 
+function asteroid_frag(id, asteroid)
+
+    local entity = asteroid.entity
+    local size   = asteroid.size
+
+    -- Break a big asteroid into smaller asteroids.
+
+    add_shockwave(entity, size)
+    add_explosion(entity, size)
+
+    if size > 1 then
+--        add_asteroid(entity, size - 1)
+--        add_asteroid(entity, size - 1)
+--        add_asteroid(entity, size - 1)
+    end
+
+    if size == 3 then add_score(entity, 25) end
+    if size == 2 then add_score(entity, 10) end
+    if size == 1 then add_score(entity,  5) end
+
+    -- Delete the original asteroid.
+
+    del_asteroid(id, asteroid)
+end
+
 function asteroid_step(id, asteroid)
 
     local entity = asteroid.entity
@@ -334,26 +383,29 @@ function asteroid_step(id, asteroid)
         local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
                                (pos_Y - pos_y) * (pos_Y - pos_y));
         if dist < size then
+            asteroid_frag(id, asteroid)
+            del_bullet   (jd, bullet)
+        end
+    end
 
-            -- Break a big asteroid into smaller asteroids.
+    -- Check this asteroid against the player.
 
-            add_shockwave(entity, size)
-            add_explosion(entity, size)
+    if state == "play" and ship then
+        local pos_X, pos_Y, pos_Z = E.entity_get_position(ship)
 
-            if size > 1 then
-                add_asteroid(entity, size - 1)
-                add_asteroid(entity, size - 1)
-                add_asteroid(entity, size - 1)
-            end
+        local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
+                               (pos_Y - pos_y) * (pos_Y - pos_y));
 
-            if size == 3 then add_score(entity, 25) end
-            if size == 2 then add_score(entity, 10) end
-            if size == 1 then add_score(entity,  5) end
+        if dist < size + 1 then
+            add_explosion(ship, 10)
+            add_shockwave(ship, 10)
 
-            -- Delete the original asteroid and the bullet.
+            E.entity_flag(ship, E.entity_flag_hidden, true)
 
-            del_asteroid(id, asteroid)
-            del_bullet  (jd, bullet)
+            velocity_dx = 0
+            velocity_dy = 0
+
+            state = "dead"
         end
     end
 end
@@ -438,16 +490,21 @@ end
 -------------------------------------------------------------------------------
 
 function level_init()
-    for i = 1, level + 3 do
+    for i = 1, level  do
         add_asteroid(nil, 3)
     end
-
-    E.entity_position(ship, 0, 0, 0);
 end
 
 function level_step()
     table.foreach(bullets,    bullet_step)
+    table.foreach(explosions, explosion_step)
+    table.foreach(shockwaves, shockwave_step)
+    table.foreach(scores,     score_step)
     table.foreach(asteroids,  asteroid_step)
+end
+
+function stuff_step()
+    table.foreach(bullets,    bullet_step)
     table.foreach(explosions, explosion_step)
     table.foreach(shockwaves, shockwave_step)
     table.foreach(scores,     score_step)
@@ -572,32 +629,98 @@ function do_start()
     E.camera_zoom(camera, global_z)
 
     score_init()
-    level_init()
 
     E.enable_idle(true)
     return true
 end
+
+-------------------------------------------------------------------------------
 
 function do_timer(dt)
 
     global_dt = dt
 
     if global_dt > 0 then
-        level_step()
-        player_step()
-        return true
-    else
-        return false
+
+        if state == "ready" then
+            stuff_step()
+            player_step()
+            return true
+        end
+
+        if state == "play" then
+            level_step()
+            player_step()
+            return true
+        end
+
+        if state == "done" then
+            stuff_step()
+            player_step()
+            return true
+        end
+
+        if state == "dead" then
+            level_step()
+            return true
+        end
     end
+
+    return false
 end
 
 function do_joystick(n, b, s)
-    if b == 1 and s then
-        add_bullet()
+    
+    if state == "start" then
+        if b == 1 and s then
+            curr_score_set(0)
+            player_reset()
+            ships = 3
+            score = 0
+            level = 1
+            level_init()
+            state = "ready"
+        end
+
+    elseif state == "ready" then
+        if b == 1 and s then
+            state = "play"
+        end
+
+    elseif state == "play" then
+        if b == 1 and s then
+            add_bullet()
+        end
+        if b == 2 then
+            thrusting = s
+        end
+
+    elseif state == "dead" then
+        if b == 1 and s then
+            print(ships)
+            if ships > 0 then
+                ships = ships - 1
+                player_reset()
+                state = "play"
+            else
+                state = "over"
+            end
+        end
+
+    elseif state == "done" then
+        if b == 2 then
+            thrusting = s
+        else
+            level = level + 1
+            level_init()
+            state = "ready"
+        end
+
+    elseif state == "over" then
+        state = "start"
     end
-    if b == 2 then
-        thrusting = s
-    end
+
+    return true
 end
 
 -------------------------------------------------------------------------------
