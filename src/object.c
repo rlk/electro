@@ -58,17 +58,20 @@ static int   ic;
 #define MAXMTRL    64
 #define MAXVERT 32768
 #define MAXFACE 16384
+#define MAXEDGE 16384
 #define MAXSURF   128
 
 static char               namev[MAXMTRL][MAXSTR];
 static struct object_mtrl mtrlv[MAXMTRL];
 static struct object_vert vertv[MAXVERT];
 static struct object_face facev[MAXFACE];
+static struct object_edge edgev[MAXEDGE];
 static struct object_surf surfv[MAXSURF];
 
 static int mtrlc;
 static int vertc;
 static int facec;
+static int edgec;
 static int surfc;
 
 /*---------------------------------------------------------------------------*/
@@ -249,10 +252,10 @@ static int read_indices(const char *line, int *vi, int *ti, int *ni)
     return n;
 }
 
-static void read_f(const char *line)
+static void read_vertices(const char *line)
 {
     const char *c = line;
-    int dc, i, i0 = ic;
+    int dc, i;
 
     /* Scan down the face string recording index set specifications. */
 
@@ -341,6 +344,15 @@ static void read_f(const char *line)
         c  += dc;
         ic +=  1;
     }
+}
+
+static void read_f(const char *line)
+{
+    int i, i0 = ic;
+
+    /* Scan down the face string recording index set specifications. */
+
+    read_vertices(line);
 
     /* Convert our N new index sets into N-2 new triangles. */
 
@@ -354,19 +366,45 @@ static void read_f(const char *line)
     }
 }
 
+static void read_e(const char *line)
+{
+    int i, i0 = ic;
+
+    /* Scan down the edge string recording index set specifications. */
+
+    read_vertices(line);
+
+    /* Convert our N new index sets into N-2 new triangles. */
+
+    for (i = i0; i < ic - 1 && edgec < MAXEDGE; ++i)
+    {
+        edgev[edgec].vi[0] = iv[i + 0][3];
+        edgev[edgec].vi[1] = iv[i + 1][3];
+
+        edgec++;
+    }
+}
+
 /*---------------------------------------------------------------------------*/
 
 static void read_g(void)
 {
     if (surfc >= 0)
     {
-        /* Close out the existing surface by copying the face cache. */
+        /* Close the existing surface by copying the face and edge cache. */
 
         surfv[surfc].fc = facec;
+        surfv[surfc].ec = edgec;
+
         surfv[surfc].fv =
             (struct object_face *) memdup(facev,
                                           facec, sizeof (struct object_face));
+        surfv[surfc].ev =
+            (struct object_edge *) memdup(edgev,
+                                          edgec, sizeof (struct object_edge));
+
         facec = 0;
+        edgec = 0;
     }
 
     if (surfc < MAXSURF)
@@ -377,6 +415,7 @@ static void read_g(void)
 
         surfv[surfc].mi =    0;
         surfv[surfc].fc =    0;
+        surfv[surfc].ec =    0;
         surfv[surfc].fv = NULL;
     }
 }
@@ -437,6 +476,7 @@ static int read_obj(const char *filename, struct object *o)
     mtrlc = -1;
     vertc =  0;
     facec =  0;
+    edgec =  0;
     surfc = -1;
 
     if ((fin = fopen(filename, "r")))
@@ -450,6 +490,7 @@ static int read_obj(const char *filename, struct object *o)
 
             else if (strncmp(line, "g",  1) == 0) read_g ();
             else if (strncmp(line, "f",  1) == 0) read_f (line + 2);
+            else if (strncmp(line, "e",  1) == 0) read_e (line + 2);
             else if (strncmp(line, "vt", 2) == 0) read_vt(line + 3);
             else if (strncmp(line, "vn", 2) == 0) read_vn(line + 3);
             else if (strncmp(line, "v",  1) == 0) read_v (line + 2);
@@ -539,6 +580,8 @@ void draw_object(int id, int od, const float V[16])
 
                     glDrawElements(GL_TRIANGLES, 3 * O[od].sv[si].fc,
                                    GL_UNSIGNED_INT,  O[od].sv[si].fv);
+                    glDrawElements(GL_LINES,     2 * O[od].sv[si].ec,
+                                   GL_UNSIGNED_INT,  O[od].sv[si].ev);
                 }
             }
             glPopClientAttrib();

@@ -37,11 +37,18 @@ struct object_face
     int vi[3];
 };
 
+struct object_edge
+{
+    int vi[2];
+};
+
 struct object_surf
 {
     int mi;
     int fc;
+    int ec;
     struct object_face *fv;
+    struct object_edge *ev;
 };
 
 struct object
