@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "joystick.h"
 #include "viewport.h"
 #include "shared.h"
 #include "server.h"
@@ -97,7 +98,6 @@ void server_send(int type)
     printf("%d of %d: server_send(%s)\n", mpi_rank(),
                                           mpi_size(), event_string(type));
 #endif
-
     mpi_share_integer(1, &type);
 }
 
@@ -115,7 +115,6 @@ static void server_init(void)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    entity_init();
     opengl_check("server_init");
 }
 
@@ -191,14 +190,20 @@ static int server_loop(void)
             case SDL_MOUSEBUTTONUP:
                 dirty |= script_click(e.button.button, 0);
                 break;
-            case SDL_USEREVENT:
-                dirty |= script_timer(e.user.code);
+            case SDL_JOYBUTTONDOWN:
+                dirty |= script_joystick(e.jbutton.which, e.jbutton.button, 1);
+                break;
+            case SDL_JOYBUTTONUP:
+                dirty |= script_joystick(e.jbutton.which, e.jbutton.button, 0);
                 break;
             case SDL_KEYDOWN:
                 dirty |= script_keyboard(e.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
                 dirty |= script_keyboard(e.key.keysym.sym, 0);
+                break;
+            case SDL_USEREVENT:
+                dirty |= script_timer(e.user.code);
                 break;
             }
 
@@ -244,11 +249,13 @@ void server(int argc, char *argv[])
 
         /* Initialize the main server window. */
 
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) == 0)
         {
             int w = window_get_w();
             int h = window_get_h();
             int m = SDL_OPENGL;
+
+            /* Set some OpenGL framebuffer attributes. */
 
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
@@ -260,6 +267,8 @@ void server(int argc, char *argv[])
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
                 server_init();
+                entity_init();
+                joystick_init();
                 script_start();
 
                 /* Block on SDL events.  Service them as they arrive. */
@@ -271,6 +280,7 @@ void server(int argc, char *argv[])
                 /* Ensure everyone finishes all events before exiting. */
 
                 mpi_barrier();
+                joystick_free();
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 

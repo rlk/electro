@@ -96,7 +96,6 @@ static void client_init(void)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    entity_init();
     opengl_check("client_init");
 }
 
@@ -153,6 +152,7 @@ void client(void)
         if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
             client_init();
+            entity_init();
 
             /* Handle any SDL events. Block on server messages. */
 

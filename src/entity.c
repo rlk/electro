@@ -31,24 +31,25 @@
 static struct entity *E     = NULL;
 static int            E_max =    0;
 
-const char *entity_typename(int type)
-{
-    switch (type)
-    {
-    case TYPE_ROOT:   return "root";
-    case TYPE_CAMERA: return "camera";
-    case TYPE_SPRITE: return "sprite";
-    case TYPE_OBJECT: return "object";
-    case TYPE_LIGHT:  return "light";
-    case TYPE_PIVOT:  return "pivot";
-    }
-
-    return "UNKNOWN";
-}
-
 int entity_exists(int id)
 {
     return (E && 0 <= id && id < E_max && E[id].type);
+}
+
+const char *entity_typename(int id)
+{
+    if (entity_exists(id))
+        switch (E[id].type)
+        {
+        case TYPE_ROOT:   return "root";
+        case TYPE_CAMERA: return "camera";
+        case TYPE_SPRITE: return "sprite";
+        case TYPE_OBJECT: return "object";
+        case TYPE_LIGHT:  return "light";
+        case TYPE_PIVOT:  return "pivot";
+        }
+
+    return "UNKNOWN";
 }
 
 int entity_todata(int id)

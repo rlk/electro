@@ -1,6 +1,7 @@
 
 TARG=	electro
 OBJS=	src/opengl.o   \
+	src/joystick.o \
 	src/viewport.o \
 	src/shared.o   \
 	src/server.o   \

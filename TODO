@@ -1,11 +1,9 @@
-stencil viewports
 object texture / image type
 Add alpha to entity.  Remove it from sprite.
 Wire mode to object.
-Relative entity transform
-Remove MPI_BYTE uses (separate hostname from viewport)
 Audio
-Joystick (get axes, do_joystick buttons)
-Audit includes
+Relative entity transform
 Script tile configuration query system/standard
+Remove MPI_BYTE uses (separate hostname from viewport)
 Abstract stars into particle system
+Audit includes
