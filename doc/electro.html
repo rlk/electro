@@ -72,6 +72,10 @@ consideration. </p>
 
 <!---------------------------------------------------------------------------->
 
+<h2> Camera </h2>
+
+<!---------------------------------------------------------------------------->
+
 <h2> Light </h2>
 
 <!---------------------------------------------------------------------------->
@@ -94,18 +98,19 @@ camera. </p>
 
 <dl>
 
-<dt><tt> entity_position(entity, x, y, z) </tt><dd><p> Specify the position of
-the entity.  Position is given in the coordinate system of the entity's
-parent. </p>
+<dt><tt> set_entity_position(entity, x, y, z) </tt><dd><p> Specify
+the position of the entity.  Position is given in the coordinate
+system of the entity's parent. </p>
 
-<dt><tt> entity_rotation(entity, x, y, z) </tt><dd><p> Specify the rotation of
-the entity.  The 3 values give the angles of rotation in degrees about the X,
-Y, and Z axes.  Rotation is given in the coordinate system of the entity's
-parent. </p>
+<dt><tt> set_entity_rotation(entity, x, y, z) </tt><dd><p> Specify
+the rotation of the entity.  The 3 values give the angles of rotation
+in degrees about the X, Y, and Z axes.  Rotation is given in the
+coordinate system of the entity's parent. </p>
 
-<dt><tt> entity_scale(entity, x, y, z) </tt><dd><p> Specify the scale of the
-entity.  The 3 values give scale multipliers along the X, Y, and Z axes.
-Scale is given in the coordinate system of the entity's parent. </p>
+<dt><tt> set_entity_scale(entity, x, y, z) </tt><dd><p> Specify the
+scale of the entity.  The 3 values give scale multipliers along the
+X, Y, and Z axes.  Scale is given in the coordinate system of the
+entity's parent. </p>
 
 </dl>
 
@@ -119,7 +124,7 @@ leading to a very intuitive turtle-style system of entity control. </p>
 
 <dl>
 
-<dt><tt> entity_move(entity, x, y, z) </tt><dd><p> Move the entity relative to
+<dt><tt> move_entity(entity, x, y, z) </tt><dd><p> Move the entity relative to
 its current position.  X is to the right, Y is up, and Z axis is to the rear,
 as defined by the entity's current orientation. </p>
 
@@ -128,7 +133,7 @@ pointed forward rather than back.  However, this would be in conflict with the
 normal right-handed coordinate system, and would only lead to inconsistency
 and confusion for the experienced 3D user. </p>
 
-<dt><tt> entity_turn(entity, x, y, z) </tt><dd><p> Rotate the entity relative
+<dt><tt> turn_entity(entity, x, y, z) </tt><dd><p> Rotate the entity relative
 to its current orientation.  Rotation about the X, Y, and Z axes corresponds
 to pitch, yaw, and roll, respectively. </p>
 
@@ -138,14 +143,15 @@ to pitch, yaw, and roll, respectively. </p>
 
 <dl>
 
-<dt><tt> entity_flag(entity, flag, value) </tt><dd><p> Set or clear a flag on
-the given entity.  Entity flags enable and disable extra features in the
-entity hierarchy.  These flags act not only on the entity that carries them,
-but also on the children of that entity.  The <tt>flag</tt> parameter gives
-the set of flags to be modified, and may be the sum of multiple flags.  The
-<tt>value</tt> parameter is a boolean giving the desired state.  A value of
-<tt>true</tt> will set the given flags, and <tt>false</tt> will clear
-them. <p>
+<dt><tt> set_entity_flag(entity, flag, value) </tt><dd><p> Set or
+clear a flag on the given entity.  Entity flags enable and disable
+extra features in the entity hierarchy.  These flags act not only
+on the entity that carries them, but also on the children of that
+entity.  The <tt>flag</tt> parameter gives the set of flags to be
+modified, and may be the sum of multiple flags.  The <tt>value</tt>
+parameter is a boolean giving the desired state.  A value of
+<tt>true</tt> will set the given flags, and <tt>false</tt> will
+clear them. <p>
 
 <dl>
 
@@ -188,23 +194,6 @@ flag will work properly, but when in doubt, scale below billboarding. </p>
 <dd><p> Make a tile. </p>
 
 </dl>
-
-<pre>
-w  = 1600
-h  = 1200
-dx = w + 128
-dy = h + 128
-
-global_w  =  dx * 2
-global_h  =  dy * 2
-global_x  = -global_w / 2
-global_y  = -global_h / 2
-
-add_tile("nico1-10",    0, 0, global_x + dx * 2, global_y,          w, h)
-add_tile("nico1-10", 1600, 0, global_x + dx * 3, global_y,          w, h)
-add_tile("nico2-10",    0, 0, global_x + dx * 2, global_y + dy,     w, h)
-add_tile("nico2-10", 1600, 0, global_x + dx * 3, global_y + dy,     w, h)
-</pre>
 
 <!---------------------------------------------------------------------------->
 
@@ -258,8 +247,8 @@ state.  A value of <tt>true</tt> indicates the button has been pressed, and
 mouse wheel up and down are reported as presses of buttons 4 and 5.  Button
 press events on wheel buttons do not have accompanying release events. </p>
 
-<dt><tt> do_timer(t) </tt><dd><p> The <tt>do_timer</tt> callback is invoked
-regularly while idling is enabled.  The <tt>t</tt> argument gives the amount
+<dt><tt> do_timer(dt) </tt><dd><p> The <tt>do_timer</tt> callback is invoked
+regularly while idling is enabled.  The <tt>dt</tt> argument gives the amount
 of time, in seconds, that has passed since the last time the callback was
 invoked.  The rate of callback is not defined, though it may be inferred to be
 "often enough."  In practice it is usually around 30 times per second, though
@@ -267,6 +256,19 @@ this will decrease with graphical complexity.  The <tt>do_timer</tt> function
 is intended to be used to update animations and other background processes.
 Applications should be sure to return <tt>true</tt> in order to force an
 update to the display.</p>
+
+<p> If an absolute measure of time is necessary, applications should
+accumulate  the <tt>dt</tt> parameter, just as they would accumulate
+relative mouse motion. </p>
+
+<pre>
+time = 0
+
+function do_timer(dt)
+    time = time + dt
+    return true
+end
+</pre>
 
 <p class="note"> The update rate of the <tt>do_timer</tt> callback is
 deliberately obscured because it is nearly impossible to guarantee.  While it
@@ -310,15 +312,269 @@ input more continuously.  Usually joystick axes are aquired by calling
 
 <!---------------------------------------------------------------------------->
 
+<h1> Example </h1>
+
+<p> What follows is a complete example of a small Electro application.
+It implements the Fifteen Puzzle, the ubiquitous sliding-tile game
+where an image is cut into 16 squares, one tile is removed, and the
+remaining tiles are scrambled.  The object is to slide the tiles
+back into place to restore the image. </p>
+
+<p> Each important chunk of code is described in turn, and the
+complete, commented source code is presented below for copying and
+pasting if necessary. </p>
+
 <pre>
 image_file = "venus.png"
 
-view_l = 0
-view_r = 0
-view_b = 0
-view_t = 0
-view_w = 0
-view_h = 0
+camera  = nil
+numbers = { }
+sprites = { }
+
+curr_i = 4
+curr_j = 4
+time   = 0
+</pre>
+
+<p> These are the global variables.  The image filename at the top
+allows the image to be changed easily.  The <tt>camera</tt> and
+<tt>sprites</tt> variables give the Electro objects that make up
+the scene graph.  The graph consists of a single orthogonal camera
+with 16 sprite objects as children.  This hierarchy is constructed
+in the <tt>do_start</tt> function below. </p>
+
+<p> The <tt>numbers</tt> variable will be initialized to a 4x4 table
+of tables that indicates which tile appears at each row and column.
+Each element <tt>numbers[i][j]</tt> will give an index into the
+<tt>sprites</tt> table.  By moving indices around in the <tt>numbers</tt>
+table, we move tiles around in the puzzle. </p>
+
+<p> The <tt>curr_i</tt> and <tt>curr_j</tt> globals track the current
+location of the blank spot.  The <tt>time</tt> variable allows the
+total amount of time passed to be tracked by the <tt>do_timer</tt>
+function. </p>
+
+<pre>
+function solved()
+    local k = 1
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            if numbers[i][j] == k then
+                k = k + 1
+            else
+                return false
+            end
+        end
+    end
+    return true
+end
+</pre>
+
+<p> The <tt>solved</tt> function lets us know when the puzzle is
+complete.  When solved, the tile numbers will read in order from
+left to right and top to bottom.  This function scans the rows and
+columns of the <tt>numbers</tt> table checking for that property
+and returning a boolean indicating the result. </p>
+
+<pre>
+function move_sprite(sprite, i, j)
+    local t, l, b, r = E.get_viewport()
+
+    local w = r - l
+    local h = t - b
+
+    E.set_entity_position(sprite, l + w * (j - 1) / 4 + w / 8,
+                                  b + h * (4 - i) / 4 + h / 8, 0)
+end
+</pre>
+
+<p> This is an important bit of Electro code.  Given a puzzle row
+<tt>i</tt> and column <tt>j</tt>, the <tt>move_sprite</tt> function
+positions the tile object <tt>sprite</tt> at the correct location
+on screen.  This function will be called any time a tile moves.  To
+do its job, it must determine the bounds of the display and do some
+trivial but annoying math to map puzzle row and column onto world-space
+x and y.</p>
+
+<pre>
+function move_piece(di, dj)
+    local next_i = curr_i + di
+    local next_j = curr_j + dj
+
+    if 1 &lt;= next_i and next_i &lt;= 4 and
+       1 &lt;= next_j and next_j &lt;= 4 then
+
+        temp                    = numbers[curr_i][curr_j]
+        numbers[curr_i][curr_j] = numbers[next_i][next_j]
+        numbers[next_i][next_j] = temp
+
+        move_sprite(sprites[numbers[curr_i][curr_j]], curr_i, curr_j)
+        move_sprite(sprites[numbers[next_i][next_j]], next_i, next_j)
+
+        curr_i = next_i
+        curr_j = next_j
+
+        E.set_entity_flag(sprites[16], E.entity_flag_hidden, not solved())
+
+        return true
+    else
+        return false
+    end
+end
+</pre>
+
+<p> The <tt>move_piece</tt> function is the meat of the fifteen
+puzzle.  The arguments <tt>di</tt> and <tt>dj</tt> indicate the row
+and column change of the blank space respectively.  The function
+begins by confirming that the move is valid--that the blank space
+would not be moving off the grid.  If valid, the contents of the
+blank (in reality, the hidden 16th piece of the puzzle) are swapped
+with the contents of the destination space.  The two sprites in
+question are repositioned, and the puzzle is checked for completeness.
+The <tt>hidden</tt> flag of the 16th piece is set to the opposite
+of the solved stutus, thus the 16th piece is displayed when the
+puzzle is solved, but not otherwise. </p>
+
+<p> The return value indicates whether the requested move is valid.
+This is used when generating random moves... </p>
+
+<pre>
+function move_random()
+    while true do
+        local d = math.random(-1, 1)
+
+        if math.random(0, 1) == 0 then
+            if move_piece(d, 0) then
+                return
+            end
+        else
+            if move_piece(0, d) then
+                return
+            end
+        end
+    end
+end
+</pre>
+
+<p> Random moves are useful for scrambling the puzzle during
+initialization, and for running the app in a non-interactive
+screensaver mode.  If we just pick a tile motion at random, there
+is no guarantee that it will be valid, so we loop until <tt>move_piece</tt>
+returns <tt>true</tt> to indicate success. </p>
+
+<pre>
+function do_timer(dt)
+    time = time + dt
+
+    if time &gt; 0.25 then
+        move_random()
+        time = 0
+        return true
+    end
+
+    return false
+end
+</pre>
+
+<p> The <tt>do_timer</tt> callback is where non-interactive random
+motions are generated.  It tracks the amount of time that has passed,
+and triggers a move after a quarter of a second.  It returns
+<tt>true</tt> to indicate that a move has occurred and the screen
+needs to be redrawn. </p>
+
+<pre>
+function do_keyboard(k, s)
+    if s then
+        if k == 276 then move_piece( 0,  1) end
+        if k == 275 then move_piece( 0, -1) end
+        if k == 273 then move_piece( 1,  0) end
+        if k == 274 then move_piece(-1,  0) end
+
+        if k == 282 then E.set_idle(true)  end
+        if k == 283 then E.set_idle(false) end
+    end
+    return true
+end
+</pre>
+
+<p> The <tt>do_keyboard</tt> callback is where interactive motions
+are generated.  Arrow-key presses trigger moves.  The F1 and F2
+keys enable and disable the <tt>do_timer</tt> callback, in effect
+putting the puzzle into non-interactive mode.  For simplicity, all
+keypresses trigger a screen update.  This is unnecessary, but
+brief.</p>
+
+<pre>
+function do_start()
+    local t, l, b, r = E.get_viewport()
+
+    local w = r - l
+    local h = t - b
+
+    camera = E.create_camera(E.camera_type_orthogonal)
+    E.set_entity_flag(camera, E.entity_flag_unlit, true);
+
+    for i = 1, 16 do
+        sprites[i] = E.create_sprite(image_file)
+
+        local sw, sh = E.get_sprite_size(sprites[i])
+
+        E.parent_entity(sprites[i], camera)
+        E.set_entity_scale(sprites[i], 0.25 * w / sw,
+                                       0.25 * h / sh, 1.0)
+    end
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            local x0 = (j - 1) / 4
+            local x1 = (j - 0) / 4
+            local y0 = (4 - i) / 4
+            local y1 = (5 - i) / 4
+
+            move_sprite(sprites[numbers[i][j]], i, j)
+            E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
+        end
+    end
+
+    return true
+end
+</pre>
+
+<p> Finally, here is the <tt>do_start</tt> callback.  This function
+is called immediately after Electro starts.  It is responsible for
+doing any and all initialization necessary to get the application
+off the ground. </p>
+
+<p> For the fifteen puzzle, we begin by creating an orthogonal
+camera, which will be the root of our hierarchy.  We want all of
+our puzzle pieces to be rendered at full brightness, so we disable
+lighting on the entire scene by setting the <tt>unlit</tt> flag at
+this root.  We then create 16 child sprite objects to represent the
+puzzle tiles.  Together, these 16 sprites should fill the display,
+so we must determine both the size of the display and the size of
+the sprite in order to scale each sprite to 1/16th of the area of
+the display.</p>
+
+<p> Then, we create the <tt>numbers</tt> table.  It is simply a 4x4
+table of tables initialized to a solved configuration.  We use the
+row and column numbers of this table to position our 16 sprites on
+screen.  We also use each sprite's initial row and column number
+to specify the sprite bounds, that is, we determine what subset of
+the image should be mapped onto each sprite. </p>
+
+<p> That is all there is to it. </p>
+
+<!---------------------------------------------------------------------------->
+
+<h2> The full source of the Fifteen Puzzle example </h2>
+<pre>
+image_file = "venus.png"
 
 camera  = nil
 numbers = { }
@@ -329,8 +585,13 @@ curr_j = 4
 time   = 0
 
 function move_sprite(sprite, i, j)
-    E.set_entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
-                                  view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
+    local t, l, b, r = E.get_viewport()
+
+    local w = r - l
+    local h = t - b
+
+    E.set_entity_position(sprite, l + w * (j - 1) / 4 + w / 8,
+                                  b + h * (4 - i) / 4 + h / 8, 0)
 end
 
 function solved()
@@ -354,8 +615,8 @@ function move_piece(di, dj)
 
     -- Confirm that the move is valid.
 
-    if 1 <= next_i and next_i <= 4 and
-       1 <= next_j and next_j <= 4 then
+    if 1 &lt;= next_i and next_i &lt;= 4 and
+       1 &lt;= next_j and next_j &lt;= 4 then
 
         -- Swap the moving piece with the blank piece.
 
@@ -398,20 +659,13 @@ function move_random()
 end
 
 function do_start()
+    local t, l, b, r = E.get_viewport()
 
-    view_l, view_r, view_b, view_t = E.get_viewport()
-    view_w = view_r - view_l
-    view_h = view_t - view_b
+    local w = r - l
+    local h = t - b
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);
-
-    -- Initialize an array that maps rows and columns onto puzzle pieces.
-
-    numbers[1] = {  1,  2,  3,  4 }
-    numbers[2] = {  5,  6,  7,  8 }
-    numbers[3] = {  9, 10, 11, 12 }
-    numbers[4] = { 13, 14, 15, 16 }
 
     -- Add 16 sprites and scale each to 1/16th the size of the display.
 
@@ -421,9 +675,16 @@ function do_start()
         local sw, sh = E.get_sprite_size(sprites[i])
 
         E.parent_entity(sprites[i], camera)
-        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
-                                       0.25 * view_h / sh, 1.0)
+        E.set_entity_scale(sprites[i], 0.25 * w / sw,
+                                       0.25 * h / sh, 1.0)
     end
+
+    -- Initialize an array that maps rows and columns onto puzzle pieces.
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
 
     -- Assign 1/16th of the image to each sprite.
 
@@ -462,7 +723,7 @@ end
 function do_timer(dt)
     time = time + dt
 
-    if time > 0.25 then
+    if time &gt; 0.25 then
         move_random()
         time = 0
         return true
@@ -470,7 +731,6 @@ function do_timer(dt)
 
     return false
 end
-
 </pre>
 
 <!---------------------------------------------------------------------------->
