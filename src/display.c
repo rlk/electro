@@ -59,6 +59,12 @@ static void default_host(struct host *H)
     H->tile[0].o[2]  = -1.0f;
     H->tile[0].r[0]  =  1.0f;
     H->tile[0].u[1]  =  1.0f * a;
+
+    H->tile[0].o[0]  = -5.0f;
+    H->tile[0].o[1]  =  0.0f;
+    H->tile[0].o[2]  = -5.0f;
+    H->tile[0].r[0]  =  10.0f;
+    H->tile[0].u[1]  =  10.0f;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -206,12 +212,14 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
         }
         glMatrixMode(GL_MODELVIEW);
 
+        glLoadIdentity();
+
         return i + 1;
     }
     return 0;
 }
 
-int draw_persp(struct frustum *F1, const float p[3], float N, float F, int i)
+int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 {
     if (i < Host.n)
     {
@@ -223,11 +231,16 @@ int draw_persp(struct frustum *F1, const float p[3], float N, float F, int i)
         float p1[3];
         float p2[3];
         float p3[3];
-        float n[3];
 
-        n[0] = o[0] - p[0];
-        n[1] = o[1] - p[1];
-        n[2] = o[2] - p[2];
+        float R[3];
+        float U[3];
+        float N[3];
+        float c[3];
+        float k;
+        float d;
+
+        float M[16];
+        float I[16];
 
         /* Compute the frustum planes. */
 
@@ -259,26 +272,70 @@ int draw_persp(struct frustum *F1, const float p[3], float N, float F, int i)
         glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
                    Host.tile[i].win_w, Host.tile[i].win_h);
 
+        /* Compute the projection. */
+
+        R[0] = Host.tile[i].r[0];
+        R[1] = Host.tile[i].r[1];
+        R[2] = Host.tile[i].r[2];
+
+        U[0] = Host.tile[i].u[0];
+        U[1] = Host.tile[i].u[1];
+        U[2] = Host.tile[i].u[2];
+
+        v_cross(N, R, U);
+
+        k = (float) sqrt(R[0] * R[0] + R[1] * R[1] + R[2] * R[2]);
+        R[0] /= k;
+        R[1] /= k;
+        R[2] /= k;
+        k = (float) sqrt(U[0] * U[0] + U[1] * U[1] + U[2] * U[2]);
+        U[0] /= k;
+        U[1] /= k;
+        U[2] /= k;
+        k = (float) sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
+        N[0] /= k;
+        N[1] /= k;
+        N[2] /= k;
+
+        d = N[0] * (o[0] - p[0]) + 
+            N[1] * (o[1] - p[1]) +
+            N[2] * (o[2] - p[2]);
+
+        c[0] = p[0] + N[0] * d;
+        c[1] = p[1] + N[1] * d;
+        c[2] = p[2] + N[2] * d;
+
         /* Apply the projection. */
 
         glMatrixMode(GL_PROJECTION);
         {
-            /*
-            GLdouble L = -N * (n[0]         /  n[2]);
-            GLdouble R = -N * (n[0] + r[0]) / (n[2] + r[2]);
-            GLdouble B = -N * (n[1]         /  n[2]);
-            GLdouble T = -N * (n[1] + u[1]) / (n[2] + u[2]);
-            */
-
-            GLdouble L = o[0] - p[0];
-            GLdouble R = o[0] - p[0] + r[0];
-            GLdouble B = o[1] - p[1];
-            GLdouble T = o[1] - p[1] + u[1];
+            GLdouble fL = -fN * (R[0] * (p0[0] - c[0]) +
+                                 R[1] * (p0[1] - c[1]) +
+                                 R[2] * (p0[2] - c[2])) / d;
+            GLdouble fR = -fN * (R[0] * (p1[0] - c[0]) +
+                                 R[1] * (p1[1] - c[1]) +
+                                 R[2] * (p1[2] - c[2])) / d;
+            GLdouble fB = -fN * (U[0] * (p0[0] - c[0]) +
+                                 U[1] * (p0[1] - c[1]) +
+                                 U[2] * (p0[2] - c[2])) / d;
+            GLdouble fT = -fN * (U[0] * (p3[0] - c[0]) +
+                                 U[1] * (p3[1] - c[1]) +
+                                 U[2] * (p3[2] - c[2])) / d;
 
             glLoadIdentity();
-            glFrustum(L, R, B, T, N, F);
+            glFrustum(fL, fR, fB, fT, fN, fF);
         }
         glMatrixMode(GL_MODELVIEW);
+
+        M[0] = R[0]; M[4] = U[0]; M[8]  = N[0]; M[12] = 0.0f;
+        M[1] = R[1]; M[5] = U[1]; M[9]  = N[1]; M[13] = 0.0f;
+        M[2] = R[2]; M[6] = U[2]; M[10] = N[2]; M[14] = 0.0f;
+        M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
+
+        m_invt(I, M);
+
+        glLoadIdentity();
+        glMultMatrixf(I);
 
         return i + 1;
     }

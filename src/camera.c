@@ -58,7 +58,7 @@ int init_camera(void)
 int draw_tile(int cd, struct frustum *F1, int i)
 {
     if (C[cd].type == CAMERA_PERSP)
-        return draw_persp(F1, C[cd].offset, 1.f, 10000.f, i);
+        return draw_persp(F1, C[cd].offset, 1.0f, 10000.f, i);
 
     if (C[cd].type == CAMERA_ORTHO)
         return draw_ortho(F1, -1000.f,  1000.f, i);
@@ -91,7 +91,6 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
         while ((i = draw_tile(cd, &F1, i)))
         {
-            glLoadIdentity();
             transform_entity(id, &F2, &F1);
 
             /* Render all children using this camera. */

@@ -16,23 +16,21 @@ function do_start()
     ortho  = E.create_camera(E.camera_type_orthogonal)
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
+    scene  = E.create_pivot()
     pivot  = E.create_pivot()
     thing  = E.create_object("box.obj")
     floor  = E.create_object("checker.obj")
-    sprite = E.create_sprite("box_rgb.jpg")
 
     E.parent_entity(light, camera)
-    E.parent_entity(pivot, light)
+    E.parent_entity(scene, light)
+    E.parent_entity(pivot, scene)
     E.parent_entity(thing, pivot)
     E.parent_entity(floor, pivot)
-    E.parent_entity(sprite, ortho)
 
     E.set_entity_position(light, 0,  2.0,  2.0)
-    E.set_entity_position(pivot, 0, -2.0, -2.0)
+    E.set_entity_position(scene, 0, -2.0, -2.0)
+    E.set_entity_position(pivot, 0,  3.0, -10.0)
     E.set_entity_position(thing, 0,  1.0,  0.0)
-    E.set_entity_position(sprite, x + w / 2, y + h / 2, 0)
-
-    E.set_entity_position(camera, 0, 0, 5)
 
     E.set_background(1, 1, 1, 0, 0.5, 1)
 
@@ -42,8 +40,8 @@ end
 function do_timer(dt)
         local x, y, z = E.get_tracking()
 
+        E.set_entity_position(camera, x, y, z)
         E.set_camera_offset(camera, x, y, z)
-        print(x, y, z)
         
         return true
 end

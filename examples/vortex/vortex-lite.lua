@@ -35,6 +35,7 @@ end
 
 function position_camera()
     local rot_x, rot_y, rot_z = E.get_entity_rotation(camera)
+    local x, y, z = E.get_tracking()
 
     local T = math.pi * rot_y / 180
     local P = math.pi * rot_x / 180
@@ -43,7 +44,8 @@ function position_camera()
     pos_y = -math.sin(P)               * dist
     pos_z =  math.cos(P) * math.cos(T) * dist
 
-    E.set_entity_position(camera, pos_x, pos_y, pos_z)
+    E.set_entity_position(camera, pos_x + x, pos_y + y, pos_z + z)
+    E.set_camera_offset(camera, x, y, z)
 end
 
 -------------------------------------------------------------------------------
@@ -73,6 +75,8 @@ function do_start()
     E.set_entity_scale(hilite, 1 / 256, 1 / 256, 1 / 256)
     E.set_entity_scale(marker, 1 / 128, 1 / 128, 1 / 128)
 
+    E.enable_timer(true)        
+
     return true
 end
 
@@ -98,8 +102,6 @@ function do_keyboard(k, s)
     if s and k == 285 then -- F4
         spin = spin - 1
     end
-
-    E.enable_timer(spin ~= 0)
 
     return true
 end
