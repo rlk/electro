@@ -8,10 +8,10 @@ TARG= vortex
 
 CFLAGS= $(shell sdl-config --cflags) -g
 
-ifeq (($shell uname), Darwin)
-	LIBS= $(shell sdl-config --libs) -lpng -lz -lGL -lGLU -lm
-else
+ifeq ($(shell uname), Darwin)
 	LIBS= $(shell sdl-config --libs) -lpng -lz -lm
+else
+	LIBS= $(shell sdl-config --libs) -lpng -lz -lGL -lGLU -lm
 endif
 
 #------------------------------------------------------------------------------
