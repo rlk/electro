@@ -153,6 +153,8 @@ void server(int np, int argc, char *argv[])
 
         viewport_init(np);
 
+        /* Parse command line options.  Load scripts and data files. */
+
         while ((c = getopt(argc, argv, "hs:f:t:o:")) > 0)
             switch (c)
             {
@@ -166,6 +168,8 @@ void server(int np, int argc, char *argv[])
 
         status_init();
         viewport_sync(0, np);
+
+        /* Initialize the main server window. */
 
         if (SDL_Init(SDL_INIT_VIDEO) == 0)
         {
@@ -183,12 +187,17 @@ void server(int np, int argc, char *argv[])
 
                 server_init();
 
+                /* Block on events.  Service them as they arrive. */
+
                 while (SDL_WaitEvent(NULL))
                     if (server_loop() == 0)
                         break;
             }
+            else fprintf(stderr, "%s\n", SDL_GetError());
+
             SDL_Quit();
         }
+        else fprintf(stderr, "%s\n", SDL_GetError());
 
         script_free();
     }

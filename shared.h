@@ -41,17 +41,17 @@ struct event
 
 struct viewport
 {
-    char name[NAMELEN];
-    int gx;
-    int gy;
-    int lx;
-    int ly;
-    int w;
-    int h;
+    char name[NAMELEN];      /* Node host name                               */
+    float X;                 /* Window X position, relative to desktop       */
+    float Y;                 /* Window Y position, relative to desktop       */
+    float x;                 /* Tile X position, relative to center of array */
+    float y;                 /* Tile Y position, relative to center of array */
+    float w;                 /* Tile width                                   */
+    float h;                 /* Tile height                                  */
 };
 
 void viewport_init(int);
-void viewport_tile(const char *, int, int, int, int, int, int);
+void viewport_tile(const char *, float, float, float, float, float, float);
 void viewport_sync(int, int);
 
 /*---------------------------------------------------------------------------*/

@@ -120,6 +120,8 @@ void client(int np, int id)
         int w = status_get_viewport_w();
         int h = status_get_viewport_h();
 
+        printf("%d %d\n", w, h);
+
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
@@ -132,8 +134,11 @@ void client(int np, int id)
             while (client_loop())
                 client_recv_event();
         }
+        else fprintf(stderr, "%s\n", SDL_GetError());
+
         SDL_Quit();
     }
+    else fprintf(stderr, "%s\n", SDL_GetError());
 }
 
 /*---------------------------------------------------------------------------*/

@@ -140,8 +140,7 @@ int script_init(void)
 
         return 1;
     }
-    else
-        return 0;
+    return 0;
 }
 
 void script_free(void)

@@ -33,19 +33,19 @@ void viewport_init(int n)
     V_num = 0;
 }
 
-void viewport_tile(const char *name, int gx, int gy,
-                                     int lx, int ly, int w, int h)
+void viewport_tile(const char *name, float X, float Y,
+                                     float x, float y, float w, float h)
 {
     if (V_num < V_max)
     {
         strncpy(Vi[V_num].name, name, NAMELEN);
 
-        Vi[V_num].gx = gx;
-        Vi[V_num].gy = gy;
-        Vi[V_num].lx = lx;
-        Vi[V_num].ly = ly;
-        Vi[V_num].w  =  w;
-        Vi[V_num].h  =  h;
+        Vi[V_num].X = X;
+        Vi[V_num].Y = Y;
+        Vi[V_num].x = x;
+        Vi[V_num].y = y;
+        Vi[V_num].w = w;
+        Vi[V_num].h = h;
 
         V_num++;
     }
@@ -62,21 +62,21 @@ void viewport_sync(int i, int n)
 
     gethostname(Vt.name, NAMELEN);
 
-    Vt.gx =   0;
-    Vt.gy =   0;
-    Vt.lx =   0;
-    Vt.ly =   0;
-    Vt.w  = 800;
-    Vt.h  = 600;
+    Vt.X =    0.0f;
+    Vt.Y =    0.0f;
+    Vt.x = -400.0f;
+    Vt.y = -300.0f;
+    Vt.w =  800.0f;
+    Vt.h =  600.0f;
 
-    /* Gather all names at the root. */
+    /* Gather all host names at the root. */
 
     if ((err = MPI_Gather(&Vt, sz, MPI_BYTE,
                            Vo, sz, MPI_BYTE, 0, MPI_COMM_WORLD))
             != MPI_SUCCESS)
         mpi_error(err);
 
-    /* If this is the root, assign viewports by matching names. */
+    /* If this is the root, assign viewports by matching host names. */
 
     if (i == 0)
     {
@@ -89,12 +89,12 @@ void viewport_sync(int i, int n)
                 {
                     /* A name matches.  Copy the viewport definition. */
 
-                    Vo[j].gx = Vi[k].gx;
-                    Vo[j].gy = Vi[k].gy;
-                    Vo[j].lx = Vi[k].lx;
-                    Vo[j].ly = Vi[k].ly;
-                    Vo[j].w  = Vi[k].w;
-                    Vo[j].h  = Vi[k].h;
+                    Vo[j].X = Vi[k].X;
+                    Vo[j].Y = Vi[k].Y;
+                    Vo[j].x = Vi[k].x;
+                    Vo[j].y = Vi[k].y;
+                    Vo[j].w = Vi[k].w;
+                    Vo[j].h = Vi[k].h;
 
                     /* Destroy the name to ensure it matches at most once. */
 
@@ -111,9 +111,11 @@ void viewport_sync(int i, int n)
             != MPI_SUCCESS)
         mpi_error(err);
 
+    printf("got %f %f %f %f %f %f\n", Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+
     /* Apply this client's viewport. */
 
-    status_set_viewport(Vt.gx, Vt.gy, Vt.lx, Vt.ly, Vt.w, Vt.h);
+    if (i) status_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -24,10 +24,10 @@ static float camera_dist;
 static float camera_magn;
 static float camera_zoom;
 
-static float viewport_gx;
-static float viewport_gy;
-static float viewport_lx;
-static float viewport_ly;
+static float viewport_X;
+static float viewport_Y;
+static float viewport_x;
+static float viewport_y;
 static float viewport_w;
 static float viewport_h;
 
@@ -48,24 +48,26 @@ void status_init(void)
     camera_magn   =  128.0f;
     camera_zoom   =    0.5f;
 
-    viewport_gx =   0;
-    viewport_gy =   0;
-    viewport_lx =   0;
-    viewport_ly =   0;
-    viewport_w  = 800;
-    viewport_h  = 600;
+    viewport_X =    0.0f;
+    viewport_Y =    0.0f;
+    viewport_x = -400.0f;
+    viewport_y = -300.0f;
+    viewport_w =  800.0f;
+    viewport_h =  600.0f;
 }
 
 void status_draw_camera(void)
 {
     /* Load an off-axis projection for the current tile. */
 
+    printf("%f %f %f %f\n", viewport_x, viewport_y, viewport_w, viewport_h);
+
     glMatrixMode(GL_PROJECTION);
     {
-        GLdouble l = camera_zoom *  viewport_gx               / viewport_w;
-        GLdouble r = camera_zoom * (viewport_gx + viewport_w) / viewport_w;
-        GLdouble b = camera_zoom *  viewport_gy               / viewport_h;
-        GLdouble t = camera_zoom * (viewport_gy + viewport_h) / viewport_h;
+        GLdouble l = camera_zoom *  viewport_x;
+        GLdouble r = camera_zoom * (viewport_x + viewport_w);
+        GLdouble b = camera_zoom *  viewport_y;
+        GLdouble t = camera_zoom * (viewport_y + viewport_h);
 
         glLoadIdentity();
 
@@ -95,19 +97,24 @@ void status_draw_camera(void)
 
 /*---------------------------------------------------------------------------*/
 
-void status_set_viewport(int gx, int gy, int lx, int ly, int w, int h)
+void status_set_viewport(float X, float Y, float x, float y, float w, float h)
 {
     char buf[32];
 
-    viewport_gx = gx;
-    viewport_gy = gy;
-    viewport_lx = lx;
-    viewport_ly = ly;
-    viewport_w  =  w;
-    viewport_h  =  h;
+    printf("set %f %f %f %f %f\n", X, Y, x, y, w, h);
 
-    sprintf(buf, "%d, %d", viewport_lx, viewport_ly);
+    viewport_X = X;
+    viewport_Y = Y;
+    viewport_x = x;
+    viewport_y = y;
+    viewport_w = w;
+    viewport_h = h;
+
+    /* SDL looks to the environment for window placement. */
+    /*
+    sprintf(buf, "%d, %d", (int) X, (int) Y);
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+    */
 }
 
 void status_set_camera_pos(float x, float y, float z)
@@ -143,12 +150,12 @@ void status_set_camera_zoom(float d)
 
 int status_get_viewport_w(void)
 {
-    return viewport_w;
+    return (int) viewport_w;
 }
 
 int status_get_viewport_h(void)
 {
-    return viewport_h;
+    return (int) viewport_h;
 }
 
 void status_get_camera_pos(float *x, float *y, float *z)

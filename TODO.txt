@@ -1,3 +1,4 @@
-Zoom when distance hits 0.0
+zoom when distance hits 0.0
 smarter event queueing
 remove viewer
+resolve path issues

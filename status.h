@@ -21,7 +21,7 @@ void status_draw_camera(void);
 
 /*---------------------------------------------------------------------------*/
 
-void  status_set_viewport(int, int, int, int, int, int);
+void  status_set_viewport(float, float, float, float, float, float);
 
 void  status_set_camera_pos(float, float, float);
 void  status_set_camera_rot(float, float, float);
