@@ -13,6 +13,8 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
+#include "frustum.h"
+
 /*---------------------------------------------------------------------------*/
 
 #define LIGHT_POSITIONAL  1
@@ -28,7 +30,7 @@ struct light
 /*---------------------------------------------------------------------------*/
 
 int  init_light(void);
-void draw_light(int, int, const float[16], float);
+void draw_light(int, int, const struct frustum *, float);
 
 int  send_create_light(int);
 void recv_create_light(void);

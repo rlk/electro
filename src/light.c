@@ -50,9 +50,9 @@ int init_light(void)
     return 0;
 }
 
-void draw_light(int id, int ld, const float V[16], float a)
+void draw_light(int id, int ld, const struct frustum *F0, float a)
 {
-    float W[16];
+    struct frustum F1;
 
     if (light_exists(ld))
     {
@@ -62,7 +62,7 @@ void draw_light(int id, int ld, const float V[16], float a)
             GLenum light = GL_LIGHT0 + ld;
             GLfloat p[4];
 
-            transform_entity(id, W, V);
+            transform_entity(id, &F1, F0);
 
             /* Determine the homogenous coordinate lightsource position. */
 
@@ -79,7 +79,7 @@ void draw_light(int id, int ld, const float V[16], float a)
             glLightfv(light, GL_DIFFUSE, L[ld].d);
             glLightfv(light, GL_POSITION, p);
 
-            draw_entity_list(id, W, a * get_entity_alpha(id));
+            draw_entity_list(id, &F1, a * get_entity_alpha(id));
         }
         glPopMatrix();
         glPopAttrib();

@@ -14,6 +14,7 @@
 #define ENTITY_H
 
 #include "opengl.h"
+#include "frustum.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -64,8 +65,8 @@ int  entity_exists(int);
 int  entity_data(int);
 int  entity_type(int);
 
-void transform_entity(int, float[16], const float[16]);
-void draw_entity_list(int,            const float[16], float);
+void transform_entity(int, struct frustum *, const struct frustum *);
+void draw_entity_list(int,                   const struct frustum *, float);
 
 /*---------------------------------------------------------------------------*/
 

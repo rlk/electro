@@ -1,22 +1,13 @@
 frustum structure
+zoom remove?
+logo
+camera offset per tile (for geowall and planar)
 
-flicker?
-regenerate galaxy files
-
-analyze performance
-    find the bottleneck on nico
-        free-run on null scene
-        free-run on zero magnitude
-    free-run may be ok since MPI restructuring
-
-css print
+CSS media
 Scale and billboard frustum (thorough test)
-
-TTF support (distribute the ttf?  Just the image?)
-asteroids text overlay models?
-
 camera near/far (automatic? (entity bounding sphere?))
 
 Improve assertions (delineate necessary thing_exists vs thing_assert)
 
 Particle system? (stars?)
+TTF support (distribute the ttf?  Just the image?)

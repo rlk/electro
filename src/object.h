@@ -14,6 +14,7 @@
 #define OBJECT_H
 
 #include "opengl.h"
+#include "frustum.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -73,7 +74,7 @@ struct object
 /*---------------------------------------------------------------------------*/
 
 int  init_object(void);
-void draw_object(int, int, const float[16], float);
+void draw_object(int, int, const struct frustum *, float);
 
 int  send_create_object(const char *);
 void recv_create_object(void);

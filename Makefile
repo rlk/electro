@@ -1,5 +1,10 @@
 PREFIX=/usr/local/Electro
-SDL_CONFIG=sdl-config
+
+ifeq ($(shell uname), Darwin)
+	SDL_CONFIG=/sw/bin/sdl-config
+else
+	SDL_CONFIG=/usr/bin/sdl-config
+endif
 
 #------------------------------------------------------------------------------
 
@@ -57,6 +62,7 @@ OBJS=	src/opengl.o   \
 	src/utility.o  \
 	src/joystick.o \
 	src/viewport.o \
+	src/display.o  \
 	src/console.o  \
 	src/buffer.o   \
 	src/server.o   \

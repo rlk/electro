@@ -95,9 +95,9 @@ static void draw_galaxy_arrays(int gd)
     }
 }
 
-void draw_galaxy(int id, int gd, const float V[16], float a)
+void draw_galaxy(int id, int gd, const struct frustum *F0, float a)
 {
-    float W[16];
+    struct frustum F1;
 
     if (galaxy_exists(gd))
     {
@@ -105,7 +105,7 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
         {
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, W, V);
+            transform_entity(id, &F1, F0);
 
             glPushAttrib(GL_ENABLE_BIT  |
                          GL_TEXTURE_BIT |
@@ -134,14 +134,14 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
 
                 /* Render all stars. */
 
-                node_draw(G[gd].N, 0, 0, V, G[gd].bound);
+                node_draw(G[gd].N, 0, 0, &F1, G[gd].bound);
             }
             glPopClientAttrib();
             glPopAttrib();
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, W, a * get_entity_alpha(id));
+            draw_entity_list(id, &F1, a * get_entity_alpha(id));
         }
         glPopMatrix();
     }

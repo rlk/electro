@@ -156,9 +156,9 @@ static void ortho_camera(float V[16], const float pos[3], float T, float P,
     V[15] =  V[12] * pos[0] + V[13] * pos[1] + V[14] * pos[2] - r;
 }
 
-static void persp_camera(float V[16], const float pos[3], float T, float P,
-                                                          float l, float r,
-                                                          float b, float t)
+static void persp_camera(struct frustum *F, const float p[3], float T, float P,
+                                                              float l, float r,
+                                          b                   float b, float t)
 {
     const float n = CAMERA_NEAR;
 
@@ -171,47 +171,35 @@ static void persp_camera(float V[16], const float pos[3], float T, float P,
     v[1] =  (float) (sin(P));
     v[2] = -(float) (cos(P) * cos(T));
 
-    /* Find the view right vector. */
-
-    R[0] =  (float) cos(T);
-    R[1] =  0;
-    R[2] = -(float) sin(T);
-
-    /* Find the view up vector. */
-    
-    U[0] = R[1] * v[2] - R[2] * v[1];
-    U[1] = R[2] * v[0] - R[0] * v[2];
-    U[2] = R[0] * v[1] - R[1] * v[0];
-
     /* Find the view center.*/
 
-    c[0] = pos[0] + v[0] * n;
-    c[1] = pos[1] + v[1] * n;
-    c[2] = pos[2] + v[2] * n;
+    F->c[0] = p[0] + v[0] * n;
+    F->c[1] = p[1] + v[1] * n;
+    F->c[2] = p[2] + v[2] * n;
 
     /* Find the bottom left position. */
 
-    A[0] = c[0] + l * R[0] + b * U[0];
-    A[1] = c[1] + l * R[1] + b * U[1];
-    A[2] = c[2] + l * R[2] + b * U[2];
+    A[0] = F->c[0] + l * F->r[0] + b * F->u[0];
+    A[1] = F->c[1] + l * F->r[1] + b * F->u[1];
+    A[2] = F->c[2] + l * F->r[2] + b * F->u[2];
 
     /* Find the bottom right position. */
 
-    B[0] = c[0] + r * R[0] + b * U[0];
-    B[1] = c[1] + r * R[1] + b * U[1];
-    B[2] = c[2] + r * R[2] + b * U[2];
+    B[0] = F->c[0] + r * F->r[0] + b * F->u[0];
+    B[1] = F->c[1] + r * F->r[1] + b * F->u[1];
+    B[2] = F->c[2] + r * F->r[2] + b * F->u[2];
 
     /* Find the top right position. */
 
-    C[0] = c[0] + r * R[0] + t * U[0];
-    C[1] = c[1] + r * R[1] + t * U[1];
-    C[2] = c[2] + r * R[2] + t * U[2];
+    C[0] = F->c[0] + r * F->r[0] + t * F->u[0];
+    C[1] = F->c[1] + r * F->r[1] + t * F->u[1];
+    C[2] = F->c[2] + r * F->r[2] + t * F->u[2];
 
     /* Find the top left position. */
 
-    D[0] = c[0] + l * R[0] + t * U[0];
-    D[1] = c[1] + l * R[1] + t * U[1];
-    D[2] = c[2] + l * R[2] + t * U[2];
+    D[0] = F->c[0] + l * F->r[0] + t * F->u[0];
+    D[1] = F->c[1] + l * F->r[1] + t * F->u[1];
+    D[2] = F->c[2] + l * F->r[2] + t * F->u[2];
 
     /* Find the view frustum planes. */
 
@@ -233,9 +221,9 @@ int init_camera(void)
     return 0;
 }
 
-void draw_camera(int id, int cd, const float V[16], float a)
+void draw_camera(int id, int cd, const struct frustum *F0, float a)
 {
-    float W[16];
+    struct frustum F1;
 
     float pos[3];
     float rot[3];
@@ -275,7 +263,7 @@ void draw_camera(int id, int cd, const float V[16], float a)
                 b = -C[cd].zoom * viewport_y1;
                 t = -C[cd].zoom * viewport_y0;
 
-                ortho_camera(W, pos, T, P, l, r, b, t);
+                ortho_camera(F1, pos, T, P, l, r, b, t);
 
                 glOrtho(l, r, b, t, -CAMERA_FAR, CAMERA_FAR);
             }
@@ -286,7 +274,7 @@ void draw_camera(int id, int cd, const float V[16], float a)
                 b = -C[cd].zoom * viewport_y1 / viewport_W;
                 t = -C[cd].zoom * viewport_y0 / viewport_W;
 
-                persp_camera(W, pos, T, P, l, r, b, t);
+                persp_camera(F1, pos, T, P, l, r, b, t);
 
                 glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR);
             }
@@ -307,7 +295,7 @@ void draw_camera(int id, int cd, const float V[16], float a)
 
         /* Render all children using this camera. */
 
-        draw_entity_list(id, W, a * get_entity_alpha(id));
+        draw_entity_list(id, F1, a * get_entity_alpha(id));
     }
 }
 

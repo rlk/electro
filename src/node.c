@@ -99,44 +99,18 @@ int node_sort(struct node *N, int n0, int n1,
 
 /*---------------------------------------------------------------------------*/
 
-static int node_test(const float V[4], const float b[6])
-{
-    const float k00 = b[0] * V[0];
-    const float k11 = b[1] * V[1];
-    const float k22 = b[2] * V[2];
-    const float k30 = b[3] * V[0];
-    const float k41 = b[4] * V[1];
-    const float k52 = b[5] * V[2];
-
-    int c = 0;
-
-    if (k00 + k11 + k22 > V[3]) c++;
-    if (k00 + k11 + k52 > V[3]) c++;
-    if (k00 + k41 + k22 > V[3]) c++;
-    if (k00 + k41 + k52 > V[3]) c++;
-    if (k30 + k11 + k22 > V[3]) c++;
-    if (k30 + k11 + k52 > V[3]) c++;
-    if (k30 + k41 + k22 > V[3]) c++;
-    if (k30 + k41 + k52 > V[3]) c++;
-
-    return c;
-}
-
 void node_draw(const struct node *N, int n, int i,
-               const float V[16], const float b[6])
+               const struct frustum *F, const float b[6])
 {
-    int c0, c1, c2, c3;
+    int r = test_frustum(F, b);
 
     /* If this node is entirely invisible, prune the tree. */
 
-    if (!(c0 = node_test(V +  0, b))) return;
-    if (!(c1 = node_test(V +  4, b))) return;
-    if (!(c2 = node_test(V +  8, b))) return;
-    if (!(c3 = node_test(V + 12, b))) return;
+    if (r < 0) return;
 
     /* If this is a leaf, or is entirely visible, draw it. */
 
-    if (N[n].nodeL == 0 || N[n].nodeR == 0 || c0 + c1 + c2 + c3 == 32)
+    if (N[n].nodeL == 0 || N[n].nodeR == 0 || r > 0)
         glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
 
     else

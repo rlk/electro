@@ -13,6 +13,7 @@
 #ifndef GALAXY_H
 #define GALAXY_H
 
+#include "frustum.h"
 #include "node.h"
 #include "star.h"
 
@@ -36,7 +37,7 @@ struct galaxy
 /*---------------------------------------------------------------------------*/
 
 int  init_galaxy(void);
-void draw_galaxy(int, int, const float[16], float);
+void draw_galaxy(int, int, const struct frustum *, float);
 int  pick_galaxy(int, int, const float[3], const float[3]);
 
 void prep_galaxy(void);

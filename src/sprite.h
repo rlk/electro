@@ -13,6 +13,8 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
+#include "frustum.h"
+
 /*---------------------------------------------------------------------------*/
 
 struct sprite
@@ -28,7 +30,7 @@ struct sprite
 /*---------------------------------------------------------------------------*/
 
 int  init_sprite(void);
-void draw_sprite(int, int, const float[16], float);
+void draw_sprite(int, int, const struct frustum *, float);
 
 int  send_create_sprite(const char *);
 void recv_create_sprite(void);

@@ -88,7 +88,7 @@ int entity_type(int id)
 
 /*---------------------------------------------------------------------------*/
 
-void transform_entity(int id, float frustum1[16], const float frustum0[16])
+void transform_entity(int id, struct frustum *F1, const struct frustum *F0)
 {
     float M[16];
     float I[16];
@@ -166,13 +166,13 @@ void transform_entity(int id, float frustum1[16], const float frustum0[16])
 
     /* Transform the view frustum. */
 
-    m_pfrm(frustum1 +  0, M, frustum0 +  0);
-    m_pfrm(frustum1 +  4, M, frustum0 +  4);
-    m_pfrm(frustum1 +  8, M, frustum0 +  8);
-    m_pfrm(frustum1 + 12, M, frustum0 + 12);
+    m_pfrm(V1[0], M, V0[0]);
+    m_pfrm(V1[1], M, V0[1]);
+    m_pfrm(V1[2], M, V0[2]);
+    m_pfrm(V1[3], M, V0[3]);
 }
 
-void draw_entity_list(int id, const float V[16], float a)
+void draw_entity_list(int id, const struct frustum *F0, float a)
 {
     int jd;
 
@@ -216,12 +216,12 @@ void draw_entity_list(int id, const float V[16], float a)
 
                 switch (E[jd].type)
                 {
-                case TYPE_CAMERA: draw_camera(jd, E[jd].data, V, a); break;
-                case TYPE_SPRITE: draw_sprite(jd, E[jd].data, V, a); break;
-                case TYPE_OBJECT: draw_object(jd, E[jd].data, V, a); break;
-                case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, V, a); break;
-                case TYPE_LIGHT:  draw_light (jd, E[jd].data, V, a); break;
-                case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, V, a); break;
+                case TYPE_CAMERA: draw_camera(jd, E[jd].data, F0, a); break;
+                case TYPE_SPRITE: draw_sprite(jd, E[jd].data, F0, a); break;
+                case TYPE_OBJECT: draw_object(jd, E[jd].data, F0, a); break;
+                case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, F0, a); break;
+                case TYPE_LIGHT:  draw_light (jd, E[jd].data, F0, a); break;
+                case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, F0, a); break;
                 }
             }
             glPopAttrib();
