@@ -10,8 +10,10 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -21,6 +23,7 @@
 #endif
 
 #include "utility.h"
+#include "console.h"
 
 /*---------------------------------------------------------------------------*/
 /* File path parsing                                                         */
@@ -126,6 +129,22 @@ int balloc(void **buf, int *len, size_t siz, int (*occupied)(int))
     else i = -1;
 
     return i;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void *error(char *format, ...)
+{
+    char string[MAXSTR];
+    va_list args;
+
+    va_start(args, format);
+    vsnprintf(string, MAXSTR, format, args);
+    va_end(args);
+
+    error_console(string);
+
+    return NULL;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 
 #include "opengl.h"
+#include "utility.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -46,7 +47,7 @@ GLboolean opengl_need(const char *extension)
         start = space;
     }
 
-    fprintf(stderr, "Requires %s\n", extension);
+    error("Requires OpenGL extension: %s", extension);
 
     return GL_FALSE;
 }
@@ -56,7 +57,7 @@ void *opengl_proc(const char *name)
     void *p = SDL_GL_GetProcAddress(name);
 
     if (p == NULL)
-        fprintf(stderr, "%s not found\n", name);
+        error("OpenGL procedure '%s' not found\n", name);
 
     return p;
 }
@@ -143,10 +144,10 @@ GLint opengl_perf(void)
 
 void opengl_check(const char *str)
 {
-    GLenum error;
+    GLenum err;
 
-    while ((error = glGetError()) != GL_NO_ERROR)
-        fprintf(stderr, "OpenGL error: %s: %s\n", str, gluErrorString(error));
+    while ((err = glGetError()) != GL_NO_ERROR)
+        error("OpenGL error: %s: %s", str, gluErrorString(err));
 }
 
 #endif

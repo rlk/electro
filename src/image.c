@@ -24,14 +24,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-static void *punt_image(const char *message)
-{
-    fprintf(stderr, "Image error: %s\n", message);
-    return NULL;
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int power_of_two(int n)
 {
     int i = 1;
@@ -112,13 +104,13 @@ void *load_png_image(const char *filename, int *width,
     /* Initialize all PNG import data structures. */
 
     if (!(fp = fopen(filename, FMODE_RB)))
-        return punt_image("Failure opening PNG file");
+        return error("Failure opening PNG file '%s'", filename);
 
     if (!(readp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
-        return punt_image("Failure creating PNG read struct");
+        return error("Failure creating PNG read struct '%s'", filename);
         
     if (!(infop = png_create_info_struct(readp)))
-        return punt_image("Failure creating PNG info struct");
+        return error("Failure creating PNG info struct '%s'", filename);
 
     /* Enable the default PNG error handler. */
 
@@ -145,13 +137,13 @@ void *load_png_image(const char *filename, int *width,
         case PNG_COLOR_TYPE_RGB:        b = 3; break;
         case PNG_COLOR_TYPE_RGB_ALPHA:  b = 4; break;
 
-        default: return punt_image("Unsupported PNG color type");
+        default: return error("Unsupported PNG color type '%s'", filename);
         }
 
         /* Read the pixel data. */
 
         if (!(bytep = png_get_rows(readp, infop)))
-            return punt_image("Failure reading PNG pixel data");
+            return error("Failure reading PNG pixel data '%s'", filename);
 
         /* Allocate the final pixel buffer and copy pixels there. */
 
@@ -167,7 +159,7 @@ void *load_png_image(const char *filename, int *width,
             *bytes  = b;
         }
     }
-    else return punt_image("PNG read error");
+    else return error("PNG read error");
 
     /* Free all resources. */
 
@@ -225,6 +217,7 @@ void *load_jpg_image(const char *filename, int *width,
 
         fclose(fp);
     }
+    else error("Failure opening JPG file '%s'", filename);
 
     return p;
 }
@@ -282,7 +275,7 @@ void *load_image(const char *filename, int *width,
     else if (strcmp(extension, ".jpg") == 0 || strcmp(extension, ".JPG") == 0)
         return load_jpg_image(filename, width, height, bytes);
     else
-        return punt_image("Unsupported image format");
+        return error("Unsupported image format for '%s'", filename);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -218,6 +218,7 @@ static void read_mtl(const char *filename)
 
         fclose(fin);
     }
+    else error("Failure opening MTL file '%s'", filename);
 }
 
 static int find_mtl(const char *name)
@@ -228,7 +229,7 @@ static int find_mtl(const char *name)
         if (strncmp(namev[i], name, MAXSTR) == 0)
             return i;
 
-    fprintf(stderr, "Unknown material '%s'\n", name);
+    error("MTL: Unknown material '%s'", name);
     return 0;
 }
 
@@ -520,6 +521,8 @@ static int read_obj(const char *filename, struct object *o)
 
         return 1;
     }
+    else error("Failure opening OBJ file '%s'", filename);
+
     return 0;
 }
 

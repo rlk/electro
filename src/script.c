@@ -19,9 +19,11 @@
 #include <SDL.h>
 #include <lua.h>
 #include <lualib.h>
+#include <string.h>
 
 #include "joystick.h"
 #include "viewport.h"
+#include "console.h"
 #include "server.h"
 #include "camera.h"
 #include "sprite.h"
@@ -114,20 +116,23 @@ static void script_type_error(const char *name,
                               const char *type, lua_State *L, int i)
 {
     const char *got = "unknown";
+    char err[MAXSTR];
 
     if (lua_isuserdata(L, i))
         got = get_entity_type_name(lua_toentity(L, i));
     else
         got = lua_typename(L, lua_type(L, i));
 
-    lua_pushfstring(L, "'%s' expected %s, got %s", name, type, got);
-    lua_error(L);
+    sprintf(err, "'%s' expected %s, got %s", name, type, got);
+    error_console(err);
 }
 
 static void script_arity_error(const char *name, lua_State *L, int i, int n)
 {
-    lua_pushfstring(L, "'%s' expected %d parameters, got %d", name, -i, n);
-    lua_error(L);
+    char err[MAXSTR];
+
+    sprintf(err, "'%s' expected %d parameters, got %d", name, -i, n);
+    error_console(err);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -787,7 +792,7 @@ static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
     int r = 0;
 
     if (lua_pcall(L, nin, nout, 0) == LUA_ERRRUN)
-        fprintf(stderr, "%s: %s\n", name, lua_tostring(L, -1));
+        error("%s: %s\n", name, lua_tostring(L, -1));
     else
         r = lua_toboolean(L, -1);
 
@@ -1029,6 +1034,54 @@ void free_script(void)
     lua_close(L);
 }
 
+static const char *chunkreader(lua_State *L, void *data, size_t *size)
+{
+    static char buffer[MAXSTR];
+
+    memset(buffer, 0, MAXSTR);
+
+    if ((*size = fread(buffer, 1, MAXSTR - 1, (FILE *) data)) > 0)
+        return buffer;
+    else
+        return NULL;
+}
+
+void load_script(const char *file, int push)
+{
+    char cwd[MAXSTR];
+    int  err;
+    FILE *fp;
+
+    /* Change the CWD to the directory of the named script. */
+
+    const char *path = get_file_path(file);
+    const char *name = get_file_name(file);
+
+    if (push) getcwd(cwd, MAXSTR);
+
+    chdir(path);
+
+    /* Load and execute the script. */
+
+    if ((fp = fopen(name, "r")))
+    {
+        if ((err = lua_load(L, chunkreader, fp, file)))
+            error("Loading: %s", lua_tostring(L, -1));
+        else
+        {
+            if (lua_pcall(L, 0, 0, 0))
+                error("Executing: %s", lua_tostring(L, -1));
+        }
+        
+        lua_pop(L, 1);
+
+        fclose(fp);
+    }
+
+    if (push) chdir(cwd);
+}
+
+#ifdef SNIP
 void load_script(const char *file, int push)
 {
     char cwd[MAXSTR];
@@ -1052,7 +1105,7 @@ void load_script(const char *file, int push)
 
         if (lua_pcall(L, 1, 0, 0) == LUA_ERRRUN)
         {
-            fprintf(stderr, "%s\n", lua_tostring(L, -1));
+            error("%s", lua_tostring(L, -1));
             lua_pop(L, 1);
         }
     }
@@ -1060,5 +1113,6 @@ void load_script(const char *file, int push)
 
     if (push) chdir(cwd);
 }
+#endif
 
 /*---------------------------------------------------------------------------*/

@@ -2,14 +2,16 @@ PREFIX=/usr/local/Electro
 
 #------------------------------------------------------------------------------
 
+# To build in cluster mode: "make MPI=1".
+
 ifdef MPI
-	CC= mpicc
-	CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
-	TARG= electro-mpi
+	CC=     mpicc
+	TARG=   electro-mpi
+	CFLAGS= $(shell sdl-config --cflags) -g -Wall -DMPI -DNDEBUG
 else
-	CC= cc
-	CFLAGS= -g -Wall $(shell sdl-config --cflags)
-	TARG= electro
+	CC=     cc
+	TARG=   electro
+	CFLAGS= $(shell sdl-config --cflags) -g -Wall
 endif
 
 #------------------------------------------------------------------------------
@@ -19,7 +21,7 @@ LUALIB= -llua -llualib
 IMGLIB= -ljpeg -lpng -lz -lm
 OGGLIB= -lvorbisfile
 
-# Assume the Fink tree is available under OSX.
+# Assume the Fink tree is available under OSX and GL is in a framework.
 
 ifeq ($(shell uname), Darwin)
 	INCDIR= -I/sw/include
@@ -29,18 +31,24 @@ else
 	OGLLIB= -lGL -lGLU
 endif
 
-# If Lua is not found globally, assume it is in the user's home directory.
+# Include Lua, if it exists.
 
-ifneq ($(shell ls /usr/include/lua),)
+ifneq ($(wildcard /usr/include/lua),)
 	INCDIR += -I/usr/include/lua
-else
+endif
+
+# If user include or lib directories exist, assume dependancies are there.
+
+ifneq ($(wildcard $(HOME)/include),)
 	INCDIR += -I$(HOME)/include
+endif
+ifneq ($(wildcard $(HOME)/lib),)
 	LIBDIR += -L$(HOME)/lib
 endif
 
-LIBS= $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lm
-
 #------------------------------------------------------------------------------
+
+LIBS= $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lm
 
 OBJS=	src/opengl.o   \
 	src/matrix.o   \

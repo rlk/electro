@@ -187,6 +187,8 @@ int parse_galaxy(const char *filename, struct galaxy *g)
 
         return 1;
     }
+    else error("Failure opening galaxy file '%s'", filename);
+
     return 0;
 }
 
@@ -221,6 +223,8 @@ int write_galaxy(const char *filename, struct galaxy *g)
 
         return 1;
     }
+    else error("Failure opening galaxy file '%s' for writing", filename);
+
     return 0;
 }
 

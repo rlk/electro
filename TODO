@@ -1,10 +1,5 @@
-console
 css print
-GL fix on missing VP?
-
-arguments to lua script?
 fp/vp per entity (also fixes standard string length)
-
 Scale and billboard frustum (thorough test)
 
 TTF support (distribute the ttf?  Just the image?)
@@ -15,8 +10,6 @@ camera near/far (automatic? (entity bounding sphere?))
 
 Reorganize MPI abstraction (it's simpler than it once was)
 Improve assertions (delineate necessary thing_exists vs thing_assert)
-Improve linear descriptor seaching (next-free list) (growable buffer?)
-Improve clone reference counting
 
 Particle system? (stars?)
 

@@ -12,12 +12,19 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define CONSOLE_X 10
+#define CONSOLE_Y 10
+#define CONSOLE_W 80
+#define CONSOLE_H 24
+
 int  init_console(int, int);
 void draw_console(void);
+int  show_console(void);
 
 void clear_console(void);
 void color_console(float, float, float);
 void print_console(const char *);
+void error_console(const char *);
 
 /*---------------------------------------------------------------------------*/
 

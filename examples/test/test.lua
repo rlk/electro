@@ -30,7 +30,7 @@ function do_start()
     camera  = E.create_camera(E.camera_type_perspective)
     light   = E.create_light(E.light_type_positional)
     pivot   = E.create_pivot()
-    thing   = E.create_object("box.obj")
+    thing   = E.create_object("obj.obj")
     floor   = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
@@ -69,12 +69,6 @@ function do_keyboard(k, s)
     local control = E.get_modifier(64)
 
     if s then
-        if k == keycode.k then
-            E.delete_entity(thing)
-            thing = E.create_object("box.obj")
-            E.parent_entity(thing, pivot)
-            E.set_entity_position(thing, 0,  1.0,  0.0)
-        end
 
         if k == keycode.up        then E.move_entity(thing,  0, 0, -1) end
         if k == keycode.down      then E.move_entity(thing,  0, 0,  1) end

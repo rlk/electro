@@ -13,6 +13,8 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include <stdarg.h>
+
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -44,7 +46,9 @@ const char *get_file_path(const char *);
 float htonf(float);
 float ntohf(float);
 
-int balloc(void **, int *, size_t, int (*)(int));
+int  balloc(void **, int *, size_t, int (*)(int));
+
+void *error(char *, ...);
 
 /*---------------------------------------------------------------------------*/
 

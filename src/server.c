@@ -175,6 +175,11 @@ static int server_loop(void)
         if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) grab(0);
         if (e.type == SDL_MOUSEBUTTONDOWN)                 grab(1);
 
+        /* Handle console toggle. */
+
+        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F1)
+            dirty = show_console();
+
         /* Dispatch the event to the scripting system. */
 
         if (server_grab)
@@ -256,6 +261,7 @@ void server(int argc, char *argv[])
 
     if (init_script())
     {
+        init_console(CONSOLE_W, CONSOLE_H);
         init_viewport();
 
         /* Read and execute all scripts given on the command line. */
@@ -287,7 +293,6 @@ void server(int argc, char *argv[])
             {
                 /* Initialize all subsystems. */
 	
-                init_console(w, h);
                 init_opengl();
                 init_joystick();
                 init_buffer();
