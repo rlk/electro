@@ -1,17 +1,14 @@
-CC= g++
+CC= cc
 RM= rm
 
-INCDIR= -I/sw/include
-LIBDIR= -L/sw/lib
-
-OBJS=   img.o png.o server.o client.o main.o
+OBJS=   galaxy.o viewer.o main.o
 TARG=   vortex
-LIBS=   $(LIBDIR) $(shell sdl-config --libs) -lpng -lz
-CFLAGS= $(INCDIR) $(shell sdl-config --cflags) -g
+LIBS=   $(shell sdl-config --libs)
+CFLAGS= $(shell sdl-config --cflags) -g
 
 #------------------------------------------------------------------------------
 
-.cpp.o :
+.c.o :
 	$(CC) $(CFLAGS) -c $<
 
 $(TARG) : $(OBJS)

@@ -1,31 +1,28 @@
 
 #------------------------------------------------------------------------------
 
-INCDIR= /IC:\Include \
-        /IC:\SDL\Include
-LIBDIR= /LIBPATH:C:\Lib \
-        /LIBPATH:C:\SDL\Lib
+INCDIR= /IC:\SDL\Include
+LIBDIR= /LIBPATH:C:\SDL\Lib
 
 #------------------------------------------------------------------------------
 
-PNG_LIBS= libpng.lib zlib.lib
 SYS_LIBS= glu32.lib opengl32.lib kernel32.lib user32.lib gdi32.lib
 SDL_LIBS= SDL.lib SDLmain.lib
 
-LIBS=   $(PNG_LIBS) $(SDL_LIBS) $(SYS_LIBS)
+LIBS=   $(SDL_LIBS) $(SYS_LIBS)
 TARG=   vortex.exe
-OBJS= 	png.obj  \
-	img.obj  \
+OBJS= 	galaxy.obj \
+        viewer.obj \
 	main.obj
 
-CFLAGS= /nologo /MD /Ox /EHsc /W3
+CFLAGS= /nologo /MD /Ox /W3
 LFLAGS= /nologo /subsystem:console
 
 #------------------------------------------------------------------------------
 
-.SUFFIXES : .cpp .obj
+.SUFFIXES : .c .obj
 
-.cpp.obj :
+.c.obj :
 	cl $(CFLAGS) /c $< $(INCDIR)
 
 #------------------------------------------------------------------------------
@@ -35,10 +32,5 @@ $(TARG) : $(OBJS)
 
 clean :
 	del $(TARG) $(OBJS)
-
-dist : $(TARG)
-        del $(OBJS)
-        del *.cpp
-        del *.hpp
 
 #------------------------------------------------------------------------------
