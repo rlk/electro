@@ -14,6 +14,7 @@ global_shockwave = nil
 
 -------------------------------------------------------------------------------
 
+time  = 0
 fire  = nil
 boom  = nil
 music = nil
@@ -74,21 +75,98 @@ end
 
 -------------------------------------------------------------------------------
 
+function digit_set(sprite, n)
+    if     n == 0 then E.sprite_bounds(sprite, 0.00, 0.25, 0.75, 1.00)
+    elseif n == 1 then E.sprite_bounds(sprite, 0.25, 0.50, 0.75, 1.00)
+    elseif n == 2 then E.sprite_bounds(sprite, 0.50, 0.75, 0.75, 1.00)
+    elseif n == 3 then E.sprite_bounds(sprite, 0.75, 1.00, 0.75, 1.00)
+    elseif n == 4 then E.sprite_bounds(sprite, 0.00, 0.25, 0.50, 0.75)
+    elseif n == 5 then E.sprite_bounds(sprite, 0.25, 0.50, 0.50, 0.75)
+    elseif n == 6 then E.sprite_bounds(sprite, 0.50, 0.75, 0.50, 0.75)
+    elseif n == 7 then E.sprite_bounds(sprite, 0.75, 1.00, 0.50, 0.75)
+    elseif n == 8 then E.sprite_bounds(sprite, 0.00, 0.25, 0.25, 0.50)
+    elseif n == 9 then E.sprite_bounds(sprite, 0.25, 0.50, 0.25, 0.50) end
+end
+
+function alpha_set(sprite, c)
+    if     c == "A" then E.sprite_bounds(sprite, 0.000, 0.125, 0.75, 1.00)
+    elseif c == "B" then E.sprite_bounds(sprite, 0.125, 0.250, 0.75, 1.00)
+    elseif c == "C" then E.sprite_bounds(sprite, 0.250, 0.375, 0.75, 1.00)
+    elseif c == "D" then E.sprite_bounds(sprite, 0.375, 0.500, 0.75, 1.00)
+    elseif c == "E" then E.sprite_bounds(sprite, 0.500, 0.625, 0.75, 1.00)
+    elseif c == "F" then E.sprite_bounds(sprite, 0.625, 0.750, 0.75, 1.00)
+    elseif c == "G" then E.sprite_bounds(sprite, 0.750, 0.875, 0.75, 1.00)
+    elseif c == "H" then E.sprite_bounds(sprite, 0.875, 1.000, 0.75, 1.00)
+    elseif c == "I" then E.sprite_bounds(sprite, 0.000, 0.125, 0.50, 0.75)
+    elseif c == "J" then E.sprite_bounds(sprite, 0.125, 0.250, 0.50, 0.75)
+    elseif c == "K" then E.sprite_bounds(sprite, 0.250, 0.375, 0.50, 0.75)
+    elseif c == "L" then E.sprite_bounds(sprite, 0.375, 0.500, 0.50, 0.75)
+    elseif c == "M" then E.sprite_bounds(sprite, 0.500, 0.625, 0.50, 0.75)
+    elseif c == "N" then E.sprite_bounds(sprite, 0.625, 0.750, 0.50, 0.75)
+    elseif c == "O" then E.sprite_bounds(sprite, 0.750, 0.875, 0.50, 0.75)
+    elseif c == "P" then E.sprite_bounds(sprite, 0.875, 1.000, 0.50, 0.75)
+    elseif c == "Q" then E.sprite_bounds(sprite, 0.000, 0.125, 0.25, 0.50)
+    elseif c == "R" then E.sprite_bounds(sprite, 0.125, 0.250, 0.25, 0.50)
+    elseif c == "S" then E.sprite_bounds(sprite, 0.250, 0.375, 0.25, 0.50)
+    elseif c == "T" then E.sprite_bounds(sprite, 0.375, 0.500, 0.25, 0.50)
+    elseif c == "U" then E.sprite_bounds(sprite, 0.500, 0.625, 0.25, 0.50)
+    elseif c == "V" then E.sprite_bounds(sprite, 0.625, 0.750, 0.25, 0.50)
+    elseif c == "W" then E.sprite_bounds(sprite, 0.750, 0.875, 0.25, 0.50)
+    elseif c == "X" then E.sprite_bounds(sprite, 0.875, 1.000, 0.25, 0.50)
+    elseif c == "Y" then E.sprite_bounds(sprite, 0.000, 0.125, 0.00, 0.25)
+    elseif c == "Z" then E.sprite_bounds(sprite, 0.125, 0.250, 0.00, 0.25) end
+end
+
+-------------------------------------------------------------------------------
+
+function create_string(s)
+    local scale = 1 / 128
+    local dx    = 2.5
+    local dy    = 2.5
+    local l     = string.len(s)
+
+    local pivot = E.create_pivot()
+    local glyph
+
+    for i = 1, l do
+        local c = string.upper(string.sub(s, i, i))
+
+        if "0" <= c and c <= "9" then
+            glyph = E.create_sprite("digit.png")
+            digit_set(glyph, string.byte(c) - 48)
+            E.entity_scale(glyph, scale, scale, scale);
+        end
+        if "A" <= c and c <= "Z" then
+            glyph = E.create_sprite("alpha.png")
+            alpha_set(glyph, c)
+            E.entity_scale(glyph, scale / 2, scale, scale);
+        end
+
+        E.entity_parent  (glyph, pivot)
+        E.entity_position(glyph, dx * (i - (l + 1) / 2), 0, 0)
+    end
+
+    E.entity_scale(pivot, 2, 2, 2)
+    return pivot
+end
+
+-------------------------------------------------------------------------------
+
+overlay = nil
+
+function add_overlay(s)
+    overlay = create_string(s)
+    E.entity_parent(overlay, camera)
+end
+
+function del_overlay()
+    E.entity_delete(overlay)
+end
+
+-------------------------------------------------------------------------------
+
 local curr_score_digit = { }
 local high_score_digit = { }
-
-function digit_set(sprite, n)
-    if n == 0 then E.sprite_bounds(sprite, 0.00, 0.25, 0.75, 1.00) end
-    if n == 1 then E.sprite_bounds(sprite, 0.25, 0.50, 0.75, 1.00) end
-    if n == 2 then E.sprite_bounds(sprite, 0.50, 0.75, 0.75, 1.00) end
-    if n == 3 then E.sprite_bounds(sprite, 0.75, 1.00, 0.75, 1.00) end
-    if n == 4 then E.sprite_bounds(sprite, 0.00, 0.25, 0.50, 0.75) end
-    if n == 5 then E.sprite_bounds(sprite, 0.25, 0.50, 0.50, 0.75) end
-    if n == 6 then E.sprite_bounds(sprite, 0.50, 0.75, 0.50, 0.75) end
-    if n == 7 then E.sprite_bounds(sprite, 0.75, 1.00, 0.50, 0.75) end
-    if n == 8 then E.sprite_bounds(sprite, 0.00, 0.25, 0.25, 0.50) end
-    if n == 9 then E.sprite_bounds(sprite, 0.25, 0.50, 0.25, 0.50) end
-end
 
 function curr_score_set(n)
     digit_set(curr_score_digit[0], math.mod(n,                     10));
@@ -117,7 +195,7 @@ function score_init()
     -- Create the current score display.
 
     for i = 0, 4 do
-        curr_score_digit[i] = E.create_sprite("score.png")
+        curr_score_digit[i] = E.create_sprite("digit.png")
 
         E.entity_scale   (curr_score_digit[i], scale, scale, scale);
         E.entity_parent  (curr_score_digit[i], camera)
@@ -128,7 +206,7 @@ function score_init()
     -- Create the high score display.
 
     for i = 0, 4 do
-        high_score_digit[i] = E.create_sprite("score.png")
+        high_score_digit[i] = E.create_sprite("digit.png")
 
         E.entity_scale   (high_score_digit[i], scale, scale, scale);
         E.entity_parent  (high_score_digit[i], camera)
@@ -670,6 +748,7 @@ function do_start()
     E.camera_zoom(space,    0.5)
     E.entity_position(space, 0, 15.5, 9200)
 
+    add_overlay("AST3R0IDS")
     score_init()
 
     E.enable_idle(true)
@@ -681,40 +760,42 @@ end
 function do_timer(dt)
 
     local rot_x, rot_y, rot_z = E.entity_get_rotation(space)
+    local scale = 2.0 + 0.5 * math.sin(time);
+
+    time = time + dt
 
     E.entity_rotation(space, rot_x, rot_y + dt, rot_z)
 
-    global_dt = dt
     wait_time = wait_time + dt
 
+    if overlay then E.entity_scale(overlay, scale, scale, scale) end
+
     if global_dt > 0 then
+
+        global_dt = dt
 
         if state == "ready" then
             stuff_step()
             player_step()
-            return true
         end
 
         if state == "play" then
             level_step()
             player_step()
-            return true
         end
 
         if state == "done" then
             wait_time = wait_time + dt
             stuff_step()
             player_step()
-            return true
         end
 
         if state == "dead" then
             level_step()
-            return true
         end
     end
 
-    return false
+    return true
 end
 
 function do_joystick(n, b, s)

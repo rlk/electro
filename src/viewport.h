@@ -50,6 +50,8 @@ int  viewport_get_h(void);
 
 /*---------------------------------------------------------------------------*/
 
+float window_get_scale(void);
+
 int  window_get_w(void);
 int  window_get_h(void);
 

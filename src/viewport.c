@@ -287,12 +287,17 @@ int viewport_get_h(void)
 
 /*---------------------------------------------------------------------------*/
 
+float window_get_scale(void)
+{
+    return (float) DEFAULT_W / viewport_w;
+}
+
 int window_get_w(void)
 {
     /* Scale the server window width down to a reasonable size. */
 
     if (mpi_isroot())
-        return (int) (viewport_w * DEFAULT_W / viewport_w);
+        return (int) (viewport_w * window_get_scale());
     else
         return (int) (viewport_w);
 }

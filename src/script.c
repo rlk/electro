@@ -713,6 +713,7 @@ int script_init(void)
         luaopen_base(L);
         luaopen_math(L);
         luaopen_table(L);
+        luaopen_string(L);
         luaopen_electro(L);
 
         return 1;

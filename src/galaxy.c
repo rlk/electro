@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "opengl.h"
+#include "viewport.h"
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
@@ -65,15 +66,12 @@ void galaxy_send_magn(int gd, float m)
     pack_event(EVENT_GALAXY_MAGN);
     pack_float(m);
 
-    mag = m / 10;
+    mag = m * window_get_scale();
 }
 
 void galaxy_recv_magn(void)
 {
-    if (mpi_isroot())
-        mag = unpack_float();
-    else
-        mag = unpack_float();
+    mag = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/

@@ -46,8 +46,8 @@ SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
-INCDIR= -I/usr/include/lua
-LIBDIR= 
+INCDIR= -I$(HOME)/include -I/usr/include/lua
+LIBDIR= -L$(HOME)/lib
 
 ifeq ($(shell uname), Darwin)
 	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile
