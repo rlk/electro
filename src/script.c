@@ -369,39 +369,39 @@ static int script_viewport_get(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Entity constructors.                                                      */
 
-static int script_camera_create(lua_State *L)
+static int script_create_camera(lua_State *L)
 {
-    int id = camera_send_create(script_getnumber("camera_create", L, -1));
+    int id = camera_send_create(script_getnumber("create_camera", L, -1));
 
     lua_pushentity(L, id);
     return 1;
 }
 
-static int script_sprite_create(lua_State *L)
+static int script_create_sprite(lua_State *L)
 {
-    int id = sprite_send_create(script_getstring("sprite_create", L, -1));
+    int id = sprite_send_create(script_getstring("create_sprite", L, -1));
 
     lua_pushentity(L, id);
     return 1;
 }
 
-static int script_object_create(lua_State *L)
+static int script_create_object(lua_State *L)
 {
-    int id = object_send_create(script_getstring("object_create", L, -1));
+    int id = object_send_create(script_getstring("create_object", L, -1));
 
     lua_pushentity(L, id);
     return 1;
 }
 
-static int script_light_create(lua_State *L)
+static int script_create_light(lua_State *L)
 {
-    int id = light_send_create(script_getnumber("light_create", L, -1));
+    int id = light_send_create(script_getnumber("create_light", L, -1));
 
     lua_pushentity(L, id);
     return 1;
 }
 
-static int script_pivot_create(lua_State *L)
+static int script_create_pivot(lua_State *L)
 {
     int id = pivot_send_create();
 
@@ -449,11 +449,11 @@ void luaopen_electro(lua_State *L)
 
     /* Entity contructors. */
 
-    lua_function(L, "camera_create",       script_camera_create);
-    lua_function(L, "sprite_create",       script_sprite_create);
-    lua_function(L, "object_create",       script_object_create);
-    lua_function(L, "light_create",        script_light_create);
-    lua_function(L, "pivot_create",        script_pivot_create);
+    lua_function(L, "create_camera",       script_create_camera);
+    lua_function(L, "create_sprite",       script_create_sprite);
+    lua_function(L, "create_object",       script_create_object);
+    lua_function(L, "create_light",        script_create_light);
+    lua_function(L, "create_pivot",        script_create_pivot);
 
     /* Entity control. */
 

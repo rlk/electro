@@ -269,9 +269,9 @@ function do_start()
 
     -- Initialize some source objects.
 
-    global_ship   = E.object_create("ship.obj")
-    global_rock   = E.object_create("rock.obj")
-    global_bullet = E.sprite_create("bullet.png")
+    global_ship   = E.create_object("ship.obj")
+    global_rock   = E.create_object("rock.obj")
+    global_bullet = E.create_sprite("bullet.png")
 
     E.entity_flag(global_ship,   1, 1);
     E.entity_flag(global_rock,   1, 1);
@@ -279,10 +279,10 @@ function do_start()
 
     -- Initialize the scene.
 
+    camera = E.create_camera(E.camera_orthogonal)
+    light  = E.create_light(E.light_positional)
+    pivot  = E.create_pivot()
     ship   = E.entity_clone(global_ship);
-    camera = E.camera_create(1)
-    pivot  = E.pivot_create( )
-    light  = E.light_create(1)
 
     E.entity_parent(pivot, camera)
     E.entity_parent(light, camera)
