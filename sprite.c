@@ -76,6 +76,7 @@ void sprite_draw(void)
                     glTranslatef(S[id].pos[0], S[id].pos[1], 0.0f);
                     glScalef(S[id].size, S[id].size, 1.0f);
                     glRotatef(S[id].rot, 0.0f, 0.0f, 1.0f);
+                    glColor4f(1.0f, 1.0f, 1.0f, S[id].alpha);
 
                     glBegin(GL_QUADS);
                     {

@@ -7,7 +7,7 @@ pos_z  = 9200.0
 rot_x  =    0.0
 rot_y  =    0.0
 rot_dy =    0.0
-dist   =    0.0
+dist   =    1.5
 magn   =  128.0
 
 btn    = { }
@@ -47,19 +47,19 @@ function do_click(b, s)
 
    if s then
       if b == 4 then -- mouse wheel down
-         dist = dist + 10.0
+         dist = dist * 1.5;
          camera_dist(dist)
          return true
       end
 
       if b == 5 then -- mouse wheel up
-         dist = dist - 10.0
+         dist = dist / 1.5;
          camera_dist(dist)
          return true
       end
       
       if b == 2 then -- middle button click
-         dist = 0
+         dist = 1.5
          camera_dist(dist)
          return true
       end
@@ -67,7 +67,7 @@ function do_click(b, s)
       if b == 3 then
          foo = sprite_load("head.png")
          sprite_size(foo, 0.5)
-         sprite_move(foo, -w + 64, -h / 2 + 64)
+         sprite_move(foo, global_x + 96, -global_y + global_h - 96)
          return true
       end
    end

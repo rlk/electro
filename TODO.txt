@@ -1,6 +1,5 @@
 fix lua_dofile
 improve lua error handling
-sprite
 audio
 audit includes
 script tile configuration query

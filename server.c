@@ -74,6 +74,9 @@ static void server_init(void)
     sprite_init();
     galaxy_init();
     star_init();
+
+    server_send(EVENT_DRAW);
+    server_draw();
 }
 
 static void server_draw(void)
