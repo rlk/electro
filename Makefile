@@ -56,7 +56,8 @@ endif
 
 LIBS= $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lm
 
-OBJS=	src/opengl.o   \
+OBJS=	src/version.o  \
+	src/opengl.o   \
 	src/glyph.o    \
 	src/matrix.o   \
 	src/utility.o  \
@@ -95,5 +96,15 @@ clean :
 install : $(TARG)
 	cp $(TARG) $(PREFIX)/bin
 	cp config/* $(PREFIX)/config
+
+#------------------------------------------------------------------------------
+
+src/version.c : FORCE
+	echo -n 'const char* version(void) { const char *str = "' \
+	                         > src/version.c
+	svnversion -n .         >> src/version.c
+	echo '"; return str; }' >> src/version.c
+
+FORCE :
 
 #------------------------------------------------------------------------------
