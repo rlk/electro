@@ -12,6 +12,10 @@ global_shockwave = nil
 
 -------------------------------------------------------------------------------
 
+fire  = nil
+boom  = nil
+music = nil
+
 state     = "start"
 
 serial    = 1
@@ -205,8 +209,8 @@ function add_bullet()
     local x =  math.sin(a)
     local y =  math.cos(a)
 
-    bullet.dx = x * 15
-    bullet.dy = y * 15
+    bullet.dx = x * 15 + velocity_dx
+    bullet.dy = y * 15 + velocity_dy
 
     -- Add the new sprite to the scene.
 
@@ -222,6 +226,8 @@ function add_bullet()
         curr_score = curr_score - 1
         curr_score_set(curr_score)
     end
+
+    E.sound_play(fire)
 end
 
 function del_bullet(id, bullet)
@@ -248,6 +254,8 @@ function add_explosion(entity, size)
     E.entity_position(explosion.entity, x, y, 0)
 
     table.insert(explosions, explosion)
+
+    E.sound_play(boom)
 end
 
 function del_explosion(id, explosion)
@@ -603,6 +611,12 @@ function do_start()
 
     math.randomseed(os.time())
 
+    fire  = E.sound_load("fizzle.ogg")
+    boom  = E.sound_load("explosion.ogg")
+    music = E.sound_load("inter.ogg")
+
+    E.sound_loop(music)
+
     -- Establish the boundries of the viewport.
 
     global_l, global_r, global_b, global_t = E.viewport_get()
@@ -647,9 +661,9 @@ function do_start()
     E.entity_position(light, 0, 0, 10)
     E.camera_zoom(camera, global_z)
 
-    E.galaxy_magn(galaxy, 100.0)
+    E.galaxy_magn(galaxy, 500.0)
     E.camera_dist(space,  100.0)
-    E.camera_zoom(space,  0.001)
+    E.camera_zoom(space,  0.0001)
     E.entity_position(space, 0, 15.5, 9200)
 
     score_init()
@@ -704,9 +718,10 @@ function do_joystick(n, b, s)
     if state == "start" then
         if b == 1 and s then
             curr_score_set(0)
+            curr_score = 0
             player_reset()
+            speed = 7
             ships = 3
-            score = 0
             level = 1
             level_init()
             state = "ready"
@@ -740,7 +755,7 @@ function do_joystick(n, b, s)
         if b == 2 then
             thrusting = s
         end
-        if wait_time > 1 and b == 2 and s then
+        if wait_time > 1 and b == 1 and s then
             speed = speed + 2
             level = level + 1
             level_init()

@@ -1,3 +1,0 @@
-#!/bin/sh
-
-mpirun -machinefile $ELECTRO_CONFIG/local.dat -np 3 ../../electro $ELECTRO_CONFIG/local.lua $@

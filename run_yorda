@@ -1,3 +1,0 @@
-#!/bin/sh
-
-mpirun -machinefile $ELECTRO_CONFIG/yorda.dat -np 16 ../electro $ELECTRO_CONFIG/yorda.lua $@

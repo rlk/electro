@@ -1,3 +1,0 @@
-#!/bin/sh
-
-mpirun -machinefile $ELECTRO_CONFIG/zod.dat -np 17 ../../electro $ELECTRO_CONFIG/zod.lua $@

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mpirun -machinefile /usr/local/Electro/config/zod.dat -np 17 /usr/local/Electro/bin/electro-mpi /usr/local/Electro/config/zod.lua $@

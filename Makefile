@@ -1,5 +1,6 @@
 
 TARG=	electro
+#TARG=	electro-mpi
 OBJS=	src/opengl.o   \
 	src/joystick.o \
 	src/viewport.o \
@@ -28,12 +29,12 @@ CC= mpicc
 RM= rm -f
 
 SDL_LIBS= $(shell sdl-config --libs)
-LUA_LIBS= -llua50 -llualib50
+LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
-#CFLAGS= -g -Wall $(shell sdl-config --cflags)
-CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
-INCDIR= -I$(HOME)/include -I/usr/include/lua50
+CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
+#CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+INCDIR= -I$(HOME)/include -I/usr/include/lua
 LIBDIR= -L$(HOME)/lib
 
 ifeq ($(shell uname), Darwin)
