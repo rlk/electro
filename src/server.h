@@ -15,10 +15,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-void set_grab(int);
-void set_idle(int);
-
-void server_send(int);
+void enable_timer(int);
 
 void server(int, char **);
 

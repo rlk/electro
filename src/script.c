@@ -335,9 +335,9 @@ static int script_add_tile(lua_State *L)
 
 static int script_set_idle(lua_State *L)
 {
-    const char *name = "set_idle";
+    const char *name = "enable_timer";
 
-    set_idle(script_getboolean(name, L, -1));
+    enable_timer(script_getboolean(name, L, -1));
     return 0;
 }
 

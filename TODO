@@ -1,17 +1,18 @@
-Documentation up to date
-Windows port
-Relative entity transform
 Propagate alpha
+Object edge
 JPG support
+Relative entity transform
+Update README
+Audit includes
+Remove .d usage
+Windows port
 Website
+
 TTF support
-
-
 GL error.  glTexParameter WTF?
 Star VBO?  (Ok if tree is NOT pruned)
 asteroids text overlay models?
 Scale and billboard frustum
-Object edge
 
 camera near/far
 
@@ -26,4 +27,3 @@ Particle system? (stars?)
 frustum transform = matrix multiplication?
         identity matrix is idempotent frustum?
 
-Audit includes

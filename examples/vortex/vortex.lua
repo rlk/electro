@@ -45,7 +45,7 @@ function do_keyboard(k, s)
         spin = spin - 1
     end
 
-    E.set_idle(spin ~= 0)
+    E.enable_timer(spin ~= 0)
 
     return true
 end

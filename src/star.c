@@ -134,7 +134,7 @@ int star_parse_hip(struct star *s, FILE *fp)
         if (sscanf(buf + 51, "%lf", &ra)  == 1 &&
             sscanf(buf + 64, "%lf", &de)  == 1 &&
             sscanf(buf + 41, "%lf", &mag) == 1 &&
-            sscanf(buf + 79, "%lf", &plx) == 1)
+            sscanf(buf + 79, "%lf", &plx) == 1 && plx > 0.0)
         {
             double b, l, n1, n2, n3;
 
@@ -144,29 +144,26 @@ int star_parse_hip(struct star *s, FILE *fp)
             ra  = M_RAD(ra);
             de  = M_RAD(de);
 
-            if (isnormal(plx))
-            {
-                /* Compute the position in galactic coordinates. */
+            /* Compute the position in galactic coordinates. */
 
-                n1 =                     cos(de) * cos(ra - c1);
-                n2 = sin(de) * sin(c2) + cos(de) * sin(ra - c1) * cos(c2);
-                n3 = sin(de) * cos(c2) - cos(de) * sin(ra - c1) * sin(c2);
+            n1 =                     cos(de) * cos(ra - c1);
+            n2 = sin(de) * sin(c2) + cos(de) * sin(ra - c1) * cos(c2);
+            n3 = sin(de) * cos(c2) - cos(de) * sin(ra - c1) * sin(c2);
 
-                l = -atan2(n1, n2) + c3;
-                b =  asin(n3);
+            l = -atan2(n1, n2) + c3;
+            b =  asin(n3);
 
-                s->pos[0] = (float) (sin(l) * cos(b) * plx);
-                s->pos[1] = (float) (         sin(b) * plx + 15.5);
-                s->pos[2] = (float) (cos(l) * cos(b) * plx + 9200);
+            s->pos[0] = (float) (sin(l) * cos(b) * plx);
+            s->pos[1] = (float) (         sin(b) * plx + 15.5);
+            s->pos[2] = (float) (cos(l) * cos(b) * plx + 9200);
 
-                /* Compute the absolute magnitude and color. */
+            /* Compute the absolute magnitude and color. */
 
-                s->mag =  (float) (mag - 5.0 * log(plx / 10.0) / log(10.0));
+            s->mag =  (float) (mag - 5.0 * log(plx / 10.0) / log(10.0));
 
-                star_color(buf[435], s->col);
+            star_color(buf[435], s->col);
             
-                return 1;
-            }
+            return 1;
         }
     }
     return 0;

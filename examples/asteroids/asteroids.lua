@@ -1013,7 +1013,7 @@ function do_start()
     E.set_entity_position(space, 0, 15.5, 9200)
 
     goto_state("title")
-    E.set_idle(true)
+    E.enable_timer(true)
 
     return true
 end

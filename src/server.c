@@ -37,7 +37,7 @@ static int server_time = 0;
 
 /*---------------------------------------------------------------------------*/
 
-void set_grab(int b)
+void grab(int b)
 {
     if (b && !server_grab)
     {
@@ -72,7 +72,7 @@ static Uint32 timer_callback(Uint32 interval, void *parameter)
     return interval;
 }
 
-void set_idle(int b)
+void enable_timer(int b)
 {
     static SDL_TimerID timer_id;
     static int         timer_on = 0;
@@ -169,8 +169,8 @@ static int server_loop(void)
     {
         /* Handle point grab toggle. */
 
-        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) set_grab(0);
-        if (e.type == SDL_MOUSEBUTTONDOWN)                 set_grab(1);
+        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) grab(0);
+        if (e.type == SDL_MOUSEBUTTONDOWN)                 grab(1);
 
         /* Dispatch the event to the scripting system. */
 
