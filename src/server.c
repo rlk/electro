@@ -171,7 +171,7 @@ static int server_keydn(SDL_KeyboardEvent *k)
 
 static int server_keyup(SDL_KeyboardEvent *k)
 {
-    if (!console_is_enabled())
+    if (console_is_enabled())
         return 0;
     else
         return do_keyboard_script(k->keysym.sym, 0);
@@ -276,8 +276,8 @@ void server(int argc, char *argv[])
 
     /*
     prep_tyc_galaxy();
-    */
     prep_hip_galaxy();
+    */
 
     if (init_script())
     {

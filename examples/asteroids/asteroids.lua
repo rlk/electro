@@ -63,6 +63,8 @@ shockwaves = { }
 scores     = { }
 spares     = { }
 
+turn_left   = false
+turn_right  = false
 thrusting   = false
 velocity_dx = 0
 velocity_dy = 0
@@ -653,10 +655,10 @@ function player_step()
 
     -- Handle rotation change
 
-    if joy_x < -0.5 then
+    if joy_x < -0.5 or turn_left then
         rot_z = rot_z + global_dt * 180
     end
-    if joy_x >  0.5 then
+    if joy_x >  0.5 or turn_right then
         rot_z = rot_z - global_dt * 180
     end
 
@@ -1020,6 +1022,56 @@ end
 
 -------------------------------------------------------------------------------
 
+function hit_fire()
+    if     state == "title" then
+        goto_state("ready")
+
+    elseif state == "ready" then
+        goto_state("play")
+
+    elseif state == "play" then
+        add_bullet()
+
+    elseif state == "dead" then
+        if state_time > 1 then
+            if ships > 0 then
+                ships = ships - 1
+                spare_set(ships)
+                player_reset()
+                goto_state("play")
+
+            elseif curr_score > high_score then
+                goto_state("high")
+
+            else
+                goto_state("over")
+            end
+        end
+
+    elseif state == "clear" then
+        if state_time > 1 then
+            speed = speed + 2
+            level = level + 1
+            goto_state("ready")
+        end
+
+    elseif state == "high" then
+        E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+        if index < 3 then
+            index = index + 1
+        else
+            goto_state("over")
+        end
+
+    elseif state == "over" then
+        if state_time > 1 then
+            goto_state("title")
+        end
+    end
+end
+
+-------------------------------------------------------------------------------
+
 function do_timer(dt)
 
     global_dt = dt
@@ -1033,6 +1085,19 @@ function do_timer(dt)
     timer_state(state)
 
     return true
+end
+
+function do_keyboard(k, s)
+    if k == 276 then turn_left  = s end
+    if k == 275 then turn_right = s end
+
+    if k == 273 then
+        thrusting  = s
+        E.set_entity_flag(thrust, E.entity_flag_hidden, not thrusting)
+    end
+    if k == 32 and s == true then
+        hit_fire()
+    end
 end
 
 function do_joystick(n, b, s)
@@ -1062,51 +1127,7 @@ function do_joystick(n, b, s)
     end
 
     if b == button_fire and s then
-        if     state == "title" then
-            goto_state("ready")
-
-        elseif state == "ready" then
-            goto_state("play")
-
-        elseif state == "play" then
-            add_bullet()
-
-        elseif state == "dead" then
-            if state_time > 1 then
-                if ships > 0 then
-                    ships = ships - 1
-                    spare_set(ships)
-                    player_reset()
-                    goto_state("play")
-
-                elseif curr_score > high_score then
-                    goto_state("high")
-
-                else
-                    goto_state("over")
-                end
-            end
-
-        elseif state == "clear" then
-            if state_time > 1 then
-                speed = speed + 2
-                level = level + 1
-                goto_state("ready")
-            end
-
-        elseif state == "high" then
-            E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
-            if index < 3 then
-                index = index + 1
-            else
-                goto_state("over")
-            end
-
-        elseif state == "over" then
-            if state_time > 1 then
-                goto_state("title")
-            end
-        end
+        hit_fire()
     end
 
     return true

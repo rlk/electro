@@ -116,17 +116,15 @@ static int node_test(const float V[4], const float b[6])
     return 1;
 }
 
-int node_draw(const struct node *N, int n, int i,
-              const float V[16], const float b[6])
+void node_draw(const struct node *N, int n, int i,
+               const float V[16], const float b[6])
 {
-    int c = 0;
-
     /* Test this node against the view frustem. */
 
-    if (node_test(V +  0, b)) return 0;
-    if (node_test(V +  4, b)) return 0;
-    if (node_test(V +  8, b)) return 0;
-    if (node_test(V + 12, b)) return 0;
+    if (node_test(V +  0, b)) return;
+    if (node_test(V +  4, b)) return;
+    if (node_test(V +  8, b)) return;
+    if (node_test(V + 12, b)) return;
 
     if (N[n].nodeL && N[n].nodeR)
     {
@@ -146,18 +144,15 @@ int node_draw(const struct node *N, int n, int i,
 
         /* Render each subtree in its own bounding box. */
 
-        c += node_draw(N, N[n].nodeL, (i + 1) % 3, V, bL);
-        c += node_draw(N, N[n].nodeR, (i + 1) % 3, V, bR);
+        node_draw(N, N[n].nodeL, (i + 1) % 3, V, bL);
+        node_draw(N, N[n].nodeR, (i + 1) % 3, V, bR);
     }
     else
     {
         /* We've hit a leaf.  Apparently, it is visible.  Draw it. */
 
         glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
-        c = N[n].starc;
     }
-
-    return c;
 }
 
 int node_pick(const struct node *N, int n,

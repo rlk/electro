@@ -74,7 +74,6 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
     GLenum fl = GL_FLOAT;
 
     float W[16];
-    int c = 0;
 
     if (galaxy_exists(gd))
     {
@@ -131,7 +130,7 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
 
                 /* Render all stars. */
 
-                c = node_draw(G[gd].N, 0, 0, V, G[gd].bound);
+                node_draw(G[gd].N, 0, 0, V, G[gd].bound);
             }
             glPopClientAttrib();
             glPopAttrib();
