@@ -18,5 +18,14 @@ $(TARG) : $(OBJS)
 clean :
 	$(RM) $(TARG) $(OBJS)
 
-#------------------------------------------------------------------------------
+depend :
+	makedepend -Y *.c 2> /dev/null
 
+
+#------------------------------------------------------------------------------
+# DO NOT DELETE
+
+galaxy.o: opengl.h glext.h galaxy.h viewer.h png.h
+main.o: opengl.h glext.h viewer.h galaxy.h
+png.o: png.h opengl.h glext.h
+viewer.o: opengl.h glext.h

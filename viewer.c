@@ -5,7 +5,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-static double position[3];
+static double position[4];
 static double rotation[2];
 static double distance;
 
@@ -78,6 +78,7 @@ void viewer_init(void)
     position[0] = 0;
     position[1] = 0;
     position[2] = 0;
+    position[3] = 1;
     rotation[0] = 0;
     rotation[1] = 0;
     distance    = 0;

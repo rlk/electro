@@ -5,8 +5,9 @@
 
 struct star
 {
-    double position[3];
-    double magnitude;
+    float         position[3];
+    float         magnitude;
+    unsigned char color[3];
 };
 
 struct node
