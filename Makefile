@@ -1,10 +1,13 @@
-CC= mpicxx
+CC= g++
 RM= rm
+
+INCDIR= -I/sw/include
+LIBDIR= -L/sw/lib
 
 OBJS=   img.o png.o server.o client.o main.o
 TARG=   vortex
-LIBS=   $(shell sdl-config --libs)
-CFLAGS= $(shell sdl-config --cflags) -g
+LIBS=   $(LIBDIR) $(shell sdl-config --libs) -lpng -lz
+CFLAGS= $(INCDIR) $(shell sdl-config --cflags) -g
 
 #------------------------------------------------------------------------------
 
