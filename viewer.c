@@ -91,7 +91,7 @@ int viewer_point(int x, int y)
     }
     if (button[2])
     {
-        distance += dy * 100;
+        distance += dy * 32;
 
         if (distance < 0.0)
             distance = 0.0;

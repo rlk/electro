@@ -19,6 +19,8 @@ static int num_nodes = 0;
 static struct star *S;
 static struct node *N;
 
+#define GLSL 1
+
 /*---------------------------------------------------------------------------*/
 
 double log_10(double n)
@@ -58,7 +60,7 @@ void read_star(FILE *fp)
         {
             /* Compute equatorial position in parsecs and radians. */
 
-            plx =    1000.0 / fabs(plx);
+            plx = 1000.0 / fabs(plx);
             ra  = M_PI * ra /  180.0;
             de  = M_PI * de /  180.0;
 
@@ -85,7 +87,6 @@ void read_star(FILE *fp)
             c[1] = 0xFF;
             c[2] = 0xFF;
 
-            /*
             switch (buf[435])
             {
             case 'O': c[0] = 0x6F; c[1] = 0x6F; c[2] = 0xFF; break;
@@ -96,7 +97,6 @@ void read_star(FILE *fp)
             case 'K': c[0] = 0xFF; c[1] = 0xAF; c[2] = 0x8F; break;
             case 'M': c[0] = 0xFF; c[1] = 0x6F; c[2] = 0x6F; break;
             }
-            */
 
             S[num_stars].color[0] = c[0];
             S[num_stars].color[1] = c[1];
@@ -109,7 +109,7 @@ void read_star(FILE *fp)
 
 void star_init(void)
 {
-    star_texture = png_load("blob.png");
+/*  star_texture = png_load("blob.png"); */
 
     if ((S = (struct star *) calloc(sizeof (struct star), max_stars)))
     {
@@ -144,36 +144,62 @@ int tree_init(int d)
 
 /*---------------------------------------------------------------------------*/
 
+const char *read_file(const char *filename)
+{
+    char  *ptr = NULL;
+    char   buf[MAXBUF];
+    size_t len;
+
+    FILE  *fp;
+
+    if ((fp = fopen(filename, "r")))
+    {
+        if ((len = fread(buf, 1, MAXBUF, fp)) > 0)
+        {
+            if ((ptr = (char *) calloc(1, len + 1)))
+                strncpy(ptr, buf, len);
+        }
+        fclose(fp);
+    }
+
+    return ptr;
+}
+
 void galaxy_init(void)
 {
-    FILE  *fp;
+    FILE *fp;
+    const char *vert_program;
+    const char *frag_program;
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_ARB);
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
 
     glEnable(GL_POINT_SPRITE_ARB);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBlendFunc(GL_ONE, GL_ONE);
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    if ((fp = fopen("star.vp", "r")))
-    {
-        char   buf[VPMAXLEN];
-        size_t len;
+    vert_program = read_file("star.vp");
+    frag_program = read_file("star.fp");
 
-        if ((len = fread(buf, 1, VPMAXLEN, fp)) > 0)
-            glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
-                               GL_PROGRAM_FORMAT_ASCII_ARB, len, buf);
+    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB,
+                       strlen(vert_program), vert_program);
 
-        if (glGetError() != GL_NO_ERROR)
-            printf("%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    if (glGetError() != GL_NO_ERROR)
+        printf("vert_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
 
-        fclose(fp);
-    }
+    glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB,
+                       strlen(frag_program), frag_program);
+
+    if (glGetError() != GL_NO_ERROR)
+        printf("frag_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
 
     star_init();
     tree_init(2);
@@ -187,11 +213,6 @@ void galaxy_draw(const double p[3])
     double  viewpoint[3];
     double  magnifier[1];
     int i;
-
-    /*
-      float c[4] = { 1.0, 1.0, 1.0, 1.0 };
-    */
-    float c[4] = { 2.0, 2.0, 2.0, 1.0 };
 
     viewer_get_pos(viewpoint);
     viewer_get_mag(magnifier);
@@ -207,15 +228,11 @@ void galaxy_draw(const double p[3])
     glColorPointer (3, GL_UNSIGNED_BYTE, stride, &S[0].color);
     glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, stride, &S[0].magnitude);
 
-    /*
-    glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, c);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-    */
     glDrawArrays(GL_POINTS, 0, num_stars);
 
     glDisableVertexAttribArrayARB(6);
-    glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
 
     glDisable(GL_TEXTURE_2D);
     {

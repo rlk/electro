@@ -1,3 +1,5 @@
 Zoom when distance hits 0.0
 Color stars
 Add the sun
+integrate Lua early?
+          (console!)

@@ -59,11 +59,6 @@ int supported(const char *extension)
 
 static void init(void)
 {
-    if (!supported("GL_ARB_vertex_program"))
-        fprintf(stderr, "Requires GL_ARB_vertex_program\n");
-    if (!supported("GL_ARB_point_sprite"))
-        fprintf(stderr, "Requires GL_ARB_point_sprite\n");
-
     viewer_init();
     galaxy_init();
 }
