@@ -38,27 +38,27 @@ function add_asteroid(entity, size)
     local z  = 0
 
     if entity then
-        x, y, z = entity_get_position(entity)
+        x, y, z = E.entity_get_position(entity)
     end
 
     local asteroid = { }
 
-    asteroid.object = entity_clone(global_rock)
+    asteroid.object = E.entity_clone(global_rock)
     asteroid.size   = size
     asteroid.dx     = dx * speed
     asteroid.dy     = dy * speed
     asteroid.wx     = math.random(-90, 90)
     asteroid.wy     = math.random(-90, 90)
 
-    entity_scale   (asteroid.object, size / 3, size / 3, size / 3)
-    entity_parent  (asteroid.object, light)
-    entity_position(asteroid.object, x , y, 0)
+    E.entity_scale   (asteroid.object, size / 3, size / 3, size / 3)
+    E.entity_parent  (asteroid.object, light)
+    E.entity_position(asteroid.object, x , y, 0)
 
     table.insert(asteroids, asteroid)
 end
 
 function del_asteroid(id, asteroid)
-    entity_delete(asteroid.object)
+    E.entity_delete(asteroid.object)
 
     table.remove(asteroids, id)
 end
@@ -67,8 +67,8 @@ end
 
 function add_bullet()
 
-    local pos_x, pos_y, pos_z = entity_get_position(ship)
-    local rot_x, rot_y, rot_z = entity_get_rotation(ship)
+    local pos_x, pos_y, pos_z = E.entity_get_position(ship)
+    local rot_x, rot_y, rot_z = E.entity_get_rotation(ship)
 
     local a = -math.rad(rot_z)
     local x =  math.sin(a)
@@ -76,21 +76,21 @@ function add_bullet()
 
     local bullet = { }
 
-    bullet.object = entity_clone(global_bullet)
+    bullet.object = E.entity_clone(global_bullet)
     bullet.dx     = x * 15
     bullet.dy     = y * 15
 
-    entity_position(bullet.object, pos_x + x,
-                                   pos_y + y, pos_z)
+    E.entity_position(bullet.object, pos_x + x,
+                                           pos_y + y, pos_z)
 
-    entity_scale (bullet.object, 1 / 64, 1 / 64, 1 / 64)
-    entity_parent(bullet.object, pivot)
+    E.entity_scale (bullet.object, 1 / 64, 1 / 64, 1 / 64)
+    E.entity_parent(bullet.object, pivot)
 
     table.insert(bullets, bullet)
 end
 
 function del_bullet(id, bullet)
-    entity_delete(bullet.object)
+    E.entity_delete(bullet.object)
 
     table.remove(bullets, id)
 end
@@ -112,8 +112,8 @@ function asteroid_step(id, asteroid)
 
         -- Find the asteroid's new position and orientation.
         
-        local pos_x, pos_y, pos_z = entity_get_position(object)
-        local rot_x, rot_y, rot_z = entity_get_rotation(object)
+        local pos_x, pos_y, pos_z = E.entity_get_position(object)
+        local rot_x, rot_y, rot_z = E.entity_get_rotation(object)
 
         pos_x = pos_x + dx * global_dt
         pos_y = pos_y + dy * global_dt
@@ -152,13 +152,13 @@ function asteroid_step(id, asteroid)
 
         -- Apply the new position and orientation.
 
-        entity_position(object, pos_x, pos_y, pos_z)
-        entity_rotation(object, rot_x, rot_y, rot_z)
+        E.entity_position(object, pos_x, pos_y, pos_z)
+        E.entity_rotation(object, rot_x, rot_y, rot_z)
 
         -- Check this asteroid against all bullets.
 
         for jd, bullet in pairs(bullets) do
-            local pos_X, pos_Y, pos_Z = entity_get_position(bullet.object)
+            local pos_X, pos_Y, pos_Z = E.entity_get_position(bullet.object)
 
             local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
                                    (pos_Y - pos_y) * (pos_Y - pos_y));
@@ -190,7 +190,7 @@ function bullet_step(id, bullet)
     if object then
         -- Find the bullet's new position.
         
-        local pos_x, pos_y, pos_z = entity_get_position(object)
+        local pos_x, pos_y, pos_z = E.entity_get_position(object)
 
         pos_x = pos_x + dx * global_dt
         pos_y = pos_y + dy * global_dt
@@ -209,7 +209,7 @@ function bullet_step(id, bullet)
         -- Apply the new position and orientation.
 
         else
-            entity_position(object, pos_x, pos_y, pos_z)
+            E.entity_position(object, pos_x, pos_y, pos_z)
         end
     end
 end
@@ -221,7 +221,7 @@ function level_init()
         add_asteroid(nil, 3)
     end
 
-    entity_position(ship, 0, 0, 0);
+    E.entity_position(ship, 0, 0, 0);
 end
 
 function level_step()
@@ -233,19 +233,19 @@ end
 
 function player_step()
 
-    local rot_x, rot_y, rot_z = entity_get_rotation(ship)
+    local rot_x, rot_y, rot_z = E.entity_get_rotation(ship)
     local changed = false
 
-    if (joystick_axis(0, 0) < -0.5) then
+    if (E.joystick_axis(0, 0) < -0.5) then
         rot_z = rot_z + global_dt * 180
         changed = true
     end
-    if (joystick_axis(0, 0) >  0.5) then
+    if (E.joystick_axis(0, 0) >  0.5) then
         rot_z = rot_z - global_dt * 180
         changed = true
     end
 
-    if changed then entity_rotation(ship, rot_x, rot_y, rot_z) end
+    if changed then E.entity_rotation(ship, rot_x, rot_y, rot_z) end
 end
 
 -------------------------------------------------------------------------------
@@ -256,7 +256,7 @@ function do_start()
 
     -- Establish the boundries of the viewport.
 
-    global_l, global_r, global_b, global_t = viewport_get()
+    global_l, global_r, global_b, global_t = E.viewport_get()
 
     global_z = 64 / (global_r - global_l)
     
@@ -269,32 +269,32 @@ function do_start()
 
     -- Initialize some source objects.
 
-    global_ship   = object_create("ship.obj")
-    global_rock   = object_create("rock.obj")
-    global_bullet = sprite_create("bullet.png")
+    global_ship   = E.object_create("ship.obj")
+    global_rock   = E.object_create("rock.obj")
+    global_bullet = E.sprite_create("bullet.png")
 
-    entity_flag(global_ship,   1, 1);
-    entity_flag(global_rock,   1, 1);
-    entity_flag(global_bullet, 1, 1);
+    E.entity_flag(global_ship,   1, 1);
+    E.entity_flag(global_rock,   1, 1);
+    E.entity_flag(global_bullet, 1, 1);
 
     -- Initialize the scene.
 
-    ship   = entity_clone(global_ship);
-    camera = camera_create(1)
-    pivot  = pivot_create( )
-    light  = light_create(1)
+    ship   = E.entity_clone(global_ship);
+    camera = E.camera_create(1)
+    pivot  = E.pivot_create( )
+    light  = E.light_create(1)
 
-    entity_parent(pivot, camera)
-    entity_parent(light, camera)
-    entity_parent(ship,  light)
+    E.entity_parent(pivot, camera)
+    E.entity_parent(light, camera)
+    E.entity_parent(ship,  light)
 
-    entity_position(light, 0, 0, 10)
+    E.entity_position(light, 0, 0, 10)
 
-    camera_zoom(camera, global_z)
+    E.camera_zoom(camera, global_z)
 
     level_init()
 
-    enable_idle(true)
+    E.enable_idle(true)
 
     return true
 end

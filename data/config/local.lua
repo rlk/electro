@@ -17,7 +17,7 @@ global_y = -h / 2
 global_w =  w * 2
 global_h =      2
 
-add_tile(name, 0, 0, -w, -h / 2, w, h)
-add_tile(name, w, 0,  0, -h / 2, w, h)
+E.add_tile(name, 0, 0, -w, -h / 2, w, h)
+E.add_tile(name, w, 0,  0, -h / 2, w, h)
 
 -------------------------------------------------------------------------------

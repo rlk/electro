@@ -18,39 +18,39 @@ btn    = { }
 -------------------------------------------------------------------------------
 
 function init_2D()
-    ortho = camera_create(1)
-    point = sprite_create("head.png")
+    ortho = E.camera_create(1)
+    point = E.sprite_create("head.png")
 
-    entity_parent(point, ortho)
-    entity_scale(point, 0.5, 0.5, 0.5)
+    E.entity_parent(point, ortho)
+    E.entity_scale(point, 0.5, 0.5, 0.5)
 end
 
 function init_3D()
-    persp = camera_create(2)
+    persp = E.camera_create(E.camera_perspective)
 
-    obj1  = object_create("ball.obj")
-    obj2  = object_create("ball.obj")
-    light = light_create(2)
-    pivot = pivot_create()
+    obj1  = E.object_create("ball.obj")
+    obj2  = E.object_create("ball.obj")
+    light = E.light_create(2)
+    pivot = E.pivot_create()
 
-    entity_parent(light, persp)
-    entity_parent(pivot, light)
-    entity_parent(obj1,  pivot)
-    entity_parent(obj2,  pivot)
+    E.entity_parent(light, persp)
+    E.entity_parent(pivot, light)
+    E.entity_parent(obj1,  pivot)
+    E.entity_parent(obj2,  pivot)
 
-    camera_zoom(persp,  0.001)
-    camera_dist(persp, 10.000)
+    E.camera_zoom(persp,  0.001)
+    E.camera_dist(persp, 10.000)
 
-    entity_position(light, 1, 1, 1)
-    entity_position(obj1, -1, 0, 0)
-    entity_position(obj2,  1, 0, 0)
+    E.entity_position(light, 1, 1, 1)
+    E.entity_position(obj1, -1, 0, 0)
+    E.entity_position(obj2,  1, 0, 0)
 end
 
 function do_start()
     init_2D()
     init_3D()
 
-    enable_idle(true)
+    E.enable_idle(true)
 
     return true
 end
@@ -62,7 +62,11 @@ end
 
 function do_timer(dt)
     rot_y = rot_y + dt * 90
-    if (pivot) then entity_rotation(pivot, rot_x, rot_y, 0) end
+
+    if (pivot) then
+        E.entity_rotation(pivot, rot_x, rot_y, 0)
+    end
+
     return true
 end
 
@@ -70,13 +74,17 @@ function do_point(dx, dy)
     pnt_x = pnt_x + dx
     pnt_y = pnt_y - dy
 
-    if (point) then entity_position(point, pnt_x, pnt_y, 0) end
+    if (point) then
+        E.entity_position(point, pnt_x, pnt_y, 0)
+    end
 
     if btn[1] then
         rot_x = rot_x + dy
         rot_y = rot_y + dx
 
-        if (pivot) then entity_rotation(pivot, rot_x, rot_y, 0) end
+        if (pivot) then
+            E.entity_rotation(pivot, rot_x, rot_y, 0)
+        end
 
         return true
     end

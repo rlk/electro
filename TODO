@@ -1,9 +1,14 @@
-object texture / image type
 Add alpha to entity.  Remove it from sprite.
 Wire mode to object.
+
+entity_create->create_entity? N_V -> V_N?
+
 Audio
+Object texture / image type
 Relative entity transform
-Script tile configuration query system/standard
-Remove MPI_BYTE uses (separate hostname from viewport)
-Abstract stars into particle system
+
+Galaxy object
+Documentation up to date
+Particle system? (stars?)
+
 Audit includes

@@ -433,40 +433,76 @@ static int script_camera_zoom(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Script setup/shutdown                                                     */
 
+#define lua_function(L, n, f) (lua_pushstring(L, n),    \
+                               lua_pushcfunction(L, f), \
+                               lua_settable(L, -3))
+#define lua_constant(L, n, v) (lua_pushstring(L, n), \
+                               lua_pushnumber(L, v), \
+                               lua_settable(L, -3))
+
+void luaopen_electro(lua_State *L)
+{
+    /* Create the Electro environment table. */
+
+    lua_pushstring(L, "E");
+    lua_newtable(L);
+
+    /* Entity contructors. */
+
+    lua_function(L, "camera_create",       script_camera_create);
+    lua_function(L, "sprite_create",       script_sprite_create);
+    lua_function(L, "object_create",       script_object_create);
+    lua_function(L, "light_create",        script_light_create);
+    lua_function(L, "pivot_create",        script_pivot_create);
+
+    /* Entity control. */
+
+    lua_function(L, "entity_parent",       script_entity_parent);
+    lua_function(L, "entity_delete",       script_entity_delete);
+    lua_function(L, "entity_clone",        script_entity_clone);
+
+    lua_function(L, "entity_position",     script_entity_position);
+    lua_function(L, "entity_rotation",     script_entity_rotation);
+    lua_function(L, "entity_scale",        script_entity_scale);
+    lua_function(L, "entity_flag",         script_entity_flag);
+
+    lua_function(L, "entity_get_position", script_entity_get_position);
+    lua_function(L, "entity_get_rotation", script_entity_get_rotation);
+
+    /* Camera control. */
+
+    lua_function(L, "camera_dist",         script_camera_dist);
+    lua_function(L, "camera_zoom",         script_camera_zoom);
+
+    lua_constant(L, "camera_orthogonal",   CAMERA_ORTHO);
+    lua_constant(L, "camera_perspective",  CAMERA_PERSP);
+
+    /* Light control. */
+
+    lua_constant(L, "light_positional",    LIGHT_POSITIONAL);
+    lua_constant(L, "light_directional",   LIGHT_DIRECTIONAL);
+
+    /* Misc. */
+
+    lua_function(L, "add_tile",            script_add_tile);
+    lua_function(L, "enable_idle",         script_enable_idle);
+    lua_function(L, "joystick_axis",       script_joystick_axis);
+    lua_function(L, "viewport_get",        script_viewport_get);
+
+    /* Register the "electro" environment table globally. */
+
+    lua_settable(L, LUA_GLOBALSINDEX);
+}
+
 int script_init(void)
 {
     if ((L = lua_open()))
     {
+        luaopen_io(L);
         luaopen_base(L);
         luaopen_math(L);
-        luaopen_io(L);
         luaopen_table(L);
-
-        lua_register(L, "add_tile",        script_add_tile);
-        lua_register(L, "enable_idle",     script_enable_idle);
-        lua_register(L, "joystick_axis",   script_joystick_axis);
-
-        lua_register(L, "entity_parent",   script_entity_parent);
-        lua_register(L, "entity_delete",   script_entity_delete);
-        lua_register(L, "entity_clone",    script_entity_clone);
-
-        lua_register(L, "entity_position", script_entity_position);
-        lua_register(L, "entity_rotation", script_entity_rotation);
-        lua_register(L, "entity_scale",    script_entity_scale);
-        lua_register(L, "entity_flag",     script_entity_flag);
-
-        lua_register(L, "camera_create",   script_camera_create);
-        lua_register(L, "sprite_create",   script_sprite_create);
-        lua_register(L, "object_create",   script_object_create);
-        lua_register(L, "light_create",    script_light_create);
-        lua_register(L, "pivot_create",    script_pivot_create);
-
-        lua_register(L, "camera_dist",     script_camera_dist);
-        lua_register(L, "camera_zoom",     script_camera_zoom);
-
-        lua_register(L, "entity_get_position", script_entity_get_position);
-        lua_register(L, "entity_get_rotation", script_entity_get_rotation);
-        lua_register(L, "viewport_get",        script_viewport_get);
+        luaopen_electro(L);
 
         return 1;
     }
