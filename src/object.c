@@ -581,6 +581,8 @@ void draw_object(int id, int od, const float V[16], float a)
                     d[2] = m->d[2];
                     d[3] = m->d[3] * a * get_entity_alpha(id);
 
+                    glColor4fv(d);
+
                     /* Apply the material properties. */
 
                     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);

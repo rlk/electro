@@ -83,7 +83,9 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
 
             transform_entity(id, W, V);
 
-            glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
+            glPushAttrib(GL_ENABLE_BIT  |
+                         GL_TEXTURE_BIT |
+                         GL_COLOR_BUFFER_BIT);
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             {
                 /* Set up the GL state for star rendering. */

@@ -87,19 +87,6 @@ int entity_type(int id)
 }
 
 /*---------------------------------------------------------------------------*/
-/*
-int buffer_unused(int max, int (*exists)(int))
-{
-    int id;
-
-    for (id = 0; id < max; ++id)
-        if (!exists(id))
-            return id;
-
-    return -1;
-}
-*/
-/*---------------------------------------------------------------------------*/
 
 void transform_entity(int id, float frustum1[16], const float frustum0[16])
 {
@@ -208,6 +195,15 @@ void draw_entity_list(int id, const float V[16], float a)
             {
                 glPushAttrib(GL_ENABLE_BIT);
                 glDisable(GL_LIGHTING);
+            }
+
+            /* Enable line smoothing if requested. */
+
+            if (E[jd].flag & FLAG_LINE_SMOOTH)
+            {
+                glEnable(GL_LINE_SMOOTH);
+                glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+                glLineWidth(2.0);
             }
 
             /* Draw this entity. */

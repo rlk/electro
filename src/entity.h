@@ -23,10 +23,11 @@
 #define TYPE_LIGHT  6
 #define TYPE_PIVOT  7
 
-#define FLAG_HIDDEN    1
-#define FLAG_WIREFRAME 2
-#define FLAG_BILLBOARD 4
-#define FLAG_UNLIT     8
+#define FLAG_HIDDEN       1
+#define FLAG_WIREFRAME    2
+#define FLAG_BILLBOARD    4
+#define FLAG_UNLIT        8
+#define FLAG_LINE_SMOOTH 16
 
 struct entity
 {

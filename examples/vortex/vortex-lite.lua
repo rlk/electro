@@ -3,6 +3,7 @@
 
 camera = nil
 galaxy = nil
+hilite = nil
 
 zoom =   1.0
 magn = 100.0
@@ -13,6 +14,26 @@ setzoom = false
 setmagn = false
 setdist = false
 
+vert_point = 0
+vert_count = 1
+vert_start = 1
+serial = 1
+
+constellation = { }
+
+-------------------------------------------------------------------------------
+
+function add_constellation(name)
+    constellation[serial] = E.create_object(name)
+
+    E.set_entity_alpha(constellation[serial], 0.8)
+    E.set_entity_flag(constellation[serial], E.entity_flag_unlit,       true)
+    E.set_entity_flag(constellation[serial], E.entity_flag_line_smooth, true)
+    E.parent_entity  (constellation[serial], camera)
+
+    serial = serial + 1
+end
+
 -------------------------------------------------------------------------------
 
 function do_start()
@@ -20,12 +41,20 @@ function do_start()
 
     camera = E.create_camera(E.camera_type_perspective)
     galaxy = E.create_galaxy("../galaxy_hip.gal")
+    hilite = E.create_sprite("hilite.png")
 
     E.parent_entity(galaxy, camera)
+    E.parent_entity(hilite, galaxy)
 
+    add_constellation("cassiopeia.obj")
+    add_constellation("orion.obj")
+    
     E.set_camera_zoom    (camera, zoom)
     E.set_camera_distance(camera, dist)
     E.set_galaxy_magnitude(galaxy, magn)
+
+    E.set_entity_flag(hilite, E.entity_flag_billboard, true)
+    E.set_entity_scale(hilite, 1 / 256, 1 / 256, 1 / 256)
 
     return true
 end
@@ -51,9 +80,11 @@ function do_keyboard(k, s)
 end
 
 function do_frame()
-    local i       = E.get_star_index(galaxy, camera)
-    local x, y, z = E.get_star_position(galaxy, i)
+    vert_point = E.get_star_index(galaxy, camera)
 
+    local x, y, z = E.get_star_position(galaxy, vert_point)
+
+    E.set_entity_position(hilite, x, y, z)
 end
 
 function do_point(dx, dy)
@@ -103,7 +134,23 @@ function do_point(dx, dy)
 end
 
 function do_click(b, s)
-    if b == 1 then setzoom = s end
+    if b == 1 then
+        if E.get_modifier(E.key_modifier_shift) then
+            if s then
+                local x, y, z = E.get_star_position(galaxy, vert_point)
+                print(string.format("v %f %f %f", x, y, z))
+            else
+                local x, y, z = E.get_star_position(galaxy, vert_point)
+                print(string.format("v %f %f %f", x, y, z))
+
+                print(string.format("e %d// %d//", vert_count, vert_count + 1))
+                vert_count = vert_count + 2
+            end
+        else
+            setzoom = s
+        end
+    end
+
     if b == 2 then setmagn = s end
     if b == 3 then setdist = s end
     return true

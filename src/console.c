@@ -436,7 +436,6 @@ static void refresh_command(void)
 int input_console(int symbol, int unicode)
 {
     if (symbol == SDLK_RETURN)                      /* Execute the command. */
-
     {
         if (command_i > 0)
         {
@@ -484,7 +483,7 @@ int input_console(int symbol, int unicode)
         refresh_command();
     }
 
-    else if (symbol == SDLK_UP)                     /* Previous history. */
+    else if (symbol == SDLK_UP || unicode == 16)    /* Previous history. */
     {
         history_j = (history_j - 1) % MAXHST;
         strncpy(command, history[history_j], MAXSTR);
@@ -493,7 +492,7 @@ int input_console(int symbol, int unicode)
         refresh_command();
     }
 
-    else if (symbol == SDLK_DOWN)                   /* Next history. */
+    else if (symbol == SDLK_DOWN || unicode == 14)  /* Next history. */
     {
         history_j = (history_j + 1) % MAXHST;
         strncpy(command, history[history_j], MAXSTR);

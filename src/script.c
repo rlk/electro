@@ -1126,6 +1126,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_wireframe",   FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
     lua_constant(L, "entity_flag_unlit",       FLAG_UNLIT);
+    lua_constant(L, "entity_flag_line_smooth", FLAG_LINE_SMOOTH);
 
     lua_constant(L, "camera_type_orthogonal",  CAMERA_ORTHO);
     lua_constant(L, "camera_type_perspective", CAMERA_PERSP);

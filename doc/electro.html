@@ -485,6 +485,15 @@ stars.  Commonly, any linear change applied to camera zoom should also
 be applied to galaxy magnitude in order to provide the illusion of
 increased magnification. </p>
 
+<dt><i>index</i> = <tt>get_star_index</tt>(<i>galaxy,
+camera</i>)<dd><p> Return the index of the star closest to the center
+of the given <i>camera</i>.  This is useful for star selection and
+galaxy navigation. </p>
+
+<dt><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy,
+index</i>)<dd><p> Return the position of the star at <i>index</i> of
+<i>galaxy</i>.
+
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -745,6 +754,22 @@ unpredictable and events tend to queue up, leading to sluggish
 behavior.  The application developer may count on the fact that
 <tt>do_timer</tt> is invoked as often as is possible, such that
 performance will not suffer. </p>
+
+<dt><tt> do_frame() </tt><dd><p> This callback is invoked immediately
+before a frame is rendered.  This is useful for operations that should
+be performed exactly once per frame. </p>
+
+<p> In general, events are queued and several events are handled
+during each frame period.  This is necessary because rendering is
+usually more expensive than event handling, and re-rendering after
+each event leads to sluggish performance.  Often, the most efficient
+event-handling organization is to accumulate events as they arrive (as
+in the <tt>do_timer</tt> and <tt>do_point</tt> examples) and use the
+resulting totals to update the scene at the last moment. </p>
+
+<p> Unlike other callbacks, the "dirty" flag return value from
+<tt>do_frame</tt> is ignored, as a redraw has already been
+scheduled. </p>
 
 <dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
 whenever a key is pressed or released.  The <tt>s</tt> argument is a
