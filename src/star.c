@@ -230,10 +230,10 @@ int star_gimme_sol(struct star *s)
 {
     /* The sun is not in the catalog.  Add it manually. */
 
-    s->pos[0] =    0.0;
-    s->pos[1] =   15.5;
-    s->pos[2] = 9200.0;
-    s->mag    =    5.0;
+    s->pos[0] = 0.0;
+    s->pos[1] = 0.0;
+    s->pos[2] = 0.0;
+    s->mag    = 5.0;
 
     star_color('G', s->col);
 

@@ -132,10 +132,6 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 /* Render all stars. */
 
                 c = node_draw(G[gd].N, 0, 0, V, G[gd].bound);
-
-                glPointSize(10.0);
-                glDrawArrays(GL_POINTS, G[gd].mark, 1);
-                glPointSize(1);
             }
             glPopClientAttrib();
             glPopAttrib();
@@ -152,9 +148,7 @@ int pick_galaxy(int id, int gd, const float p[3], const float v[3])
 {
     float d = 0;
 
-    G[gd].mark = node_pick(G[gd].N, 0, G[gd].S, 0, p, v, &d);
-
-    return G[gd].mark;
+    return node_pick(G[gd].N, 0, G[gd].S, 0, p, v, &d);
 }
 
 /*---------------------------------------------------------------------------*/

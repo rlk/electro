@@ -1,5 +1,5 @@
 PREFIX=/usr/local/Electro
-SDL_CONFIG=/sw/bin/sdl-config
+SDL_CONFIG=sdl-config
 
 #------------------------------------------------------------------------------
 

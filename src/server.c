@@ -276,8 +276,8 @@ void server(int argc, char *argv[])
 
     /*
     prep_tyc_galaxy();
-    prep_hip_galaxy();
     */
+    prep_hip_galaxy();
 
     if (init_script())
     {

@@ -54,7 +54,6 @@ function do_frame()
     local i       = E.get_star_index(galaxy, camera)
     local x, y, z = E.get_star_position(galaxy, i)
 
---  E.print_console(string.format("%d %f %f %f\n", i, x, y, z))
 end
 
 function do_point(dx, dy)

@@ -322,7 +322,7 @@ void draw_console(void)
             /* Set the GL state for rendering the console. */
 
             glEnable(GL_COLOR_MATERIAL);
-            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_DEPTH_TEST);
             glDisable(GL_TEXTURE_2D);
             glDisable(GL_LIGHTING);
 

@@ -24,8 +24,6 @@ struct galaxy
     int    S_num;
     int    N_num;
 
-    int mark;
-
     float  magnitude;
     float  bound[6];
 
