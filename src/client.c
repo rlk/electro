@@ -21,6 +21,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
+#include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
 #include "image.h"
@@ -61,7 +62,8 @@ static void client_recv(void)
     while ((event = unpack_event()))
     {
 #ifndef NDEBUG
-    printf("%d of %d: client_recv(%d)\n", mpi_rank(), mpi_size(), event);
+    printf("%d of %d: client_recv(%s)\n", mpi_rank(), mpi_size(),
+                                          event_string(event));
 #endif
         switch (event)
         {
@@ -80,10 +82,12 @@ static void client_recv(void)
         case EVENT_CAMERA_CREATE: camera_recv_create();   break;
         case EVENT_SPRITE_CREATE: sprite_recv_create();   break;
         case EVENT_OBJECT_CREATE: object_recv_create();   break;
+        case EVENT_GALAXY_CREATE: galaxy_recv_create();   break;
         case EVENT_LIGHT_CREATE:  light_recv_create();    break;
         case EVENT_PIVOT_CREATE:  pivot_recv_create();    break;
         case EVENT_IMAGE_CREATE:  image_recv_create();    break;
 
+        case EVENT_GALAXY_MAGN:   galaxy_recv_magn();     break;
         case EVENT_CAMERA_DIST:   camera_recv_dist();     break;
         case EVENT_CAMERA_ZOOM:   camera_recv_zoom();     break;
         case EVENT_SPRITE_BOUNDS: sprite_recv_bounds();   break;

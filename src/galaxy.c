@@ -16,54 +16,96 @@
 #include <math.h>
 
 #include "opengl.h"
-#include "galaxy.h"
+#include "buffer.h"
 #include "shared.h"
+#include "entity.h"
+#include "galaxy.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_init(void)
+static float mag = 1.0f;
+
+/*---------------------------------------------------------------------------*/
+
+int galaxy_send_create(const char *filename)
 {
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    star_read_catalog_bin(filename);
 
-    glEnable(GL_POINT_SPRITE_ARB);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
+    pack_event(EVENT_GALAXY_CREATE);
+    star_send_create();
 
-    glBlendFunc(GL_ONE, GL_ONE);
+    return entity_send_create(TYPE_GALAXY, 0);
+}
 
-    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-
-    /*
-    shared_load_program("star.vp", GL_VERTEX_PROGRAM_ARB);
-    shared_load_program("star.fp", GL_FRAGMENT_PROGRAM_ARB);
-    */
+void galaxy_recv_create(void)
+{
+    star_recv_create();
+    entity_recv_create();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void circum_draw(void)
+void galaxy_send_magn(int gd, float m)
 {
-    int i;
-
-    glDisable(GL_TEXTURE_2D);
-    {
-        glBegin(GL_LINE_LOOP);
-        {
-            for (i = 0; i < 360; i++)
-                glVertex3d(RADIUS * sin(PI * i / 180.0), 0,
-                           RADIUS * cos(PI * i / 180.0));
-        }
-        glEnd();
-    }
-    glEnable(GL_TEXTURE_2D);
+    pack_event(EVENT_GALAXY_MAGN);
+    pack_float((mag = m));
 }
 
-void galaxy_draw(void)
+void galaxy_recv_magn(void)
 {
-/*  circum_draw(); */
-    star_draw();
+    mag = unpack_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void galaxy_draw(int id, int gd, float a)
+{
+    glPushMatrix();
+    {
+        /* Apply the local coordinate system transformation. */
+
+        entity_transform(id);
+
+        glPushAttrib(GL_TEXTURE_BIT |
+                     GL_ENABLE_BIT  |
+                     GL_COLOR_BUFFER_BIT);
+        {
+            /* Set up the GL state for star rendering. */
+
+            glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+            glEnable(GL_POINT_SPRITE_ARB);
+            glEnable(GL_COLOR_MATERIAL);
+
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_LIGHTING);
+            glDisable(GL_DEPTH_TEST);
+
+            glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+            glBlendFunc(GL_ONE, GL_ONE);
+
+            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, mag, 0, 0, 0);
+
+            /* Render all stars. */
+
+            star_draw();
+        }
+        glPopAttrib();
+
+        opengl_check("galaxy_draw");
+
+        /* Render all child entities in this coordinate system. */
+
+        entity_traversal(id, a);
+    }
+    glPopMatrix();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void galaxy_delete(int gd)
+{
+    star_delete();
 }
 
 /*---------------------------------------------------------------------------*/

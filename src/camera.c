@@ -36,6 +36,35 @@ static int camera_exists(int cd)
 
 /*---------------------------------------------------------------------------*/
 
+static void camera_transform(int id)
+{
+    float p[3];
+    float r[3];
+
+    entity_get_position(id, p + 0, p + 1, p + 2);
+    entity_get_rotation(id, r + 0, r + 1, r + 2);
+
+    /* Rotation. */
+
+    if (fabs(r[0]) > 0.0)
+        glRotatef(-r[0], 1.0f, 0.0f, 0.0f);
+
+    if (fabs(r[1]) > 0.0)
+        glRotatef(-r[1], 0.0f, 1.0f, 0.0f);
+
+    if (fabs(r[2]) > 0.0)
+        glRotatef(-r[2], 0.0f, 0.0f, 1.0f);
+
+    /* Translation. */
+
+    if (fabs(p[0]) > 0.0 ||
+        fabs(p[1]) > 0.0 ||
+        fabs(p[2]) > 0.0)
+    {
+        glTranslatef(-p[0], -p[1], -p[2]);
+    }
+}
+
 int camera_init(void)
 {
     if ((C = (struct camera *) calloc(CMAXINIT, sizeof (struct camera))))
@@ -93,22 +122,20 @@ void camera_draw(int id, int cd, float a)
             glLoadIdentity();
             glTranslatef(0, 0, -C[cd].dist);
 
-            entity_transform(id);
+            camera_transform(id);
         }
 
         opengl_check("camera_draw");
+
+        /* Use the view configuration as vertex program parameters. */
+
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
+                                   0, p[0], p[1], p[2], 1);
 
         /* Render all children using this camera. */
 
         entity_traversal(id, a);
     }
-
-    /* Use the view configuration as vertex program parameters. */
-
-    /* TODO: Re-enable this.
-    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, camera_magn, 0, 0, 0);
-    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, p[0], p[1], p[2], 1);
-    */
 }
 
 /*---------------------------------------------------------------------------*/

@@ -22,6 +22,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
+#include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
 #include "entity.h"
@@ -50,6 +51,7 @@ const char *entity_typename(int id)
         case TYPE_CAMERA: return "camera";
         case TYPE_SPRITE: return "sprite";
         case TYPE_OBJECT: return "object";
+        case TYPE_GALAXY: return "galaxy";
         case TYPE_LIGHT:  return "light";
         case TYPE_PIVOT:  return "pivot";
         }
@@ -178,6 +180,9 @@ void entity_traversal(int id, float a)
                 break;
             case TYPE_OBJECT:
                 object_draw(jd, E[jd].data, E[jd].alpha * a);
+                break;
+            case TYPE_GALAXY:
+                galaxy_draw(jd, E[jd].data, E[jd].alpha * a);
                 break;
             case TYPE_LIGHT:
                 light_draw(jd, E[jd].data, E[jd].alpha * a);
@@ -351,6 +356,7 @@ static void entity_delete(int id)
         case TYPE_CAMERA: camera_delete(data); break;
         case TYPE_SPRITE: sprite_delete(data); break;
         case TYPE_OBJECT: object_delete(data); break;
+        case TYPE_GALAXY: galaxy_delete(data); break;
         case TYPE_LIGHT:   light_delete(data); break;
         }
     }

@@ -19,8 +19,9 @@
 #define TYPE_CAMERA 2
 #define TYPE_SPRITE 3
 #define TYPE_OBJECT 4
-#define TYPE_LIGHT  5
-#define TYPE_PIVOT  6
+#define TYPE_GALAXY 5
+#define TYPE_LIGHT  6
+#define TYPE_PIVOT  7
 
 #define FLAG_HIDDEN    1
 #define FLAG_WIREFRAME 2

@@ -15,6 +15,8 @@ global_shockwave = nil
 state     = "start"
 
 serial    = 1
+space     = nil
+galaxy    = nil
 camera    = nil
 above     = nil
 below     = nil
@@ -36,7 +38,9 @@ level      = 1
 ships      = 0
 curr_score = 0
 high_score = 100
-speed      = 5
+speed      = 7
+
+wait_time  = 0
 
 -------------------------------------------------------------------------------
 
@@ -106,7 +110,7 @@ function score_init()
 
     -- Create the current score display.
 
-    for i = 0,4 do
+    for i = 0, 4 do
         curr_score_digit[i] = E.create_sprite("score.png")
 
         E.entity_scale   (curr_score_digit[i], scale, scale, scale);
@@ -117,7 +121,7 @@ function score_init()
 
     -- Create the high score display.
 
-    for i = 0,4 do
+    for i = 0, 4 do
         high_score_digit[i] = E.create_sprite("score.png")
 
         E.entity_scale   (high_score_digit[i], scale, scale, scale);
@@ -211,6 +215,13 @@ function add_bullet()
     E.entity_position(bullet.entity, pos_x + x, pos_y + y, pos_z)
 
     table.insert(bullets, bullet)
+
+    -- Bullets cost one point.
+
+    if curr_score > 0 then
+        curr_score = curr_score - 1
+        curr_score_set(curr_score)
+    end
 end
 
 function del_bullet(id, bullet)
@@ -323,9 +334,9 @@ function asteroid_frag(id, asteroid)
     add_explosion(entity, size)
 
     if size > 1 then
---        add_asteroid(entity, size - 1)
---        add_asteroid(entity, size - 1)
---        add_asteroid(entity, size - 1)
+        add_asteroid(entity, size - 1)
+        add_asteroid(entity, size - 1)
+        add_asteroid(entity, size - 1)
     end
 
     if size == 3 then add_score(entity, 25) end
@@ -396,7 +407,7 @@ function asteroid_step(id, asteroid)
         local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
                                (pos_Y - pos_y) * (pos_Y - pos_y));
 
-        if dist < size + 1 then
+        if dist < size + 0.5 then
             add_explosion(ship, 10)
             add_shockwave(ship, 10)
 
@@ -404,8 +415,8 @@ function asteroid_step(id, asteroid)
 
             velocity_dx = 0
             velocity_dy = 0
-
-            state = "dead"
+            wait_time   = 0
+            state       = "dead"
         end
     end
 end
@@ -490,8 +501,14 @@ end
 -------------------------------------------------------------------------------
 
 function level_init()
-    for i = 1, level  do
+    for i = 1, level + 3 do
         add_asteroid(nil, 3)
+    end
+end
+
+function level_stop()
+    while undone > 0 do
+        table.foreach(asteroids,  del_asteroid)
     end
 end
 
@@ -613,20 +630,27 @@ function do_start()
     -- Initialize the scene.
 
     camera  = E.create_camera(E.camera_type_orthogonal)
-    overlay = E.create_camera(E.camera_type_orthogonal)
+    space   = E.create_camera(E.camera_type_perspective)
 
     light  = E.create_light(E.light_type_positional)
     above  = E.create_pivot()
     below  = E.create_pivot()
     ship   = E.entity_clone(global_ship);
+    galaxy = E.create_galaxy("../hip_main.bin")
 
-    E.entity_parent(above, camera)
-    E.entity_parent(light, camera)
-    E.entity_parent(ship,  light)
-    E.entity_parent(below, camera)
+    E.entity_parent(above,  camera)
+    E.entity_parent(light,  camera)
+    E.entity_parent(ship,   light)
+    E.entity_parent(below,  camera)
+    E.entity_parent(galaxy, space)
 
     E.entity_position(light, 0, 0, 10)
     E.camera_zoom(camera, global_z)
+
+    E.galaxy_magn(galaxy, 100.0)
+    E.camera_dist(space,  100.0)
+    E.camera_zoom(space,  0.001)
+    E.entity_position(space, 0, 15.5, 9200)
 
     score_init()
 
@@ -638,7 +662,12 @@ end
 
 function do_timer(dt)
 
+    local rot_x, rot_y, rot_z = E.entity_get_rotation(space)
+
+    E.entity_rotation(space, rot_x, rot_y + dt, rot_z)
+
     global_dt = dt
+    wait_time = wait_time + dt
 
     if global_dt > 0 then
 
@@ -655,6 +684,7 @@ function do_timer(dt)
         end
 
         if state == "done" then
+            wait_time = wait_time + dt
             stuff_step()
             player_step()
             return true
@@ -696,8 +726,7 @@ function do_joystick(n, b, s)
         end
 
     elseif state == "dead" then
-        if b == 1 and s then
-            print(ships)
+        if wait_time > 1 and b == 1 and s then
             if ships > 0 then
                 ships = ships - 1
                 player_reset()
@@ -710,14 +739,19 @@ function do_joystick(n, b, s)
     elseif state == "done" then
         if b == 2 then
             thrusting = s
-        else
+        end
+        if wait_time > 1 and b == 2 and s then
+            speed = speed + 2
             level = level + 1
             level_init()
             state = "ready"
         end
 
     elseif state == "over" then
-        state = "start"
+        if wait_time > 1 and s then
+            level_stop()
+            state = "start"
+        end
     end
 
     return true

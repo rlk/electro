@@ -44,7 +44,7 @@ static void *image_punt(const char *message)
 GLuint image_make_tex(const void *p, int w, int h, int b)
 {
     GLenum f = GL_RGB;
-    GLuint o;
+    GLuint o = 0;
 
     /* Determine GL texture format from byte count. */
 
@@ -61,9 +61,16 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
     glGenTextures(1, &o);
     glBindTexture(GL_TEXTURE_2D, o);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     /*
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, b, w, h, 0, f, GL_UNSIGNED_BYTE, p);
     */
 
     glTexParameteri(GL_TEXTURE_2D,
@@ -179,7 +186,10 @@ int image_init(void)
     if ((I = (struct image *) calloc(IMAXINIT, sizeof (struct image))))
     {
         I[0].filename = "default";
-        I[0].texture  = 0;
+        I[0].texture  =   0;
+        I[0].w        = 128;
+        I[0].h        = 128;
+        I[0].b        =   3;
 
         I_max = IMAXINIT;
         return 1;
@@ -242,19 +252,20 @@ void image_recv_create(void)
     I[id].b = unpack_index();
     I[id].p = unpack_alloc(I[id].w * I[id].h * I[id].b);
 
-    I[id].texture = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+    I[id].texture  = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+    I[id].filename = "exists";
 }
 
 /*---------------------------------------------------------------------------*/
 
 int image_get_w(int id)
 {
-    return image_exists(id) ? I[id].w : 0;
+    return image_exists(id) ? I[id].w : 128;
 }
 
 int image_get_h(int id)
 {
-    return image_exists(id) ? I[id].h : 0;
+    return image_exists(id) ? I[id].h : 128;
 }
 
 /*---------------------------------------------------------------------------*/

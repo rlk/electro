@@ -10,10 +10,10 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <mpi.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #ifdef _WIN32
@@ -23,15 +23,27 @@
 #endif
 
 #include "opengl.h"
-#include "shared.h"
+#include "buffer.h"
 #include "image.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
 
-static GLuint       star_texture = 0;
-static int          star_count   = 0;
 static struct star *star_data    = NULL;
+static int          star_count   = 0;
+static GLuint       star_fp      = 0;
+static GLuint       star_vp      = 0;
+static GLuint       star_texture = 0;
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef _WIN32
+#define FMODE_RB "rb"
+#define FMODE_WB "wb"
+#else
+#define FMODE_RB "r"
+#define FMODE_WB "w"
+#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -62,6 +74,9 @@ GLuint star_make_texture(void)
         /* Create a texture object, and release the image buffer. */
 
         o = image_make_tex(p, w, h, 1);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         free(p);
     }
@@ -229,7 +244,7 @@ int star_write_catalog(const char *filename)
 
         fclose(fp);
     }
-    else perror("star_write_catalog_bin: fopen()");
+    else perror("star_write_catalog: fopen()");
 
     return n;
 }
@@ -315,27 +330,146 @@ int star_read_catalog_txt(const char *filename)
 
 /*---------------------------------------------------------------------------*/
 
-void star_init(void)
+static GLuint load_star_fp(void)
 {
-    int len;
+    const char *star_fp =
+        "!!ARBfp1.0                                                        \n"
+
+        "ATTRIB icol = fragment.color;                                     \n"
+        "ATTRIB texc = fragment.texcoord;                                  \n"
+
+        "PARAM  half = { 0.5, 0.5, 0.0, 1.0 };                             \n"
+
+        "TEMP   ncol;                                                      \n"
+        "TEMP   dist;                                                      \n"
+        "TEMP   temp;                                                      \n"
+
+        "OUTPUT ocol = result.color;                                       \n"
+
+        /* We must subtract and re-add (0.5, 0.5) on texture coordinates.*/
+
+        "SUB    dist, texc, half;                                          \n"
+
+        /* Scale the texture inversely to the value of each channel. */
+
+        "RCP    ncol.r, icol.r;                                            \n"
+        "RCP    ncol.g, icol.g;                                            \n"
+        "RCP    ncol.b, icol.b;                                            \n"
+
+        /* Perform the texture lookup separately for each color component.*/
+
+        "MAD    temp, dist, ncol.r, half;                                  \n"
+        "TEX    ocol.r, temp, texture[0], 2D;                              \n"
+
+        "MAD    temp, dist, ncol.g, half;                                  \n"
+        "TEX    ocol.g, temp, texture[0], 2D;                              \n"
+
+        "MAD    temp, dist, ncol.b, half;                                  \n"
+        "TEX    ocol.b, temp, texture[0], 2D;                              \n"
+
+        /* Assume additive blending, and set alpha to 1. */
+
+        "MOV    ocol.a, 1;                                                 \n"
+
+        "END                                                               \n";
+
+    GLuint program;
+
+    glGenProgramsARB(1, &program);
+
+    glBindProgramARB  (GL_FRAGMENT_PROGRAM_ARB, program);
+    glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(star_fp), star_fp);
+
+    return program;
+}
+
+static GLuint load_star_vp(void)
+{
+    const char *star_vp =
+        "!!ARBvp1.0                                                         \n"
+
+        "ATTRIB ipos   = vertex.position;                                  \n"
+        "ATTRIB icol   = vertex.color;                                     \n"
+        "ATTRIB imag   = vertex.attrib[6];                                 \n"
+
+        "PARAM  const  = { 0.01, -0.2, 10.0, 0.7525749 };                  \n"
+        "PARAM  view   = program.env[0];                                   \n"
+        "PARAM  mult   = program.env[1];                                   \n"
+        "PARAM  mvp[4] = { state.matrix.mvp };                             \n"
+
+        "TEMP   dist;                                                      \n"
+        "TEMP   amag;                                                      \n"
+        "TEMP   luma;                                                      \n"
+        "TEMP   temp;                                                      \n"
+
+        "OUTPUT osiz   = result.pointsize;                                 \n"
+        "OUTPUT opos   = result.position;                                  \n"
+        "OUTPUT ocol   = result.color;                                     \n"
+
+        /* Transform the star position. */
+
+        "DP4    opos.x, mvp[0], ipos;                                      \n"
+        "DP4    opos.y, mvp[1], ipos;                                      \n"
+        "DP4    opos.z, mvp[2], ipos;                                      \n"
+        "DP4    opos.w, mvp[3], ipos;                                      \n"
+
+        /*  Compute the distance (squared) from the viewpoint to the star. */
+
+        "SUB    temp, ipos, view;                                          \n"
+        "DP3    dist, temp, temp;                                          \n"
+
+        /* Compute the apparent magnitude. */
+
+        "MUL    temp, dist, const.x;                                       \n"
+        "LG2    temp, temp.x;                                              \n"
+        "MUL    temp, temp, const.w;                                       \n"
+        "ADD    amag, imag, temp;                                          \n"
+
+        /* Compute the luminosity and sprite scale. */
+
+        "MUL    temp, amag, const.y;                                       \n"
+        "POW    luma, const.z, temp.x;                                     \n"
+        "MUL    osiz, luma, mult;                                          \n"
+        
+        "MOV    ocol, icol;                                                \n"
+        "END                                                               \n";
+
+
+    GLuint program;
+
+    glGenProgramsARB(1, &program);
+
+    glBindProgramARB  (GL_VERTEX_PROGRAM_ARB, program);
+    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(star_vp), star_vp);
+
+    return program;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void star_send_create(void)
+{
+    pack_index(star_count);
+    pack_alloc(star_count * sizeof (struct star), star_data);
 
     star_texture = star_make_texture();
-
-    /* Broadcast the size of the star catalog. */
-
-    mpi_share_integer(1, &star_count);
-
-    /* If this host is not root, acquire storage for the catalog. */
-
-    if (!mpi_isroot())
-        star_data = (struct star *) calloc(sizeof (struct star), star_count);
-
-    /* Broadcast the star catalog data. */
-
-    len = star_count * sizeof (struct star);
-
-    mpi_assert(MPI_Bcast(star_data, len, MPI_BYTE, 0, MPI_COMM_WORLD));
+    star_fp      = load_star_fp();
+    star_vp      = load_star_vp();
 }
+
+void star_recv_create(void)
+{
+    star_count = unpack_index();
+    star_data  = unpack_alloc(star_count * sizeof (struct star));
+
+    star_texture = star_make_texture();
+    star_fp      = load_star_fp();
+    star_vp      = load_star_vp();
+}
+
+/*---------------------------------------------------------------------------*/
 
 void star_draw(void)
 {
@@ -346,12 +480,15 @@ void star_draw(void)
     glEnable(GL_VERTEX_PROGRAM_ARB);
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
     {
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vp);
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_fp);
+
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableVertexAttribArrayARB(6);
 
-        glVertexPointer(3, GL_FLOAT,         s, &star_data[0].pos);
-        glColorPointer (3, GL_UNSIGNED_BYTE, s, &star_data[0].col);
+        glVertexPointer(3, GL_FLOAT,                s, &star_data[0].pos);
+        glColorPointer (3, GL_UNSIGNED_BYTE,        s, &star_data[0].col);
         glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].mag);
 
         glDrawArrays(GL_POINTS, 0, star_count);
@@ -362,6 +499,16 @@ void star_draw(void)
     }
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
     glDisable(GL_VERTEX_PROGRAM_ARB);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void star_delete(void)
+{
+    free(star_data);
+
+    star_data  = NULL;
+    star_count = 0;
 }
 
 /*---------------------------------------------------------------------------*/

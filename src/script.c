@@ -21,6 +21,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
+#include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
 #include "entity.h"
@@ -132,6 +133,12 @@ static int lua_iscamera(lua_State *L, int i)
         && entity_istype(lua_toentity(L, i), TYPE_CAMERA);
 }
 
+static int lua_isgalaxy(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && entity_istype(lua_toentity(L, i), TYPE_GALAXY);
+}
+
 static int lua_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
@@ -225,6 +232,24 @@ static int script_getcamera(const char *name, lua_State *L, int i)
             return entity_todata(lua_toentity(L, i));
         else
             script_type_error(name, "camera", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
+static int script_getgalaxy(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a galaxy, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_isgalaxy(L, i))
+            return entity_todata(lua_toentity(L, i));
+        else
+            script_type_error(name, "galaxy", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -479,6 +504,14 @@ static int script_create_object(lua_State *L)
     return 1;
 }
 
+static int script_create_galaxy(lua_State *L)
+{
+    int id = galaxy_send_create(script_getstring("create_galaxy", L, -1));
+
+    lua_pushentity(L, id);
+    return 1;
+}
+
 static int script_create_light(lua_State *L)
 {
     int id = light_send_create(script_getnumber("create_light", L, -1));
@@ -493,6 +526,18 @@ static int script_create_pivot(lua_State *L)
 
     lua_pushentity(L, id);
     return 1;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Galaxf controls                                                           */
+
+static int script_galaxy_magn(lua_State *L)
+{
+    const char *name = "galaxy_magn";
+
+    galaxy_send_magn(script_getgalaxy(name, L, -2),
+                     script_getnumber(name, L, -1));
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -586,6 +631,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "create_camera",           script_create_camera);
     lua_function(L, "create_sprite",           script_create_sprite);
     lua_function(L, "create_object",           script_create_object);
+    lua_function(L, "create_galaxy",           script_create_galaxy);
     lua_function(L, "create_light",            script_create_light);
     lua_function(L, "create_pivot",            script_create_pivot);
 
@@ -609,6 +655,10 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_hidden",      FLAG_HIDDEN);
     lua_constant(L, "entity_flag_wireframe",   FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
+
+    /* Galaxy control. */
+
+    lua_function(L, "galaxy_magn",             script_galaxy_magn);
 
     /* Camera control. */
 

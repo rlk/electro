@@ -10,11 +10,9 @@ rot_y  = 0.0
 music  = nil
 sound  = nil
 
+galaxy = nil
 persp  = nil
 ortho  = nil
-obj1   = nil
-obj2   = nil
-light  = nil
 point  = nil
 btn    = { }
 
@@ -31,26 +29,16 @@ function init_2D()
 end
 
 function init_3D()
-    persp = E.create_camera(E.camera_type_perspective)
-    obj1  = E.create_object("ball.obj")
-    obj2  = E.create_object("ball.obj")
-    light = E.create_light(E.light_type_positional)
-    pivot = E.create_pivot()
+    persp  = E.create_camera(E.camera_type_perspective)
+    galaxy = E.create_galaxy("hip_main.bin")
 
-    E.entity_parent(light, persp)
-    E.entity_parent(pivot, light)
-    E.entity_parent(obj1,  pivot)
-    E.entity_parent(obj2,  pivot)
+    E.entity_parent(galaxy,  persp)
 
-    E.entity_alpha(obj1, 0.5)
-    E.entity_flag(obj2, E.entity_flag_billboard, true)
-
+    E.galaxy_magn(galaxy, 100.0)
     E.camera_zoom(persp,  0.001)
-    E.camera_dist(persp, 10.000)
+    E.camera_dist(persp,  30.0)
 
-    E.entity_position(light, 0, 2, 2)
-    E.entity_position(obj1, -1, 0, 0)
-    E.entity_position(obj2,  1, 0, 0)
+    E.entity_position(persp, 0, 15.5, 9200)
 end
 
 function do_start()
@@ -62,7 +50,7 @@ function do_start()
 
     E.sound_loop(music);
 
-    E.enable_idle(true)
+--  E.enable_idle(true)
 
     return true
 end
@@ -102,8 +90,8 @@ function do_point(dx, dy)
         rot_x = rot_x + dy
         rot_y = rot_y + dx
 
-        if (pivot) then
-            E.entity_rotation(pivot, rot_x, rot_y, 0)
+        if (persp) then
+            E.entity_rotation(persp, rot_x, rot_y, 0)
         end
 
         return true

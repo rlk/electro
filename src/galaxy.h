@@ -19,8 +19,15 @@
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_init(void);
-void galaxy_draw(void);
+int  galaxy_send_create(const char *);
+void galaxy_recv_create(void);
+
+void galaxy_send_magn(int, float);
+void galaxy_recv_magn(void);
+
+void galaxy_draw(int, int, float);
+
+void galaxy_delete(int);
 
 /*---------------------------------------------------------------------------*/
 

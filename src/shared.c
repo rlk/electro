@@ -115,18 +115,25 @@ const char *event_string(int type)
 
     case EVENT_ENTITY_PARENT: return "entity parent";
     case EVENT_ENTITY_DELETE: return "entity delete";
+    case EVENT_ENTITY_CLONE:  return "entity clone";
     case EVENT_ENTITY_MOVE:   return "entity move";
     case EVENT_ENTITY_TURN:   return "entity turn";
     case EVENT_ENTITY_SIZE:   return "entity size";
+    case EVENT_ENTITY_FADE:   return "entity fade";
+    case EVENT_ENTITY_FLAG:   return "entity flag";
 
     case EVENT_CAMERA_CREATE: return "camera create";
     case EVENT_SPRITE_CREATE: return "sprite create";
     case EVENT_OBJECT_CREATE: return "object create";
+    case EVENT_GALAXY_CREATE: return "galaxy create";
     case EVENT_LIGHT_CREATE:  return "light create";
     case EVENT_PIVOT_CREATE:  return "pivot create";
+    case EVENT_IMAGE_CREATE:  return "image create";
 
+    case EVENT_GALAXY_MAGN:   return "galaxy magn";
     case EVENT_CAMERA_DIST:   return "camera dist";
     case EVENT_CAMERA_ZOOM:   return "camera zoom";
+    case EVENT_SPRITE_BOUNDS: return "sprite bounds";
     }
 
     return "UNKNOWN";
