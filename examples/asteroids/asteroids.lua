@@ -904,7 +904,7 @@ function do_start()
     below  = E.create_pivot()
     ship   = E.create_clone(global_ship)
     thrust = E.create_sprite("thrust.png")
-    galaxy = E.create_galaxy("../galaxy_small.gal")
+    galaxy = E.create_galaxy("../galaxy_hip.gal")
 
     for i = 1, 5 do
         spares[i] = E.create_clone(global_ship)

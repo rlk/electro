@@ -1,13 +1,17 @@
 
 -------------------------------------------------------------------------------
 
-camera = nil
-galaxy = nil
+camera_tyc = nil
+camera_hip = nil
+galaxy_tyc = nil
+galaxy_hip = nil
 
-zoom =   1.0
-magn = 100.0
-dist =   0.0
-spin =   0.0
+zoom     =   1.0
+hip_magn = 100.0
+tyc_magn = 100.0
+hip_dist =   0.0
+tyc_dist =   0.0
+spin     =   0.0
 
 setzoom = false
 setmagn = false
@@ -16,24 +20,33 @@ setdist = false
 -------------------------------------------------------------------------------
 
 function do_start()
-    camera = E.create_camera(E.camera_type_perspective)
-    galaxy = E.create_galaxy("../galaxy_large.gal")
+    camera_tyc = E.create_camera(E.camera_type_perspective)
+    camera_hip = E.create_camera(E.camera_type_perspective)
+    galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal")
+    galaxy_hip = E.create_galaxy("../galaxy_hip.gal")
 
-    E.parent_entity(galaxy, camera)
+    E.parent_entity(galaxy_hip, camera_hip)
+    E.parent_entity(galaxy_tyc, camera_tyc)
 
-    E.set_entity_position(camera, 0, 15.5, 9200)
+    E.set_entity_position(camera_hip, 0, 15.5, 9200)
+    E.set_entity_position(camera_tyc, 0, 15.5, 9200)
 
-    E.set_camera_zoom(camera, zoom)
-    E.set_camera_distance(camera, dist)
-    E.set_galaxy_magnitude(galaxy, magn)
+    E.set_camera_zoom    (camera_hip, zoom)
+    E.set_camera_zoom    (camera_tyc, zoom)
+    E.set_camera_distance(camera_hip, hip_dist)
+    E.set_camera_distance(camera_tyc, tyc_dist)
+
+    E.set_galaxy_magnitude(galaxy_hip, hip_magn)
+    E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
 
     return true
 end
 
 function do_timer(dt)
-    local x, y, z = E.get_entity_rotation(camera)
+    local x, y, z = E.get_entity_rotation(camera_hip)
 
-    E.set_entity_rotation(camera, x, y + dt * spin, z)
+    E.set_entity_rotation(camera_hip, x, y + dt * spin, z)
+    E.set_entity_rotation(camera_tyc, x, y + dt * spin, z)
     return true
 end
 
@@ -51,6 +64,9 @@ function do_keyboard(k, s)
 end
 
 function do_point(dx, dy)
+    local shift   = E.get_modifier(1)
+    local control = E.get_modifier(64)
+
     if setzoom then      -- Set the camera zoom.
 
         zoom = zoom + dy * 0.01
@@ -58,30 +74,36 @@ function do_point(dx, dy)
             zoom = 0.001
         end
 
-        E.set_camera_zoom(camera, zoom * zoom)
-        E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
+        E.set_camera_zoom(camera_hip, zoom * zoom)
+        E.set_camera_zoom(camera_tyc, zoom * zoom)
+        E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
+        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
 
     elseif setmagn then  -- Set the stellar magnitude multiplier.
 
-        magn = magn - dy * 1.0
-        if magn < 0 then
-            magn = 0
-        end
+        if not shift   then hip_magn = hip_magn - dy * 1.0 end
+        if not control then tyc_magn = tyc_magn - dy * 1.0 end
 
-        E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
+        if hip_magn < 0 then hip_magn = 0 end
+        if tyc_magn < 0 then tyc_magn = 0 end
+
+        E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
+        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
 
     elseif setdist then  -- Set the camera distance from the center.
 
-        dist = dist + dy * 0.1
-        if dist < 0 then
-            dist = 0
-        end
+        if not shift   then hip_dist = hip_dist + dy * 0.1 end
+        if not control then tyc_dist = tyc_dist + dy * 0.1 end
 
-        E.set_camera_distance(camera, dist)
+        if hip_dist < 0 then hip_dist = 0 end
+        if tyc_dist < 0 then tyc_dist = 0 end
+
+        E.set_camera_distance(camera_hip, hip_dist)
+        E.set_camera_distance(camera_tyc, tyc_dist)
 
     else                 -- None of the above.  Just pan the camera
 
-        local x, y, z = E.get_entity_rotation(camera)
+        local x, y, z = E.get_entity_rotation(camera_hip)
 
         x = x - dy * 0.1 * zoom * zoom
         y = y - dx * 0.1 * zoom * zoom
@@ -92,7 +114,8 @@ function do_point(dx, dy)
         if y < -180 then y = y + 360 end
         if y >  180 then y = y - 360 end
 
-        E.set_entity_rotation(camera, x, y, z)
+        E.set_entity_rotation(camera_hip, x, y, z)
+        E.set_entity_rotation(camera_tyc, x, y, z)
     end
 
     return true

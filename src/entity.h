@@ -89,6 +89,9 @@ void send_set_entity_rotation(int, float, float, float);
 void send_set_entity_scale   (int, float, float, float);
 void send_set_entity_alpha   (int, float);
 
+void send_move_entity(int, float, float, float);
+void send_turn_entity(int, float, float, float);
+
 void recv_set_entity_position(void);
 void recv_set_entity_rotation(void);
 void recv_set_entity_scale   (void);

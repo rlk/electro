@@ -128,22 +128,27 @@ void transform_entity(int id, float frustum1[16], const float frustum0[16])
         m_zrot(M, I, E[id].rotation[2]);
     }
 
-    /* Billboard.  TODO: fix frustum billboard. */
+    /* Billboard. */
 
     if (E[id].flag & FLAG_BILLBOARD)
     {
-        float M[16];
+        float A[16];
+        float B[16];
 
-        glGetFloatv(GL_MODELVIEW_MATRIX, M);
+        glGetFloatv(GL_MODELVIEW_MATRIX, A);
 
-        M[0] = 1.f;  M[4] = 0.f;  M[8]  = 0.f;
-        M[1] = 0.f;  M[5] = 1.f;  M[9]  = 0.f;
-        M[2] = 0.f;  M[6] = 0.f;  M[10] = 1.f;
+        A[0] = 1.f;  A[4] = 0.f;  A[8]  = 0.f;
+        A[1] = 0.f;  A[5] = 1.f;  A[9]  = 0.f;
+        A[2] = 0.f;  A[6] = 0.f;  A[10] = 1.f;
 
-        glLoadMatrixf(M);
+        glLoadMatrixf(A);
+
+        m_xpos(B, A);
+        m_mult(M, M, A);
+        m_mult(I, B, I);
     }
 
-    /* Scale.  TODO: fix frustum scale. */
+    /* Scale. */
 
     if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
         fabs(E[id].scale[1] - 1.0) > 0.0 ||
@@ -152,6 +157,9 @@ void transform_entity(int id, float frustum1[16], const float frustum0[16])
         glScalef(E[id].scale[0],
                  E[id].scale[1],
                  E[id].scale[2]);
+        m_scal(M, I, E[id].scale[0],
+                     E[id].scale[1],
+                     E[id].scale[2]);
     }
 
     /* Transform the view frustum. */
@@ -476,6 +484,35 @@ void send_set_entity_alpha(int id, float a)
     pack_index(id);
 
     pack_float((E[id].alpha = a));
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_move_entity(int id, float x, float y, float z)
+{
+    float M[16], I[16], v[3];
+
+    m_init(M);
+    m_init(I);
+
+    m_xrot(M, I, E[id].rotation[0]);
+    m_yrot(M, I, E[id].rotation[1]);
+    m_zrot(M, I, E[id].rotation[2]);
+
+    v[0] = M[0] * x + M[4] * y + M[8]  * z;
+    v[1] = M[1] * x + M[5] * y + M[9]  * z;
+    v[2] = M[2] * x + M[6] * y + M[10] * z;
+
+    send_set_entity_position(id, E[id].position[0] + v[0],
+                                 E[id].position[1] + v[1],
+                                 E[id].position[2] + v[2]);
+}
+
+void send_turn_entity(int id, float x, float y, float z)
+{
+    send_set_entity_rotation(id, E[id].rotation[0] + x,
+                                 E[id].rotation[1] + y,
+                                 E[id].rotation[2] + z);
 }
 
 /*---------------------------------------------------------------------------*/

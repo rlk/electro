@@ -61,11 +61,6 @@ static void client_recv(void)
     sync_buffer();
 
     while ((event = unpack_event()))
-    {
-#ifndef NDEBUG
-    printf("%d of %d: client_recv(%s)\n", mpi_rank(), mpi_size(),
-                                          event_string(event));
-#endif
         switch (event)
         {
         case EVENT_DRAW:                 recv_draw_client();          break;
@@ -95,7 +90,6 @@ static void client_recv(void)
         case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         }
-    }
 }
 
 /*---------------------------------------------------------------------------*/

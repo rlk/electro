@@ -32,7 +32,7 @@
 #define N_MAX   16834
 #define S_MAX 2621440
 
-#define GMAXINIT 2
+#define GMAXINIT 4
 
 static struct galaxy *G;
 static int            G_max;
@@ -128,10 +128,6 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
         }
         glPopMatrix();
     }
-
-#ifndef NDEBUG
-    printf("%d stars\n", c);
-#endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -259,7 +255,7 @@ static void fini_galaxy_prep(struct galaxy *g)
 
 /*---------------------------------------------------------------------------*/
 
-static int prep_galaxy_hip(struct star *S, int S_num, const char *filename)
+static int prep_parse_hip(struct star *S, int S_num, const char *filename)
 {
     struct stat buf;
     FILE *fp;
@@ -280,7 +276,7 @@ static int prep_galaxy_hip(struct star *S, int S_num, const char *filename)
     return S_num;
 }
 
-static int prep_galaxy_tyc(struct star *S, int S_num, const char *filename)
+static int prep_parse_tyc(struct star *S, int S_num, const char *filename)
 {
     struct stat buf;
     FILE *fp;
@@ -305,38 +301,32 @@ static int prep_galaxy_tyc(struct star *S, int S_num, const char *filename)
 
 /* TODO: Generalize galaxy preprocessing. */
 
-void prep_large_galaxy(void)
+void prep_tyc_galaxy(void)
 {
     struct galaxy g;
 
     init_galaxy_prep(&g);
-
-    g.S_num = star_gimme_sol(g.S);
-    g.S_num = prep_galaxy_hip(g.S, g.S_num, "../hip_main.dat");
-    g.S_num = prep_galaxy_tyc(g.S, g.S_num, "../tyc2.dat");
-
+    {
+        g.S_num = prep_parse_tyc(g.S, g.S_num, "../tyc2.dat");
+    }
     fini_galaxy_prep(&g);
 
-    printf("large: %d stars, %d nodes.\n", g.S_num, g.N_num);
-
-    write_galaxy("../galaxy_large.gal", &g);
+    write_galaxy("../galaxy_tyc.gal", &g);
     free_galaxy_prep(&g);
 }
 
-void prep_small_galaxy(void)
+void prep_hip_galaxy(void)
 {
     struct galaxy g;
 
     init_galaxy_prep(&g);
-
-    g.S_num = star_gimme_sol(g.S);
-    g.S_num = prep_galaxy_hip(g.S, g.S_num, "../hip_main.dat");
-
+    {
+        g.S_num = star_gimme_sol(g.S);
+        g.S_num = prep_parse_hip(g.S, g.S_num, "../hip_main.dat");
+    }
     fini_galaxy_prep(&g);
 
-    printf("small: %d stars, %d nodes.\n", g.S_num, g.N_num);
-
-    write_galaxy("../galaxy_small.gal", &g);
+    write_galaxy("../galaxy_hip.gal", &g);
     free_galaxy_prep(&g);
 }
 
@@ -374,7 +364,7 @@ int send_create_galaxy(const char *filename)
 
             /* Encapsulate this object in an entity. */
 
-            return send_create_entity(TYPE_GALAXY, 0);
+            return send_create_entity(TYPE_GALAXY, gd);
         }
     }
     return -1;

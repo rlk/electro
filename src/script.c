@@ -10,6 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <SDL.h>
 #include <lua.h>
 #include <lualib.h>
 #include <stdio.h>
@@ -333,7 +334,7 @@ static int script_add_tile(lua_State *L)
     return 0;
 }
 
-static int script_set_idle(lua_State *L)
+static int script_enable_timer(lua_State *L)
 {
     const char *name = "enable_timer";
 
@@ -347,6 +348,30 @@ static int script_get_joystick(lua_State *L)
 
     lua_pushnumber(L, get_joystick(script_getnumber(name, L, -2),
                                    script_getnumber(name, L, -1)));
+    return 1;
+}
+
+static int script_get_viewport(lua_State *L)
+{
+    float x = get_total_viewport_x();
+    float y = get_total_viewport_y();
+    float w = get_total_viewport_w();
+    float h = get_total_viewport_h();
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, x + w);
+    lua_pushnumber(L, y);
+    lua_pushnumber(L, y + h);
+
+    return 4;
+}
+
+static int script_get_modifier(lua_State *L)
+{
+    int i = (int) script_getnumber("get_modifier", L, -1);
+
+    lua_pushboolean(L, (SDL_GetModState() & i) ? 1 : 0);
+
     return 1;
 }
 
@@ -435,6 +460,30 @@ static int script_set_entity_flag(lua_State *L)
 
 /*---------------------------------------------------------------------------*/
 
+static int script_move_entity(lua_State *L)
+{
+    const char *name = "move_entity";
+
+    send_move_entity(script_getentity(name, L, -4),
+                     script_getnumber(name, L, -3),
+                     script_getnumber(name, L, -2),
+                     script_getnumber(name, L, -1));
+    return 0;
+}
+
+static int script_turn_entity(lua_State *L)
+{
+    const char *name = "turn_entity";
+
+    send_turn_entity(script_getentity(name, L, -4),
+                     script_getnumber(name, L, -3),
+                     script_getnumber(name, L, -2),
+                     script_getnumber(name, L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
 static int script_get_entity_position(lua_State *L)
 {
     int id = script_getentity("get_entity_position", L, -1);
@@ -485,21 +534,6 @@ static int script_get_entity_alpha(lua_State *L)
     lua_pushnumber(L, a);
 
     return 1;
-}
-
-static int script_get_viewport(lua_State *L)
-{
-    float x = get_total_viewport_x();
-    float y = get_total_viewport_y();
-    float w = get_total_viewport_w();
-    float h = get_total_viewport_h();
-
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, x + w);
-    lua_pushnumber(L, y);
-    lua_pushnumber(L, y + h);
-
-    return 4;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -840,6 +874,9 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_entity_scale",     script_get_entity_scale);
     lua_function(L, "get_entity_alpha",     script_get_entity_alpha);
 
+    lua_function(L, "move_entity",          script_move_entity);
+    lua_function(L, "turn_entity",          script_turn_entity);
+
     /* Galaxy control. */
 
     lua_function(L, "set_galaxy_magnitude", script_set_galaxy_magnitude);
@@ -870,9 +907,10 @@ void luaopen_electro(lua_State *L)
     /* Misc. */
 
     lua_function(L, "add_tile",             script_add_tile);
-    lua_function(L, "set_idle",             script_set_idle);
+    lua_function(L, "enable_timer",         script_enable_timer);
     lua_function(L, "get_joystick",         script_get_joystick);
     lua_function(L, "get_viewport",         script_get_viewport);
+    lua_function(L, "get_modifier",         script_get_modifier);
 
     /* Constants. */
 

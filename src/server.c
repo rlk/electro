@@ -247,8 +247,8 @@ void server(int argc, char *argv[])
     int argi;
     
     /*
-    galaxy_prep_large();
-    galaxy_prep_small();
+    prep_tyc_galaxy();
+    prep_hip_galaxy();
     */
 
     if (init_script())
