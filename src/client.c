@@ -91,6 +91,7 @@ static void client_recv(void)
         case EVENT_CAMERA_DIST:   camera_recv_dist();     break;
         case EVENT_CAMERA_ZOOM:   camera_recv_zoom();     break;
         case EVENT_SPRITE_BOUNDS: sprite_recv_bounds();   break;
+        case EVENT_LIGHT_COLOR:   light_recv_color();     break;
         }
     }
 }
@@ -107,6 +108,7 @@ static void client_init(void)
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
 
+    glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     opengl_check("client_init");

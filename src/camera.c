@@ -127,14 +127,6 @@ void camera_draw(int id, int cd, float a)
                 GLdouble t = -C[cd].zoom * viewport_y0 / viewport_W;
                 GLdouble f =  CAMERA_FAR;
 
-                printf("%d %d %d %d %d %f %f %f %f\n", 
-                       viewport_x0,
-                       viewport_x1,
-                       viewport_y0,
-                       viewport_y1,
-                       viewport_W,
-                       l, r, b, t);
-
                 glFrustum(l, r, b, t, 1.0, f);
             }
         }

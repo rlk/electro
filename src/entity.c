@@ -168,6 +168,12 @@ void entity_traversal(int id, float a)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
 
+            if (E[jd].flag & FLAG_UNLIT)
+            {
+                glPushAttrib(GL_ENABLE_BIT);
+                glDisable(GL_LIGHTING);
+            }
+
             /* Draw this entity. */
 
             switch (E[jd].type)
@@ -195,6 +201,7 @@ void entity_traversal(int id, float a)
             /* Revert to previous render modes, as necessary. */
 
             if (E[jd].flag & FLAG_WIREFRAME)  glPopAttrib();
+            if (E[jd].flag & FLAG_UNLIT)      glPopAttrib();
         }
 }
 

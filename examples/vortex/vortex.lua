@@ -28,10 +28,23 @@ function do_start()
     E.galaxy_magn(galaxy, magn)
 end
 
-function do_timer()
+function do_timer(dt)
     local x, y, z = E.entity_get_rotation(camera)
 
-    E.entity_rotation(camera, x, y + spin, z)
+    E.entity_rotation(camera, x, y + dt * spin, z)
+    return true
+end
+
+function do_keyboard(k, s)
+    if s and k == 282 then -- F1
+        spin = spin + 1
+    end
+    if s and k == 283 then -- F2
+        spin = spin - 1
+    end
+
+    E.enable_idle(spin ~= 0)
+
     return true
 end
 

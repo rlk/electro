@@ -145,6 +145,12 @@ static int lua_issprite(lua_State *L, int i)
         && entity_istype(lua_toentity(L, i), TYPE_SPRITE);
 }
 
+static int lua_islight(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && entity_istype(lua_toentity(L, i), TYPE_LIGHT);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Function argument type and arity checkers                                 */
 
@@ -268,6 +274,24 @@ static int script_getsprite(const char *name, lua_State *L, int i)
             return entity_todata(lua_toentity(L, i));
         else
             script_type_error(name, "sprite", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
+static int script_getlight(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a light, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_islight(L, i))
+            return entity_todata(lua_toentity(L, i));
+        else
+            script_type_error(name, "light", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -571,6 +595,20 @@ static int script_camera_zoom(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Light controls                                                            */
+
+static int script_light_color(lua_State *L)
+{
+    const char *name = "light_color";
+
+    light_send_color(script_getlight(name, L, -4),
+                     script_getnumber(name, L, -3),
+                     script_getnumber(name, L, -2),
+                     script_getnumber(name, L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Sprite controls                                                           */
 
 static int script_sprite_bounds(lua_State *L)
@@ -664,10 +702,15 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_hidden",      FLAG_HIDDEN);
     lua_constant(L, "entity_flag_wireframe",   FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
+    lua_constant(L, "entity_flag_unlit",       FLAG_UNLIT);
 
     /* Galaxy control. */
 
     lua_function(L, "galaxy_magn",             script_galaxy_magn);
+
+    /* Light control. */
+
+    lua_function(L, "light_color",             script_light_color);
 
     /* Camera control. */
 

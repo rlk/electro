@@ -29,6 +29,9 @@ void light_draw(int, int, float);
 int  light_send_create(int);
 void light_recv_create(void);
 
+void light_send_color(int, float, float, float);
+void light_recv_color(void);
+
 void light_delete(int);
 
 /*---------------------------------------------------------------------------*/

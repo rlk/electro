@@ -1,5 +1,8 @@
 
-sound = false
+high_score_file = "asteroids.dat"
+
+sound = true
+music = false
 
 -------------------------------------------------------------------------------
 
@@ -9,20 +12,27 @@ global_bullet    = nil
 global_score05   = nil
 global_score10   = nil
 global_score25   = nil
-global_explosion = nil
-global_shockwave = nil
 
-button_fire   = 0
-button_thrust = 1
+global_ship_explosion = nil
+global_ship_shockwave = nil
+global_rock_explosion = nil
+global_rock_shockwave = nil
+
+button_fire   = 2
+button_thrust = 3
 
 -------------------------------------------------------------------------------
+
+state     = "none"
+
+init      = { }
+init_flag = true
 
 time  = 0
 fire  = nil
 boom  = nil
 music = nil
-
-state     = "start"
+index = 0
 
 serial    = 1
 space     = nil
@@ -30,8 +40,10 @@ galaxy    = nil
 camera    = nil
 above     = nil
 below     = nil
-light     = nil
+light1    = nil
+light2    = nil
 ship      = nil
+thrust    = nil
 
 undone     = 0
 bullets    = { }
@@ -39,6 +51,7 @@ asteroids  = { }
 explosions = { }
 shockwaves = { }
 scores     = { }
+spares     = { }
 
 thrusting   = false
 velocity_dx = 0
@@ -47,10 +60,20 @@ velocity_dy = 0
 level      = 1
 ships      = 0
 curr_score = 0
+free_score = 0
 high_score = 100
 speed      = 7
 
-wait_time  = 0
+total_time = 0
+state_time = 0
+
+overlay_title = nil
+overlay_ready = nil
+overlay_level = nil
+overlay_clear = nil
+overlay_high  = nil
+overlay_over  = nil
+overlay_init  = { }
 
 -------------------------------------------------------------------------------
 
@@ -68,6 +91,8 @@ function player_reset()
     velocity_dx = 0
     velocity_dy = 0
 
+    E.entity_flag(thrust, E.entity_flag_hidden, not thrusting)
+
     if ship then
         E.entity_flag(ship, E.entity_flag_hidden, false)
 
@@ -77,6 +102,12 @@ function player_reset()
 end
 
 -------------------------------------------------------------------------------
+
+function spare_set(n)
+    for i = 1, 5 do
+        E.entity_flag(spares[i], E.entity_flag_hidden, (n < i))
+    end
+end
 
 function digit_set(sprite, n)
     if     n == 0 then E.sprite_bounds(sprite, 0.00, 0.25, 0.75, 1.00)
@@ -120,50 +151,10 @@ function alpha_set(sprite, c)
     elseif c == "Z" then E.sprite_bounds(sprite, 0.125, 0.250, 0.00, 0.25) end
 end
 
--------------------------------------------------------------------------------
-
-function create_string(s)
-    local scale = 1 / 128
-    local dx    = 2.5
-    local dy    = 2.5
-    local l     = string.len(s)
-
-    local pivot = E.create_pivot()
-    local glyph
-
-    for i = 1, l do
-        local c = string.upper(string.sub(s, i, i))
-
-        if "0" <= c and c <= "9" then
-            glyph = E.create_sprite("digit.png")
-            digit_set(glyph, string.byte(c) - 48)
-            E.entity_scale(glyph, scale, scale, scale);
-        end
-        if "A" <= c and c <= "Z" then
-            glyph = E.create_sprite("alpha.png")
-            alpha_set(glyph, c)
-            E.entity_scale(glyph, scale / 2, scale, scale);
-        end
-
-        E.entity_parent  (glyph, pivot)
-        E.entity_position(glyph, dx * (i - (l + 1) / 2), 0, 0)
-    end
-
-    E.entity_scale(pivot, 2, 2, 2)
-    return pivot
-end
-
--------------------------------------------------------------------------------
-
-overlay = nil
-
-function add_overlay(s)
-    overlay = create_string(s)
-    E.entity_parent(overlay, camera)
-end
-
-function del_overlay()
-    E.entity_delete(overlay)
+function init_set()
+    alpha_set(overlay_init[1], init[1])
+    alpha_set(overlay_init[2], init[2])
+    alpha_set(overlay_init[3], init[3])
 end
 
 -------------------------------------------------------------------------------
@@ -256,7 +247,7 @@ function add_asteroid(entity, size)
     -- Add the new asteroid to the scene.
 
     E.entity_scale   (asteroid.entity, scale, scale, scale)
-    E.entity_parent  (asteroid.entity, light)
+    E.entity_parent  (asteroid.entity, light2)
     E.entity_position(asteroid.entity, x, y, 0)
 
     table.insert(asteroids, asteroid)
@@ -269,7 +260,9 @@ function del_asteroid(id, asteroid)
     undone = undone - 1
 
     if undone == 0 then
-        state = "done"
+        return true
+    else
+        return false
     end
 end
 
@@ -320,13 +313,13 @@ end
 
 -------------------------------------------------------------------------------
 
-function add_explosion(entity, size)
+function add_explosion(entity, source, size)
     local explosion = { }
     local scale = 0.05 * size / 3.0
 
     -- Clone a new explosion sprite.
 
-    explosion.entity = E.entity_clone(global_explosion)
+    explosion.entity = E.entity_clone(source)
 
     -- Add the new sprite to the scene.
 
@@ -348,20 +341,20 @@ end
 
 -------------------------------------------------------------------------------
 
-function add_shockwave(entity, size)
+function add_shockwave(entity, source, size)
     local shockwave = { }
-    local scale = 0.025 * size / 3.0
+    local scale = 0.01 * size / 3.0
 
     -- Clone a new shockwave sprite.
 
-    shockwave.entity = E.entity_clone(global_shockwave)
+    shockwave.entity = E.entity_clone(source)
 
     -- Add the new sprite to the scene.
 
     local x, y, z = E.entity_get_position(entity)
 
     E.entity_scale   (shockwave.entity, scale, scale, scale)
-    E.entity_parent  (shockwave.entity, above)
+    E.entity_parent  (shockwave.entity, below)
     E.entity_position(shockwave.entity, x, y, 0)
 
     table.insert(shockwaves, shockwave)
@@ -383,9 +376,12 @@ function add_score(entity, value)
     curr_score = curr_score + value
     curr_score_set(curr_score)
 
-    if curr_score > high_score then
-        high_score = curr_score
-        high_score_set(high_score)
+    -- Award a free ship
+
+    if curr_score > free_score then
+        ships = ships + 1
+        spare_set(ships)
+        free_score = free_score + 1000
     end
 
     -- Select the correct sprite for the given value.
@@ -421,8 +417,8 @@ function asteroid_frag(id, asteroid)
 
     -- Break a big asteroid into smaller asteroids.
 
-    add_shockwave(entity, size)
-    add_explosion(entity, size)
+    add_shockwave(entity, global_rock_shockwave, size)
+    add_explosion(entity, global_rock_explosion, size)
 
     if size > 1 then
         add_asteroid(entity, size - 1)
@@ -436,7 +432,9 @@ function asteroid_frag(id, asteroid)
 
     -- Delete the original asteroid.
 
-    del_asteroid(id, asteroid)
+    if del_asteroid(id, asteroid) then
+        goto_state("clear")
+    end
 end
 
 function asteroid_step(id, asteroid)
@@ -499,15 +497,14 @@ function asteroid_step(id, asteroid)
                                (pos_Y - pos_y) * (pos_Y - pos_y));
 
         if dist < size + 0.5 then
-            add_explosion(ship, 10)
-            add_shockwave(ship, 10)
+            add_explosion(ship, global_ship_explosion, 5)
+            add_shockwave(ship, global_ship_shockwave, 5)
 
             E.entity_flag(ship, E.entity_flag_hidden, true)
 
             velocity_dx = 0
             velocity_dy = 0
-            wait_time   = 0
-            state       = "dead"
+            goto_state("dead")
         end
     end
 end
@@ -591,15 +588,16 @@ end
 
 -------------------------------------------------------------------------------
 
-function level_init()
-    for i = 1, level + 3 do
-        add_asteroid(nil, 3)
-    end
-end
-
 function level_stop()
     while undone > 0 do
         table.foreach(asteroids,  del_asteroid)
+    end
+end
+
+function level_init()
+    level_stop()
+    for i = 1, level + 3 do
+        add_asteroid(nil, 3)
     end
 end
 
@@ -674,6 +672,146 @@ end
 
 -------------------------------------------------------------------------------
 
+function enter_state(s)
+    if     s == "title" then
+        curr_score = 0
+        free_score = 1000
+        speed      = 7
+        ships      = 2
+        level      = 1
+        spare_set(ships)
+        E.entity_flag(overlay_title, E.entity_flag_hidden, false)
+
+    elseif s == "ready" then
+
+        digit_set(overlay_level, level)
+        spare_set(ships)
+        level_init()
+        player_reset()
+        curr_score_set(curr_score)
+
+        E.entity_flag(overlay_ready, E.entity_flag_hidden, false)
+        E.entity_flag(overlay_level, E.entity_flag_hidden, false)
+
+    elseif s == "play"  then
+
+    elseif s == "dead"  then
+
+    elseif s == "clear" then
+        E.entity_flag(overlay_clear, E.entity_flag_hidden, false)
+
+    elseif s == "high" then
+        init_flag = true
+        high_score = curr_score
+        high_score_set(high_score)
+        index = 1
+        E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+        E.entity_flag(overlay_high, E.entity_flag_hidden,  false)
+
+    elseif s == "over"  then
+        E.entity_flag(overlay_over,  E.entity_flag_hidden, false)
+
+    end
+end
+
+function leave_state(s)
+    if     s == "title" then
+        E.entity_flag(overlay_title, E.entity_flag_hidden, true)
+
+    elseif s == "ready" then
+        E.entity_flag(overlay_ready, E.entity_flag_hidden, true)
+        E.entity_flag(overlay_level, E.entity_flag_hidden, true)
+
+    elseif s == "play"  then
+
+    elseif s == "dead"  then
+
+    elseif s == "clear" then
+        E.entity_flag(overlay_clear, E.entity_flag_hidden, true)
+
+    elseif s == "high" then
+        E.entity_flag(overlay_high,  E.entity_flag_hidden, true)
+        E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+
+        local fout = io.open(high_score_file, "w")
+        if fout then
+            fout:write(high_score, init[1], init[2], init[3])
+            fout:close()
+        end
+
+    elseif s == "over"  then
+        E.entity_flag(overlay_over,  E.entity_flag_hidden, true)
+    end
+end
+
+function timer_state(s)
+    if     s == "title" then
+        level_step()
+
+    elseif s == "ready" then
+        stuff_step()
+        player_step()
+
+    elseif s == "play"  then
+        level_step()
+        player_step()
+
+    elseif s == "dead"  then
+        level_step()
+
+    elseif s == "clear" then
+        stuff_step()
+        player_step()
+
+    elseif s == "high"  then
+        local byte  = string.byte(init[index])
+        local scale = 0.01 + 0.001 * math.sin(state_time * 8)
+
+        E.entity_scale(overlay_init[index], scale / 2, scale, scale)
+
+        if      E.joystick_axis(0, 0) >  0.5 then
+            if  init_flag then
+                init_flag = false
+
+                if byte >= 90 then
+                    init[index] = "A"
+                else
+                    init[index] = string.char(byte + 1)
+                end
+                alpha_set(overlay_init[index], init[index])
+            end
+
+        elseif  E.joystick_axis(0, 0) < -0.5 then
+            if init_flag then
+                init_flag = false
+
+                if byte <= 65 then
+                    init[index] = "Z"
+                else
+                    init[index] = string.char(byte - 1)
+                end
+                alpha_set(overlay_init[index], init[index])
+            end
+
+        else
+            init_flag = true
+        end
+
+    elseif s == "over"  then
+        level_step()
+
+    end
+end
+
+function goto_state(s)
+    leave_state(state)
+    state       = s
+    state_time  = 0
+    enter_state(state)
+end
+
+-------------------------------------------------------------------------------
+
 function new_global_object(filename)
     object = E.create_object(filename)
     E.entity_flag(object, E.entity_flag_hidden, true)
@@ -697,8 +835,9 @@ function do_start()
     if sound then
         fire  = E.sound_load("fizzle.ogg")
         boom  = E.sound_load("explosion.ogg")
+    end
+    if music then
         music = E.sound_load("inter.ogg")
-
         E.sound_loop(music)
     end
 
@@ -723,38 +862,134 @@ function do_start()
     global_score05   = new_global_sprite("score05.png")
     global_score10   = new_global_sprite("score10.png")
     global_score25   = new_global_sprite("score25.png")
-    global_explosion = new_global_sprite("explosion.png")
-    global_shockwave = new_global_sprite("shockwave.png")
 
-    -- Initialize the scene.
+    global_ship_explosion = new_global_sprite("ship_explosion.png")
+    global_ship_shockwave = new_global_sprite("ship_shockwave.png")
+    global_rock_explosion = new_global_sprite("rock_explosion.png")
+    global_rock_shockwave = new_global_sprite("rock_shockwave.png")
+
+    -- Initialize all entities
 
     camera  = E.create_camera(E.camera_type_orthogonal)
     space   = E.create_camera(E.camera_type_perspective)
 
-    light  = E.create_light(E.light_type_positional)
+    light1 = E.create_light(E.light_type_positional)
+    light2 = E.create_light(E.light_type_positional)
     above  = E.create_pivot()
     below  = E.create_pivot()
-    ship   = E.entity_clone(global_ship);
+    ship   = E.entity_clone(global_ship)
+    thrust = E.create_sprite("thrust.png")
     galaxy = E.create_galaxy("../hip_main.bin")
 
+    for i = 1, 5 do
+        spares[i] = E.entity_clone(global_ship)
+        E.entity_parent  (spares[i], light2)
+        E.entity_position(spares[i], global_r - 3 * i, global_b + 3, 0)
+    end
+
+    overlay_title = E.create_sprite("title.png")
+    overlay_ready = E.create_sprite("ready.png")
+    overlay_level = E.create_sprite("digit.png")
+    overlay_clear = E.create_sprite("clear.png")
+    overlay_high  = E.create_sprite("high.png")
+    overlay_over  = E.create_sprite("over.png")
+
+    overlay_init[1] = E.create_sprite("alpha.png")
+    overlay_init[2] = E.create_sprite("alpha.png")
+    overlay_init[3] = E.create_sprite("alpha.png")
+
+    -- Initialize the hierarchy
+
     E.entity_parent(above,  camera)
-    E.entity_parent(light,  camera)
-    E.entity_parent(ship,   light)
     E.entity_parent(below,  camera)
+    E.entity_parent(light1, camera)
+    E.entity_parent(light2, light1)
+    E.entity_parent(ship,   light2)
+    E.entity_parent(thrust, ship)
     E.entity_parent(galaxy, space)
 
-    E.entity_position(light, 0, 0, 10)
+    E.entity_scale(thrust, 0.05, 0.05, 0.05)
+    E.entity_flag(thrust, E.entity_flag_unlit,  true)
+    E.entity_flag(thrust, E.entity_flag_hidden, true)
+
+    E.entity_parent(overlay_title,   below)
+    E.entity_parent(overlay_level,   below)
+    E.entity_parent(overlay_ready,   below)
+    E.entity_parent(overlay_clear,   below)
+    E.entity_parent(overlay_high,    below)
+    E.entity_parent(overlay_over,    below)
+    E.entity_parent(overlay_init[1], below)
+    E.entity_parent(overlay_init[2], below)
+    E.entity_parent(overlay_init[3], below)
+
+    E.entity_scale(overlay_title,   0.07, 0.07, 0.07)
+    E.entity_scale(overlay_level,   0.02, 0.02, 0.02)
+    E.entity_scale(overlay_ready,   0.07, 0.07, 0.07)
+    E.entity_scale(overlay_clear,   0.07, 0.07, 0.07)
+    E.entity_scale(overlay_high,    0.07, 0.07, 0.07)
+    E.entity_scale(overlay_over,    0.07, 0.07, 0.07)
+    E.entity_scale(overlay_init[1], 0.004, 0.008, 0.008)
+    E.entity_scale(overlay_init[2], 0.004, 0.008, 0.008)
+    E.entity_scale(overlay_init[3], 0.004, 0.008, 0.008)
+
+    E.entity_flag(overlay_ready, E.entity_flag_hidden, true)
+    E.entity_flag(overlay_level, E.entity_flag_hidden, true)
+    E.entity_flag(overlay_clear, E.entity_flag_hidden, true)
+    E.entity_flag(overlay_high,  E.entity_flag_hidden, true)
+    E.entity_flag(overlay_over,  E.entity_flag_hidden, true)
+
+    E.entity_position(overlay_init[1], global_l + 16.0, global_t - 2.5, 0)
+    E.entity_position(overlay_init[2], global_l + 19.0, global_t - 2.5, 0)
+    E.entity_position(overlay_init[3], global_l + 22.0, global_t - 2.5, 0)
+    
+    -- Read the current high score
+
+    score_init()
+
+    high_score = 100
+    init[1]    = "A"
+    init[2]    = "A"
+    init[3]    = "A"
+
+    local fin = io.open(high_score_file, "r")
+    if fin then
+        local score  = fin:read("*n")
+        local player = fin:read("*a")
+
+        fin:close(fin)
+
+        if score then
+            high_score = score
+            high_score_set(high_score)
+        end
+
+        if player then
+            init[1] = string.sub(player, 1, 1)
+            init[2] = string.sub(player, 2, 2)
+            init[3] = string.sub(player, 3, 3)
+        end
+    end
+
+    init_set()
+
+    -- Initialize the view
+
+    E.entity_position(light1,  10, 0, 10)
+    E.entity_position(light2, -10, 0, 10)
+
+    E.light_color(light1, 1.0, 0.8, 0.5)
+    E.light_color(light2, 0.5, 0.8, 1.0)
+
     E.camera_zoom(camera, global_z)
 
-    E.galaxy_magn(galaxy, 500.0)
+    E.galaxy_magn(galaxy, 100.0)
     E.camera_dist(space,  100.0)
     E.camera_zoom(space,    0.5)
     E.entity_position(space, 0, 15.5, 9200)
 
-    add_overlay("ASTEROIDS")
-    score_init()
-
+    goto_state("title")
     E.enable_idle(true)
+
     return true
 end
 
@@ -762,97 +997,76 @@ end
 
 function do_timer(dt)
 
-    local rot_x, rot_y, rot_z = E.entity_get_rotation(space)
-    local scale = 2.0 + 0.5 * math.sin(time);
+    global_dt = dt
 
-    time = time + dt
+    state_time = state_time + dt
+    total_time = total_time + dt
 
-    E.entity_rotation(space, rot_x, rot_y + dt, rot_z)
+    E.camera_dist(space, 100 * math.sin(total_time / 10))
+    E.entity_rotation(space, 0, total_time, 0)
 
-    wait_time = wait_time + dt
-
-    if overlay then E.entity_scale(overlay, scale, scale, scale) end
-
-    if global_dt > 0 then
-
-        global_dt = dt
-
-        if state == "ready" then
-            stuff_step()
-            player_step()
-        end
-
-        if state == "play" then
-            level_step()
-            player_step()
-        end
-
-        if state == "done" then
-            stuff_step()
-            player_step()
-        end
-
-        if state == "dead" then
-            level_step()
-        end
-    end
+    timer_state(state)
 
     return true
 end
 
 function do_joystick(n, b, s)
     
-    if state == "start" then
-        if b == button_fire and s then
-            curr_score_set(0)
-            curr_score = 0
-            player_reset()
-            speed = 7
-            ships = 3
-            level = 1
-            level_init()
-            state = "ready"
-        end
+    if b == button_thrust then
+        thrusting = s
+        E.entity_flag(thrust, E.entity_flag_hidden, not thrusting)
 
-    elseif state == "ready" then
-        if b == button_fire and s then
-            state = "play"
+        if state == "high" and index > 1 then
+            E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+            index = index - 1
         end
+    end
 
-    elseif state == "play" then
-        if b == button_fire and s then
+    if b == button_fire and s then
+        if     state == "title" then
+            goto_state("ready")
+
+        elseif state == "ready" then
+            goto_state("play")
+
+        elseif state == "play" then
             add_bullet()
-        end
-        if b == button_thrust then
-            thrusting = s
-        end
 
-    elseif state == "dead" then
-        if wait_time > 1 and b == button_fire and s then
-            if ships > 0 then
-                ships = ships - 1
-                player_reset()
-                state = "play"
-            else
-                state = "over"
+        elseif state == "dead" then
+            if state_time > 1 then
+                if ships > 0 then
+                    ships = ships - 1
+                    spare_set(ships)
+                    player_reset()
+                    goto_state("play")
+
+                elseif curr_score > high_score then
+                    goto_state("high")
+
+                else
+                    goto_state("over")
+                end
             end
-        end
 
-    elseif state == "done" then
-        if b == button_thrust then
-            thrusting = s
-        end
-        if wait_time > 1 and b == button_fire and s then
-            speed = speed + 2
-            level = level + 1
-            level_init()
-            state = "ready"
-        end
+        elseif state == "clear" then
+            if state_time > 1 then
+                speed = speed + 2
+                level = level + 1
+                goto_state("ready")
+            end
 
-    elseif state == "over" then
-        if wait_time > 1 and s then
-            level_stop()
-            state = "start"
+        elseif state == "high" then
+            E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+            if index < 3 then
+                index = index + 1
+            else
+                goto_state("over")
+            end
+
+        elseif state == "over" then
+            if state_time > 1 then
+                goto_state("title")
+            end
         end
     end
 

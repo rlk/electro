@@ -26,6 +26,7 @@
 #define FLAG_HIDDEN    1
 #define FLAG_WIREFRAME 2
 #define FLAG_BILLBOARD 4
+#define FLAG_UNLIT     8
 
 struct entity
 {

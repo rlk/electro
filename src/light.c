@@ -116,6 +116,27 @@ void light_recv_create(void)
 
 /*---------------------------------------------------------------------------*/
 
+void light_send_color(int ld, float r, float g, float b)
+{
+    pack_event(EVENT_LIGHT_COLOR);
+    pack_index(ld);
+
+    pack_float((L[ld].d[0] = r));
+    pack_float((L[ld].d[1] = g));
+    pack_float((L[ld].d[2] = b));
+}
+
+void light_recv_color(void)
+{
+    int ld = unpack_index();
+
+    L[ld].d[0] = unpack_float();
+    L[ld].d[1] = unpack_float();
+    L[ld].d[2] = unpack_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
 /* This function should be called only by the entity delete function. */
 
 void light_delete(int ld)

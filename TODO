@@ -1,5 +1,8 @@
+asteroids
+    new sounds and sprites
+    high score initials
+    free ship
 Look into event queueing on heavy client load.
-Finish asteroids
 Octree stars.  Time for offline preprocessor.
 Windows port
 Website
