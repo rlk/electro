@@ -372,9 +372,9 @@ void entity_get_rotation(int id, float *x, float *y, float *z)
 {
     if (entity_exists(id))
     {
-        *x = E[id].rotation[0];
-        *y = E[id].rotation[1];
-        *z = E[id].rotation[2];
+        if (x) *x = E[id].rotation[0];
+        if (y) *y = E[id].rotation[1];
+        if (z) *z = E[id].rotation[2];
     }
 }
 
@@ -382,9 +382,9 @@ void entity_get_scale(int id, float *x, float *y, float *z)
 {
     if (entity_exists(id))
     {
-        *x = E[id].scale[0];
-        *y = E[id].scale[1];
-        *z = E[id].scale[2];
+        if (x) *x = E[id].scale[0];
+        if (y) *y = E[id].scale[1];
+        if (z) *z = E[id].scale[2];
     }
 }
 

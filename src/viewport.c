@@ -31,12 +31,12 @@ static int              V_num = 0;
 
 /*---------------------------------------------------------------------------*/
 
-static float viewport_X =    0.0f;
-static float viewport_Y =    0.0f;
-static float viewport_x = -400.0f;
-static float viewport_y = -300.0f;
-static float viewport_w =  800.0f;
-static float viewport_h =  600.0f;
+static float viewport_X = 0.0f;
+static float viewport_Y = 0.0f;
+static float viewport_x = DEFAULT_X;
+static float viewport_y = DEFAULT_Y;
+static float viewport_w = DEFAULT_W;
+static float viewport_h = DEFAULT_H;
 
 /*---------------------------------------------------------------------------*/
 /* TODO: This is not strictly correct MPI type usage.  Fix. */
@@ -237,6 +237,14 @@ void viewport_set(float X, float Y, float x, float y, float w, float h)
     viewport_h = h;
 
     set_window_pos((int) X, (int) Y);
+}
+
+void viewport_get(float *x, float *y, float *w, float *h)
+{
+    if (x) *x = viewport_x;
+    if (y) *y = viewport_y;
+    if (w) *w = viewport_w;
+    if (h) *h = viewport_h;
 }
 
 int viewport_get_x(void)

@@ -72,13 +72,13 @@ static Uint32 timer_callback(Uint32 interval, void *parameter)
 void enable_idle(int b)
 {
     static SDL_TimerID timer_id;
-    static int         timer_on = 1;
+    static int         timer_on = 0;
 
     /* Enable or disable an SDL timer callback. */
 
     if (b && !timer_on)
     {
-        timer_id = SDL_AddTimer(1000 / 30, timer_callback, NULL);
+        timer_id = SDL_AddTimer(1000 / 40, timer_callback, NULL);
         timer_on = 1;
         server_time = SDL_GetTicks();
     }
@@ -110,6 +110,7 @@ static void server_init(void)
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_NORMALIZE);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
 
@@ -266,9 +267,9 @@ void server(int argc, char *argv[])
 
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
+                joystick_init();
                 server_init();
                 entity_init();
-                joystick_init();
                 script_start();
 
                 /* Block on SDL events.  Service them as they arrive. */

@@ -91,6 +91,7 @@ static void client_init(void)
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_NORMALIZE);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
 

@@ -117,8 +117,8 @@ void camera_render(int id, int cd)
 
             glLoadIdentity();
 
-            if (C[cd].type == CAMERA_PERSP) glFrustum(l, r, b, t,  1.0, f);
-            if (C[cd].type == CAMERA_ORTHO) glOrtho  (l, r, b, t, -1.0, 1.0);
+            if (C[cd].type == CAMERA_PERSP) glFrustum(l, r, b, t, 1.0, f);
+            if (C[cd].type == CAMERA_ORTHO) glOrtho  (l, r, b, t,  -f, f);
         }
         glMatrixMode(GL_MODELVIEW);
         {

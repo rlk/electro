@@ -211,6 +211,7 @@ static int find_mtl(const char *name)
         if (strncmp(namev[i], name, MAXSTR) == 0)
             return i;
 
+    fprintf(stderr, "Unknown material '%s'\n", name);
     return 0;
 }
 

@@ -305,6 +305,50 @@ static int script_entity_scale(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+
+static int script_entity_get_position(lua_State *L)
+{
+    float x, y, z;
+    int id = script_getentity("entity_get_position", L, -1);
+
+    entity_get_position(id, &x, &y, &z);
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+    lua_pushnumber(L, z);
+
+    return 3;
+}
+
+static int script_entity_get_rotation(lua_State *L)
+{
+    float x, y, z;
+    int id = script_getentity("entity_get_rotation", L, -1);
+
+    entity_get_rotation(id, &x, &y, &z);
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+    lua_pushnumber(L, z);
+
+    return 3;
+}
+
+static int script_viewport_get(lua_State *L)
+{
+    float x, y, w, h;
+
+    viewport_get(&x, &y, &w, &h);
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, x + w);
+    lua_pushnumber(L, y);
+    lua_pushnumber(L, y + h);
+
+    return 4;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Entity constructors.                                                      */
 
 static int script_camera_create(lua_State *L)
@@ -368,6 +412,7 @@ int script_init(void)
         luaopen_base(L);
         luaopen_math(L);
         luaopen_io(L);
+        luaopen_table(L);
 
         lua_register(L, "add_tile",        script_add_tile);
         lua_register(L, "enable_idle",     script_enable_idle);
@@ -388,6 +433,10 @@ int script_init(void)
 
         lua_register(L, "camera_dist",     script_camera_dist);
         lua_register(L, "camera_zoom",     script_camera_zoom);
+
+        lua_register(L, "entity_get_position", script_entity_get_position);
+        lua_register(L, "entity_get_rotation", script_entity_get_rotation);
+        lua_register(L, "viewport_get",        script_viewport_get);
 
         return 1;
     }

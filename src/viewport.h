@@ -12,10 +12,10 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define DEFAULT_X -400.0f
-#define DEFAULT_Y -300.0f
-#define DEFAULT_W  800.0f
-#define DEFAULT_H  600.0f
+#define DEFAULT_X -512.0f
+#define DEFAULT_Y -384.0f
+#define DEFAULT_W 1024.0f
+#define DEFAULT_H  768.0f
 
 /*---------------------------------------------------------------------------*/
 
@@ -40,7 +40,9 @@ void viewport_sync(void);
 
 /*---------------------------------------------------------------------------*/
 
-void viewport_set(float, float, float, float, float, float);
+void viewport_set(float,   float,   float,   float, float, float);
+void viewport_get(float *, float *, float *, float *);
+
 int  viewport_get_x(void);
 int  viewport_get_y(void);
 int  viewport_get_w(void);
