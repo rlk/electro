@@ -58,7 +58,7 @@ int  entity_data(int);
 int  entity_type(int);
 
 void transform_entity(int, float[16], const float[16]);
-void draw_entity_list(int,            const float[16]);
+void draw_entity_list(int,            const float[16], float);
 
 /*---------------------------------------------------------------------------*/
 

@@ -21,14 +21,14 @@
 
 /*---------------------------------------------------------------------------*/
 
-void draw_pivot(int id, int pd, const float V[16])
+void draw_pivot(int id, int pd, const float V[16], float a)
 {
     float W[16];
 
     glPushMatrix();
     {
         transform_entity(id, W, V);
-        draw_entity_list(id, W);
+        draw_entity_list(id, W, a * get_entity_alpha(id));
     }
     glPopMatrix();
 }

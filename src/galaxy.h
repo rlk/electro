@@ -33,7 +33,7 @@ struct galaxy
 /*---------------------------------------------------------------------------*/
 
 int  init_galaxy(void);
-void draw_galaxy(int, int, const float[16]);
+void draw_galaxy(int, int, const float[16], float);
 
 void prep_galaxy(void);
 

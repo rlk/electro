@@ -64,7 +64,7 @@ struct object
 /*---------------------------------------------------------------------------*/
 
 int  init_object(void);
-void draw_object(int, int, const float[16]);
+void draw_object(int, int, const float[16], float);
 
 int  send_create_object(const char *);
 void recv_create_object(void);

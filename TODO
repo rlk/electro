@@ -1,4 +1,3 @@
-Propagate alpha
 Relative entity transform
 Update README
 Audit includes
@@ -7,7 +6,6 @@ Windows port
 Website
 
 Better deep delete policy / garbage collection
-Address light position inconsistency
 
 TTF support
 GL error.  glTexParameter WTF?

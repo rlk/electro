@@ -162,7 +162,7 @@ void transform_entity(int id, float frustum1[16], const float frustum0[16])
     m_pfrm(frustum1 + 12, M, frustum0 + 12);
 }
 
-void draw_entity_list(int id, const float V[16])
+void draw_entity_list(int id, const float V[16], float a)
 {
     int jd;
 
@@ -179,6 +179,8 @@ void draw_entity_list(int id, const float V[16])
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
 
+            /* Disable lighting if requested. */
+
             if (E[jd].flag & FLAG_UNLIT)
             {
                 glPushAttrib(GL_ENABLE_BIT);
@@ -189,12 +191,12 @@ void draw_entity_list(int id, const float V[16])
 
             switch (E[jd].type)
             {
-            case TYPE_CAMERA: draw_camera(jd, E[jd].data, V); break;
-            case TYPE_SPRITE: draw_sprite(jd, E[jd].data, V); break;
-            case TYPE_OBJECT: draw_object(jd, E[jd].data, V); break;
-            case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, V); break;
-            case TYPE_LIGHT:  draw_light (jd, E[jd].data, V); break;
-            case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, V); break;
+            case TYPE_CAMERA: draw_camera(jd, E[jd].data, V, a); break;
+            case TYPE_SPRITE: draw_sprite(jd, E[jd].data, V, a); break;
+            case TYPE_OBJECT: draw_object(jd, E[jd].data, V, a); break;
+            case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, V, a); break;
+            case TYPE_LIGHT:  draw_light (jd, E[jd].data, V, a); break;
+            case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, V, a); break;
             }
 
             /* Revert to previous render modes, as necessary. */
@@ -230,7 +232,7 @@ void draw_entity(void)
 
     memset(W, 0, 16 * sizeof (float));
 
-    if (E) draw_entity_list(0, W);
+    if (E) draw_entity_list(0, W, 1.0f);
 }
 
 /*---------------------------------------------------------------------------*/

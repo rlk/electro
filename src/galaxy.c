@@ -63,7 +63,7 @@ int init_galaxy(void)
     return 0;
 }
 
-void draw_galaxy(int id, int gd, const float V[16])
+void draw_galaxy(int id, int gd, const float V[16], float a)
 {
     GLsizei stride = sizeof (struct star);
 
@@ -124,7 +124,7 @@ void draw_galaxy(int id, int gd, const float V[16])
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, W);
+            draw_entity_list(id, W, a * get_entity_alpha(id));
         }
         glPopMatrix();
     }

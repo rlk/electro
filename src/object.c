@@ -532,7 +532,7 @@ int init_object(void)
     return 0;
 }
 
-void draw_object(int id, int od, const float V[16])
+void draw_object(int id, int od, const float V[16], float a)
 {
     GLsizei stride = sizeof (struct object_vert);
     float W[16];
@@ -547,12 +547,19 @@ void draw_object(int id, int od, const float V[16])
 
             /* Render this object. */
 
-            glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+            glPushAttrib(GL_LIGHTING_BIT |
+                         GL_TEXTURE_BIT  |
+                         GL_DEPTH_BUFFER_BIT);
             {
                 int si;
 
                 glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[od].vv);
+
+                /* If this object is transparent, don't write depth. */
+
+                if (a * get_entity_alpha(id) < 1.0)
+                    glDepthMask(GL_FALSE);
 
                 for (si = 0; si < O[od].sc; ++si)
                 {
@@ -566,7 +573,7 @@ void draw_object(int id, int od, const float V[16])
                     d[0] = m->d[0];
                     d[1] = m->d[1];
                     d[2] = m->d[2];
-                    d[3] = m->d[3] * get_entity_alpha(id);
+                    d[3] = m->d[3] * a * get_entity_alpha(id);
 
                     /* Apply the material properties. */
 
@@ -584,12 +591,12 @@ void draw_object(int id, int od, const float V[16])
                                    GL_UNSIGNED_INT,  O[od].sv[si].ev);
                 }
             }
-            glPopClientAttrib();
             glPopAttrib();
+            glPopClientAttrib();
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, W);
+            draw_entity_list(id, W, a * get_entity_alpha(id));
         }
         glPopMatrix();
     }

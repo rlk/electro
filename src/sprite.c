@@ -48,7 +48,7 @@ int init_sprite(void)
     return 0;
 }
 
-void draw_sprite(int id, int sd, const float V[16])
+void draw_sprite(int id, int sd, const float V[16], float a)
 {
     float W[16];
 
@@ -62,10 +62,9 @@ void draw_sprite(int id, int sd, const float V[16])
             transform_entity(id, W, V);
 
             glDepthMask(GL_FALSE);
-
             draw_image(S[sd].image);
 
-            glColor4f(1.0f, 1.0f, 1.0f, get_entity_alpha(id));
+            glColor4f(1.0f, 1.0f, 1.0f, a * get_entity_alpha(id));
 
             glBegin(GL_QUADS);
             {
@@ -81,7 +80,7 @@ void draw_sprite(int id, int sd, const float V[16])
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, W);
+            draw_entity_list(id, W, a * get_entity_alpha(id));
         }
         glPopMatrix();
         glPopAttrib();

@@ -229,7 +229,7 @@ int init_camera(void)
     return 0;
 }
 
-void draw_camera(int id, int cd, const float V[16])
+void draw_camera(int id, int cd, const float V[16], float a)
 {
     float W[16];
 
@@ -302,7 +302,7 @@ void draw_camera(int id, int cd, const float V[16])
 
         /* Render all children using this camera. */
 
-        draw_entity_list(id, W);
+        draw_entity_list(id, W, a * get_entity_alpha(id));
     }
 }
 

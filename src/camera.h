@@ -31,7 +31,7 @@ struct camera
 /*---------------------------------------------------------------------------*/
 
 int  init_camera(void);
-void draw_camera(int, int, const float[16]);
+void draw_camera(int, int, const float[16], float);
 
 int  send_create_camera(int);
 void recv_create_camera(void);
