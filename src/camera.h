@@ -13,6 +13,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "frustum.h"
+
 /*---------------------------------------------------------------------------*/
 
 #define CAMERA_NEAR     1.0f

@@ -14,8 +14,8 @@
 
 #include "opengl.h"
 #include "joystick.h"
-#include "viewport.h"
 #include "console.h"
+#include "display.h"
 #include "buffer.h"
 #include "script.h"
 #include "entity.h"
@@ -101,12 +101,13 @@ static void init_server(void)
 
 static void server_draw(void)
 {
-    const float gray[3] = { 0.2f, 0.2f, 0.2f };
+/*  const float gray[3] = { 0.2f, 0.2f, 0.2f }; */
 
     glClear(GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT |
             GL_STENCIL_BUFFER_BIT);
 
+#ifdef SNIP
     /* Draw the defined viewports to the stencil buffer. */
 
     glStencilFunc(GL_ALWAYS,   1, 0xFFFFFFFF);
@@ -121,13 +122,14 @@ static void server_draw(void)
 
     glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
     draw_background();
+#endif
 
     if (server_mirror)
         draw_entity();
 
     /* Draw the console overtop both the scene and the mullions. */
 
-    glStencilFunc(GL_ALWAYS,   1, 0xFFffffff);
+/*  glStencilFunc(GL_ALWAYS,   1, 0xFFffffff); */
     draw_console();
 
     /* Sync and swap. */
@@ -281,14 +283,14 @@ void server(int argc, char *argv[])
     if (init_script())
     {
         init_console(CONSOLE_COLS, CONSOLE_ROWS);
-        init_viewport();
+        init_display();
 
         /* Read and execute all scripts given on the command line. */
 
         for (argi = 1; argi < argc; argi++)
             load_script(argv[argi], argi < argc - 1);
 
-        sync_viewport();
+        sync_display();
 
         /* Initialize the main server window. */
 

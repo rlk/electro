@@ -15,6 +15,8 @@
 #include <float.h>
 
 #include "utility.h"
+#include "frustum.h"
+#include "display.h"
 #include "opengl.h"
 #include "node.h"
 
@@ -108,9 +110,9 @@ void node_draw(const struct node *N, int n, int i,
 
     if (r < 0) return;
 
-    /* If this is a leaf, or is entirely visible, draw it. */
+    /* If this node is entirely visible, or is a leaf, draw it. */
 
-    if (N[n].nodeL == 0 || N[n].nodeR == 0 || r > 0)
+    if (r > 0 || N[n].nodeL == 0 || N[n].nodeR == 0)
         glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
 
     else
@@ -127,8 +129,8 @@ void node_draw(const struct node *N, int n, int i,
 
         /* Render each subtree in its own bounding box. */
 
-        node_draw(N, N[n].nodeL, (i + 1) % 3, V, bL);
-        node_draw(N, N[n].nodeR, (i + 1) % 3, V, bR);
+        node_draw(N, N[n].nodeL, (i + 1) % 3, F, bL);
+        node_draw(N, N[n].nodeR, (i + 1) % 3, F, bR);
     }
 }
 

@@ -10,7 +10,13 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "display.h"
+#include "buffer.h"
+#include "event.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -27,6 +33,7 @@ static float color1[3] = { 0.1f, 0.2f, 0.4f };
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef SNIP
 static void set_window_pos(int X, int Y)
 {
     char buf[32];
@@ -41,6 +48,7 @@ static void set_window_pos(int X, int Y)
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
 #endif
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -100,7 +108,7 @@ void sync_display(void)
     }
 #endif
 
-    if (rank == 0) memcpy(Host, Hi[0], sizeof (struct host));
+    if (rank == 0) memcpy(&Host, Hi, sizeof (struct host));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -110,7 +118,7 @@ static int get_host(const char *name)
     int hd;
 
     for (hd = 0; hd < H_max; hd++)
-        if (strncmp(H[hd].name, name, NAMELEN) == 0)
+        if (strncmp(Hi[hd].name, name, MAXNAME) == 0)
             return hd;
 
     return -1;
@@ -120,7 +128,7 @@ void add_host(const char *name, int X, int Y, int W, int H)
 {
     if (H_num < H_max)
     {
-        strncpy(S[hd].name, name, NAMELEN);
+        strncpy(Hi[H_num].name, name, MAXNAME);
 
         Hi[H_num].X = X;
         Hi[H_num].Y = Y;
@@ -140,7 +148,7 @@ void add_tile(const char *name, int x, int y, int w, int h, const float p[3],
 
     if (0 <= i && i < H_num)
     {
-        int n = H[hd].n;
+        int n = Hi[i].n;
 
         Hi[i].tile[n].x    = x;
         Hi[i].tile[n].y    = y;

@@ -16,10 +16,10 @@
 
 #include "opengl.h"
 #include "matrix.h"
-#include "viewport.h"
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
+#include "display.h"
 #include "utility.h"
 #include "camera.h"
 
@@ -70,6 +70,7 @@ static void transform_camera(int id)
 }
 
 /*---------------------------------------------------------------------------*/
+#ifdef SNIP
 
 static void camera_plane(float plane[4], const float a[3],
                                          const float b[3],
@@ -100,8 +101,6 @@ static void camera_plane(float plane[4], const float a[3],
     plane[2] /= k;
     plane[3]  = (plane[0] * a[0] + plane[1] * a[1] + plane[2] * a[2]);
 }
-
-/*---------------------------------------------------------------------------*/
 
 static void ortho_camera(float V[16], const float pos[3], float T, float P,
                                                           float l, float r,
@@ -158,7 +157,7 @@ static void ortho_camera(float V[16], const float pos[3], float T, float P,
 
 static void persp_camera(struct frustum *F, const float p[3], float T, float P,
                                                               float l, float r,
-                                          b                   float b, float t)
+                                                              float b, float t)
 {
     const float n = CAMERA_NEAR;
 
@@ -208,7 +207,7 @@ static void persp_camera(struct frustum *F, const float p[3], float T, float P,
     camera_plane(V +  8, pos, D, C);
     camera_plane(V + 12, pos, A, D);
 }
-
+#endif
 /*---------------------------------------------------------------------------*/
 
 int init_camera(void)
@@ -234,13 +233,13 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
     if (camera_exists(cd))
     {
         float l, r, b, t;
-
+/*
         int viewport_x0 = (int) get_local_viewport_x();
         int viewport_x1 = (int) get_local_viewport_w() + viewport_x0;
         int viewport_y0 = (int) get_local_viewport_y();
         int viewport_y1 = (int) get_local_viewport_h() + viewport_y0;
         int viewport_W  = (int) get_total_viewport_w();
-
+*/
         float T = PI * rot[1] / 180.0f;
         float P = PI * rot[0] / 180.0f;
 
@@ -258,25 +257,27 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
             if (C[cd].type == CAMERA_ORTHO)
             {
+/*
                 l =  C[cd].zoom * viewport_x0;
                 r =  C[cd].zoom * viewport_x1;
                 b = -C[cd].zoom * viewport_y1;
                 t = -C[cd].zoom * viewport_y0;
+*/
+/*              ortho_camera(F1, pos, T, P, l, r, b, t); */
 
-                ortho_camera(F1, pos, T, P, l, r, b, t);
-
-                glOrtho(l, r, b, t, -CAMERA_FAR, CAMERA_FAR);
+/*              glOrtho(l, r, b, t, -CAMERA_FAR, CAMERA_FAR); */
             }
             if (C[cd].type == CAMERA_PERSP)
             {
+/*
                 l =  C[cd].zoom * viewport_x0 / viewport_W;
                 r =  C[cd].zoom * viewport_x1 / viewport_W;
                 b = -C[cd].zoom * viewport_y1 / viewport_W;
                 t = -C[cd].zoom * viewport_y0 / viewport_W;
+*/
+/*              persp_camera(F1, pos, T, P, l, r, b, t); */
 
-                persp_camera(F1, pos, T, P, l, r, b, t);
-
-                glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR);
+/*              glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR); */
             }
         }
         glMatrixMode(GL_MODELVIEW);
@@ -295,7 +296,7 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
         /* Render all children using this camera. */
 
-        draw_entity_list(id, F1, a * get_entity_alpha(id));
+        draw_entity_list(id, &F1, a * get_entity_alpha(id));
     }
 }
 

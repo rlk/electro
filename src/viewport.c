@@ -22,7 +22,6 @@
 #include "opengl.h"
 #include "buffer.h"
 #include "utility.h"
-#include "viewport.h"
 #include "event.h"
 
 /*---------------------------------------------------------------------------*/

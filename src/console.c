@@ -18,7 +18,7 @@
 
 #include "opengl.h"
 #include "utility.h"
-#include "viewport.h"
+#include "display.h"
 #include "console.h"
 #include "glyph.h"
 #include "script.h"

@@ -1,6 +1,4 @@
-/*    |||   ELECTRO                                                          */
-/*    O o   Copyright (C) 2005 Robert Kooima                                 */
-/*     -                                                                     */
+/*    Copyright (C) 2005 Robert Kooima                                       */
 /*                                                                           */
 /*    ELECTRO is free software;  you can redistribute it and/or modify it    */
 /*    under the terms of the  GNU General Public License  as published by    */
@@ -53,7 +51,7 @@ struct host
 
 /*---------------------------------------------------------------------------*/
 
-int  init_display(void);
+void init_display(void);
 void sync_display(void);
 
 void add_host(const char *, int, int, int, int);

@@ -13,8 +13,8 @@
 #include <SDL.h>
 
 #include "opengl.h"
-#include "viewport.h"
 #include "utility.h"
+#include "display.h"
 #include "buffer.h"
 #include "camera.h"
 #include "sprite.h"
@@ -151,7 +151,7 @@ static int client_loop(void)
 
 void client(void)
 {
-    sync_viewport();
+    sync_display();
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
@@ -169,7 +169,7 @@ void client(void)
 
         if (SDL_SetVideoMode(w, h, 0, m))
         {
-			init_opengl();
+            init_opengl();
             init_buffer();
             init_image();
             init_client();

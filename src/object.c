@@ -612,7 +612,7 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, F1, a * get_entity_alpha(id));
+            draw_entity_list(id, &F1, a * get_entity_alpha(id));
         }
         glPopMatrix();
     }

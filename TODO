@@ -1,6 +1,5 @@
-frustum structure
-zoom remove?
-logo
+zoom remove
+ortho remove
 camera offset per tile (for geowall and planar)
 
 CSS media

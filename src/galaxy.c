@@ -18,7 +18,6 @@
 
 #include "opengl.h"
 #include "utility.h"
-#include "viewport.h"
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
@@ -451,14 +450,12 @@ void recv_create_galaxy(void)
 
 void send_set_galaxy_magnitude(int gd, float m)
 {
-    G[gd].count = 1;
-
     pack_event(EVENT_SET_GALAXY_MAGNITUDE);
     pack_index(gd);
 
     pack_float(m);
 
-    G[gd].magnitude = m * get_viewport_scale();
+    G[gd].magnitude = m; /* * get_viewport_scale(); */
 }
 
 void recv_set_galaxy_magnitude(void)

@@ -166,10 +166,10 @@ void transform_entity(int id, struct frustum *F1, const struct frustum *F0)
 
     /* Transform the view frustum. */
 
-    m_pfrm(V1[0], M, V0[0]);
-    m_pfrm(V1[1], M, V0[1]);
-    m_pfrm(V1[2], M, V0[2]);
-    m_pfrm(V1[3], M, V0[3]);
+    m_pfrm(F1->V[0], M, F0->V[0]);
+    m_pfrm(F1->V[1], M, F0->V[1]);
+    m_pfrm(F1->V[2], M, F0->V[2]);
+    m_pfrm(F1->V[3], M, F0->V[3]);
 }
 
 void draw_entity_list(int id, const struct frustum *F0, float a)
@@ -254,11 +254,11 @@ int init_entity(void)
 
 void draw_entity(void)
 {
-    float W[16];
+    struct frustum F;
 
-    memset(W, 0, 16 * sizeof (float));
+    memset(&F, 0, sizeof (struct frustum));
 
-    if (E) draw_entity_list(0, W, 1.0f);
+    if (E) draw_entity_list(0, &F, 1.0f);
 }
 
 /*---------------------------------------------------------------------------*/
