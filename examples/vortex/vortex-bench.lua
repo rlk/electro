@@ -7,8 +7,8 @@ galaxy_tyc = nil
 galaxy_hip = nil
 
 zoom     =   1.0
-hip_magn = 100.0
-tyc_magn = 100.0
+hip_magn = 0.0
+tyc_magn = 0.0
 hip_dist =   0.0
 tyc_dist =   0.0
 spin     =   0.0

@@ -560,7 +560,13 @@ void draw_object(int id, int od, const float V[16], float a)
             {
                 int si;
 
-                glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[od].vv);
+                if (GL_has_vertex_buffer_object)
+                {
+                    glBindBufferARB(GL_ARRAY_BUFFER_ARB, O[od].buffer);
+                    glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
+                }
+                else
+                    glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[od].vv);
 
                 /* If this object is transparent, don't write depth. */
 
@@ -612,6 +618,19 @@ void draw_object(int id, int od, const float V[16], float a)
 
 /*---------------------------------------------------------------------------*/
 
+static void create_object(int od)
+{
+    if (GL_has_vertex_buffer_object)
+    {
+        glGenBuffersARB(1, &O[od].buffer);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, O[od].buffer);
+
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                        O[od].vc * sizeof (struct object_vert),
+                        O[od].vv, GL_STATIC_DRAW_ARB);
+    }
+}
+
 int send_create_object(const char *filename)
 {
     int od;
@@ -648,6 +667,8 @@ int send_create_object(const char *filename)
                 pack_index(s->fc);
                 pack_alloc(s->fc * sizeof (struct object_face), s->fv);
             }
+
+            create_object(od);
 
             /* Encapsulate this object in an entity. */
 
@@ -689,6 +710,8 @@ void recv_create_object(void)
         s->fv = unpack_alloc(s->fc * sizeof (struct object_face));
     }
 
+    create_object(od);
+
     /* Encapsulate this object in an entity. */
 
     recv_create_entity();
@@ -712,6 +735,9 @@ void delete_object(int od)
         if (O[od].count == 0)
         {
             int si;
+
+            if (glIsBufferARB(O[od].buffer))
+                glDeleteBuffersARB(1, &O[od].buffer);
 
             for (si = 0; si < O[od].sc; ++si)
                 if (O[od].sv[si].fv) free(O[od].sv[si].fv);

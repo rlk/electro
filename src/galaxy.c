@@ -27,7 +27,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define N_MAX   16834
+#define N_MAX   32768
 #define S_MAX 2621440
 
 #define GMAXINIT 4
@@ -35,9 +35,9 @@
 static struct galaxy *G;
 static int            G_max;
 
-static GLuint star_texture;
-static GLuint star_frag;
-static GLuint star_vert;
+static GLuint star_texture = 0;
+static GLuint star_frag    = 0;
+static GLuint star_vert    = 0;
 
 static int galaxy_exists(int gd)
 {
@@ -58,18 +58,73 @@ int init_galaxy(void)
         G_max = GMAXINIT;
 
         star_texture = star_make_texture();
-        star_frag    = star_frag_program();
-        star_vert    = star_vert_program();
+
+        if (GL_has_fragment_program)
+            star_frag = star_frag_program();
+
+        if (GL_has_vertex_program)
+            star_vert = star_vert_program();
 
         return 1;
     }
     return 0;
 }
 
-void draw_galaxy(int id, int gd, const float V[16], float a)
+/*---------------------------------------------------------------------------*/
+
+static void draw_galaxy_programs(int gd)
+{
+    /* Enable and bind the vertex and fragment programs. */
+
+    if (GL_has_vertex_program)
+    {
+        glEnable(GL_VERTEX_PROGRAM_ARB);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, star_vert);
+
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
+                                   1, G[gd].magnitude, 0, 0, 0);
+    }
+
+    if (GL_has_fragment_program)
+    {
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
+    }
+}
+
+static void draw_galaxy_arrays(int gd)
 {
     GLsizei sz = sizeof (struct star);
 
+    /* Enable the star arrays. */
+
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    /* Bind the vertex buffers. */
+
+    if (GL_has_vertex_buffer_object)
+    {
+        glEnableVertexAttribArrayARB(6);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
+
+        glColorPointer (3, GL_UNSIGNED_BYTE, sz, (GLvoid *) 0);
+        glVertexPointer(3, GL_FLOAT,         sz, (GLvoid *) 4);
+
+        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, sz, (GLvoid *) 16);
+    }
+    else
+    {
+        glColorPointer (3, GL_UNSIGNED_BYTE, sz, G[gd].S->col);
+        glVertexPointer(3, GL_FLOAT,         sz, G[gd].S->pos);
+    }
+}
+
+void draw_galaxy(int id, int gd, const float V[16], float a)
+{
     float W[16];
 
     if (galaxy_exists(gd))
@@ -88,46 +143,23 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 /* Set up the GL state for star rendering. */
 
                 glBindTexture(GL_TEXTURE_2D, star_texture);
-                glBlendFunc(GL_ONE, GL_ONE);
 
                 glDisable(GL_TEXTURE_2D);
                 glDisable(GL_LIGHTING);
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_COLOR_MATERIAL);
 
-                glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
+                glBlendFunc(GL_ONE, GL_ONE);
 
-                if (GL_has_program)
-                {
-                    glEnable(GL_VERTEX_PROGRAM_ARB);
-                    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-                    glEnable(GL_FRAGMENT_PROGRAM_ARB);
-                }
                 if (GL_has_point_sprite)
+                {
                     glEnable(GL_POINT_SPRITE_ARB);
-
-                if (GL_has_program)
-                {
-                    glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
-                    glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vert);
-                    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                               1, G[gd].magnitude, 0, 0, 0);
-                    glEnableVertexAttribArrayARB(6);
-                }
-                if (GL_has_point_sprite)
                     glTexEnvi(GL_POINT_SPRITE_ARB,
                               GL_COORD_REPLACE_ARB, GL_TRUE);
+                }
 
-                /* Enable the star arrays. */
-
-                glEnableClientState(GL_COLOR_ARRAY);
-                glEnableClientState(GL_VERTEX_ARRAY);
-
-                glColorPointer (3, GL_UNSIGNED_BYTE, sz, (GLvoid *) 0);
-                glVertexPointer(3, GL_FLOAT,         sz, (GLvoid *) 4);
-
-                if (GL_has_program)
-                    glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, sz, (GLvoid *) 16);
+                draw_galaxy_programs(gd);
+                draw_galaxy_arrays(gd);
 
                 /* Render all stars. */
 
@@ -262,6 +294,8 @@ static void fini_galaxy_prep(struct galaxy *g)
 
     g->N_num = node_sort(g->N, 0, 1, g->S, 0, g->S_num, 0);
 
+    printf("%d nodes\n", g->N_num);
+
     /* Find the Outer Limits (please stand by). */
 
     g->bound[0] = g->bound[1] = g->bound[2] =  FLT_MAX;
@@ -359,11 +393,15 @@ void prep_hip_galaxy(void)
 
 static void create_galaxy(int gd)
 {
-    glGenBuffersARB(1, &G[gd].buffer);
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                    G[gd].S_num * sizeof (struct star),
-                    G[gd].S,       GL_STATIC_DRAW_ARB);
+    if (GL_has_vertex_buffer_object)
+    {
+        glGenBuffersARB(1, &G[gd].buffer);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
+
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                        G[gd].S_num * sizeof (struct star),
+                        G[gd].S, GL_STATIC_DRAW_ARB);
+    }
 }
 
 int send_create_galaxy(const char *filename)

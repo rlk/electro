@@ -13,6 +13,8 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include "opengl.h"
+
 /*---------------------------------------------------------------------------*/
 
 #define MAXOBJECT 128
@@ -57,6 +59,9 @@ struct object_surf
 struct object
 {
     int count;
+
+    GLuint buffer;
+
     int vc;
     int mc;
     int sc;

@@ -277,6 +277,7 @@ static int server_loop(void)
 void server(int argc, char *argv[])
 {
     int argi;
+
     /*
     prep_tyc_galaxy();
     prep_hip_galaxy();

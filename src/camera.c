@@ -301,7 +301,7 @@ void draw_camera(int id, int cd, const float V[16], float a)
 
         /* Use the view configuration as vertex program parameters. */
 
-        if (GL_has_program)
+        if (GL_has_vertex_program)
             glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
                                        pos[0], pos[1], pos[2], 1);
 

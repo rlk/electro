@@ -322,7 +322,7 @@ GLuint star_frag_program(void)
 
     GLuint program = 0;
 
-    if (GL_has_program)
+    if (GL_has_fragment_program)
     {
         size_t len = strlen(star_fp);
 
@@ -386,9 +386,9 @@ GLuint star_vert_program(void)
         "MOV    ocol, icol;                      \n"
         "END                                     \n";
 
-    GLuint program;
+    GLuint program = 0;
 
-    if (GL_has_program)
+    if (GL_has_vertex_program)
     {
         size_t len = strlen(star_vp);
 

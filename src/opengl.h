@@ -32,9 +32,10 @@
 
 /*---------------------------------------------------------------------------*/
 
-extern GLboolean GL_has_program;
-extern GLboolean GL_has_point_sprite;
+extern GLboolean GL_has_fragment_program;
+extern GLboolean GL_has_vertex_program;
 extern GLboolean GL_has_vertex_buffer_object;
+extern GLboolean GL_has_point_sprite;
 
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;

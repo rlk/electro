@@ -4,9 +4,6 @@ flicker?
 regenerate galaxy files
 
 analyze performance
-    check culling
-    find the bottleneck in tyc
-        Star VBO?  (Ok if tree is NOT pruned)
     find the bottleneck on nico
         free-run on null scene
         free-run on zero magnitude

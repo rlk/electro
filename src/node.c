@@ -20,7 +20,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define N_SIZ 1024   /* Maximum number of stars at one leaf of the BSP tree. */
+#define N_SIZ 256    /* Maximum number of stars at one leaf of the BSP tree. */
 
 /*---------------------------------------------------------------------------*/
 
