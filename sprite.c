@@ -22,6 +22,7 @@
 #include "sprite.h"
 
 /*---------------------------------------------------------------------------*/
+/* Sprite entity storage                                                     */
 
 static struct sprite *S     = NULL;
 static int            S_max =   64;

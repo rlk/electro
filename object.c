@@ -14,12 +14,24 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "entity.h"
 #include "object.h"
 
 #define MAXSTR 256
 
 /*---------------------------------------------------------------------------*/
-/* Vector caches                                                             */
+/* Object entity storage                                                     */
+
+static struct object *O     = NULL;
+static int            O_max =   64;
+
+static int object_exists(int id)
+{
+    return (O && 0 <= id && id < O_max && O[id].vc);
+}
+
+/*---------------------------------------------------------------------------*/
+/* Vector loader caches                                                      */
 
 #define MAXV 32768
 
@@ -34,7 +46,7 @@ static int   tc;
 static int   ic;
 
 /*---------------------------------------------------------------------------*/
-/* Object element cache                                                      */
+/* Object element loader caches                                              */
 
 #define MAXMTRL    64
 #define MAXVERT 32768
@@ -76,28 +88,31 @@ static void read_newmtl(const char *name)
 
         /* Default diffuse */
 
-        mtrlv[mtrlc].d[0] = 1.0f;
-        mtrlv[mtrlc].d[1] = 1.0f;
-        mtrlv[mtrlc].d[2] = 1.0f;
-        mtrlv[mtrlc].d[3] = 1.0f;
+        mtrlv[mtrlc].d[0] = 0.8f;
+        mtrlv[mtrlc].d[1] = 0.8f;
+        mtrlv[mtrlc].d[2] = 0.8f;
+        mtrlv[mtrlc].d[3] = 0.8f;
 
         /* Default ambient */
 
         mtrlv[mtrlc].a[0] = 0.2f;
         mtrlv[mtrlc].a[1] = 0.2f;
         mtrlv[mtrlc].a[2] = 0.2f;
+        mtrlv[mtrlc].a[3] = 1.0f;
 
         /* Default specular */
 
-        mtrlv[mtrlc].s[0] = 0.2f;
-        mtrlv[mtrlc].s[1] = 0.2f;
-        mtrlv[mtrlc].s[2] = 0.2f;
+        mtrlv[mtrlc].s[0] = 0.0f;
+        mtrlv[mtrlc].s[1] = 0.0f;
+        mtrlv[mtrlc].s[2] = 0.0f;
+        mtrlv[mtrlc].s[3] = 1.0f;
 
         /* Default emmisive */
 
         mtrlv[mtrlc].e[0] = 0.0f;
         mtrlv[mtrlc].e[1] = 0.0f;
         mtrlv[mtrlc].e[2] = 0.0f;
+        mtrlv[mtrlc].e[3] = 1.0f;
 
         /* Default shininess */
 
@@ -193,6 +208,22 @@ static int find_mtl(const char *name)
 
 /*---------------------------------------------------------------------------*/
 
+static int read_indices(const char *line, int *vi, int *ti, int *ni)
+{
+    int n;
+
+    *vi = 0;
+    *ti = 0;
+    *ni = 0;
+
+    /* Allow either vertex/texcoord/normal or missing texcoord. */
+
+    if (sscanf(line, "%d/%d/%d%n", vi, ti, ni, &n) >= 3) return n;
+    if (sscanf(line, "%d//%d%n",   vi,     ni, &n) >= 2) return n;
+
+    return 0;
+}
+
 static void read_f(const char *line)
 {
     const char *c = line;
@@ -200,9 +231,9 @@ static void read_f(const char *line)
 
     /* Scan down the face string recording index set specifications. */
 
-    while (ic < MAXV && sscanf(c, "%d/%d/%d%n", &iv[ic][0],
+    while ((ic < MAXV) && (dc = read_indices(c, &iv[ic][0],
                                                 &iv[ic][1],
-                                                &iv[ic][2], &dc) >= 3)
+                                                &iv[ic][2])))
     {
         iv[ic][3] = ic;
 
@@ -321,7 +352,7 @@ static void read_v(const char *line)
 
 /*---------------------------------------------------------------------------*/
 
-static void read_obj(const char *filename, struct object *O)
+static void read_obj(const char *filename, struct object *o)
 {
     char line[MAXSTR];
     FILE *fin;
@@ -353,16 +384,84 @@ static void read_obj(const char *filename, struct object *O)
 
     /* Close out the object by copying the element caches. */
 
-    O->mv = (struct object_mtrl *) memdup(mtrlv,
-                                          mtrlc, sizeof (struct object_mtrl));
-    O->vv = (struct object_vert *) memdup(vertv,
+    o->vv = (struct object_vert *) memdup(vertv,
                                           vertc, sizeof (struct object_vert));
-    O->sv = (struct object_surf *) memdup(surfv,
+    o->mv = (struct object_mtrl *) memdup(mtrlv,
+                                          mtrlc, sizeof (struct object_mtrl));
+    o->sv = (struct object_surf *) memdup(surfv,
                                           surfc, sizeof (struct object_surf));
 
-    O->mc = mtrlc;
-    O->vc = vertc;
-    O->sc = surfc;
+    o->vc = vertc;
+    o->mc = mtrlc;
+    o->sc = surfc;
+}
+
+/*---------------------------------------------------------------------------*/
+
+int object_create(const char *filename)
+{
+    int id = -1;
+
+    if (O && (id = buffer_unused(O_max, object_exists)) >= 0)
+    {
+        /* Initialize the new object. */
+        /*
+        if (mpi_isroot())
+            server_send(EVENT_OBJECT_CREATE);
+        */
+        /* Syncronize the new object. */
+        /*
+        mpi_share_integer(1, &id);
+
+        O[id].texture = shared_load_texture(filename, &O[id].w, &O[id].h);
+        O[id].a       = 1.0f;
+        */
+        /* Encapsulate this new object in an entity. */
+
+        id = entity_create(TYPE_OBJECT, id);
+    }
+    else if ((O = buffer_expand(O, &O_max, sizeof (struct object))))
+        id = object_create(filename);
+
+    return id;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void object_render(int id)
+{
+    GLsizei stride = sizeof (struct object_vert);
+
+    if (object_exists(id))
+    {
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        {
+            int si;
+
+            glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[id].vv);
+
+            for (si = 0; si < O[id].sc; ++si)
+            {
+                int mi = O[id].sv[si].mi;
+
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   O[id].mv[mi].d);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   O[id].mv[mi].a);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  O[id].mv[mi].s);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  O[id].mv[mi].e);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, O[id].mv[mi].x);
+
+                glDrawElements(GL_TRIANGLES, 3 * O[id].sv[si].fc,
+                               GL_UNSIGNED_INT,  O[id].sv[si].fv);
+            }
+        }
+        glPopClientAttrib();
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void object_delete(int id)
+{
 }
 
 /*---------------------------------------------------------------------------*/

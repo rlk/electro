@@ -47,16 +47,22 @@ static void lua_pushentity(lua_State *L, int id)
 
 /*---------------------------------------------------------------------------*/
 
+static int lua_iscamera(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && entity_istype(lua_toentity(L, i), TYPE_CAMERA);
+}
+
 static int lua_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
         && entity_istype(lua_toentity(L, i), TYPE_SPRITE);
 }
 
-static int lua_iscamera(lua_State *L, int i)
+static int lua_isobject(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && entity_istype(lua_toentity(L, i), TYPE_CAMERA);
+        && entity_istype(lua_toentity(L, i), TYPE_OBJECT);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -274,6 +280,14 @@ static int script_camera_zoom(lua_State *L)
 
 /*---------------------------------------------------------------------------*/
 
+static int script_camera_create(lua_State *L)
+{
+    const char *name = "camera_create";
+
+    lua_pushentity(L, camera_create(script_getnumber(name, L, -1)));
+    return 1;
+}
+
 static int script_sprite_create(lua_State *L)
 {
     const char *name = "sprite_create";
@@ -282,11 +296,11 @@ static int script_sprite_create(lua_State *L)
     return 1;
 }
 
-static int script_camera_create(lua_State *L)
+static int script_object_create(lua_State *L)
 {
-    const char *name = "camera_create";
+    const char *name = "object_create";
 
-    lua_pushentity(L, camera_create(script_getnumber(name, L, -1)));
+    lua_pushentity(L, object_create(script_getstring(name, L, -1)));
     return 1;
 }
 
@@ -362,8 +376,9 @@ int script_init(void)
         lua_register(L, "camera_dist",     script_camera_dist);
         lua_register(L, "camera_zoom",     script_camera_zoom);
 
-        lua_register(L, "sprite_create",   script_sprite_create);
         lua_register(L, "camera_create",   script_camera_create);
+        lua_register(L, "sprite_create",   script_sprite_create);
+        lua_register(L, "sprite_create",   script_object_create);
 
         lua_register(L, "entity_parent",   script_entity_parent);
         lua_register(L, "entity_delete",   script_entity_delete);

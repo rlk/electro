@@ -76,6 +76,10 @@ int camera_create(int type)
     return id;
 }
 
+void camera_delete(int id)
+{
+}
+
 /*---------------------------------------------------------------------------*/
 
 void camera_render(int id, const float pos[3], const float rot[3])

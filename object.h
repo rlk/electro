@@ -19,17 +19,17 @@ struct object_mtrl
     int texture;
 
     float d[4];
-    float a[3];
-    float s[3];
-    float e[3];
+    float a[4];
+    float s[4];
+    float e[4];
     float x[1];
 };
 
 struct object_vert
 {
-    float v[3];
-    float n[3];
     float t[2];
+    float n[3];
+    float v[3];
 };
 
 struct object_face
@@ -46,18 +46,18 @@ struct object_surf
 
 struct object
 {
-    int mc;
     int vc;
+    int mc;
     int sc;
-    struct object_mtrl *mv;
     struct object_vert *vv;
+    struct object_mtrl *mv;
     struct object_surf *sv;
 };
 
 /*---------------------------------------------------------------------------*/
 
-int  object_load(const char *);
-void object_free(int);
-void object_draw(int);
+int  object_create(const char *);
+void object_delete(int);
+void object_render(int);
 
 /*---------------------------------------------------------------------------*/

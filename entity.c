@@ -19,14 +19,14 @@
 #include "server.h"
 #include "camera.h"
 #include "sprite.h"
+#include "object.h"
 #include "entity.h"
 
 /*---------------------------------------------------------------------------*/
+/* Base entity storage                                                       */
 
 static struct entity *E     = NULL;
 static int            E_max =   64;
-
-/*---------------------------------------------------------------------------*/
 
 int entity_exists(int id)
 {
@@ -136,6 +136,8 @@ static void entity_traverse(int id)
         switch (E[id].type)
         {
         case TYPE_SPRITE: sprite_render(E[id].data);                 break;
+        case TYPE_OBJECT: object_render(E[id].data);                 break;
+
         case TYPE_CAMERA: camera_render(E[id].data, E[id].position,
                                                     E[id].rotation); break;
         }
@@ -239,7 +241,9 @@ void entity_delete(int id)
 
     switch (E[id].type)
     {
+    case TYPE_CAMERA: camera_delete(E[id].data); break;
     case TYPE_SPRITE: sprite_delete(E[id].data); break;
+    case TYPE_OBJECT: object_delete(E[id].data); break;
     }
 
     memset(E + id, 0, sizeof (struct entity));
