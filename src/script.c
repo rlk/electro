@@ -506,7 +506,8 @@ static int script_create_object(lua_State *L)
 
 static int script_create_galaxy(lua_State *L)
 {
-    int id = galaxy_send_create(script_getstring("create_galaxy", L, -1));
+    int id = galaxy_send_create(script_getstring("create_galaxy", L, -2),
+                                script_getstring("create_galaxy", L, -1));
 
     lua_pushentity(L, id);
     return 1;

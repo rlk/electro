@@ -21,7 +21,7 @@
 /* FIXME: Byte-order dependant.                                              */
 /* FIXME: Not protected against buffer overflow.                             */
 
-#define BUFINIT (32 * 1024 * 1024)
+#define BUFINIT (64 * 1024 * 1024)
 
 static unsigned char *buf;
 static int            pos;

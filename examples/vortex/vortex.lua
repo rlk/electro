@@ -6,7 +6,7 @@ galaxy = nil
 
 zoom =   1.0
 magn = 100.0
-dist =   0.0
+dist =   2.0
 spin =   0.0
 
 setzoom = false
@@ -17,13 +17,14 @@ setdist = false
 
 function do_start()
     camera = E.create_camera(E.camera_type_perspective)
-    galaxy = E.create_galaxy("../hip_main.bin")
+    galaxy = E.create_galaxy("../hip_main.dat", "../tyc2.dat")
 
     E.entity_parent(galaxy, camera)
 
     E.entity_position(camera, 0, 15.5, 9200)
 
     E.camera_zoom(camera, zoom)
+    E.camera_dist(camera, dist)
     E.galaxy_magn(galaxy, magn)
 end
 
@@ -35,20 +36,18 @@ function do_timer()
 end
 
 function do_point(dx, dy)
-    if setzoom then      -- Set the camera zoom, adjust magnitude accordingly.
+    if setzoom then      -- Set the camera zoom.
 
         zoom = zoom + dy * 0.01
-        magn = magn - dy * 5
+        if zoom < 0.001 then
+            zoom = 0.001
+        end
 
-        if zoom < 0.001 then zoom = 0.001 end
-        if magn < 0.0   then magn = 0.0   end
-
-        E.galaxy_magn(galaxy, magn)
-        E.camera_zoom(camera, zoom)
+        E.camera_zoom(camera, zoom * zoom)
 
     elseif setmagn then  -- Set the stellar magnitude multiplier.
 
-        magn = magn - dy * 0.1
+        magn = magn - dy * 1.0
         if magn < 0 then
             magn = 0
         end
@@ -68,8 +67,8 @@ function do_point(dx, dy)
 
         local x, y, z = E.entity_get_rotation(camera)
 
-        x = x - dy * 0.1 * zoom
-        y = y - dx * 0.1 * zoom
+        x = x - dy * 0.1 * zoom * zoom
+        y = y - dx * 0.1 * zoom * zoom
 
         if x < -90 then x = -90 end
         if x >  90 then x =  90 end

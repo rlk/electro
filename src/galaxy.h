@@ -19,7 +19,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  galaxy_send_create(const char *);
+int  galaxy_send_create(const char *, const char *);
 void galaxy_recv_create(void);
 
 void galaxy_send_magn(int, float);

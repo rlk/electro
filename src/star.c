@@ -29,11 +29,16 @@
 
 /*---------------------------------------------------------------------------*/
 
-static struct star *star_data    = NULL;
-static int          star_count   = 0;
-static GLuint       star_fp      = 0;
-static GLuint       star_vp      = 0;
-static GLuint       star_texture = 0;
+static struct star *star_near_data  = NULL;
+static int          star_near_count = 0;
+static GLuint       star_near_vp    = 0;
+
+static struct star *star_far_data   = NULL;
+static int          star_far_count  = 0;
+static GLuint       star_far_vp     = 0;
+
+static GLuint       star_texture    = 0;
+static GLuint       star_fp         = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -179,10 +184,10 @@ int star_parse_hip(FILE *fp, struct star *s)
 
     if (fgets(buf, STAR_HIP_RECLEN + 1, fp))
     {
-        double ra  = 0;
-        double de  = 0;
-        double mag = 0;
-        double plx = 0;
+        double ra  = 0.0;
+        double de  = 0.0;
+        double mag = 0.0;
+        double plx = 0.0;
 
         double n1, c1 = PI * 282.25 / 180.0;
         double n2, c2 = PI *  62.6  / 180.0;
@@ -199,8 +204,8 @@ int star_parse_hip(FILE *fp, struct star *s)
             /* Compute equatorial position in parsecs and radians. */
 
             plx =  1000.0 / fabs(plx);
-            ra  = PI * ra /  180.0;
-            de  = PI * de /  180.0;
+            ra  = PI * ra / 180.0;
+            de  = PI * de / 180.0;
 
             /* Compute the position in galactic coordinates. */
 
@@ -230,8 +235,65 @@ int star_parse_hip(FILE *fp, struct star *s)
     return -1;
 }
 
-/*---------------------------------------------------------------------------*/
+int star_parse_tyc(FILE *fp, struct star *s)
+{
+    char buf[STAR_HIP_RECLEN + 1];
 
+    /* Read a single line from the given file. */
+
+    if (fgets(buf, STAR_HIP_RECLEN + 1, fp))
+    {
+        double ra, de;
+        double bt, vt;
+        double mag;
+        double plx;
+
+        double n1, c1 = PI * 282.25 / 180.0;
+        double n2, c2 = PI *  62.6  / 180.0;
+        double n3, c3 = PI *  33.0  / 180.0;
+        double b, l;
+        
+        int hip;
+
+        /* Attempt to parse necessary data from the line. */
+
+        if (sscanf(buf + 142, "%d",  &hip) == 0 &&
+            sscanf(buf + 152, "%lf", &ra)  == 1 &&
+            sscanf(buf + 165, "%lf", &de)  == 1 &&
+            sscanf(buf + 110, "%lf", &bt)  == 1 &&
+            sscanf(buf + 123, "%lf", &vt)  == 1)
+        {
+            /* Compute equatorial position in parsecs and radians. */
+            
+            mag = vt - 0.090 * (bt - vt);
+            plx = 100000.0;
+            ra  = PI * ra / 180.0;
+            de  = PI * de / 180.0;
+
+            /* Compute the position in galactic coordinates. */
+
+            n1 =                     cos(de) * cos(ra - c1);
+            n2 = sin(de) * sin(c2) + cos(de) * sin(ra - c1) * cos(c2);
+            n3 = sin(de) * cos(c2) - cos(de) * sin(ra - c1) * sin(c2);
+
+            l = -atan2(n1, n2) + c3;
+            b =  asin(n3);
+
+            s->pos[0] = (GLfloat) (sin(l) * cos(b) * plx);
+            s->pos[1] = (GLfloat) (         sin(b) * plx + 15.5);
+            s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx + 9200);
+            s->mag    = mag;
+
+            star_calc_color('K', s->col);
+            return +1;
+        }
+        return 0;
+    }
+    return -1;
+}
+
+/*---------------------------------------------------------------------------*/
+#ifdef SNIP
 int star_write(const char *filename)
 {
     FILE *fp;
@@ -283,6 +345,30 @@ int star_read_bin(const char *filename)
 
     return star_count;
 }
+#endif
+
+int star_read_sol(void)
+{
+    size_t n = star_near_count + 1;
+    size_t s = sizeof (struct star);
+    
+    if ((star_near_data = (struct star *) realloc(star_near_data, s * n)))
+    {
+        /* The sun is not in the catalog.  Add it manually. */
+
+        star_near_data[star_near_count].pos[0] =    0.0;
+        star_near_data[star_near_count].pos[1] =   15.5;
+        star_near_data[star_near_count].pos[2] = 9200.0;
+        star_near_data[star_near_count].mag    =    5.0;
+
+        star_calc_color('G', star_near_data[star_near_count].col);
+
+        star_near_count++;
+
+        return 1;
+    }
+    return 0;
+}
 
 int star_read_hip(const char *filename)
 {
@@ -292,40 +378,70 @@ int star_read_hip(const char *filename)
 
     if (stat(filename, &buf) == 0)
     {
-        size_t n = 1 + buf.st_size / STAR_HIP_RECLEN;
+        size_t n = star_near_count + buf.st_size / STAR_HIP_RECLEN;
+        size_t s = sizeof (struct star);
         FILE *fp = NULL;
 
         /* Open the catalog, allocate and fill a buffer of stars. */
 
         if ((fp = fopen(filename, "r")))
         {
-            if ((star_data = (struct star *) calloc(sizeof (struct star), n)))
+            star_near_data = (struct star *) realloc(star_near_data, s * n);
+
+            if (star_near_data)
             {
                 int c;
 
-                /* The sun is not in the catalog.  Add it manually. */
-
-                star_data[0].pos[0] =    0.0;
-                star_data[0].pos[1] =   15.5;
-                star_data[0].pos[2] = 9200.0;
-                star_data[0].mag    =    5.0;
-
-                star_calc_color('G', star_data[0].col);
-
-                star_count = 1;
-
                 /* Parse all catalog records. */
                
-                while ((c = star_parse_hip(fp, star_data + star_count)) >= 0)
-                    star_count += c;
+                while ((c = star_parse_hip(fp, star_near_data +
+                                               star_near_count)) >= 0)
+                    star_near_count += c;
             }
             fclose(fp);
         }
-        else perror("star_read_catalog_txt: fopen()");
+        else perror("star_read_hip: fopen()");
     }
-    else perror("star_read_catalog_txt: stat()");
+    else perror("star_read_hip: stat()");
 
-    return star_count;
+    return star_near_count;
+}
+
+int star_read_tyc(const char *filename)
+{
+    struct stat buf;
+
+    /* Count the number of stars in the catalog. */
+
+    if (stat(filename, &buf) == 0)
+    {
+        size_t n = star_far_count + buf.st_size / STAR_TYC_RECLEN;
+        size_t s = sizeof(struct star);
+        FILE *fp = NULL;
+
+        /* Open the catalog, allocate and fill a buffer of stars. */
+
+        if ((fp = fopen(filename, "r")))
+        {
+            star_far_data = (struct star *) realloc(star_far_data, s * n);
+
+            if (star_far_data)
+            {
+                int c;
+
+                /* Parse all catalog records. */
+               
+                while ((c = star_parse_tyc(fp, star_far_data +
+                                               star_far_count)) >= 0)
+                    star_far_count += c;
+            }
+            fclose(fp);
+        }
+        else perror("star_read_tyc: fopen()");
+    }
+    else perror("star_read_tyc: stat()");
+
+    return star_far_count;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -384,7 +500,7 @@ static GLuint load_star_fp(void)
     return program;
 }
 
-static GLuint load_star_vp(void)
+static GLuint load_star_near_vp(void)
 {
     const char *star_vp =
         "!!ARBvp1.0                                                         \n"
@@ -447,26 +563,88 @@ static GLuint load_star_vp(void)
     return program;
 }
 
+static GLuint load_star_far_vp(void)
+{
+    const char *star_vp =
+        "!!ARBvp1.0                                                         \n"
+
+        "ATTRIB ipos   = vertex.position;                                  \n"
+        "ATTRIB icol   = vertex.color;                                     \n"
+        "ATTRIB imag   = vertex.attrib[6];                                 \n"
+
+        "PARAM  const  = { 0.0, -0.2, 10.0, 0.0 };                         \n"
+        "PARAM  view   = program.env[0];                                   \n"
+        "PARAM  mult   = program.env[1];                                   \n"
+        "PARAM  mvp[4] = { state.matrix.mvp };                             \n"
+
+        "TEMP   dist;                                                      \n"
+        "TEMP   amag;                                                      \n"
+        "TEMP   luma;                                                      \n"
+        "TEMP   temp;                                                      \n"
+
+        "OUTPUT osiz   = result.pointsize;                                 \n"
+        "OUTPUT opos   = result.position;                                  \n"
+        "OUTPUT ocol   = result.color;                                     \n"
+        /*
+        "MOV    ipos.w, const.w;                                           \n"
+        */
+        /* Transform the star position. */
+
+        "DP4    opos.x, mvp[0], ipos;                                      \n"
+        "DP4    opos.y, mvp[1], ipos;                                      \n"
+        "DP4    opos.z, mvp[2], ipos;                                      \n"
+        "DP4    opos.w, mvp[3], ipos;                                      \n"
+
+        /* Compute the luminosity and sprite scale. */
+
+        "MUL    temp, imag, const.y;                                       \n"
+        "POW    luma, const.z, temp.x;                                     \n"
+        "MUL    osiz, luma, mult;                                          \n"
+        
+        "MOV    ocol, icol;                                                \n"
+        "END                                                               \n";
+
+
+    GLuint program;
+
+    glGenProgramsARB(1, &program);
+
+    glBindProgramARB  (GL_VERTEX_PROGRAM_ARB, program);
+    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(star_vp), star_vp);
+
+    return program;
+}
+
 /*---------------------------------------------------------------------------*/
 
 void star_send_create(void)
 {
-    pack_index(star_count);
-    pack_alloc(star_count * sizeof (struct star), star_data);
+    /*
+    star_near_count = unpack_index();
+    star_far_count  = unpack_index();
 
+    star_near_data  = unpack_alloc(star_near_count * sizeof (struct star));
+    star_far_data   = unpack_alloc(star_far_count  * sizeof (struct star));
+    */
     star_texture = star_make_texture();
     star_fp      = load_star_fp();
-    star_vp      = load_star_vp();
+    star_near_vp = load_star_near_vp();
+    star_far_vp  = load_star_far_vp();
 }
 
 void star_recv_create(void)
 {
-    star_count = unpack_index();
-    star_data  = unpack_alloc(star_count * sizeof (struct star));
+    star_near_count = unpack_index();
+    star_far_count  = unpack_index();
+
+    star_near_data  = unpack_alloc(star_near_count * sizeof (struct star));
+    star_far_data   = unpack_alloc(star_far_count  * sizeof (struct star));
 
     star_texture = star_make_texture();
     star_fp      = load_star_fp();
-    star_vp      = load_star_vp();
+    star_near_vp = load_star_near_vp();
+    star_far_vp  = load_star_far_vp();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -480,18 +658,23 @@ void star_draw(void)
     glEnable(GL_VERTEX_PROGRAM_ARB);
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
     {
-        glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vp);
-        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_fp);
-
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableVertexAttribArrayARB(6);
 
-        glVertexPointer(3, GL_FLOAT,                s, &star_data[0].pos);
-        glColorPointer (3, GL_UNSIGNED_BYTE,        s, &star_data[0].col);
-        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].mag);
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_fp);
 
-        glDrawArrays(GL_POINTS, 0, star_count);
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_far_vp);
+        glVertexPointer(3, GL_FLOAT,                s, &star_far_data[0].pos);
+        glColorPointer (3, GL_UNSIGNED_BYTE,        s, &star_far_data[0].col);
+        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_far_data[0].mag);
+        glDrawArrays(GL_POINTS, 0, star_far_count);
+
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_near_vp);
+        glVertexPointer(3, GL_FLOAT,                s, &star_near_data[0].pos);
+        glColorPointer (3, GL_UNSIGNED_BYTE,        s, &star_near_data[0].col);
+        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_near_data[0].mag);
+        glDrawArrays(GL_POINTS, 0, star_near_count);
 
         glDisableVertexAttribArrayARB(6);
         glDisableClientState(GL_COLOR_ARRAY);
@@ -505,10 +688,13 @@ void star_draw(void)
 
 void star_delete(void)
 {
-    free(star_data);
+    free(star_near_data);
+    free(star_far_data);
 
-    star_data  = NULL;
-    star_count = 0;
+    star_near_data  = NULL;
+    star_near_count = 0;
+    star_far_data   = NULL;
+    star_far_count  = 0;
 }
 
 /*---------------------------------------------------------------------------*/

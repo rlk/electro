@@ -30,11 +30,12 @@ struct star
 
 /*---------------------------------------------------------------------------*/
 
-int star_write(const char *);
+int  star_write(const char *);
 
-int star_read_hip(const char *);
-int star_read_typ(const char *);
-int star_read_bin(const char *);
+int  star_read_sol(void);
+int  star_read_hip(const char *);
+int  star_read_tyc(const char *);
+int  star_read_bin(const char *);
 
 void star_send_create(void);
 void star_recv_create(void);

@@ -28,9 +28,11 @@ static float mag = 1.0f;
 
 /*---------------------------------------------------------------------------*/
 
-int galaxy_send_create(const char *filename)
+int galaxy_send_create(const char *nearfile, const char *farfile)
 {
-    star_read_bin(filename);
+    star_read_sol();
+    star_read_hip(nearfile);
+    star_read_tyc(farfile);
 
     pack_event(EVENT_GALAXY_CREATE);
     star_send_create();
