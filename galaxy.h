@@ -3,6 +3,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define RADIUS 15000.0f
+
 struct star
 {
     float         position[3];
@@ -12,12 +14,14 @@ struct star
 
 struct node
 {
-    int size;
     int seed;
     int type;
 
     int star_first;
     int star_count;
+
+    float position[3];
+    float radius;
 };
 
 /*---------------------------------------------------------------------------*/

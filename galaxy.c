@@ -87,6 +87,17 @@ void get_color(char type, unsigned char c[3])
 
     switch (type)
     {
+    case 'O': c[0] = 0xBF; c[1] = 0xBF; c[2] = 0xFF; break;
+    case 'B': c[0] = 0xCF; c[1] = 0xCF; c[2] = 0xFF; break;
+    case 'A': c[0] = 0xDF; c[1] = 0xDF; c[2] = 0xFF; break;
+    case 'F': c[0] = 0xEF; c[1] = 0xEF; c[2] = 0xFF; break;
+    case 'G': c[0] = 0xFF; c[1] = 0xFF; c[2] = 0xDF; break;
+    case 'K': c[0] = 0xFF; c[1] = 0xDF; c[2] = 0xBF; break;
+    case 'M': c[0] = 0xFF; c[1] = 0xBF; c[2] = 0x8F; break;
+    }
+    /*
+    switch (type)
+    {
     case 'O': c[0] = 0x6F; c[1] = 0x6F; c[2] = 0xFF; break;
     case 'B': c[0] = 0x8F; c[1] = 0x8F; c[2] = 0xFF; break;
     case 'A': c[0] = 0xBF; c[1] = 0xBF; c[2] = 0xFF; break;
@@ -95,6 +106,7 @@ void get_color(char type, unsigned char c[3])
     case 'K': c[0] = 0xFF; c[1] = 0xAF; c[2] = 0x8F; break;
     case 'M': c[0] = 0xFF; c[1] = 0x6F; c[2] = 0x6F; break;
     }
+    */
 }
 
 void read_star(FILE *fp)
@@ -183,17 +195,63 @@ void star_init(void)
 
 /*---------------------------------------------------------------------------*/
 
-static int tree_init_count(int d)
+int node_init_count(int d)
 {
     if (d == 0)
         return 8;
     else
-        return 8 * tree_init_count(d - 1);
+        return 8 * node_init_count(d - 1);
 }
 
-int tree_init(int d)
+void node_init_position(int i, int d, float x, float y, float z, float r)
 {
-    int n = tree_init_count(d);
+    float s = r / 2;
+
+    N[i].position[0] = x;
+    N[i].position[1] = y;
+    N[i].position[2] = z;
+    N[i].radius      = r;
+
+    if (d > 0)
+    {
+        node_init_position(8 * i + 1, d - 1, x + s, y + s, z + s, s);
+        node_init_position(8 * i + 2, d - 1, x - s, y + s, z + s, s);
+        node_init_position(8 * i + 3, d - 1, x + s, y - s, z + s, s);
+        node_init_position(8 * i + 4, d - 1, x - s, y - s, z + s, s);
+        node_init_position(8 * i + 5, d - 1, x + s, y + s, z - s, s);
+        node_init_position(8 * i + 6, d - 1, x - s, y + s, z - s, s);
+        node_init_position(8 * i + 7, d - 1, x + s, y - s, z - s, s);
+        node_init_position(8 * i + 8, d - 1, x - s, y - s, z - s, s);
+    }
+}
+
+int node_init(int d)
+{
+    int n = node_init_count(d);
+
+    if ((N = (struct node *) calloc(n, sizeof (struct node))))
+    {
+        node_init_position(0, d, 0, 0, 0, RADIUS);
+    }
+}
+
+void node_draw(int i, int d)
+{
+    if (d == 0)
+    {
+        glVertex3fv(N[i].position);
+    }
+    else
+    {
+        node_draw(8 * i + 1, d - 1);
+        node_draw(8 * i + 2, d - 1);
+        node_draw(8 * i + 3, d - 1);
+        node_draw(8 * i + 4, d - 1);
+        node_draw(8 * i + 5, d - 1);
+        node_draw(8 * i + 6, d - 1);
+        node_draw(8 * i + 7, d - 1);
+        node_draw(8 * i + 8, d - 1);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -226,8 +284,6 @@ void galaxy_init(void)
     const char *frag_program;
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    glEnable(GL_VERTEX_PROGRAM_ARB);
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
 
     glEnable(GL_POINT_SPRITE_ARB);
     glEnable(GL_COLOR_MATERIAL);
@@ -235,7 +291,6 @@ void galaxy_init(void)
     glEnable(GL_BLEND);
 
     glBlendFunc(GL_ONE, GL_ONE);
-/*    glBlendFunc(GL_SRC_ALPHA, GL_ONE);*/
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
@@ -257,17 +312,57 @@ void galaxy_init(void)
         printf("frag_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
 
     star_init();
-    tree_init(2);
+    node_init(viewer_depth());
 }
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_draw(const double p[3])
+void circum_draw(void)
+{
+    int i;
+
+    glDisable(GL_TEXTURE_2D);
+    {
+        glBegin(GL_LINE_LOOP);
+        {
+            for (i = 0; i < 360; i++)
+                glVertex3d(RADIUS * sin(M_PI * i / 180.0), 0,
+                           RADIUS * cos(M_PI * i / 180.0));
+        }
+        glEnd();
+    }
+    glEnable(GL_TEXTURE_2D);
+}
+
+void star_draw(void)
 {
     GLsizei stride = sizeof (struct star);
-    double  viewpoint[3];
-    double  magnifier[1];
-    int i;
+
+    glEnable(GL_VERTEX_PROGRAM_ARB);
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    {
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glEnableVertexAttribArrayARB(6);
+
+        glVertexPointer(3, GL_FLOAT, stride, &S[0].position);
+        glColorPointer (3, GL_UNSIGNED_BYTE, stride, &S[0].color);
+        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, stride, &S[0].magnitude);
+
+        glDrawArrays(GL_POINTS, 0, num_stars);
+
+        glDisableVertexAttribArrayARB(6);
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+    }
+    glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    glDisable(GL_VERTEX_PROGRAM_ARB);
+}
+
+void galaxy_draw(const double p[3])
+{
+    double viewpoint[3];
+    double magnifier[1];
 
     viewer_get_pos(viewpoint);
     viewer_get_mag(magnifier);
@@ -275,33 +370,18 @@ void galaxy_draw(const double p[3])
     glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 0, viewpoint);
     glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 1, magnifier);
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glEnableVertexAttribArrayARB(6);
+    circum_draw();
+    star_draw();
 
-    glVertexPointer(3, GL_FLOAT, stride, &S[0].position);
-    glColorPointer (3, GL_UNSIGNED_BYTE, stride, &S[0].color);
-    glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, stride, &S[0].magnitude);
-
-    glDrawArrays(GL_POINTS, 0, num_stars);
-
-    glDisableVertexAttribArrayARB(6);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
-
-    glDisable(GL_TEXTURE_2D);
+    /*
+    glPointSize(50);
+    glBegin(GL_POINTS);
     {
-        double r = 15000;
-
-        glBegin(GL_LINE_LOOP);
-        {
-            for (i = 0; i < 360; i++)
-                glVertex3d(r * sin(M_PI * i / 180.0), 0,
-                           r * cos(M_PI * i / 180.0));
-        }
-        glEnd();
+        glColor3f(0.1, 0.1, 0.1);
+        node_draw(0, viewer_depth());
     }
-    glEnable(GL_TEXTURE_2D);
+    glEnd();
+    */
 }
 
 /*---------------------------------------------------------------------------*/

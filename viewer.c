@@ -12,6 +12,8 @@ static double magnifier;
 
 static int button[3];
 
+static int max_depth;
+static int depth;
 static int spinning;
 
 /*---------------------------------------------------------------------------*/
@@ -30,6 +32,8 @@ void viewer_init(void)
     rotation[1] =      0.0;
     distance    =   1000.0;
     magnifier   =    256.0;
+
+    max_depth = depth = 5;
 }
 
 void viewer_post(void)
@@ -91,7 +95,10 @@ int viewer_point(int x, int y)
     }
     if (button[2])
     {
-        distance += dy;
+        if (SDL_GetModState() & KMOD_LSHIFT)
+            distance += dy;
+        else
+            distance += dy * 128;
 
         if (distance < 0.0)
             distance = 0.0;
@@ -130,6 +137,10 @@ int viewer_keybd(int k, int s)
         magnifier += 32;
     if (k == SDLK_F9  && s)
         magnifier -= 32;
+    if (k == SDLK_F8  && s)
+        if (depth < max_depth) depth++;
+    if (k == SDLK_F7  && s)
+        if (depth >         0) depth--;
 
     return 1;
 }
@@ -157,6 +168,11 @@ void viewer_get_pos(double p[3])
 void viewer_get_mag(double m[1])
 {
     m[0] = magnifier;
+}
+
+int viewer_depth(void)
+{
+    return depth;
 }
 
 /*---------------------------------------------------------------------------*/
