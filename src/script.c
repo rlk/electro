@@ -20,6 +20,7 @@
 #include "sprite.h"
 #include "object.h"
 #include "light.h"
+#include "pivot.h"
 #include "entity.h"
 #include "script.h"
 
@@ -291,6 +292,12 @@ static int script_light_create(lua_State *L)
     return 1;
 }
 
+static int script_pivot_create(lua_State *L)
+{
+    lua_pushentity(L, pivot_create());
+    return 1;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int script_entity_parent(lua_State *L)
@@ -367,6 +374,7 @@ int script_init(void)
         lua_register(L, "sprite_create",   script_sprite_create);
         lua_register(L, "object_create",   script_object_create);
         lua_register(L, "light_create",    script_light_create);
+        lua_register(L, "pivot_create",    script_pivot_create);
 
         lua_register(L, "entity_parent",   script_entity_parent);
         lua_register(L, "entity_delete",   script_entity_delete);

@@ -9,6 +9,7 @@ OBJS=	src/opengl.o \
 	src/sprite.o \
 	src/object.o \
 	src/light.o  \
+	src/pivot.o  \
 	src/script.o \
 	src/galaxy.o \
 	src/node.o   \

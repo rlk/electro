@@ -15,11 +15,11 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define TYPE_PIVOT  1
-#define TYPE_CAMERA 2
-#define TYPE_SPRITE 3
-#define TYPE_OBJECT 4
-#define TYPE_LIGHT  5
+#define TYPE_CAMERA 1
+#define TYPE_SPRITE 2
+#define TYPE_OBJECT 3
+#define TYPE_LIGHT  4
+#define TYPE_PIVOT  5
 
 struct entity
 {

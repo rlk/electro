@@ -21,6 +21,7 @@
 #include "sprite.h"
 #include "object.h"
 #include "light.h"
+#include "pivot.h"
 #include "entity.h"
 
 /*---------------------------------------------------------------------------*/
@@ -130,10 +131,11 @@ void entity_traversal(int id)
     for (jd = E[id].car; jd; jd = E[jd].cdr)
         switch (E[jd].type)
         {
+        case TYPE_CAMERA: camera_render(jd, E[jd].data); break;
         case TYPE_SPRITE: sprite_render(jd, E[jd].data); break;
         case TYPE_OBJECT: object_render(jd, E[jd].data); break;
         case TYPE_LIGHT:   light_render(jd, E[jd].data); break;
-        case TYPE_CAMERA: camera_render(jd, E[jd].data); break;
+        case TYPE_PIVOT:   pivot_render(jd, E[jd].data); break;
         }
 }
 

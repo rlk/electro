@@ -20,6 +20,7 @@
 #include "sprite.h"
 #include "object.h"
 #include "light.h"
+#include "pivot.h"
 #include "entity.h"
 #include "galaxy.h"
 #include "star.h"
@@ -73,6 +74,7 @@ static void client_recv(void)
         case EVENT_SPRITE_CREATE: sprite_create(NULL);         break;
         case EVENT_OBJECT_CREATE: object_create(NULL);         break;
         case EVENT_LIGHT_CREATE:  light_create(0);             break;
+        case EVENT_PIVOT_CREATE:  pivot_create();              break;
 
         case EVENT_CAMERA_DIST:   camera_set_dist(0, 0);       break;
         case EVENT_CAMERA_ZOOM:   camera_set_zoom(0, 0);       break;
