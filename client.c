@@ -17,8 +17,9 @@
 #include "shared.h"
 #include "client.h"
 #include "camera.h"
-#include "shared.h"
 #include "sprite.h"
+#include "object.h"
+#include "light.h"
 #include "entity.h"
 #include "galaxy.h"
 #include "star.h"
@@ -47,10 +48,15 @@ static void client_recv_exit(void)
 
 static void client_recv(void)
 {
-    int type;
+    int type = 0;
 
     if (mpi_share_integer(1, &type))
     {
+#ifndef NDEBUG
+    printf("%d of %d: client_recv(%s)\n", mpi_rank(),
+                                          mpi_size(), event_string(type));
+#endif
+
         switch (type)
         {
         case EVENT_DRAW:          client_recv_draw();          break;
@@ -61,15 +67,15 @@ static void client_recv(void)
 
         case EVENT_ENTITY_MOVE:   entity_position(0, 0, 0, 0); break;
         case EVENT_ENTITY_TURN:   entity_rotation(0, 0, 0, 0); break;
-        case EVENT_ENTITY_SIZE:   entity_scale(0, 0, 0, 0);    break;
+        case EVENT_ENTITY_SIZE:   entity_scale   (0, 0, 0, 0); break;
 
-        case EVENT_SPRITE_CREATE: sprite_create(NULL);         break;
         case EVENT_CAMERA_CREATE: camera_create(0);            break;
+        case EVENT_SPRITE_CREATE: sprite_create(NULL);         break;
+        case EVENT_OBJECT_CREATE: object_create(NULL);         break;
+        case EVENT_LIGHT_CREATE:  light_create(0);             break;
 
         case EVENT_CAMERA_DIST:   camera_set_dist(0, 0);       break;
         case EVENT_CAMERA_ZOOM:   camera_set_zoom(0, 0);       break;
-
-        default: fprintf(stderr, "Uncaught event\n");
         }
     }
 }
@@ -84,6 +90,8 @@ static void client_init(void)
     star_init();
     */
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_LIGHTING);
 }
 
 static void client_draw(void)

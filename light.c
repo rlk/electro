@@ -26,47 +26,48 @@
 static struct light *L     = NULL;
 static int           L_max =    4;
 
-static int light_exists(int id)
+static int light_exists(int ld)
 {
-    return (L && 0 < id && id < L_max && L[id].type);
+    return (L && ((ld == 0) || (0 < ld && ld < L_max && L[ld].type)));
 }
 
 /*---------------------------------------------------------------------------*/
 
 int light_create(int type)
 {
-    int id = -1;
+    int ld;
 
-    if (L && (id = buffer_unused(L_max, light_exists)) >= 0)
+    if (L && (ld = buffer_unused(L_max, light_exists)) >= 0)
     {
         /* Initialize the new light. */
 
         if (mpi_isroot())
         {
-            L[id].type = type;
-            L[id].d[0] = 1.0f;
-            L[id].d[1] = 1.0f;
-            L[id].d[2] = 1.0f;
-            L[id].d[3] = 1.0f;
-            /*
+            L[ld].type = type;
             server_send(EVENT_LIGHT_CREATE);
-            */
         }
+
+        L[ld].d[0] = 1.0f;
+        L[ld].d[1] = 1.0f;
+        L[ld].d[2] = 1.0f;
+        L[ld].d[3] = 1.0f;
+
         /* Syncronize the new light. */
-        /*
-        mpi_share_integer(1, &id);
-        */
+
+        mpi_share_integer(1, &ld);
+        mpi_share_integer(1, &L[ld].type);
+
         /* Encapsulate this new light in an entity. */
 
-        id = entity_create(TYPE_LIGHT, id);
+        return entity_create(TYPE_LIGHT, ld);
     }
     else if ((L = buffer_expand(L, &L_max, sizeof (struct light))))
-        id = light_create(type);
+        return light_create(type);
 
-    return id;
+    return -1;
 }
 
-void light_delete(int id)
+void light_delete(int ld)
 {
 }
 

@@ -29,6 +29,9 @@
 int  mpi_assert(int);
 int  mpi_isroot(void);
 
+int  mpi_rank(void);
+int  mpi_size(void);
+
 void mpi_barrier(void);
 
 int  mpi_share_byte(int, void *);
@@ -38,22 +41,23 @@ int  mpi_share_integer(int, int *);
 
 /*---------------------------------------------------------------------------*/
 
-#define EVENT_DRAW 1
-#define EVENT_EXIT 2
+#define EVENT_DRAW           1
+#define EVENT_EXIT           2
 
-#define EVENT_ENTITY_CREATE 3
-#define EVENT_ENTITY_PARENT 4
-#define EVENT_ENTITY_DELETE 5
-#define EVENT_ENTITY_MOVE   6
-#define EVENT_ENTITY_TURN   7
-#define EVENT_ENTITY_SIZE   8
+#define EVENT_ENTITY_CREATE  3
+#define EVENT_ENTITY_PARENT  4
+#define EVENT_ENTITY_DELETE  5
+#define EVENT_ENTITY_MOVE    6
+#define EVENT_ENTITY_TURN    7
+#define EVENT_ENTITY_SIZE    8
 
-#define EVENT_SPRITE_CREATE 9
-#define EVENT_CAMERA_CREATE 10
+#define EVENT_CAMERA_CREATE  9
+#define EVENT_SPRITE_CREATE 10
+#define EVENT_OBJECT_CREATE 11
+#define EVENT_LIGHT_CREATE  12
 
-#define EVENT_CAMERA_DIST   11
-#define EVENT_CAMERA_ZOOM   12
-
+#define EVENT_CAMERA_DIST   13
+#define EVENT_CAMERA_ZOOM   14
 
 /*---------------------------------------------------------------------------*/
 
@@ -85,6 +89,10 @@ void   shared_set_camera_rot(float, float, float);
 void   shared_set_camera_dist(float);
 void   shared_set_camera_magn(float);
 void   shared_set_camera_zoom(float);
+
+/*---------------------------------------------------------------------------*/
+
+const char *event_string(int);
 
 /*---------------------------------------------------------------------------*/
 

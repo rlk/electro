@@ -51,20 +51,35 @@ int mpi_assert(int err)
 #endif
 }
 
-int mpi_isroot(void)
+int mpi_rank(void)
 {
     int rank = 0;
-
 #ifdef MPI
     mpi_assert(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
 #endif
+    return rank;
+}
 
-    return (rank == 0);
+int mpi_size(void)
+{
+    int size = 0;
+#ifdef MPI
+    mpi_assert(MPI_Comm_size(MPI_COMM_WORLD, &size));
+#endif
+    return size;
+}
+
+int mpi_isroot(void)
+{
+    return (mpi_rank() == 0);
 }
 
 void mpi_barrier(void)
 {
 #ifdef MPI
+#ifndef NDEBUG
+    printf("%d of %d: barrier\n", mpi_rank(), mpi_size());
+#endif
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
 }
@@ -121,13 +136,12 @@ static int              V_num = 0;
 #endif
 
 /*---------------------------------------------------------------------------*/
+/* TODO: This is not strictly correct MPI type usage.  Fix. */
 
 void viewport_init(void)
 {
 #ifdef MPI
-    int n;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &n);
+    int n = mpi_size();
 
     Vi = (struct viewport *) calloc(n, sizeof (struct viewport));
     Vo = (struct viewport *) calloc(n, sizeof (struct viewport));
@@ -318,6 +332,34 @@ GLuint shared_load_texture(const char *filename, int *width, int *height)
     free(p);
 
     return texture;
+}
+
+/*---------------------------------------------------------------------------*/
+
+const char *event_string(int type)
+{
+    switch (type)
+    {
+    case EVENT_DRAW:          return "draw";
+    case EVENT_EXIT:          return "exit";
+
+    case EVENT_ENTITY_CREATE: return "entity create";
+    case EVENT_ENTITY_PARENT: return "entity parent";
+    case EVENT_ENTITY_DELETE: return "entity delete";
+    case EVENT_ENTITY_MOVE:   return "entity move";
+    case EVENT_ENTITY_TURN:   return "entity turn";
+    case EVENT_ENTITY_SIZE:   return "entity size";
+
+    case EVENT_CAMERA_CREATE: return "camera create";
+    case EVENT_SPRITE_CREATE: return "sprite create";
+    case EVENT_OBJECT_CREATE: return "object create";
+    case EVENT_LIGHT_CREATE:  return "light create";
+
+    case EVENT_CAMERA_DIST:   return "camera dist";
+    case EVENT_CAMERA_ZOOM:   return "camera zoom";
+    }
+
+    return "UNKNOWN";
 }
 
 /*---------------------------------------------------------------------------*/

@@ -34,48 +34,46 @@ static float viewport_h =  600.0f;
 static struct camera *C     = NULL;
 static int            C_max =    2;
 
-static int camera_exists(int id)
+static int camera_exists(int cd)
 {
-    return (C && 0 <= id && id < C_max && C[id].type);
+    return (C && ((cd == 0) || (0 < cd && cd < C_max && C[cd].type)));
 }
 
 /*---------------------------------------------------------------------------*/
 
 int camera_create(int type)
 {
-    int id = -1;
+    int cd;
 
-    if (C && (id = buffer_unused(C_max, camera_exists)) >= 0)
+    if (C && (cd = buffer_unused(C_max, camera_exists)) >= 0)
     {
         /* Initialize the new camera. */
 
         if (mpi_isroot())
         {
-            C[id].type =  type;
-            C[id].dist =  0.0f;
-            C[id].zoom = (type == CAMERA_ORTHO) ? 1.0f : 0.001f;
-
+            C[cd].type =  type;
             server_send(EVENT_CAMERA_CREATE);
         }
 
+        C[cd].dist = 0.0f;
+        C[cd].zoom = 1.0f;
+
         /* Syncronize the new camera. */
 
-        mpi_share_integer(1, &id);
-        mpi_share_integer(1, &C[id].type);
-        mpi_share_float  (1, &C[id].dist);
-        mpi_share_float  (1, &C[id].zoom);
+        mpi_share_integer(1, &cd);
+        mpi_share_integer(1, &C[cd].type);
 
         /* Encapsulate this new camera in an entity. */
 
-        id = entity_create(TYPE_CAMERA, id);
+        return entity_create(TYPE_CAMERA, cd);
     }
     else if ((C = buffer_expand(C, &C_max, sizeof (struct camera))))
-        id = camera_create(type);
+        return camera_create(type);
 
-    return id;
+    return -1;
 }
 
-void camera_delete(int id)
+void camera_delete(int cd)
 {
 }
 

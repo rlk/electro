@@ -19,7 +19,7 @@ function do_start()
     entity_parent(object, light)
 
     camera_zoom(camera, 0.001)
-    camera_dist(camera, 5.000)
+    camera_dist(camera, 10.000)
 
     entity_position(light, 1, 1, 1)
 

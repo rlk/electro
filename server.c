@@ -92,6 +92,11 @@ void enable_idle(int b)
 
 void server_send(int type)
 {
+#ifndef NDEBUG
+    printf("%d of %d: server_send(%s)\n", mpi_rank(),
+                                          mpi_size(), event_string(type));
+#endif
+
     mpi_share_integer(1, &type);
 }
 

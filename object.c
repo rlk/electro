@@ -15,6 +15,8 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "shared.h"
+#include "server.h"
 #include "entity.h"
 #include "object.h"
 
@@ -26,9 +28,9 @@
 static struct object *O     = NULL;
 static int            O_max =   64;
 
-static int object_exists(int id)
+static int object_exists(int od)
 {
-    return (O && 0 <= id && id < O_max && O[id].vc);
+    return (O && ((od == 0) || (0 < od && od < O_max && O[od].vc)));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -455,35 +457,84 @@ static void read_obj(const char *filename, struct object *o)
 }
 
 /*---------------------------------------------------------------------------*/
+/* TODO: This is not strictly correct MPI type usage.  Fix. */
+
+static void object_share_surf(struct object_surf *s)
+{
+    mpi_share_integer(1, &s->mi);
+    mpi_share_integer(1, &s->fc);
+
+    if (!mpi_isroot())
+    {
+        if (s->fc)
+            s->fv = (struct object_face *)
+                calloc(s->fc, sizeof (struct object_face));
+    }
+
+    if (s->fc && s->fv)
+        mpi_share_byte(s->fc * sizeof (struct object_face), s->fv);
+}
+
+static void object_share(struct object *o)
+{
+    int si;
+
+    mpi_share_integer(1, &o->vc);
+    mpi_share_integer(1, &o->mc);
+    mpi_share_integer(1, &o->sc);
+
+    if (!mpi_isroot())
+    {
+        if (o->vc)
+            o->vv = (struct object_vert *)
+                calloc(o->vc, sizeof (struct object_vert));
+        if (o->mc)
+            o->mv = (struct object_mtrl *)
+                calloc(o->mc, sizeof (struct object_mtrl));
+        if (o->sc)
+            o->sv = (struct object_surf *)
+                calloc(o->sc, sizeof (struct object_surf));
+    }
+
+    if (o->vc && o->vv)
+        mpi_share_byte(o->vc * sizeof (struct object_vert), o->vv);
+    if (o->mc && o->mv)
+        mpi_share_byte(o->mc * sizeof (struct object_mtrl), o->mv);
+
+    for (si = 0; si < o->sc; ++si)
+        object_share_surf(o->sv + si);
+}
+
+/*---------------------------------------------------------------------------*/
 
 int object_create(const char *filename)
 {
-    int id = -1;
+    int od;
 
-    if (O && (id = buffer_unused(O_max, object_exists)) >= 0)
+    if (O && (od = buffer_unused(O_max, object_exists)) >= 0)
     {
-        read_obj(filename, O + id);
-
         /* Initialize the new object. */
-        /*
-        if (mpi_isroot())
-            server_send(EVENT_OBJECT_CREATE);
-        */
-        /* Syncronize the new object. */
-        /*
-        mpi_share_integer(1, &id);
 
-        O[id].texture = shared_load_texture(filename, &O[id].w, &O[id].h);
-        O[id].a       = 1.0f;
-        */
+        if (mpi_isroot())
+        {
+            read_obj(filename, O + od);
+            server_send(EVENT_OBJECT_CREATE);
+        }
+
+        /* Syncronize the new object. */
+
+        mpi_share_integer(1, &od);
+
+        object_share(O + od);
+
         /* Encapsulate this new object in an entity. */
 
-        id = entity_create(TYPE_OBJECT, id);
+        return entity_create(TYPE_OBJECT, od);
     }
     else if ((O = buffer_expand(O, &O_max, sizeof (struct object))))
-        id = object_create(filename);
+        return object_create(filename);
 
-    return id;
+    return -1;
 }
 
 /*---------------------------------------------------------------------------*/
