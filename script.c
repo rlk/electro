@@ -117,6 +117,7 @@ void script_point(int x, int y)
 
         lua_call(L, 2, 0);
     }
+    else lua_pop(L, 1);
 }
 
 void script_click(int b, int s)
@@ -125,8 +126,8 @@ void script_click(int b, int s)
 
     if (lua_isfunction(L, -1))
     {
-        lua_pushnumber(L, (lua_Number) b);
-        lua_pushnumber(L, (lua_Number) s);
+        lua_pushnumber (L, (lua_Number) b);
+        lua_pushboolean(L, (lua_Number) s);
 
         lua_call(L, 2, 0);
     }
@@ -138,8 +139,8 @@ void script_keybd(int k, int s)
 
     if (lua_isfunction(L, -1))
     {
-        lua_pushnumber(L, (lua_Number) k);
-        lua_pushnumber(L, (lua_Number) s);
+        lua_pushnumber (L, (lua_Number) k);
+        lua_pushboolean(L, (lua_Number) s);
 
         lua_call(L, 2, 0);
     }

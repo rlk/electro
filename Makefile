@@ -4,7 +4,6 @@ OBJS=	opengl.o \
 	image.o  \
 	star.o   \
 	galaxy.o \
-	viewer.o \
 	shared.o \
 	client.o \
 	server.o \

@@ -4,7 +4,6 @@
 
 #include "opengl.h"
 #include "galaxy.h"
-#include "viewer.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
@@ -74,15 +73,6 @@ void circum_draw(void)
 
 void galaxy_draw(const double p[3])
 {
-    double viewpoint[3];
-    double magnifier[1];
-
-    viewer_get_pos(viewpoint);
-    viewer_get_mag(magnifier);
-
-    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 0, viewpoint);
-    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 1, magnifier);
-
     circum_draw();
     star_draw();
 

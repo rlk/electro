@@ -8,6 +8,15 @@
 
 /*---------------------------------------------------------------------------*/
 
+static float pos[4] = { 0.0, 15.5, 9200.0, 1.0 };
+static float rot[3] = { 0.0, 0.0, 0.0 };
+
+static float dist   = 1000.0f;
+static float magn   =  128.0f;
+static float zoom   =    0.5f;
+
+/*---------------------------------------------------------------------------*/
+
 void client_recv_draw(void)
 {
     SDL_Event e;
@@ -20,22 +29,31 @@ void client_recv_draw(void)
 
 void client_recv_move(const struct event *e)
 {
+    pos[0] = e->x;
+    pos[1] = e->y;
+    pos[2] = e->z;
 }
 
 void client_recv_turn(const struct event *e)
 {
+    rot[0] = e->x;
+    rot[1] = e->y;
+    rot[2] = e->z;
 }
 
 void client_recv_zoom(const struct event *e)
 {
+    zoom = e->x;
 }
 
 void client_recv_dist(const struct event *e)
 {
+    dist = e->x;
 }
 
 void client_recv_magn(const struct event *e)
 {
+    magn = e->x;
 }
 
 void client_recv_exit(void)
@@ -58,8 +76,6 @@ void client_recv_event(void)
 
     if ((err = MPI_Bcast(&e, sz, MPI_BYTE, 0, MPI_COMM_WORLD)) == MPI_SUCCESS)
     {
-        printf("client recv %d\n", e.type);
-
         switch (e.type)
         {
         case EVENT_DRAW: client_recv_draw();   break;
@@ -83,11 +99,39 @@ static void client_init(int id)
     sprintf(buf, "Client %d\n", id);
 
     SDL_WM_SetCaption(buf, buf);
+
+    star_read_catalog_bin("hip_main.bin");
+    galaxy_init();
 }
 
 static void client_draw(void)
 {
+    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
+
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    {
+        glLoadIdentity();
+        glFrustum(-a * zoom, +a * zoom, -zoom, +zoom, 1.0, 1000000.0);
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    {
+        glLoadIdentity();
+        glTranslatef(0, 0, -dist);
+
+        glRotatef(-rot[0], 1, 0, 0);
+        glRotatef(-rot[1], 0, 1, 0);
+        glRotatef(-rot[2], 0, 0, 1);
+
+        glTranslatef(-pos[0], -pos[1], -pos[2]);
+    }
+
+    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 0, pos);
+    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 1, magn);
+
+    galaxy_draw();
 
     SDL_GL_SwapBuffers();
 }
