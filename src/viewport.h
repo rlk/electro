@@ -12,8 +12,14 @@
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef _WIN32
 #define DEFAULT_LX 100.0f
 #define DEFAULT_LY 100.0f
+#else
+#define DEFAULT_LX   0.0f
+#define DEFAULT_LY   0.0f
+#endif
+
 #define DEFAULT_X -400.0f
 #define DEFAULT_Y -300.0f
 #define DEFAULT_W  800.0f
