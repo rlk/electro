@@ -12,7 +12,10 @@ magn   =  128.0
 
 btn    = { }
 foo    = -1
-foo_y  =  0
+
+foo_a  =  0
+foo_x  =   global_x + 96
+foo_y  =  -global_y + global_h - 96
 
 -------------------------------------------------------------------------------
 
@@ -59,15 +62,27 @@ function do_click(b, s)
       end
       
       if b == 2 then -- middle button click
-         dist = 1.5
+         dist  = 1.5
          camera_dist(dist)
+
+         if foo ~= -1 then
+            foo_x =   global_x + 96
+            foo_y =  -global_y + global_h - 96
+            sprite_move(foo, foo_x, foo_y)
+         end
+
          return true
       end
 
       if b == 3 then
-         foo = sprite_load("head.png")
-         sprite_size(foo, 0.5)
-         sprite_move(foo, global_x + 96, -global_y + global_h - 96)
+         if foo == -1 then
+            foo = sprite_load("head.png")
+            sprite_size(foo, 0.5)
+            sprite_move(foo, foo_x, foo_y)
+         else
+            sprite_free(foo)
+            foo = -1
+         end
          return true
       end
    end
@@ -79,32 +94,37 @@ end
 
 function do_point(dx, dy)
 
-   rot_x = rot_x - 180 * dy / 500.0
-   rot_y = rot_y - 180 * dx / 500.0
+   if btn[1] and foo ~= -1 then
+      foo_x = foo_x + dx
+      foo_y = foo_y + dy
+      sprite_move(foo, foo_x, foo_y)
+   else
+      rot_x = rot_x - 180 * dy / 500.0
+      rot_y = rot_y - 180 * dx / 500.0
 
-   if rot_x >   90 then rot_x =  90 end
-   if rot_x <  -90 then rot_x = -90 end
-   if rot_y >  180 then rot_y = rot_y - 360 end
-   if rot_y < -180 then rot_y = rot_y + 360 end
+      if rot_x >   90 then rot_x =  90 end
+      if rot_x <  -90 then rot_x = -90 end
+      if rot_y >  180 then rot_y = rot_y - 360 end
+      if rot_y < -180 then rot_y = rot_y + 360 end
 
-   camera_turn(rot_x, rot_y, 0)
-
+      camera_turn(rot_x, rot_y, 0)
+   end
    return true
 end
 
 function do_timer(dt)
 
    rot_y = rot_y + dt * rot_dy
-   foo_y = foo_y + dt * rot_dy * 100
+   foo_a = foo_a + dt * rot_dy * 100
 
    if rot_y >  180 then rot_y = rot_y - 360 end
    if rot_y < -180 then rot_y = rot_y + 360 end
-   if foo_y >  180 then foo_y = foo_y - 360 end
-   if foo_y < -180 then foo_y = foo_y + 360 end
+   if foo_a >  180 then foo_a = foo_a - 360 end
+   if foo_a < -180 then foo_a = foo_a + 360 end
 
    camera_turn(rot_x, rot_y, 0)
 
-   sprite_turn(foo, foo_y)
+   if (foo ~= -1) then sprite_turn(foo, foo_a) end
 
    return true
 end
