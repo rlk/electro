@@ -16,7 +16,7 @@
 
 struct object_mtrl
 {
-    int texture;
+    int image;
 
     float d[4];
     float a[4];

@@ -86,6 +86,7 @@ static void client_recv(void)
 
         case EVENT_CAMERA_DIST:   camera_recv_dist();     break;
         case EVENT_CAMERA_ZOOM:   camera_recv_zoom();     break;
+        case EVENT_SPRITE_BOUNDS: sprite_recv_bounds();   break;
         }
     }
 }
@@ -160,6 +161,7 @@ void client(void)
         if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
             buffer_init();
+            image_init();
             client_init();
             entity_init();
 

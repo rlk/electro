@@ -132,25 +132,11 @@ static int lua_iscamera(lua_State *L, int i)
         && entity_istype(lua_toentity(L, i), TYPE_CAMERA);
 }
 
-#ifdef SNIP
 static int lua_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
         && entity_istype(lua_toentity(L, i), TYPE_SPRITE);
 }
-
-static int lua_isobject(lua_State *L, int i)
-{
-    return lua_isuserdata(L, i)
-        && entity_istype(lua_toentity(L, i), TYPE_OBJECT);
-}
-
-static int lua_islight(lua_State *L, int i)
-{
-    return lua_isuserdata(L, i)
-        && entity_istype(lua_toentity(L, i), TYPE_LIGHT);
-}
-#endif
 
 /*---------------------------------------------------------------------------*/
 /* Function argument type and arity checkers                                 */
@@ -239,6 +225,24 @@ static int script_getcamera(const char *name, lua_State *L, int i)
             return entity_todata(lua_toentity(L, i));
         else
             script_type_error(name, "camera", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
+static int script_getsprite(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a sprite, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_issprite(L, i))
+            return entity_todata(lua_toentity(L, i));
+        else
+            script_type_error(name, "sprite", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -513,6 +517,21 @@ static int script_camera_zoom(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Sprite controls                                                           */
+
+static int script_sprite_bounds(lua_State *L)
+{
+    const char *name = "sprite_bounds";
+
+    sprite_send_bounds(script_getsprite(name, L, -5),
+                       script_getnumber(name, L, -4),
+                       script_getnumber(name, L, -3),
+                       script_getnumber(name, L, -2),
+                       script_getnumber(name, L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Sound functions                                                           */
 
 static int script_sound_load(lua_State *L)
@@ -598,6 +617,10 @@ void luaopen_electro(lua_State *L)
 
     lua_constant(L, "camera_type_orthogonal",  CAMERA_ORTHO);
     lua_constant(L, "camera_type_perspective", CAMERA_PERSP);
+
+    /* Sprite control. */
+
+    lua_function(L, "sprite_bounds",           script_sprite_bounds);
 
     /* Light control. */
 

@@ -24,6 +24,7 @@
 #include "camera.h"
 #include "entity.h"
 #include "sound.h"
+#include "image.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -273,6 +274,7 @@ void server(int argc, char *argv[])
                 joystick_init();
                 buffer_init();
                 sound_init();
+                image_init();
                 server_init();
                 entity_init();
                 script_start();

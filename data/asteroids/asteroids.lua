@@ -31,7 +31,7 @@ velocity_dy = 0
 
 level      = 1
 curr_score = 0
-high_score = 0
+high_score = 100
 speed      = 5
 
 -------------------------------------------------------------------------------
@@ -43,6 +43,75 @@ global_t = 0
 global_w = 0
 global_h = 0
 global_z = 1
+
+-------------------------------------------------------------------------------
+
+local curr_score_digit = { }
+local high_score_digit = { }
+
+function digit_set(sprite, n)
+    if n == 0 then E.sprite_bounds(sprite, 0.00, 0.25, 0.75, 1.00) end
+    if n == 1 then E.sprite_bounds(sprite, 0.25, 0.50, 0.75, 1.00) end
+    if n == 2 then E.sprite_bounds(sprite, 0.50, 0.75, 0.75, 1.00) end
+    if n == 3 then E.sprite_bounds(sprite, 0.75, 1.00, 0.75, 1.00) end
+    if n == 4 then E.sprite_bounds(sprite, 0.00, 0.25, 0.50, 0.75) end
+    if n == 5 then E.sprite_bounds(sprite, 0.25, 0.50, 0.50, 0.75) end
+    if n == 6 then E.sprite_bounds(sprite, 0.50, 0.75, 0.50, 0.75) end
+    if n == 7 then E.sprite_bounds(sprite, 0.75, 1.00, 0.50, 0.75) end
+    if n == 8 then E.sprite_bounds(sprite, 0.00, 0.25, 0.25, 0.50) end
+    if n == 9 then E.sprite_bounds(sprite, 0.25, 0.50, 0.25, 0.50) end
+end
+
+function curr_score_set(n)
+    digit_set(curr_score_digit[0], math.mod(n,                     10));
+    digit_set(curr_score_digit[1], math.mod(math.floor(n / 10),    10));
+    digit_set(curr_score_digit[2], math.mod(math.floor(n / 100),   10));
+    digit_set(curr_score_digit[3], math.mod(math.floor(n / 1000),  10));
+    digit_set(curr_score_digit[4], math.mod(math.floor(n / 10000), 10));
+end
+
+function high_score_set(n)
+    digit_set(high_score_digit[0], math.mod(n,                     10));
+    digit_set(high_score_digit[1], math.mod(math.floor(n / 10),    10));
+    digit_set(high_score_digit[2], math.mod(math.floor(n / 100),   10));
+    digit_set(high_score_digit[3], math.mod(math.floor(n / 1000),  10));
+    digit_set(high_score_digit[4], math.mod(math.floor(n / 10000), 10));
+end
+
+function score_init()
+    local scale = 1 / 128
+    local dx    = 2.5
+    local dy    = 2.5
+
+    local curr_r = global_r
+    local high_r = global_l + dx * 6
+
+    -- Create the current score display.
+
+    for i = 0,4 do
+        curr_score_digit[i] = E.create_sprite("score.png")
+
+        E.entity_scale   (curr_score_digit[i], scale, scale, scale);
+        E.entity_parent  (curr_score_digit[i], camera)
+        E.entity_position(curr_score_digit[i], curr_r - dx * (i + 1),
+                                             global_t - dy, 0)
+    end
+
+    -- Create the high score display.
+
+    for i = 0,4 do
+        high_score_digit[i] = E.create_sprite("score.png")
+
+        E.entity_scale   (high_score_digit[i], scale, scale, scale);
+        E.entity_parent  (high_score_digit[i], camera)
+        E.entity_position(high_score_digit[i], high_r - dx * (i + 1),
+                                             global_t - dy, 0)
+    end
+
+    curr_score_set(curr_score)
+    high_score_set(high_score)
+end
+
 
 -------------------------------------------------------------------------------
 
@@ -183,7 +252,15 @@ function add_score(entity, value)
     local score = { }
     local scale = 0.01
 
+    -- Tally the score
+
     curr_score = curr_score + value
+    curr_score_set(curr_score)
+
+    if curr_score > high_score then
+        high_score = curr_score
+        high_score_set(high_score)
+    end
 
     -- Select the correct sprite for the given value.
 
@@ -412,33 +489,17 @@ function player_step()
 
     -- Wrap the orientation to (-180, 180).
 
-    if rot_x < -180 then
-        rot_x = rot_x + 360
-    end
-    if rot_x >  180 then
-        rot_x = rot_x - 360
-    end
-    if rot_y < -180 then
-        rot_y = rot_y + 360
-    end
-    if rot_y >  180 then
-        rot_y = rot_y - 360
-    end
+    if rot_x < -180 then rot_x = rot_x + 360 end
+    if rot_x >  180 then rot_x = rot_x - 360 end
+    if rot_y < -180 then rot_y = rot_y + 360 end
+    if rot_y >  180 then rot_y = rot_y - 360 end
 
     -- Wrap the position to the viewport.
 
-    if pos_x < global_l then
-        pos_x = pos_x + global_w
-    end
-    if pos_x > global_r then
-        pos_x = pos_x - global_w
-    end
-    if pos_y < global_b then
-        pos_y = pos_y + global_h
-    end
-    if pos_y > global_t then
-        pos_y = pos_y - global_h
-    end
+    if pos_x < global_l then pos_x = pos_x + global_w end
+    if pos_x > global_r then pos_x = pos_x - global_w end
+    if pos_y < global_b then pos_y = pos_y + global_h end
+    if pos_y > global_t then pos_y = pos_y - global_h end
 
     -- Apply the new position and rotation.
 
@@ -494,7 +555,9 @@ function do_start()
 
     -- Initialize the scene.
 
-    camera = E.create_camera(E.camera_type_orthogonal)
+    camera  = E.create_camera(E.camera_type_orthogonal)
+    overlay = E.create_camera(E.camera_type_orthogonal)
+
     light  = E.create_light(E.light_type_positional)
     above  = E.create_pivot()
     below  = E.create_pivot()
@@ -508,6 +571,7 @@ function do_start()
     E.entity_position(light, 0, 0, 10)
     E.camera_zoom(camera, global_z)
 
+    score_init()
     level_init()
 
     E.enable_idle(true)

@@ -32,7 +32,7 @@ static int            S_max;
 
 static int sprite_exists(int sd)
 {
-    return (S && 0 <= sd && sd < S_max && S[sd].texture);
+    return (S && 0 <= sd && sd < S_max && S[sd].flag);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -60,18 +60,18 @@ void sprite_draw(int id, int sd, float a)
 
             glDisable(GL_DEPTH_TEST);
 
-            glBindTexture(GL_TEXTURE_2D, S[sd].texture);
+            image_draw(S[sd].image);
             glColor4f(1.0f, 1.0f, 1.0f, a);
 
             glBegin(GL_QUADS);
             {
-                int dx = S[sd].w / 2;
-                int dy = S[sd].h / 2;
+                int dx = image_get_w(S[sd].image) / 2;
+                int dy = image_get_h(S[sd].image) / 2;
 
-                glTexCoord2i(0, 0); glVertex2f(-dx, -dy);
-                glTexCoord2i(1, 0); glVertex2f(+dx, -dy);
-                glTexCoord2i(1, 1); glVertex2f(+dx, +dy);
-                glTexCoord2i(0, 1); glVertex2f(-dx, +dy);
+                glTexCoord2f(S[sd].s0, S[sd].t0); glVertex2f(-dx, -dy);
+                glTexCoord2f(S[sd].s1, S[sd].t0); glVertex2f(+dx, -dy);
+                glTexCoord2f(S[sd].s1, S[sd].t1); glVertex2f(+dx, +dy);
+                glTexCoord2f(S[sd].s0, S[sd].t1); glVertex2f(-dx, +dy);
             }
             glEnd();
 
@@ -94,36 +94,57 @@ int sprite_send_create(const char *filename)
 
     if ((sd = buffer_unused(S_max, sprite_exists)) >= 0)
     {
-        if ((S[sd].p = image_load_png(filename, &S[sd].w, &S[sd].h, &S[sd].b)))
-        {
-            pack_event(EVENT_SPRITE_CREATE);
-            pack_index(sd);
+        S[sd].image = image_send_create(filename);
+        S[sd].flag  = 1;
 
-            pack_index(S[sd].w);
-            pack_index(S[sd].h);
-            pack_index(S[sd].b);
-            pack_alloc(S[sd].w * S[sd].h * S[sd].b, S[sd].p);
+        pack_event(EVENT_SPRITE_CREATE);
+        pack_index(sd);
+        pack_index(S[sd].image);
 
-            S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
+        S[sd].s0 = S[sd].t0 = 0.0f;
+        S[sd].s1 = S[sd].t1 = 1.0f;
 
-            return entity_send_create(TYPE_SPRITE, sd);
-        }
+        return entity_send_create(TYPE_SPRITE, sd);
     }
     return -1;
 }
 
 void sprite_recv_create(void)
 {
-    int  sd = unpack_index();
+    int sd = unpack_index();
 
-    S[sd].w = unpack_index();
-    S[sd].h = unpack_index();
-    S[sd].b = unpack_index();
-    S[sd].p = unpack_alloc(S[sd].w * S[sd].h * S[sd].b);
+    S[sd].image = unpack_index();
+    S[sd].flag  = 1;
 
-    S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
+    S[sd].s0 = S[sd].t0 = 0.0f;
+    S[sd].s1 = S[sd].t1 = 1.0f;
 
     entity_recv_create();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void sprite_send_bounds(int sd, float s0, float s1, float t0, float t1)
+{
+    if (sprite_exists(sd))
+    {
+        pack_event(EVENT_SPRITE_BOUNDS);
+        pack_index(sd);
+        pack_float((S[sd].s0 = s0));
+        pack_float((S[sd].s1 = s1));
+        pack_float((S[sd].t0 = t0));
+        pack_float((S[sd].t1 = t1));
+    }
+}
+
+void sprite_recv_bounds(void)
+{
+    int sd   = unpack_index();
+
+    S[sd].s0 = unpack_float();
+    S[sd].s1 = unpack_float();
+    S[sd].t0 = unpack_float();
+    S[sd].t1 = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -132,17 +153,8 @@ void sprite_recv_create(void)
 
 void sprite_delete(int sd)
 {
-    /* Release the sprite object. */
-
     if (sprite_exists(sd))
-    {
-        if (S[sd].p) free(S[sd].p);
-
-        if (glIsTexture(S[sd].texture))
-            glDeleteTextures(1, &S[sd].texture);
-
         memset(S + sd, 0, sizeof (struct sprite));
-    }
 }
 
 /*---------------------------------------------------------------------------*/

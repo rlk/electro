@@ -76,7 +76,9 @@ int mpi_isroot(void)
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef MPI
 static MPI_Comm clients;
+#endif
 
 void mpi_barrier_clients(void)
 {

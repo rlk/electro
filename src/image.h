@@ -40,6 +40,9 @@ void image_draw(int);
 int  image_send_create(const char *);
 void image_recv_create(void);
 
+int  image_get_w(int);
+int  image_get_h(int);
+
 void image_delete(int);
 
 /*---------------------------------------------------------------------------*/

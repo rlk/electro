@@ -64,6 +64,7 @@ int  mpi_share_integer(int, int *);
 
 #define EVENT_CAMERA_DIST   17
 #define EVENT_CAMERA_ZOOM   18
+#define EVENT_SPRITE_BOUNDS 19
 
 /*---------------------------------------------------------------------------*/
 

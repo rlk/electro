@@ -1,14 +1,13 @@
-Image type
-Sprite image / texcoord
 Object edge
 Galaxy object
 
-Object texture
 Relative entity transform
 
+short descriptors?  short object indices?
 Documentation up to date
 Particle system? (stars?)
 
+Reorganize MPI abstraction (it's simpler than it once was)
 Improve assertions (delineate necessary thing_exists vs thing_assert)
 Improve linear descriptor seaching
 Improve clone reference counting

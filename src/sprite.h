@@ -19,11 +19,12 @@
 
 struct sprite
 {
-    GLuint texture;
-    void  *p;
-    int    w;
-    int    h;
-    int    b;
+    int   flag;
+    int   image;
+    float s0;
+    float s1;
+    float t0;
+    float t1;
 };
 
 /*---------------------------------------------------------------------------*/
@@ -33,6 +34,9 @@ void sprite_draw(int, int, float);
 
 int  sprite_send_create(const char *);
 void sprite_recv_create(void);
+
+void sprite_send_bounds(int, float, float, float, float);
+void sprite_recv_bounds(void);
 
 void sprite_delete(int);
 

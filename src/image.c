@@ -33,7 +33,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-static GLubyte *image_punt(const char *message)
+static void *image_punt(const char *message)
 {
     fprintf(stderr, "Image error: %s\n", message);
     return NULL;
@@ -61,6 +61,11 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
     glGenTextures(1, &o);
     glBindTexture(GL_TEXTURE_2D, o);
 
+    /*
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    */
+
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
@@ -68,10 +73,7 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
                     GL_TEXTURE_MAG_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D, f, w, h, f, GL_UNSIGNED_BYTE, p);
+    gluBuild2DMipmaps(GL_TEXTURE_2D, b, w, h, f, GL_UNSIGNED_BYTE, p);
 
     opengl_check("image_make_tex");
 
@@ -167,7 +169,7 @@ static int           I_max;
 
 static int image_exists(int id)
 {
-    return (I && 0 <= id && id < I_max && I[id].texture);
+    return (I && 0 <= id && id < I_max && I[id].filename);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -176,6 +178,9 @@ int image_init(void)
 {
     if ((I = (struct image *) calloc(IMAXINIT, sizeof (struct image))))
     {
+        I[0].filename = "default";
+        I[0].texture  = 0;
+
         I_max = IMAXINIT;
         return 1;
     }
@@ -206,9 +211,8 @@ int image_send_create(const char *filename)
     {
         /* Note the file name. */
 
-        I[id].filename = (char *) calloc(strlen(filename) + 1, 1);
-
-        strcpy(I[id].filename, filename);
+        if ((I[id].filename = (char *) calloc(strlen(filename) + 1, 1)))
+            strcpy(I[id].filename, filename);
 
         /* Load and pack the image. */
 
@@ -239,6 +243,18 @@ void image_recv_create(void)
     I[id].p = unpack_alloc(I[id].w * I[id].h * I[id].b);
 
     I[id].texture = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int image_get_w(int id)
+{
+    return image_exists(id) ? I[id].w : 0;
+}
+
+int image_get_h(int id)
+{
+    return image_exists(id) ? I[id].h : 0;
 }
 
 /*---------------------------------------------------------------------------*/

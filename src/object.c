@@ -18,6 +18,7 @@
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
+#include "image.h"
 #include "object.h"
 
 #define MAXSTR 256
@@ -91,7 +92,7 @@ static void read_newmtl(const char *name)
 
         sscanf(name, "%s", namev[mtrlc]);
 
-        mtrlv[mtrlc].texture = 0;
+        mtrlv[mtrlc].image = 0;
 
         /* Default diffuse */
 
@@ -129,6 +130,13 @@ static void read_newmtl(const char *name)
 
 static void read_map_Kd(const char *line)
 {
+    if (mtrlc >= 0)
+    {
+        char name[MAXSTR];
+
+        if (sscanf(line, "%s", name) == 1)
+            mtrlv[mtrlc].image = image_send_create(name);
+    }
 }
 
 static void read_Kd(const char *line)
@@ -491,7 +499,7 @@ void object_draw(int id, int od, float a)
 
             /* Render this object. */
 
-            glPushAttrib(GL_LIGHTING_BIT);
+            glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             {
                 int si;
@@ -503,7 +511,7 @@ void object_draw(int id, int od, float a)
                     const struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
                     float d[4];
 
-                    glBindTexture(GL_TEXTURE_2D, m->texture);
+                    image_draw(m->image);
 
                     /* Modulate the diffule color by the current alpha. */
 
