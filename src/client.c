@@ -73,6 +73,7 @@ static void client_recv(void)
         case EVENT_ENTITY_MOVE:   entity_recv_position(); break;
         case EVENT_ENTITY_TURN:   entity_recv_rotation(); break;
         case EVENT_ENTITY_SIZE:   entity_recv_scale();    break;
+        case EVENT_ENTITY_FADE:   entity_recv_alpha();    break;
         case EVENT_ENTITY_FLAG:   entity_recv_flag();     break;
 
         case EVENT_CAMERA_CREATE: camera_recv_create();   break;

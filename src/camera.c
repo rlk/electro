@@ -46,7 +46,7 @@ int camera_init(void)
     return 0;
 }
 
-void camera_draw(int id, int cd)
+void camera_draw(int id, int cd, float a)
 {
     float p[3];
     float r[3];
@@ -100,7 +100,7 @@ void camera_draw(int id, int cd)
 
         /* Render all children using this camera. */
 
-        entity_traversal(id);
+        entity_traversal(id, a);
     }
 
     /* Use the view configuration as vertex program parameters. */

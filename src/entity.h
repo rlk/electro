@@ -23,6 +23,7 @@
 #define TYPE_PIVOT  6
 
 #define FLAG_HIDE   1
+#define FLAG_WIRE   2
 
 struct entity
 {
@@ -33,6 +34,7 @@ struct entity
     float position[3];
     float rotation[3];
     float scale[3];
+    float alpha;
 
     int car;
     int cdr;
@@ -53,7 +55,7 @@ int  entity_todata(int);
 int  entity_istype(int, int);
 
 void entity_transform(int);
-void entity_traversal(int);
+void entity_traversal(int, float);
 
 /*---------------------------------------------------------------------------*/
 
@@ -82,10 +84,12 @@ void entity_recv_flag(void);
 void entity_send_position(int, float, float, float);
 void entity_send_rotation(int, float, float, float);
 void entity_send_scale   (int, float, float, float);
+void entity_send_alpha   (int, float);
 
 void entity_recv_position(void);
 void entity_recv_rotation(void);
 void entity_recv_scale   (void);
+void entity_recv_alpha   (void);
 
 void entity_get_position(int, float *, float *, float *);
 void entity_get_rotation(int, float *, float *, float *);

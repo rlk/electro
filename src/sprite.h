@@ -24,13 +24,12 @@ struct sprite
     int    w;
     int    h;
     int    b;
-    float  a;
 };
 
 /*---------------------------------------------------------------------------*/
 
 int  sprite_init(void);
-void sprite_draw(int, int);
+void sprite_draw(int, int, float);
 
 int  sprite_send_create(const char *);
 void sprite_recv_create(void);

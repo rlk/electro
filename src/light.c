@@ -45,7 +45,7 @@ int light_init(void)
     return 0;
 }
 
-void light_draw(int id, int ld)
+void light_draw(int id, int ld, float a)
 {
     if (light_exists(ld))
     {
@@ -72,7 +72,7 @@ void light_draw(int id, int ld)
 
             opengl_check("light_draw");
 
-            entity_traversal(id);
+            entity_traversal(id, a);
         }
         glPopAttrib();
     }

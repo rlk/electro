@@ -312,6 +312,15 @@ static int script_entity_scale(lua_State *L)
     return 0;
 }
 
+static int script_entity_alpha(lua_State *L)
+{
+    const char *name = "entity_alpha";
+
+    entity_send_alpha(script_getentity(name, L, -2),
+                      script_getnumber(name, L, -1));
+    return 0;
+}
+
 static int script_entity_flag(lua_State *L)
 {
     const char *name = "entity_flag";
@@ -464,6 +473,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "entity_position",     script_entity_position);
     lua_function(L, "entity_rotation",     script_entity_rotation);
     lua_function(L, "entity_scale",        script_entity_scale);
+    lua_function(L, "entity_alpha",        script_entity_alpha);
     lua_function(L, "entity_flag",         script_entity_flag);
 
     lua_function(L, "entity_get_position", script_entity_get_position);

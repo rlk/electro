@@ -21,6 +21,8 @@ function init_2D()
     ortho = E.create_camera(E.camera_orthogonal)
     point = E.create_sprite("head.png")
 
+    E.entity_alpha(point, 0.5)
+
     E.entity_parent(point, ortho)
     E.entity_scale(point, 0.5, 0.5, 0.5)
 end
@@ -36,6 +38,8 @@ function init_3D()
     E.entity_parent(pivot, light)
     E.entity_parent(obj1,  pivot)
     E.entity_parent(obj2,  pivot)
+
+    E.entity_alpha(obj1, 0.5)
 
     E.camera_zoom(persp,  0.001)
     E.camera_dist(persp, 10.000)

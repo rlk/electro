@@ -47,7 +47,7 @@ int sprite_init(void)
     return 0;
 }
 
-void sprite_draw(int id, int sd)
+void sprite_draw(int id, int sd, float a)
 {
     if (sprite_exists(sd))
     {
@@ -58,7 +58,7 @@ void sprite_draw(int id, int sd)
             entity_transform(id);
 
             glBindTexture(GL_TEXTURE_2D, S[sd].texture);
-            glColor4f(1.0f, 1.0f, 1.0f, S[sd].a);
+            glColor4f(1.0f, 1.0f, 1.0f, a);
 
             glBegin(GL_QUADS);
             {
@@ -76,7 +76,7 @@ void sprite_draw(int id, int sd)
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id);
+            entity_traversal(id, a);
         }
         glPopMatrix();
     }
@@ -99,7 +99,6 @@ int sprite_send_create(const char *filename)
         pack_alloc(S[sd].w * S[sd].h * S[sd].b, S[sd].p);
 
         S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
-        S[sd].a       = 1.0f;
 
         return entity_send_create(TYPE_SPRITE, sd);
     }
@@ -114,7 +113,6 @@ void sprite_recv_create(void)
     S[sd].h = unpack_index();
     S[sd].b = unpack_index();
     S[sd].p = unpack_alloc(S[sd].w * S[sd].h * S[sd].b);
-    S[sd].a = 1.0f;
 
     S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
 

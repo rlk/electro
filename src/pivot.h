@@ -12,7 +12,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-void pivot_draw(int, int);
+void pivot_draw(int, int, float);
 
 int  pivot_send_create(void);
 void pivot_recv_create(void);

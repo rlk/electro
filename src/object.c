@@ -477,7 +477,7 @@ int object_init(void)
     return 0;
 }
 
-void object_draw(int id, int od)
+void object_draw(int id, int od, float a)
 {
     GLsizei stride = sizeof (struct object_vert);
 
@@ -501,14 +501,26 @@ void object_draw(int id, int od)
                 for (si = 0; si < O[od].sc; ++si)
                 {
                     const struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
+                    float d[4];
 
                     glBindTexture(GL_TEXTURE_2D, m->texture);
 
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   m->d);
+                    /* Modulate the diffule color by the current alpha. */
+
+                    d[0] = m->d[0];
+                    d[1] = m->d[1];
+                    d[2] = m->d[2];
+                    d[3] = m->d[3] * a;
+
+                    /* Apply the material properties. */
+
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);
                     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
                     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
                     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
                     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
+
+                    /* Draw everything. */
 
                     glDrawElements(GL_TRIANGLES, 3 * O[od].sv[si].fc,
                                    GL_UNSIGNED_INT,  O[od].sv[si].fv);
@@ -521,7 +533,7 @@ void object_draw(int id, int od)
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id);
+            entity_traversal(id, a);
         }
         glPopMatrix();
     }

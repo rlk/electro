@@ -134,22 +134,48 @@ void entity_transform(int id)
         glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
 }
 
-void entity_traversal(int id)
+void entity_traversal(int id, float a)
 {
     int jd;
 
-    /* Traverse the child list, recursively invoking render functions. */
+    /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
     for (jd = E[id].car; jd; jd = E[jd].cdr)
         if ((E[jd].flag & FLAG_HIDE) == 0)
+        {
+            /* Enable wireframe if specified. */
+
+            if (E[jd].flag & FLAG_WIRE)
+            {
+                glPushAttrib(GL_POLYGON_BIT);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            }
+
+            /* Draw this entity. */
+
             switch (E[jd].type)
             {
-            case TYPE_CAMERA: camera_draw(jd, E[jd].data); break;
-            case TYPE_SPRITE: sprite_draw(jd, E[jd].data); break;
-            case TYPE_OBJECT: object_draw(jd, E[jd].data); break;
-            case TYPE_LIGHT:   light_draw(jd, E[jd].data); break;
-            case TYPE_PIVOT:   pivot_draw(jd, E[jd].data); break;
+            case TYPE_CAMERA:
+                camera_draw(jd, E[jd].data, E[jd].alpha * a);
+                break;
+            case TYPE_SPRITE:
+                sprite_draw(jd, E[jd].data, E[jd].alpha * a);
+                break;
+            case TYPE_OBJECT:
+                object_draw(jd, E[jd].data, E[jd].alpha * a);
+                break;
+            case TYPE_LIGHT:
+                light_draw(jd, E[jd].data, E[jd].alpha * a);
+                break;
+            case TYPE_PIVOT:
+                pivot_draw(jd, E[jd].data, E[jd].alpha * a);
+                break;
             }
+
+            /* Revert to previous render modes, as necessary. */
+
+            if (E[jd].flag & FLAG_WIRE)  glPopAttrib();
+        }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -173,7 +199,7 @@ int entity_init(void)
 
 void entity_draw(void)
 {
-    if (E) entity_traversal(0);
+    if (E) entity_traversal(0, 1.0f);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -226,6 +252,7 @@ static void entity_create(int id, int type, int data)
     E[id].scale[0] = 1.0f;
     E[id].scale[1] = 1.0f;
     E[id].scale[2] = 1.0f;
+    E[id].alpha    = 1.0f;
 
     entity_attach(id, 0);
 }
@@ -405,6 +432,14 @@ void entity_send_scale(int id, float x, float y, float z)
     pack_float((E[id].scale[2] = z));
 }
 
+void entity_send_alpha(int id, float a)
+{
+    pack_event(EVENT_ENTITY_FADE);
+    pack_index(id);
+
+    pack_float((E[id].alpha = a));
+}
+
 /*---------------------------------------------------------------------------*/
 
 void entity_recv_position(void)
@@ -432,6 +467,13 @@ void entity_recv_scale(void)
     E[id].scale[0] = unpack_float();
     E[id].scale[1] = unpack_float();
     E[id].scale[2] = unpack_float();
+}
+
+void entity_recv_alpha(void)
+{
+    int id = unpack_index();
+
+    E[id].alpha = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/

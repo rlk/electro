@@ -1,7 +1,4 @@
-Add alpha to entity.  Remove it from sprite.
-Wire mode to object.
-
-entity_create->create_entity? N_V -> V_N?
+Billboard
 
 Audio
 Object texture / image type

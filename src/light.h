@@ -24,7 +24,7 @@ struct light
 /*---------------------------------------------------------------------------*/
 
 int  light_init(void);
-void light_draw(int, int);
+void light_draw(int, int, float);
 
 int  light_send_create(int);
 void light_recv_create(void);
