@@ -25,6 +25,25 @@ struct event
 
 /*---------------------------------------------------------------------------*/
 
+#define NAMELEN 32
+
+struct viewport
+{
+    char name[NAMELEN];
+    int gx;
+    int gy;
+    int lx;
+    int ly;
+    int w;
+    int h;
+};
+
+void viewport_init(int);
+void viewport_tile(const char *, int, int, int, int, int, int);
+void viewport_sync(int, int);
+
+/*---------------------------------------------------------------------------*/
+
 void mpi_error(int);
 
 /*---------------------------------------------------------------------------*/

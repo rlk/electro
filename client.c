@@ -57,6 +57,8 @@ static void client_recv_event(void)
 
 static void client_init(int id)
 {
+    glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
+
     star_read_catalog_bin("hip_main.bin");
 
     status_init();
@@ -66,18 +68,6 @@ static void client_init(int id)
 
 static void client_draw(void)
 {
-    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
-    GLdouble z = (GLdouble) status_get_camera_zoom();
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    {
-        glLoadIdentity();
-        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000000.0);
-    }
-    glMatrixMode(GL_MODELVIEW);
-
     status_draw_camera();
     galaxy_draw();
 
@@ -108,19 +98,19 @@ static int client_loop(void)
 
 void client(int np, int id)
 {
-    char buf[32];
-
-    sprintf(buf, "%d, %d", (id - 1) * WIN_W, 0);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+    viewport_sync(id, np);
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
+        int w = status_get_viewport_w();
+        int h = status_get_viewport_h();
+
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        if (SDL_SetVideoMode(WIN_W, WIN_H, 0, SDL_OPENGL | SDL_NOFRAME))
+        if (SDL_SetVideoMode(w, h, 0, SDL_OPENGL | SDL_NOFRAME))
         {
             client_init(id);
 

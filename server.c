@@ -88,18 +88,6 @@ static void server_init(void)
 
 static void server_draw(void)
 {
-    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
-    GLdouble z = (GLdouble) status_get_camera_zoom();
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    {
-        glLoadIdentity();
-        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000000.0);
-    }
-    glMatrixMode(GL_MODELVIEW);
-
     status_draw_camera();
     galaxy_draw();
 
@@ -149,6 +137,8 @@ void server(int np, int argc, char *argv[])
     {
         int c;
 
+        viewport_init(np);
+
         while ((c = getopt(argc, argv, "hs:f:t:o:")) > 0)
             switch (c)
             {
@@ -160,14 +150,19 @@ void server(int np, int argc, char *argv[])
             case 'h': usage(argv[0]); return;
             }
 
+        viewport_sync(0, np);
+
         if (SDL_Init(SDL_INIT_VIDEO) == 0)
         {
+            int w = status_get_viewport_w();
+            int h = status_get_viewport_h();
+
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-            if (SDL_SetVideoMode(WIN_W, WIN_H, 0, WIN_M | SDL_OPENGL))
+            if (SDL_SetVideoMode(w, h, 0, SDL_OPENGL))
             {
                 SDL_WM_SetCaption(TITLE, TITLE);
 

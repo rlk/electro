@@ -3,6 +3,7 @@
 
 #include "server.h"
 #include "status.h"
+#include "shared.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/
@@ -10,6 +11,25 @@
 static lua_State *L;
 
 /*---------------------------------------------------------------------------*/
+
+static const char *script_getstring(const char * name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_isstring(L, i))
+            return lua_tostring(L, i);
+        else
+            lua_pushfstring(L, "'%s' expected string, got %s", name,
+                            lua_typename(L, lua_type(L, i)));
+    }
+    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", name, -i, n);
+
+    lua_error(L);
+
+    return "";
+}
 
 static float script_getnumber(const char * name, lua_State *L, int i)
 {
@@ -23,8 +43,7 @@ static float script_getnumber(const char * name, lua_State *L, int i)
             lua_pushfstring(L, "'%s' expected number, got %s", name,
                             lua_typename(L, lua_type(L, i)));
     }
-    else
-        lua_pushfstring(L, "'%s' expected %d parameters, got %d", name, -i, n);
+    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", name, -i, n);
 
     lua_error(L);
 
@@ -32,6 +51,18 @@ static float script_getnumber(const char * name, lua_State *L, int i)
 }
 
 /*---------------------------------------------------------------------------*/
+
+static int script_add_tile(lua_State *L)
+{
+    const char *name = "add_tile";
+    viewport_tile(script_getstring(name, L, -7),
+                  script_getnumber(name, L, -6),
+                  script_getnumber(name, L, -5),
+                  script_getnumber(name, L, -4),
+                  script_getnumber(name, L, -3),
+                  script_getnumber(name, L, -2),
+                  script_getnumber(name, L, -1));
+}
 
 static int script_scene_draw(lua_State *L)
 {
@@ -87,6 +118,7 @@ int script_init(void)
         luaopen_base(L);
         luaopen_math(L);
 
+        lua_register(L, "add_tile",    script_add_tile);
         lua_register(L, "scene_draw",  script_scene_draw);
         lua_register(L, "camera_move", script_camera_move);
         lua_register(L, "camera_turn", script_camera_turn);

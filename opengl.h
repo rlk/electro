@@ -3,20 +3,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define WINDOW
-
-#ifdef WINDOW
-#define WIN_W 640
-#define WIN_H 480
-#define WIN_M 0
-#else
-#define WIN_W 1600
-#define WIN_H 1200
-#define WIN_M SDL_FULLSCREEN
-#endif
-
-/*---------------------------------------------------------------------------*/
-
 #ifdef _WIN32
 #define WIN32
 #define WIN32_LEAN_AND_MEAN
