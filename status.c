@@ -63,8 +63,8 @@ void status_draw_camera(void)
     {
         GLdouble l = camera_zoom *  viewport_x;
         GLdouble r = camera_zoom * (viewport_x + viewport_w);
-        GLdouble b = camera_zoom *  viewport_y;
-        GLdouble t = camera_zoom * (viewport_y + viewport_h);
+        GLdouble b = camera_zoom * (viewport_y + viewport_h);
+        GLdouble t = camera_zoom *  viewport_y;
 
         glLoadIdentity();
 
