@@ -11,8 +11,8 @@ dy = h + mullion_h
 
 total_w  =  dx * 4
 total_h  =  dy * 4
-total_x  = -total_w / 2
-total_y  = -total_h / 2
+total_x  = -total_w / 2 + mullion_w / 2
+total_y  = -total_h / 2 + mullion_h / 2
 
 E.add_tile("nico5-10",    0, 0, total_x,          total_y,          w, h)
 E.add_tile("nico6-10",    0, 0, total_x,          total_y + dy,     w, h)

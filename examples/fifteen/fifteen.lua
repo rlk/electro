@@ -1,9 +1,12 @@
 
 image_file = "moon.png"
 
-view_l, view_r, view_b, view_t = E.viewport_get()
-view_w = view_r - view_l
-view_h = view_t - view_b
+view_l = 0
+view_r = 0
+view_b = 0
+view_t = 0
+view_w = 0
+view_h = 0
 
 camera  = nil
 numbers = { }
@@ -16,8 +19,8 @@ time   = 0
 -------------------------------------------------------------------------------
 
 function sprite_position(sprite, i, j)
-    E.entity_position(sprite, view_l + view_w * (i - 1) / 4 + view_w / 8,
-                              view_t - view_w * (j - 1) / 4 + view_w / 8, 0)
+    E.entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
+                              view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
 end
 
 function solved()
@@ -88,6 +91,10 @@ end
 
 function do_start()
 
+    view_l, view_r, view_b, view_t = E.viewport_get()
+    view_w = view_r - view_l
+    view_h = view_t - view_b
+
     camera = E.create_camera(E.camera_type_orthogonal)
     E.entity_flag(camera, E.entity_flag_unlit, true);
 
@@ -114,11 +121,13 @@ function do_start()
 
     for i = 1, 4 do
         for j = 1, 4 do
-            local x = j / 4
-            local y = i / 4
+            local x0 = (j - 1) / 4
+            local x1 = (j - 0) / 4
+            local y0 = (4 - i) / 4
+            local y1 = (5 - i) / 4
 
             sprite_position(sprites[numbers[i][j]], i, j)
-            E.sprite_bounds(sprites[numbers[i][j]], x - 0.25, x, y - 0.25, y)
+            E.sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
     end
 
@@ -129,10 +138,10 @@ function do_keyboard(k, s)
     if s then
         -- If an arrow key has been pressed, move a puzzle piece.
 
-        if k == 276 then move_piece( 1,  0) end
-        if k == 275 then move_piece(-1,  0) end
-        if k == 273 then move_piece( 0,  1) end
-        if k == 274 then move_piece( 0, -1) end
+        if k == 276 then move_piece( 0,  1) end
+        if k == 275 then move_piece( 0, -1) end
+        if k == 273 then move_piece( 1,  0) end
+        if k == 274 then move_piece(-1,  0) end
 
         -- If autoplay has been switched, toggle the idle function.
 
