@@ -15,6 +15,7 @@
 #include "opengl.h"
 #include "joystick.h"
 #include "viewport.h"
+#include "console.h"
 #include "buffer.h"
 #include "shared.h"
 #include "script.h"
@@ -134,6 +135,7 @@ static void server_draw(void)
 
     draw_background();
     draw_entity();
+    draw_console();
 
     /* Sync and swap. */
 
@@ -285,6 +287,7 @@ void server(int argc, char *argv[])
             {
                 /* Initialize all subsystems. */
 	
+                init_console(w, h);
                 init_opengl();
                 init_joystick();
                 init_buffer();
