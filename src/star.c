@@ -326,7 +326,7 @@ GLuint star_frag_program(void)
 
     GLuint program = 0;
 
-    if (opengl_has_program)
+    if (GL_has_program)
     {
         size_t len = strlen(star_fp);
 
@@ -392,7 +392,7 @@ GLuint star_vert_program(void)
 
     GLuint program;
 
-    if (opengl_has_program)
+    if (GL_has_program)
     {
         size_t len = strlen(star_vp);
 

@@ -92,7 +92,7 @@ int send_create_light(int type)
 {
     int ld;
 
-    if ((ld = alloc_light()) >= 0)
+    if (L && (ld = alloc_light()) >= 0)
     {
         pack_event(EVENT_CREATE_LIGHT);
         pack_index(ld);

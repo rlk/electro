@@ -321,7 +321,7 @@ int send_create_entity(int type, int data)
 {
     int id;
 
-    if ((id = alloc_entity()) >= 0)
+    if (E && (id = alloc_entity()) >= 0)
     {
         pack_index(id);
         pack_index(type);

@@ -39,13 +39,13 @@ void free_joystick(void)
 
 /*---------------------------------------------------------------------------*/
 
-float get_joystick(int i, int a)
+void get_joystick(int i, float a[2])
 {
     if (SDL_JoystickOpened(i))
-        if (0 <= a && a < SDL_JoystickNumAxes(joy[i]))
-            return (float) SDL_JoystickGetAxis(joy[i], a) / 32768.0f;
-
-    return 0;
+    {
+        a[0] = SDL_JoystickGetAxis(joy[i], 0) / 32768.0f;;
+        a[1] = SDL_JoystickGetAxis(joy[i], 1) / 32768.0f;;
+    }
 }
 
 /*---------------------------------------------------------------------------*/

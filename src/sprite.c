@@ -96,7 +96,7 @@ int send_create_sprite(const char *filename)
 {
     int sd;
 
-    if ((sd = alloc_sprite()) >= 0)
+    if (S && (sd = alloc_sprite()) >= 0)
     {
         S[sd].image = send_create_image(filename);
         S[sd].count = 1;

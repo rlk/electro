@@ -97,16 +97,16 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_COLOR_MATERIAL);
 
-                if (opengl_has_program)
+                if (GL_has_program)
                 {
                     glEnable(GL_VERTEX_PROGRAM_ARB);
                     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
                     glEnable(GL_FRAGMENT_PROGRAM_ARB);
                 }
-                if (opengl_has_point_sprite)
+                if (GL_has_point_sprite)
                     glEnable(GL_POINT_SPRITE_ARB);
 
-                if (opengl_has_program)
+                if (GL_has_program)
                 {
                     glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
                     glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vert);
@@ -114,8 +114,9 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                                                1, G[gd].magnitude, 0, 0, 0);
                     glEnableVertexAttribArrayARB(6);
                 }
-                if (opengl_has_point_sprite)
-                    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+                if (GL_has_point_sprite)
+                    glTexEnvi(GL_POINT_SPRITE_ARB,
+                              GL_COORD_REPLACE_ARB, GL_TRUE);
 
                 /* Enable the star arrays. */
 
@@ -125,7 +126,7 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 glColorPointer (3, ub, sz, G[gd].S->col);
                 glVertexPointer(3, fl, sz, G[gd].S->pos);
 
-                if (opengl_has_program)
+                if (GL_has_program)
                     glVertexAttribPointerARB(6, 1, fl, 0, sz, &G[gd].S->mag);
 
                 /* Render all stars. */
@@ -349,7 +350,7 @@ int send_create_galaxy(const char *filename)
 {
     int gd;
 
-    if ((gd = alloc_galaxy()) >= 0)
+    if (G && (gd = alloc_galaxy()) >= 0)
     {
         /* If the file exists and is successfully read... */
 

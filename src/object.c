@@ -614,7 +614,7 @@ int send_create_object(const char *filename)
     int od;
     int si;
 
-    if ((od = alloc_object()) >= 0)
+    if (O && (od = alloc_object()) >= 0)
     {
         /* If the file exists and is successfully read... */
 

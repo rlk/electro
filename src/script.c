@@ -343,10 +343,13 @@ static int script_enable_timer(lua_State *L)
 static int script_get_joystick(lua_State *L)
 {
     const char *name = "get_joystick";
+    float a[2];
 
-    lua_pushnumber(L, get_joystick((int) script_getnumber(name, L, -2),
-                                   (int) script_getnumber(name, L, -1)));
-    return 1;
+    get_joystick((int) script_getnumber(name, L, -1), a);
+
+    lua_pushnumber(L, (double) a[0]);
+    lua_pushnumber(L, (double) a[1]);
+    return 2;
 }
 
 static int script_get_viewport(lua_State *L)

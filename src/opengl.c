@@ -19,8 +19,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-int opengl_has_program      = 0;
-int opengl_has_point_sprite = 0;
+GLboolean GL_has_program      = 0;
+GLboolean GL_has_point_sprite = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -99,18 +99,18 @@ void init_opengl(void)
         glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
             opengl_proc("glGenProgramsARB");
 
-        opengl_has_program = (glDisableVertexAttribArrayARB
-                           && glEnableVertexAttribArrayARB
-                           && glProgramEnvParameter4fARB
-                           && glVertexAttribPointerARB
-                           && glProgramStringARB
-                           && glBindProgramARB
-                           && glGenProgramsARB);
+        GL_has_program = (glDisableVertexAttribArrayARB
+                       && glEnableVertexAttribArrayARB
+                       && glProgramEnvParameter4fARB
+                       && glVertexAttribPointerARB
+                       && glProgramStringARB
+                       && glBindProgramARB
+                       && glGenProgramsARB) ? GL_TRUE : GL_FALSE;
     }
 
     if (opengl_need("GL_ARB_point_sprite"))
     {
-        opengl_has_point_sprite = 1;
+        GL_has_point_sprite = GL_TRUE;
     }
 }
 

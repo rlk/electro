@@ -640,6 +640,7 @@ function player_step()
 
     local pos_x, pos_y, pos_z = E.get_entity_position(ship)
     local rot_x, rot_y, rot_z = E.get_entity_rotation(ship)
+    local joy_x, joy_y = E.get_joystick(0)
 
     -- Handle thrust
 
@@ -652,10 +653,10 @@ function player_step()
 
     -- Handle rotation change
 
-    if E.get_joystick(0, 0) < -0.5 then
+    if joy_x < -0.5 then
         rot_z = rot_z + global_dt * 180
     end
-    if E.get_joystick(0, 0) >  0.5 then
+    if joy_y >  0.5 then
         rot_z = rot_z - global_dt * 180
     end
 

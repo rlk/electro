@@ -32,8 +32,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-extern int opengl_has_program;
-extern int opengl_has_point_sprite;
+extern GLboolean GL_has_program;
+extern GLboolean GL_has_point_sprite;
 
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;

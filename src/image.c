@@ -299,7 +299,7 @@ int send_create_image(const char *filename)
 
     /* Didn't find it.  It's new. */
 
-    if ((id = alloc_image()) >= 0)
+    if (I && (id = alloc_image()) >= 0)
     {
         /* Note the file name. */
 

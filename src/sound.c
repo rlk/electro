@@ -147,7 +147,7 @@ int create_sound(const char *filename)
     int   sd;
     FILE *fp;
 
-    if ((sd = alloc_sound()) >= 0)
+    if (S && (sd = alloc_sound()) >= 0)
     {
         if ((fp = fopen(filename, FMODE_RB)))
         {
