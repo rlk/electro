@@ -13,11 +13,9 @@
 #include <SDL.h>
 #include <lua.h>
 #include <lualib.h>
-#include <stdio.h>
 
 #include "joystick.h"
 #include "viewport.h"
-#include "shared.h"
 #include "server.h"
 #include "camera.h"
 #include "sprite.h"
@@ -924,6 +922,10 @@ void luaopen_electro(lua_State *L)
 
     lua_constant(L, "light_type_positional",   LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",  LIGHT_DIRECTIONAL);
+
+    lua_constant(L, "key_modifier_shift",      KMOD_SHIFT);
+    lua_constant(L, "key_modifier_control",    KMOD_CTRL);
+    lua_constant(L, "key_modifier_alt",        KMOD_ALT);
 
     /* Register the "electro" environment table globally. */
 

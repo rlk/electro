@@ -12,14 +12,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <png.h>
 #include <jpeglib.h>
 
 #include "utility.h"
 #include "opengl.h"
 #include "buffer.h"
-#include "shared.h"
 #include "entity.h"
 #include "event.h"
 #include "image.h"

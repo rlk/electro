@@ -64,8 +64,8 @@ function do_keyboard(k, s)
 end
 
 function do_point(dx, dy)
-    local shift   = E.get_modifier(1)
-    local control = E.get_modifier(64)
+    local shift   = E.get_modifier(E.key_modifier_shift)
+    local control = E.get_modifier(E.key_modifier_control)
 
     if setzoom then      -- Set the camera zoom.
 

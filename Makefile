@@ -14,6 +14,34 @@ endif
 
 #------------------------------------------------------------------------------
 
+SDLLIB= $(shell sdl-config --libs) -lSDLmain
+LUALIB= -llua -llualib
+IMGLIB= -ljpeg -lpng -lz -lm
+OGGLIB= -lvorbisfile
+
+# Assume the Fink tree is available under OSX.
+
+ifeq ($(shell uname), Darwin)
+	INCDIR= -I/sw/include
+	LIBDIR= -L/sw/lib
+	OGLLIB=
+else
+	OGLLIB= -lGL -lGLU
+endif
+
+# If Lua is not found globally, assume it is in the user's home directory.
+
+ifneq ($(shell ls /usr/include/lua),)
+	INCDIR += -I/usr/include/lua
+else
+	INCDIR += -I$(HOME)/include
+	LIBDIR += -L$(HOME)/lib
+endif
+
+LIBS= $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lm
+
+#------------------------------------------------------------------------------
+
 OBJS=	src/opengl.o   \
 	src/matrix.o   \
 	src/utility.o  \
@@ -37,46 +65,19 @@ OBJS=	src/opengl.o   \
 	src/star.o     \
 	src/main.o
 
-DEPS= $(OBJS:.o=.d)
-
 #------------------------------------------------------------------------------
 
-RM= rm -f
-
-SDL_LIBS= $(shell sdl-config --libs) -lSDLmain
-LUA_LIBS= -llua -llualib
-IMG_LIBS= -ljpeg -lpng -lz -lm
-
-ifeq ($(shell uname), Darwin)
-    INCDIR= -I/sw/include -I/usr/include/lua
-    LIBDIR= -L/sw/lib
-    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(IMG_LIBS) -lvorbisfile -lm
-else
-    INCDIR= -I$(HOME)/include -I/usr/include/lua
-    LIBDIR= -L$(HOME)/lib
-    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(IMG_LIBS) -lvorbisfile -lGL -lGLU -lm
-endif
-
-#------------------------------------------------------------------------------
-
-%.d : %.c
-	$(CC) $(CFLAGS) $(INCDIR) -MM -MF $@ -MT $*.o $<
-
-%.o : %.c
+.c.o :
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
-
-#------------------------------------------------------------------------------
 
 $(TARG) : $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
 clean :
-	$(RM) $(TARG) $(OBJS) $(DEPS)
+	rm -f $(TARG) $(OBJS)
 
 install : $(TARG)
 	cp $(TARG) $(PREFIX)/bin
 	cp config/* $(PREFIX)/config
 
 #------------------------------------------------------------------------------
-
-include $(DEPS)

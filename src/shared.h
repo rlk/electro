@@ -13,8 +13,6 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#include "opengl.h"
-
 /*---------------------------------------------------------------------------*/
 
 #define TITLE "Electro"

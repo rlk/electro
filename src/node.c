@@ -10,14 +10,10 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 
 #include "utility.h"
 #include "opengl.h"
-#include "star.h"
 #include "node.h"
 
 /*---------------------------------------------------------------------------*/

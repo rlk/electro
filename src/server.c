@@ -11,22 +11,17 @@
 /*    General Public License for more details.                               */
 
 #include <SDL.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "opengl.h"
 #include "joystick.h"
 #include "viewport.h"
 #include "buffer.h"
 #include "shared.h"
-#include "server.h"
 #include "script.h"
-#include "camera.h"
 #include "entity.h"
 #include "sound.h"
 #include "image.h"
 #include "event.h"
-#include "node.h"
 
 /*---------------------------------------------------------------------------*/
 

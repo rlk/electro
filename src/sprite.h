@@ -13,8 +13,6 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include "opengl.h"
-
 /*---------------------------------------------------------------------------*/
 
 struct sprite

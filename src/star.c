@@ -13,8 +13,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <sys/stat.h>
 
 #include "utility.h"
 #include "opengl.h"

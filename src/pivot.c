@@ -14,10 +14,8 @@
 
 #include "opengl.h"
 #include "buffer.h"
-#include "shared.h"
 #include "entity.h"
 #include "event.h"
-#include "pivot.h"
 
 /*---------------------------------------------------------------------------*/
 

@@ -23,19 +23,19 @@
    -
 </pre>
 
-<p> Electro is an application development framework designed for use on
-cluster-driven tiled displays.  Electro is based upon the MPI process model
-and is bound to the Lua programming language.  With support for 3D graphics,
-2D graphics, audio, and input handling, Electro provides an easy-to-use
-scripting system for interactive applications spanning multiple processors and
-displays. </p>
+<p> Electro is an application development framework designed for use
+on cluster-driven tiled displays.  Electro is based upon the MPI
+process model and is bound to the Lua programming language.  With
+support for 3D graphics, 2D graphics, audio, and input handling,
+Electro provides an easy-to-use scripting system for interactive
+applications spanning multiple processors and displays. </p>
 
 <h1> This Document </h1>
 
-<p> This document details the functions and data types of the Electro API.  A
-knowledge of the Lua Programming Language, version 5.0, is prerequisite.  Lua
-documentation and tutorials may be found at
-<a href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
+<p> This document details the functions and data types of the Electro
+API.  A knowledge of the Lua Programming Language, version 5.0, is
+prerequisite.  Lua documentation and tutorials may be found at <a
+href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
 
 <p> Electro API function definitions appear here as follows:
 
@@ -43,24 +43,24 @@ documentation and tutorials may be found at
 Invoke <tt>function</tt> with <i>arguments</i> giving a <i>value</i>.
 </p></dl>
 
-<p> This document includes a number of Lua code examples.  These examples are
-distinguished from the main text as follows: </p>
+<p> This document includes a number of Lua code examples.  These
+examples are distinguished from the main text as follows: </p>
 
 <pre>
 print("Hello, World!")
 </pre>
 
 <p> This document also includes a number of paragraphs giving design
-rationale.  These describe some of the trade-offs and design decisions made
-during the development of Electro.  They are presented here in the hope that
-they will provide the reader with a more thorough understanding of the details
-of the implementation.  Rationale paragraphs are distinguished from the main
-text as follows: </p>
+rationale.  These describe some of the trade-offs and design decisions
+made during the development of Electro.  They are presented here in
+the hope that they will provide the reader with a more thorough
+understanding of the details of the implementation.  Rationale
+paragraphs are distinguished from the main text as follows: </p>
 
 <p class="note"> Electro adheres to a number of closely-held design
 principles.  The primary principles are simplicity, orthogonality, and
-efficiency.  Violations of these principles do appear, but not without serious
-consideration. </p>
+efficiency.  Violations of these principles do appear, but not without
+serious consideration. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -68,9 +68,9 @@ consideration. </p>
 
 <h2> Entity API </h2>
 
-<p> The core of any Electro application is the scene graph.  The
-scene graph is a very common organizing scheme in 3D graphics, and
-examples of its use abound.  Other scene graph libraries include
+<p> The core of any Electro application is the scene graph.  The scene
+graph is a very common organizing scheme in 3D graphics, and examples
+of its use abound.  Other scene graph libraries include
 
 <a href="http://oss.sgi.com/projects/inventor/">Open Inventor</a>,
 <a href="http://www.blitzbasic.com/">Blitz3D</a>,
@@ -82,11 +82,11 @@ find the Electro API unsurprising. </p>
 
 <p> Scene graph functionality is organized into a small class
 hierarchy.  The entity base class handles all of the common properties
-and behaviours of scene graph elements, most notably 3D transformation,
-and the parent-child relationships that hold a scene hierarchy
-together.  The subclasses handle the specifics of controlling the
-view and lighting, drawing 3D and 2D geometry, etc.  The class
-hierarchy is as follows: </p>
+and behaviours of scene graph elements, most notably 3D
+transformation, and the parent-child relationships that hold a scene
+hierarchy together.  The subclasses handle the specifics of
+controlling the view and lighting, drawing 3D and 2D geometry, etc.
+The class hierarchy is as follows: </p>
 
 <ul>
 <a href="#entity"> Entity </a>
@@ -112,96 +112,96 @@ hierarchy is as follows: </p>
 Load an OBJ format 3D object and return an Electro object entity.
 This is the normal means of importing 3D geometry into an Electro
 application.  It fully supports the OBJ file format, including
-material files and texture maps.  The OBJ export capabilities of
-Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.
+material files and texture maps.  The OBJ export capabilities of Maya,
+Lightwave, Wings3D, and Milkshape are known to be compatible.
 </p>
 
 <p class="note"> The Electro OBJ loader allows two non-standard
 extensions to the OBJ specification.  An OBJ file may include "e"
 specifiers which behave like "f" specifiers but define edges rather
-than faces.  An MTL file may include "Ke" specifiers which behave
-like "Kd", "Ka", and "Ks" specifiers but define an emissive material
+than faces.  An MTL file may include "Ke" specifiers which behave like
+"Kd", "Ka", and "Ks" specifiers but define an emissive material
 property rather than a diffuse, ambient, or specular property.
 Standard exporters do not produce these tags, and importers simply
 ignore them, so they do not get in the way of normal OBJ file
 usage.</p>
 
 <dt><i>sprite</i> = <tt>create_sprite</tt>(<i>filename</i>)<dd><p>
-Load an image file and create a sprite entity.  A sprite consists
-of a single quadrilateral, textured using the given image.  Image
-files may be in JPG or PNG format.  The default size of the sprite
-object is equal to the size of the source image.  Commonly, sprite
-objects are used as billboards in 3D scenes, or are displayed as
-2D overlays using an orthogonal camera.  </p>
+Load an image file and create a sprite entity.  A sprite consists of a
+single quadrilateral, textured using the given image.  Image files may
+be in JPG or PNG format.  The default size of the sprite object is
+equal to the size of the source image.  Commonly, sprite objects are
+used as billboards in 3D scenes, or are displayed as 2D overlays using
+an orthogonal camera.  </p>
 
-<p class="note"> Unextended OpenGL requires that the width and
-height of all texture map images be a power of two.  It can be
-inconvenient to satisfy this requirement, so Electro automatically
-rescales non-power-of-two textures up to the nearest power-of-two
-size.  This is only done internally, so a sprite's size and aspect
-ratio will reflect the <i>original</i> image attributes.  The scaling
-is done using the standard OpenGL utility method, but it can still
-result in image quality degradation.  If you are picky about image
-quality, or you desire pixel-for-pixel correctness, be sure to use
-only power-of-two source images.  The same applies to texture images
-loaded by <tt>create_object</tt>.</p>
+<p class="note"> Unextended OpenGL requires that the width and height
+of all texture map images be a power of two.  It can be inconvenient
+to satisfy this requirement, so Electro automatically rescales
+non-power-of-two textures up to the nearest power-of-two size.  This
+is only done internally, so a sprite's size and aspect ratio will
+reflect the <i>original</i> image attributes.  The scaling is done
+using the standard OpenGL utility method, but it can still result in
+image quality degradation.  If you are picky about image quality, or
+you desire pixel-for-pixel correctness, be sure to use only
+power-of-two source images.  The same applies to texture images loaded
+by <tt>create_object</tt>.</p>
 
-<dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p>
-Create a camera of the given type.  To be visible in a scene, all
-entities must be descendants of a camera entity.  Because of this,
-cameras are commonly left unparented and allowed to remain at the
-root.  Here are the defined camera types:</p>
+<dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p> Create
+a camera of the given type.  To be visible in a scene, all entities
+must be descendants of a camera entity.  Because of this, cameras are
+commonly left unparented and allowed to remain at the root.  Here are
+the defined camera types:</p>
 
-<dl>
+<ul>
 
-<dt><tt>camera_type_orthogonal</tt><dd><p> An orthogonal camera
-uses an orthogonal projection.  By default, the aperture of an
-orthogonal camera matches the total size of the current display,
-which is appropriate for pixel-correct 2D overlays.</p>
+<li><tt>camera_type_orthogonal</tt><p> An orthogonal camera uses an
+orthogonal projection.  By default, the aperture of an orthogonal
+camera matches the total size of the current display, which is
+appropriate for pixel-correct 2D overlays.</p>
 
-<dt><tt>camera_type_perspective</tt><dd><p>A perspective camera
-uses a perspective projection.  By default the aperture of a
-perspective camera is one unit high, with width determined by the
-aspect ratio of the total display. </p>
+<li><tt>camera_type_perspective</tt><p>A perspective camera uses a
+perspective projection.  By default the aperture of a perspective
+camera is one unit high, with width determined by the aspect ratio of
+the total display. </p>
 
-</dl>
+</ul>
 
-<p>A scene is allowed to include any number of cameras.
-One reasonable configuration is to include one perspective camera
-for the display of 3D objects, and one orthogonal camera for the
-display of 2D overlays.  </p>
+<p>A scene is allowed to include any number of cameras.  One
+reasonable configuration is to include one perspective camera for the
+display of 3D objects, and one orthogonal camera for the display of 2D
+overlays.  </p>
 
-<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p> Create
-a light source of the given type.  To be illuminated, all entities
-must be descendants of a light entity.  Conversely, entities which
-should appear unshaded and fully-bright should not descend from a
-light entity.  Here are the defined light types: </p>
+<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p> Create a
+light source of the given type.  To be illuminated, all entities must
+be descendants of a light entity.  Conversely, entities which should
+appear unshaded and fully-bright should not descend from a light
+entity.  Here are the defined light types: </p>
 
-<dl>
+<ul>
 
-<dt><tt>light_type_positional</tt><dd><p> A positional light provides
-a localized light from within the scene.</p>
+<li><tt>light_type_positional</tt><p> A positional light provides a
+localized light from within the scene.</p>
 
-<dt><tt>light_type_directional</tt><dd><p> A directional light
-source provides a parallel light from infinitely far away.  Light
-is directed along the vector from the position of a directional
-light source to the origin of the light's coordinate system (determined
-by any transformations defined by parent entities).</p>
+<li><tt>light_type_directional</tt><p> A directional light source
+provides a parallel light from infinitely far away.  Light is directed
+along the vector from the position of a directional light source to
+the origin of the light's coordinate system (determined by any
+transformations defined by parent entities).</p>
 
-</dl>
+</ul>
 
 <p class="note"> In the implementation, the only difference between
 positional and directional light sources is the value of the <i>w</i>
 component of the homogeneous position of the light.  A positional
-light has <i>w=1</i> and a directional light has <i>w=0</i>, thus
-the homogeneous position vector is finite or infinite in length,
+light has <i>w=1</i> and a directional light has <i>w=0</i>, thus the
+homogeneous position vector is finite or infinite in length,
 respectively. </p>
 
 <dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p> Create a pivot
-entity.  A pivot does nothing, but is useful as a grouping entity.
-As it has all the properties of an entity, including transformation
-and render flags, It provides a mechanism by which the transform
-hierarchy may be extended and controlled.  </p>
+entity.  A pivot does nothing, but is useful as a grouping entity.  As
+it has all the properties of an entity, including transformation and
+render flags, It provides a mechanism by which the transform hierarchy
+may be extended and controlled.  </p>
 
 <dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename</i>)<dd><p>
 Load a galaxy definition from the named file and return a galaxy
@@ -209,9 +209,9 @@ entity.  A galaxy entity is a static 3D collection of particles,
 organized into a BSP structure for efficient rendering.</p>
 
 <p class="note"> The galaxy object should be considered a hack.  It
-has only a very specific use.  It will probably be removed in a
-future revision of the Electro API, or possibly abstracted into a
-general particle system.  </p>
+has only a very specific use.  It will probably be removed in a future
+revision of the Electro API, or possibly abstracted into a general
+particle system.  </p>
 
 <dt><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>
 Duplicate the given entity.  Cloning allows entities to be instanced
@@ -221,12 +221,11 @@ circumstances where large numbers of similar objects are frequently
 created and destroyed.</p>
 
 <p> Note, however, that a clone is a <i>shallow</i> copy of the
-original.  A clone has all of the attributes of a distinct entity,
-but it shares the attributes specific to its derived type.  For
-example, if a scaling operation is applied to a cloned entity, only
-that entity will be scaled.  However if the color of a cloned light
-source is changed, all instances of the original light source will
-change.
+original.  A clone has all of the attributes of a distinct entity, but
+it shares the attributes specific to its derived type.  For example,
+if a scaling operation is applied to a cloned entity, only that entity
+will be scaled.  However if the color of a cloned light source is
+changed, all instances of the original light source will change.
 
 </dl>
 
@@ -234,8 +233,8 @@ change.
 
 <a name="entity"><h3> Entity </h3>
 
-<p> The following functions act on entities.  The entity argument
-of each function may take any entity value, including object, sprite,
+<p> The following functions act on entities.  The entity argument of
+each function may take any entity value, including object, sprite,
 camera, light, and pivot. </p>
 
 <h4> Hierarchy Management </h4>
@@ -260,66 +259,74 @@ is a clone, then the entity itself will be removed, but any resources
 shared by other instances of the same entity will remain.
 
 <p class="note"> While Lua is a garbage-collected language, Electro
-entities are not subject to garbage collection.  They must be
-released manually.  Entity garbage collection is complicated by the
-fact that entity references held by parent entities are not visible to
-the Lua runtime.  Someday the implementation may tackle this problem,
-but until then be careful you don't allow abandoned resources
-to pile up. </p>
+entities are not subject to garbage collection.  They must be released
+manually.  Entity garbage collection is complicated by the fact that
+entity references held by parent entities are not visible to the Lua
+runtime.  Someday the implementation may tackle this problem, but
+until then be careful you don't allow abandoned resources to pile
+up. </p>
 
 </dl>
+
+<!---------------------------------------------------------------------------->
 
 <h4> Absolute Transformation </h4>
 <dl>
 
-<dt><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p> Specify
-the position of the entity.  Position is given in the coordinate
-system of the entity's parent. </p>
-
-<dt><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)<dd><p> Specify
-the rotation of the entity.  The 3 values give the angles of rotation
-in degrees about the X, Y, and Z axes.  Rotation is given in the
+<dt><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p>
+Specify the position of the entity.  Position is given in the
 coordinate system of the entity's parent. </p>
 
-<dt><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)<dd><p> Specify the
-scale of the entity.  The 3 values give scale multipliers along the
-X, Y, and Z axes.  Scale is given in the coordinate system of the
+<dt><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)<dd><p>
+Specify the rotation of the entity.  The 3 values give the angles of
+rotation in degrees about the X, Y, and Z axes.  Rotation is given in
+the coordinate system of the entity's parent. </p>
+
+<dt><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)<dd><p> Specify
+the scale of the entity.  The 3 values give scale multipliers along
+the X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
 
-<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify
-the transparency of the entity.  A value of 1.0 is fully opaque and
-0.0 is fully invisible.  This transparency value propagates down
-the hierarchy.  Transparency values specified by child nodes will
+<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify the
+transparency of the entity.  A value of 1.0 is fully opaque and 0.0 is
+fully invisible.  This transparency value propagates down the
+hierarchy.  Transparency values specified by child nodes will
 accumulate.  That is, if a parent and a child both specify
 <i>alpha</i>=0.5 then the child will appear with a transparency of
 0.25.</p>
 
 </dl>
 
+<!---------------------------------------------------------------------------->
+
 <h4> Relative Transformation </h4>
 <dl>
 
 <dt><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Move the
-entity relative to its current position.  X is to the right, Y is
-up, and Z axis is to the rear, as defined by the entity's current
+entity relative to its current position.  X is to the right, Y is up,
+and Z axis is to the rear, as defined by the entity's current
 orientation. </p>
 
-<p class="note"> It might be more clear to the beginner if the Z axis to
-pointed forward rather than back.  However, this would be in conflict with the
-normal right-handed coordinate system, and would only lead to inconsistency
-and confusion for the experienced 3D user. </p>
+<p class="note"> It might be more clear to the beginner if the Z axis
+to pointed forward rather than back.  However, this would be in
+conflict with the normal right-handed coordinate system, and would
+only lead to inconsistency and confusion for the experienced 3D
+user. </p>
 
 <dt><tt>turn_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Rotate the
-entity relative to its current orientation.  Rotation about the X,
-Y, and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
+entity relative to its current orientation.  Rotation about the X, Y,
+and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
 
 </dl>
 
-<p class="note"> Strictly speaking, to provide both absolute and relative
-transformation functions is to violate the principle of orthogonality.  In
-this case, I just couldn't resist.  Inspiration for this feature is drawn from
-Blitz3D, which showed that relative transform is very beginner-friendly,
-leading to a very intuitive turtle-style system of entity control. </p>
+<p class="note"> Strictly speaking, to provide both absolute and
+relative transformation functions is to violate the principle of
+orthogonality.  In this case, I just couldn't resist.  Inspiration for
+this feature is drawn from Blitz3D, which showed that relative
+transform is very beginner-friendly, leading to a very intuitive
+turtle-style system of entity control. </p>
+
+<!---------------------------------------------------------------------------->
 
 <h4> Query </h4>
 <dl>
@@ -336,53 +343,57 @@ Return the rotation of the entity about the local X, Y, and Z axes.
 Return the scaling of the entity along the local X, Y, and Z axes.
 </p>
 
-<dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p>
-Return the transparency value of the entity.
+<dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p> Return
+the transparency value of the entity.
 </p>
 
 </dl>
 
+<!---------------------------------------------------------------------------->
+
 <h4> Flags </h4>
 <dl>
 
-<dt><tt>set_entity_flag</tt>(<i>entity, flag, value</i>) <dd><p> Set or
-clear a flag on the given entity.  Entity flags enable and disable
-extra features in the entity hierarchy.  These flags act not only
-on the entity that carries them, but also on the children of that
-entity.  The <i>flag</i> parameter gives the set of flags to be
-modified, and may be the sum of multiple flags.  The <i>value</i>
-parameter is a boolean giving the desired state.  A value of
-<tt>true</tt> will set the given flags, and <tt>false</tt> will
-clear them. <p>
+<dt><tt>set_entity_flag</tt>(<i>entity, flag, value</i>) <dd><p> Set
+or clear a flag on the given entity.  Entity flags enable and disable
+extra features in the entity hierarchy.  These flags act not only on
+the entity that carries them, but also on the children of that entity.
+The <i>flag</i> parameter gives the set of flags to be modified, and
+may be the sum of multiple flags.  The <i>value</i> parameter is a
+boolean giving the desired state.  A value of <tt>true</tt> will set
+the given flags, and <tt>false</tt> will clear them. </p>
 
-<dl>
+<ul>
 
-<dt><tt> entity_flag_wireframe </tt><dd><p> The wireframe flag causes an
-entity and its descendants to be rendered in wireframe.  An entire scene may
-be rendered in wireframe by setting the wireframe flag on a camera or
-light. The application is free to set or clear a wireframe flag value at one
-point in the hierarchy and set an opposite value at a lower point.  Entities
-will appear as expected. </p>
+<li><tt> entity_flag_wireframe </tt><p> The wireframe flag causes
+an entity and its descendants to be rendered in wireframe.  An entire
+scene may be rendered in wireframe by setting the wireframe flag on a
+camera or light. The application is free to set or clear a wireframe
+flag value at one point in the hierarchy and set an opposite value at
+a lower point.  Entities will appear as expected. </p>
 
-<dt><tt> entity_flag_hidden </tt><dd><p> The hidden flag causes an entity and
-its descendants to be omitted from rendering.  Unlike the wireframe flag, the
-hidden flag <i>cannot</i> be reversed lower in the hierarchy, as it actually
-causes traversal of the hierarchy to be pruned.</p>
+<li><tt> entity_flag_hidden </tt><p> The hidden flag causes an
+entity and its descendants to be omitted from rendering.  Unlike the
+wireframe flag, the hidden flag <i>cannot</i> be reversed lower in the
+hierarchy, as it actually causes traversal of the hierarchy to be
+pruned. </p>
 
-<dt><tt> entity_flag_billboard </tt><dd><p> Entities with the billboard flag
-are drawn facing the camera, regardless of their actual orientation.  In
-effect, all rotations and translations are applied as usual, so the entity
-will be positioned in space as expected, but an extra rotation is applied in
-order to re-aim the entity's Z axis toward the camera.  </p>
+<li><tt> entity_flag_billboard </tt><p> Entities with the
+billboard flag are drawn facing the camera, regardless of their actual
+orientation.  In effect, all rotations and translations are applied as
+usual, so the entity will be positioned in space as expected, but an
+extra rotation is applied in order to re-aim the entity's Z axis
+toward the camera. </p>
 
-<p class="note"> Due to the manner in which the billboard transformation is
-implemented, scaling operations will <i>not</i> transform billboard entities
-below them in the hierarchy.  This is a minor limitation in practice, as
-scaling is normally applied near the leaves of the scene hierarchy anyway.
-The common case of an entity with local scaling <i>and</i> a local billboard
-flag will work properly, but when in doubt, scale below billboarding. </p>
+<p class="note"> Due to the manner in which the billboard
+transformation is implemented, scaling operations will <i>not</i>
+transform billboard entities below them in the hierarchy.  This is a
+minor limitation in practice, as scaling is normally applied near the
+leaves of the scene hierarchy anyway.  The common case of an entity
+with local scaling <i>and</i> a local billboard flag will work
+properly, but when in doubt, scale below billboarding. </p>
 
-</dl>
+</ul>
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -400,11 +411,11 @@ contains images of all of the digits 0-9, and select the digit
 currently displayed simply by modifying the sprite bounds.  </p>
 
 <dt><i>r, g, b, a</i> = <tt>get_sprite_pixel</tt>(<i>sprite, x, y</i>)
-<dd><p> Return the color value of the (<i>x, y</i>) pixel of
-a sprite.  This function always returns 4 color components.  If the
-source image does not include all four channels, then values are
-extrapolated: greyscale values are copied to all three color channels
-and opaque textures are assigned an alpha value of 1.</p>
+<dd><p> Return the color value of the (<i>x, y</i>) pixel of a sprite.
+This function always returns 4 color components.  If the source image
+does not include all four channels, then values are extrapolated:
+greyscale values are copied to all three color channels and opaque
+textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
 Return the size of the sprite in pixels.</p>
@@ -416,8 +427,8 @@ Return the size of the sprite in pixels.</p>
 <a name="camera"><h3> Camera </h3>
 <dl>
 
-<dt><tt>set_camera_distance</tt>(<i>camera, distance</i>)<dd><p>
-Set the distance to the focus point of the camera.  More precisely,
+<dt><tt>set_camera_distance</tt>(<i>camera, distance</i>)<dd><p> Set
+the distance to the focus point of the camera.  More precisely,
 <i>distance</i> is a translation along the positive Z axis applied
 prior to the actual positioning and rotation of the camera.  Think
 of the camera's position and rotation not as motions of the camera,
@@ -428,12 +439,12 @@ view, while a positive distance is useful as an object-viewer tumbler
 camera.  Negative camera distance would place the camera position
 behind the viewer. </p>
 
-<dt><tt>set_camera_zoom</tt>(<i>camera, zoom</i>)<dd><p> Set the
-zoom factor of a camera.  This value normally ranges from 0 to 1
-but may reasonably be higher.  In effect, it linearly scales the
-size of the view area of the camera.  Large values widen the view
-(theoretically, an infinite zoom value gives a 180 degree field of
-view) and small values narrow it. </p>
+<dt><tt>set_camera_zoom</tt>(<i>camera, zoom</i>)<dd><p> Set the zoom
+factor of a camera.  This value normally ranges from 0 to 1 but may
+reasonably be higher.  In effect, it linearly scales the size of the
+view area of the camera.  Large values widen the view (theoretically,
+an infinite zoom value gives a 180 degree field of view) and small
+values narrow it. </p>
 
 </dl>
 
@@ -454,16 +465,16 @@ diffuse color of a light source.  </p>
 
 <dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p> Set the
 magnitude multiplier of a galaxy.  By default, stars are rendered
-using their computed luminosity.  For all but a few stars, this is
-far too dim to be visible.  The magnitude multiplier can be treated
-as a linear scale of apparent star size.  For example, a magnitude
-value of 100 will result in the very largest of stars being rendered
+using their computed luminosity.  For all but a few stars, this is far
+too dim to be visible.  The magnitude multiplier can be treated as a
+linear scale of apparent star size.  For example, a magnitude value of
+100 will result in the very largest of stars being rendered
 approximately 100 pixels across.  </p>
 
-<p> Note that this is completely distinct from camera zoom.  Tightening
-the view of a camera will not result in apparently brighter stars.
-Commonly, any linear change applied to camera zoom should also be
-applied to galaxy magnitude in order to provide the illusion of
+<p> Note that this is completely distinct from camera zoom.
+Tightening the view of a camera will not result in apparently brighter
+stars.  Commonly, any linear change applied to camera zoom should also
+be applied to galaxy magnitude in order to provide the illusion of
 increased magnification. </p>
 
 </dl>
@@ -479,29 +490,29 @@ play simultaneously. </p>
 
 <dl>
 
-<dt><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p> Open
-a reference to the named Ogg Vorbis audio stream.  This is the normal
+<dt><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p> Open a
+reference to the named Ogg Vorbis audio stream.  This is the normal
 means by which audio is imported into an Electro application.  This
 function initializes a sound for playback, but does not start
 playback.</p>
 
-<dt><tt>free_sound</tt>(<i>stream</i>)<dd><p>
-Close an audio stream and release all resources associated with it.
+<dt><tt>free_sound</tt>(<i>stream</i>)<dd><p> Close an audio stream
+and release all resources associated with it.
 </p>
 
 <dt><tt>play_sound</tt>(<i>stream</i>)<dd><p> Start playback of an
 audio stream.  If <i>stream</i> is already playing when this function
-is called, then the original playback will stop and the stream will
-be rewound to the beginning before being restarted.  If it is
-necessary to mix multiple instances of one specific sound, then
-multiple sound objects must be used.  </p>
+is called, then the original playback will stop and the stream will be
+rewound to the beginning before being restarted.  If it is necessary
+to mix multiple instances of one specific sound, then multiple sound
+objects must be used.  </p>
 
 <dt><tt>loop_sound</tt>(<i>stream</i>)<dd><p> Begin playing an audio
 stream, but automatically rewind it when the end is reached.  </p>
 
 <dt><tt>stop_sound</tt>(<i>stream</i>)<dd><p> Stop a playing audio
-stream.  This function merely stops playback, and does not release
-any resources.  The stream may be restarted from the beginning.
+stream.  This function merely stops playback, and does not release any
+resources.  The stream may be restarted from the beginning.
 </p>
 
 </dl>
@@ -526,18 +537,31 @@ numbers recieved by the <tt>do_joystick</tt> callback.  For example,
 allow the user to select the number of active joysticks by pressing
 Start on each.</p>
 
+<dt><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>
+Return the current state of a keyboard modifier.  The return value is
+<tt>true</tt> if the modifier key is down.  The queryable modifiers
+are:
+
+<ul>
+<li><tt>key_modifier_shift</tt>
+<li><tt>key_modifier_control</tt>
+<li><tt>key_modifier_alt</tt>
+</ul>
+</p>
+
 <dt><i>l, r, b, t</i> = <tt>get_viewport</tt>()<dd><p> Return the
-total size of the display.  The return values <i>l, r, b, t</i>
-give the left, right, bottom, and top extents of the rectangular
-union of all tiles, in pixels.  This information is often useful
-when positioning entities on screen or scaling entities to some
+total size of the display.  The return values <i>l, r, b, t</i> give
+the left, right, bottom, and top extents of the rectangular union of
+all tiles, in pixels.  This information is often useful when
+positioning entities on screen or scaling entities to some
 screen-relative size.  </p>
 
-<dt><tt>add_tile</tt>(<i>name, local_x, local_y, global_x, global_y, width, height</i>)
-<dd><p> Add a tile.  This function is used by configuration scripts
-to define the structure of a tiled display.  The specified parameters
-are only accessed prior to the execution of the <tt>on_start</tt>
-callback, so any use of it must be at the global scope. </p>
+<dt><tt>add_tile</tt>(<i>name, local_x, local_y, global_x, global_y,
+width, height</i>) <dd><p> Add a tile.  This function is used by
+configuration scripts to define the structure of a tiled display.  The
+specified parameters are only accessed prior to the execution of the
+<tt>on_start</tt> callback, so any use of it must be at the global
+scope. </p>
 
 <p> The <i>name</i> argument gives the name of the rendering node
 responsible for rendering the defined tile.  The <i>local_x</i> and
@@ -594,34 +618,37 @@ E.add_tile("nico4-10", 1600, 0, X + dx * 3, Y + dy * 3, w, h)
 
 <h1> Callbacks </h1>
 
-<p> Callback functions are the mechanism by which Electro Lua applications
-respond to user interface events.  An application may define these functions
-as needed.  If a function exists then it is invoked when the corresponding
-event occurs.  Callback functions should return a boolean value to indicate
-whether the event resulted in a dirty screen.  Returning <tt>true</tt>
-schedules a screen update to occur at the next opportunity. </p>
+<p> Callback functions are the mechanism by which Electro Lua
+applications respond to user interface events.  An application may
+define these functions as needed.  If a function exists then it is
+invoked when the corresponding event occurs.  Callback functions
+should return a boolean value to indicate whether the event resulted
+in a dirty screen.  Returning <tt>true</tt> schedules a screen update
+to occur at the next opportunity. </p>
 
 <dl>
 
-<dt><tt> do_start() </tt> <dd><p> This callback is invoked precisely once at
-the beginning of a run.  It occurs after all of the scripts named on the
-command line have finished executing, but before any event processing begins.
-Applications are free to perform Lua state initialization upon initial
-execution, but Electro object initialization <i>must</i> be performed in the
-<tt>do_start</tt> function.</p>
+<dt><tt> do_start() </tt> <dd><p> This callback is invoked precisely
+once at the beginning of a run.  It occurs after all of the scripts
+named on the command line have finished executing, but before any
+event processing begins.  Applications are free to perform Lua state
+initialization upon initial execution, but Electro object
+initialization <i>must</i> be performed in the <tt>do_start</tt>
+function.</p>
 
-<p class="note"> This callback is a bit of a hack.  It is necessary because
-Electro objects cannot be initialized until the OpenGL context exists.
-However, the OpenGL context cannot be created until the viewport configuration
-is known.  So, startup must proceed in two distinct phases, one before context
-creation, and one after.  The <tt>do_start</tt> callback is this second
-phase. </p>
+<p class="note"> This callback is a bit of a hack.  It is necessary
+because Electro objects cannot be initialized until the OpenGL context
+exists.  However, the OpenGL context cannot be created until the
+viewport configuration is known.  So, startup must proceed in two
+distinct phases, one before context creation, and one after.  The
+<tt>do_start</tt> callback is this second phase. </p>
 
-<dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked whenever the
-mouse pointer moves within the Electro main window.  Motion is reported
-relatively, so the pointer may move an unlimited distance in any direction.
-Absolute position is not reported.  If absolute mouse position is necessary,
-then it must be tracked manually, as follows: </p>
+<dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
+whenever the mouse pointer moves within the Electro main window.
+Motion is reported relatively, so the pointer may move an unlimited
+distance in any direction.  Absolute position is not reported.  If
+absolute mouse position is necessary, then it must be tracked
+manually, as follows: </p>
 
 <pre>
 mouse_x = 0
@@ -634,23 +661,25 @@ function do_point(dx, dy)
 end
 </pre>
 
-<dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked whenever a mouse
-button is pressed or released.  The <tt>b</tt> argument gives the button
-number, 1, 2, 3, etc.  The <tt>s</tt> argument is a boolean giving button
-state.  A value of <tt>true</tt> indicates the button has been pressed, and
-<tt>false</tt> indicates it has been released.  Note, on most modern systems
-mouse wheel up and down are reported as presses of buttons 4 and 5.  Button
-press events on wheel buttons do not have accompanying release events. </p>
+<dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked whenever
+a mouse button is pressed or released.  The <tt>b</tt> argument gives
+the button number, 1, 2, 3, etc.  The <tt>s</tt> argument is a boolean
+giving button state.  A value of <tt>true</tt> indicates the button
+has been pressed, and <tt>false</tt> indicates it has been released.
+Note, on most modern systems mouse wheel up and down are reported as
+presses of buttons 4 and 5.  Button press events on wheel buttons do
+not have accompanying release events. </p>
 
-<dt><tt> do_timer(dt) </tt><dd><p> The <tt>do_timer</tt> callback is invoked
-regularly while idling is enabled.  The <tt>dt</tt> argument gives the amount
-of time, in seconds, that has passed since the last time the callback was
-invoked.  The rate of callback is not defined, though it may be inferred to be
-"often enough."  In practice it is usually around 30 times per second, though
-this will decrease with graphical complexity.  The <tt>do_timer</tt> function
-is intended to be used to update animations and other background processes.
-Applications should be sure to return <tt>true</tt> in order to force an
-update to the display.</p>
+<dt><tt> do_timer(dt) </tt><dd><p> The <tt>do_timer</tt> callback is
+invoked regularly while idling is enabled.  The <tt>dt</tt> argument
+gives the amount of time, in seconds, that has passed since the last
+time the callback was invoked.  The rate of callback is not defined,
+though it may be inferred to be "often enough."  In practice it is
+usually around 30 times per second, though this will decrease with
+graphical complexity.  The <tt>do_timer</tt> function is intended to
+be used to update animations and other background processes.
+Applications should be sure to return <tt>true</tt> in order to force
+an update to the display.</p>
 
 <p> If an absolute measure of time is necessary, applications should
 accumulate  the <tt>dt</tt> parameter, just as they would accumulate
@@ -668,23 +697,25 @@ end
 </pre>
 
 <p class="note"> The update rate of the <tt>do_timer</tt> callback is
-deliberately obscured because it is nearly impossible to guarantee.  While it
-might make sense to allow an application to request a callback rate, this
-request can only be precisely filled in a limited number of cases.  The idle
-timer does <i>not</i> free-run.  Free-running in Electro is bad because MPI
-synchronization is unpredictable and events tend to queue up, leading to
-sluggish behavior.  The application developer may count on the fact that
-<tt>do_timer</tt> is invoked as often as is possible, such that performance
-will not suffer. </p>
+deliberately obscured because it is nearly impossible to guarantee.
+While it might make sense to allow an application to request a
+callback rate, this request can only be precisely filled in a limited
+number of cases.  The idle timer does <i>not</i> free-run.
+Free-running in Electro is bad because MPI synchronization is
+unpredictable and events tend to queue up, leading to sluggish
+behavior.  The application developer may count on the fact that
+<tt>do_timer</tt> is invoked as often as is possible, such that
+performance will not suffer. </p>
 
-<dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked whenever a
-key is pressed or released.  The <tt>s</tt> argument is a boolean giving the
-key state.  The <tt>k</tt> argument gives a key identifier.  For most keys,
-this gives the ASCII value of the unshifted character.  For non-ASCII keys and
-modifiers it is a unique identifier outside of the range of ASCII.  A full
-listing of keys and their associated values would be lengthy and
-uninteresting.  When in doubt about the value of a key, query it interactively
-as follows: </p>
+<dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
+whenever a key is pressed or released.  The <tt>s</tt> argument is a
+boolean giving the key state.  The <tt>k</tt> argument gives a key
+identifier.  For most keys, this gives the ASCII value of the
+unshifted character.  For non-ASCII keys and modifiers it is a unique
+identifier outside of the range of ASCII.  A full listing of keys and
+their associated values would be lengthy and uninteresting.  When in
+doubt about the value of a key, query it interactively as follows:
+</p>
 
 <pre>
 function do_keyboard(k, s)
@@ -697,12 +728,13 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is invoked whenever a
-joystick button is pressed or released.  The <tt>n</tt> argument gives the
-joystick device number.  The <tt>b</tt> argument gives the button number.  The
-<tt>s</tt> argument is a boolean giving button state.  Applications respond to
-button presses in an event-driven fashion, but they should read joystick axis
-input more continuously.  Usually joystick axes are aquired by calling
+<dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is invoked
+whenever a joystick button is pressed or released.  The <tt>n</tt>
+argument gives the joystick device number.  The <tt>b</tt> argument
+gives the button number.  The <tt>s</tt> argument is a boolean giving
+button state.  Applications respond to button presses in an
+event-driven fashion, but they should read joystick axis input more
+continuously.  Usually joystick axes are aquired by calling
 <tt>joystick_axis</tt> in a <tt>do_timer</tt> callback. </p>
 
 </dl>
@@ -714,8 +746,8 @@ input more continuously.  Usually joystick axes are aquired by calling
 <p> What follows is a complete example of a small Electro application.
 It implements the Fifteen Puzzle, the ubiquitous sliding-tile game
 where an image is cut into 16 squares, one tile is removed, and the
-remaining tiles are scrambled.  The object is to slide the tiles
-back into place to restore the image. </p>
+remaining tiles are scrambled.  The object is to slide the tiles back
+into place to restore the image. </p>
 
 <p> Each important chunk of code is described in turn, and the
 complete, commented source code is presented below for copying and
@@ -735,16 +767,16 @@ time   = 0
 
 <p> These are the global variables.  The image filename at the top
 allows the image to be changed easily.  The <tt>camera</tt> and
-<tt>sprites</tt> variables give the Electro objects that make up
-the scene graph.  The graph consists of a single orthogonal camera
-with 16 sprite objects as children.  This hierarchy is constructed
-in the <tt>do_start</tt> function below. </p>
+<tt>sprites</tt> variables give the Electro objects that make up the
+scene graph.  The graph consists of a single orthogonal camera with 16
+sprite objects as children.  This hierarchy is constructed in the
+<tt>do_start</tt> function below. </p>
 
 <p> The <tt>numbers</tt> variable will be initialized to a 4x4 table
 of tables that indicates which tile appears at each row and column.
 Each element <tt>numbers[i][j]</tt> will give an index into the
-<tt>sprites</tt> table.  By moving indices around in the <tt>numbers</tt>
-table, we move tiles around in the puzzle. </p>
+<tt>sprites</tt> table.  By moving indices around in the
+<tt>numbers</tt> table, we move tiles around in the puzzle. </p>
 
 <p> The <tt>curr_i</tt> and <tt>curr_j</tt> globals track the current
 location of the blank spot.  The <tt>time</tt> variable allows the
@@ -769,10 +801,10 @@ end
 </pre>
 
 <p> The <tt>solved</tt> function lets us know when the puzzle is
-complete.  When solved, the tile numbers will read in order from
-left to right and top to bottom.  This function scans the rows and
-columns of the <tt>numbers</tt> table checking for that property
-and returning a boolean indicating the result. </p>
+complete.  When solved, the tile numbers will read in order from left
+to right and top to bottom.  This function scans the rows and columns
+of the <tt>numbers</tt> table checking for that property and returning
+a boolean indicating the result. </p>
 
 <pre>
 function move_sprite(sprite, i, j)
@@ -788,11 +820,11 @@ end
 
 <p> This is an important bit of Electro code.  Given a puzzle row
 <tt>i</tt> and column <tt>j</tt>, the <tt>move_sprite</tt> function
-positions the tile object <tt>sprite</tt> at the correct location
-on screen.  This function will be called any time a tile moves.  To
-do its job, it must determine the bounds of the display and do some
-trivial but annoying math to map puzzle row and column onto world-space
-x and y.</p>
+positions the tile object <tt>sprite</tt> at the correct location on
+screen.  This function will be called any time a tile moves.  To do
+its job, it must determine the bounds of the display and do some
+trivial but annoying math to map puzzle row and column onto
+world-space x and y.</p>
 
 <pre>
 function move_piece(di, dj)
@@ -825,13 +857,13 @@ end
 puzzle.  The arguments <tt>di</tt> and <tt>dj</tt> indicate the row
 and column change of the blank space respectively.  The function
 begins by confirming that the move is valid--that the blank space
-would not be moving off the grid.  If valid, the contents of the
-blank (in reality, the hidden 16th piece of the puzzle) are swapped
-with the contents of the destination space.  The two sprites in
-question are repositioned, and the puzzle is checked for completeness.
-The <tt>hidden</tt> flag of the 16th piece is set to the opposite
-of the solved stutus, thus the 16th piece is displayed when the
-puzzle is solved, but not otherwise. </p>
+would not be moving off the grid.  If valid, the contents of the blank
+(in reality, the hidden 16th piece of the puzzle) are swapped with the
+contents of the destination space.  The two sprites in question are
+repositioned, and the puzzle is checked for completeness.  The
+<tt>hidden</tt> flag of the 16th piece is set to the opposite of the
+solved stutus, thus the 16th piece is displayed when the puzzle is
+solved, but not otherwise. </p>
 
 <p> The return value indicates whether the requested move is valid.
 This is used when generating random moves... </p>
@@ -856,9 +888,9 @@ end
 
 <p> Random moves are useful for scrambling the puzzle during
 initialization, and for running the app in a non-interactive
-screensaver mode.  If we just pick a tile motion at random, there
-is no guarantee that it will be valid, so we loop until <tt>move_piece</tt>
-returns <tt>true</tt> to indicate success. </p>
+screensaver mode.  If we just pick a tile motion at random, there is
+no guarantee that it will be valid, so we loop until
+<tt>move_piece</tt> returns <tt>true</tt> to indicate success. </p>
 
 <pre>
 function do_timer(dt)
@@ -895,12 +927,11 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<p> The <tt>do_keyboard</tt> callback is where interactive motions
-are generated.  Arrow-key presses trigger moves.  The F1 and F2
-keys enable and disable the <tt>do_timer</tt> callback, in effect
-putting the puzzle into non-interactive mode.  For simplicity, all
-keypresses trigger a screen update.  This is unnecessary, but
-brief.</p>
+<p> The <tt>do_keyboard</tt> callback is where interactive motions are
+generated.  Arrow-key presses trigger moves.  The F1 and F2 keys
+enable and disable the <tt>do_timer</tt> callback, in effect putting
+the puzzle into non-interactive mode.  For simplicity, all keypresses
+trigger a screen update.  This is unnecessary, but brief.</p>
 
 <pre>
 function do_start()
@@ -943,27 +974,26 @@ function do_start()
 end
 </pre>
 
-<p> Finally, here is the <tt>do_start</tt> callback.  This function
-is called immediately after Electro starts.  It is responsible for
-doing any and all initialization necessary to get the application
-off the ground. </p>
+<p> Finally, here is the <tt>do_start</tt> callback.  This function is
+called immediately after Electro starts.  It is responsible for doing
+any and all initialization necessary to get the application off the
+ground. </p>
 
-<p> For the fifteen puzzle, we begin by creating an orthogonal
-camera, which will be the root of our hierarchy.  We want all of
-our puzzle pieces to be rendered at full brightness, so we disable
-lighting on the entire scene by setting the <tt>unlit</tt> flag at
-this root.  We then create 16 child sprite objects to represent the
-puzzle tiles.  Together, these 16 sprites should fill the display,
-so we must determine both the size of the display and the size of
-the sprite in order to scale each sprite to 1/16th of the area of
-the display.</p>
+<p> For the fifteen puzzle, we begin by creating an orthogonal camera,
+which will be the root of our hierarchy.  We want all of our puzzle
+pieces to be rendered at full brightness, so we disable lighting on
+the entire scene by setting the <tt>unlit</tt> flag at this root.  We
+then create 16 child sprite objects to represent the puzzle tiles.
+Together, these 16 sprites should fill the display, so we must
+determine both the size of the display and the size of the sprite in
+order to scale each sprite to 1/16th of the area of the display.</p>
 
 <p> Then, we create the <tt>numbers</tt> table.  It is simply a 4x4
-table of tables initialized to a solved configuration.  We use the
-row and column numbers of this table to position our 16 sprites on
-screen.  We also use each sprite's initial row and column number
-to specify the sprite bounds, that is, we determine what subset of
-the image should be mapped onto each sprite. </p>
+table of tables initialized to a solved configuration.  We use the row
+and column numbers of this table to position our 16 sprites on screen.
+We also use each sprite's initial row and column number to specify the
+sprite bounds, that is, we determine what subset of the image should
+be mapped onto each sprite. </p>
 
 <p> That is all there is to it. </p>
 

@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef PIVOT_H
+#define PIVOT_H
+
 /*---------------------------------------------------------------------------*/
 
 void draw_pivot(int, int, const float[16], float);
@@ -18,3 +21,5 @@ int  send_create_pivot(void);
 void recv_create_pivot(void);
 
 /*---------------------------------------------------------------------------*/
+
+#endif

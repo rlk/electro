@@ -12,17 +12,13 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <math.h>
 #include <sys/stat.h>
 
 #include "opengl.h"
-#include "star.h"
-#include "node.h"
 #include "utility.h"
 #include "viewport.h"
 #include "buffer.h"
-#include "shared.h"
 #include "entity.h"
 #include "event.h"
 #include "galaxy.h"

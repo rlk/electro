@@ -12,12 +12,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "opengl.h"
 #include "buffer.h"
-#include "shared.h"
-#include "server.h"
 #include "entity.h"
 #include "image.h"
 #include "event.h"

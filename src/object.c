@@ -16,7 +16,6 @@
 
 #include "opengl.h"
 #include "buffer.h"
-#include "shared.h"
 #include "entity.h"
 #include "image.h"
 #include "event.h"

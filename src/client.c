@@ -11,13 +11,11 @@
 /*    General Public License for more details.                               */
 
 #include <SDL.h>
-#include <stdio.h>
 
 #include "opengl.h"
 #include "viewport.h"
 #include "buffer.h"
 #include "shared.h"
-#include "client.h"
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
@@ -27,8 +25,6 @@
 #include "image.h"
 #include "event.h"
 #include "entity.h"
-#include "galaxy.h"
-#include "star.h"
 
 /*---------------------------------------------------------------------------*/
 

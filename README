@@ -1,32 +1,43 @@
 
 
-                              * ELECTRO *
+                               |||
+                               O o    Electro
+                                _
+
+
+* Setup
+
+    You might want to include the Electro binary directory in your path.
+    Using bash, type the following, or add it to your .bashrc file.
+
+        $ export PATH=$PATH:/usr/local/Electro/bin
+
+    Or using tcsh, type the following, or add it to your .cshrc file.
+
+        % setenv PATH ${PATH}:/usr/local/Electro/bin
+
 
 * Running
 
-    The run scripts must know the location of the MPI machine files and Lua
-    display configuration scripts.  Confirm that the ELECTRO_CONFIG variable
-    and ELECTRO_BIN variable specified in the script are correct.
-
     The run scripts take a list of Lua files as parameters.  Each file is
     executed in turn.  Lua code should be careful to manage the location of
-    any data files.  By default, application data is loaded from the current
-    working directory.
+    any data files, but by default, application data is loaded from the
+    current working directory.
 
     To run Asteroids on nico:
 
-        $ cd electro/examples/asteroids
-        $ ../../electro-nico asteroids.lua
+        $ cd /usr/local/Electro/examples/asteroids
+        $ electro-nico asteroids.lua
 
     Applications may be run in standalone mode in the same fashion:
 
-        $ ../../electro asteroids.lua
+        $ electro asteroids.lua
 
     In addition the standalone mode may take a cluster configuration and
     will run locally in a simulator mode.  The cluster script should appear
     before the application script on the command line.
 
-        $ ../../electro $ELECTRO_CONFIG/nico.lua asteroids.lua
+        $ electro /usr/local/electro/config/nico.lua asteroids.lua
 
 
 * rlk@evl.uic.edu

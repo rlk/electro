@@ -10,7 +10,6 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -19,7 +18,6 @@
 #include "matrix.h"
 #include "viewport.h"
 #include "buffer.h"
-#include "shared.h"
 #include "entity.h"
 #include "event.h"
 #include "camera.h"

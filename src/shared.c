@@ -10,10 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-#include <sys/stat.h>
 
 #ifdef MPI
 #include <mpi.h>
@@ -24,9 +21,6 @@
 #else
 #include <unistd.h>
 #endif
-
-#include "shared.h"
-#include "event.h"
 
 /*---------------------------------------------------------------------------*/
 /* Optional MPI function abstractions                                        */
