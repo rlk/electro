@@ -53,6 +53,11 @@ void viewport_init(void)
 
     V_max = n;
     V_num = 0;
+
+    Vs.x =  1000000;
+    Vs.y =  1000000;
+    Vs.w = -1000000;
+    Vs.h = -1000000;
 }
 
 void viewport_draw(void)
@@ -260,12 +265,12 @@ int viewport_get_y(void)
 
 int viewport_get_w(void)
 {
-    return (int) (viewport_w);
+    return (int) viewport_w;
 }
 
 int viewport_get_h(void)
 {
-    return (int) (viewport_h);
+    return (int) viewport_h;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -141,14 +141,15 @@ void entity_traversal(int id)
     /* Traverse the child list, recursively invoking render functions. */
 
     for (jd = E[id].car; jd; jd = E[jd].cdr)
-        switch (E[jd].type)
-        {
-        case TYPE_CAMERA: camera_draw(jd, E[jd].data); break;
-        case TYPE_SPRITE: sprite_render(jd, E[jd].data); break;
-        case TYPE_OBJECT: object_render(jd, E[jd].data); break;
-        case TYPE_LIGHT:   light_render(jd, E[jd].data); break;
-        case TYPE_PIVOT:   pivot_render(jd, E[jd].data); break;
-        }
+        if ((E[jd].flag & FLAG_HIDE) == 0)
+            switch (E[jd].type)
+            {
+            case TYPE_CAMERA: camera_draw(jd, E[jd].data); break;
+            case TYPE_SPRITE: sprite_draw(jd, E[jd].data); break;
+            case TYPE_OBJECT: object_draw(jd, E[jd].data); break;
+            case TYPE_LIGHT:   light_draw(jd, E[jd].data); break;
+            case TYPE_PIVOT:   pivot_draw(jd, E[jd].data); break;
+            }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -220,6 +221,7 @@ static void entity_create(int id, int type, int data)
 {
     E[id].type = type;
     E[id].data = data;
+    E[id].flag = 0;
 
     E[id].scale[0] = 1.0f;
     E[id].scale[1] = 1.0f;
@@ -277,7 +279,7 @@ static void entity_delete(int id)
 {
     if (entity_exists(id))
     {
-        int pd = E[id].par;
+        int jd, pd = E[id].par, data = E[id].data;
 
         /* Let the parent inherit any children. */
 
@@ -288,17 +290,23 @@ static void entity_delete(int id)
 
         entity_detach(id, pd);
 
+        memset(E + id, 0, sizeof (struct entity));
+
+        /* TODO: Fix.  Search for a clone data reference. */
+
+        for (jd = 0; jd < E_max; ++jd)
+            if (E[jd].data == data)
+                return;
+
         /* Invoke the data delete handler. */
 
         switch (E[id].type)
         {
-        case TYPE_CAMERA: camera_delete(E[id].data); break;
-        case TYPE_SPRITE: sprite_delete(E[id].data); break;
-        case TYPE_OBJECT: object_delete(E[id].data); break;
-        case TYPE_LIGHT:   light_delete(E[id].data); break;
+        case TYPE_CAMERA: camera_delete(data); break;
+        case TYPE_SPRITE: sprite_delete(data); break;
+        case TYPE_OBJECT: object_delete(data); break;
+        case TYPE_LIGHT:   light_delete(data); break;
         }
-
-        memset(E + id, 0, sizeof (struct entity));
     }
 }
 
@@ -313,6 +321,56 @@ void entity_send_delete(int id)
 void entity_recv_delete(void)
 {
     entity_delete(unpack_index());
+}
+
+/*---------------------------------------------------------------------------*/
+
+int entity_send_clone(int id)
+{
+    int jd = buffer_unused(E_max, entity_exists);
+
+    pack_event(EVENT_ENTITY_CLONE);
+    pack_index(id);
+    pack_index(jd);
+
+    entity_create(jd, E[id].type, E[id].data);
+
+    return jd;
+}
+
+void entity_recv_clone(void)
+{
+    int id = unpack_index();
+    int jd = unpack_index();
+
+    entity_create(jd, E[id].type, E[id].data);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void entity_send_flag(int id, int flags, int state)
+{
+    pack_event(EVENT_ENTITY_FLAG);
+    pack_index(id);
+    pack_index(flags);
+    pack_index(state);
+
+    if (state)
+        E[id].flag = E[id].flag | (flags);
+    else
+        E[id].flag = E[id].flag & (~flags);
+}
+
+void entity_recv_flag(void)
+{
+    int id    = unpack_index();
+    int flags = unpack_index();
+    int state = unpack_index();
+
+    if (state)
+        E[id].flag = E[id].flag | (flags);
+    else
+        E[id].flag = E[id].flag & (~flags);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1,11 +1,14 @@
 
 -------------------------------------------------------------------------------
 
+global_ship   = nil
+global_rock   = nil
+global_bullet = nil
+
 serial    = 1
 camera    = nil
 pivot     = nil
 light     = nil
-ship      = nil
 asteroids = { }
 bullets   = { }
 
@@ -40,7 +43,7 @@ function add_asteroid(entity, size)
 
     local asteroid = { }
 
-    asteroid.object = object_create("asteroid.obj")
+    asteroid.object = entity_clone(global_rock)
     asteroid.size   = size
     asteroid.dx     = dx * speed
     asteroid.dy     = dy * speed
@@ -73,7 +76,7 @@ function add_bullet()
 
     local bullet = { }
 
-    bullet.object = sprite_create("bullet.png")
+    bullet.object = entity_clone(global_bullet)
     bullet.dx     = x * 15
     bullet.dy     = y * 15
 
@@ -264,12 +267,22 @@ function do_start()
     global_w = global_r - global_l
     global_h = global_t - global_b
 
+    -- Initialize some source objects.
+
+    global_ship   = object_create("ship.obj")
+    global_rock   = object_create("rock.obj")
+    global_bullet = sprite_create("bullet.png")
+
+    entity_flag(global_ship,   1, 1);
+    entity_flag(global_rock,   1, 1);
+    entity_flag(global_bullet, 1, 1);
+
     -- Initialize the scene.
 
+    ship   = entity_clone(global_ship);
     camera = camera_create(1)
-    pivot  =  pivot_create( )
-    light  =  light_create(1)
-    ship   = object_create("ship.obj")
+    pivot  = pivot_create( )
+    light  = light_create(1)
 
     entity_parent(pivot, camera)
     entity_parent(light, camera)

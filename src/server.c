@@ -94,17 +94,6 @@ void enable_idle(int b)
 }
 
 /*---------------------------------------------------------------------------*/
-/*
-void server_send(int type)
-{
-#ifndef NDEBUG
-    printf("%d of %d: server_send(%s)\n", mpi_rank(),
-                                          mpi_size(), event_string(type));
-#endif
-    mpi_share_integer(1, &type);
-}
-*/
-/*---------------------------------------------------------------------------*/
 
 static void server_init(void)
 {
@@ -211,30 +200,35 @@ static int server_loop(void)
                 break;
             }
 
-        /* Handle a clean exit. */
+        /* Handle a clean exit.  TODO: remove redundancy. */
 
         if (e.type == SDL_QUIT)
         {
             pack_event(EVENT_EXIT);
             pack_event(EVENT_NULL);
+            buffer_sync();
+
             return 0;
         }
     }
 
     /* Redraw a dirty buffer. */
 
-    if (dirty)
+    if (server_grab)
     {
-        pack_event(EVENT_DRAW);
+        if (dirty)
+        {
+            pack_event(EVENT_DRAW);
 
-        server_draw();
-        server_perf();
+            server_draw();
+            server_perf();
 
-        dirty = 0;
+            dirty = 0;
+        }
+
+        pack_event(EVENT_NULL);
+        buffer_sync();
     }
-
-    pack_event(EVENT_NULL);
-    buffer_sync();
 
     return 1;
 }

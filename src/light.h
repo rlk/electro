@@ -24,11 +24,11 @@ struct light
 /*---------------------------------------------------------------------------*/
 
 int  light_init(void);
+void light_draw(int, int);
 
-int  light_create(int);
-void light_render(int, int);
+int  light_send_create(int);
+void light_recv_create(void);
+
 void light_delete(int);
-
-void light_color(int, float, float, float);
 
 /*---------------------------------------------------------------------------*/

@@ -13,22 +13,14 @@
 /*---------------------------------------------------------------------------*/
 
 #include "opengl.h"
+#include "buffer.h"
 #include "shared.h"
-#include "server.h"
 #include "entity.h"
 #include "pivot.h"
 
 /*---------------------------------------------------------------------------*/
 
-int pivot_create(void)
-{
-    if (mpi_isroot())
-        server_send(EVENT_PIVOT_CREATE);
-
-    return entity_create(TYPE_PIVOT, 0);
-}
-
-void pivot_render(int id, int pd)
+void pivot_draw(int id, int pd)
 {
     glPushMatrix();
     {
@@ -37,7 +29,21 @@ void pivot_render(int id, int pd)
     }
     glPopMatrix();
 
-    opengl_check("pivot_render");
+    opengl_check("pivot_draw");
+}
+
+/*---------------------------------------------------------------------------*/
+
+int pivot_send_create(void)
+{
+    pack_event(EVENT_PIVOT_CREATE);
+
+    return entity_send_create(TYPE_PIVOT, 0);
+}
+
+void pivot_recv_create(void)
+{
+    entity_recv_create();
 }
 
 /*---------------------------------------------------------------------------*/

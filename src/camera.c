@@ -19,7 +19,6 @@
 #include "viewport.h"
 #include "buffer.h"
 #include "shared.h"
-#include "server.h"
 #include "entity.h"
 #include "camera.h"
 
@@ -97,7 +96,7 @@ void camera_draw(int id, int cd)
             entity_transform(id);
         }
 
-        opengl_check("camera_render");
+        opengl_check("camera_draw");
 
         /* Render all children using this camera. */
 
@@ -114,13 +113,6 @@ void camera_draw(int id, int cd)
 
 /*---------------------------------------------------------------------------*/
 
-static void camera_create(int cd, int type)
-{
-    C[cd].type = type;
-    C[cd].dist = 0.0f;
-    C[cd].zoom = 1.0f;
-}
-
 int camera_send_create(int type)
 {
     int cd = buffer_unused(C_max, camera_exists);
@@ -129,22 +121,27 @@ int camera_send_create(int type)
     pack_index(cd);
     pack_index(type);
 
-    camera_create(cd, type);
+    C[cd].type = type;
+    C[cd].dist = 0.0f;
+    C[cd].zoom = 1.0f;
 
     return entity_send_create(TYPE_CAMERA, cd);
 }
 
 void camera_recv_create(void)
 {
-    int cd   = unpack_index();
-    int type = unpack_index();
+    int cd = unpack_index();
 
-    camera_create(cd, type);
+    C[cd].type = unpack_index();
+    C[cd].dist = 0.0f;
+    C[cd].zoom = 1.0f;
 
     entity_recv_create();
 }
 
 /*---------------------------------------------------------------------------*/
+
+/* This function should be called only by the entity delete function. */
 
 void camera_delete(int cd)
 {
@@ -172,7 +169,7 @@ void camera_recv_dist(void)
 
 void camera_send_zoom(int cd, float z)
 {
-    pack_event(EVENT_CAMERA_DIST);
+    pack_event(EVENT_CAMERA_ZOOM);
     pack_index(cd);
 
     pack_float((C[cd].zoom = z));

@@ -28,10 +28,10 @@ end
 function init_3D()
     persp = camera_create(2)
 
-    light = light_create(2)
-    pivot = pivot_create()
     obj1  = object_create("ball.obj")
     obj2  = object_create("ball.obj")
+    light = light_create(2)
+    pivot = pivot_create()
 
     entity_parent(light, persp)
     entity_parent(pivot, light)
@@ -57,12 +57,12 @@ end
 
 function do_click(b, s)
    btn[b] = s
+   return false
 end
 
 function do_timer(dt)
     rot_y = rot_y + dt * 90
     if (pivot) then entity_rotation(pivot, rot_x, rot_y, 0) end
-    print("foo")
     return true
 end
 
@@ -77,6 +77,8 @@ function do_point(dx, dy)
         rot_y = rot_y + dx
 
         if (pivot) then entity_rotation(pivot, rot_x, rot_y, 0) end
+
+        return true
     end
 
     return true

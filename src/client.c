@@ -57,11 +57,10 @@ static void client_recv(void)
 
     buffer_sync();
 
-    while (unpack_event())
+    while ((event = unpack_event()))
     {
 #ifndef NDEBUG
-    printf("%d of %d: client_recv(%s)\n", mpi_rank(),
-                                          mpi_size(), event_string(event));
+    printf("%d of %d: client_recv(%d)\n", mpi_rank(), mpi_size(), event);
 #endif
         switch (event)
         {
@@ -70,20 +69,20 @@ static void client_recv(void)
 
         case EVENT_ENTITY_PARENT: entity_recv_parent();   break;
         case EVENT_ENTITY_DELETE: entity_recv_delete();   break;
+        case EVENT_ENTITY_CLONE:  entity_recv_clone();    break;
         case EVENT_ENTITY_MOVE:   entity_recv_position(); break;
         case EVENT_ENTITY_TURN:   entity_recv_rotation(); break;
         case EVENT_ENTITY_SIZE:   entity_recv_scale();    break;
+        case EVENT_ENTITY_FLAG:   entity_recv_flag();     break;
 
         case EVENT_CAMERA_CREATE: camera_recv_create();   break;
-/*
-        case EVENT_SPRITE_CREATE: sprite_create(NULL);         break;
-        case EVENT_OBJECT_CREATE: object_create(NULL);         break;
-        case EVENT_LIGHT_CREATE:  light_create(0);             break;
-        case EVENT_PIVOT_CREATE:  pivot_create();              break;
-*/
+        case EVENT_SPRITE_CREATE: sprite_recv_create();   break;
+        case EVENT_OBJECT_CREATE: object_recv_create();   break;
+        case EVENT_LIGHT_CREATE:  light_recv_create();    break;
+        case EVENT_PIVOT_CREATE:  pivot_recv_create();    break;
 
-        case EVENT_CAMERA_DIST:   camera_recv_dist();       break;
-        case EVENT_CAMERA_ZOOM:   camera_recv_zoom();       break;
+        case EVENT_CAMERA_DIST:   camera_recv_dist();     break;
+        case EVENT_CAMERA_ZOOM:   camera_recv_zoom();     break;
         }
     }
 }

@@ -12,7 +12,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  pivot_create(void);
-void pivot_render(int, int);
+void pivot_draw(int, int);
+
+int  pivot_send_create(void);
+void pivot_recv_create(void);
 
 /*---------------------------------------------------------------------------*/

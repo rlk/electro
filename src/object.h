@@ -57,9 +57,11 @@ struct object
 /*---------------------------------------------------------------------------*/
 
 int  object_init(void);
+void object_draw(int, int);
 
-int  object_create(const char *);
-void object_render(int, int);
+int  object_send_create(const char *);
+void object_recv_create(void);
+
 void object_delete(int);
 
 /*---------------------------------------------------------------------------*/

@@ -22,10 +22,13 @@
 #define TYPE_LIGHT  5
 #define TYPE_PIVOT  6
 
+#define FLAG_HIDE   1
+
 struct entity
 {
     int type;
     int data;
+    int flag;
 
     float position[3];
     float rotation[3];
@@ -67,6 +70,12 @@ void entity_recv_parent(void);
 
 void entity_send_delete(int);
 void entity_recv_delete(void);
+
+int  entity_send_clone(int);
+void entity_recv_clone(void);
+
+void entity_send_flag(int, int, int);
+void entity_recv_flag(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -18,17 +18,17 @@ void  buffer_sync(void);
 
 /*---------------------------------------------------------------------------*/
 
+void  pack_alloc(int, const void *);
 void  pack_index(int);
 void  pack_event(char);
 void  pack_float(float);
-void  pack_alloc(const void *, int);
 
 /*---------------------------------------------------------------------------*/
 
+void *unpack_alloc(int);
 int   unpack_index(void);
 char  unpack_event(void);
 float unpack_float(void);
-void *unpack_alloc(int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -57,8 +57,6 @@ void sprite_draw(int id, int sd)
 
             entity_transform(id);
 
-            /* Render this sprite. */
-
             glBindTexture(GL_TEXTURE_2D, S[sd].texture);
             glColor4f(1.0f, 1.0f, 1.0f, S[sd].a);
 
@@ -74,7 +72,7 @@ void sprite_draw(int id, int sd)
             }
             glEnd();
 
-            opengl_check("sprite_render");
+            opengl_check("sprite_draw");
 
             /* Render all child entities in this coordinate system. */
 
@@ -86,27 +84,22 @@ void sprite_draw(int id, int sd)
 
 /*---------------------------------------------------------------------------*/
 
-static void sprite_create(int sd, int w, int h, int b, void *p)
-{
-    S[sd].texture = image_make_tex(p, w, h, b);
-    S[sd].a       = 1.0f;
-}
-
 int sprite_send_create(const char *filename)
 {
-    int w, h, b, sd = buffer_unused(S_max, sprite_exists);
-    void *p;
+    int sd = buffer_unused(S_max, sprite_exists);
 
-    if ((p = image_load_png(filename, &w, &h, &b)))
+    if ((S[sd].p = image_load_png(filename, &S[sd].w, &S[sd].h, &S[sd].b)))
     {
         pack_event(EVENT_SPRITE_CREATE);
         pack_index(sd);
-        pack_index(w);
-        pack_index(h);
-        pack_index(b);
-        pack_alloc(p, w * h * b);
 
-        sprite_create(sd, w, h, b, p);
+        pack_index(S[sd].w);
+        pack_index(S[sd].h);
+        pack_index(S[sd].b);
+        pack_alloc(S[sd].w * S[sd].h * S[sd].b, S[sd].p);
+
+        S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
+        S[sd].a       = 1.0f;
 
         return entity_send_create(TYPE_SPRITE, sd);
     }
@@ -116,12 +109,14 @@ int sprite_send_create(const char *filename)
 void sprite_recv_create(void)
 {
     int  sd = unpack_index();
-    int   w = unpack_index();
-    int   h = unpack_index();
-    int   b = unpack_index();
-    void *p = unpack_alloc(w * h * b);
 
-    sprite_create(sd, w, h, b, p);
+    S[sd].w = unpack_index();
+    S[sd].h = unpack_index();
+    S[sd].b = unpack_index();
+    S[sd].p = unpack_alloc(S[sd].w * S[sd].h * S[sd].b);
+    S[sd].a = 1.0f;
+
+    S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
 
     entity_recv_create();
 }

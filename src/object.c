@@ -15,8 +15,8 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "buffer.h"
 #include "shared.h"
-#include "server.h"
 #include "entity.h"
 #include "object.h"
 
@@ -25,8 +25,10 @@
 /*---------------------------------------------------------------------------*/
 /* Object entity storage                                                     */
 
-static struct object *O     = NULL;
-static int            O_max =    0;
+#define OMAXINIT 128
+
+static struct object *O;
+static int            O_max;
 
 static int object_exists(int od)
 {
@@ -406,7 +408,7 @@ static void read_v(const char *line)
 
 /*---------------------------------------------------------------------------*/
 
-static void read_obj(const char *filename, struct object *o)
+static int read_obj(const char *filename, struct object *o)
 {
     char line[MAXSTR];
     FILE *fin;
@@ -438,122 +440,44 @@ static void read_obj(const char *filename, struct object *o)
             else if (strncmp(line, "vn", 2) == 0) read_vn(line + 3);
             else if (strncmp(line, "v",  1) == 0) read_v (line + 2);
         }
+
+        /* Close out the last group being read. */
+
+        read_g();
+
+        /* Close out the object by copying the element caches. */
+
+        o->vv = (struct object_vert *)
+            memdup(vertv, vertc, sizeof (struct object_vert));
+        o->mv = (struct object_mtrl *)
+            memdup(mtrlv, mtrlc, sizeof (struct object_mtrl));
+        o->sv = (struct object_surf *)
+            memdup(surfv, surfc, sizeof (struct object_surf));
+
+        o->vc = vertc;
+        o->mc = mtrlc;
+        o->sc = surfc;
+
         fclose(fin);
+
+        return 1;
     }
-
-    /* Close out the last group being read. */
-
-    read_g();
-
-    /* Close out the object by copying the element caches. */
-
-    o->vv = (struct object_vert *) memdup(vertv,
-                                          vertc, sizeof (struct object_vert));
-    o->mv = (struct object_mtrl *) memdup(mtrlv,
-                                          mtrlc, sizeof (struct object_mtrl));
-    o->sv = (struct object_surf *) memdup(surfv,
-                                          surfc, sizeof (struct object_surf));
-
-    o->vc = vertc;
-    o->mc = mtrlc;
-    o->sc = surfc;
-}
-
-/*---------------------------------------------------------------------------*/
-/* TODO: This is not strictly correct MPI type usage.  Fix. */
-
-static void object_share_surf(struct object_surf *s)
-{
-    mpi_share_integer(1, &s->mi);
-    mpi_share_integer(1, &s->fc);
-
-    if (!mpi_isroot())
-    {
-        if (s->fc)
-            s->fv = (struct object_face *)
-                calloc(s->fc, sizeof (struct object_face));
-    }
-
-    if (s->fc && s->fv)
-        mpi_share_byte(s->fc * sizeof (struct object_face), s->fv);
-}
-
-static void object_share(struct object *o)
-{
-    int si;
-
-    mpi_share_integer(1, &o->vc);
-    mpi_share_integer(1, &o->mc);
-    mpi_share_integer(1, &o->sc);
-
-    if (!mpi_isroot())
-    {
-        if (o->vc)
-            o->vv = (struct object_vert *)
-                calloc(o->vc, sizeof (struct object_vert));
-        if (o->mc)
-            o->mv = (struct object_mtrl *)
-                calloc(o->mc, sizeof (struct object_mtrl));
-        if (o->sc)
-            o->sv = (struct object_surf *)
-                calloc(o->sc, sizeof (struct object_surf));
-    }
-
-    if (o->vc && o->vv)
-        mpi_share_byte(o->vc * sizeof (struct object_vert), o->vv);
-    if (o->mc && o->mv)
-        mpi_share_byte(o->mc * sizeof (struct object_mtrl), o->mv);
-
-    for (si = 0; si < o->sc; ++si)
-        object_share_surf(o->sv + si);
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int object_init(void)
 {
-    if ((O = (struct object *) calloc(64, sizeof (struct object))))
+    if ((O = (struct object *) calloc(OMAXINIT, sizeof (struct object))))
     {
-        O_max = 64;
+        O_max = OMAXINIT;
         return 1;
     }
     return 0;
 }
 
-int object_create(const char *filename)
-{
-    int od;
-
-    if (O && (od = buffer_unused(O_max, object_exists)) >= 0)
-    {
-        /* Initialize the new object. */
-
-        if (mpi_isroot())
-        {
-            read_obj(filename, O + od);
-            server_send(EVENT_OBJECT_CREATE);
-        }
-
-        /* Syncronize the new object. */
-
-        mpi_share_integer(1, &od);
-
-        object_share(O + od);
-        opengl_check("object_create");
-
-        /* Encapsulate this new object in an entity. */
-
-        return entity_create(TYPE_OBJECT, od);
-    }
-    else if ((O = buffer_expand(O, &O_max, sizeof (struct object))))
-        return object_create(filename);
-
-    return -1;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void object_render(int id, int od)
+void object_draw(int id, int od)
 {
     GLsizei stride = sizeof (struct object_vert);
 
@@ -593,7 +517,7 @@ void object_render(int id, int od)
             glPopClientAttrib();
             glPopAttrib();
 
-            opengl_check("object_render");
+            opengl_check("object_draw");
 
             /* Render all child entities in this coordinate system. */
 
@@ -605,13 +529,88 @@ void object_render(int id, int od)
 
 /*---------------------------------------------------------------------------*/
 
+int object_send_create(const char *filename)
+{
+    int od = buffer_unused(O_max, object_exists);
+    int si;
+
+    /* If the file exists and is successfully read... */
+
+    if ((read_obj(filename, O + od)))
+    {
+        /* Pack the object header. */
+
+        pack_event(EVENT_OBJECT_CREATE);
+        pack_index(od);
+        pack_index(O[od].vc);
+        pack_index(O[od].mc);
+        pack_index(O[od].sc);
+
+        /* Pack the vertices and materials. */
+
+        pack_alloc(O[od].vc * sizeof (struct object_vert), O[od].vv);
+        pack_alloc(O[od].mc * sizeof (struct object_mtrl), O[od].mv);
+
+        /* Pack each of the surfaces. */
+
+        for (si = 0; si < O[od].sc; ++si)
+        {
+            struct object_surf *s = O[od].sv + si;
+
+            pack_index(s->mi);
+            pack_index(s->fc);
+            pack_alloc(s->fc * sizeof (struct object_face), s->fv);
+        }
+
+        /* Encapsulate this object in an entity. */
+
+        return entity_send_create(TYPE_OBJECT, od);
+    }
+    return -1;
+}
+
+void object_recv_create(void)
+{
+    int od = unpack_index();
+    int si;
+
+    /* Unpack the object header. */
+
+    O[od].vc = unpack_index();
+    O[od].mc = unpack_index();
+    O[od].sc = unpack_index();
+
+    /* Unpack the vertices and materials.  Allocate space for surfaces. */
+
+    O[od].vv = unpack_alloc(O[od].vc * sizeof (struct object_vert));
+    O[od].mv = unpack_alloc(O[od].mc * sizeof (struct object_mtrl));
+
+    O[od].sv = (struct object_surf *)
+        calloc(O[od].sc, sizeof (struct object_surf));
+
+    /* Unpack each surface. */
+
+    for (si = 0; si < O[od].sc; ++si)
+    {
+        struct object_surf *s = O[od].sv + si;
+
+        s->mi = unpack_index();
+        s->fc = unpack_index();
+        s->fv = unpack_alloc(s->fc * sizeof (struct object_face));
+    }
+
+    /* Encapsulate this object in an entity. */
+
+    entity_recv_create();
+}
+
+/*---------------------------------------------------------------------------*/
+
 /* This function should be called only by the entity delete function. */
 
 void object_delete(int od)
 {
     int si;
-
-    mpi_share_integer(1, &od);
 
     for (si = 0; si < O[od].sc; ++si)
         if (O[od].sv[si].fv) free(O[od].sv[si].fv);

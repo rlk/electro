@@ -268,6 +268,14 @@ static int script_entity_delete(lua_State *L)
     return 0;
 }
 
+static int script_entity_clone(lua_State *L)
+{
+    int id = entity_send_clone(script_getentity("entity_clone", L, -1));
+
+    lua_pushentity(L, id);
+    return 1;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Entity transform functions                                                */
 
@@ -301,6 +309,16 @@ static int script_entity_scale(lua_State *L)
                       script_getnumber(name, L, -3),
                       script_getnumber(name, L, -2),
                       script_getnumber(name, L, -1));
+    return 0;
+}
+
+static int script_entity_flag(lua_State *L)
+{
+    const char *name = "entity_flag";
+
+    entity_send_flag(script_getentity(name, L, -3),
+                     script_getnumber(name, L, -2),
+                     script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -430,10 +448,12 @@ int script_init(void)
 
         lua_register(L, "entity_parent",   script_entity_parent);
         lua_register(L, "entity_delete",   script_entity_delete);
+        lua_register(L, "entity_clone",    script_entity_clone);
 
         lua_register(L, "entity_position", script_entity_position);
         lua_register(L, "entity_rotation", script_entity_rotation);
         lua_register(L, "entity_scale",    script_entity_scale);
+        lua_register(L, "entity_flag",     script_entity_flag);
 
         lua_register(L, "camera_create",   script_camera_create);
         lua_register(L, "sprite_create",   script_sprite_create);

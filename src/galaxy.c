@@ -35,8 +35,10 @@ void galaxy_init(void)
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
+    /*
     shared_load_program("star.vp", GL_VERTEX_PROGRAM_ARB);
     shared_load_program("star.fp", GL_FRAGMENT_PROGRAM_ARB);
+    */
 }
 
 /*---------------------------------------------------------------------------*/

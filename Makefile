@@ -3,6 +3,7 @@ TARG=	electro
 OBJS=	src/opengl.o   \
 	src/joystick.o \
 	src/viewport.o \
+	src/buffer.o   \
 	src/shared.o   \
 	src/server.o   \
 	src/client.o   \
@@ -13,9 +14,6 @@ OBJS=	src/opengl.o   \
 	src/light.o    \
 	src/pivot.o    \
 	src/script.o   \
-	src/galaxy.o   \
-	src/node.o     \
-	src/star.o     \
 	src/image.o    \
 	src/main.o
 
@@ -27,11 +25,11 @@ CC= mpicc
 RM= rm -f
 
 SDL_LIBS= $(shell sdl-config --libs)
-LUA_LIBS= -llua -llualib
+LUA_LIBS= -llua50 -llualib50
 PNG_LIBS= -lpng -lz -lm
 
-CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI
-INCDIR= -I$(HOME)/include -I/usr/include/lua
+CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+INCDIR= -I$(HOME)/include -I/usr/include/lua50
 LIBDIR= -L$(HOME)/lib
 
 ifeq ($(shell uname), Darwin)

@@ -15,16 +15,18 @@
 #include <stdio.h>
 
 #include "opengl.h"
+#include "buffer.h"
 #include "shared.h"
-#include "server.h"
 #include "entity.h"
 #include "light.h"
 
 /*---------------------------------------------------------------------------*/
 /* Light entity storage                                                     */
 
-static struct light *L     = NULL;
-static int           L_max =    0;
+#define LMAXINIT 8
+
+static struct light *L;
+static int           L_max;
 
 static int light_exists(int ld)
 {
@@ -43,43 +45,7 @@ int light_init(void)
     return 0;
 }
 
-int light_create(int type)
-{
-    int ld;
-
-    if (L && (ld = buffer_unused(L_max, light_exists)) >= 0)
-    {
-        /* Initialize the new light. */
-
-        if (mpi_isroot())
-        {
-            L[ld].type = type;
-            server_send(EVENT_LIGHT_CREATE);
-        }
-
-        L[ld].d[0] = 1.0f;
-        L[ld].d[1] = 1.0f;
-        L[ld].d[2] = 1.0f;
-        L[ld].d[3] = 1.0f;
-
-        /* Syncronize the new light. */
-
-        mpi_share_integer(1, &ld);
-        mpi_share_integer(1, &L[ld].type);
-
-        /* Encapsulate this new light in an entity. */
-
-        return entity_create(TYPE_LIGHT, ld);
-    }
-    else if ((L = buffer_expand(L, &L_max, sizeof (struct light))))
-        return light_create(type);
-
-    return -1;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void light_render(int id, int ld)
+void light_draw(int id, int ld)
 {
     if (light_exists(ld))
     {
@@ -104,7 +70,7 @@ void light_render(int id, int ld)
             glLightfv(light, GL_DIFFUSE, L[ld].d);
             glLightfv(light, GL_POSITION, pos);
 
-            opengl_check("light_render");
+            opengl_check("light_draw");
 
             entity_traversal(id);
         }
@@ -114,12 +80,42 @@ void light_render(int id, int ld)
 
 /*---------------------------------------------------------------------------*/
 
+int light_send_create(int type)
+{
+    int ld = buffer_unused(L_max, light_exists);
+
+    pack_event(EVENT_LIGHT_CREATE);
+    pack_index(ld);
+    pack_index(type);
+
+    L[ld].type = type;
+    L[ld].d[0] = 1.0f;
+    L[ld].d[1] = 1.0f;
+    L[ld].d[2] = 1.0f;
+    L[ld].d[3] = 1.0f;
+
+    return entity_send_create(TYPE_LIGHT, ld);
+}
+
+void light_recv_create(void)
+{
+    int ld = unpack_index();
+
+    L[ld].type = unpack_index();
+    L[ld].d[0] = 1.0f;
+    L[ld].d[1] = 1.0f;
+    L[ld].d[2] = 1.0f;
+    L[ld].d[3] = 1.0f;
+
+    entity_recv_create();
+}
+
+/*---------------------------------------------------------------------------*/
+
 /* This function should be called only by the entity delete function. */
 
 void light_delete(int ld)
 {
-    mpi_share_integer(1, &ld);
-
     memset(L + ld, 0, sizeof (struct light));
 }
 

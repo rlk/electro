@@ -10,8 +10,10 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "shared.h"
 
@@ -28,7 +30,7 @@ static int            max;
 union typecast
 {
     int   i;
-    char  c;
+    char  c[4];
     float f;
 };
 
@@ -56,7 +58,7 @@ void buffer_free(void)
 
 void buffer_sync(void)
 {
-    int n;
+    int n = pos;
 
 #ifdef MPI
     mpi_assert(MPI_Bcast(&n,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
@@ -74,14 +76,18 @@ void pack_index(int i)
 
     T->i = i;
     pos += sizeof (int);
+
+    assert(pos < max);
 }
 
 void pack_event(char c)
 {
     union typecast *T = (union typecast *) (buf + pos);
 
-    T->c = c;
+    T->c[0] = c;
     pos += sizeof (unsigned char);
+
+    assert(pos < max);
 }
 
 void pack_float(float f)
@@ -90,12 +96,16 @@ void pack_float(float f)
 
     T->f = f;
     pos += sizeof (float);
+
+    assert(pos < max);
 }
 
-void pack_alloc(const void *ptr, int siz)
+void pack_alloc(int siz, const void *ptr)
 {
     memcpy(buf + pos, ptr, siz);
     pos += siz;
+
+    assert(pos < max);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -113,7 +123,7 @@ char unpack_event(void)
     union typecast *T = (union typecast *) (buf + pos);
 
     pos += sizeof (char);
-    return T->c;
+    return T->c[0];
 }
 
 float unpack_float(void)

@@ -14,8 +14,8 @@
 
 #define DEFAULT_X -512.0f
 #define DEFAULT_Y -384.0f
-#define DEFAULT_W 1024.0f
-#define DEFAULT_H  768.0f
+#define DEFAULT_W  800.0f
+#define DEFAULT_H  600.0f
 
 /*---------------------------------------------------------------------------*/
 
