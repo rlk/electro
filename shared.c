@@ -195,7 +195,10 @@ GLuint shared_load_program(const char *filename, GLenum target)
         /* If this host is root, report any error in the program text. */
 
         if (mpi_root() && (glGetError() != GL_NO_ERROR))
-            fprintf(stderr, "%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+        {
+            const GLubyte *msg = glGetString(GL_PROGRAM_ERROR_STRING_ARB);
+            fprintf(stderr, "%s", (const char *) msg);
+        }
 
         free(ptr);
     }

@@ -15,25 +15,16 @@ OBJS=	opengl.o \
 
 #------------------------------------------------------------------------------
 
-CC= cc
+CC= mpicc
 RM= rm
-
-MPI_CFLAGS= -Wno-long-long -DUSE_STDARG -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 \
-	-DHAVE_UNISTD_H=1 -DHAVE_STDARG_H=1 -DUSE_STDARG=1 -DMALLOC_RET_VOID=1
 
 SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
-MPI_LIBS= -lmpich
 
-#MPI_LIBDIR= -L/usr/local/mpich-1.2.6/lib
-#MPI_INCDIR= -I/usr/local/mpich-1.2.6/include
-MPI_LIBDIR= -L/opt/mpich/ch-p4/lib64
-MPI_INCDIR= -I/opt/mpich/ch-p4/include
-
-CFLAGS= -g -ansi -pedantic -Wall $(MPI_CFLAGS) $(shell sdl-config --cflags)
-INCDIR= $(MPI_INCDIR) -I$(HOME)/include
-LIBDIR= $(MPI_LIBDIR) -L$(HOME)/lib
+CFLAGS= -O2 -ansi -pedantic -Wall -Wno-long-long $(shell sdl-config --cflags)
+INCDIR= -I$(HOME)/include
+LIBDIR= -L$(HOME)/lib
 
 ifeq ($(shell uname), Darwin)
 	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) $(MPI_LIBS)
@@ -60,14 +51,16 @@ depend :
 # DO NOT DELETE
 
 camera.o: opengl.h glext.h shared.h server.h camera.h
-client.o: opengl.h glext.h shared.h client.h camera.h galaxy.h star.h
+client.o: opengl.h glext.h shared.h client.h camera.h sprite.h galaxy.h
+client.o: star.h
 galaxy.o: opengl.h glext.h galaxy.h shared.h star.h
 image.o: opengl.h glext.h image.h
 main.o: server.h client.h
 node.o: opengl.h glext.h galaxy.h node.h
 opengl.o: opengl.h glext.h
-script.o: shared.h opengl.h glext.h server.h camera.h script.h
-server.o: opengl.h glext.h shared.h server.h script.h camera.h galaxy.h
-server.o: star.h
+script.o: shared.h opengl.h glext.h server.h camera.h sprite.h script.h
+server.o: opengl.h glext.h shared.h server.h script.h camera.h sprite.h
+server.o: galaxy.h star.h
 shared.o: image.h opengl.h glext.h shared.h camera.h
+sprite.o: opengl.h glext.h shared.h server.h camera.h sprite.h
 star.o: opengl.h glext.h shared.h image.h star.h

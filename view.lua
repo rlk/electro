@@ -10,6 +10,7 @@ rot_dy =    0.0
 dist   =    1.5
 magn   =  256.0
 zoom   =    0.0001
+tick   =    0.0
 
 btn    = { }
 btn[1] = false
@@ -122,19 +123,27 @@ end
 
 function do_timer(dt)
 
-   rot_y = rot_y + dt * rot_dy
-   foo_a = foo_a + dt * rot_dy * 100
+    tick = tick + dt
 
-   if rot_y >  180 then rot_y = rot_y - 360 end
-   if rot_y < -180 then rot_y = rot_y + 360 end
-   if foo_a >  180 then foo_a = foo_a - 360 end
-   if foo_a < -180 then foo_a = foo_a + 360 end
+    if (tick > 1.0 / 30.0) then
+    
+        rot_y = rot_y + tick * rot_dy
+        foo_a = foo_a + tick * rot_dy * 100
 
-   camera_turn(rot_x, rot_y, 0)
+        if rot_y >  180 then rot_y = rot_y - 360 end
+        if rot_y < -180 then rot_y = rot_y + 360 end
+        if foo_a >  180 then foo_a = foo_a - 360 end
+        if foo_a < -180 then foo_a = foo_a + 360 end
 
-   if (foo ~= -1) then sprite_turn(foo, foo_a) end
+        camera_turn(rot_x, rot_y, 0)
 
-   return true
+        if (foo ~= -1) then sprite_turn(foo, foo_a) end
+
+        tick = 0.0
+
+        return true
+    end
+    return false
 end
 
 -------------------------------------------------------------------------------
