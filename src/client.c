@@ -121,6 +121,8 @@ static void client_draw(void)
     draw_background();
     draw_entity();
 
+    glFinish();
+
 #ifdef MPI
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif

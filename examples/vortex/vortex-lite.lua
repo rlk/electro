@@ -104,8 +104,8 @@ function do_point(dx, dy)
             zoom = 0.001
         end
 
-        E.set_camera_zoom(camera, zoom * zoom)
-        E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
+--      E.set_camera_zoom(camera, zoom * zoom)
+--      E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
 
     elseif setmagn then  -- Set the stellar magnitude multiplier.
 
@@ -113,8 +113,11 @@ function do_point(dx, dy)
         if magn < 0 then
                 magn = 0
         end
+        if magn > 2500 then
+                magn = 2500
+        end
 
-        E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
+        E.set_galaxy_magnitude(galaxy, magn)
 
     elseif setdist then  -- Set the camera distance from the center.
 
@@ -126,8 +129,8 @@ function do_point(dx, dy)
 
         local x, y, z = E.get_entity_rotation(camera)
 
-        x = x - dy * 0.1 * zoom * zoom
-        y = y - dx * 0.1 * zoom * zoom
+        x = x - dy * 0.1
+        y = y - dx * 0.1
 
         if x < -90 then x = -90 end
         if x >  90 then x =  90 end

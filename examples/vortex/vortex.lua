@@ -82,11 +82,11 @@ function do_timer(dt)
 
     E.set_camera_distance(camera_hip, hip_dist)
     E.set_camera_distance(camera_tyc, tyc_dist)
-    E.set_camera_zoom(camera_hip, zoom * zoom)
-    E.set_camera_zoom(camera_tyc, zoom * zoom)
+--  E.set_camera_zoom(camera_hip, zoom * zoom)
+--  E.set_camera_zoom(camera_tyc, zoom * zoom)
 
-    E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
-    E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
+    E.set_galaxy_magnitude(galaxy_hip, hip_magn)
+    E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
 
     E.set_entity_rotation(camera_hip, rot_x, rot_y, rot_z)
     E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
@@ -124,8 +124,8 @@ function do_point(dx, dy)
         if not shift   then hip_magn = hip_magn - dy * 1.0 end
         if not control then tyc_magn = tyc_magn - dy * 1.0 end
 
-        E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
-        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
+--      E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
+--      E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
 
     elseif setdist then  -- Set the camera distance from the center.
 

@@ -5,6 +5,7 @@ light   = nil
 pivot   = nil
 thing   = nil
 floor   = nil
+dist    = 10
 
 tumble = false
 
@@ -26,13 +27,19 @@ function do_start()
     E.set_entity_position(thing, 0,  1.0,  0.0)
 
     E.set_entity_position(camera, 0, 0, 0);
-    E.set_camera_distance(camera, 10)
+    E.set_camera_distance(camera, dist)
 end
 
 function do_click(b, s)
     if b == 1 then
         tumble = s
     end
+    if b == 4 and s then dist = dist + 1 end
+    if b == 5 and s then dist = dist - 1 end
+
+    E.set_camera_distance(camera, dist)
+
+    return true
 end
 
 function do_point(dx, dy)

@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "utility.h"
 #include "display.h"
 #include "matrix.h"
 #include "buffer.h"
@@ -78,13 +79,13 @@ void sync_display(void)
 
 #ifdef MPI
 
-    if (gethostname(H.name, MAXNAME) == 0)
+    if (gethostname(Host.name, MAXNAME) == 0)
     {
         size_t sz = sizeof (struct host);
         int i, j, size;
 
         assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
-        assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &m));
+        assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
 
         /* Gather all host names at the root. */
 
@@ -94,12 +95,12 @@ void sync_display(void)
         /* The root assigns tiles by matching host names. */
 
         if (rank == 0)
-            for (i = 0; i < m; i++)
+            for (i = 0; i < size; i++)
                 for (j = 0; j < H_num; j++)
-                    if (strcmp(Hi[i].name, Ho[j].name) == 0)
+                    if (strcmp(Hi[j].name, Ho[i].name) == 0)
                     {
-                        memcpy(Ho + j, Hi + i, sizeof (struct host));
-                        strcpy(Hi[i], name, "");
+                        memcpy(Ho + i, Hi + j, sizeof (struct host));
+                        strcpy(Hi[j].name,  "");
 
                         break;
                     }
@@ -130,9 +131,9 @@ int draw_display(struct frustum *F1, const float p[3], float N, float F, int i)
         /* Configure the viewport. */
 
         glViewport(Host.tile[i].x, Host.tile[i].y,
-                   Host.tile[i].w, Host.tile[i].h);
+                   Host.tile[i].w - 1, Host.tile[i].h);
         glScissor (Host.tile[i].x, Host.tile[i].y,
-                   Host.tile[i].w, Host.tile[i].h);
+                   Host.tile[i].w - 1, Host.tile[i].h);
 
         /* Apply the projection. */
 

@@ -104,11 +104,15 @@ int node_sort(struct node *N, int n0, int n1,
 void node_draw(const struct node *N, int n, int i,
                const struct frustum *F, const float b[6])
 {
+    int r = 0;
+
+#ifdef SNIP
     int r = test_frustum(F, b);
 
     /* If this node is entirely invisible, prune the tree. */
 
     if (r < 0) return;
+#endif
 
     /* If this node is entirely visible, or is a leaf, draw it. */
 

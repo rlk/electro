@@ -120,6 +120,8 @@ static void server_draw(void)
 
     /* Sync and swap. */
 
+    glFinish();
+
 #ifdef MPI
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
