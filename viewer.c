@@ -11,6 +11,8 @@ static double distance;
 
 static int button[3];
 
+static int spinning;
+
 /*---------------------------------------------------------------------------*/
 
 int viewer_point(int x, int y)
@@ -67,7 +69,34 @@ int viewer_click(int b, int s)
     return 1;
 }
 
+int viewer_keybd(int k, int s)
+{
+    if (k == SDLK_F12 && s)
+        spinning++;
+    if (k == SDLK_F11 && s)
+        spinning--;
+
+    return 1;
+}
+
+int viewer_event(int c)
+{
+    if (spinning)
+        rotation[1] += 0.01 * spinning;
+
+    return 1;
+}
+
 /*---------------------------------------------------------------------------*/
+
+void viewer_post(void)
+{
+    SDL_Event e;
+
+    e.type = SDL_USEREVENT;
+
+    SDL_PushEvent(&e);
+}
 
 void viewer_init(void)
 {
@@ -102,6 +131,8 @@ void viewer_draw(void)
         glRotated(-rotation[0], 1, 0, 0);
         glRotated(-rotation[1], 0, 1, 0);
     }
+
+    if (spinning) viewer_post();
 }
 
 void viewer_get_pos(double p[3])

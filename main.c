@@ -48,8 +48,15 @@ static int loop(void)
             c += viewer_point(e.motion.x, e.motion.y);
             break;
 
+        case SDL_USEREVENT:
+            c += viewer_event(e.user.code);
+            break;
+
         case SDL_KEYDOWN:
-            if (e.key.keysym.sym == SDLK_ESCAPE) return 1;
+            if (e.key.keysym.sym == SDLK_ESCAPE)
+                return 1;
+            else
+                c += viewer_keybd(e.key.keysym.sym, 1);
             break;
 
         case SDL_QUIT:

@@ -5,6 +5,8 @@
 
 int viewer_point(int, int);
 int viewer_click(int, int);
+int viewer_keybd(int, int);
+int viewer_event(int);
 
 void viewer_init(void);
 void viewer_draw(void);
