@@ -1,6 +1,9 @@
+PREFIX=/usr/local/Electro
 
-TARG=	electro
-#TARG=	electro-mpi
+#------------------------------------------------------------------------------
+
+#TARG=	electro
+TARG=	electro-mpi
 OBJS=	src/opengl.o   \
 	src/joystick.o \
 	src/viewport.o \
@@ -32,8 +35,8 @@ SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
-CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
-#CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+#CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
+CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
 INCDIR= -I$(HOME)/include -I/usr/include/lua
 LIBDIR= -L$(HOME)/lib
 
@@ -58,6 +61,9 @@ $(TARG) : $(OBJS)
 
 clean :
 	$(RM) $(TARG) $(OBJS) $(DEPS)
+
+install : $(TARG)
+	cp $(TARG) $(PREFIX)/bin
 
 #------------------------------------------------------------------------------
 

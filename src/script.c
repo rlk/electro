@@ -506,8 +506,15 @@ static int script_create_object(lua_State *L)
 
 static int script_create_galaxy(lua_State *L)
 {
-    int id = galaxy_send_create(script_getstring("create_galaxy", L, -2),
-                                script_getstring("create_galaxy", L, -1));
+    const char *name = "create_galaxy";
+    int id, n = lua_gettop(L);
+
+    if (n == 2)
+        id = galaxy_send_create(script_getstring(name, L, -2),
+                                script_getstring(name, L, -1));
+    else
+        id = galaxy_send_create(script_getstring(name, L, -1), 0);
+                                
 
     lua_pushentity(L, id);
     return 1;

@@ -31,8 +31,9 @@ static float mag = 1.0f;
 int galaxy_send_create(const char *nearfile, const char *farfile)
 {
     star_read_sol();
-    star_read_hip(nearfile);
-    star_read_tyc(farfile);
+
+    if (nearfile) star_read_hip(nearfile);
+    if (farfile)  star_read_tyc(farfile);
 
     pack_event(EVENT_GALAXY_CREATE);
     star_send_create();

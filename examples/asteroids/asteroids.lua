@@ -663,7 +663,6 @@ function do_start()
 
     E.galaxy_magn(galaxy, 500.0)
     E.camera_dist(space,  100.0)
-    E.camera_zoom(space,  0.0001)
     E.entity_position(space, 0, 15.5, 9200)
 
     score_init()
