@@ -412,7 +412,9 @@ void galaxy_send_magn(int gd, float m)
     pack_event(EVENT_GALAXY_MAGN);
     pack_index(gd);
 
-    pack_float((G[gd].magn = m));
+    pack_float(m);
+
+    G[gd].magn = m * viewport_scale();
 }
 
 void galaxy_recv_magn(void)

@@ -1,6 +1,11 @@
+fifteen
+image width/height query
+Documentation up to date
+GL error.  glTexParameter WTF?
+disable depth writes on sprites instead of depth test?
 Star VBO?  (Ok if tree is NOT pruned)
+asteroids text overlay models?
 Scale and billboard frustum
-Parse tyc (tune N_SIZ)
 Object edge
 
 frustum transform = matrix multiplication?
@@ -9,7 +14,6 @@ frustum transform = matrix multiplication?
 Look into event queueing on heavy client load.
 Windows port
 Relative entity transform
-Documentation up to date
 Website
 camera near/far
 

@@ -120,7 +120,10 @@ static void client_draw(void)
 
     entity_draw();
 
+/*
     mpi_barrier_clients();
+*/
+    mpi_barrier_all();
     SDL_GL_SwapBuffers();
 }
 

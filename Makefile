@@ -8,7 +8,7 @@ ifdef MPI
 	TARG= electro-mpi
 else
 	CC= cc
-	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags)
+	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags) -DNDEBUG
 	TARG= electro
 endif
 

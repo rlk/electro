@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 {
     if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
     {
-        mpi_split();
+/*      mpi_split(); */
 
         if (mpi_isroot())
             server(argc, argv);

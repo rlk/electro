@@ -18,8 +18,8 @@ global_ship_shockwave = nil
 global_rock_explosion = nil
 global_rock_shockwave = nil
 
-button_fire   = 2
-button_thrust = 3
+button_fire   = 0
+button_thrust = 1
 
 -------------------------------------------------------------------------------
 
@@ -101,6 +101,7 @@ function player_reset()
     velocity_dx = 0
     velocity_dy = 0
 
+    E.sound_stop(sound_thrust2)
     E.entity_flag(thrust, E.entity_flag_hidden, not thrusting)
 
     if ship then
@@ -518,6 +519,7 @@ function asteroid_step(id, asteroid)
 
             velocity_dx = 0
             velocity_dy = 0
+            E.sound_stop(sound_thrust2)
             goto_state("dead")
         end
     end
@@ -1003,7 +1005,7 @@ function do_start()
 
     E.camera_zoom(camera, global_z)
 
-    E.galaxy_magn(galaxy, 100.0)
+    E.galaxy_magn(galaxy, 500.0)
     E.camera_dist(space,  100.0)
     E.camera_zoom(space,    0.5)
     E.entity_position(space, 0, 15.5, 9200)

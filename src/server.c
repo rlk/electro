@@ -132,6 +132,7 @@ static void server_draw(void)
 
     /* Sync and swap. */
 
+    mpi_barrier_all();
     SDL_GL_SwapBuffers();
 }
 
@@ -215,18 +216,19 @@ static int server_loop(void)
     if (server_grab)
     {
         if (dirty)
-        {
             pack_event(EVENT_DRAW);
 
+        pack_event(EVENT_NULL);
+        buffer_sync();
+
+        if (dirty)
+        {
             server_draw();
             server_perf();
 
             dirty = 0;
             count = count + 1;
         }
-
-        pack_event(EVENT_NULL);
-        buffer_sync();
     }
 
     return 1;

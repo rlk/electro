@@ -32,12 +32,32 @@ static void *image_punt(const char *message)
 
 /*---------------------------------------------------------------------------*/
 
+static int power_of_two(int n)
+{
+    int i = 1;
+
+    while (i < n)
+        i *= 2;
+
+    return i;
+}
+
+/*---------------------------------------------------------------------------*/
+
 GLuint image_make_tex(const void *p, int w, int h, int b)
 {
     GLenum f = GL_RGB;
     GLuint o = 0;
 
-    /* Determine GL texture format from byte count. */
+    int W = power_of_two(w);
+    int H = power_of_two(h);
+
+    /* Create a GL texture object. */
+
+    glGenTextures(1, &o);
+    glBindTexture(GL_TEXTURE_2D, o);
+
+    /* Determine the GL texture format from the byte count. */
 
     switch (b)
     {
@@ -47,22 +67,22 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
     case 4: f = GL_RGBA;            break;
     }
 
-    /* Create a GL texture object. */
+    /* Ensure that the image is power-of-two in size.  Generate mipmaps. */
 
-    glGenTextures(1, &o);
-    glBindTexture(GL_TEXTURE_2D, o);
+    if (W != w || H != h)
+    {
+        void *P;
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        if ((P = malloc(W * H * b)))
+            gluScaleImage(f, w, h, GL_UNSIGNED_BYTE, p,
+                             W, H, GL_UNSIGNED_BYTE, P);
 
-    /*
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, b, W, H, f, GL_UNSIGNED_BYTE, P);
+    }
+    else
+        gluBuild2DMipmaps(GL_TEXTURE_2D, b, w, h, f, GL_UNSIGNED_BYTE, p);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, b, w, h, 0, f, GL_UNSIGNED_BYTE, p);
-    */
+    /* Enable mipmapping on it. */
 
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_MIN_FILTER,
@@ -70,10 +90,6 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_MAG_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D, b, w, h, f, GL_UNSIGNED_BYTE, p);
-
-    opengl_check("image_make_tex");
 
     return o;
 }
@@ -192,6 +208,19 @@ void image_draw(int id)
 {
     if (image_exists(id))
         glBindTexture(GL_TEXTURE_2D, I[id].texture);
+}
+
+void *image_load(const char *filename, int *width,
+                                       int *height,
+                                       int *bytes)
+{
+    const char *extension = filename + strlen(filename) - 4;
+
+    if (strcmp(extension, ".png") == 0 ||
+        strcmp(extension, ".PNG") == 0)
+        return image_load_png(filename, width, height, bytes);
+    else
+        return image_punt("Unsupported image format");
 }
 
 /*---------------------------------------------------------------------------*/
