@@ -8,7 +8,7 @@
     h2     { margin-left:  -6%; }
     h3     { margin-left:  -3%; }
     pre    { background: #FFFFCC; padding: 1em; border: none; }
-    p.note { background: #CCCCFF; padding: 1em; }
+    p.note { background: #CCFFFF; padding: 1em; }
   </style>
 </head>
 <body>
@@ -50,9 +50,9 @@ understanding of the details of the implementation.  Rationale
 paragraphs are distinguished from the main text as follows: </p>
 
 <p class="note"> Electro adheres to a number of closely-held design
-principles.  It is influenced by several existing software systems,
-but only as far as these basic principles are not violated.  The
-primary design principle is simplicity. </p>
+principles.  The primary principles are simplicity, orthogonality, and
+efficiency.  Violations of these principles do appear, but not without
+serious consideration. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -70,8 +70,8 @@ primary design principle is simplicity. </p>
 each function may take any entity value, including object, sprite,
 lightsource, and camera. </p>
 
+<h3> Absolute Transformation </h3>
 <dl>
-
 <dt><tt> entity_position(entity, x, y, z) </tt>
 
 <dd><p> Specify the position of the entity.  Position is given in the
@@ -80,15 +80,44 @@ coordinate system of the entity's parent. </p>
 <dt><tt> entity_rotation(entity, x, y, z) </tt>
 
 <dd><p> Specify the rotation of the entity.  The 3 values give the
-angles of rotation in degrees about the X, Y, and Z.  These correspond
-to pitch, yaw, and roll, respectively.  Rotation is given in the
-coordinate system of the entity's parent. </p>
+angles of rotation in degrees about the X, Y, and Z axes.  Rotation is
+given in the coordinate system of the entity's parent. </p>
 
 <dt><tt> entity_scale(entity, x, y, z) </tt>
 
 <dd><p> Specify the scale of the entity.  The 3 values give scale
 multipliers along the X, Y, and Z axes.  Scale is given in the
 coordinate system of the entity's parent. </p>
+
+</dl>
+
+<h3> Relative Transformation </h3>
+
+<p class="note"> Strictly speaking, to provide both absolute and
+relative transformation functions is to violate the principle of
+orthogonality.  In this case, I just couldn't resist.  Inspiration for
+this feature is drawn from Blitz3D, which showed that relative
+transform is very beginner-friendly, leading to a very intuitive
+turtle-style system of entity control. </p>
+
+<dl>
+<dt><tt> entity_move(entity, x, y, z) </tt>
+
+<dd><p> Move the entity relative to its current position.  X is to the
+right, Y is up, and Z axis is to the rear, as defined by the entity's
+current orientation. </p>
+
+<p class="note"> It might be more clear to the beginner if the Z axis
+to pointed forward rather than back.  However, this would be in
+conflict with the normal right-handed coordinate system, and would
+only lead to inconsistency and confusion for the experienced 3D
+user. </p>
+
+<dt><tt> entity_turn(entity, x, y, z) </tt>
+
+<dd><p> Rotate the entity relative to its current orientation.
+Rotation about the X, Y, and Z axes corresponds to pitch, yaw, and
+roll, respectively. </p>
 
 </dl>
 
