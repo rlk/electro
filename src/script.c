@@ -208,6 +208,20 @@ static const char *script_getstring(lua_State *L, int i)
     return "";
 }
 
+static int script_getboolean(lua_State *L, int i)
+{
+    if (1 <= -i && -i <= lua_gettop(L))
+    {
+        if (lua_isboolean(L, i))
+            return lua_toboolean(L, i);
+        else
+            script_type_error("boolean", L, i);
+    }
+    else script_arity_error(L, i);
+
+    return 0;
+}
+
 static float script_getnumber(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
@@ -222,19 +236,36 @@ static float script_getnumber(lua_State *L, int i)
     return 0.0;
 }
 
-static int script_getboolean(lua_State *L, int i)
+static void script_getvector(lua_State *L, int i, float *v, int n)
 {
+    int j;
+
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_isboolean(L, i))
-            return lua_toboolean(L, i);
-        else
-            script_type_error("boolean", L, i);
+        if (lua_istable(L, i))
+        {
+            for (j = 0; j < n; j++)
+            {
+                lua_pushnumber(L, j + 1);
+                lua_gettable  (L, i - 1);
+
+                if (lua_isnumber(L, -1))
+                    v[j] = lua_tonumber(L, -1);
+                else
+                {
+                    script_type_error("number", L, -1);
+                    break;
+                }
+
+                lua_pop(L, 1);
+            }
+        }
+        else script_type_error("vector", L, i);
     }
     else script_arity_error(L, i);
-
-    return 0;
 }
+
+/*---------------------------------------------------------------------------*/
 
 static int script_getentity(lua_State *L, int i)
 {
@@ -339,11 +370,11 @@ static int script_add_tile(lua_State *L)
     float o[3];
     float r[3];
     float u[3];
-/*
+
     script_getvector(L, -3, o, 3);
     script_getvector(L, -2, r, 3);
     script_getvector(L, -1, u, 3);
-*/
+
     add_tile(script_getstring(L, -8),
              script_getnumber(L, -7),
              script_getnumber(L, -6),

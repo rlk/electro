@@ -37,6 +37,7 @@ static int  history_j = 0;
 static int  command_i = 0;
 
 static int console_enable = 0;
+static int image_dirty    = 0;
 
 static int console_w;
 static int console_h;
@@ -115,14 +116,14 @@ static void write_console(const char *str)
     }
 }
 
-static void faded(const char *str)
+static void fade(const char *str)
 {
     int i, l = strlen(str);
+    char buf[2];
 
     for (i = 0; i < l; i++)
     {
         float k = (float) i / l;
-        char  buf[2];
 
         buf[0] = str[i];
         buf[1] = '\0';
@@ -134,9 +135,9 @@ static void faded(const char *str)
 
 static void ident(void)
 {
-    faded("  |||  ELECTRO                           \n");
-    faded("  O o  Copyright (C) 2005  Robert Kooima \n");
-    faded("   -   http://www.evl.uic.edu/rlk/electro\n");
+    fade("  |||  ELECTRO                           \n");
+    fade("  O o  Copyright (C) 2005  Robert Kooima \n");
+    fade("   -   http://www.evl.uic.edu/rlk/electro\n");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -192,7 +193,6 @@ static void init_back_image(void)
         glTexImage2D(GL_TEXTURE_2D, 0, 4, 2, 2, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, back_image);
     }
-
 }
 
 /*---------------------------------------------------------------------------*/
@@ -204,10 +204,10 @@ static void draw_image(void)
 
     init_fore_image();
 
-    /* This would be a lot more efficient using glBitmap to draw right    */
-    /* to the framebuffer, or glTexSubImage2D with pixel transfer bias    */
-    /* to transfer glyphs straight to texture memory, but both of those   */
-    /* are commonly buggy on crappy hardware.  Lame.                      */
+    /* This would be a lot more efficient using glBitmap to draw right   */
+    /* to the framebuffer, or glTexSubImage2D with pixel transfer bias   */
+    /* to transfer glyphs straight to texture memory, but both of those  */
+    /* are commonly buggy on crappy hardware.  Lame.                     */
 
     for (r = 0; r < console_h; r++)
         for (c = 0; c < console_w; c++)
@@ -233,6 +233,8 @@ static void draw_image(void)
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_w, image_h,
                     GL_RGBA, GL_UNSIGNED_BYTE, image);
+
+    image_dirty = 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -264,6 +266,9 @@ void draw_console(void)
 {
     if (console_enable)
     {
+        if (image_dirty)
+            draw_image();
+
         glPushAttrib(GL_ENABLE_BIT);
         {
             int x = CONSOLE_X;
@@ -277,6 +282,7 @@ void draw_console(void)
             /* Set the GL state for rendering the console. */
 
             glEnable(GL_COLOR_MATERIAL);
+            glDisable(GL_SCISSOR_TEST);
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_LIGHTING);
             glEnable(GL_TEXTURE_2D);
@@ -475,9 +481,9 @@ int input_console(int symbol, int unicode)
         }
     }
 
-    draw_image();
+    image_dirty = 1;
 
-    return 1;
+    return image_dirty;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -485,8 +491,7 @@ int input_console(int symbol, int unicode)
 void clear_console(void)
 {
     memset(console, 0, console_w * console_h * 4);
-
-    draw_image();
+    image_dirty = 1;
 }
 
 void color_console(float r, float g, float b)
@@ -499,9 +504,8 @@ void color_console(float r, float g, float b)
 void print_console(const char *str)
 {
     write_console(str);
-    draw_image();
-
     console_enable = 1;
+    image_dirty    = 1;
 }
 
 void error_console(const char *str)
@@ -524,8 +528,7 @@ void error_console(const char *str)
     console_g = g;
     console_b = b;
     console_enable = 1;
-
-    draw_image();
+    image_dirty    = 1;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -13,6 +13,8 @@
 #ifndef DISPLAY
 #define DISPLAY
 
+#include "frustum.h"
+
 #define MAXNAME 32
 #define MAXTILE  4
 
@@ -32,7 +34,7 @@ struct tile
     int w;
     int h;
 
-    float p[3];
+    float o[3];
     float r[3];
     float u[3];
 };
@@ -53,6 +55,7 @@ struct host
 
 void init_display(void);
 void sync_display(void);
+int  draw_display(struct frustum *, const float[3], float, float, int);
 
 void add_host(const char *, int, int, int, int);
 void add_tile(const char *, int, int, int, int, const float[3],

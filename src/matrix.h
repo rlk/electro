@@ -25,6 +25,7 @@
 void m_init(float[16]);
 void m_copy(float[16], const float[16]);
 void m_xpos(float[16], const float[16]);
+void m_invt(float[16], const float[16]);
 void m_mult(float[16], const float[16], const float[16]);
 
 /*---------------------------------------------------------------------------*/

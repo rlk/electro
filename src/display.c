@@ -10,11 +10,14 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "opengl.h"
 #include "display.h"
+#include "matrix.h"
 #include "buffer.h"
 #include "event.h"
 
@@ -111,6 +114,38 @@ void sync_display(void)
     if (rank == 0) memcpy(&Host, Hi, sizeof (struct host));
 }
 
+int draw_display(struct frustum *F, const float p[3], float n, float f, int i)
+{
+    if (i < Host.n)
+    {
+        /* TODO: generalize this. */
+
+        float l = Host.tile[i].o[0]                     - p[0];
+        float r = Host.tile[i].o[0] + Host.tile[i].r[0] - p[0];
+        float b = Host.tile[i].o[1]                     - p[1];
+        float t = Host.tile[i].o[1] + Host.tile[i].u[1] - p[1];
+
+        /* Configure the viewport. */
+
+        glViewport(Host.tile[i].x, Host.tile[i].y,
+                   Host.tile[i].w, Host.tile[i].h);
+        glScissor (Host.tile[i].x, Host.tile[i].y,
+                   Host.tile[i].w, Host.tile[i].h);
+
+        /* Apply the projection. */
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            glLoadIdentity();
+            glFrustum(l, r, b, t, n, f);
+        }
+        glMatrixMode(GL_MODELVIEW);
+
+        return i + 1;
+    }
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int get_host(const char *name)
@@ -140,7 +175,7 @@ void add_host(const char *name, int X, int Y, int W, int H)
     }
 }
 
-void add_tile(const char *name, int x, int y, int w, int h, const float p[3],
+void add_tile(const char *name, int x, int y, int w, int h, const float o[3],
                                                             const float r[3],
                                                             const float u[3])
 {
@@ -155,9 +190,9 @@ void add_tile(const char *name, int x, int y, int w, int h, const float p[3],
         Hi[i].tile[n].w    = w;
         Hi[i].tile[n].h    = h;
 
-        Hi[i].tile[n].p[0] = p[0];
-        Hi[i].tile[n].p[1] = p[1];
-        Hi[i].tile[n].p[2] = p[2];
+        Hi[i].tile[n].o[0] = o[0];
+        Hi[i].tile[n].o[1] = o[1];
+        Hi[i].tile[n].o[2] = o[2];
 
         Hi[i].tile[n].r[0] = r[0];
         Hi[i].tile[n].r[1] = r[1];

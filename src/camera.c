@@ -224,79 +224,44 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 {
     struct frustum F1;
 
-    float pos[3];
-    float rot[3];
+    float p[3];
+    float r[3];
+    float o[3] = { 0, 0, 0 };
 
-    get_entity_position(id, pos + 0, pos + 1, pos + 2);
-    get_entity_rotation(id, rot + 0, rot + 1, rot + 2);
+    get_entity_position(id, p + 0, p + 1, p + 2);
+    get_entity_rotation(id, r + 0, r + 1, r + 2);
 
     if (camera_exists(cd))
     {
-        float l, r, b, t;
-/*
-        int viewport_x0 = (int) get_local_viewport_x();
-        int viewport_x1 = (int) get_local_viewport_w() + viewport_x0;
-        int viewport_y0 = (int) get_local_viewport_y();
-        int viewport_y1 = (int) get_local_viewport_h() + viewport_y0;
-        int viewport_W  = (int) get_total_viewport_w();
-*/
-        float T = PI * rot[1] / 180.0f;
-        float P = PI * rot[0] / 180.0f;
+        float T = PI * r[1] / 180.0f;
+        float P = PI * r[0] / 180.0f;
+        int   i = 0;
 
         /* Compute the camera position and orientation vectors. */
 
-        pos[0] += (float) (sin(T) * cos(P) * C[cd].dist);
-        pos[1] -= (float) (         sin(P) * C[cd].dist);
-        pos[2] += (float) (cos(T) * cos(P) * C[cd].dist);
+        p[0] += (float) (sin(T) * cos(P) * C[cd].dist);
+        p[1] -= (float) (         sin(P) * C[cd].dist);
+        p[2] += (float) (cos(T) * cos(P) * C[cd].dist);
 
-        /* Load projection and modelview matrices for this camera. */
+        /* Supply the view position as a vertex program parameter. */
+            
+        if (GL_has_vertex_program)
+            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
+                                       0, p[0], p[1], p[2], 1);
 
-        glMatrixMode(GL_PROJECTION);
-        {
-            glLoadIdentity();
+        /* Load projection and modelview matrices for each tile. */
 
-            if (C[cd].type == CAMERA_ORTHO)
-            {
-/*
-                l =  C[cd].zoom * viewport_x0;
-                r =  C[cd].zoom * viewport_x1;
-                b = -C[cd].zoom * viewport_y1;
-                t = -C[cd].zoom * viewport_y0;
-*/
-/*              ortho_camera(F1, pos, T, P, l, r, b, t); */
-
-/*              glOrtho(l, r, b, t, -CAMERA_FAR, CAMERA_FAR); */
-            }
-            if (C[cd].type == CAMERA_PERSP)
-            {
-/*
-                l =  C[cd].zoom * viewport_x0 / viewport_W;
-                r =  C[cd].zoom * viewport_x1 / viewport_W;
-                b = -C[cd].zoom * viewport_y1 / viewport_W;
-                t = -C[cd].zoom * viewport_y0 / viewport_W;
-*/
-/*              persp_camera(F1, pos, T, P, l, r, b, t); */
-
-/*              glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR); */
-            }
-        }
-        glMatrixMode(GL_MODELVIEW);
+        while ((i = draw_display(&F1, o, 1, 10000, i)))
         {
             glLoadIdentity();
             glTranslatef(0, 0, -C[cd].dist);
 
             transform_camera(id);
+
+            /* Render all children using this camera. */
+            
+            draw_entity_list(id, &F1, a * get_entity_alpha(id));
         }
-
-        /* Use the view configuration as vertex program parameters. */
-
-        if (GL_has_vertex_program)
-            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
-                                       pos[0], pos[1], pos[2], 1);
-
-        /* Render all children using this camera. */
-
-        draw_entity_list(id, &F1, a * get_entity_alpha(id));
     }
 }
 

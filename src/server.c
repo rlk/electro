@@ -82,7 +82,7 @@ static void init_server(void)
 {
     glViewport(0, 0, get_window_w(), get_window_h());
 
-    glEnable(GL_STENCIL_TEST);
+    glEnable(GL_SCISSOR_TEST);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
@@ -103,33 +103,19 @@ static void server_draw(void)
 {
 /*  const float gray[3] = { 0.2f, 0.2f, 0.2f }; */
 
+    glViewport(0, 0, get_window_w(), get_window_h());
+    glScissor (0, 0, get_window_w(), get_window_h());
+
     glClear(GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT |
             GL_STENCIL_BUFFER_BIT);
 
-#ifdef SNIP
-    /* Draw the defined viewports to the stencil buffer. */
-
-    glStencilFunc(GL_ALWAYS,   1, 0xFFFFFFFF);
-    draw_viewport();
-
-    /* Draw the mullions into the non-viewport parts of the frame buffer. */
-
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFFFFFFFF);
-    fill_viewport(gray, gray);
-
-    /* Draw the scene into the viewport parts of the frame buffer. */
-
-    glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
-    draw_background();
-#endif
-
     if (server_mirror)
         draw_entity();
 
-    /* Draw the console overtop both the scene and the mullions. */
+    glViewport(0, 0, get_window_w(), get_window_h());
+    glScissor (0, 0, get_window_w(), get_window_h());
 
-/*  glStencilFunc(GL_ALWAYS,   1, 0xFFffffff); */
     draw_console();
 
     /* Sync and swap. */

@@ -43,7 +43,7 @@ function do_start()
     E.set_entity_position(pivot, 0, -2.0, -2.0)
     E.set_entity_position(thing, 0,  1.0,  0.0)
 
-    E.set_camera_distance(camera, 10)
+    E.set_camera_distance(camera, 5)
 
     dump(nil, 0)
 end
