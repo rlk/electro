@@ -58,7 +58,6 @@ OBJS=	src/opengl.o   \
 	src/viewport.o \
 	src/console.o  \
 	src/buffer.o   \
-	src/shared.o   \
 	src/server.o   \
 	src/client.o   \
 	src/entity.o   \

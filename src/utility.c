@@ -156,3 +156,21 @@ void *error(char *format, ...)
 }
 
 /*---------------------------------------------------------------------------*/
+
+#ifdef MPI
+
+void assert_mpi(int err)
+{
+    if (err != MPI_SUCCESS)
+    {
+        char buf[MAXSTR];
+        int  n = MAXSTR;
+
+        MPI_Error_string(err, buf, &n);
+        error("MPI Error: %s\n", buf);
+    }
+}
+
+#endif
+
+/*---------------------------------------------------------------------------*/

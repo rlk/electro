@@ -15,6 +15,10 @@
 
 #include <stdarg.h>
 
+#ifdef MPI
+#include <mpi.h>
+#endif
+
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -51,6 +55,8 @@ float ntohf(float);
 int  balloc(void **, int *, size_t, int (*)(int));
 
 void *error(char *, ...);
+
+void assert_mpi(int);
 
 /*---------------------------------------------------------------------------*/
 

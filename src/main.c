@@ -10,9 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include "shared.h"
 #include "server.h"
 #include "client.h"
+#include "utility.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -31,7 +31,11 @@ int MAIN(int argc, char *argv[])
 {
     if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
     {
-        if (mpi_isroot())
+        int rank = 0;
+
+        assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+
+        if (rank == 0)
             server(argc, argv);
         else
             client();

@@ -17,13 +17,13 @@
 #include "viewport.h"
 #include "console.h"
 #include "buffer.h"
-#include "shared.h"
 #include "script.h"
 #include "entity.h"
 #include "utility.h"
 #include "sound.h"
 #include "image.h"
 #include "event.h"
+#include "server.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -141,7 +141,9 @@ static void server_draw(void)
 
     /* Sync and swap. */
 
-    mpi_barrier();
+#ifdef MPI
+    assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
+#endif
     SDL_GL_SwapBuffers();
 }
 
@@ -341,7 +343,9 @@ void server(int argc, char *argv[])
 
                 /* Ensure everyone finishes all events before exiting. */
 
-                mpi_barrier();
+#ifdef MPI
+                assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
+#endif
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 

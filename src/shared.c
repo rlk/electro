@@ -25,25 +25,6 @@
 /*---------------------------------------------------------------------------*/
 /* Optional MPI function abstractions                                        */
 
-int mpi_assert(int err)
-{
-#ifdef MPI
-    char buf[256];
-    int len = 256;
-
-    if (err == MPI_SUCCESS)
-        return 1;
-    else
-    {
-        MPI_Error_string(err, buf, &len);
-        fprintf(stderr, "MPI Error: %s\n", buf);
-        return 0;
-    }
-#else
-    return 1;
-#endif
-}
-
 int mpi_rank(void)
 {
     int rank = 0;

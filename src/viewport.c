@@ -20,15 +20,10 @@
 #endif
 
 #include "opengl.h"
-#include "shared.h"
 #include "buffer.h"
 #include "utility.h"
-#include "event.h"
 #include "viewport.h"
-
-#ifdef MPI
-#include <mpi.h>
-#endif
+#include "event.h"
 
 /*---------------------------------------------------------------------------*/
 /* Viewport configuration                                                    */
@@ -65,7 +60,11 @@ static void set_window_pos(int X, int Y)
 
 void init_viewport(void)
 {
-    int n = mpi_size();
+    int n = 0;
+
+#ifdef MPI
+    assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &n));
+#endif
 
     if (V_max < n)
         V_max = n;
@@ -196,12 +195,13 @@ void add_tile(const char *name, float X, float Y,
 
 void sync_viewport(void)
 {
+    struct viewport Vtemp;
+    int rank = 0;
+
 #ifdef MPI
     size_t sz = sizeof (struct viewport);
+    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
 #endif
-
-    struct viewport Vtemp;
-    int root = mpi_isroot();
 
     /* Get this client's host name.  Set a default viewport. */
 
@@ -230,18 +230,18 @@ void sync_viewport(void)
 
     /* Gather all host names at the root. */
 
-    mpi_assert(MPI_Gather(&Vtemp, sz, MPI_BYTE,
+    assert_mpi(MPI_Gather(&Vtemp, sz, MPI_BYTE,
                            Vout,  sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
     /* If this is the root, assign viewports by matching host names. */
 
-    if (mpi_isroot())
+    if (rank == 0)
     {
         int j;
         int k;
         int n;
 
-        MPI_Comm_size(MPI_COMM_WORLD, &n);
+        assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &n));
 
         for (j = 1; j < n; j++)
             for (k = 0; k < V_num; k++)
@@ -266,20 +266,20 @@ void sync_viewport(void)
 
     /* Scatter the assignments to all clients.  Broadcast the total.  */
 
-    mpi_assert(MPI_Scatter(Vout,  sz, MPI_BYTE,
+    assert_mpi(MPI_Scatter(Vout,  sz, MPI_BYTE,
                           &Vtemp, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
-    mpi_assert(MPI_Bcast(&Vtotal, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
+    assert_mpi(MPI_Bcast(&Vtotal, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
 #endif  /* MPI */
 
     /* Apply this node's viewport. */
 
-    Vlocal.X = root ? Vtotal.X : Vtemp.X;
-    Vlocal.Y = root ? Vtotal.Y : Vtemp.Y;
-    Vlocal.x = root ? Vtotal.x : Vtemp.x;
-    Vlocal.y = root ? Vtotal.y : Vtemp.y;
-    Vlocal.w = root ? Vtotal.w : Vtemp.w;
-    Vlocal.h = root ? Vtotal.h : Vtemp.h;
+    Vlocal.X = rank ? Vtemp.X : Vtotal.X;
+    Vlocal.Y = rank ? Vtemp.Y : Vtotal.Y;
+    Vlocal.x = rank ? Vtemp.x : Vtotal.x;
+    Vlocal.y = rank ? Vtemp.y : Vtotal.y;
+    Vlocal.w = rank ? Vtemp.w : Vtotal.w;
+    Vlocal.h = rank ? Vtemp.h : Vtotal.h;
 
     set_window_pos((int) Vlocal.X, (int) Vlocal.Y);
 }
@@ -332,9 +332,15 @@ float get_local_viewport_h(void)
 
 float get_viewport_scale(void)
 {
+    int rank = 0;
+
+#ifdef MPI
+    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+#endif
+
     /* Scale the server window width down to a reasonable size. */
 
-    if (mpi_isroot())
+    if (rank == 0)
         return (float) DEFAULT_W / Vtotal.w;
     else
         return 1.0f;

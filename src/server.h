@@ -15,6 +15,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define TITLE "Electro"
+
 void enable_timer(int);
 
 void server(int, char **);

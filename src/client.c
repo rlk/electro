@@ -14,8 +14,8 @@
 
 #include "opengl.h"
 #include "viewport.h"
+#include "utility.h"
 #include "buffer.h"
-#include "shared.h"
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
@@ -116,7 +116,9 @@ static void client_draw(void)
     draw_background();
     draw_entity();
 
-    mpi_barrier();
+#ifdef MPI
+    assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
+#endif
     SDL_GL_SwapBuffers();
 }
 
@@ -175,7 +177,9 @@ void client(void)
 
             /* Ensure everyone finishes all events before exiting. */
 
-            mpi_barrier();
+#ifdef MPI
+            assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
+#endif
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
 

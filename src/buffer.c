@@ -15,7 +15,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "shared.h"
+#include "utility.h"
 
 /*---------------------------------------------------------------------------*/
 /* FIXME: Byte-order dependant.                                              */
@@ -62,8 +62,8 @@ void sync_buffer(void)
     len = pos;
 
 #ifdef MPI
-    mpi_assert(MPI_Bcast(&len,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
-    mpi_assert(MPI_Bcast(buf, len, MPI_BYTE,    0, MPI_COMM_WORLD));
+    assert_mpi(MPI_Bcast(&len,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
+    assert_mpi(MPI_Bcast(buf, len, MPI_BYTE,    0, MPI_COMM_WORLD));
 #endif
 
     pos = 0;
