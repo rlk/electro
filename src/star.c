@@ -207,7 +207,7 @@ int star_parse_tyc(struct star *s, FILE *fp)
             mag = vt - 0.090 * (bt - vt);
             ra  = M_RAD(ra);
             de  = M_RAD(de);
-            plx = 100000.0;
+            plx = 10.0;
 
             /* Compute the position in galactic coordinates. */
 
@@ -231,7 +231,7 @@ int star_parse_tyc(struct star *s, FILE *fp)
     return 0;
 }
 
-int star_parse_sol(struct star *s)
+int star_gimme_sol(struct star *s)
 {
     /* The sun is not in the catalog.  Add it manually. */
 

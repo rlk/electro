@@ -28,7 +28,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define N_MAX    4096
+#define N_MAX   16834
 #define S_MAX 2621440
 
 #define GMAXINIT 2
@@ -304,15 +304,37 @@ static int galaxy_prep_tyc(struct star *S, int S_num, const char *filename)
 
 /* TODO: Generalize galaxy preprocessing. */
 
-void galaxy_prep(void)
+void galaxy_prep_large(void)
 {
     struct galaxy g;
 
     galaxy_prep_init(&g);
 
-    g.S_num = galaxy_prep_hip(g.S, 0, "../hip_main.dat");
+    g.S_num = star_gimme_sol(g.S);
+    g.S_num = galaxy_prep_hip(g.S, g.S_num, "../hip_main.dat");
+    g.S_num = galaxy_prep_tyc(g.S, g.S_num, "../tyc2.dat");
 
     galaxy_prep_fini(&g);
+
+    printf("large: %d stars, %d nodes.\n", g.S_num, g.N_num);
+
+    galaxy_write("../galaxy_large.gal", &g);
+    galaxy_prep_free(&g);
+}
+
+void galaxy_prep_small(void)
+{
+    struct galaxy g;
+
+    galaxy_prep_init(&g);
+
+    g.S_num = star_gimme_sol(g.S);
+    g.S_num = galaxy_prep_hip(g.S, g.S_num, "../hip_main.dat");
+
+    galaxy_prep_fini(&g);
+
+    printf("small: %d stars, %d nodes.\n", g.S_num, g.N_num);
+
     galaxy_write("../galaxy_small.gal", &g);
     galaxy_prep_free(&g);
 }

@@ -237,8 +237,11 @@ static int server_loop(void)
 void server(int argc, char *argv[])
 {
     int argi;
-
-    galaxy_prep();
+    
+    /*
+    galaxy_prep_large();
+    galaxy_prep_small();
+    */
 
     if (script_init())
     {
