@@ -17,10 +17,10 @@
 
 #include "opengl.h"
 #include "shared.h"
-#include "status.h"
-#include "galaxy.h"
-#include "script.h"
 #include "server.h"
+#include "script.h"
+#include "camera.h"
+#include "galaxy.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/

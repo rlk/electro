@@ -15,11 +15,11 @@
 #include <stdio.h>
 
 #include "opengl.h"
-#include "star.h"
-#include "galaxy.h"
 #include "shared.h"
-#include "status.h"
 #include "client.h"
+#include "camera.h"
+#include "galaxy.h"
+#include "star.h"
 
 /*---------------------------------------------------------------------------*/
 

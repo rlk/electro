@@ -23,8 +23,8 @@
 #endif
 
 #include "image.h"
-#include "status.h"
 #include "shared.h"
+#include "camera.h"
 
 /*---------------------------------------------------------------------------*/
 

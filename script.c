@@ -14,9 +14,9 @@
 #include <lualib.h>
 #include <stdio.h>
 
-#include "server.h"
-#include "status.h"
 #include "shared.h"
+#include "server.h"
+#include "camera.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/

@@ -16,9 +16,9 @@
 #include <mpi.h>
 
 #include "opengl.h"
-#include "server.h"
 #include "shared.h"
-#include "status.h"
+#include "server.h"
+#include "camera.h"
 
 /*---------------------------------------------------------------------------*/
 

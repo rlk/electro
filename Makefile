@@ -1,15 +1,15 @@
 
 TARG=	vortex
 OBJS=	opengl.o \
-	image.o  \
-	star.o   \
-	node.o   \
-	galaxy.o \
-	status.o \
 	shared.o \
-	client.o \
 	server.o \
+	client.o \
+	camera.o \
 	script.o \
+	galaxy.o \
+	node.o   \
+	star.o   \
+	image.o  \
 	main.o
 
 #------------------------------------------------------------------------------
@@ -56,16 +56,15 @@ depend :
 #------------------------------------------------------------------------------
 # DO NOT DELETE
 
-client.o: opengl.h glext.h star.h galaxy.h shared.h status.h client.h
-galaxy.o: opengl.h glext.h galaxy.h star.h
+camera.o: opengl.h glext.h shared.h server.h camera.h
+client.o: opengl.h glext.h shared.h client.h camera.h galaxy.h star.h
+galaxy.o: opengl.h glext.h galaxy.h shared.h star.h
 image.o: opengl.h glext.h image.h
 main.o: server.h client.h
 node.o: opengl.h glext.h galaxy.h node.h
 opengl.o: opengl.h glext.h
-script.o: server.h status.h shared.h script.h
-server.o: opengl.h glext.h shared.h status.h galaxy.h script.h server.h
+script.o: shared.h opengl.h glext.h server.h camera.h script.h
+server.o: opengl.h glext.h shared.h server.h script.h camera.h galaxy.h
 server.o: star.h
-shared.o: status.h shared.h
-star.o: opengl.h glext.h image.h star.h
-status.o: opengl.h glext.h
-viewer.o: opengl.h glext.h
+shared.o: image.h opengl.h glext.h shared.h camera.h
+star.o: opengl.h glext.h shared.h image.h star.h
