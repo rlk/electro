@@ -19,6 +19,11 @@
 
 /*---------------------------------------------------------------------------*/
 
+int opengl_has_program      = 0;
+int opengl_has_point_sprite = 0;
+
+/*---------------------------------------------------------------------------*/
+
 GLboolean opengl_need(const char *extension)
 {
     const char *string = (const char *) glGetString(GL_EXTENSIONS);
@@ -60,9 +65,8 @@ void *opengl_proc(const char *name)
 
 #ifdef __APPLE__
 
-GLboolean opengl_init(void)
+void init_opengl(void)
 {
-    return GL_TRUE;
 }
 
 #else
@@ -75,7 +79,7 @@ PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
 PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 
-GLboolean opengl_init(void)
+void init_opengl(void)
 {
     if (opengl_need("GL_ARB_vertex_program") &&
         opengl_need("GL_ARB_fragment_program"))
@@ -94,15 +98,20 @@ GLboolean opengl_init(void)
             opengl_proc("glBindProgramARB");
         glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
             opengl_proc("glGenProgramsARB");
+
+        opengl_has_program = (glDisableVertexAttribArrayARB
+                           && glEnableVertexAttribArrayARB
+                           && glProgramEnvParameter4fARB
+                           && glVertexAttribPointerARB
+                           && glProgramStringARB
+                           && glBindProgramARB
+                           && glGenProgramsARB);
     }
-    else return GL_FALSE;
 
     if (opengl_need("GL_ARB_point_sprite"))
     {
+        opengl_has_point_sprite = 1;
     }
-    else return GL_FALSE;
-
-    return GL_TRUE;
 }
 
 #endif

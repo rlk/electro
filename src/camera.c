@@ -245,16 +245,16 @@ void draw_camera(int id, int cd, const float V[16], float a)
 
     if (camera_exists(cd))
     {
-        GLdouble l, r, b, t;
+        float l, r, b, t;
 
-        int viewport_x0 = get_local_viewport_x();
-        int viewport_x1 = get_local_viewport_w() + viewport_x0;
-        int viewport_y0 = get_local_viewport_y();
-        int viewport_y1 = get_local_viewport_h() + viewport_y0;
-        int viewport_W  = get_total_viewport_w();
+        int viewport_x0 = (int) get_local_viewport_x();
+        int viewport_x1 = (int) get_local_viewport_w() + viewport_x0;
+        int viewport_y0 = (int) get_local_viewport_y();
+        int viewport_y1 = (int) get_local_viewport_h() + viewport_y0;
+        int viewport_W  = (int) get_total_viewport_w();
 
-        double T = PI * rot[1] / 180.0;
-        double P = PI * rot[0] / 180.0;
+        float T = PI * rot[1] / 180.0f;
+        float P = PI * rot[0] / 180.0f;
 
         /* Compute the camera position and orientation vectors. */
 
@@ -301,8 +301,9 @@ void draw_camera(int id, int cd, const float V[16], float a)
 
         /* Use the view configuration as vertex program parameters. */
 
-        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
-                                   pos[0], pos[1], pos[2], 1);
+        if (opengl_has_program)
+            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
+                                       pos[0], pos[1], pos[2], 1);
 
         /* Render all children using this camera. */
 

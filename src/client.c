@@ -160,8 +160,9 @@ void client(void)
 
         SDL_ShowCursor(0);
 
-        if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
+        if (SDL_SetVideoMode(w, h, 0, m))
         {
+			init_opengl();
             init_buffer();
             init_image();
             init_client();

@@ -344,8 +344,8 @@ static int script_get_joystick(lua_State *L)
 {
     const char *name = "get_joystick";
 
-    lua_pushnumber(L, get_joystick(script_getnumber(name, L, -2),
-                                   script_getnumber(name, L, -1)));
+    lua_pushnumber(L, get_joystick((int) script_getnumber(name, L, -2),
+                                   (int) script_getnumber(name, L, -1)));
     return 1;
 }
 
@@ -500,7 +500,7 @@ static int script_set_entity_flag(lua_State *L)
     const char *name = "set_entity_flag";
 
     send_set_entity_flag(script_getentity(name, L, -3),
-                         script_getnumber(name, L, -2),
+                   (int) script_getnumber(name, L, -2),
                          script_getboolean(name, L, -1));
     return 0;
 }
@@ -588,7 +588,8 @@ static int script_get_entity_alpha(lua_State *L)
 
 static int script_create_camera(lua_State *L)
 {
-    int id = send_create_camera(script_getnumber("create_camera", L, -1));
+	int fl = (int) script_getnumber("create_camera", L, -1);
+    int id = send_create_camera(fl);
 
     lua_pushentity(L, id);
     return 1;
@@ -620,7 +621,8 @@ static int script_create_galaxy(lua_State *L)
 
 static int script_create_light(lua_State *L)
 {
-    int id = send_create_light(script_getnumber("create_light", L, -1));
+	int fl = (int) script_getnumber("create_light", L, -1);
+    int id = send_create_light(fl);
 
     lua_pushentity(L, id);
     return 1;

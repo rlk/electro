@@ -148,7 +148,7 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%s - %d FPS\n", TITLE, fps_new);
+        sprintf(buf, "%s - %d FPS", TITLE, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;
@@ -279,10 +279,11 @@ void server(int argc, char *argv[])
             SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-            if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
+            if (SDL_SetVideoMode(w, h, 0, m))
             {
                 /* Initialize all subsystems. */
-
+	
+				init_opengl();
                 init_joystick();
                 init_buffer();
                 init_sound();

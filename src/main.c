@@ -15,9 +15,8 @@
 #include "client.h"
 
 /*---------------------------------------------------------------------------*/
-/* This hack works around an apparent bug in the OSX port of SDL.            */
 
-#ifdef __APPLE__
+#if defined(_WIN32) || defined(__APPLE__)
 #define MAIN SDL_main
 #else
 #define MAIN main

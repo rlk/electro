@@ -74,10 +74,10 @@ void draw_sprite(int id, int sd, const float V[16], float a)
                 int dx = get_image_w(S[sd].image) / 2;
                 int dy = get_image_h(S[sd].image) / 2;
 
-                glTexCoord2f(S[sd].s0, S[sd].t0); glVertex2f(-dx, -dy);
-                glTexCoord2f(S[sd].s1, S[sd].t0); glVertex2f(+dx, -dy);
-                glTexCoord2f(S[sd].s1, S[sd].t1); glVertex2f(+dx, +dy);
-                glTexCoord2f(S[sd].s0, S[sd].t1); glVertex2f(-dx, +dy);
+                glTexCoord2f(S[sd].s0, S[sd].t0); glVertex2i(-dx, -dy);
+                glTexCoord2f(S[sd].s1, S[sd].t0); glVertex2i(+dx, -dy);
+                glTexCoord2f(S[sd].s1, S[sd].t1); glVertex2i(+dx, +dy);
+                glTexCoord2f(S[sd].s0, S[sd].t1); glVertex2i(-dx, +dy);
             }
             glEnd();
 

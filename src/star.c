@@ -216,7 +216,7 @@ int star_parse_tyc(struct star *s, FILE *fp)
             s->pos[0] = (GLfloat) (sin(l) * cos(b) * plx);
             s->pos[1] = (GLfloat) (         sin(b) * plx + 15.5);
             s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx + 9200);
-            s->mag    = mag;
+            s->mag    =   (float) mag;
 
             star_color('K', s->col);
 
@@ -324,14 +324,18 @@ GLuint star_frag_program(void)
 
         "END                                     \n";
 
-    GLuint program;
+    GLuint program = 0;
 
-    glGenProgramsARB(1, &program);
+    if (opengl_has_program)
+    {
+        size_t len = strlen(star_fp);
 
-    glBindProgramARB  (GL_FRAGMENT_PROGRAM_ARB, program);
-    glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
-                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(star_fp), star_fp);
+        glGenProgramsARB(1, &program);
 
+        glBindProgramARB  (GL_FRAGMENT_PROGRAM_ARB, program);
+        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                           GL_PROGRAM_FORMAT_ASCII_ARB, len, star_fp);
+    }
     return program;
 }
 
@@ -388,12 +392,16 @@ GLuint star_vert_program(void)
 
     GLuint program;
 
-    glGenProgramsARB(1, &program);
+    if (opengl_has_program)
+    {
+        size_t len = strlen(star_vp);
 
-    glBindProgramARB  (GL_VERTEX_PROGRAM_ARB, program);
-    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
-                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(star_vp), star_vp);
+        glGenProgramsARB(1, &program);
 
+        glBindProgramARB  (GL_VERTEX_PROGRAM_ARB, program);
+        glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                           GL_PROGRAM_FORMAT_ASCII_ARB, len, star_vp);
+    }
     return program;
 }
 

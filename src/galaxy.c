@@ -68,7 +68,7 @@ int init_galaxy(void)
 
 void draw_galaxy(int id, int gd, const float V[16], float a)
 {
-    GLsizei stride = sizeof (struct star);
+    GLsizei sz = sizeof (struct star);
 
     GLenum ub = GL_UNSIGNED_BYTE;
     GLenum fl = GL_FLOAT;
@@ -89,34 +89,44 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
             {
                 /* Set up the GL state for star rendering. */
 
-                glEnable(GL_VERTEX_PROGRAM_ARB);
-                glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-                glEnable(GL_FRAGMENT_PROGRAM_ARB);
-                glEnable(GL_POINT_SPRITE_ARB);
-                glEnable(GL_COLOR_MATERIAL);
+                glBindTexture(GL_TEXTURE_2D, star_texture);
+                glBlendFunc(GL_ONE, GL_ONE);
 
                 glDisable(GL_TEXTURE_2D);
                 glDisable(GL_LIGHTING);
                 glDisable(GL_DEPTH_TEST);
+                glEnable(GL_COLOR_MATERIAL);
 
-                glBindTexture   (GL_TEXTURE_2D,           star_texture);
-                glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
-                glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vert);
+                if (opengl_has_program)
+                {
+                    glEnable(GL_VERTEX_PROGRAM_ARB);
+                    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+                    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+                }
+                if (opengl_has_point_sprite)
+                    glEnable(GL_POINT_SPRITE_ARB);
 
-                glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-                glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                           1, G[gd].magnitude, 0, 0, 0);
-                glBlendFunc(GL_ONE, GL_ONE);
+                if (opengl_has_program)
+                {
+                    glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
+                    glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vert);
+                    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
+                                               1, G[gd].magnitude, 0, 0, 0);
+                    glEnableVertexAttribArrayARB(6);
+                }
+                if (opengl_has_point_sprite)
+                    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
                 /* Enable the star arrays. */
 
                 glEnableClientState(GL_COLOR_ARRAY);
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glEnableVertexAttribArrayARB(6);
 
-                glColorPointer             (3, ub,    stride,  G[gd].S->col);
-                glVertexPointer            (3, fl,    stride,  G[gd].S->pos);
-                glVertexAttribPointerARB(6, 1, fl, 0, stride, &G[gd].S->mag);
+                glColorPointer (3, ub, sz, G[gd].S->col);
+                glVertexPointer(3, fl, sz, G[gd].S->pos);
+
+                if (opengl_has_program)
+                    glVertexAttribPointerARB(6, 1, fl, 0, sz, &G[gd].S->mag);
 
                 /* Render all stars. */
 

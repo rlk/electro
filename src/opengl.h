@@ -32,6 +32,9 @@
 
 /*---------------------------------------------------------------------------*/
 
+extern int opengl_has_program;
+extern int opengl_has_point_sprite;
+
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
@@ -54,9 +57,8 @@ extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 
 void       *opengl_proc(const char *);
 GLboolean   opengl_need(const char *);
-GLboolean   opengl_init(void);
 GLint       opengl_perf(void);
-const char *opengl_read(const char *);
+void        init_opengl(void);
 
 /*---------------------------------------------------------------------------*/
 

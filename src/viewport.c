@@ -12,13 +12,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <limits.h>
+#include <float.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #include "opengl.h"
 #include "shared.h"
 #include "buffer.h"
+#include "utility.h"
 #include "event.h"
 #include "viewport.h"
 
@@ -47,9 +51,12 @@ static void set_window_pos(int X, int Y)
     char buf[32];
 
     /* SDL looks to the environment for window position. */
-
+	/*
     sprintf(buf, "%d,%d", X, Y);
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+	*/
+	sprintf(buf, "SDL_VIDEO_WINDOW_Pos=%d,%d", X, Y);
+	putenv(buf);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -64,12 +71,12 @@ void init_viewport(void)
     Vin  = (struct viewport *) calloc(V_max, sizeof (struct viewport));
     Vout = (struct viewport *) calloc(V_max, sizeof (struct viewport));
 
-    Vtotal.X = 0;
-    Vtotal.Y = 0;
-    Vtotal.x = INT_MAX;
-    Vtotal.y = INT_MAX;
-    Vtotal.w = INT_MIN;
-    Vtotal.h = INT_MIN;
+    Vtotal.X = DEFAULT_LX;
+    Vtotal.Y = DEFAULT_LY;
+    Vtotal.x = FLT_MAX;
+    Vtotal.y = FLT_MAX;
+    Vtotal.w = FLT_MIN;
+    Vtotal.h = FLT_MIN;
 
     V_num = 0;
 }
@@ -198,8 +205,8 @@ void sync_viewport(void)
 
     gethostname(Vtemp.name, NAMELEN);
 
-    Vtemp.X = 0;
-    Vtemp.Y = 0;
+    Vtemp.X = DEFAULT_LX;
+    Vtemp.Y = DEFAULT_LY;
     Vtemp.x = DEFAULT_X;
     Vtemp.y = DEFAULT_Y;
     Vtemp.w = DEFAULT_W;
@@ -209,8 +216,8 @@ void sync_viewport(void)
 
     if (V_num == 0)
     {
-        Vtotal.X = 0;
-        Vtotal.Y = 0;
+        Vtotal.X = DEFAULT_LX;
+        Vtotal.Y = DEFAULT_LY;
         Vtotal.x = DEFAULT_X;
         Vtotal.y = DEFAULT_Y;
         Vtotal.w = DEFAULT_W;

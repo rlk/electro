@@ -13,7 +13,11 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
+#endif
 
 /*---------------------------------------------------------------------------*/
 
