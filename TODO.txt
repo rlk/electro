@@ -1,6 +1,4 @@
 remove MPI_BYTE uses
-fix lua_dofile
-improve lua error handling
 move data to dir
 audio
 audit includes

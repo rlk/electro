@@ -260,7 +260,19 @@ void script_free(void)
 
 void script_file(const char *filename)
 {
-    lua_dofile(L, filename);
+    lua_getglobal(L, "dofile");
+
+    if (lua_isfunction(L, -1))
+    {
+        lua_pushstring(L, filename);
+
+        if (lua_pcall(L, 1, 0, 0) == LUA_ERRRUN)
+        {
+            fprintf(stderr, "%s\n", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    else lua_pop(L, 1);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -276,9 +288,10 @@ int script_point(int x, int y)
         lua_pushnumber(L, (lua_Number) x);
         lua_pushnumber(L, (lua_Number) y);
 
-        lua_call(L, 2, 1);
-
-        r = lua_toboolean(L, -1);
+        if (lua_pcall(L, 2, 1, 0) == LUA_ERRRUN)
+            fprintf(stderr, "(do_point): %s\n", lua_tostring(L, -1));
+        else
+            r = lua_toboolean(L, -1);
     }
     lua_pop(L, 1);
 
@@ -296,11 +309,12 @@ int script_click(int b, int s)
         lua_pushnumber (L, (lua_Number) b);
         lua_pushboolean(L, s);
 
-        lua_call(L, 2, 1);
-
-        r = lua_toboolean(L, -1);
+        if (lua_pcall(L, 2, 1, 0) == LUA_ERRRUN)
+            fprintf(stderr, "(do_click): %s\n", lua_tostring(L, -1));
+        else
+            r = lua_toboolean(L, -1);
     }
-    else lua_pop(L, 1);
+    lua_pop(L, 1);
 
     return r;
 }
@@ -316,11 +330,12 @@ int script_keybd(int k, int s)
         lua_pushnumber (L, (lua_Number) k);
         lua_pushboolean(L, s);
 
-        lua_call(L, 2, 1);
-
-        r = lua_toboolean(L, -1);
+        if (lua_pcall(L, 2, 1, 0) == LUA_ERRRUN)
+            fprintf(stderr, "(do_keybd): %s\n", lua_tostring(L, -1));
+        else
+            r = lua_toboolean(L, -1);
     }
-    else lua_pop(L, 1);
+    lua_pop(L, 1);
 
     return r;
 }
@@ -335,11 +350,12 @@ int script_timer(int t)
     {
         lua_pushnumber(L, (lua_Number) (t / 1000.0f));
 
-        lua_call(L, 1, 1);
-
-        r = lua_toboolean(L, -1);
+        if (lua_pcall(L, 1, 1, 0) == LUA_ERRRUN)
+            fprintf(stderr, "(do_timer): %s\n", lua_tostring(L, -1));
+        else
+            r = lua_toboolean(L, -1);
     }
-    else lua_pop(L, 1);
+    lua_pop(L, 1);
 
     return r;
 }

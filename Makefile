@@ -22,7 +22,7 @@ SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
-CFLAGS= -O2 -ansi -pedantic -Wall -Wno-long-long $(shell sdl-config --cflags)
+CFLAGS= -O2 -Wall -Wno-long-long $(shell sdl-config --cflags)
 INCDIR= -I$(HOME)/include
 LIBDIR= -L$(HOME)/lib
 
