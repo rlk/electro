@@ -2,11 +2,12 @@
 <head>
   <style type="text/css">
     body   { text-align:   justify;
-             margin-right: 10%;
-             margin-left:  10%; }
-    h1     { margin-left:  -9%; }
-    h2     { margin-left:  -6%; }
-    h3     { margin-left:  -3%; }
+             margin-right: 12%;
+             margin-left:  12%; }
+    h1     { margin-left: -12%; }
+    h2     { margin-left:  -9%; }
+    h3     { margin-left:  -6%; }
+    h4     { margin-left:  -3%; }
     pre    { background: #FFFFCC; padding: 1em; }
     p.note { background: #CCFFFF; padding: 1em; }
   </style>
@@ -32,8 +33,8 @@ displays. </p>
 
 <p> This document details the functions and data types of the Electro API.  A
 knowledge of the Lua Programming Language, version 5.0, is prerequisite.  Lua
-documentation and tutorials may be found at <a
-href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
+documentation and tutorials may be found at
+<a href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
 
 <p> This document includes a number of Lua code examples.  These examples are
 distinguished from the main text as follows: </p>
@@ -56,65 +57,97 @@ consideration. </p>
 
 <!---------------------------------------------------------------------------->
 
-<h1> Types </h1>
+<h1> API </h1>
+
+<h2> Entity API </h2>
+
+
+<ul>
+<a href="#entity"> Entity </a>
+<ul>
+<li><a href="#object"> Object </a>
+<li><a href="#sprite"> Sprite </a>
+<li><a href="#camera"> Camera </a>
+<li><a href="#light">  Light  </a>
+<li><a href="#pivot">  Pivot  </a>
+<li><a href="#galaxy"> Galaxy </a>
+</ul>
+</ul>
 
 <!---------------------------------------------------------------------------->
 
-<h2> Entity </h2>
-
-<!---------------------------------------------------------------------------->
-
-<h2> Object </h2>
-
-<!---------------------------------------------------------------------------->
-
-<h2> Sprite </h2>
-
-<!---------------------------------------------------------------------------->
-
-<h2> Camera </h2>
-
-<!---------------------------------------------------------------------------->
-
-<h2> Light </h2>
-
-<!---------------------------------------------------------------------------->
-
-<h2> Pivot </h2>
-
-<!---------------------------------------------------------------------------->
-
-<h1> Functions </h1>
-
-<!---------------------------------------------------------------------------->
-
-<h2> Entity Functions </h2>
-
-<p> The following functions act on entities.  The entity argument of each
-function may take any entity value, including object, sprite, lightsource, and
-camera. </p>
-
-<h3> Absolute Transformation </h3>
+<h3> Constructors </h3>
 
 <dl>
 
-<dt><tt> set_entity_position(entity, x, y, z) </tt><dd><p> Specify
+<dt><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>
+</p>
+
+<dt><i>sprite</i> = <tt>create_sprite</tt>(<i>filename</i>)<dd><p>
+</p>
+
+<dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p>
+</p>
+
+<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p>
+</p>
+
+<dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p>
+</p>
+
+<dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename</i>)<dd><p>
+</p>
+
+<dt><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>
+</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="entity"><h3> Entity </h3>
+
+<p> The following functions act on entities.  The entity argument
+of each function may take any entity value, including object, sprite,
+camera, light, and pivot. </p>
+
+<h4> Absolute Transformation </h4>
+<dl>
+
+<dt><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p> Specify
 the position of the entity.  Position is given in the coordinate
 system of the entity's parent. </p>
 
-<dt><tt> set_entity_rotation(entity, x, y, z) </tt><dd><p> Specify
+<dt><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)<dd><p> Specify
 the rotation of the entity.  The 3 values give the angles of rotation
 in degrees about the X, Y, and Z axes.  Rotation is given in the
 coordinate system of the entity's parent. </p>
 
-<dt><tt> set_entity_scale(entity, x, y, z) </tt><dd><p> Specify the
+<dt><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)<dd><p> Specify the
 scale of the entity.  The 3 values give scale multipliers along the
 X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
 
 </dl>
 
-<h3> Relative Transformation </h3>
+<h4> Relative Transformation </h4>
+<dl>
+
+<dt><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Move the
+entity relative to its current position.  X is to the right, Y is
+up, and Z axis is to the rear, as defined by the entity's current
+orientation. </p>
+
+<p class="note"> It might be more clear to the beginner if the Z axis to
+pointed forward rather than back.  However, this would be in conflict with the
+normal right-handed coordinate system, and would only lead to inconsistency
+and confusion for the experienced 3D user. </p>
+
+<dt><tt>turn_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Rotate the
+entity relative to its current orientation.  Rotation about the X,
+Y, and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
+
+</dl>
 
 <p class="note"> Strictly speaking, to provide both absolute and relative
 transformation functions is to violate the principle of orthogonality.  In
@@ -122,33 +155,32 @@ this case, I just couldn't resist.  Inspiration for this feature is drawn from
 Blitz3D, which showed that relative transform is very beginner-friendly,
 leading to a very intuitive turtle-style system of entity control. </p>
 
+<h4> Query </h4>
 <dl>
 
-<dt><tt> move_entity(entity, x, y, z) </tt><dd><p> Move the entity relative to
-its current position.  X is to the right, Y is up, and Z axis is to the rear,
-as defined by the entity's current orientation. </p>
+<dt><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)<dd><p>
+</p>
 
-<p class="note"> It might be more clear to the beginner if the Z axis to
-pointed forward rather than back.  However, this would be in conflict with the
-normal right-handed coordinate system, and would only lead to inconsistency
-and confusion for the experienced 3D user. </p>
+<dt><i>x, y, z</i> = <tt>get_entity_rotation</tt>(<i>entity</i>)<dd><p>
+</p>
 
-<dt><tt> turn_entity(entity, x, y, z) </tt><dd><p> Rotate the entity relative
-to its current orientation.  Rotation about the X, Y, and Z axes corresponds
-to pitch, yaw, and roll, respectively. </p>
+<dt><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>
+</p>
+
+<dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p>
+</p>
 
 </dl>
 
-<h3> Flags </h3>
-
+<h4> Flags </h4>
 <dl>
 
-<dt><tt> set_entity_flag(entity, flag, value) </tt><dd><p> Set or
+<dt><tt>set_entity_flag</tt>(<i>entity, flag, value</i>) <dd><p> Set or
 clear a flag on the given entity.  Entity flags enable and disable
 extra features in the entity hierarchy.  These flags act not only
 on the entity that carries them, but also on the children of that
-entity.  The <tt>flag</tt> parameter gives the set of flags to be
-modified, and may be the sum of multiple flags.  The <tt>value</tt>
+entity.  The <i>flag</i> parameter gives the set of flags to be
+modified, and may be the sum of multiple flags.  The <i>value</i>
 parameter is a boolean giving the desired state.  A value of
 <tt>true</tt> will set the given flags, and <tt>false</tt> will
 clear them. <p>
@@ -185,13 +217,143 @@ flag will work properly, but when in doubt, scale below billboarding. </p>
 
 <!---------------------------------------------------------------------------->
 
-<h2> Configuration Functions </h2>
-
+<a name="sprite"><h3> Sprite </h3>
 <dl>
 
-<dt><tt> add_tile(local_x, local_y, global_x, global_y, width, height) </tt>
+<dt><tt>set_sprite_bounds</tt>(<i>sprite, s0, s1, t0, t1</i>)<dd><p>
+</p>
 
-<dd><p> Make a tile. </p>
+<dt><i>r, g, b, a</i> = <tt>get_sprite_pixel</tt>(<i>sprite, x, y</i>)<dd><p>
+</p>
+
+<dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
+</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="camera"><h3> Camera </h3>
+<dl>
+
+<dt><tt>set_camera_distance</tt>(<i>camera, distance</i>)<dd><p>
+</p>
+
+<dt><tt>set_camera_zoom</tt>(<i>camera, zoom</i>)<dd><p>
+</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="light"><h3> Light </h3>
+<dl>
+
+<dt><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p>
+</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="galaxy"><h3> Galaxy </h3>
+<dl>
+
+<dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p>
+</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<h2> Sound API </h2>
+<dl>
+
+<dt><i>sound</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p>
+</p>
+
+<dt><tt>free_sound</tt>(<i>sound</i>)<dd><p>
+</p>
+
+<dt><tt>play_sound</tt>(<i>sound</i>)<dd><p>
+</p>
+
+<dt><tt>loop_sound</tt>(<i>sound</i>)<dd><p>
+</p>
+
+<dt><tt>stop_sound</tt>(<i>sound</i>)<dd><p>
+</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<h2> Miscellaneous API </h2>
+<dl>
+
+<dt><tt>set_idle</tt>(<i>enabled</i>)<dd><p>
+</p>
+
+<dt><tt>get_joystick</tt>()<dd><p>
+</p>
+
+<dt><tt>get_viewport</tt>()<dd><p>
+</p>
+
+<dt><tt>add_tile</tt>(<i>name, local_x, local_y, global_x, global_y, width, height</i>)
+<dd><p> Add a tile.  This function is used by configuration scripts
+to define the structure of a tiled display.  The specified parameters
+are only accessed prior to the execution of the <tt>on_start</tt>
+callback, so any use of it must be at the global scope. </p>
+
+<p> The <i>name</i> argument gives the name of the rendering node
+responsible for rendering the defined tile.  The <i>local_x</i> and
+<i>local_y</i> arguments give the X and Y pixel position of the
+rendering window on that node's desktop.  The <i>global_x</i> and
+<i>global_y</i> arguments give the pixel location of the window
+within the total display.  The <i>width</i> and <i>height</i>
+arguments give the size of the tile being defined in pixels.  The
+width and height apply to both the size of the window on the render
+node's desktop and the size of the defined portion of the total
+display. </p>
+
+<p> As an example, here is a configuration for the 16-tile, 8-node
+nico display. </p>
+
+<pre>
+mullion_w = 128
+mullion_h = 128
+
+w  = 1600
+h  = 1200
+dx = w + mullion_w
+dy = h + mullion_h
+
+W  =  dx * 4
+H  =  dy * 4
+X  = -W / 2 + mullion_w / 2
+Y  = -H / 2 + mullion_h / 2
+
+E.add_tile("nico5-10",    0, 0, X,          Y,          w, h)
+E.add_tile("nico6-10",    0, 0, X,          Y + dy,     w, h)
+E.add_tile("nico7-10",    0, 0, X,          Y + dy * 2, w, h)
+E.add_tile("nico8-10",    0, 0, X,          Y + dy * 3, w, h)
+
+E.add_tile("nico5-10", 1600, 0, X + dx,     Y,          w, h)
+E.add_tile("nico6-10", 1600, 0, X + dx,     Y + dy,     w, h)
+E.add_tile("nico7-10", 1600, 0, X + dx,     Y + dy * 2, w, h)
+E.add_tile("nico8-10", 1600, 0, X + dx,     Y + dy * 3, w, h)
+
+E.add_tile("nico1-10",    0, 0, X + dx * 2, Y,          w, h)
+E.add_tile("nico2-10",    0, 0, X + dx * 2, Y + dy,     w, h)
+E.add_tile("nico3-10",    0, 0, X + dx * 2, Y + dy * 2, w, h)
+E.add_tile("nico4-10",    0, 0, X + dx * 2, Y + dy * 3, w, h)
+
+E.add_tile("nico1-10", 1600, 0, X + dx * 3, Y,          w, h)
+E.add_tile("nico2-10", 1600, 0, X + dx * 3, Y + dy,     w, h)
+E.add_tile("nico3-10", 1600, 0, X + dx * 3, Y + dy * 2, w, h)
+E.add_tile("nico4-10", 1600, 0, X + dx * 3, Y + dy * 3, w, h)
+</pre>
 
 </dl>
 
