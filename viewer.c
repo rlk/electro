@@ -23,8 +23,8 @@ int viewer_point(int x, int y)
 
     if (button[0])
     {
-        rotation[0] += 180.0 * dy / 500.0;
-        rotation[1] += 180.0 * dx / 500.0;
+        rotation[0] -= 180.0 * dy / 500.0;
+        rotation[1] -= 180.0 * dx / 500.0;
 
         if (rotation[0] >  +90.0) rotation[0]  = +90.0;
         if (rotation[0] <  -90.0) rotation[0]  = -90.0;
@@ -48,6 +48,10 @@ int viewer_click(int b, int s)
     case 4: if (s) position[2] += 0.25; break;
     case 5: if (s) position[2] -= 0.25; break;
     }
+
+    if (position[2] < 0.0)
+        position[2] = 0.0;
+
     return 1;
 }
 
@@ -57,8 +61,8 @@ void viewer_init(void)
 {
     position[0] =   0;
     position[1] =   0;
-    position[2] =   5;
-    rotation[0] = -30;
+    position[2] =   0;
+    rotation[0] =   0;
     rotation[1] =   0;
     rotation[2] =   0;
     button[0]   =   0;
@@ -68,10 +72,13 @@ void viewer_init(void)
 
 void viewer_draw(void)
 {
+    GLdouble a = 1.0;
+    GLdouble z = 0.5;
+
     glMatrixMode(GL_PROJECTION);
     {
         glLoadIdentity();
-        glFrustum(-1.0, +1.0, -1.0, +1.0, +1.0, +1000.0);
+        glFrustum(-a * z, +a * z, -z, +z, 1.0, 100.0);
     }
 
     glMatrixMode(GL_MODELVIEW);
