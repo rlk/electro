@@ -94,9 +94,6 @@ function do_point(dx, dy)
         if not shift   then hip_dist = hip_dist + dy * 0.1 end
         if not control then tyc_dist = tyc_dist + dy * 0.1 end
 
-        if hip_dist < 0 then hip_dist = 0 end
-        if tyc_dist < 0 then tyc_dist = 0 end
-
         E.set_camera_distance(camera_hip, hip_dist)
         E.set_camera_distance(camera_tyc, tyc_dist)
 

@@ -26,21 +26,21 @@ static int star_cmp0(const void *p1,
                      const void *p2)
 {
     return (((const struct star *) p1)->pos[0] <
-            ((const struct star *) p2)->pos[0]);
+            ((const struct star *) p2)->pos[0]) ? -1 : +1;
 }
 
 static int star_cmp1(const void *p1,
                      const void *p2)
 {
     return (((const struct star *) p1)->pos[1] <
-            ((const struct star *) p2)->pos[1]);
+            ((const struct star *) p2)->pos[1]) ? -1 : +1;
 }
 
 static int star_cmp2(const void *p1,
                      const void *p2)
 {
     return (((const struct star *) p1)->pos[2] <
-            ((const struct star *) p2)->pos[2]);
+            ((const struct star *) p2)->pos[2]) ? -1 : +1;
 }
 
 int (*star_cmp[3])(const void *, const void *) = {
@@ -317,10 +317,6 @@ GLuint star_frag_program(void)
 
         "MAD    temp, dist, ncol.b, half;        \n"
         "TEX    ocol.b, temp, texture[0], 2D;    \n"
-
-        /* Assume additive blending, and set alpha to 1. */
-
-        "MOV    ocol.a, 1;                       \n"
 
         "END                                     \n";
 

@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef VIEWPORT_H
+#define VIEWPORT_H
+
 /*---------------------------------------------------------------------------*/
 
 #ifdef _WIN32
@@ -74,3 +77,5 @@ int get_window_w(void);
 int get_window_h(void);
 
 /*---------------------------------------------------------------------------*/
+
+#endif

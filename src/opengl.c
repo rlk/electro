@@ -20,8 +20,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-GLboolean GL_has_program      = 0;
-GLboolean GL_has_point_sprite = 0;
+GLboolean GL_has_program              = 0;
+GLboolean GL_has_point_sprite         = 0;
+GLboolean GL_has_vertex_buffer_object = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -79,6 +80,11 @@ PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
 PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
+PFNGLBINDBUFFERARBPROC               glBindBufferARB;
+PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
+PFNGLBUFFERDATAARBPROC               glBufferDataARB;
+PFNGLISBUFFERARBPROC                 glIsBufferARB;
+PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 
 void init_opengl(void)
 {
@@ -109,6 +115,26 @@ void init_opengl(void)
                        && glGenProgramsARB) ? GL_TRUE : GL_FALSE;
     }
 
+    if (opengl_need("GL_ARB_vertex_buffer_object"))
+    {
+        glBindBufferARB = (PFNGLBINDBUFFERARBPROC)
+            opengl_proc("glBindBufferARB");
+        glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)
+            opengl_proc("glGenBuffersARB");
+        glBufferDataARB = (PFNGLBUFFERDATAARBPROC)
+            opengl_proc("glBufferDataARB");
+        glIsBufferARB = (PFNGLISBUFFERARBPROC)
+            opengl_proc("glIsBufferARB");
+        glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
+            opengl_proc("glDeleteBuffersARB");
+
+        GL_has_vertex_buffer_object = (glBindBufferARB
+                                    && glGenBuffersARB
+                                    && glBufferDataARB
+                                    && glIsBufferARB
+                                    && glDeleteBuffersARB) ? GL_TRUE:GL_FALSE;
+    }
+
     if (opengl_need("GL_ARB_point_sprite"))
     {
         GL_has_point_sprite = GL_TRUE;
@@ -119,21 +145,34 @@ void init_opengl(void)
 
 /*---------------------------------------------------------------------------*/
 
-GLint opengl_perf(void)
+GLfloat opengl_perf(GLfloat *all)
 {
-    static GLint fps   = 0;
-    static GLint then  = 0;
-    static GLint count = 0;
+    static GLfloat fps   = 0.0f;
+    static GLint   then  = 0;
+    static GLint   count = 0;
+    static GLint   total = 0;
+    static GLint   start = 0;
 
     GLint now = (GLint) SDL_GetTicks();
     
+    /* Compute the average FPS over 250 milliseconds. */
+
     if (now - then > 250)
     {
-        fps   = count * 1000 / (now - then);
+        fps   = 1000.0f * count / (now - then);
         then  = now;
         count = 0;
     }
     else count++;
+
+    /* Compute the total average FPS. */
+
+    if (start)
+        total++;
+    else
+        start = SDL_GetTicks();
+
+    if (all) *all = 1000.0f * total / (now - start);
 
     return fps;
 }

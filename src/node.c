@@ -11,6 +11,7 @@
 /*    General Public License for more details.                               */
 
 #include <stdlib.h>
+#include <string.h>
 #include <float.h>
 
 #include "utility.h"
@@ -100,58 +101,60 @@ int node_sort(struct node *N, int n0, int n1,
 
 static int node_test(const float V[4], const float b[6])
 {
-    /* Test all 8 points of the bounding box against the view frustum. */
+    const float k00 = b[0] * V[0];
+    const float k11 = b[1] * V[1];
+    const float k22 = b[2] * V[2];
+    const float k30 = b[3] * V[0];
+    const float k41 = b[4] * V[1];
+    const float k52 = b[5] * V[2];
 
-    if (b[0] * V[0] + b[1] * V[1] + b[2] * V[2] > V[3]) return 0;
-    if (b[0] * V[0] + b[1] * V[1] + b[5] * V[2] > V[3]) return 0;
-    if (b[0] * V[0] + b[4] * V[1] + b[2] * V[2] > V[3]) return 0;
-    if (b[0] * V[0] + b[4] * V[1] + b[5] * V[2] > V[3]) return 0;
-    if (b[3] * V[0] + b[1] * V[1] + b[2] * V[2] > V[3]) return 0;
-    if (b[3] * V[0] + b[1] * V[1] + b[5] * V[2] > V[3]) return 0;
-    if (b[3] * V[0] + b[4] * V[1] + b[2] * V[2] > V[3]) return 0;
-    if (b[3] * V[0] + b[4] * V[1] + b[5] * V[2] > V[3]) return 0;
+    int c = 0;
 
-    /* All points are outsite the frustum.  Cull the box. */
+    if (k00 + k11 + k22 > V[3]) c++;
+    if (k00 + k11 + k52 > V[3]) c++;
+    if (k00 + k41 + k22 > V[3]) c++;
+    if (k00 + k41 + k52 > V[3]) c++;
+    if (k30 + k11 + k22 > V[3]) c++;
+    if (k30 + k11 + k52 > V[3]) c++;
+    if (k30 + k41 + k22 > V[3]) c++;
+    if (k30 + k41 + k52 > V[3]) c++;
 
-    return 1;
+    return c;
 }
 
 void node_draw(const struct node *N, int n, int i,
                const float V[16], const float b[6])
 {
-    /* Test this node against the view frustem. */
+    int c0, c1, c2, c3;
 
-    if (node_test(V +  0, b)) return;
-    if (node_test(V +  4, b)) return;
-    if (node_test(V +  8, b)) return;
-    if (node_test(V + 12, b)) return;
+    /* If this node is entirely invisible, prune the tree. */
 
-    if (N[n].nodeL && N[n].nodeR)
+    if (!(c0 = node_test(V +  0, b))) return;
+    if (!(c1 = node_test(V +  4, b))) return;
+    if (!(c2 = node_test(V +  8, b))) return;
+    if (!(c3 = node_test(V + 12, b))) return;
+
+    /* If this is a leaf, or is entirely visible, draw it. */
+
+    if (N[n].nodeL == 0 || N[n].nodeR == 0 || c0 + c1 + c2 + c3 == 32)
+        glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
+
+    else
     {
+        /* We're at necessary a branch.  Cut the bounding box in two. */
+
         float bR[6];
         float bL[6];
 
-        /* We're at a branch.  Cut the bounding box in two. */
+        memcpy(bR, b, 6 * sizeof (float));
+        memcpy(bL, b, 6 * sizeof (float));
 
-        bL[0] = bR[0] = b[0];
-        bL[1] = bR[1] = b[1];
-        bL[2] = bR[2] = b[2];
-        bL[3] = bR[3] = b[3];
-        bL[4] = bR[4] = b[4];
-        bL[5] = bR[5] = b[5];
-
-        bL[i] = bR[i + 3] = N[n].k;
+        bL[i + 3] = bR[i] = N[n].k;
 
         /* Render each subtree in its own bounding box. */
 
         node_draw(N, N[n].nodeL, (i + 1) % 3, V, bL);
         node_draw(N, N[n].nodeR, (i + 1) % 3, V, bR);
-    }
-    else
-    {
-        /* We've hit a leaf.  Apparently, it is visible.  Draw it. */
-
-        glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
     }
 }
 
@@ -165,14 +168,14 @@ int node_pick(const struct node *N, int n,
     {
         float dL = -1.0f;
         float dR = -1.0f;
-        int   sL;
-        int   sR;
+        int   sL = -1;
+        int   sR = -1;
 
         /* Test the left and right child nodes, as necessary. */
         
-        if (p[i] > N[n].k || v[i] > 0)
-            sL = node_pick(N, N[n].nodeL, S, (i + 1) % 3, p, v, &dL);
         if (p[i] < N[n].k || v[i] < 0)
+            sL = node_pick(N, N[n].nodeL, S, (i + 1) % 3, p, v, &dL);
+        if (p[i] > N[n].k || v[i] > 0)
             sR = node_pick(N, N[n].nodeR, S, (i + 1) % 3, p, v, &dR);
 
         /* Note the best find thus far. */

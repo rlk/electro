@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef LIGHT_H
+#define LIGHT_H
+
 /*---------------------------------------------------------------------------*/
 
 #define LIGHT_POSITIONAL  1
@@ -37,3 +40,5 @@ void clone_light(int);
 void delete_light(int);
 
 /*---------------------------------------------------------------------------*/
+
+#endif

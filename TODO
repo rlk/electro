@@ -1,10 +1,16 @@
+frustum structure
+
 flicker?
-example constellations
 regenerate galaxy files
-you are here (billboards in space)
-find the bottleneck in tyc
+
+analyze performance
+    check culling
+    find the bottleneck in tyc
         Star VBO?  (Ok if tree is NOT pruned)
-find the bottleneck on nico
+    find the bottleneck on nico
+        free-run on null scene
+        free-run on zero magnitude
+    free-run may be ok since MPI restructuring
 
 css print
 fp/vp per entity (also fixes standard string length)

@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef BUFFER_H
+#define BUFFER_H
+
 /*---------------------------------------------------------------------------*/
 
 void  init_buffer(void);
@@ -34,3 +37,4 @@ float unpack_float(void);
 
 /*---------------------------------------------------------------------------*/
 
+#endif

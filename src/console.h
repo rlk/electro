@@ -10,12 +10,15 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef CONSOLE_H
+#define CONSOLE_H
+
 /*---------------------------------------------------------------------------*/
 
-#define CONSOLE_X 10
-#define CONSOLE_Y 10
-#define CONSOLE_W 80
-#define CONSOLE_H 24
+#define CONSOLE_X    10
+#define CONSOLE_Y    10
+#define CONSOLE_COLS 80
+#define CONSOLE_ROWS 24
 
 int  init_console(int, int);
 void draw_console(void);
@@ -31,3 +34,4 @@ void error_console(const char *);
 
 /*---------------------------------------------------------------------------*/
 
+#endif

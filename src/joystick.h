@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef JOYSTICK_H
+#define JOYSTICK_H
+
 /*---------------------------------------------------------------------------*/
 
 void init_joystick(void);
@@ -19,3 +22,4 @@ void get_joystick(int, float[2]);
 
 /*---------------------------------------------------------------------------*/
 
+#endif

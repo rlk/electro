@@ -27,6 +27,8 @@ struct galaxy
     float  magnitude;
     float  bound[6];
 
+    GLuint buffer;
+
     struct star *S;
     struct node *N;
 };

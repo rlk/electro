@@ -70,9 +70,6 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
 {
     GLsizei sz = sizeof (struct star);
 
-    GLenum ub = GL_UNSIGNED_BYTE;
-    GLenum fl = GL_FLOAT;
-
     float W[16];
 
     if (galaxy_exists(gd))
@@ -97,6 +94,8 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 glDisable(GL_LIGHTING);
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_COLOR_MATERIAL);
+
+                glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
 
                 if (GL_has_program)
                 {
@@ -124,11 +123,11 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 glEnableClientState(GL_COLOR_ARRAY);
                 glEnableClientState(GL_VERTEX_ARRAY);
 
-                glColorPointer (3, ub, sz, G[gd].S->col);
-                glVertexPointer(3, fl, sz, G[gd].S->pos);
+                glColorPointer (3, GL_UNSIGNED_BYTE, sz, (GLvoid *) 0);
+                glVertexPointer(3, GL_FLOAT,         sz, (GLvoid *) 4);
 
                 if (GL_has_program)
-                    glVertexAttribPointerARB(6, 1, fl, 0, sz, &G[gd].S->mag);
+                    glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, sz, (GLvoid *) 16);
 
                 /* Render all stars. */
 
@@ -358,6 +357,15 @@ void prep_hip_galaxy(void)
 
 /*---------------------------------------------------------------------------*/
 
+static void create_galaxy(int gd)
+{
+    glGenBuffersARB(1, &G[gd].buffer);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                    G[gd].S_num * sizeof (struct star),
+                    G[gd].S,       GL_STATIC_DRAW_ARB);
+}
+
 int send_create_galaxy(const char *filename)
 {
     int gd;
@@ -390,6 +398,8 @@ int send_create_galaxy(const char *filename)
             pack_alloc(G[gd].S_num * sizeof (struct star), G[gd].S);
             pack_alloc(G[gd].N_num * sizeof (struct node), G[gd].N);
 
+            create_galaxy(gd);
+
             /* Encapsulate this object in an entity. */
 
             return send_create_entity(TYPE_GALAXY, gd);
@@ -421,6 +431,8 @@ void recv_create_galaxy(void)
     G[gd].S = unpack_alloc(G[gd].S_num * sizeof (struct star));
     G[gd].N = unpack_alloc(G[gd].N_num * sizeof (struct node));
     
+    create_galaxy(gd);
+
     /* Encapsulate this object in an entity. */
 
     recv_create_entity();
@@ -464,6 +476,9 @@ void delete_galaxy(int gd)
 
         if (G[gd].count == 0)
         {
+            if (glIsBufferARB(G[gd].buffer))
+                glDeleteBuffersARB(1, &G[gd].buffer);
+
             if (G[gd].S) free(G[gd].S);
             if (G[gd].N) free(G[gd].N);
 

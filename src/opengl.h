@@ -34,6 +34,7 @@
 
 extern GLboolean GL_has_program;
 extern GLboolean GL_has_point_sprite;
+extern GLboolean GL_has_vertex_buffer_object;
 
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
@@ -43,6 +44,11 @@ extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 extern PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
 extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
+extern PFNGLBINDBUFFERARBPROC               glBindBufferARB;
+extern PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
+extern PFNGLBUFFERDATAARBPROC               glBufferDataARB;
+extern PFNGLISBUFFERARBPROC                 glIsBufferARB;
+extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 #endif
 
 #ifndef GL_POINT_SPRITE_ARB
@@ -57,7 +63,7 @@ extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 
 void       *opengl_proc(const char *);
 GLboolean   opengl_need(const char *);
-GLint       opengl_perf(void);
+GLfloat     opengl_perf(GLfloat *);
 
 void        init_opengl(void);
 

@@ -21,7 +21,7 @@
 
 struct star
 {
-    unsigned char col[3];
+    unsigned char col[4];
     float         pos[3];
     float         mag;
 };

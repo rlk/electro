@@ -873,6 +873,16 @@ static int script_get_entity_debug_id(lua_State *L)
     return 1;
 }
 
+static int script_exit(lua_State *L)
+{
+    SDL_Event e;
+
+    e.type = SDL_QUIT;
+    SDL_PushEvent(&e);
+
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Script callback backcallers                                               */
 
@@ -1119,6 +1129,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);
     lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
+    lua_function(L, "exit",                 script_exit);
 
     /* Constants. */
 

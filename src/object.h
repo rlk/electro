@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifndef OBJECT_H
+#define OBJECT_H
+
 /*---------------------------------------------------------------------------*/
 
 #define MAXOBJECT 128
@@ -74,3 +77,5 @@ void clone_object(int);
 void delete_object(int);
 
 /*---------------------------------------------------------------------------*/
+
+#endif

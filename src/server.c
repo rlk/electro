@@ -24,7 +24,6 @@
 #include "sound.h"
 #include "image.h"
 #include "event.h"
-#include "version.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -32,6 +31,8 @@ static void server_draw(void);
 
 static int server_grab = 0;
 static int server_time = 0;
+
+static float average_fps = 0.0f;
 
 /*---------------------------------------------------------------------------*/
 
@@ -70,16 +71,17 @@ static Uint32 timer_callback(Uint32 interval, void *parameter)
     return interval;
 }
 
+static int         timer_on = 0;
+
 void enable_timer(int b)
 {
-    static SDL_TimerID timer_id;
-    static int         timer_on = 0;
+/*  static SDL_TimerID timer_id; */
 
     /* Enable or disable an SDL timer callback. */
 
     if (b && !timer_on)
     {
-        timer_id = SDL_AddTimer(1000 / 40, timer_callback, NULL);
+/*      timer_id = SDL_AddTimer(1000 / 40, timer_callback, NULL); */
         timer_on = 1;
         server_time = SDL_GetTicks();
     }
@@ -87,7 +89,7 @@ void enable_timer(int b)
     if (!b && timer_on)
     {
         timer_on = 0;
-        SDL_RemoveTimer(timer_id);
+/*      SDL_RemoveTimer(timer_id); */
     }
 }
 
@@ -146,7 +148,7 @@ static void server_draw(void)
 static void server_perf(void)
 {
     static int fps_old = 0;
-    int        fps_new = opengl_perf();
+    int        fps_new = (int) opengl_perf(&average_fps);
 
     if (fps_new != fps_old)
     {
@@ -265,6 +267,8 @@ static int server_loop(void)
         }
     }
 
+    if (timer_on && server_grab) timer_callback(0, NULL);
+
     return 1;
 }
 
@@ -273,7 +277,6 @@ static int server_loop(void)
 void server(int argc, char *argv[])
 {
     int argi;
-
     /*
     prep_tyc_galaxy();
     prep_hip_galaxy();
@@ -281,7 +284,7 @@ void server(int argc, char *argv[])
 
     if (init_script())
     {
-        init_console(CONSOLE_W, CONSOLE_H);
+        init_console(CONSOLE_COLS, CONSOLE_ROWS);
         init_viewport();
 
         /* Read and execute all scripts given on the command line. */
@@ -329,6 +332,8 @@ void server(int argc, char *argv[])
 
                 SDL_PauseAudio(0);
 
+                grab(1);
+
                 while (SDL_WaitEvent(NULL))
                     if (server_loop() == 0)
                         break;
@@ -343,6 +348,8 @@ void server(int argc, char *argv[])
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
     }
+
+    printf("Average FPS: %f\n", average_fps);
 }
 
 /*---------------------------------------------------------------------------*/

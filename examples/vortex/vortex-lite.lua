@@ -4,6 +4,7 @@
 camera = nil
 galaxy = nil
 hilite = nil
+marker = nil
 
 zoom =   1.0
 magn = 100.0
@@ -42,9 +43,11 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     galaxy = E.create_galaxy("../galaxy_hip.gal")
     hilite = E.create_sprite("hilite.png")
+    marker = E.create_sprite("here.png")
 
     E.parent_entity(galaxy, camera)
     E.parent_entity(hilite, galaxy)
+    E.parent_entity(marker, galaxy)
 
     add_constellation("cassiopeia.obj")
     add_constellation("orion.obj")
@@ -54,7 +57,9 @@ function do_start()
     E.set_galaxy_magnitude(galaxy, magn)
 
     E.set_entity_flag(hilite, E.entity_flag_billboard, true)
+    E.set_entity_flag(marker, E.entity_flag_billboard, true)
     E.set_entity_scale(hilite, 1 / 256, 1 / 256, 1 / 256)
+    E.set_entity_scale(marker, 1 / 128, 1 / 128, 1 / 128)
 
     return true
 end

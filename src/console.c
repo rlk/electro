@@ -548,6 +548,10 @@ void print_console(const char *str)
 {
     int i, l = strlen(str);
 
+#ifndef NDEBUG
+    fprintf(stderr, "%s", str);
+#endif
+
     for (i = 0; i < l; i++)
     {
         if (str[i] == '\n')
@@ -570,6 +574,12 @@ void print_console(const char *str)
                 CONS_B(console_y, console_x) = console_b;
             }
             console_x = console_x + 1;
+        }
+
+        if (console_x > console_w)
+        {
+            scroll_console();
+            console_x = 0;
         }
     }
 
