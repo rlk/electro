@@ -527,6 +527,29 @@ resources.  The stream may be restarted from the beginning.
 
 <!---------------------------------------------------------------------------->
 
+<h2> Console API </h2>
+
+<p> Electro uses a text console overlay to display error messages and enable
+run-time interaction with Lua state.  This console can be enabled and disabled
+by pressing F1. It also appears automatically whenever anything is printed to
+it.  Applications are free to use this console for their own purposes as well.
+For example, debugging information may be send there. </p>
+
+<dl>
+
+<dt><tt>print_console</tt>(<i>string</i>)<dd></p> Print <i>string</i> to the
+console.  To print formatted output or non-string objects, use string
+concatenation or Lua <tt>string.format</tt> function. </p>
+
+<dt><tt>clear_console</tt>()<dd><p> Clear the console to blank. </p>
+
+<dt><tt>color_console</tt>(<i>r, g, b</i>)<dd><p> Set the console text color to
+(<i>r, g, b</i>). </p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
 <h2> Miscellaneous API </h2>
 <dl>
 

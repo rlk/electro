@@ -232,7 +232,7 @@ static int  history_i = 0;
 static int  history_j = 0;
 static int  command_i = 0;
 
-static int console_enable = 1;
+static int console_enable = 0;
 
 static int console_w;
 static int console_h;
@@ -272,6 +272,8 @@ static void ident(void)
     faded("  |||  ELECTRO                           \n");
     faded("  O o  Copyright (C) 2005  Robert Kooima \n");
     faded("   -   http://www.evl.uic.edu/rlk/electro\n");
+
+    console_enable = 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -571,6 +573,8 @@ void print_console(const char *str)
             console_x = console_x + 1;
         }
     }
+
+    console_enable = 1;
 }
 
 void error_console(const char *str)
@@ -585,7 +589,6 @@ void error_console(const char *str)
     print_console(str);
     print_console("\n");
 
-    console_enable = 1;
     console_r = r;
     console_g = g;
     console_b = b;
