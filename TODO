@@ -1,10 +1,17 @@
 console script
+galaxy star query
+example constellations
+you are here (billboards in space)
+vortex light
+find the bottleneck in tyc
+        Star VBO?  (Ok if tree is NOT pruned)
+find the bottleneck on nico
+
 css print
 fp/vp per entity (also fixes standard string length)
 Scale and billboard frustum (thorough test)
 
 TTF support (distribute the ttf?  Just the image?)
-Star VBO?  (Ok if tree is NOT pruned)
 asteroids text overlay models?
 
 camera near/far (automatic? (entity bounding sphere?))

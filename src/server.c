@@ -152,11 +152,29 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%s - %s - %d FPS", TITLE, REV, fps_new);
+        sprintf(buf, "%s - %d FPS", TITLE, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;
     }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int server_keydn(SDL_KeyboardEvent *k)
+{
+    if (console_is_enabled())
+        return input_console(k->keysym.sym, k->keysym.unicode);
+    else
+        return do_keyboard_script(k->keysym.sym, 1);
+}
+
+static int server_keyup(SDL_KeyboardEvent *k)
+{
+    if (!console_is_enabled())
+        return 0;
+    else
+        return do_keyboard_script(k->keysym.sym, 0);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -203,14 +221,10 @@ static int server_loop(void)
                                             e.jbutton.button, 0);
                 break;
             case SDL_KEYDOWN:
-                if (console_is_enabled())
-                    dirty |= input_console(e.key.keysym.unicode);
-                else
-                    dirty |= do_keyboard_script(e.key.keysym.sym, 1);
+                dirty |= server_keydn(&e.key);
                 break;
             case SDL_KEYUP:
-                if (!console_is_enabled())
-                    dirty |= do_keyboard_script(e.key.keysym.sym, 0);
+                dirty |= server_keyup(&e.key);
                 break;
             case SDL_USEREVENT:
                 dirty |= do_timer_script(e.user.code);

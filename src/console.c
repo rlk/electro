@@ -10,9 +10,11 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "opengl.h"
 #include "utility.h"
@@ -222,7 +224,12 @@ GLubyte glyph[96][13] = {
 
 /*---------------------------------------------------------------------------*/
 
+#define MAXHST 128
+
+static char history[MAXHST][MAXSTR];
 static char command[MAXSTR];
+static int  history_i = 0;
+static int  history_j = 0;
 static int  command_i = 0;
 
 static int console_enable = 1;
@@ -362,6 +369,8 @@ void draw_console(void)
                             glColor3ub(r, g, b);
                         }
 
+                        /* TODO: the glyphs are offset in the bytes. */
+
                         glRasterPos2i(CONSOLE_X + j * STEP_X - 2,
                                       CONSOLE_Y + i * STEP_Y);
                         glBitmap(8, 13, 0, 0, 0, 0, glyph[CONS_C(i, j) - 32]);
@@ -379,35 +388,31 @@ static void scroll_console(void)
     memset(console, 0, console_w * 4);
 }
 
-static void add_char(char c)
+static void clear_console_line(void)
 {
-    if (c == '\n' || c == '\r')
-    {
-        if (console_y == 0)
-            scroll_console();
-        else
-            console_y = console_y - 1;
-            
-        console_x = 0;
-    }
+    int i;
 
-    if (c >= 32)
-    {
-        if (0 <= console_x && console_x < console_w &&
-            0 <= console_y && console_y < console_h)
-        {
-            CONS_C(console_y, console_x) = c;
-            CONS_R(console_y, console_x) = console_r;
-            CONS_G(console_y, console_x) = console_g;
-            CONS_B(console_y, console_x) = console_b;
-        }
-        console_x = console_x + 1;
-    }
+    /* Clear to the end of the line. */
+
+    for (i = console_x; i < console_w; i++)
+        CONS_C(console_y, i) = 0;
 }
 
-/*---------------------------------------------------------------------------*/
+static void input_console_line(void)
+{
+    /* Scroll the console if necessary. */
 
-int input_console(char c)
+    if (console_y == 0)
+        scroll_console();
+    else
+        console_y = console_y - 1;
+            
+    /* Carriage return. */
+
+    console_x = 0;
+}
+
+static void refresh_command(void)
 {
     unsigned char r = console_r;
     unsigned char g = console_g;
@@ -415,34 +420,116 @@ int input_console(char c)
 
     color_console(1.0f, 1.0f, 1.0f);
 
-    if (c == 13)
+    console_x = 0;
+
+    print_console(command);
+    clear_console_line();
+
+    console_x = command_i;
+    console_r = r;
+    console_g = g;
+    console_b = b;
+}
+
+int input_console(int symbol, int unicode)
+{
+    if (symbol == SDLK_RETURN)                      /* Execute the command. */
+
     {
-        while (console_x < console_w)
-            CONS_C(console_y, console_x++) = 0;
+        if (command_i > 0)
+        {
+            refresh_command();
+            input_console_line();
 
-        add_char(c);
-        command[command_i++] = 0;
-        do_command(command);
-        command_i = 0;
+            strncpy(history[history_i], command, MAXSTR);
 
+            history_i = history_j = (history_i + 1) % MAXHST;
+            command_i = 0;
+
+            do_command(command);
+
+            memset(command, 0, MAXSTR);
+        }
     }
 
-    if (c == 8 && command_i > 0 && console_x > 0)
+    else if (symbol == SDLK_LEFT || unicode == 2)   /* Cursor moves left. */
     {
-        command_i--;
-        console_x--;
+        if (command_i > 0)
+        {
+            command_i--;
+            console_x--;
+        }
     }
 
-    if (32 <= c && c < 127 && command_i < MAXSTR)
+    else if (symbol == SDLK_RIGHT || unicode == 6)  /* Cursor moves right. */
     {
-        add_char(c);
-        command[command_i++] = c;
+        if (command[command_i])
+        {
+            command_i++;
+            console_x++;
+        }
     }
 
-    color_console(r, g, b);
+    else if (symbol == SDLK_HOME || unicode == 1)   /* Home */
+        console_x = command_i = 0;
+
+    else if (symbol == SDLK_END || unicode == 5)    /* End */
+        console_x = command_i = strlen(command);
+
+    else if (unicode == 11)                         /* Kill */
+    {
+        memset(command + command_i, 0, MAXSTR - command_i - 1);
+        refresh_command();
+    }
+
+    else if (symbol == SDLK_UP)                     /* Previous history. */
+    {
+        history_j = (history_j - 1) % MAXHST;
+        strncpy(command, history[history_j], MAXSTR);
+
+        command_i = strlen(command);
+        refresh_command();
+    }
+
+    else if (symbol == SDLK_DOWN)                   /* Next history. */
+    {
+        history_j = (history_j + 1) % MAXHST;
+        strncpy(command, history[history_j], MAXSTR);
+
+        command_i = strlen(command);
+        refresh_command();
+    }
+
+    else if (symbol == SDLK_DELETE ||
+             symbol == SDLK_BACKSPACE)              /* Delete a character. */
+    {
+        if (command_i > 0)
+        {
+            memmove(command + command_i - 1,
+                    command + command_i, MAXSTR - command_i - 1);
+
+            command_i--;
+            refresh_command();
+        }
+    }
+    
+    else if (isprint(unicode))                      /* Insert a character. */
+    {
+        if (command_i < MAXSTR && console_x < console_w)
+        {
+            memmove(command + command_i + 1,
+                    command + command_i, MAXSTR - command_i - 1);
+            command[command_i] = (char) unicode;
+
+            command_i++;
+            refresh_command();
+        }
+    }
 
     return 1;
 }
+
+/*---------------------------------------------------------------------------*/
 
 void clear_console(void)
 {
@@ -459,10 +546,6 @@ void color_console(float r, float g, float b)
 void print_console(const char *str)
 {
     int i, l = strlen(str);
-
-#ifndef NDEBUG
-    fprintf(stderr, "%s", str);
-#endif
 
     for (i = 0; i < l; i++)
     {
@@ -502,9 +585,10 @@ void error_console(const char *str)
     print_console(str);
     print_console("\n");
 
-    color_console(r, g, b);
-
     console_enable = 1;
+    console_r = r;
+    console_g = g;
+    console_b = b;
 }
 
 /*---------------------------------------------------------------------------*/

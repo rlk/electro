@@ -23,7 +23,7 @@ void draw_console(void);
 int  set_console_enable(int);
 int  console_is_enabled(void);
 
-int  input_console(char);
+int  input_console(int, int);
 void clear_console(void);
 void color_console(float, float, float);
 void print_console(const char *);

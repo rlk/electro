@@ -805,6 +805,31 @@ static int script_loop_sound(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Console functions                                                         */
+
+static int script_clear_console(lua_State *L)
+{
+    clear_console();
+    return 0;
+}
+
+static int script_color_console(lua_State *L)
+{
+    const char *name = "color_console";
+
+    color_console(script_getnumber(name, L, -3),
+                  script_getnumber(name, L, -2),
+                  script_getnumber(name, L, -1));
+    return 0;
+}
+
+static int script_print_console(lua_State *L)
+{
+    print_console(script_getstring("print_console", L, -1));
+    return 1;
+}
+
+/*---------------------------------------------------------------------------*/
 
 static int script_get_entity_debug_id(lua_State *L)
 {
@@ -1028,6 +1053,12 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "stop_sound",           script_stop_sound);
     lua_function(L, "play_sound",           script_play_sound);
     lua_function(L, "loop_sound",           script_loop_sound);
+
+    /* Console */
+
+    lua_function(L, "clear_console",        script_clear_console);
+    lua_function(L, "color_console",        script_color_console);
+    lua_function(L, "print_console",        script_print_console);
 
     /* Misc. */
 

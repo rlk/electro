@@ -27,6 +27,10 @@ end
 
 function do_start()
 
+    E.clear_console()
+    E.color_console(1, 1, 0)
+    E.print_console("TEST!")
+
     camera  = E.create_camera(E.camera_type_perspective)
     light   = E.create_light(E.light_type_positional)
     pivot   = E.create_pivot()
