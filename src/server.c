@@ -95,7 +95,7 @@ void enable_idle(int b)
 
 static void server_init(void)
 {
-    glViewport(0, 0, window_get_w(), window_get_h());
+    glViewport(0, 0, window_w(), window_h());
 
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_2D);
@@ -252,8 +252,8 @@ void server(int argc, char *argv[])
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK |
                      SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
         {
-            int w = window_get_w();
-            int h = window_get_h();
+            int w = window_w();
+            int h = window_h();
             int m = SDL_OPENGL;
 
             /* Set some OpenGL framebuffer attributes. */

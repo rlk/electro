@@ -85,11 +85,11 @@ void camera_draw(int id, int cd, float a)
 
     if (camera_exists(cd))
     {
-        int viewport_x0 = viewport_get_x();
-        int viewport_x1 = viewport_get_x() + viewport_get_w();
-        int viewport_y0 = viewport_get_y();
-        int viewport_y1 = viewport_get_y() + viewport_get_h();
-        int viewport_w  = viewport_get_w();
+        int viewport_x0 = viewport_local_x();
+        int viewport_x1 = viewport_local_x() + viewport_local_w();
+        int viewport_y0 = viewport_local_y();
+        int viewport_y1 = viewport_local_y() + viewport_local_h();
+        int viewport_W  = viewport_total_w();
 
         double T = PI * r[1] / 180.0;
         double P = PI * r[0] / 180.0;
@@ -121,11 +121,19 @@ void camera_draw(int id, int cd, float a)
             }
             if (C[cd].type == CAMERA_PERSP)
             {
-                GLdouble l =  C[cd].zoom * viewport_x0 / viewport_w;
-                GLdouble r =  C[cd].zoom * viewport_x1 / viewport_w;
-                GLdouble b = -C[cd].zoom * viewport_y1 / viewport_w;
-                GLdouble t = -C[cd].zoom * viewport_y0 / viewport_w;
+                GLdouble l =  C[cd].zoom * viewport_x0 / viewport_W;
+                GLdouble r =  C[cd].zoom * viewport_x1 / viewport_W;
+                GLdouble b = -C[cd].zoom * viewport_y1 / viewport_W;
+                GLdouble t = -C[cd].zoom * viewport_y0 / viewport_W;
                 GLdouble f =  CAMERA_FAR;
+
+                printf("%d %d %d %d %d %f %f %f %f\n", 
+                       viewport_x0,
+                       viewport_x1,
+                       viewport_y0,
+                       viewport_y1,
+                       viewport_W,
+                       l, r, b, t);
 
                 glFrustum(l, r, b, t, 1.0, f);
             }
@@ -138,12 +146,12 @@ void camera_draw(int id, int cd, float a)
             camera_transform(id);
         }
 
-        opengl_check("camera_draw");
-
         /* Use the view configuration as vertex program parameters. */
 
         glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
                                    0, p[0], p[1], p[2], 1);
+
+        opengl_check("camera_draw");
 
         /* Render all children using this camera. */
 

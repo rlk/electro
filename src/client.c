@@ -99,7 +99,7 @@ static void client_recv(void)
 
 static void client_init(void)
 {
-    glViewport(0, 0, window_get_w(), window_get_h());
+    glViewport(0, 0, window_w(), window_h());
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -150,8 +150,8 @@ void client(void)
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
-        int w = window_get_w();
-        int h = window_get_h();
+        int w = window_w();
+        int h = window_h();
         int m = SDL_OPENGL | SDL_NOFRAME;
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
 
 #include "opengl.h"
 #include "shared.h"
@@ -26,40 +27,46 @@
 /*---------------------------------------------------------------------------*/
 /* Viewport configuration                                                    */
 
-static struct viewport  Vs;
-static struct viewport *Vi;
-static struct viewport *Vo;
-static int              V_max = 128;
-static int              V_num = 0;
+static struct viewport  Vtotal;      /* Total display viewport               */
+static struct viewport  Vlocal;      /* Local display viewport               */
+static struct viewport *Vin;         /* Viewports input from cluster config  */
+static struct viewport *Vout;        /* Viewports output to render nodes     */
+
+static int V_max =  32;
+static int V_num =   0;
 
 /*---------------------------------------------------------------------------*/
 
-static float viewport_X = 0.0f;
-static float viewport_Y = 0.0f;
-static float viewport_x = DEFAULT_X;
-static float viewport_y = DEFAULT_Y;
-static float viewport_w = DEFAULT_W;
-static float viewport_h = DEFAULT_H;
+static void set_window_pos(int X, int Y)
+{
+    char buf[32];
+
+    /* SDL looks to the environment for window position. */
+
+    sprintf(buf, "%d,%d", X, Y);
+    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+}
 
 /*---------------------------------------------------------------------------*/
-/* TODO: This is not strictly correct MPI type usage.  Fix. */
 
 void viewport_init(void)
 {
     int n = mpi_size();
 
-    if (n < V_max) n = V_max;
+    if (V_max < n)
+        V_max = n;
 
-    Vi = (struct viewport *) calloc(n, sizeof (struct viewport));
-    Vo = (struct viewport *) calloc(n, sizeof (struct viewport));
+    Vin  = (struct viewport *) calloc(V_max, sizeof (struct viewport));
+    Vout = (struct viewport *) calloc(V_max, sizeof (struct viewport));
 
-    V_max = n;
+    Vtotal.X = 0;
+    Vtotal.Y = 0;
+    Vtotal.x = INT_MAX;
+    Vtotal.y = INT_MAX;
+    Vtotal.w = INT_MIN;
+    Vtotal.h = INT_MIN;
+
     V_num = 0;
-
-    Vs.x =  1000000;
-    Vs.y =  1000000;
-    Vs.w = -1000000;
-    Vs.h = -1000000;
 }
 
 void viewport_draw(void)
@@ -71,8 +78,8 @@ void viewport_draw(void)
     glMatrixMode(GL_PROJECTION);
     {
         glLoadIdentity();
-        glOrtho(viewport_get_x(), viewport_get_x() + viewport_get_w(),
-                viewport_get_y(), viewport_get_y() + viewport_get_h(), -1, 1);
+        glOrtho(Vtotal.x, Vtotal.x + Vtotal.w,
+                Vtotal.y, Vtotal.y + Vtotal.h, -1, 1);
     }
     glMatrixMode(GL_MODELVIEW);
     {
@@ -98,20 +105,20 @@ void viewport_draw(void)
 
             for (i = 0; i < V_num; ++i)
             {
-                glVertex2f(Vi[i].x,           Vi[i].y);
-                glVertex2f(Vi[i].x + Vi[i].w, Vi[i].y);
-                glVertex2f(Vi[i].x + Vi[i].w, Vi[i].y + Vi[i].h);
-                glVertex2f(Vi[i].x,           Vi[i].y + Vi[i].h);
+                glVertex2f(Vin[i].x,            Vin[i].y);
+                glVertex2f(Vin[i].x + Vin[i].w, Vin[i].y);
+                glVertex2f(Vin[i].x + Vin[i].w, Vin[i].y + Vin[i].h);
+                glVertex2f(Vin[i].x,            Vin[i].y + Vin[i].h);
             }
 
-            /* If there are no client viewports, draw the server viewport. */
+            /* If there are no client viewports, draw the total viewport. */
 
             if (V_num == 0)
             {
-                glVertex2f(Vs.x,        Vs.y);
-                glVertex2f(Vs.x + Vs.w, Vs.y);
-                glVertex2f(Vs.x + Vs.w, Vs.y + Vs.h);
-                glVertex2f(Vs.x,        Vs.y + Vs.h);
+                glVertex2f(Vtotal.x,            Vtotal.y);
+                glVertex2f(Vtotal.x + Vtotal.w, Vtotal.y);
+                glVertex2f(Vtotal.x + Vtotal.w, Vtotal.y + Vtotal.h);
+                glVertex2f(Vtotal.x,            Vtotal.y + Vtotal.h);
             }
         }
         glEnd();
@@ -127,12 +134,14 @@ void viewport_fill(float r, float g, float b)
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
 
+        /* Fill the entire viewport with color R,G,B. */
+
         glColor3f(r, g, b);
 
-        glRectf(viewport_get_x(),
-                viewport_get_y(),
-                viewport_get_x() + viewport_get_w(),
-                viewport_get_y() + viewport_get_h());
+        glRectf(Vtotal.x,
+                Vtotal.y,
+                Vtotal.x + Vtotal.w,
+                Vtotal.y + Vtotal.h);
     }
     glPopAttrib();
 }
@@ -140,42 +149,69 @@ void viewport_fill(float r, float g, float b)
 void viewport_tile(const char *name, float X, float Y,
                                      float x, float y, float w, float h)
 {
+    /* Note a new incoming render node viewport definition. */
+
     if (V_num < V_max)
     {
-        strncpy(Vi[V_num].name, name, NAMELEN);
+        strncpy(Vin[V_num].name, name, NAMELEN);
 
-        Vi[V_num].X = X;
-        Vi[V_num].Y = Y;
-        Vi[V_num].x = x;
-        Vi[V_num].y = y;
-        Vi[V_num].w = w;
-        Vi[V_num].h = h;
+        Vin[V_num].X = X;
+        Vin[V_num].Y = Y;
+        Vin[V_num].x = x;
+        Vin[V_num].y = y;
+        Vin[V_num].w = w;
+        Vin[V_num].h = h;
 
         V_num++;
     }
 
-    if (x < Vs.x) Vs.x = x;
-    if (y < Vs.y) Vs.y = y;
+    /* Expand the total viewport to include the new local viewport. */
 
-    if (x + w > Vs.x + Vs.w) Vs.w = x + w - Vs.x;
-    if (y + h > Vs.y + Vs.h) Vs.h = y + h - Vs.y;
+    if (Vtotal.x > x) Vtotal.x = x;
+    if (Vtotal.y > y) Vtotal.y = y;
+
+    if (Vtotal.x + Vtotal.w < x + w) Vtotal.w = x + w - Vtotal.x;
+    if (Vtotal.y + Vtotal.h < y + h) Vtotal.h = y + h - Vtotal.y;
 }
 
 void viewport_sync(void)
 {
-    static struct viewport Vt = { "", 0, 0, DEFAULT_X, DEFAULT_Y,
-                                            DEFAULT_W, DEFAULT_H };
 #ifdef MPI
     size_t sz = sizeof (struct viewport);
+#endif
+
+    struct viewport Vtemp;
+    int root = mpi_isroot();
 
     /* Get this client's host name.  Set a default viewport. */
 
-    gethostname(Vt.name, NAMELEN);
+    gethostname(Vtemp.name, NAMELEN);
+
+    Vtemp.X = 0;
+    Vtemp.Y = 0;
+    Vtemp.x = DEFAULT_X;
+    Vtemp.y = DEFAULT_Y;
+    Vtemp.w = DEFAULT_W;
+    Vtemp.h = DEFAULT_H;
+
+    /* If there are no local viewports, ensure the total viewport is valid. */
+
+    if (V_num == 0)
+    {
+        Vtotal.X = 0;
+        Vtotal.Y = 0;
+        Vtotal.x = DEFAULT_X;
+        Vtotal.y = DEFAULT_Y;
+        Vtotal.w = DEFAULT_W;
+        Vtotal.h = DEFAULT_H;
+    }
+
+#ifdef MPI
 
     /* Gather all host names at the root. */
 
-    mpi_assert(MPI_Gather(&Vt, sz, MPI_BYTE,
-                           Vo, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
+    mpi_assert(MPI_Gather(&Vtemp, sz, MPI_BYTE,
+                           Vout,  sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
     /* If this is the root, assign viewports by matching host names. */
 
@@ -189,127 +225,109 @@ void viewport_sync(void)
 
         for (j = 1; j < n; j++)
             for (k = 0; k < V_num; k++)
-                if (strcmp(Vo[j].name, Vi[k].name) == 0)
+                if (strcmp(Vout[j].name, Vin[k].name) == 0)
                 {
                     /* A name matches.  Copy the viewport definition. */
 
-                    Vo[j].X = Vi[k].X;
-                    Vo[j].Y = Vi[k].Y;
-                    Vo[j].x = Vi[k].x;
-                    Vo[j].y = Vi[k].y;
-                    Vo[j].w = Vi[k].w;
-                    Vo[j].h = Vi[k].h;
+                    Vout[j].X = Vin[k].X;
+                    Vout[j].Y = Vin[k].Y;
+                    Vout[j].x = Vin[k].x;
+                    Vout[j].y = Vin[k].y;
+                    Vout[j].w = Vin[k].w;
+                    Vout[j].h = Vin[k].h;
 
                     /* Destroy the name to ensure it matches at most once. */
 
-                    strcpy(Vi[k].name, "");
+                    strcpy(Vin[k].name, "");
 
                     break;
                 }
     }
 
-    /* Scatter the assignments to all clients. */
+    /* Scatter the assignments to all clients.  Broadcast the total.  */
 
-    mpi_assert(MPI_Scatter(Vo, sz, MPI_BYTE,
-                          &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
+    mpi_assert(MPI_Scatter(Vout,  sz, MPI_BYTE,
+                          &Vtemp, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
+    mpi_assert(MPI_Bcast(&Vtotal, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
 #endif  /* MPI */
 
-    if (V_num == 0)
-    {
-        Vs.X = 0;
-        Vs.Y = 0;
-        Vs.x = DEFAULT_X;
-        Vs.y = DEFAULT_Y;
-        Vs.w = DEFAULT_W;
-        Vs.h = DEFAULT_H;
-    }
+    /* Apply this node's viewport. */
 
-    /* Apply this client's viewport. */
+    Vlocal.X = root ? Vtotal.X : Vtemp.X;
+    Vlocal.Y = root ? Vtotal.Y : Vtemp.Y;
+    Vlocal.x = root ? Vtotal.x : Vtemp.x;
+    Vlocal.y = root ? Vtotal.y : Vtemp.y;
+    Vlocal.w = root ? Vtotal.w : Vtemp.w;
+    Vlocal.h = root ? Vtotal.h : Vtemp.h;
 
-    if (mpi_isroot())
-        viewport_set(Vs.X, Vs.Y, Vs.x, Vs.y, Vs.w, Vs.h);
-    else
-        viewport_set(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+    set_window_pos((int) Vlocal.X, (int) Vlocal.Y);
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void set_window_pos(int X, int Y)
+float viewport_total_x(void)
 {
-    char buf[32];
-
-    /* SDL looks to the environment for window position. */
-
-    sprintf(buf, "%d,%d", X, Y);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+    return Vtotal.x;
 }
 
-void viewport_set(float X, float Y, float x, float y, float w, float h)
+float viewport_total_y(void)
 {
-    viewport_X = X;
-    viewport_Y = Y;
-    viewport_x = x;
-    viewport_y = y;
-    viewport_w = w;
-    viewport_h = h;
-
-    set_window_pos((int) X, (int) Y);
+    return Vtotal.y;
 }
 
-void viewport_get(float *x, float *y, float *w, float *h)
+float viewport_total_w(void)
 {
-    if (x) *x = viewport_x;
-    if (y) *y = viewport_y;
-    if (w) *w = viewport_w;
-    if (h) *h = viewport_h;
+    return Vtotal.w;
 }
 
-int viewport_get_x(void)
+float viewport_total_h(void)
 {
-    return (int) viewport_x;
-}
-
-int viewport_get_y(void)
-{
-    return (int) viewport_y;
-}
-
-int viewport_get_w(void)
-{
-    return (int) viewport_w;
-}
-
-int viewport_get_h(void)
-{
-    return (int) viewport_h;
+    return Vtotal.h;
 }
 
 /*---------------------------------------------------------------------------*/
 
-float window_get_scale(void)
+float viewport_local_x(void)
 {
-    return (float) DEFAULT_W / viewport_w;
+    return Vlocal.x;
 }
 
-int window_get_w(void)
+float viewport_local_y(void)
+{
+    return Vlocal.y;
+}
+
+float viewport_local_w(void)
+{
+    return Vlocal.w;
+}
+
+float viewport_local_h(void)
+{
+    return Vlocal.h;
+}
+
+/*---------------------------------------------------------------------------*/
+
+float viewport_scale(void)
 {
     /* Scale the server window width down to a reasonable size. */
 
     if (mpi_isroot())
-        return (int) (viewport_w * window_get_scale());
+        return (float) DEFAULT_W / Vtotal.w;
     else
-        return (int) (viewport_w);
+        return 1.0f;
 }
 
-int window_get_h(void)
+int window_w(void)
 {
-    /* Scale the server window height down to a reasonable size. */
+    return (int) (Vlocal.w * viewport_scale());
+}
 
-    if (mpi_isroot())
-        return (int) (viewport_h * DEFAULT_W / viewport_w);
-    else
-        return (int) (viewport_h);
+int window_h(void)
+{
+    return (int) (Vlocal.h * viewport_scale());
 }
 
 /*---------------------------------------------------------------------------*/

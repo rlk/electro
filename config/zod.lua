@@ -1,18 +1,24 @@
 
 -------------------------------------------------------------------------------
 
-w  = 200
-h  = 150
-dx = w + 10  -- Tile width including mullion
-dy = h + 10  -- Tile height including mullion
+local_X = 100
+local_Y = 100
+local_w = 200
+local_h = 150
 
-global_w  =  dx * 2
-global_h  =  dy
-global_x  = -global_w / 2
-global_y  = -global_h / 2
+dx = local_w + 10  -- Tile width  including mullion
+dy = local_h + 10  -- Tile height including mullion
 
-local_x = 100
-local_y = 100
+total_w  =  dx * 2
+total_h  =  dy * 2
+total_x  = -total_w / 2
+total_y  = -total_h / 2
 
-E.add_tile("zod", local_x +  0, local_y, global_x,      global_y, w, h)
-E.add_tile("zod", local_x + dx, local_y, global_x + dx, global_y, w, h)
+E.add_tile("zod", local_X +  0, local_Y +  0,
+                  total_x +  0, total_y +  0, local_w, local_h)
+E.add_tile("zod", local_X + dx, local_Y +  0,
+                  total_x + dx, total_y +  0, local_w, local_h)
+E.add_tile("zod", local_X +  0, local_Y + dy,
+                  total_x +  0, total_y + dy, local_w, local_h)
+E.add_tile("zod", local_X + dx, local_Y + dy,
+                  total_x + dx, total_y + dy, local_w, local_h)

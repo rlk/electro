@@ -12,6 +12,9 @@ global_score25   = nil
 global_explosion = nil
 global_shockwave = nil
 
+button_fire   = 0
+button_thrust = 1
+
 -------------------------------------------------------------------------------
 
 time  = 0
@@ -748,7 +751,7 @@ function do_start()
     E.camera_zoom(space,    0.5)
     E.entity_position(space, 0, 15.5, 9200)
 
-    add_overlay("AST3R0IDS")
+    add_overlay("ASTEROIDS")
     score_init()
 
     E.enable_idle(true)
@@ -785,7 +788,6 @@ function do_timer(dt)
         end
 
         if state == "done" then
-            wait_time = wait_time + dt
             stuff_step()
             player_step()
         end
@@ -801,7 +803,7 @@ end
 function do_joystick(n, b, s)
     
     if state == "start" then
-        if b == 1 and s then
+        if b == button_fire and s then
             curr_score_set(0)
             curr_score = 0
             player_reset()
@@ -813,20 +815,20 @@ function do_joystick(n, b, s)
         end
 
     elseif state == "ready" then
-        if b == 1 and s then
+        if b == button_fire and s then
             state = "play"
         end
 
     elseif state == "play" then
-        if b == 1 and s then
+        if b == button_fire and s then
             add_bullet()
         end
-        if b == 2 then
+        if b == button_thrust then
             thrusting = s
         end
 
     elseif state == "dead" then
-        if wait_time > 1 and b == 1 and s then
+        if wait_time > 1 and b == button_fire and s then
             if ships > 0 then
                 ships = ships - 1
                 player_reset()
@@ -837,10 +839,10 @@ function do_joystick(n, b, s)
         end
 
     elseif state == "done" then
-        if b == 2 then
+        if b == button_thrust then
             thrusting = s
         end
-        if wait_time > 1 and b == 1 and s then
+        if wait_time > 1 and b == button_fire and s then
             speed = speed + 2
             level = level + 1
             level_init()

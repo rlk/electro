@@ -17,7 +17,6 @@ setdist = false
 
 function do_start()
     camera = E.create_camera(E.camera_type_perspective)
---  galaxy = E.create_galaxy("../hip_main.bin", "../tyc2.dat")
     galaxy = E.create_galaxy("../hip_main.bin")
 
     E.entity_parent(galaxy, camera)
@@ -87,6 +86,7 @@ function do_click(b, s)
     if b == 1 then setzoom = s end
     if b == 2 then setmagn = s end
     if b == 3 then setdist = s end
+    return true
 end
 
 -------------------------------------------------------------------------------

@@ -465,9 +465,10 @@ static int script_entity_get_alpha(lua_State *L)
 
 static int script_viewport_get(lua_State *L)
 {
-    float x, y, w, h;
-
-    viewport_get(&x, &y, &w, &h);
+    float x = viewport_total_x();
+    float y = viewport_total_y();
+    float w = viewport_total_w();
+    float h = viewport_total_h();
 
     lua_pushnumber(L, x);
     lua_pushnumber(L, x + w);

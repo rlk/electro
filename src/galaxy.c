@@ -66,7 +66,8 @@ void galaxy_send_magn(int gd, float m)
     pack_event(EVENT_GALAXY_MAGN);
     pack_float(m);
 
-    mag = m * window_get_scale();
+    mag = m * viewport_scale();
+    mag = m;
 }
 
 void galaxy_recv_magn(void)
@@ -84,8 +85,8 @@ void galaxy_draw(int id, int gd, float a)
 
         entity_transform(id);
 
-        glPushAttrib(GL_TEXTURE_BIT |
-                     GL_ENABLE_BIT  |
+        glPushAttrib(GL_ENABLE_BIT  |
+                     GL_TEXTURE_BIT |
                      GL_COLOR_BUFFER_BIT);
         {
             /* Set up the GL state for star rendering. */

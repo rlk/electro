@@ -2,17 +2,15 @@ PREFIX=/usr/local/Electro
 
 #------------------------------------------------------------------------------
 
-# Standalone mode
-
-CC= cc
-TARG= electro
-CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
-
-# Cluster mode
-
-#CC= mpicc
-#TARG= electro-mpi
-#CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+ifdef MPI
+	CC= mpicc
+	CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+	TARG= electro-mpi
+else
+	CC= cc
+	CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
+	TARG= electro
+endif
 
 #------------------------------------------------------------------------------
 
@@ -73,6 +71,7 @@ clean :
 
 install : $(TARG)
 	cp $(TARG) $(PREFIX)/bin
+	cp config/* $(PREFIX)/config
 
 #------------------------------------------------------------------------------
 

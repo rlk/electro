@@ -40,19 +40,23 @@ void viewport_sync(void);
 
 /*---------------------------------------------------------------------------*/
 
-void viewport_set(float,   float,   float,   float, float, float);
-void viewport_get(float *, float *, float *, float *);
+void viewport_set(float, float, float, float, float, float);
 
-int  viewport_get_x(void);
-int  viewport_get_y(void);
-int  viewport_get_w(void);
-int  viewport_get_h(void);
+float viewport_total_x(void);
+float viewport_total_y(void);
+float viewport_total_w(void);
+float viewport_total_h(void);
+
+float viewport_local_x(void);
+float viewport_local_y(void);
+float viewport_local_w(void);
+float viewport_local_h(void);
+
+float viewport_scale(void);
 
 /*---------------------------------------------------------------------------*/
 
-float window_get_scale(void);
-
-int  window_get_w(void);
-int  window_get_h(void);
+int window_w(void);
+int window_h(void);
 
 /*---------------------------------------------------------------------------*/
