@@ -212,7 +212,7 @@ static void draw_image(void)
     for (r = 0; r < console_h; r++)
         for (c = 0; c < console_w; c++)
         {
-            unsigned char *p = glyph[CONS_C(r, c) ? CONS_C(r, c) - 32 : 0];
+            const GLubyte *p = glyph[CONS_C(r, c) ? CONS_C(r, c) - 32 : 0];
 
             for (i = 0; i < GLYPH_H; i++)
                 for (j = 0; j < GLYPH_W; j++)

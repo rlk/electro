@@ -145,8 +145,8 @@ function do_keyboard(k, s)
 
         -- If autoplay has been switched, toggle the idle function.
 
-        if k == 282 then E.enable_timer(true)  end
-        if k == 283 then E.enable_timer(false) end
+        if k == 283 then E.enable_timer(true)  end
+        if k == 284 then E.enable_timer(false) end
     end
     return true
 end

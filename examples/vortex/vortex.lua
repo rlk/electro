@@ -51,6 +51,15 @@ function do_start()
 
     E.enable_timer(true)
 
+    E.print_console("---------- CONTROLS ---------\n")
+    E.print_console("F1:          toggle console\n")
+    E.print_console("Space bar:   stop motion\n")
+    E.print_console("Enter:       re-center camera\n")
+    E.print_console("Mouse move:  camera pan\n")
+    E.print_console("Left drag:   camera zoom\n")
+    E.print_console("Middle drag: star magnitude\n")
+    E.print_console("Right drag:  camera distance\n")
+
     return true
 end
 
@@ -72,8 +81,11 @@ function do_timer(dt)
 
     E.set_camera_distance(camera_hip, hip_dist)
     E.set_camera_distance(camera_tyc, tyc_dist)
-    E.set_camera_zoom(camera_hip, zoom)
-    E.set_camera_zoom(camera_tyc, zoom)
+    E.set_camera_zoom(camera_hip, zoom * zoom)
+    E.set_camera_zoom(camera_tyc, zoom * zoom)
+
+    E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
+    E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
 
     E.set_entity_rotation(camera_hip, rot_x, rot_y, rot_z)
     E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
@@ -111,8 +123,8 @@ function do_point(dx, dy)
         if not shift   then hip_magn = hip_magn - dy * 1.0 end
         if not control then tyc_magn = tyc_magn - dy * 1.0 end
 
-        E.set_galaxy_magnitude(galaxy_hip, hip_magn)
-        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
+        E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
+        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
 
     elseif setdist then  -- Set the camera distance from the center.
 
