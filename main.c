@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        if (SDL_SetVideoMode(WIN_W, WIN_H, 0, SDL_OPENGL))
+        if (SDL_SetVideoMode(WIN_W, WIN_H, 0, WIN_M | SDL_OPENGL))
         {
             init();
             draw();

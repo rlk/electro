@@ -28,7 +28,7 @@ void viewer_init(void)
     position[3] =      1.0;
     rotation[0] =      0.0;
     rotation[1] =      0.0;
-    distance    =  15000.0;
+    distance    =   1000.0;
     magnifier   =    256.0;
 }
 
@@ -91,7 +91,7 @@ int viewer_point(int x, int y)
     }
     if (button[2])
     {
-        distance += dy * 32;
+        distance += dy;
 
         if (distance < 0.0)
             distance = 0.0;

@@ -9,9 +9,9 @@ PARAM  view   = program.env[0];
 PARAM  mult   = program.env[1];
 PARAM  mvp[4] = { state.matrix.mvp };
 
-TEMP   dist;  # distance
-TEMP   amag;  # apparent magnitude
-TEMP   luma;  # luminosity
+TEMP   dist;
+TEMP   amag;
+TEMP   luma;
 TEMP   temp;
 
 OUTPUT osiz   = result.pointsize;

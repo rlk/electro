@@ -3,12 +3,15 @@
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef WIDE
-#define WIN_W 1024
-#define WIN_H 460
-#else
+
+#ifdef WINDOW
 #define WIN_W 1024
 #define WIN_H 768
+#define WIN_M 0
+#else
+#define WIN_W 1600
+#define WIN_H 1200
+#define WIN_M SDL_FULLSCREEN
 #endif
 
 #define MAXBUF 4096

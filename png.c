@@ -65,8 +65,10 @@ GLuint png_load(const char *filename)
 
         switch (png_get_color_type(readp, infop))
         {
-        case PNG_COLOR_TYPE_RGB:       b = 3; f = GL_RGB;  break;
-        case PNG_COLOR_TYPE_RGB_ALPHA: b = 4; f = GL_RGBA; break;
+        case PNG_COLOR_TYPE_GRAY:       b = 1; f = GL_LUMINANCE;        break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA: b = 2; f = GL_LUMINANCE_ALPHA;  break;
+        case PNG_COLOR_TYPE_RGB:        b = 3; f = GL_RGB;              break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:  b = 4; f = GL_RGBA;             break;
 
         default: return png_punt("Unsupported PNG color type");
         }
@@ -94,8 +96,8 @@ GLuint png_load(const char *filename)
                         GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                         GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         gluBuild2DMipmaps(GL_TEXTURE_2D, f, w, h, f, GL_UNSIGNED_BYTE, p);
 

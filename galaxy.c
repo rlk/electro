@@ -35,6 +35,68 @@ double log_2(double n)
 
 /*---------------------------------------------------------------------------*/
 
+GLuint make_texture(void)
+{
+    int c, w = 256;
+    int r, h = 256;
+
+    GLubyte *b = NULL;
+    GLuint   o = 0;
+
+    if ((b = (GLubyte *) malloc(w * h)))
+    {
+        const double k = -(2.0 * exp(1)) * (2.0 * exp(1));
+
+        /* Fill the buffer with an exponential gradient. */
+
+        for (r = 0; r < h; r++)
+            for (c = 0; c < w; c++)
+            {
+                double x = (double) c / (double) w - 0.5;
+                double y = (double) r / (double) h - 0.5;
+                double z = sqrt(x * x + y * y);
+                                
+
+                b[r * w + c] = (GLubyte) floor(exp(k * z * z) * 255.0);
+            }
+
+        /* Create a GL texture object. */
+
+        glGenTextures(1, &o);
+        glBindTexture(GL_TEXTURE_2D, o);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_LUMINANCE, w, h,
+                          GL_LUMINANCE, GL_UNSIGNED_BYTE, b);
+
+        free(b);
+    }
+
+    return o;
+}
+
+void get_color(char type, unsigned char c[3])
+{
+    c[0] = c[1] = c[2] = 0xFF;
+
+    switch (type)
+    {
+    case 'O': c[0] = 0x6F; c[1] = 0x6F; c[2] = 0xFF; break;
+    case 'B': c[0] = 0x8F; c[1] = 0x8F; c[2] = 0xFF; break;
+    case 'A': c[0] = 0xBF; c[1] = 0xBF; c[2] = 0xFF; break;
+    case 'F': c[0] = 0xDF; c[1] = 0xDF; c[2] = 0xFF; break;
+    case 'G': c[0] = 0xFF; c[1] = 0xFF; c[2] = 0xBF; break;
+    case 'K': c[0] = 0xFF; c[1] = 0xAF; c[2] = 0x8F; break;
+    case 'M': c[0] = 0xFF; c[1] = 0x6F; c[2] = 0x6F; break;
+    }
+}
+
 void read_star(FILE *fp)
 {
     char buf[512];
@@ -83,24 +145,7 @@ void read_star(FILE *fp)
 
             /* Compute the color. */
             
-            c[0] = 0xFF;
-            c[1] = 0xFF;
-            c[2] = 0xFF;
-
-            switch (buf[435])
-            {
-            case 'O': c[0] = 0x6F; c[1] = 0x6F; c[2] = 0xFF; break;
-            case 'B': c[0] = 0x8F; c[1] = 0x8F; c[2] = 0xFF; break;
-            case 'A': c[0] = 0xBF; c[1] = 0xBF; c[2] = 0xFF; break;
-            case 'F': c[0] = 0xDF; c[1] = 0xDF; c[2] = 0xFF; break;
-            case 'G': c[0] = 0xFF; c[1] = 0xFF; c[2] = 0xBF; break;
-            case 'K': c[0] = 0xFF; c[1] = 0xAF; c[2] = 0x8F; break;
-            case 'M': c[0] = 0xFF; c[1] = 0x6F; c[2] = 0x6F; break;
-            }
-
-            S[num_stars].color[0] = c[0];
-            S[num_stars].color[1] = c[1];
-            S[num_stars].color[2] = c[2];
+            get_color(buf[435], S[num_stars].color);
 
             num_stars++;
         }
@@ -109,11 +154,20 @@ void read_star(FILE *fp)
 
 void star_init(void)
 {
-/*  star_texture = png_load("blob.png"); */
+    star_texture = make_texture();
 
     if ((S = (struct star *) calloc(sizeof (struct star), max_stars)))
     {
         FILE *fp;
+
+        S[num_stars].position[0] =    0.0;
+        S[num_stars].position[1] =   15.5;
+        S[num_stars].position[2] = 9200.0;
+        S[num_stars].magnitude   =    5.0;
+
+        get_color('G', S[num_stars].color);
+
+        num_stars++;
 
         if ((fp = fopen("hip_main.dat", "r")))
         {
@@ -181,6 +235,7 @@ void galaxy_init(void)
     glEnable(GL_BLEND);
 
     glBlendFunc(GL_ONE, GL_ONE);
+/*    glBlendFunc(GL_SRC_ALPHA, GL_ONE);*/
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
