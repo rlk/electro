@@ -91,6 +91,7 @@ void recv_delete_entity(void);
 
 void send_set_entity_position (int, float, float, float);
 void send_set_entity_rotation (int, float, float, float);
+void send_set_entity_distance (int, float);
 void send_set_entity_scale    (int, float, float, float);
 void send_set_entity_alpha    (int, float);
 void send_set_entity_flag     (int, int, int);
@@ -102,6 +103,7 @@ void send_turn_entity(int, float, float, float);
 
 void recv_set_entity_position (void);
 void recv_set_entity_rotation (void);
+void recv_set_entity_distance (void);
 void recv_set_entity_scale    (void);
 void recv_set_entity_alpha    (void);
 void recv_set_entity_flag     (void);

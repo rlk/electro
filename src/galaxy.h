@@ -26,7 +26,6 @@ struct galaxy
     int    N_num;
 
     float  magnitude;
-    float  bound[6];
 
     GLuint buffer;
 

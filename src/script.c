@@ -654,8 +654,7 @@ static int script_get_entity_alpha(lua_State *L)
 
 static int script_create_camera(lua_State *L)
 {
-    int fl = (int) script_getnumber(L, -1);
-    int id = send_create_camera(fl);
+    int id = send_create_camera();
 
     lua_pushentity(L, id);
     return 1;
@@ -740,23 +739,6 @@ static int script_get_star_position(lua_State *L)
     lua_pushnumber(L, p[2]);
 
     return 3;
-}
-
-/*---------------------------------------------------------------------------*/
-/* Camera controls                                                           */
-
-static int script_set_camera_distance(lua_State *L)
-{
-    send_set_camera_distance(script_getcamera(L, -2),
-                             script_getnumber(L, -1));
-    return 0;
-}
-
-static int script_set_camera_zoom(lua_State *L)
-{
-    send_set_camera_zoom(script_getcamera(L, -2),
-                         script_getnumber(L, -1));
-    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1104,11 +1086,6 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "set_light_color",      script_set_light_color);
 
-    /* Camera control. */
-
-    lua_function(L, "set_camera_distance",  script_set_camera_distance);
-    lua_function(L, "set_camera_zoom",      script_set_camera_zoom);
-
     /* Sprite control. */
 
     lua_function(L, "set_sprite_bounds",    script_set_sprite_bounds);
@@ -1151,9 +1128,6 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
     lua_constant(L, "entity_flag_unlit",       FLAG_UNLIT);
     lua_constant(L, "entity_flag_line_smooth", FLAG_LINE_SMOOTH);
-
-    lua_constant(L, "camera_type_orthogonal",  CAMERA_ORTHO);
-    lua_constant(L, "camera_type_perspective", CAMERA_PERSP);
 
     lua_constant(L, "light_type_positional",   LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",  LIGHT_DIRECTIONAL);

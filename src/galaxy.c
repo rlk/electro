@@ -133,7 +133,7 @@ void draw_galaxy(int id, int gd, const struct frustum *F0, float a)
 
                 /* Render all stars. */
 
-                node_draw(G[gd].N, 0, 0, &F1, G[gd].bound);
+                node_draw(G[gd].N, 0, 0, &F1);
             }
             glPopClientAttrib();
             glPopAttrib();
@@ -159,7 +159,6 @@ struct head
 {
     int   N_num;
     int   S_num;
-    float bound[6];
 };
 
 int parse_galaxy(const char *filename, struct galaxy *g)
@@ -177,12 +176,6 @@ int parse_galaxy(const char *filename, struct galaxy *g)
             g->magnitude = 1.0;
             g->N_num     = ntohl(H.N_num);
             g->S_num     = ntohl(H.S_num);
-            g->bound[0]  = ntohf(H.bound[0]);
-            g->bound[1]  = ntohf(H.bound[1]);
-            g->bound[2]  = ntohf(H.bound[2]);
-            g->bound[3]  = ntohf(H.bound[3]);
-            g->bound[4]  = ntohf(H.bound[4]);
-            g->bound[5]  = ntohf(H.bound[5]);
 
             if ((g->N = (struct node *) calloc(g->N_num, sizeof(struct node))))
                 for (i = 0; i < g->N_num; ++i)
@@ -209,14 +202,8 @@ int write_galaxy(const char *filename, struct galaxy *g)
     {
         struct head H;
 
-        H.N_num    = htonl(g->N_num);
-        H.S_num    = htonl(g->S_num);
-        H.bound[0] = htonf(g->bound[0]);
-        H.bound[1] = htonf(g->bound[1]);
-        H.bound[2] = htonf(g->bound[2]);
-        H.bound[3] = htonf(g->bound[3]);
-        H.bound[4] = htonf(g->bound[4]);
-        H.bound[5] = htonf(g->bound[5]);
+        H.N_num = htonl(g->N_num);
+        H.S_num = htonl(g->S_num);
 
         if (fwrite(&H, sizeof (struct head), 1, fp) == 1)
         {
@@ -258,28 +245,9 @@ static void free_galaxy_prep(struct galaxy *g)
 
 static void fini_galaxy_prep(struct galaxy *g)
 {
-    int i;
-
     /* Sort the stars into a BSP tree. */
 
     g->N_num = node_sort(g->N, 0, 1, g->S, 0, g->S_num, 0);
-
-    printf("%d nodes\n", g->N_num);
-
-    /* Find the Outer Limits (please stand by). */
-
-    g->bound[0] = g->bound[1] = g->bound[2] =  FLT_MAX;
-    g->bound[3] = g->bound[4] = g->bound[5] =  FLT_MIN;
-
-    for (i = 0; i < g->S_num; ++i)
-    {
-        g->bound[0] = MIN(g->bound[0], g->S[i].pos[0]);
-        g->bound[1] = MIN(g->bound[1], g->S[i].pos[1]);
-        g->bound[2] = MIN(g->bound[2], g->S[i].pos[2]);
-        g->bound[3] = MAX(g->bound[3], g->S[i].pos[0]);
-        g->bound[4] = MAX(g->bound[4], g->S[i].pos[1]);
-        g->bound[5] = MAX(g->bound[5], g->S[i].pos[2]);
-    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -394,13 +362,6 @@ int send_create_galaxy(const char *filename)
             pack_index(G[gd].S_num);
             pack_index(G[gd].N_num);
 
-            pack_float(G[gd].bound[0]);
-            pack_float(G[gd].bound[1]);
-            pack_float(G[gd].bound[2]);
-            pack_float(G[gd].bound[3]);
-            pack_float(G[gd].bound[4]);
-            pack_float(G[gd].bound[5]);
-
             /* Pack the stars and BSP nodes. */
 
             pack_alloc(G[gd].S_num * sizeof (struct star), G[gd].S);
@@ -426,13 +387,6 @@ void recv_create_galaxy(void)
 
     G[gd].S_num = unpack_index();
     G[gd].N_num = unpack_index();
-
-    G[gd].bound[0] = unpack_float();
-    G[gd].bound[1] = unpack_float();
-    G[gd].bound[2] = unpack_float();
-    G[gd].bound[3] = unpack_float();
-    G[gd].bound[4] = unpack_float();
-    G[gd].bound[5] = unpack_float();
 
     /* Unpack the stars and BSP nodes. */
 

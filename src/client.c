@@ -83,8 +83,6 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_VERT_PROG: recv_set_entity_vert_prog(); break;
 
         case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
-        case EVENT_SET_CAMERA_DISTANCE:  recv_set_camera_distance();  break;
-        case EVENT_SET_CAMERA_ZOOM:      recv_set_camera_zoom();      break;
         case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
@@ -121,9 +119,8 @@ static void client_draw(void)
     draw_background();
     draw_entity();
 
-    glFinish();
-
 #ifdef MPI
+    glFinish();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
     SDL_GL_SwapBuffers();

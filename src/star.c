@@ -51,9 +51,9 @@ int (*star_cmp[3])(const void *, const void *) = {
 
 /*---------------------------------------------------------------------------*/
 
-static void star_color(char type, unsigned char c[3])
+static void star_color(char type, unsigned char c[4])
 {
-    c[0] = c[1] = c[2] = 0xFF;
+    c[0] = c[1] = c[2] = c[3] = 0xFF;
 
     switch (type)
     {

@@ -32,11 +32,18 @@ int node_write_bin(struct node *n, FILE *fp)
 
     /* Ensure all values are represented in network byte order. */
 
-    t.k     = htonf(t.k);
-    t.star0 = htonl(t.star0);
-    t.starc = htonl(t.starc);
-    t.nodeL = htonl(t.nodeL);
-    t.nodeR = htonl(t.nodeR);
+    t.split    = htonf(t.split);
+    t.bound[0] = ntohf(t.bound[0]);
+    t.bound[1] = ntohf(t.bound[1]);
+    t.bound[2] = ntohf(t.bound[2]);
+    t.bound[3] = ntohf(t.bound[3]);
+    t.bound[4] = ntohf(t.bound[4]);
+    t.bound[5] = ntohf(t.bound[5]);
+
+    t.star0    = htonl(t.star0);
+    t.starc    = htonl(t.starc);
+    t.nodeL    = htonl(t.nodeL);
+    t.nodeR    = htonl(t.nodeR);
 
     /* Write the record to the given file. */
 
@@ -54,11 +61,18 @@ int node_parse_bin(struct node *n, FILE *fp)
     {
         /* Ensure all values are represented in host byte order. */
 
-        n->k     = ntohf(n->k);
-        n->star0 = ntohl(n->star0);
-        n->starc = ntohl(n->starc);
-        n->nodeL = ntohl(n->nodeL);
-        n->nodeR = ntohl(n->nodeR);
+        n->split    = ntohf(n->split);
+        n->bound[0] = ntohf(n->bound[0]);
+        n->bound[1] = ntohf(n->bound[1]);
+        n->bound[2] = ntohf(n->bound[2]);
+        n->bound[3] = ntohf(n->bound[3]);
+        n->bound[4] = ntohf(n->bound[4]);
+        n->bound[5] = ntohf(n->bound[5]);
+
+        n->star0    = ntohl(n->star0);
+        n->starc    = ntohl(n->starc);
+        n->nodeL    = ntohl(n->nodeL);
+        n->nodeR    = ntohl(n->nodeR);
 
         return 1;
     }
@@ -87,7 +101,7 @@ int node_sort(struct node *N, int n0, int n1,
 
         /* Create a BSP split at the i-position of the middle star. */
 
-        N[n0].k     = S[sm].pos[i];
+        N[n0].split = S[sm].pos[i];
         N[n0].nodeL = n1++;
         N[n0].nodeR = n1++;
 
@@ -95,16 +109,44 @@ int node_sort(struct node *N, int n0, int n1,
 
         n1 = node_sort(N, N[n0].nodeL, n1, S, s0, sm, (i + 1) % 3);
         n1 = node_sort(N, N[n0].nodeR, n1, S, sm, s1, (i + 1) % 3);
+
+        /* Find the node bound. */
+
+        N[n0].bound[0] = MIN(N[N[n0].nodeL].bound[0], N[N[n0].nodeR].bound[0]);
+        N[n0].bound[1] = MIN(N[N[n0].nodeL].bound[1], N[N[n0].nodeR].bound[1]);
+        N[n0].bound[2] = MIN(N[N[n0].nodeL].bound[2], N[N[n0].nodeR].bound[2]);
+        N[n0].bound[3] = MAX(N[N[n0].nodeL].bound[3], N[N[n0].nodeR].bound[3]);
+        N[n0].bound[4] = MAX(N[N[n0].nodeL].bound[4], N[N[n0].nodeR].bound[4]);
+        N[n0].bound[5] = MAX(N[N[n0].nodeL].bound[5], N[N[n0].nodeR].bound[5]);
+    }
+    else
+    {
+        int s;
+
+        /* Find the node bound. */
+
+        N[n0].bound[0] = N[n0].bound[3] = S[s0].pos[0];
+        N[n0].bound[1] = N[n0].bound[4] = S[s0].pos[1];
+        N[n0].bound[2] = N[n0].bound[5] = S[s0].pos[2];
+
+        for (s = s0; s < s1; s++)
+        {
+            N[n0].bound[0] = MIN(N[n0].bound[0], S[s].pos[0]);
+            N[n0].bound[1] = MIN(N[n0].bound[1], S[s].pos[1]);
+            N[n0].bound[2] = MIN(N[n0].bound[2], S[s].pos[2]);
+            N[n0].bound[3] = MAX(N[n0].bound[3], S[s].pos[0]);
+            N[n0].bound[4] = MAX(N[n0].bound[4], S[s].pos[1]);
+            N[n0].bound[5] = MAX(N[n0].bound[5], S[s].pos[2]);
+        }
     }
     return n1;
 }
 
 /*---------------------------------------------------------------------------*/
 
-void node_draw(const struct node *N, int n, int i,
-               const struct frustum *F, const float b[6])
+void node_draw(const struct node *N, int n, int i, const struct frustum *F)
 {
-    int r = test_frustum(F, b);
+    int r = test_frustum(F, N[n].bound);
 
     /* If this node is entirely invisible, prune the tree. */
 
@@ -117,20 +159,10 @@ void node_draw(const struct node *N, int n, int i,
 
     else
     {
-        /* We're at necessary a branch.  Cut the bounding box in two. */
+        /* We're at necessary a branch.  Render the subtrees. */
 
-        float bR[6];
-        float bL[6];
-
-        memcpy(bR, b, 6 * sizeof (float));
-        memcpy(bL, b, 6 * sizeof (float));
-
-        bL[i + 3] = bR[i] = N[n].k;
-
-        /* Render each subtree in its own bounding box. */
-
-        node_draw(N, N[n].nodeL, (i + 1) % 3, F, bL);
-        node_draw(N, N[n].nodeR, (i + 1) % 3, F, bR);
+        node_draw(N, N[n].nodeL, (i + 1) % 3, F);
+        node_draw(N, N[n].nodeR, (i + 1) % 3, F);
     }
 }
 
@@ -149,9 +181,9 @@ int node_pick(const struct node *N, int n,
 
         /* Test the left and right child nodes, as necessary. */
         
-        if (p[i] < N[n].k || v[i] < 0)
+        if (p[i] < N[n].split || v[i] < 0)
             sL = node_pick(N, N[n].nodeL, S, (i + 1) % 3, p, v, &dL);
-        if (p[i] > N[n].k || v[i] > 0)
+        if (p[i] > N[n].split || v[i] > 0)
             sR = node_pick(N, N[n].nodeR, S, (i + 1) % 3, p, v, &dR);
 
         /* Note the best find thus far. */

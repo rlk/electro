@@ -20,8 +20,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define DEFAULT_X  100
-#define DEFAULT_Y  100
 #define DEFAULT_W  800
 #define DEFAULT_H  600
 

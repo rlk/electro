@@ -67,6 +67,8 @@ void init_display(void)
     if (H_max < n)
         H_max = n;
 
+    /* Allocate incoming and outgoing host config structures. */
+
     Hi = (struct host *) calloc(H_max, sizeof (struct host));
     Ho = (struct host *) calloc(H_max, sizeof (struct host));
 
@@ -112,44 +114,78 @@ void sync_display(void)
     }
 #endif
 
-    if (rank == 0) memcpy(&Host, Hi, sizeof (struct host));
+    if (rank == 0)
+    {
+        if (H_num > 0)
+            memcpy(&Host, Hi, sizeof (struct host));
+        else
+        {
+            float a = (float) DEFAULT_H / (float) DEFAULT_W;
+
+            /* No configuration is given.  Use a simple default. */
+
+            Host.W = DEFAULT_W;
+            Host.H = DEFAULT_H;
+            Host.n = 1;
+
+            Host.tile[0].w = DEFAULT_W;
+            Host.tile[0].h = DEFAULT_H;
+
+            Host.tile[0].o[0] = -0.5f;
+            Host.tile[0].o[1] = -0.5f * a;
+            Host.tile[0].o[2] = -1.0f;
+
+            Host.tile[0].r[0] =  1.0f;
+            Host.tile[0].u[1] =  1.0f * a;
+        }
+    }
 }
 
 int draw_display(struct frustum *F1, const float p[3], float N, float F, int i)
 {
-    const float x[3] = { 1.0f, 0.0f, 0.0f };
-    const float y[3] = { 0.0f, 1.0f, 0.0f };
-
     if (i < Host.n)
     {
         GLdouble l, r, b, t;
 
-        float n0[3];
-        float n1[3];
+        float A[3];
+        float B[3];
+        float C[3];
+        float D[3];
+        float n[3];
 
-        n0[0] = Host.tile[i].o[0] - p[0];
-        n0[1] = Host.tile[i].o[1] - p[1];
-        n0[2] = Host.tile[i].o[2] - p[2];
-
-        n1[0] = n0[0] + Host.tile[i].r[0] + Host.tile[i].u[0];
-        n1[1] = n0[1] + Host.tile[i].r[1] + Host.tile[i].u[1];
-        n1[2] = n0[2] + Host.tile[i].r[2] + Host.tile[i].u[2];
+        n[0] = Host.tile[i].o[0] - p[0];
+        n[1] = Host.tile[i].o[1] - p[1];
+        n[2] = Host.tile[i].o[2] - p[2];
 
         /* Compute the frustum extents. */
 
-        l = -N *  n0[0] / n0[2];
-        r = -N * (n0[0] + Host.tile[i].r[0]) / (n0[2] + Host.tile[i].r[2]);
-        b = -N *  n0[1] / n0[2];
-        t = -N * (n0[1] + Host.tile[i].u[1]) / (n0[2] + Host.tile[i].u[2]);
+        l = -N *  n[0] / n[2];
+        r = -N * (n[0] + Host.tile[i].r[0]) / (n[2] + Host.tile[i].r[2]);
+        b = -N *  n[1] / n[2];
+        t = -N * (n[1] + Host.tile[i].u[1]) / (n[2] + Host.tile[i].u[2]);
 
         /* Compute the frustum planes. */
 
-        v_cross(F1->V[0], x, n0);
-        v_cross(F1->V[1], n1, x);
-        v_cross(F1->V[2], n0, y);
-        v_cross(F1->V[3], y, n1);
+        A[0] = Host.tile[i].o[0];
+        A[1] = Host.tile[i].o[1];
+        A[2] = Host.tile[i].o[2];
 
-        F1->V[0][3] = F1->V[1][3] = F1->V[2][3] = F1->V[3][3] = 0.0f;
+        B[0] = Host.tile[i].r[0] + A[0];
+        B[1] = Host.tile[i].r[1] + A[1];
+        B[2] = Host.tile[i].r[2] + A[2];
+
+        C[0] = Host.tile[i].u[0] + B[0];
+        C[1] = Host.tile[i].u[1] + B[1];
+        C[2] = Host.tile[i].u[2] + B[2];
+
+        D[0] = Host.tile[i].u[0] + A[0];
+        D[1] = Host.tile[i].u[1] + A[1];
+        D[2] = Host.tile[i].u[2] + A[2];
+
+        v_plane(F1->V[0], p, B, A);
+        v_plane(F1->V[1], p, C, B);
+        v_plane(F1->V[2], p, D, C);
+        v_plane(F1->V[3], p, A, D);
 
         /* Configure the viewport. */
 

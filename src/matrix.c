@@ -270,4 +270,31 @@ void v_cross(float u[3], const float v[3], const float w[3])
     u[2] = v[0] * w[1] - v[1] * w[0];
 }
 
+void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
+{
+    float x[3];
+    float y[3];
+    float k;
+
+    x[0] = b[0] - a[0];
+    x[1] = b[1] - a[1];
+    x[2] = b[2] - a[2];
+
+    y[0] = c[0] - a[0];
+    y[1] = c[1] - a[1];
+    y[2] = c[2] - a[2];
+
+    p[0] = x[1] * y[2] - x[2] * y[1];
+    p[1] = x[2] * y[0] - x[0] * y[2];
+    p[2] = x[0] * y[1] - x[1] * y[0];
+
+    k = (float) sqrt(p[0] * p[0] +
+                     p[1] * p[1] +
+                     p[2] * p[2]);
+    p[0] /= k;
+    p[1] /= k;
+    p[2] /= k;
+    p[3]  = (p[0] * a[0] + p[1] * a[1] + p[2] * a[2]);
+}
+
 /*---------------------------------------------------------------------------*/

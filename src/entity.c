@@ -96,37 +96,48 @@ void transform_entity(int id, struct frustum *F1, const struct frustum *F0)
     m_init(M);
     m_init(I);
 
-    /* Translation. */
+    /* Translation-rotation is reversed for cameras. */
 
-    if (fabs(E[id].position[0]) > 0.0 ||
-        fabs(E[id].position[1]) > 0.0 ||
-        fabs(E[id].position[2]) > 0.0)
+    if (E[id].type == TYPE_CAMERA)
     {
+        /* Rotation. */
+
+        glRotatef(-E[id].rotation[0], 1.0f, 0.0f, 0.0f);
+        glRotatef(-E[id].rotation[1], 0.0f, 1.0f, 0.0f);
+        glRotatef(-E[id].rotation[2], 0.0f, 0.0f, 1.0f);
+
+        m_xrot(M, I, -E[id].rotation[0]);
+        m_yrot(M, I, -E[id].rotation[1]);
+        m_zrot(M, I, -E[id].rotation[2]);
+
+        /* Position. */
+
+        glTranslatef(-E[id].position[0],
+                     -E[id].position[1],
+                     -E[id].position[2]);
+        m_trns(M, I, E[id].position[0],
+                     E[id].position[1],
+                     E[id].position[2]);
+    }
+    else
+    {
+        /* Position. */
+
         glTranslatef(E[id].position[0],
                      E[id].position[1],
                      E[id].position[2]);
         m_trns(M, I, E[id].position[0],
                      E[id].position[1],
                      E[id].position[2]);
-    }
 
-    /* Rotation. */
+        /* Rotation. */
 
-    if (fabs(E[id].rotation[0]) > 0.0)
-    {
         glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
-        m_xrot(M, I, E[id].rotation[0]);
-    }
-
-    if (fabs(E[id].rotation[1]) > 0.0)
-    {
         glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
-        m_yrot(M, I, E[id].rotation[1]);
-    }
-
-    if (fabs(E[id].rotation[2]) > 0.0)
-    {
         glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
+
+        m_xrot(M, I, E[id].rotation[0]);
+        m_yrot(M, I, E[id].rotation[1]);
         m_zrot(M, I, E[id].rotation[2]);
     }
 
@@ -152,17 +163,12 @@ void transform_entity(int id, struct frustum *F1, const struct frustum *F0)
 
     /* Scale. */
 
-    if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
-        fabs(E[id].scale[1] - 1.0) > 0.0 ||
-        fabs(E[id].scale[2] - 1.0) > 0.0)
-    {
-        glScalef(E[id].scale[0],
+    glScalef(E[id].scale[0],
+             E[id].scale[1],
+             E[id].scale[2]);
+    m_scal(M, I, E[id].scale[0],
                  E[id].scale[1],
                  E[id].scale[2]);
-        m_scal(M, I, E[id].scale[0],
-                     E[id].scale[1],
-                     E[id].scale[2]);
-    }
 
     /* Transform the view frustum. */
 

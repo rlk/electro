@@ -120,9 +120,8 @@ static void server_draw(void)
 
     /* Sync and swap. */
 
-    glFinish();
-
 #ifdef MPI
+    glFinish();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
     SDL_GL_SwapBuffers();
@@ -163,6 +162,8 @@ static int server_keyup(SDL_KeyboardEvent *k)
 }
 
 /*---------------------------------------------------------------------------*/
+
+int which = 0;
 
 static int server_loop(void)
 {
@@ -262,7 +263,6 @@ static int server_loop(void)
 void server(int argc, char *argv[])
 {
     int argi;
-
     /*
     prep_tyc_galaxy();
     prep_hip_galaxy();
