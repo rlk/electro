@@ -27,7 +27,7 @@ SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua50 -llualib50
 PNG_LIBS= -lpng -lz -lm
 
-CFLAGS= -O2 -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG -DMPI
 INCDIR= -I$(HOME)/include -I/usr/include/lua50
 LIBDIR= -L$(HOME)/lib
 

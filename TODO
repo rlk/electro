@@ -1,5 +1,5 @@
+pivot object
 Fix server viewport
-Delete light / camera / object
 Add alpha to entity.  Remove it from sprite.
 Wire mode to object.
 Relative entity transform

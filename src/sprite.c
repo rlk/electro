@@ -99,18 +99,16 @@ void sprite_render(int id, int sd)
 
 /* This function should be called only by the entity delete function. */
 
-void sprite_delete(int id)
+void sprite_delete(int sd)
 {
-    /* Assume delete was triggered by entity delete.  Share the descriptor. */
-
-    mpi_share_integer(1, &id);
+    mpi_share_integer(1, &sd);
 
     /* Release the sprite object. */
 
-    if (glIsTexture(S[id].texture))
-        glDeleteTextures(1, &S[id].texture);
+    if (glIsTexture(S[sd].texture))
+        glDeleteTextures(1, &S[sd].texture);
 
-    memset(S + id, 0, sizeof (struct sprite));
+    memset(S + sd, 0, sizeof (struct sprite));
 }
 
 /*---------------------------------------------------------------------------*/

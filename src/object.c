@@ -587,8 +587,21 @@ void object_render(int id, int od)
 
 /*---------------------------------------------------------------------------*/
 
-void object_delete(int id)
+/* This function should be called only by the entity delete function. */
+
+void object_delete(int od)
 {
+    int si;
+
+    mpi_share_integer(1, &od);
+
+    for (si = 0; si < O[od].sc; ++si)
+        if (O[od].sv[si].fv) free(O[od].sv[si].fv);
+
+    if (O[od].mv) free(O[od].mv);
+    if (O[od].vv) free(O[od].vv);
+
+    memset(O + od, 0, sizeof (struct object));
 }
 
 /*---------------------------------------------------------------------------*/

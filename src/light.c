@@ -67,10 +67,6 @@ int light_create(int type)
     return -1;
 }
 
-void light_delete(int ld)
-{
-}
-
 /*---------------------------------------------------------------------------*/
 
 void light_render(int id, int ld)
@@ -101,6 +97,17 @@ void light_render(int id, int ld)
         }
         glPopAttrib();
     }
+}
+
+/*---------------------------------------------------------------------------*/
+
+/* This function should be called only by the entity delete function. */
+
+void light_delete(int ld)
+{
+    mpi_share_integer(1, &ld);
+
+    memset(L + ld, 0, sizeof (struct light));
 }
 
 /*---------------------------------------------------------------------------*/

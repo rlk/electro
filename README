@@ -3,8 +3,9 @@
 
 * Running
 
-    Set the ELECTRO_CONFIG environment variable to give the location
-    of the MPI machinefiles and Lua display configuration scripts.
+    The run scripts must know the location of the MPI machine files and Lua
+    display configuration scripts. Set the ELECTRO_CONFIG environment variable
+    to give their location.
 
     Using bash:
 

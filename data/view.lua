@@ -35,6 +35,14 @@ function do_point(dx, dy)
     return true
 end
 
+function do_click(b, s)
+    entity_delete(object)
+
+    object = object_create("ball.obj")
+
+    entity_parent(object, light)
+end
+
 function do_keyboard(k, s)
     return true
 end

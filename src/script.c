@@ -238,27 +238,7 @@ static int script_enable_idle(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
-/*
-static int script_camera_move(lua_State *L)
-{
-    const char *name = "camera_move";
 
-    camera_set_org(script_getnumber(name, L, -3),
-                   script_getnumber(name, L, -2),
-                   script_getnumber(name, L, -1));
-    return 0;
-}
-
-static int script_camera_turn(lua_State *L)
-{
-    const char *name = "camera_turn";
-
-    camera_set_rot(script_getnumber(name, L, -3),
-                   script_getnumber(name, L, -2),
-                   script_getnumber(name, L, -1));
-    return 0;
-}
-*/
 static int script_camera_dist(lua_State *L)
 {
     const char *name = "camera_dist";
@@ -267,15 +247,7 @@ static int script_camera_dist(lua_State *L)
                     script_getnumber(name, L, -1));
     return 0;
 }
-/*
-static int script_camera_magn(lua_State *L)
-{
-    const char *name = "camera_magn";
 
-    camera_set_magn(script_getnumber(name, L, -1));
-    return 0;
-}
-*/
 static int script_camera_zoom(lua_State *L)
 {
     const char *name = "camera_zoom";
@@ -403,11 +375,6 @@ int script_init(void)
         lua_register(L, "entity_rotation", script_entity_rotation);
         lua_register(L, "entity_scale",    script_entity_scale);
 
-/*
-        lua_register(L, "sprite_load", script_sprite_load);
-        lua_register(L, "sprite_free", script_sprite_free);
-        lua_register(L, "sprite_fade", script_sprite_fade);
-*/
         return 1;
     }
     return 0;

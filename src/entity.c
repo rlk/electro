@@ -139,12 +139,50 @@ void entity_traversal(int id)
 
 /*---------------------------------------------------------------------------*/
 
+void entity_detach(int cd, int pd)
+{
+    /* Never allow the root entity to be used as a child. */
+
+    if (cd && entity_exists(pd) && entity_exists(cd))
+    {
+        int id;
+        int jd;
+        int od = E[cd].par;
+
+        /* Remove the child from its parent's child list. */
+
+        for (jd = 0, id = E[od].car; id; jd = id, id = E[id].cdr)
+            if (id == cd)
+            {
+                if (jd)
+                    E[jd].cdr = E[id].cdr;
+                else
+                    E[od].car = E[id].cdr;
+            }
+    }
+}
+
+void entity_attach(int cd, int pd)
+{
+    /* Never allow the root entity to be used as a child. */
+
+    if (cd && entity_exists(pd) && entity_exists(cd))
+    {
+        /* Insert the child into the new parent's child list. */
+
+        E[cd].par = pd;
+        E[cd].cdr = E[pd].car;
+        E[pd].car = cd;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 /* This function should be called only by object creation functions. */
 
 int entity_create(int type, int data)
 {
-    int id = -1;
-    int rd =  0;
+    int id;
 
     if (E && (id = buffer_unused(E_max, entity_exists)) >= 0)
     {
@@ -168,22 +206,18 @@ int entity_create(int type, int data)
 
         /* Insert the new entity into the root child list. */
 
-        E[id].cdr = E[rd].car;
-        E[rd].car = id;
-        E[id].par = rd;
+        entity_attach(id, 0);
+
+        return id;
     }
     else if ((E = buffer_expand(E, &E_max, sizeof (struct entity))))
-        id = entity_create(type, data);
+        return entity_create(type, data);
 
-    return id;
+    return -1;
 }
 
 void entity_parent(int cd, int pd)
 {
-    int id;
-    int jd;
-    int od;
-
     /* Trigger the parent operation and sync the arguments. */
 
     if (mpi_isroot())
@@ -192,27 +226,8 @@ void entity_parent(int cd, int pd)
     mpi_share_integer(1, &cd);
     mpi_share_integer(1, &pd);
 
-    if (entity_exists(pd) && entity_exists(cd))
-    {
-        od = E[cd].par;
-
-        /* Remove the child from its previous parent's child list. */
-
-        for (jd = 0, id = E[od].car; id; jd = id, id = E[id].cdr)
-            if (id == cd)
-            {
-                if (jd)
-                    E[jd].cdr = E[id].cdr;
-                else
-                    E[od].car = E[id].cdr;
-            }
-
-        /* Insert the child into its new parent's child list. */
-
-        E[cd].par = pd;
-        E[cd].cdr = E[pd].car;
-        E[pd].car = cd;
-    }
+    entity_detach(cd, E[cd].par);
+    entity_attach(cd, pd);
 }
 
 void entity_render(void)
@@ -222,12 +237,23 @@ void entity_render(void)
 
 void entity_delete(int id)
 {
+    int pd = E[id].par;
+
     /* Trigger the delete operation and share the descriptor. */
 
     if (mpi_isroot())
         server_send(EVENT_ENTITY_DELETE);
 
     mpi_share_integer(1, &id);
+
+    /* Let the parent inherit any children. */
+
+    while (E[id].car)
+        entity_attach(E[id].car, pd);
+
+    /* Remove the entity from the parent's child list. */
+
+    entity_detach(id, pd);
 
     /* Invoke the data delete handler. */
 

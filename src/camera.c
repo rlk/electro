@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "opengl.h"
@@ -71,10 +72,6 @@ int camera_create(int type)
         return camera_create(type);
 
     return -1;
-}
-
-void camera_delete(int cd)
-{
 }
 
 /*---------------------------------------------------------------------------*/
@@ -144,6 +141,17 @@ void camera_render(int id, int cd)
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, camera_magn, 0, 0, 0);
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, p[0], p[1], p[2], 1);
     */
+}
+
+/*---------------------------------------------------------------------------*/
+
+/* This function should be called only by the entity delete function. */
+
+void camera_delete(int cd)
+{
+    mpi_share_integer(1, &cd);
+
+    memset(C + cd, 0, sizeof (struct camera));
 }
 
 /*---------------------------------------------------------------------------*/
