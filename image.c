@@ -88,7 +88,7 @@ GLubyte *image_load_png(const char *filename, GLsizei *width,
 
     if (setjmp(png_jmpbuf(readp)) == 0)
     {
-        int w, h, b, f, c, r, i;
+        int w, h, b, c, r, i;
 
         /* Read the PNG header. */
 

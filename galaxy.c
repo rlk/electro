@@ -29,7 +29,6 @@ static struct node *N;
 
 void galaxy_init(void)
 {
-    FILE *fp;
     const char *vert_program;
     const char *frag_program;
 
@@ -46,8 +45,8 @@ void galaxy_init(void)
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    vert_program = gl_read_text("star.vp");
-    frag_program = gl_read_text("star.fp");
+    vert_program = opengl_read("star.vp");
+    frag_program = opengl_read("star.fp");
 
     glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
                        GL_PROGRAM_FORMAT_ASCII_ARB,
@@ -75,8 +74,8 @@ void circum_draw(void)
         glBegin(GL_LINE_LOOP);
         {
             for (i = 0; i < 360; i++)
-                glVertex3d(RADIUS * sin(M_PI * i / 180.0), 0,
-                           RADIUS * cos(M_PI * i / 180.0));
+                glVertex3d(RADIUS * sin(PI * i / 180.0), 0,
+                           RADIUS * cos(PI * i / 180.0));
         }
         glEnd();
     }

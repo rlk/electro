@@ -11,13 +11,12 @@
 /*    General Public License for more details.                               */
 
 #include <stdio.h>
-#include <unistd.h>
 
 #include "opengl.h"
 
 /*---------------------------------------------------------------------------*/
 
-static float camera_pos[4];
+static float camera_pos[3];
 static float camera_rot[3];
 
 static float camera_dist;
@@ -38,7 +37,6 @@ void status_init(void)
     camera_pos[0] =    0.0f;
     camera_pos[1] =   15.5f;
     camera_pos[2] = 9200.0f;
-    camera_pos[3] =    1.0f;
 
     camera_rot[0] =    0.0f;
     camera_rot[1] =    0.0f;
@@ -59,8 +57,6 @@ void status_init(void)
 void status_draw_camera(void)
 {
     /* Load an off-axis projection for the current tile. */
-
-    printf("%f %f %f %f\n", viewport_x, viewport_y, viewport_w, viewport_h);
 
     glMatrixMode(GL_PROJECTION);
     {
@@ -91,18 +87,30 @@ void status_draw_camera(void)
 
     /* Use the view configuration as vertex program parameters. */
 
-    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 0, camera_pos);
-    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 1, camera_magn);
+    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
+                               camera_pos[0], camera_pos[1], camera_pos[2], 1);
+    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1,
+                               camera_magn, 0, 0, 0);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void status_set_viewport(float X, float Y, float x, float y, float w, float h)
+static void status_position(int X, int Y)
 {
+#ifndef _WIN32
+
     char buf[32];
 
-    printf("set %f %f %f %f %f\n", X, Y, x, y, w, h);
+    /* SDL looks to the environment for window placement. */
 
+    sprintf(buf, "%d, %d", (int) X, (int) Y);
+    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+
+#endif
+}
+
+void status_set_viewport(float X, float Y, float x, float y, float w, float h)
+{
     viewport_X = X;
     viewport_Y = Y;
     viewport_x = x;
@@ -110,11 +118,7 @@ void status_set_viewport(float X, float Y, float x, float y, float w, float h)
     viewport_w = w;
     viewport_h = h;
 
-    /* SDL looks to the environment for window placement. */
-    /*
-    sprintf(buf, "%d, %d", (int) X, (int) Y);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
-    */
+    status_position((int) X, (int) Y);
 }
 
 void status_set_camera_pos(float x, float y, float z)

@@ -16,7 +16,6 @@
 /*---------------------------------------------------------------------------*/
 
 #ifdef _WIN32
-#define WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -29,14 +28,28 @@
 #include <GL/glu.h>
 #endif
 
+/*---------------------------------------------------------------------------*/
+
 #include "glext.h"
+
+#ifdef _WIN32
+extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
+extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
+extern PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
+extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
+extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
+#endif
 
 /*---------------------------------------------------------------------------*/
 
-GLboolean   gl_supported(const char *);
-const char *gl_read_text(const char *);
+#define PI 3.1415926535897932384626433832795
 
-void gl_fps(void);
+/*---------------------------------------------------------------------------*/
+
+GLboolean   opengl_need(const char *);
+GLboolean   opengl_init(void);
+GLint       opengl_perf(void);
+const char *opengl_read(const char *);
 
 /*---------------------------------------------------------------------------*/
 

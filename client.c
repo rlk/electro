@@ -15,6 +15,8 @@
 #include <stdio.h>
 
 #include "opengl.h"
+#include "star.h"
+#include "galaxy.h"
 #include "shared.h"
 #include "status.h"
 #include "client.h"
@@ -71,7 +73,8 @@ static void client_init(int id)
 {
     glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
 
-    star_read_catalog_bin("hip_main.bin");
+/*  star_read_catalog_bin("hip_main.bin"); */
+    star_read_catalog_txt("hip_main.dat");
 
     status_init();
     galaxy_init();
@@ -119,15 +122,14 @@ void client(int np, int id)
     {
         int w = status_get_viewport_w();
         int h = status_get_viewport_h();
-
-        printf("%d %d\n", w, h);
+        int m = SDL_OPENGL | SDL_NOFRAME;
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        if (SDL_SetVideoMode(w, h, 0, SDL_OPENGL | SDL_NOFRAME))
+        if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
             client_init(id);
 

@@ -15,6 +15,12 @@
 #include <math.h>
 #include <sys/stat.h>
 
+#ifdef _WIN32
+#include <Winsock2.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "opengl.h"
 #include "image.h"
 #include "star.h"
@@ -173,9 +179,9 @@ int star_parse_txt(FILE *fp, struct star *s)
         double mag = 0;
         double plx = 0;
 
-        double n1, c1 = M_PI * 282.25 / 180.0;
-        double n2, c2 = M_PI *  62.6  / 180.0;
-        double n3, c3 = M_PI *  33.0  / 180.0;
+        double n1, c1 = PI * 282.25 / 180.0;
+        double n2, c2 = PI *  62.6  / 180.0;
+        double n3, c3 = PI *  33.0  / 180.0;
         double b, l;
 
         /* Attempt to parse necessary data from the line. */
@@ -187,9 +193,9 @@ int star_parse_txt(FILE *fp, struct star *s)
         {
             /* Compute equatorial position in parsecs and radians. */
 
-            plx = 1000.0 / fabs(plx);
-            ra  = M_PI * ra /  180.0;
-            de  = M_PI * de /  180.0;
+            plx =  1000.0 / fabs(plx);
+            ra  = PI * ra /  180.0;
+            de  = PI * de /  180.0;
 
             /* Compute the position in galactic coordinates. */
 

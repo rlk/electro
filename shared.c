@@ -10,11 +10,18 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <mpi.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <mpi.h>
 
+#ifdef _WIN32
+#include <Winsock2.h>
+#else
+#include <unistd.h>
+#endif
+
+#include "status.h"
 #include "shared.h"
 
 /*---------------------------------------------------------------------------*/
@@ -110,8 +117,6 @@ void viewport_sync(int i, int n)
                           &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD))
             != MPI_SUCCESS)
         mpi_error(err);
-
-    printf("got %f %f %f %f %f %f\n", Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 
     /* Apply this client's viewport. */
 

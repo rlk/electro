@@ -74,11 +74,13 @@ static int script_add_tile(lua_State *L)
                   script_getnumber(name, L, -3),
                   script_getnumber(name, L, -2),
                   script_getnumber(name, L, -1));
+    return 0;
 }
 
 static int script_scene_draw(lua_State *L)
 {
     server_send_draw();
+    return 0;
 }
 
 static int script_camera_move(lua_State *L)
@@ -88,6 +90,7 @@ static int script_camera_move(lua_State *L)
                           script_getnumber(name, L, -2),
                           script_getnumber(name, L, -1));
     server_send_move();
+    return 0;
 }
 
 static int script_camera_turn(lua_State *L)
@@ -97,6 +100,7 @@ static int script_camera_turn(lua_State *L)
                           script_getnumber(name, L, -2),
                           script_getnumber(name, L, -1));
     server_send_turn();
+    return 0;
 }
 
 static int script_camera_dist(lua_State *L)
@@ -104,6 +108,7 @@ static int script_camera_dist(lua_State *L)
     const char *name = "camera_dist";
     status_set_camera_dist(script_getnumber(name, L, -1));
     server_send_dist();
+    return 0;
 }
 
 static int script_camera_magn(lua_State *L)
@@ -111,6 +116,7 @@ static int script_camera_magn(lua_State *L)
     const char *name = "camera_magn";
     status_set_camera_magn(script_getnumber(name, L, -1));
     server_send_magn();
+    return 0;
 }
 
 static int script_camera_zoom(lua_State *L)
@@ -118,6 +124,7 @@ static int script_camera_zoom(lua_State *L)
     const char *name = "camera_zoom";
     status_set_camera_zoom(script_getnumber(name, L, -1));
     server_send_zoom();
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -176,7 +183,7 @@ void script_click(int b, int s)
     if (lua_isfunction(L, -1))
     {
         lua_pushnumber (L, (lua_Number) b);
-        lua_pushboolean(L, (lua_Number) s);
+        lua_pushboolean(L, s);
 
         lua_call(L, 2, 0);
     }
@@ -190,7 +197,7 @@ void script_keybd(int k, int s)
     if (lua_isfunction(L, -1))
     {
         lua_pushnumber (L, (lua_Number) k);
-        lua_pushboolean(L, (lua_Number) s);
+        lua_pushboolean(L, s);
 
         lua_call(L, 2, 0);
     }

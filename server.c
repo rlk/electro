@@ -13,11 +13,12 @@
 #include <mpi.h>
 #include <SDL.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include "opengl.h"
 #include "shared.h"
 #include "status.h"
+#include "galaxy.h"
+#include "script.h"
 #include "server.h"
 #include "star.h"
 
@@ -141,30 +142,24 @@ static void usage(const char *name)
     fprintf(stderr, "\t-t <filename>   Read ascii star catalog\n");
     fprintf(stderr, "\t-o <filename>   Write binary star catalog\n");
     fprintf(stderr, "\t-h              Help\n");
-
-    server_send_exit();
 }
 
 void server(int np, int argc, char *argv[])
 {
     if (script_init())
     {
-        int c;
+        int i;
 
         viewport_init(np);
 
         /* Parse command line options.  Load scripts and data files. */
 
-        while ((c = getopt(argc, argv, "hs:f:t:o:")) > 0)
-            switch (c)
-            {
-            case 's': script_file(optarg);           break;
-            case 'f': star_read_catalog_bin(optarg); break;
-            case 't': star_read_catalog_txt(optarg); break;
-            case 'o': star_write_catalog(optarg);    break;
-            case '?':
-            case 'h': usage(argv[0]); return;
-            }
+        for (i = 1; i < argc; i++)
+            if      (!strcmp(argv[i], "-s")) script_file(argv[++i]);
+            else if (!strcmp(argv[i], "-f")) star_read_catalog_bin(argv[++i]);
+            else if (!strcmp(argv[i], "-t")) star_read_catalog_txt(argv[++i]);
+            else if (!strcmp(argv[i], "-o")) star_write_catalog(argv[++i]);
+            else usage(argv[0]);
 
         status_init();
         viewport_sync(0, np);
@@ -175,13 +170,14 @@ void server(int np, int argc, char *argv[])
         {
             int w = status_get_viewport_w();
             int h = status_get_viewport_h();
+            int m = SDL_OPENGL;
 
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-            if (SDL_SetVideoMode(w, h, 0, SDL_OPENGL))
+            if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
                 SDL_WM_SetCaption(TITLE, TITLE);
 
