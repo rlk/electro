@@ -1,0 +1,200 @@
+<html>
+<head>
+  <style type="text/css">
+    body { text-align:   justify;
+           margin-right: 10%;
+           margin-left:  10%; }
+
+    h1   { margin-left:  -9%; }
+    h2   { margin-left:  -6%; }
+    h3   { margin-left:  -3%; }
+
+    ol   { margin-top: 0.50em; margin-bottom: 0.50em; }
+    ul   { margin-top: 0.50em; margin-bottom: 0.50em; }
+    li   { margin-top: 0.25em; margin-bottom: 0.25em; }
+  </style>
+</head>
+<body>
+
+<h1> Total Perspective Vortex </h1>
+
+A visualization of the Milky Way galaxy for tiled displays.
+
+<!---------------------------------------------------------------------------->
+
+<h2> The Executive Summary </h2>
+
+<h3> Motivation </h3>
+
+<p> One of the more striking displays in the planetarium is the high
+resolution panoramic image of the Milky Way galaxy.  It is beautiful,
+and informative, but static.  The message it conveys could benefit
+significantly from the more dynamic interactivity that a high
+resolution tiled display would allow.  So, I propose the
+implementation of an interactive application, based upon and
+augmenting the galaxy exhibit, for the use on a tiled display.
+
+<!---------------------------------------------------------------------------->
+
+<h3> Features </h3>
+
+<p> The galaxy display has several features which must be preserved
+by an interactive implementation:
+
+<ol>
+<li> On the map below the image it indicates where a number of
+astronomical objects are to be found in the sky.
+
+<li> On the monitors above the image it conveys the apparent sizes of
+these objects by zooming in from an unmagnified view.
+
+<li> On the galaxy map to the side it shows where these objects are to
+be found in the galaxy, where the Earth is located, and how objects
+are positioned relative to Earth.
+
+</ol>
+
+<p> A high-resolution interactive display can include each of these
+features, in a similar form.
+
+<ol>
+<li> Astronomical objects may be highlighted by markers overlaid on
+the image.  The viewer may use a pointing device to select objects for
+more information to be overlaid on the display.  These objects may
+include stars, constellations, and items too distant to be seen at
+normal magnification.
+
+<li> The viewer may select a distant objects for closer scrutiny
+and see the entire display zoom in toward it.
+
+<li> Having selected an object, the viewer may move the viewpoint
+outside of the galaxy, causing the viewpoint to transition smoothly to
+a distance from which the entirety of the galaxy may be seen, with the
+selected object and the Earth both highlighted.
+
+</ol>
+
+<p> A few further  enhancements to these features are possible:
+
+<ol>
+<li> A potentially large number of objects of interest may be defined
+if a mechanism is implemented to make their marker overlays adaptively
+visible.  These markers may be hidden while ignored, so that they do
+not obstruct the view, and become visible only when the pointer nears
+them.  More interesting objects may be highlighted more persistently.
+
+<li> The viewer may interactively control the level of magnification,
+and may even be allowed to zoom on arbitrary portions of the screen.
+
+<li> If the user is allowed some control over the scope of the galaxy
+view, a number of interesting sights become available.  For example, a
+viewer may select a constellation and see lines drawn between stars.
+Moving away from the Earth, he may see the true 3D shape of this
+constellation, and so gain some idea of the 3D structure of the night
+sky.
+
+</ol>
+
+<!---------------------------------------------------------------------------->
+
+<h2> A Few Notable Details </h2>
+
+<h3> Demonstration </h3>
+
+<p> When the display detects that it has not been used for a brief
+period, it transitions into attract mode.  In this mode it moves from
+one object to the next, selecting, pausing, zooming in, and zooming
+out, as appropriate for each.  When a user touches the controls, it
+immediately transitions back to the Earth-centered view, at normal
+magnification.  Object selection in attract mode may be random or
+scripted.
+
+<p> This behavior has the dual purpose of displaying the capabilities
+of the application, as well as providing interesting viewing for
+patrons interested only in a passive experience.
+
+<!---------------------------------------------------------------------------->
+
+<h3> Interface </h3>
+
+<p> The proposed interface includes a single trackball and 3 &plusmn;
+1 buttons, depending on the desired options.
+
+<ul>
+<li> The trackball rotates the view left/right and up/down.  Any
+object near the center of the display, falling within a selection
+indicater, is being "referred-to" or "moused-over".  (It can be argued
+that a static view direction with a mouse-like pointer is more
+appropriate.  In the opinion of this author, such an interface makes
+usage difficult at the far sides of the display, and causes objects
+such as Polaris and Alpha Centauri to be unviewable.)
+
+<li> An "Info" button selects the referred-to object and displays an
+information overlay.
+
+<li> Two potential interfaces for zoom control are proposed, one simple
+but limited, and the other more complex but more powerful:
+
+<ul>
+<li> The simple view defines "Zoom In" and "Zoom Out" buttons.  These
+trigger smooth transitions between 3 defined views of the selected
+object: magnified, normal, and galactic.
+
+<li> The more complex view defines only a single "Zoom" control that
+enables zoom level using the trackball.  Motion upward zooms in, and
+outward zooms out.  When zoomed in past normal, a magnified view is
+shown.  When zoomed out past normal, a galactic view is shown.  When
+released, the zoom level remains the same, allowing the viewer to pan
+about a magnified sky, or to tumble the galaxy view.
+
+</ul>
+
+<li> A further optional feature might provide a "Goto" button.  This
+would trigger a transition of the viewpoint from Earth to the selected
+object.  Such a feature would allow the night sky to be viewed from
+another star.  A "Home" button or persistent Earth overlay marker
+would be necessary to reset the view.
+
+</ul>
+
+<!---------------------------------------------------------------------------->
+
+<h3> Implementation </h3>
+
+<p> The implementation of this proposed display consists of four
+distinct types of data, rendered together to a single image using
+OpenGL.
+
+<ol>
+<li> Local stars are taken from the Hipparcos catalog.  This
+represents over 100,000 stars with parallax measurements sufficient to
+determine position.  They are rendered with correct apparent magnitude
+from any point in space.
+
+<li> Constellations are defined as sets of edges, where each edge
+connects two stars.  This author is not aware of any available
+constellation definition dataset compatible with the Hipparcos
+catalog, but as there are only 88 constellations, they would not be
+difficult to define by hand.
+
+<li> Notable nebulae are displayed as images.  While these images only
+appear correct from a viewpoint centered at Earth, this should not be
+an issue.  They are generally very small when viewed from Earth, and
+zooming in (telescopic view) is mutually exclusive from zooming out
+(galactic view, where alternate views of distant objects would become
+possible).
+
+<li> The Milky Way itself is displayed as a volumetric model of a
+spiral galaxy, rendered with an adaptive level of detail.  Not enough
+is known of the structure of the galaxy for an accurate depiction, so
+some artistic liberty is taken.  One significant constraint here is
+that the volume of the galaxy appear to integrate smoothly with the
+local star catalog during a zoom-out transition.
+
+</ol>
+
+<!---------------------------------------------------------------------------->
+
+<p><i> -- Robert Kooima </i>
+
+</ol>
