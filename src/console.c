@@ -131,8 +131,6 @@ static void ident(void)
     faded("  |||  ELECTRO                           \n");
     faded("  O o  Copyright (C) 2005  Robert Kooima \n");
     faded("   -   http://www.evl.uic.edu/rlk/electro\n");
-
-    console_enable = 0;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1022,6 +1022,7 @@ void do_command(const char *command)
 {
     char buffer[MAXSTR];
     int err;
+    int top = lua_gettop(L);
 
     memset(buffer, 0, MAXSTR);
     strncpy(buffer, command, MAXSTR);
@@ -1033,7 +1034,9 @@ void do_command(const char *command)
         if (lua_pcall(L, 0, 0, 0))
             error("Command: %s", lua_tostring(L, -1));
     }
-    lua_pop(L, 1);
+
+    while (lua_gettop(L) > top)
+        lua_pop(L, 1);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1194,6 +1197,8 @@ void load_script(const char *file, int push)
 
     if ((fp = fopen(name, "r")))
     {
+        int top = lua_gettop(L);
+
         if ((err = lua_load(L, filereader, fp, file)))
             error("Loading: %s", lua_tostring(L, -1));
         else
@@ -1201,8 +1206,9 @@ void load_script(const char *file, int push)
             if (lua_pcall(L, 0, 0, 0))
                 error("Executing: %s", lua_tostring(L, -1));
         }
-        
-        lua_pop(L, 1);
+
+        while (lua_gettop(L) > top)
+            lua_pop(L, 1);
 
         fclose(fp);
     }
