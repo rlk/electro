@@ -114,6 +114,18 @@ void viewport_sync(int n)
         int j;
         int k;
 
+        for (k = 0; k < V_num; k++)
+            printf("Def %16s %7.1f %7.1f %7.1f %7.1f %7.1f %7.1f\n",
+                Vi[k].name, Vi[k].X, Vi[k].Y,
+                            Vi[k].x, Vi[k].y,
+                            Vi[k].w, Vi[k].h);
+
+        for (j = 1; j < n; j++)
+            printf("Req %16s %7.1f %7.1f %7.1f %7.1f %7.1f %7.1f\n",
+                Vo[j].name, Vo[j].X, Vo[j].Y,
+                            Vo[j].x, Vo[j].y,
+                            Vo[j].w, Vo[j].h);
+
         for (j = 1; j < n; j++)
             for (k = 0; k < V_num; k++)
                 if (strcmp(Vo[j].name, Vi[k].name) == 0)
@@ -126,6 +138,11 @@ void viewport_sync(int n)
                     Vo[j].y = Vi[k].y;
                     Vo[j].w = Vi[k].w;
                     Vo[j].h = Vi[k].h;
+
+                    printf("OUT %16s %7.1f %7.1f %7.1f %7.1f %7.1f %7.1f\n",
+                            Vo[j].name, Vo[j].X, Vo[j].Y,
+                                        Vo[j].x, Vo[j].y,
+                                        Vo[j].w, Vo[j].h);
 
                     /* Destroy the name to ensure it matches at most once. */
 

@@ -102,6 +102,7 @@ function do_point(dx, dy)
 
    if btn[2] then
       zoom = zoom + dy * 0.00001
+      if zoom < 0.000001 then zoom = 0.00001 end
       camera_zoom(zoom)
    end
 
