@@ -18,7 +18,7 @@ btn    = { }
 -------------------------------------------------------------------------------
 
 function init_2D()
-    ortho = E.create_camera(E.camera_orthogonal)
+    ortho = E.create_camera(E.camera_type_orthogonal)
     point = E.create_sprite("head.png")
 
     E.entity_alpha(point, 0.5)
@@ -28,10 +28,10 @@ function init_2D()
 end
 
 function init_3D()
-    persp = E.create_camera(E.camera_perspective)
+    persp = E.create_camera(E.camera_type_perspective)
     obj1  = E.create_object("ball.obj")
     obj2  = E.create_object("ball.obj")
-    light = E.create_light(E.light_positional)
+    light = E.create_light(E.light_type_positional)
     pivot = E.create_pivot()
 
     E.entity_parent(light, persp)
@@ -40,6 +40,7 @@ function init_3D()
     E.entity_parent(obj2,  pivot)
 
     E.entity_alpha(obj1, 0.5)
+    E.entity_flag(obj2, E.entity_flag_billboard, true)
 
     E.camera_zoom(persp,  0.001)
     E.camera_dist(persp, 10.000)

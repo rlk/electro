@@ -111,17 +111,6 @@ void entity_transform(int id)
                      E[id].position[2]);
     }
 
-    /* Scale. */
-
-    if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
-        fabs(E[id].scale[1] - 1.0) > 0.0 ||
-        fabs(E[id].scale[2] - 1.0) > 0.0)
-    {
-        glScalef(E[id].scale[0],
-                 E[id].scale[1],
-                 E[id].scale[2]);
-    }
-
     /* Rotation. */
 
     if (fabs(E[id].rotation[0]) > 0.0)
@@ -132,6 +121,32 @@ void entity_transform(int id)
 
     if (fabs(E[id].rotation[2]) > 0.0)
         glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
+
+    /* Billboard. */
+
+    if (E[id].flag & FLAG_BILLBOARD)
+    {
+        float M[16];
+
+        glGetFloatv(GL_MODELVIEW_MATRIX, M);
+
+        M[0] = 1.f;  M[4] = 0.f;  M[8]  = 0.f;
+        M[1] = 0.f;  M[5] = 1.f;  M[9]  = 0.f;
+        M[2] = 0.f;  M[6] = 0.f;  M[10] = 1.f;
+
+        glLoadMatrixf(M);
+    }
+
+    /* Scale. */
+
+    if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
+        fabs(E[id].scale[1] - 1.0) > 0.0 ||
+        fabs(E[id].scale[2] - 1.0) > 0.0)
+    {
+        glScalef(E[id].scale[0],
+                 E[id].scale[1],
+                 E[id].scale[2]);
+    }
 }
 
 void entity_traversal(int id, float a)
@@ -141,11 +156,11 @@ void entity_traversal(int id, float a)
     /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
     for (jd = E[id].car; jd; jd = E[jd].cdr)
-        if ((E[jd].flag & FLAG_HIDE) == 0)
+        if ((E[jd].flag & FLAG_HIDDEN) == 0)
         {
             /* Enable wireframe if specified. */
 
-            if (E[jd].flag & FLAG_WIRE)
+            if (E[jd].flag & FLAG_WIREFRAME)
             {
                 glPushAttrib(GL_POLYGON_BIT);
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -174,7 +189,7 @@ void entity_traversal(int id, float a)
 
             /* Revert to previous render modes, as necessary. */
 
-            if (E[jd].flag & FLAG_WIRE)  glPopAttrib();
+            if (E[jd].flag & FLAG_WIREFRAME)  glPopAttrib();
         }
 }
 

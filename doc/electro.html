@@ -7,7 +7,7 @@
     h1     { margin-left:  -9%; }
     h2     { margin-left:  -6%; }
     h3     { margin-left:  -3%; }
-    pre    { background: #FFFFCC; padding: 1em; border: none; }
+    pre    { background: #FFFFCC; padding: 1em; }
     p.note { background: #CCFFFF; padding: 1em; }
   </style>
 </head>
@@ -58,13 +58,23 @@ serious consideration. </p>
 
 <h1> Types </h1>
 
+<!---------------------------------------------------------------------------->
+
 <h2> Entity </h2>
+
+<!---------------------------------------------------------------------------->
 
 <h2> Object </h2>
 
+<!---------------------------------------------------------------------------->
+
 <h2> Sprite </h2>
 
+<!---------------------------------------------------------------------------->
+
 <h2> Light </h2>
+
+<!---------------------------------------------------------------------------->
 
 <h2> Pivot </h2>
 
@@ -84,19 +94,19 @@ lightsource, and camera. </p>
 
 <dl>
 
-<dt><tt> entity_position(entity, x, y, z) </tt><dd><p> Specify the
-position of the entity.  Position is given in the coordinate system of
-the entity's parent. </p>
+    <dt><tt> entity_position(entity, x, y, z) </tt><dd><p> Specify the
+    position of the entity.  Position is given in the coordinate
+    system of the entity's parent. </p>
 
-<dt><tt> entity_rotation(entity, x, y, z) </tt><dd><p> Specify the
-rotation of the entity.  The 3 values give the angles of rotation in
-degrees about the X, Y, and Z axes.  Rotation is given in the
-coordinate system of the entity's parent. </p>
+    <dt><tt> entity_rotation(entity, x, y, z) </tt><dd><p> Specify the
+    rotation of the entity.  The 3 values give the angles of rotation
+    in degrees about the X, Y, and Z axes.  Rotation is given in the
+    coordinate system of the entity's parent. </p>
 
-<dt><tt> entity_scale(entity, x, y, z) </tt><dd><p> Specify the scale
-of the entity.  The 3 values give scale multipliers along the X, Y,
-and Z axes.  Scale is given in the coordinate system of the entity's
-parent. </p>
+    <dt><tt> entity_scale(entity, x, y, z) </tt><dd><p> Specify the
+    scale of the entity.  The 3 values give scale multipliers along
+    the X, Y, and Z axes.  Scale is given in the coordinate system of
+    the entity's parent. </p>
 
 </dl>
 
@@ -111,21 +121,72 @@ turtle-style system of entity control. </p>
 
 <dl>
 
-<dt><tt> entity_move(entity, x, y, z) </tt><dd><p> Move the entity
-relative to its current position.  X is to the right, Y is up, and Z
-axis is to the rear, as defined by the entity's current
-orientation. </p>
+    <dt><tt> entity_move(entity, x, y, z) </tt><dd><p> Move the entity
+    relative to its current position.  X is to the right, Y is up, and
+    Z axis is to the rear, as defined by the entity's current
+    orientation. </p>
 
-<p class="note"> It might be more clear to the beginner if the Z axis
-to pointed forward rather than back.  However, this would be in
-conflict with the normal right-handed coordinate system, and would
-only lead to inconsistency and confusion for the experienced 3D
-user. </p>
+    <p class="note"> It might be more clear to the beginner if the Z
+    axis to pointed forward rather than back.  However, this would be
+    in conflict with the normal right-handed coordinate system, and
+    would only lead to inconsistency and confusion for the experienced
+    3D user. </p>
 
-<dt><tt> entity_turn(entity, x, y, z) </tt><dd><p> Rotate the entity
-relative to its current orientation.  Rotation about the X, Y, and Z
-axes corresponds to pitch, yaw, and roll, respectively. </p>
+    <dt><tt> entity_turn(entity, x, y, z) </tt><dd><p> Rotate the
+    entity relative to its current orientation.  Rotation about the X,
+    Y, and Z axes corresponds to pitch, yaw, and roll,
+    respectively. </p>
 
+</dl>
+
+<h3> Flags </h3>
+
+<dl>
+
+    <dt><tt> entity_flag(entity, flag, value) </tt><dd><p> Set or
+    clear a flag on the given entity.  Entity flags enable and disable
+    extra features in the entity hierarchy.  These flags act not only
+    on the entity that carries them, but also on the children of that
+    entity.  The <tt>flag</tt> parameter gives the set of flags to be
+    modified, and may be the sum of multiple flags.  The
+    <tt>value</tt> parameter is a boolean giving the desired state.  A
+    value of <tt>true</tt> will set the given flags, and
+    <tt>false</tt> will clear them. <p>
+
+    <dl>
+
+        <dt><tt> entity_flag_wireframe </tt><dd><p> The wireframe flag
+        causes an entity and its descendants to be rendered in
+        wireframe.  An entire scene may be rendered in wireframe by
+        setting the wireframe flag on a camera or light. The
+        application is free to set or clear a wireframe flag value at
+        one point in the hierarchy and set an opposite value at a
+        lower point.  Entities will appear as expected. </p>
+
+        <dt><tt> entity_flag_hidden </tt><dd><p> The hidden flag
+        causes an entity and its descendants to be omitted from
+        rendering.  Unlike the wireframe flag, the hidden flag
+        <i>cannot</i> be reversed lower in the hierarchy, as it
+        actually causes traversal of the hierarchy to be pruned.</p>
+
+        <dt><tt> entity_flag_billboard </tt><dd><p> Entities with the
+        billboard flag are drawn facing the camera, regardless of
+        their actual orientation.  In effect, all rotations and
+        translations are applied as usual, so the entity will be
+        positioned in space as expected, but an extra rotation is
+        applied in order to re-aim the entity's Z axis toward the
+        camera.  </p>
+
+        <p class="note"> Due to the manner in which the billboard
+        transformation is implemented, scaling operations will
+        <i>not</i> transform billboard entities below them in the
+        hierarchy.  This is a minor limitation in practice, as scaling
+        is normally applied near the leaves of the scene hierarchy
+        anyway.  The common case of an entity with local scaling
+        <i>and</i> a local billboard flag will work properly, but when
+        in doubt, scale below billboarding. </p>
+
+    </dl>
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -134,9 +195,8 @@ axes corresponds to pitch, yaw, and roll, respectively. </p>
 
 <dl>
 
-<dt><tt> add_tile(local_x, local_y, global_x, global_y, width, height) </tt>
-
-<dd><p> Make a tile. </p>
+    <dt><tt> add_tile(local_x, local_y, global_x, global_y, width,
+    height) </tt> <dd><p> Make a tile. </p>
 
 </dl>
 
@@ -171,27 +231,28 @@ to occur at the next opportunity. </p>
 
 <dl>
 
-<dt><tt> do_start() </tt> <dd><p> This callback is invoked precisely
-once at the beginning of a run.  It occurs after all of the scripts
-named on the command line have finished executing, but before any
-event processing begins.  Applications are free to perform Lua state
-initialization upon initial execution, but Electro object
-initialization <i>must</i> be performed in the <tt>do_start</tt>
-function.</p>
+    <dt><tt> do_start() </tt> <dd><p> This callback is invoked
+    precisely once at the beginning of a run.  It occurs after all of
+    the scripts named on the command line have finished executing, but
+    before any event processing begins.  Applications are free to
+    perform Lua state initialization upon initial execution, but
+    Electro object initialization <i>must</i> be performed in the
+    <tt>do_start</tt> function.</p>
 
-<p class="note"> This callback is a bit of a hack.  It is necessary
-because Electro objects cannot be initialized until the OpenGL context
-exists.  However, the OpenGL context cannot be created until the
-viewport configuration is known.  So, startup must proceed in two
-distinct phases, one before context creation, and one after.  The
-<tt>do_start</tt> callback is this second phase. </p>
+    <p class="note"> This callback is a bit of a hack.  It is
+    necessary because Electro objects cannot be initialized until the
+    OpenGL context exists.  However, the OpenGL context cannot be
+    created until the viewport configuration is known.  So, startup
+    must proceed in two distinct phases, one before context creation,
+    and one after.  The <tt>do_start</tt> callback is this second
+    phase. </p>
 
-<dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
-whenever the mouse pointer moves within the Electro main window.
-Motion is reported relatively, so the pointer may move an unlimited
-distance in any direction.  Absolute position is not reported.  If
-absolute mouse position is necessary, then it must be tracked
-manually, as follows: </p>
+    <dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
+    whenever the mouse pointer moves within the Electro main window.
+    Motion is reported relatively, so the pointer may move an
+    unlimited distance in any direction.  Absolute position is not
+    reported.  If absolute mouse position is necessary, then it must
+    be tracked manually, as follows: </p>
 
 <pre>
 mouse_x = 0
@@ -204,46 +265,48 @@ function do_point(dx, dy)
 end
 </pre>
 
-<dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked whenever
-a mouse button is pressed or released.  The <tt>b</tt> argument gives
-the button number, 1, 2, 3, etc.  The <tt>s</tt> argument is a boolean
-giving button state.  A value of <tt>true</tt> indicates the button
-has been pressed, and <tt>false</tt> indicates it has been released.
-Note, on most modern systems mouse wheel up and down are reported as
-presses of buttons 4 and 5.  Button press events on wheel buttons do
-not have accompanying release events. </p>
+    <dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked
+    whenever a mouse button is pressed or released.  The <tt>b</tt>
+    argument gives the button number, 1, 2, 3, etc.  The <tt>s</tt>
+    argument is a boolean giving button state.  A value of
+    <tt>true</tt> indicates the button has been pressed, and
+    <tt>false</tt> indicates it has been released.  Note, on most
+    modern systems mouse wheel up and down are reported as presses of
+    buttons 4 and 5.  Button press events on wheel buttons do not have
+    accompanying release events. </p>
 
-<dt><tt> do_timer(t) </tt><dd><p> The <tt>do_timer</tt> callback is
-invoked regularly while idling is enabled.  The <tt>t</tt> argument
-gives the amount of time, in seconds, that has passed since the last
-time the callback was invoked.  The rate of callback is not defined,
-though it may be inferred to be "often enough."  In practice it is
-usually around 30 times per second, though this will decrease with
-graphical complexity.  The <tt>do_timer</tt> function is intended to
-be used to update animations and other background processes.
-Applications should be sure to return <tt>true</tt> in order to force
-an update to the display.</p>
+    <dt><tt> do_timer(t) </tt><dd><p> The <tt>do_timer</tt> callback
+    is invoked regularly while idling is enabled.  The <tt>t</tt>
+    argument gives the amount of time, in seconds, that has passed
+    since the last time the callback was invoked.  The rate of
+    callback is not defined, though it may be inferred to be "often
+    enough."  In practice it is usually around 30 times per second,
+    though this will decrease with graphical complexity.  The
+    <tt>do_timer</tt> function is intended to be used to update
+    animations and other background processes.  Applications should be
+    sure to return <tt>true</tt> in order to force an update to the
+    display.</p>
 
-<p class="note"> The update rate of the <tt>do_timer</tt> callback is
-deliberately obscured because it is nearly impossible to guarantee.
-While it might make sense to allow an application to request a
-callback rate, this request can only be precisely filled in a limited
-number of cases.  The idle timer does <i>not</i> free-run.
-Free-running in Electro is bad because MPI synchronization is
-unpredictable and events tend to queue up, leading to sluggish
-behavior.  The application developer may count on the fact that
-<tt>do_timer</tt> is invoked as often as is possible, such that
-performance will not suffer. </p>
+    <p class="note"> The update rate of the <tt>do_timer</tt> callback
+    is deliberately obscured because it is nearly impossible to
+    guarantee.  While it might make sense to allow an application to
+    request a callback rate, this request can only be precisely filled
+    in a limited number of cases.  The idle timer does <i>not</i>
+    free-run.  Free-running in Electro is bad because MPI
+    synchronization is unpredictable and events tend to queue up,
+    leading to sluggish behavior.  The application developer may count
+    on the fact that <tt>do_timer</tt> is invoked as often as is
+    possible, such that performance will not suffer. </p>
 
-<dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
-whenever a key is pressed or released.  The <tt>s</tt> argument is a
-boolean giving the key state.  The <tt>k</tt> argument gives a key
-identifier.  For most keys, this gives the ASCII value of the
-unshifted character.  For non-ASCII keys and modifiers it is a unique
-identifier outside of the range of ASCII.  A full listing of keys and
-their associated values would be lengthy and uninteresting.  When in
-doubt about the value of a key, query it interactively as follows:
-</p>
+    <dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
+    whenever a key is pressed or released.  The <tt>s</tt> argument is
+    a boolean giving the key state.  The <tt>k</tt> argument gives a
+    key identifier.  For most keys, this gives the ASCII value of the
+    unshifted character.  For non-ASCII keys and modifiers it is a
+    unique identifier outside of the range of ASCII.  A full listing
+    of keys and their associated values would be lengthy and
+    uninteresting.  When in doubt about the value of a key, query it
+    interactively as follows: </p>
 
 <pre>
 function do_keyboard(k, s)
@@ -256,17 +319,18 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is invoked
-whenever a joystick button is pressed or released.  The <tt>n</tt>
-argument gives the joystick device number.  The <tt>b</tt> argument
-gives the button number.  The <tt>s</tt> argument is a boolean giving
-button state.  Applications respond to button presses in an
-event-driven fashion, but they should read joystick axis input more
-continuously.  Usually joystick axes are aquired by calling
-<tt>joystick_axis</tt> in a <tt>do_timer</tt> callback. </p>
+    <dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is
+    invoked whenever a joystick button is pressed or released.  The
+    <tt>n</tt> argument gives the joystick device number.  The
+    <tt>b</tt> argument gives the button number.  The <tt>s</tt>
+    argument is a boolean giving button state.  Applications respond
+    to button presses in an event-driven fashion, but they should read
+    joystick axis input more continuously.  Usually joystick axes are
+    aquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt>
+    callback. </p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<p><address> rlk (at) evl.uic.edu </address></p>
+<p class="note" style="text-align: right"><i> rlk (at) evl.uic.edu </i></p>

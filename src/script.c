@@ -327,7 +327,7 @@ static int script_entity_flag(lua_State *L)
 
     entity_send_flag(script_getentity(name, L, -3),
                      script_getnumber(name, L, -2),
-                     script_getnumber(name, L, -1));
+                     script_getboolean(name, L, -1));
     return 0;
 }
 
@@ -458,46 +458,50 @@ void luaopen_electro(lua_State *L)
 
     /* Entity contructors. */
 
-    lua_function(L, "create_camera",       script_create_camera);
-    lua_function(L, "create_sprite",       script_create_sprite);
-    lua_function(L, "create_object",       script_create_object);
-    lua_function(L, "create_light",        script_create_light);
-    lua_function(L, "create_pivot",        script_create_pivot);
+    lua_function(L, "create_camera",           script_create_camera);
+    lua_function(L, "create_sprite",           script_create_sprite);
+    lua_function(L, "create_object",           script_create_object);
+    lua_function(L, "create_light",            script_create_light);
+    lua_function(L, "create_pivot",            script_create_pivot);
 
     /* Entity control. */
 
-    lua_function(L, "entity_parent",       script_entity_parent);
-    lua_function(L, "entity_delete",       script_entity_delete);
-    lua_function(L, "entity_clone",        script_entity_clone);
+    lua_function(L, "entity_parent",           script_entity_parent);
+    lua_function(L, "entity_delete",           script_entity_delete);
+    lua_function(L, "entity_clone",            script_entity_clone);
 
-    lua_function(L, "entity_position",     script_entity_position);
-    lua_function(L, "entity_rotation",     script_entity_rotation);
-    lua_function(L, "entity_scale",        script_entity_scale);
-    lua_function(L, "entity_alpha",        script_entity_alpha);
-    lua_function(L, "entity_flag",         script_entity_flag);
+    lua_function(L, "entity_position",         script_entity_position);
+    lua_function(L, "entity_rotation",         script_entity_rotation);
+    lua_function(L, "entity_scale",            script_entity_scale);
+    lua_function(L, "entity_alpha",            script_entity_alpha);
+    lua_function(L, "entity_flag",             script_entity_flag);
 
-    lua_function(L, "entity_get_position", script_entity_get_position);
-    lua_function(L, "entity_get_rotation", script_entity_get_rotation);
+    lua_function(L, "entity_get_position",     script_entity_get_position);
+    lua_function(L, "entity_get_rotation",     script_entity_get_rotation);
+
+    lua_constant(L, "entity_flag_hide",        FLAG_HIDDEN);
+    lua_constant(L, "entity_flag_wire",        FLAG_WIREFRAME);
+    lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
 
     /* Camera control. */
 
-    lua_function(L, "camera_dist",         script_camera_dist);
-    lua_function(L, "camera_zoom",         script_camera_zoom);
+    lua_function(L, "camera_dist",             script_camera_dist);
+    lua_function(L, "camera_zoom",             script_camera_zoom);
 
-    lua_constant(L, "camera_orthogonal",   CAMERA_ORTHO);
-    lua_constant(L, "camera_perspective",  CAMERA_PERSP);
+    lua_constant(L, "camera_type_orthogonal",  CAMERA_ORTHO);
+    lua_constant(L, "camera_type_perspective", CAMERA_PERSP);
 
     /* Light control. */
 
-    lua_constant(L, "light_positional",    LIGHT_POSITIONAL);
-    lua_constant(L, "light_directional",   LIGHT_DIRECTIONAL);
+    lua_constant(L, "light_type_positional",   LIGHT_POSITIONAL);
+    lua_constant(L, "light_type_directional",  LIGHT_DIRECTIONAL);
 
     /* Misc. */
 
-    lua_function(L, "add_tile",            script_add_tile);
-    lua_function(L, "enable_idle",         script_enable_idle);
-    lua_function(L, "joystick_axis",       script_joystick_axis);
-    lua_function(L, "viewport_get",        script_viewport_get);
+    lua_function(L, "add_tile",                script_add_tile);
+    lua_function(L, "enable_idle",             script_enable_idle);
+    lua_function(L, "joystick_axis",           script_joystick_axis);
+    lua_function(L, "viewport_get",            script_viewport_get);
 
     /* Register the "electro" environment table globally. */
 
