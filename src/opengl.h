@@ -23,12 +23,12 @@
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
+#define GL_GLEXT_PROTOTYPES 1
 #else
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif
 
-#define GL_GLEXT_PROTOTYPES 1
 #include "glext.h"
 
 /*---------------------------------------------------------------------------*/
