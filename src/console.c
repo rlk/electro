@@ -43,11 +43,15 @@ static int console_h;
 static int console_x;
 static int console_y;
 
+static int image_w;
+static int image_h;
+
 static unsigned char console_r = 0x00;
 static unsigned char console_g = 0xFF;
 static unsigned char console_b = 0x00;
 
 static unsigned char *console;
+static unsigned char *image;
 
 #define CONS_C(i, j) console[(console_w * i + j) * 4]
 #define CONS_R(i, j) console[(console_w * i + j) * 4 + 1]
@@ -195,43 +199,59 @@ static void init_back_image(void)
 
 static void draw_image(void)
 {
-    int i;
-    int j;
+    int r, c;
+    int i, j;
 
     init_fore_image();
 
-    /* Write the contents of the console to the console texture. */
+    /* This would be a lot more efficient using glBitmap to draw right    */
+    /* to the framebuffer, or glTexSubImage2D with pixel transfer bias    */
+    /* to transfer glyphs straight to texture memory, but both of those   */
+    /* are commonly buggy on crappy hardware.  Lame.                      */
 
-    glPushAttrib(GL_PIXEL_MODE_BIT);
-    {
-        for (i = 0; i < console_h; i++)
-            for (j = 0; j < console_w; j++)
-            {
-                unsigned char *p = glyph[CONS_C(i, j) ? CONS_C(i, j) - 32 : 0];
+    for (r = 0; r < console_h; r++)
+        for (c = 0; c < console_w; c++)
+        {
+            unsigned char *p = glyph[CONS_C(r, c) ? CONS_C(r, c) - 32 : 0];
 
-                glPixelTransferf(GL_RED_BIAS,   CONS_R(i, j) / 255.0f);
-                glPixelTransferf(GL_GREEN_BIAS, CONS_G(i, j) / 255.0f);
-                glPixelTransferf(GL_BLUE_BIAS,  CONS_B(i, j) / 255.0f);
+            for (i = 0; i < GLYPH_H; i++)
+                for (j = 0; j < GLYPH_W; j++)
+                {
+                    const int x = GLYPH_W * c + j;
+                    const int y = GLYPH_H * r + i;
+                    const int s = GLYPH_W * i + j;
+                    const int d = image_w * y + x;
 
-                glTexSubImage2D(GL_TEXTURE_2D, 0,
-                                GLYPH_W * j, GLYPH_H * i,
-                                GLYPH_W,     GLYPH_H,
-                                GL_ALPHA, GL_UNSIGNED_BYTE, p);
-            }
-    }
-    glPopAttrib();
+                    image[d * 4 + 0] = CONS_R(r, c);
+                    image[d * 4 + 1] = CONS_G(r, c);
+                    image[d * 4 + 2] = CONS_B(r, c);
+                    image[d * 4 + 3] = p[s];
+                }
+        }
+
+    /* Write the contents of the console image to the console texture. */
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_w, image_h,
+                    GL_RGBA, GL_UNSIGNED_BYTE, image);
 }
 
 /*---------------------------------------------------------------------------*/
 
 int init_console(int w, int h)
 {
-    if ((console = (unsigned char *) calloc(w * h * 4, 1)))
+    int W = GLYPH_W * w;
+    int H = GLYPH_H * h;
+
+    if ((console = (unsigned char *) calloc(w * h * 4, 1)) &&
+        (image   = (unsigned char *) calloc(W * H * 4, 1)))
     {
         console_w = w;
         console_h = h;
         console_x = 0;
         console_y = 0;
+
+        image_w = W;
+        image_h = H;
 
         ident();
 

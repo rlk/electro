@@ -217,6 +217,11 @@ Load a galaxy definition from the named file and return a galaxy
 entity.  A galaxy entity is a static 3D collection of particles,
 organized into a BSP structure for efficient rendering.</p>
 
+<p class="note"> A galaxy object must have the
+<tt>examples/star.fp</tt> and <tt>examples/star.vp</tt> fragment and
+vertex programs applied to it before it will render correctly.  See
+<tt>set_entity_frag_prog</tt> and <tt>set_entity_vert_prog</tt>.</p>
+
 <p class="note"> The galaxy object should be considered a hack.  It
 has only a very specific use.  It will probably be removed in a future
 revision of the Electro API, or possibly abstracted into a general
@@ -295,14 +300,6 @@ the scale of the entity.  The 3 values give scale multipliers along
 the X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
 
-<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify the
-transparency of the entity.  A value of 1.0 is fully opaque and 0.0 is
-fully invisible.  This transparency value propagates down the
-hierarchy.  Transparency values specified by child nodes will
-accumulate.  That is, if a parent and a child both specify
-<i>alpha</i>=0.5 then the child will appear with a transparency of
-0.25.</p>
-
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -333,6 +330,37 @@ orthogonality.  In this case, I just couldn't resist.  Inspiration for
 this feature is drawn from Blitz3D, which showed that relative
 transform is very beginner-friendly, leading to a very intuitive
 turtle-style system of entity control. </p>
+
+<!---------------------------------------------------------------------------->
+
+<h4> Rendering properties </h4>
+<dl>
+
+<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify the
+transparency of the entity.  A value of 1.0 is fully opaque and 0.0 is
+fully invisible.  This transparency value propagates down the
+hierarchy.  Transparency values specified by child nodes will
+accumulate.  That is, if a parent and a child both specify
+<i>alpha</i>=0.5 then the child will appear with a transparency of
+0.25.</p>
+
+<dt><tt>set_entity_frag_prog</tt>(<i>entity, file</i>)<dd><p> Specify
+a fragment program to be applied to <i>entity</i> and its children.
+The <i>file</i> argument gives a text file in ARB fragment program
+syntax.</p>
+
+<dt><tt>set_entity_vert_prog</tt>(<i>entity, file</i>)<dd><p> Specify
+a vertex program to be applied to <i>entity</i> and its children.
+The <i>file</i> argument gives a text file in ARB vertex program
+syntax.</p>
+
+<p class="note"> ARB fragment and vertex program syntaxes were chosen
+because the standards are mature.  High-quality implementations are
+wide-spread and available on a nice array of hardware.  If you prefer
+a higher-level language, use one that can be compiled down to ARB_fp
+and ARB_vp, such as Cg. </p>
+
+</dl>
 
 <!---------------------------------------------------------------------------->
 
