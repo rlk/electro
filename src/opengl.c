@@ -17,6 +17,7 @@
 
 #include "opengl.h"
 #include "utility.h"
+#include "console.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -89,6 +90,8 @@ PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 
 void init_opengl(void)
 {
+    print_console(glGetString(GL_EXTENSIONS));
+
     glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
         opengl_proc("glProgramStringARB");
     glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)

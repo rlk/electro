@@ -14,13 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <sys/errno.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <sys/errno.h>
 #endif
 
 #include "utility.h"
@@ -147,7 +147,7 @@ void *error(char *format, ...)
     va_list args;
 
     va_start(args, format);
-    vsnprintf(string, MAXSTR, format, args);
+    vsprintf(string, format, args);
     va_end(args);
 
     error_console(string);

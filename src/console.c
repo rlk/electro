@@ -262,7 +262,7 @@ static void faded(const char *str)
 
         char buf[2] = { str[i], '\0' };
 
-        color_console((1.0 - k), k, 0.0);
+        color_console((1.0f - k), k, 0.0f);
         print_console(buf);
     }
 }
