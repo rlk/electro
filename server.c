@@ -117,20 +117,32 @@ static void server_draw(void)
 static int server_loop(void)
 {
     SDL_Event e;
+    int c = 0;
 
     while (SDL_PollEvent(&e))
         switch (e.type)
         {
-        case SDL_MOUSEMOTION:     script_point(e.motion.x, e.motion.y); break;
-        case SDL_MOUSEBUTTONDOWN: script_click(e.button.button,  1);    break;
-        case SDL_MOUSEBUTTONUP:   script_click(e.button.button,  0);    break;
-        case SDL_KEYDOWN:         script_keybd(e.key.keysym.sym, 1);    break;
-        case SDL_KEYUP:           script_keybd(e.key.keysym.sym, 0);    break;
-
+        case SDL_MOUSEMOTION:
+            c += script_point(e.motion.x, e.motion.y);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            c += script_click(e.button.button, 1);
+            break;
+        case SDL_MOUSEBUTTONUP:
+            c += script_click(e.button.button, 0);
+            break;
+        case SDL_KEYDOWN:
+            c += script_keybd(e.key.keysym.sym, 1);
+            break;
+        case SDL_KEYUP:
+            c += script_keybd(e.key.keysym.sym, 0);
+            break;
         case SDL_QUIT:
             server_send_exit();
             return 0;
         }
+
+    if (c) server_send_draw();
 
     return 1;
 }

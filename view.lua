@@ -22,40 +22,47 @@ last_y = 0.0
 
 function do_click(b, s)
 
-        if b == 4 then
-                dist = dist + 128.0
-                camera_dist(dist)
-                scene_draw()
-        end
-        if b == 5 then
-                dist = dist - 128.0
-                if dist < 0 then dist = 0 end
-                camera_dist(dist)
-                scene_draw()
-        end
-                
-        btn[b] = s
+   if b == 4 then
+      dist = dist + 128.0
+      camera_dist(dist)
+
+      return true
+   end
+
+   if b == 5 then
+      dist = dist - 128.0
+      if dist < 0 then dist = 0 end
+      camera_dist(dist)
+
+      return true
+   end
+   
+   btn[b] = s
+   return false
 end
 
 function do_point(x, y)
-        local dx = last_x - x
-        local dy = last_y - y
+   local dx = last_x - x
+   local dy = last_y - y
 
-        last_x = x
-        last_y = y
+   last_x = x
+   last_y = y
 
-        if btn[1] then
-                rot_x = rot_x - 180 * dy / 500.0
-                rot_y = rot_y - 180 * dx / 500.0
+   if btn[1] then
+      rot_x = rot_x - 180 * dy / 500.0
+      rot_y = rot_y - 180 * dx / 500.0
 
-                if rot_x >   90 then rot_x =  90 end
-                if rot_x <  -90 then rot_x = -90 end
-                if rot_y >  180 then rot_y = rot_y - 360 end
-                if rot_y < -180 then rot_y = rot_y + 360 end
+      if rot_x >   90 then rot_x =  90 end
+      if rot_x <  -90 then rot_x = -90 end
+      if rot_y >  180 then rot_y = rot_y - 360 end
+      if rot_y < -180 then rot_y = rot_y + 360 end
 
-                camera_turn(rot_x, rot_y, 0)
-                scene_draw()
-        end
+      camera_turn(rot_x, rot_y, 0)
+
+      return true
+   end
+
+   return false
 end
 
 -------------------------------------------------------------------------------

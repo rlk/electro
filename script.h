@@ -20,9 +20,9 @@ void script_free(void);
 
 void script_file(const char *);
 
-void script_click(int, int);
-void script_point(int, int);
-void script_keybd(int, int);
+int  script_click(int, int);
+int  script_point(int, int);
+int  script_keybd(int, int);
 
 /*---------------------------------------------------------------------------*/
 

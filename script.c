@@ -78,12 +78,6 @@ static int script_add_tile(lua_State *L)
     return 0;
 }
 
-static int script_scene_draw(lua_State *L)
-{
-    server_send_draw();
-    return 0;
-}
-
 static int script_camera_move(lua_State *L)
 {
     const char *name = "camera_move";
@@ -139,7 +133,7 @@ int script_init(void)
         luaopen_math(L);
 
         lua_register(L, "add_tile",    script_add_tile);
-        lua_register(L, "scene_draw",  script_scene_draw);
+
         lua_register(L, "camera_move", script_camera_move);
         lua_register(L, "camera_turn", script_camera_turn);
         lua_register(L, "camera_dist", script_camera_dist);
@@ -163,8 +157,10 @@ void script_file(const char *filename)
 
 /*---------------------------------------------------------------------------*/
 
-void script_point(int x, int y)
+int script_point(int x, int y)
 {
+    int r = 0;
+
     lua_getglobal(L, "do_point");
 
     if (lua_isfunction(L, -1))
@@ -172,13 +168,19 @@ void script_point(int x, int y)
         lua_pushnumber(L, (lua_Number) x);
         lua_pushnumber(L, (lua_Number) y);
 
-        lua_call(L, 2, 0);
+        lua_call(L, 2, 1);
+
+        r = lua_toboolean(L, -1);
     }
-    else lua_pop(L, 1);
+    lua_pop(L, 1);
+
+    return r;
 }
 
-void script_click(int b, int s)
+int script_click(int b, int s)
 {
+    int r = 0;
+
     lua_getglobal(L, "do_click");
 
     if (lua_isfunction(L, -1))
@@ -186,13 +188,19 @@ void script_click(int b, int s)
         lua_pushnumber (L, (lua_Number) b);
         lua_pushboolean(L, s);
 
-        lua_call(L, 2, 0);
+        lua_call(L, 2, 1);
+
+        r = lua_toboolean(L, -1);
     }
     else lua_pop(L, 1);
+
+    return r;
 }
 
-void script_keybd(int k, int s)
+int script_keybd(int k, int s)
 {
+    int r = 0;
+
     lua_getglobal(L, "do_keybd");
 
     if (lua_isfunction(L, -1))
@@ -200,9 +208,13 @@ void script_keybd(int k, int s)
         lua_pushnumber (L, (lua_Number) k);
         lua_pushboolean(L, s);
 
-        lua_call(L, 2, 0);
+        lua_call(L, 2, 1);
+
+        r = lua_toboolean(L, -1);
     }
     else lua_pop(L, 1);
+
+    return r;
 }
 
 /*---------------------------------------------------------------------------*/
