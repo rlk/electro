@@ -94,7 +94,8 @@ void sprite_render(int id, int sd)
             /* Render this sprite. */
 
             glBindTexture(GL_TEXTURE_2D, S[sd].texture);
-                
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
             glBegin(GL_QUADS);
             {
                 int dx = S[sd].w / 2;

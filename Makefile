@@ -1,20 +1,21 @@
 
 TARG=	electro
-OBJS=	src/opengl.o \
-	src/shared.o \
-	src/server.o \
-	src/client.o \
-	src/entity.o \
-	src/camera.o \
-	src/sprite.o \
-	src/object.o \
-	src/light.o  \
-	src/pivot.o  \
-	src/script.o \
-	src/galaxy.o \
-	src/node.o   \
-	src/star.o   \
-	src/image.o  \
+OBJS=	src/opengl.o   \
+	src/viewport.o \
+	src/shared.o   \
+	src/server.o   \
+	src/client.o   \
+	src/entity.o   \
+	src/camera.o   \
+	src/sprite.o   \
+	src/object.o   \
+	src/light.o    \
+	src/pivot.o    \
+	src/script.o   \
+	src/galaxy.o   \
+	src/node.o     \
+	src/star.o     \
+	src/image.o    \
 	src/main.o
 
 DEPS= $(OBJS:.o=.d)
@@ -28,7 +29,7 @@ SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua50 -llualib50
 PNG_LIBS= -lpng -lz -lm
 
-CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI
+CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
 INCDIR= -I$(HOME)/include -I/usr/include/lua50
 LIBDIR= -L$(HOME)/lib
 

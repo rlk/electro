@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "viewport.h"
 #include "shared.h"
 #include "server.h"
 #include "script.h"
@@ -34,7 +35,6 @@ static int server_time = 0;
 
 void enable_grab(int b)
 {
-    /*
     if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -45,7 +45,6 @@ void enable_grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
-    */
     server_grab = b;
 }
 
@@ -106,13 +105,9 @@ void server_send(int type)
 
 static void server_init(void)
 {
-    glViewport(0, 0, viewport_get_w(), viewport_get_h());
+    glViewport(0, 0, window_get_w(), window_get_h());
 
-    entity_init();
-    /*
-    galaxy_init();
-    star_init();
-    */
+    glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -120,17 +115,32 @@ static void server_init(void)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    entity_init();
     opengl_check("server_init");
 }
 
 static void server_draw(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT |
+            GL_DEPTH_BUFFER_BIT |
+            GL_STENCIL_BUFFER_BIT);
 
+    /* Draw the defined viewports to the stencil buffer. */
+
+    glStencilFunc(GL_ALWAYS,   1, 0xFFFFFFFF);
+    viewport_draw();
+
+    /* Draw the mullions into the non-viewport parts of the frame buffer. */
+
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFFFFFFFF);
+    viewport_fill(0.1f, 0.1f, 0.1f);
+
+    /* Draw the scene into the viewport parts of the frame buffer. */
+
+    glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
     entity_render();
-    /*
-    galaxy_draw();
-    */
+
+    /* Sync and swap. */
 
     mpi_barrier();
     SDL_GL_SwapBuffers();
@@ -236,14 +246,15 @@ void server(int argc, char *argv[])
 
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0)
         {
-            int w = viewport_get_w();
-            int h = viewport_get_h();
+            int w = window_get_w();
+            int h = window_get_h();
             int m = SDL_OPENGL;
 
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+            SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())

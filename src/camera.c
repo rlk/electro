@@ -16,19 +16,11 @@
 #include <math.h>
 
 #include "opengl.h"
+#include "viewport.h"
 #include "shared.h"
 #include "server.h"
 #include "entity.h"
 #include "camera.h"
-
-/*---------------------------------------------------------------------------*/
-
-static float viewport_X =    0.0f;
-static float viewport_Y =    0.0f;
-static float viewport_x = -400.0f;
-static float viewport_y = -300.0f;
-static float viewport_w =  800.0f;
-static float viewport_h =  600.0f;
 
 /*---------------------------------------------------------------------------*/
 
@@ -96,6 +88,11 @@ void camera_render(int id, int cd)
 
     if (camera_exists(cd))
     {
+        int viewport_x0 = viewport_get_x();
+        int viewport_x1 = viewport_get_x() + viewport_get_w();
+        int viewport_y0 = viewport_get_y();
+        int viewport_y1 = viewport_get_y() + viewport_get_h();
+
         double T = PI * r[1] / 180.0;
         double P = PI * r[0] / 180.0;
 
@@ -112,10 +109,10 @@ void camera_render(int id, int cd)
 
         glMatrixMode(GL_PROJECTION);
         {
-            GLdouble l =  C[cd].zoom *  viewport_x;
-            GLdouble r =  C[cd].zoom * (viewport_x + viewport_w);
-            GLdouble b = -C[cd].zoom * (viewport_y + viewport_h);
-            GLdouble t = -C[cd].zoom *  viewport_y;
+            GLdouble l =  C[cd].zoom * viewport_x0;
+            GLdouble r =  C[cd].zoom * viewport_x1;
+            GLdouble b = -C[cd].zoom * viewport_y1;
+            GLdouble t = -C[cd].zoom * viewport_y0;
             GLdouble f =  CAMERA_FAR;
 
             glLoadIdentity();
@@ -155,60 +152,6 @@ void camera_delete(int cd)
     mpi_share_integer(1, &cd);
 
     memset(C + cd, 0, sizeof (struct camera));
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void set_window_pos(int X, int Y)
-{
-    char buf[32];
-
-    /* SDL looks to the environment for window position. */
-
-    sprintf(buf, "%d,%d", X, Y);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
-}
-
-void viewport_set(float X, float Y, float x, float y, float w, float h)
-{
-    viewport_X = X;
-    viewport_Y = Y;
-    viewport_x = x;
-    viewport_y = y;
-    viewport_w = w;
-    viewport_h = h;
-
-    set_window_pos((int) X, (int) Y);
-}
-
-int viewport_get_x(void)
-{
-    return (int) viewport_x;
-}
-
-int viewport_get_y(void)
-{
-    return (int) viewport_y;
-}
-
-int viewport_get_w(void)
-{
-    /* Scale the server window width down to a reasonable size. */
-
-    if (mpi_isroot())
-        return (int) (viewport_w * DEFAULT_W / viewport_w);
-    else
-        return (int) (viewport_w);
-}
-
-int viewport_get_h(void)
-{
-    /* Scale the server window height down to a reasonable size. */
-
-    if (mpi_isroot())
-        return (int) (viewport_h * DEFAULT_W / viewport_w);
-    else
-        return (int) (viewport_h);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -29,14 +29,6 @@ struct camera
 
 /*---------------------------------------------------------------------------*/
 
-void viewport_set(float, float, float, float, float, float);
-int  viewport_get_x(void);
-int  viewport_get_y(void);
-int  viewport_get_w(void);
-int  viewport_get_h(void);
-
-/*---------------------------------------------------------------------------*/
-
 int  camera_init(void);
 
 int  camera_create(int);

@@ -14,6 +14,7 @@
 #include <lualib.h>
 #include <stdio.h>
 
+#include "viewport.h"
 #include "shared.h"
 #include "server.h"
 #include "camera.h"

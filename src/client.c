@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "opengl.h"
+#include "viewport.h"
 #include "shared.h"
 #include "client.h"
 #include "camera.h"
@@ -86,13 +87,8 @@ static void client_recv(void)
 
 static void client_init(void)
 {
-    glViewport(0, 0, viewport_get_w(), viewport_get_h());
+    glViewport(0, 0, window_get_w(), window_get_h());
 
-    entity_init();
-    /*
-    galaxy_init();
-    star_init();
-    */
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -100,6 +96,7 @@ static void client_init(void)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    entity_init();
     opengl_check("client_init");
 }
 
@@ -108,9 +105,6 @@ static void client_draw(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     entity_render();
-    /*
-    galaxy_draw();
-    */
 
     mpi_barrier();
     SDL_GL_SwapBuffers();
@@ -144,8 +138,8 @@ void client(void)
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
-        int w = viewport_get_w();
-        int h = viewport_get_h();
+        int w = window_get_w();
+        int h = window_get_h();
         int m = SDL_OPENGL | SDL_NOFRAME;
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
