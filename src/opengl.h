@@ -55,4 +55,12 @@ const char *opengl_read(const char *);
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef NDEBUG
+#define opengl_check(S) { }
+#else
+void    opengl_check(const char *);
+#endif
+
+/*---------------------------------------------------------------------------*/
+
 #endif

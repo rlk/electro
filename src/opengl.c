@@ -144,3 +144,18 @@ const char *opengl_read(const char *filename)
 }
 
 /*---------------------------------------------------------------------------*/
+
+#ifndef NDEBUG
+
+void opengl_check(const char *str)
+{
+    GLenum error;
+
+    while ((error = glGetError()) != GL_NO_ERROR)
+        fprintf(stderr, "OpenGL error: %s: %s\n", str, gluErrorString(error));
+}
+
+#endif
+
+/*---------------------------------------------------------------------------*/
+

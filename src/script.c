@@ -55,6 +55,7 @@ static int lua_iscamera(lua_State *L, int i)
         && entity_istype(lua_toentity(L, i), TYPE_CAMERA);
 }
 
+#ifdef SNIP
 static int lua_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
@@ -72,6 +73,7 @@ static int lua_islight(lua_State *L, int i)
     return lua_isuserdata(L, i)
         && entity_istype(lua_toentity(L, i), TYPE_LIGHT);
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* Function argument error reporters                                         */
@@ -178,6 +180,7 @@ static int script_getentity(const char *name, lua_State *L, int i)
     return 0;
 }
 
+#ifdef SNIP
 static int script_getsprite(const char *name, lua_State *L, int i)
 {
     int n = lua_gettop(L);
@@ -195,6 +198,7 @@ static int script_getsprite(const char *name, lua_State *L, int i)
 
     return 0;
 }
+#endif
 
 static int script_getcamera(const char *name, lua_State *L, int i)
 {
@@ -205,7 +209,7 @@ static int script_getcamera(const char *name, lua_State *L, int i)
     if (1 <= -i && -i <= n)
     {
         if (lua_iscamera(L, i))
-            return lua_toentity(L, i);
+            return entity_todata(lua_toentity(L, i));
         else
             script_type_error(name, "camera", L, i);
     }

@@ -37,6 +37,8 @@ int  viewport_get_h(void);
 
 /*---------------------------------------------------------------------------*/
 
+int  camera_init(void);
+
 int  camera_create(int);
 void camera_render(int, int);
 void camera_delete(int);

@@ -10,6 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -28,11 +29,31 @@
 /* Base entity storage                                                       */
 
 static struct entity *E     = NULL;
-static int            E_max =   64;
+static int            E_max =    0;
+
+const char *entity_typename(int type)
+{
+    switch (type)
+    {
+    case TYPE_ROOT:   return "root";
+    case TYPE_CAMERA: return "camera";
+    case TYPE_SPRITE: return "sprite";
+    case TYPE_OBJECT: return "object";
+    case TYPE_LIGHT:  return "light";
+    case TYPE_PIVOT:  return "pivot";
+    }
+
+    return "UNKNOWN";
+}
 
 int entity_exists(int id)
 {
-    return (E && ((id == 0) || (0 < id && id < E_max && E[id].type)));
+    return (E && 0 <= id && id < E_max && E[id].type);
+}
+
+int entity_todata(int id)
+{
+    return entity_exists(id) ? E[id].data : -1;
 }
 
 int entity_istype(int id, int type)
@@ -44,42 +65,27 @@ int entity_istype(int id, int type)
 
 int buffer_unused(int max, int (*exists)(int))
 {
-    int id = -1;
+    int id;
 
-    for (id = 1; id < max; ++id)
+    for (id = 0; id < max; ++id)
         if (!exists(id))
-            break;
+            return id;
 
-    return id;
+    return -1;
 }
 
 void *buffer_expand(void *buf, int *len, int siz)
 {
     void *ptr = NULL;
 
-    /* If the buffer does not exist, ... */
+    /* Reallocate the buffer and initilize the second half. */
 
-    if (buf == NULL)
+    if ((ptr = realloc(buf, *len * siz * 2)))
     {
-        /* ... allocate and initialize it, ... */
-
-        if ((ptr = malloc(*len * siz)))
-        {
-            memset(ptr, 0, *len * siz);
-        }
-        else ptr = buf;
+        memset(ptr + *len, 0, *len * siz);
+        *len *= 2;
     }
-    else
-    {
-        /* ... otherwise, reallocate it and initilize the second half. */
-
-        if ((ptr = realloc(buf, *len * siz * 2)))
-        {
-            memset(ptr + *len, 0, *len * siz);
-            *len *= 2;
-        }
-        else ptr = buf;
-    }
+    else ptr = buf;
 
     return ptr;
 }
@@ -180,6 +186,23 @@ void entity_attach(int cd, int pd)
 
 /*---------------------------------------------------------------------------*/
 
+int entity_init(void)
+{
+    if ((E = (struct entity *) calloc(64, sizeof (struct entity))))
+    {
+        E_max     = 64;
+        E[0].type = TYPE_ROOT;
+
+        camera_init();
+        sprite_init();
+        object_init();
+        light_init();
+
+        return 1;
+    }
+    return 0;
+}
+
 /* This function should be called only by object creation functions. */
 
 int entity_create(int type, int data)
@@ -274,17 +297,19 @@ void entity_delete(int id)
 
 void entity_position(int id, float x, float y, float z)
 {
-    if (entity_exists(id))
+    if (mpi_isroot())
     {
-        if (mpi_isroot())
-        {
-            E[id].position[0] = x;
-            E[id].position[1] = y;
-            E[id].position[2] = z;
+        E[id].position[0] = x;
+        E[id].position[1] = y;
+        E[id].position[2] = z;
 
-            server_send(EVENT_ENTITY_MOVE);
-        }
+        server_send(EVENT_ENTITY_MOVE);
 
+        mpi_share_integer(1, &id);
+        mpi_share_float(3, E[id].position);
+    }
+    else
+    {
         mpi_share_integer(1, &id);
         mpi_share_float(3, E[id].position);
     }
@@ -292,17 +317,19 @@ void entity_position(int id, float x, float y, float z)
 
 void entity_rotation(int id, float x, float y, float z)
 {
-    if (entity_exists(id))
+    if (mpi_isroot())
     {
-        if (mpi_isroot())
-        {
-            E[id].rotation[0] = x;
-            E[id].rotation[1] = y;
-            E[id].rotation[2] = z;
+        E[id].rotation[0] = x;
+        E[id].rotation[1] = y;
+        E[id].rotation[2] = z;
 
-            server_send(EVENT_ENTITY_TURN);
-        }
+        server_send(EVENT_ENTITY_TURN);
 
+        mpi_share_integer(1, &id);
+        mpi_share_float(3, E[id].rotation);
+    }
+    else
+    {
         mpi_share_integer(1, &id);
         mpi_share_float(3, E[id].rotation);
     }
@@ -310,17 +337,19 @@ void entity_rotation(int id, float x, float y, float z)
 
 void entity_scale(int id, float x, float y, float z)
 {
-    if (entity_exists(id))
+    if (mpi_isroot())
     {
-        if (mpi_isroot())
-        {
-            E[id].scale[0] = x;
-            E[id].scale[1] = y;
-            E[id].scale[2] = z;
+        E[id].scale[0] = x;
+        E[id].scale[1] = y;
+        E[id].scale[2] = z;
 
-            server_send(EVENT_ENTITY_SIZE);
-        }
+        server_send(EVENT_ENTITY_SIZE);
 
+        mpi_share_integer(1, &id);
+        mpi_share_float(3, E[id].scale);
+    }
+    else
+    {
         mpi_share_integer(1, &id);
         mpi_share_float(3, E[id].scale);
     }

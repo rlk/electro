@@ -25,7 +25,7 @@ int  script_click(int, int);
 int  script_point(int, int);
 int  script_timer(int);
 int  script_keyboard(int, int);
-int  script_joystick(int, int);
+int  script_joystick(int, int, int);
 
 /*---------------------------------------------------------------------------*/
 

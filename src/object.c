@@ -26,7 +26,7 @@
 /* Object entity storage                                                     */
 
 static struct object *O     = NULL;
-static int            O_max =   64;
+static int            O_max =    0;
 
 static int object_exists(int od)
 {
@@ -88,6 +88,8 @@ static void read_newmtl(const char *name)
         mtrlc++;
 
         sscanf(name, "%s", namev[mtrlc]);
+
+        mtrlv[mtrlc].texture = 0;
 
         /* Default diffuse */
 
@@ -507,6 +509,16 @@ static void object_share(struct object *o)
 
 /*---------------------------------------------------------------------------*/
 
+int object_init(void)
+{
+    if ((O = (struct object *) calloc(64, sizeof (struct object))))
+    {
+        O_max = 64;
+        return 1;
+    }
+    return 0;
+}
+
 int object_create(const char *filename)
 {
     int od;
@@ -526,6 +538,7 @@ int object_create(const char *filename)
         mpi_share_integer(1, &od);
 
         object_share(O + od);
+        opengl_check("object_create");
 
         /* Encapsulate this new object in an entity. */
 
@@ -564,6 +577,8 @@ void object_render(int id, int od)
                 {
                     const struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
 
+                    glBindTexture(GL_TEXTURE_2D, m->texture);
+
                     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   m->d);
                     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
                     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
@@ -576,6 +591,8 @@ void object_render(int id, int od)
             }
             glPopClientAttrib();
             glPopAttrib();
+
+            opengl_check("object_render");
 
             /* Render all child entities in this coordinate system. */
 

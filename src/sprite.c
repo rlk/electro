@@ -24,20 +24,36 @@
 /* Sprite entity storage                                                     */
 
 static struct sprite *S     = NULL;
-static int            S_max =   64;
+static int            S_max =    0;
 
 static int sprite_exists(int id)
 {
-    return (S && 0 < id && id < S_max && S[id].texture);
+    return (S && 0 <= id && id < S_max && S[id].texture);
 }
 
 /*---------------------------------------------------------------------------*/
 
+int sprite_init(void)
+{
+    if ((S = (struct sprite *) calloc(32, sizeof (struct sprite))))
+    {
+        S_max = 32;
+        return 1;
+    }
+    return 0;
+}
+
+static void sprite_share(struct sprite *s, const char *filename)
+{
+    s->texture = shared_load_texture(filename, &s->w, &s->h);
+    s->a       = 1.0f;
+}
+
 int sprite_create(const char *filename)
 {
-    int id = -1;
+    int sd;
 
-    if (S && (id = buffer_unused(S_max, sprite_exists)) >= 0)
+    if (S && (sd = buffer_unused(S_max, sprite_exists)) >= 0)
     {
         /* Initialize the new sprite. */
 
@@ -46,19 +62,19 @@ int sprite_create(const char *filename)
 
         /* Syncronize the new sprite. */
 
-        mpi_share_integer(1, &id);
+        mpi_share_integer(1, &sd);
 
-        S[id].texture = shared_load_texture(filename, &S[id].w, &S[id].h);
-        S[id].a       = 1.0f;
+        sprite_share(S + sd, filename);
+        opengl_check("sprite_create");
 
         /* Encapsulate this new sprite in an entity. */
 
-        id = entity_create(TYPE_SPRITE, id);
+        return entity_create(TYPE_SPRITE, sd);
     }
     else if ((S = buffer_expand(S, &S_max, sizeof (struct sprite))))
-        id = sprite_create(filename);
+        return sprite_create(filename);
 
-    return id;
+    return -1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -67,6 +83,8 @@ void sprite_render(int id, int sd)
 {
     if (sprite_exists(sd))
     {
+        opengl_check("sprite_render before");
+
         glPushMatrix();
         {
             /* Apply the local coordinate system transformation. */
@@ -89,7 +107,11 @@ void sprite_render(int id, int sd)
             }
             glEnd();
 
+            opengl_check("sprite_render after");
+
             /* Render all child entities in this coordinate system. */
+
+            entity_traversal(id);
         }
         glPopMatrix();
     }

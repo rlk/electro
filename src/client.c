@@ -87,13 +87,20 @@ static void client_recv(void)
 static void client_init(void)
 {
     glViewport(0, 0, viewport_get_w(), viewport_get_h());
+
+    entity_init();
     /*
     galaxy_init();
     star_init();
     */
+    glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glEnable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    opengl_check("client_init");
 }
 
 static void client_draw(void)

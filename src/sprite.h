@@ -27,6 +27,8 @@ struct sprite
 
 /*---------------------------------------------------------------------------*/
 
+int  sprite_init(void);
+
 int  sprite_create(const char *);
 void sprite_render(int, int);
 void sprite_delete(int);

@@ -23,6 +23,8 @@ struct light
 
 /*---------------------------------------------------------------------------*/
 
+int  light_init(void);
+
 int  light_create(int);
 void light_render(int, int);
 void light_delete(int);

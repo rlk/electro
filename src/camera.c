@@ -33,14 +33,24 @@ static float viewport_h =  600.0f;
 /*---------------------------------------------------------------------------*/
 
 static struct camera *C     = NULL;
-static int            C_max =    2;
+static int            C_max =    0;
 
 static int camera_exists(int cd)
 {
-    return (C && ((cd == 0) || (0 < cd && cd < C_max && C[cd].type)));
+    return (C && 0 <= cd && cd < C_max && C[cd].type);
 }
 
 /*---------------------------------------------------------------------------*/
+
+int camera_init(void)
+{
+    if ((C = (struct camera *) calloc(2, sizeof (struct camera))))
+    {
+        C_max = 2;
+        return 1;
+    }
+    return 0;
+}
 
 int camera_create(int type)
 {
@@ -108,7 +118,6 @@ void camera_render(int id, int cd)
             GLdouble t = -C[cd].zoom *  viewport_y;
             GLdouble f =  CAMERA_FAR;
 
-            glPushMatrix();
             glLoadIdentity();
 
             if (C[cd].type == CAMERA_PERSP) glFrustum(l, r, b, t,  1.0, f);
@@ -116,23 +125,17 @@ void camera_render(int id, int cd)
         }
         glMatrixMode(GL_MODELVIEW);
         {
-            glPushMatrix();
+            glLoadIdentity();
             glTranslatef(0, 0, -C[cd].dist);
 
             entity_transform(id);
         }
 
+        opengl_check("camera_render");
+
         /* Render all children using this camera. */
 
         entity_traversal(id);
-
-        /* Revert to the previous camera configuration. */
-
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
     }
 
     /* Use the view configuration as vertex program parameters. */
@@ -210,33 +213,39 @@ int viewport_get_h(void)
 
 /*---------------------------------------------------------------------------*/
 
-void camera_set_dist(int id, float d)
+void camera_set_dist(int cd, float d)
 {
-    if (camera_exists(id))
+    if (mpi_isroot())
     {
-        if (mpi_isroot())
-        {
-            C[id].dist = d;
-            server_send(EVENT_CAMERA_DIST);
-        }
+        C[cd].dist = d;
 
-        mpi_share_integer(1, &id);
-        mpi_share_float(1, &C[id].dist);
+        server_send(EVENT_CAMERA_DIST);
+
+        mpi_share_integer(1, &cd);
+        mpi_share_float(1, &C[cd].dist);
+    }
+    else
+    {
+        mpi_share_integer(1, &cd);
+        mpi_share_float(1, &C[cd].dist);
     }
 }
 
-void camera_set_zoom(int id, float z)
+void camera_set_zoom(int cd, float z)
 {
-    if (camera_exists(id))
+    if (mpi_isroot())
     {
-        if (mpi_isroot())
-        {
-            C[id].zoom = z;
-            server_send(EVENT_CAMERA_ZOOM);
-        }
+        C[cd].zoom = z;
 
-        mpi_share_integer(1, &id);
-        mpi_share_float(1, &C[id].zoom);
+        server_send(EVENT_CAMERA_ZOOM);
+
+        mpi_share_integer(1, &cd);
+        mpi_share_float(1, &C[cd].zoom);
+    }
+    else
+    {
+        mpi_share_integer(1, &cd);
+        mpi_share_float(1, &C[cd].zoom);
     }
 }
 

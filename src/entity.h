@@ -15,11 +15,12 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define TYPE_CAMERA 1
-#define TYPE_SPRITE 2
-#define TYPE_OBJECT 3
-#define TYPE_LIGHT  4
-#define TYPE_PIVOT  5
+#define TYPE_ROOT   1
+#define TYPE_CAMERA 2
+#define TYPE_SPRITE 3
+#define TYPE_OBJECT 4
+#define TYPE_LIGHT  5
+#define TYPE_PIVOT  6
 
 struct entity
 {
@@ -42,13 +43,18 @@ void *buffer_expand(void *, int *, int);
 
 /*---------------------------------------------------------------------------*/
 
+const char *entity_typename(int);
+
 int  entity_exists(int);
+int  entity_todata(int);
 int  entity_istype(int, int);
 
 void entity_transform(int);
 void entity_traversal(int);
 
 /*---------------------------------------------------------------------------*/
+
+int  entity_init(void);
 
 int  entity_create(int, int);
 void entity_parent(int, int);

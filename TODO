@@ -1,3 +1,5 @@
+stencil viewports
+object texture / image type
 Add alpha to entity.  Remove it from sprite.
 Wire mode to object.
 Relative entity transform

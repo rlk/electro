@@ -353,6 +353,7 @@ const char *event_string(int type)
     case EVENT_SPRITE_CREATE: return "sprite create";
     case EVENT_OBJECT_CREATE: return "object create";
     case EVENT_LIGHT_CREATE:  return "light create";
+    case EVENT_PIVOT_CREATE:  return "pivot create";
 
     case EVENT_CAMERA_DIST:   return "camera dist";
     case EVENT_CAMERA_ZOOM:   return "camera zoom";

@@ -24,14 +24,24 @@
 /* Light entity storage                                                     */
 
 static struct light *L     = NULL;
-static int           L_max =    4;
+static int           L_max =    0;
 
 static int light_exists(int ld)
 {
-    return (L && ((ld == 0) || (0 < ld && ld < L_max && L[ld].type)));
+    return (L && 0 <= ld && ld < L_max && L[ld].type);
 }
 
 /*---------------------------------------------------------------------------*/
+
+int light_init(void)
+{
+    if ((L = (struct light *) calloc(8, sizeof (struct light))))
+    {
+        L_max = 8;
+        return 1;
+    }
+    return 0;
+}
 
 int light_create(int type)
 {
@@ -86,12 +96,15 @@ void light_render(int id, int ld)
 
         glPushAttrib(GL_ENABLE_BIT);
         {
-            GLenum light = GL_LIGHT0 + (ld - 1);
+            GLenum light = GL_LIGHT0 + ld;
 
+            glEnable(GL_LIGHTING);
             glEnable(light);
         
             glLightfv(light, GL_DIFFUSE, L[ld].d);
             glLightfv(light, GL_POSITION, pos);
+
+            opengl_check("light_render");
 
             entity_traversal(id);
         }
