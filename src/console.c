@@ -108,7 +108,7 @@ static void write_console(const char *str)
 
         /* Scroll on line wrap. */
 
-        if (console_x > console_w)
+        if (console_x >= console_w)
         {
             scroll_console();
             console_x = 0;

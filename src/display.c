@@ -114,16 +114,18 @@ void sync_display(void)
     if (rank == 0) memcpy(&Host, Hi, sizeof (struct host));
 }
 
-int draw_display(struct frustum *F, const float p[3], float n, float f, int i)
+int draw_display(struct frustum *F1, const float p[3], float N, float F, int i)
 {
     if (i < Host.n)
     {
-        /* TODO: generalize this. */
-
-        float l = Host.tile[i].o[0]                     - p[0];
-        float r = Host.tile[i].o[0] + Host.tile[i].r[0] - p[0];
-        float b = Host.tile[i].o[1]                     - p[1];
-        float t = Host.tile[i].o[1] + Host.tile[i].u[1] - p[1];
+        GLdouble l = -N * ((Host.tile[i].o[0]                     - p[0]) /
+                           (Host.tile[i].o[2]                     - p[2]));
+        GLdouble r = -N * ((Host.tile[i].o[0] + Host.tile[i].r[0] - p[0]) /
+                           (Host.tile[i].o[2] + Host.tile[i].r[2] - p[2]));
+        GLdouble b = -N * ((Host.tile[i].o[1]                     - p[1]) /
+                           (Host.tile[i].o[2]                     - p[2]));
+        GLdouble t = -N * ((Host.tile[i].o[1] + Host.tile[i].u[1] - p[1]) /
+                           (Host.tile[i].o[2] + Host.tile[i].u[2] - p[2]));
 
         /* Configure the viewport. */
 
@@ -137,7 +139,7 @@ int draw_display(struct frustum *F, const float p[3], float n, float f, int i)
         glMatrixMode(GL_PROJECTION);
         {
             glLoadIdentity();
-            glFrustum(l, r, b, t, n, f);
+            glFrustum(l, r, b, t, N, F);
         }
         glMatrixMode(GL_MODELVIEW);
 

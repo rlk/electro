@@ -1,13 +1,3 @@
-E.color_console(1, 1, 1)
-
-E.print_console(" !\"#$%&'()*+,-./\n")
-E.print_console("0123456789:;<=>?\n")
-E.print_console("@ABCDEFGHIJKLMNO\n")
-E.print_console("PQRSTUVWXYZ[\\]^_\n")
-E.print_console("`abcdefghijklmno\n")
-E.print_console("pqrstuvwxyz{|}~ \n")
-
-E.color_console(0, 1, 0)
 
 -- Here are a few SDL keycode constants that might come in handy.
 

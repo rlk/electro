@@ -8,23 +8,6 @@ floor   = nil
 
 tumble = false
 
-function dump(entity, depth)
-    local i = 0
-    local s = ""
-
-    for i = 1, depth do
-        s = s.."   "
-    end
-
-    E.print_console(s .. E.get_entity_debug_id(entity).."\n")
-
-    i = 0
-    while E.get_entity_child(entity, i) do
-        dump(E.get_entity_child(entity, i), depth + 1)
-        i = i + 1
-    end
-end
-
 function do_start()
 
     camera  = E.create_camera(E.camera_type_perspective)
@@ -38,14 +21,12 @@ function do_start()
     E.parent_entity(thing, pivot)
     E.parent_entity(floor, pivot)
 
-    E.set_entity_rotation(light, 30, 0, 0)
     E.set_entity_position(light, 0,  2.0,  2.0)
     E.set_entity_position(pivot, 0, -2.0, -2.0)
     E.set_entity_position(thing, 0,  1.0,  0.0)
 
-    E.set_camera_distance(camera, 5)
-
-    dump(nil, 0)
+    E.set_entity_position(camera, 0, 0, 0);
+    E.set_camera_distance(camera, 10)
 end
 
 function do_click(b, s)
