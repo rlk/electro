@@ -16,6 +16,56 @@ static int spinning;
 
 /*---------------------------------------------------------------------------*/
 
+void viewer_init(void)
+{
+    button[0]   =  0;
+    button[1]   =  0;
+    button[2]   =  0;
+
+    position[0] =      0.0;
+    position[1] =     15.5;
+    position[2] =   9200.0;
+    position[3] =      1.0;
+    rotation[0] =      0.0;
+    rotation[1] =      0.0;
+    distance    =  15000.0;
+    magnifier   =    256.0;
+}
+
+void viewer_post(void)
+{
+    SDL_Event e;
+
+    e.type = SDL_USEREVENT;
+
+    SDL_PushEvent(&e);
+}
+
+void viewer_draw(void)
+{
+    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
+    GLdouble z = 0.5;
+
+    glMatrixMode(GL_PROJECTION);
+    {
+        glLoadIdentity();
+        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000000.0);
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    {
+        glLoadIdentity();
+        glTranslated(0, 0, -distance);
+        glRotated(-rotation[0], 1, 0, 0);
+        glRotated(-rotation[1], 0, 1, 0);
+        glTranslated(-position[0], -position[1], -position[2]);
+    }
+
+    if (spinning) viewer_post();
+}
+
+/*---------------------------------------------------------------------------*/
+
 int viewer_point(int x, int y)
 {
     static int last_x = 0;
@@ -41,7 +91,7 @@ int viewer_point(int x, int y)
     }
     if (button[2])
     {
-        distance += dy / 10.0;
+        distance += dy * 100;
 
         if (distance < 0.0)
             distance = 0.0;
@@ -77,9 +127,9 @@ int viewer_keybd(int k, int s)
     if (k == SDLK_F11 && s)
         spinning--;
     if (k == SDLK_F10 && s)
-        magnifier += 10;
+        magnifier += 32;
     if (k == SDLK_F9  && s)
-        magnifier -= 10;
+        magnifier -= 32;
 
     return 1;
 }
@@ -93,53 +143,6 @@ int viewer_event(int c)
 }
 
 /*---------------------------------------------------------------------------*/
-
-void viewer_post(void)
-{
-    SDL_Event e;
-
-    e.type = SDL_USEREVENT;
-
-    SDL_PushEvent(&e);
-}
-
-void viewer_init(void)
-{
-    button[0]   =  0;
-    button[1]   =  0;
-    button[2]   =  0;
-
-    position[0] =  0;
-    position[1] =  0;
-    position[2] =  0;
-    position[3] =  1;
-    rotation[0] =  0;
-    rotation[1] =  0;
-    distance    =  0;
-    magnifier   = 50;
-}
-
-void viewer_draw(void)
-{
-    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
-    GLdouble z = 0.5;
-
-    glMatrixMode(GL_PROJECTION);
-    {
-        glLoadIdentity();
-        glFrustum(-a * z, +a * z, -z, +z, 1.0, 10000.0);
-    }
-
-    glMatrixMode(GL_MODELVIEW);
-    {
-        glLoadIdentity();
-        glTranslated(0, 0, -distance);
-        glRotated(-rotation[0], 1, 0, 0);
-        glRotated(-rotation[1], 0, 1, 0);
-    }
-
-    if (spinning) viewer_post();
-}
 
 void viewer_get_pos(double p[3])
 {

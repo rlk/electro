@@ -1,0 +1,7 @@
+O  00 00 FF
+B  50 50 FF
+A  A0 A0 FF
+F  FF FF FF
+G  FF FF 00
+K  FF 80 00
+M  FF 00 00
