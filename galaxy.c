@@ -10,6 +10,7 @@
 /*---------------------------------------------------------------------------*/
 
 #define N 118218
+static int n = 0;
 
 static GLuint texture;
 static struct star *S;
@@ -29,16 +30,21 @@ void galaxy_star(FILE *fp, int i)
         sscanf(buf + 64, "%lf", &de);
         sscanf(buf + 79, "%lf", &plx);
 
-        plx =    1000.0 / plx;
-        ra  = M_PI * ra / 180.0;
-        de  = M_PI * de / 180.0;
+        if (mag < 6.0)
+        {
+            plx =    1000.0 / plx;
+            ra  = M_PI * ra / 180.0;
+            de  = M_PI * de / 180.0;
 
-        S[i].position[0] =  sin(ra) * cos(de) * plx;
-        S[i].position[1] =            sin(de) * plx;
-        S[i].position[2] =  cos(ra) * cos(de) * plx;
+            S[n].position[0] =  sin(ra) * cos(de) * plx;
+            S[n].position[1] =            sin(de) * plx;
+            S[n].position[2] =  cos(ra) * cos(de) * plx;
         
-        S[i].temperature =  0;
-        S[i].magnitude   =  mag - 5.0 * log(plx / 10.0);
+            S[n].temperature =  0;
+            S[n].magnitude   =  mag - 5.0 * log(plx / 10.0);
+
+            n++;
+        }
     }
 }
 
@@ -79,7 +85,7 @@ void galaxy_draw(const double p[3])
 
     glColor4d(1.0, 1.0, 1.0, 1.0);
 
-    for (i = 0; i < N; i++)
+    for (i = 0; i < n; i++)
     {
         double dx = S[i].position[0] - p[0];
         double dy = S[i].position[1] - p[1];
