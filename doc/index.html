@@ -1,0 +1,169 @@
+<html>
+<head>
+  <style type="text/css">
+    body   { text-align:   justify;
+             margin-right: 12%;
+             margin-left:  12%; }
+    h1     { margin-left: -12%; }
+    h2     { margin-left:  -9%; }
+    h3     { margin-left:  -6%; }
+    h4     { margin-left:  -3%; }
+    dt     { background: #EEEEEE; padding: 0.5em; }
+    pre    { background: #FFFFCC; padding: 1.0em; }
+    p.note { background: #CCFFFF; padding: 1.0em; }
+  </style>
+</head>
+<body>
+
+<!---------------------------------------------------------------------------->
+
+<pre style="font-size:3em; font-weight:bold; padding: 0.25em">
+  |||
+  O o  Electro
+   -
+</pre>
+
+<p> Electro is an application development environment designed for use
+on cluster-driven tiled displays.  Electro is based upon the MPI
+process model and is bound to the Lua programming language.  With
+support for 3D graphics, 2D graphics, audio, and input handling,
+Electro provides an easy-to-use scripting system for interactive
+applications spanning multiple processors and displays. </p>
+
+<p> In addition to the MPI-based cluster mode, Electro may be built
+in a stand-alone mode under Linux, Windows 2K/XP, and Mac OS X.
+This stand-alone mode accepts the same cluster configuration input
+as the cluster mode, and will display a simulated tiling that may
+be used to test applications for compatibility with various tiled
+displays.  </p>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Download </h1>
+
+<p> Source code is made available under the terms of the <a
+href="http://www.gnu.org/licenses/gpl.html"> GNU General Public
+License </a>.  Building this source requires the libraries and
+header files for
+
+<a href="http://www.libsdl.org">SDL</a>,
+<a href="http://www.libpng.org">PNG</a>,
+<a href="http://www.ijg.org">JPEG</a>,
+<a href="http://www.lua.org">Lua</a>, and
+<a href="http://www.vorbis.com">Ogg Vorbis.</a>
+
+A makefile is included for Linux and OS X.  A Visual Studio 6 project
+file is included for Windows.</p>
+
+<ul>
+<li><a href="electro-159-src.zip"> electro-159-src.zip </a>
+</ul>
+
+<p> This Windows 2K/XP binary was built using Visual Studio 6.  It
+statically links all libraries, with the exception of SDL, which
+is included. </p>
+
+<ul>
+<li><a href="electro-159-w32.zip"> electro-159-w32.zip </a>
+</ul>
+
+<p> This galaxy data package is necessary to run the Asteroids and
+Vortex demos.  The contents of this package must be placed in
+<tt>electro/examples/</tt>.  This ZIP file is approximately 30MB in size:
+</p>
+
+<ul>
+<li><a href="electro-galaxy.zip"> electro-galaxy.zip </a>
+</ul>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Documentation </h1>
+
+<p> Complete documentation including a brief tutorial is <a
+href="electro.html">available here</a> and is also included in the
+source package. </p>
+
+<p> There are 3 demo applications included in the source and binary
+packages: Asteroids, Vortex, and Fifteen. </p>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Running </h1>
+
+<p> Electro takes a list of Lua scripts on the command line.  Each
+script is executed in turn.  Electro infers the current working
+directory from the path name of each script. </p>
+
+<p> Click in the application window to activate it.  Electro will grab
+your mouse pointer.  Press <b>Escape</b> to release the pointer and
+pause the application. </p>
+
+<h3> Stand-alone mode </h3>
+
+Under Unix: </p>
+
+<pre>
+$ ./electro examples/asteroids/asteroids.lua
+</pre>
+
+<p>Under Windows, Lua scripts may be dragged-and-dropped on the
+Electro application, or Electro may be run from the command line:
+
+<pre>
+C:\&gt; cd examples\asteroids
+C:\&gt; electro examples\asteroids\asteroids.lua
+</pre>
+
+<h3> Cluster simulator </h3>
+
+<p> To run a demo in a simulator mode, include the name of the
+configuration file on the command line: </p>
+
+<pre>
+$ ./electro config/nico.lua examples/asteroids/asteroids.lua
+</pre>
+
+<p>Under Windows: </p>
+
+<pre>
+C:\&gt; electro.exe config\nico.lua examples\asteroids\asteroids.lua
+</pre>
+
+<h3> Cluster mode </h3>
+
+<p> At EVL, Electro is installed globally on nico.  Run it in
+standalone mode as above, or in cluster mode by invoking the nico
+run script <tt>electro-nico</tt>: </p>
+
+<pre>
+$ setenv PATH ${PATH}:/usr/local/Electro/bin
+$ electro-nico /usr/local/Electro/examples/asteroids/asteroids.lua
+</pre>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Notes </h1>
+
+<dl>
+
+<dt> OpenGL Requirements <dd><p> Electro requires
+<tt>GL_ARB_vertex_program</tt>, <tt>GL_ARB_fragment_program</tt>,
+and <tt>GL_ARB_point_sprite</tt> to render stars correcly.  An
+NVIDIA GeForce FX (or better) or ATI Radeon 9600 (or better) is
+necessary.  Electro will run without these features, and demos will
+work correctly, but stars will appear as tiny dots. </p>
+
+<dt> Apple horkedness <dd><p> Apple systems seem to ignore the point
+size output of the vertex program.  This bug appears on both NVIDIA
+and ATI hardware on Macs, but has not been observed on NVIDIA or
+ATI hardware on PCs.  Again, Electro will run and the demos will
+work, but stars will appear as tiny dots. </p>
+
+<dt> Asteroids <dd><p> Asteroids requires a joystick. </p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<p class="note" style="text-align: right"><i> rlk (at) evl.uic.edu </i></p>
