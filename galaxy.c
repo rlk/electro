@@ -30,7 +30,7 @@ void galaxy_star(FILE *fp, int i)
         sscanf(buf + 64, "%lf", &de);
         sscanf(buf + 79, "%lf", &plx);
 
-        if (mag < 8.0)
+        if (mag < 15.0)
         {
             ra  = M_PI * ra / 180.0;
             de  = M_PI * de / 180.0;
@@ -40,14 +40,12 @@ void galaxy_star(FILE *fp, int i)
             else
                 plx = 1000.0;
 
-            S[n].position[0] =  sin(ra) * cos(de) * plx;
-            S[n].position[1] =            sin(de) * plx;
-            S[n].position[2] = -cos(ra) * cos(de) * plx;
+            S[n].position[0] =  sin(ra) * cos(de) * 10;
+            S[n].position[1] =            sin(de) * 10;
+            S[n].position[2] =  cos(ra) * cos(de) * 10;
             
             S[n].temperature =  1;
-            S[n].brightness  =  sqrt(pow(10.0, -mag / 2.5));
-            S[n].brightness  =  sqrt(pow(10.0, -mag / 10.0)) / 10;
-            S[n].brightness  =  0.1;
+            S[n].brightness  =  sqrt(pow(10, -mag / 2.5)) * 0.25;
 
             n++;
         }
