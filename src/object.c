@@ -667,7 +667,9 @@ int send_create_object(const char *filename)
 
                 pack_index(s->mi);
                 pack_index(s->fc);
+                pack_index(s->ec);
                 pack_alloc(s->fc * sizeof (struct object_face), s->fv);
+                pack_alloc(s->ec * sizeof (struct object_edge), s->ev);
             }
 
             create_object(od);
@@ -709,7 +711,9 @@ void recv_create_object(void)
 
         s->mi = unpack_index();
         s->fc = unpack_index();
+        s->ec = unpack_index();
         s->fv = unpack_alloc(s->fc * sizeof (struct object_face));
+        s->ev = unpack_alloc(s->ec * sizeof (struct object_edge));
     }
 
     create_object(od);

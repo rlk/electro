@@ -19,6 +19,7 @@
 #include <SDL.h>
 #include <lua.h>
 #include <lualib.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "joystick.h"
@@ -547,6 +548,34 @@ static int script_set_entity_flag(lua_State *L)
     send_set_entity_flag(script_getentity(name, L, -3),
                    (int) script_getnumber(name, L, -2),
                          script_getboolean(name, L, -1));
+    return 0;
+}
+
+static int script_set_entity_frag_prog(lua_State *L)
+{
+    const char *name = "set_entity_frag_prog";
+    int id           = script_getentity(name, L, -2);
+    const char *file = script_getstring(name, L, -1);
+
+    char *text = alloc_text(file);
+
+    send_set_entity_frag_prog(id, text);
+
+    free(text);
+    return 0;
+}
+
+static int script_set_entity_vert_prog(lua_State *L)
+{
+    const char *name = "set_entity_vert_prog";
+    int id           = script_getentity(name, L, -2);
+    const char *file = script_getstring(name, L, -1);
+
+    char *text = alloc_text(file);
+
+    send_set_entity_vert_prog(id, text);
+
+    free(text);
     return 0;
 }
 
@@ -1079,6 +1108,8 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_scale",     script_set_entity_scale);
     lua_function(L, "set_entity_alpha",     script_set_entity_alpha);
     lua_function(L, "set_entity_flag",      script_set_entity_flag);
+    lua_function(L, "set_entity_frag_prog", script_set_entity_frag_prog);
+    lua_function(L, "set_entity_vert_prog", script_set_entity_vert_prog);
 
     lua_function(L, "get_entity_position",  script_get_entity_position);
     lua_function(L, "get_entity_rotation",  script_get_entity_rotation);

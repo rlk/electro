@@ -57,8 +57,8 @@ static unsigned char *console;
 /*---------------------------------------------------------------------------*/
 
 static GLubyte back_image[16] = {
-    0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0xC0, 
-    0x00, 0x00, 0x00, 0xB0, 0x00, 0x00, 0x00, 0xB0, 
+    0x00, 0x10, 0x00, 0xC0, 0x00, 0x10, 0x00, 0xC0, 
+    0x00, 0x10, 0x00, 0xB0, 0x00, 0x10, 0x00, 0xB0, 
 };
 
 static GLuint  fore_texture;
@@ -118,8 +118,10 @@ static void faded(const char *str)
     for (i = 0; i < l; i++)
     {
         float k = (float) i / l;
+        char  buf[2];
 
-        char buf[2] = { str[i], '\0' };
+        buf[0] = str[i];
+        buf[1] = '\0';
 
         color_console((1.0f - k), k, 0.0f);
         write_console(buf);
@@ -494,6 +496,10 @@ void error_console(const char *str)
     write_console(str);
     write_console("\n");
     
+#ifndef NDEBUG
+    fprintf(stderr, "Error: %s\n", str);
+#endif
+
     console_r = r;
     console_g = g;
     console_b = b;

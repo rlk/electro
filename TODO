@@ -10,7 +10,6 @@ analyze performance
     free-run may be ok since MPI restructuring
 
 css print
-fp/vp per entity (also fixes standard string length)
 Scale and billboard frustum (thorough test)
 
 TTF support (distribute the ttf?  Just the image?)
@@ -18,11 +17,6 @@ asteroids text overlay models?
 
 camera near/far (automatic? (entity bounding sphere?))
 
-Reorganize MPI abstraction (it's simpler than it once was)
 Improve assertions (delineate necessary thing_exists vs thing_assert)
 
 Particle system? (stars?)
-
-frustum transform = matrix multiplication?
-        identity matrix is idempotent frustum?
-

@@ -46,6 +46,8 @@ extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 extern PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
 extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
+extern PFNGLISPROGRAMARBPROC                glIsProgramARB;
+extern PFNGLDELETEPROGRAMSARBPROC           glDeleteProgramsARB;
 extern PFNGLBINDBUFFERARBPROC               glBindBufferARB;
 extern PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
 extern PFNGLBUFFERDATAARBPROC               glBufferDataARB;

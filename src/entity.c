@@ -181,47 +181,50 @@ void draw_entity_list(int id, const float V[16], float a)
     for (jd = E[id].car; jd; jd = E[jd].cdr)
         if ((E[jd].flag & FLAG_HIDDEN) == 0)
         {
-            /* Enable wireframe if specified. */
-
-            if (E[jd].flag & FLAG_WIREFRAME)
+            glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
             {
-                glPushAttrib(GL_POLYGON_BIT);
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                /* Enable wireframe if specified. */
+
+                if (E[jd].flag & FLAG_WIREFRAME)
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+                /* Disable lighting if requested. */
+
+                if (E[jd].flag & FLAG_UNLIT)
+                    glDisable(GL_LIGHTING);
+
+                /* Enable line smoothing if requested. */
+
+                if (E[jd].flag & FLAG_LINE_SMOOTH)
+                    glEnable(GL_LINE_SMOOTH);
+
+                /* Enable vertex and fragment programs if specified. */
+
+                if (E[jd].frag_prog && GL_has_fragment_program)
+                {
+                    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+                    glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, E[jd].frag_prog);
+                }
+                if (E[jd].vert_prog && GL_has_vertex_program)
+                {
+                    glEnable(GL_VERTEX_PROGRAM_ARB);
+                    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+                    glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   E[jd].vert_prog);
+                }
+
+                /* Draw this entity. */
+
+                switch (E[jd].type)
+                {
+                case TYPE_CAMERA: draw_camera(jd, E[jd].data, V, a); break;
+                case TYPE_SPRITE: draw_sprite(jd, E[jd].data, V, a); break;
+                case TYPE_OBJECT: draw_object(jd, E[jd].data, V, a); break;
+                case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, V, a); break;
+                case TYPE_LIGHT:  draw_light (jd, E[jd].data, V, a); break;
+                case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, V, a); break;
+                }
             }
-
-            /* Disable lighting if requested. */
-
-            if (E[jd].flag & FLAG_UNLIT)
-            {
-                glPushAttrib(GL_ENABLE_BIT);
-                glDisable(GL_LIGHTING);
-            }
-
-            /* Enable line smoothing if requested. */
-
-            if (E[jd].flag & FLAG_LINE_SMOOTH)
-            {
-                glEnable(GL_LINE_SMOOTH);
-                glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-                glLineWidth(2.0);
-            }
-
-            /* Draw this entity. */
-
-            switch (E[jd].type)
-            {
-            case TYPE_CAMERA: draw_camera(jd, E[jd].data, V, a); break;
-            case TYPE_SPRITE: draw_sprite(jd, E[jd].data, V, a); break;
-            case TYPE_OBJECT: draw_object(jd, E[jd].data, V, a); break;
-            case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, V, a); break;
-            case TYPE_LIGHT:  draw_light (jd, E[jd].data, V, a); break;
-            case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, V, a); break;
-            }
-
-            /* Revert to previous render modes, as necessary. */
-
-            if (E[jd].flag & FLAG_WIREFRAME)  glPopAttrib();
-            if (E[jd].flag & FLAG_UNLIT)      glPopAttrib();
+            glPopAttrib();
 
             /* Protect the space-time continuum. */
 
@@ -361,29 +364,35 @@ void recv_parent_entity(void)
 }
 
 /*---------------------------------------------------------------------------*/
-void send_set_entity_flag(int id, int flags, int state)
-{
-    pack_event(EVENT_SET_ENTITY_FLAG);
-    pack_index(id);
-    pack_index(flags);
-    pack_index(state);
 
-    if (state)
-        E[id].flag = E[id].flag | (flags);
-    else
-        E[id].flag = E[id].flag & (~flags);
+static void set_entity_frag_prog(int id, const char *txt)
+{
+    if (GL_has_fragment_program)
+    {
+        int len = strlen(txt);
+
+        glGenProgramsARB(1, &E[id].frag_prog);
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, E[id].frag_prog);
+
+        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                           GL_PROGRAM_FORMAT_ASCII_ARB, len, txt);
+    }
+    else E[id].frag_prog = 0;
 }
 
-void recv_set_entity_flag(void)
+static void set_entity_vert_prog(int id, const char *txt)
 {
-    int id    = unpack_index();
-    int flags = unpack_index();
-    int state = unpack_index();
+    if (GL_has_vertex_program)
+    {
+        int len = strlen(txt);
 
-    if (state)
-        E[id].flag = E[id].flag | (flags);
-    else
-        E[id].flag = E[id].flag & (~flags);
+        glGenProgramsARB(1, &E[id].vert_prog);
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, E[id].vert_prog);
+
+        glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                           GL_PROGRAM_FORMAT_ASCII_ARB, len, txt);
+    }
+    else E[id].vert_prog = 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -424,6 +433,43 @@ void send_set_entity_alpha(int id, float a)
     pack_index(id);
 
     pack_float((E[id].alpha = a));
+}
+
+void send_set_entity_flag(int id, int flags, int state)
+{
+    pack_event(EVENT_SET_ENTITY_FLAG);
+    pack_index(id);
+    pack_index(flags);
+    pack_index(state);
+
+    if (state)
+        E[id].flag = E[id].flag | (flags);
+    else
+        E[id].flag = E[id].flag & (~flags);
+}
+
+void send_set_entity_frag_prog(int id, const char *txt)
+{
+    int len = strlen(txt) + 1;
+
+    pack_event(EVENT_SET_ENTITY_FRAG_PROG);
+    pack_index(id);
+    pack_index(len);
+    pack_alloc(len, txt);
+
+    set_entity_frag_prog(id, txt);
+}
+
+void send_set_entity_vert_prog(int id, const char *txt)
+{
+    int len = strlen(txt) + 1;
+
+    pack_event(EVENT_SET_ENTITY_VERT_PROG);
+    pack_index(id);
+    pack_index(len);
+    pack_alloc(len, txt);
+
+    set_entity_vert_prog(id, txt);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -489,6 +535,36 @@ void recv_set_entity_alpha(void)
     int id = unpack_index();
 
     E[id].alpha = unpack_float();
+}
+
+void recv_set_entity_flag(void)
+{
+    int id    = unpack_index();
+    int flags = unpack_index();
+    int state = unpack_index();
+
+    if (state)
+        E[id].flag = E[id].flag | (flags);
+    else
+        E[id].flag = E[id].flag & (~flags);
+}
+
+void recv_set_entity_frag_prog(void)
+{
+    int         id  = unpack_index();
+    int         len = unpack_index();
+    const char *txt = unpack_alloc(len);
+
+    set_entity_frag_prog(id, txt);
+}
+
+void recv_set_entity_vert_prog(void)
+{
+    int         id  = unpack_index();
+    int         len = unpack_index();
+    const char *txt = unpack_alloc(len);
+
+    set_entity_vert_prog(id, txt);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -587,6 +663,16 @@ static void delete_entity(int id)
         /* Remove this entity from the parent's child list. */
 
         detach_entity(id, pd);
+
+        /* Release any program objects. */
+
+        if (GL_has_fragment_program)
+            if (glIsProgramARB(E[id].frag_prog))
+                glDeleteProgramsARB(1, &E[id].frag_prog);
+                
+        if (GL_has_vertex_program)
+            if (glIsProgramARB(E[id].vert_prog))
+                glDeleteProgramsARB(1, &E[id].vert_prog);
 
         /* Invoke the data delete handler. */
 

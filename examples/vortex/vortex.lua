@@ -33,6 +33,11 @@ function do_start()
     galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal")
     galaxy_hip = E.create_galaxy("../galaxy_hip.gal")
 
+    E.set_entity_vert_prog(galaxy_hip, "../star.vp");
+    E.set_entity_frag_prog(galaxy_hip, "../star.fp");
+    E.set_entity_vert_prog(galaxy_tyc, "../star.vp");
+    E.set_entity_frag_prog(galaxy_tyc, "../star.fp");
+
     E.parent_entity(galaxy_hip, camera_hip)
     E.parent_entity(galaxy_tyc, camera_tyc)
 
@@ -65,10 +70,10 @@ function do_timer(dt)
     if rot_y < -180 then rot_y = rot_y + 360 end
     if rot_y >  180 then rot_y = rot_y - 360 end
 
-    if hip_dist then E.set_camera_distance(camera_hip, hip_dist) end
-    if tyc_dist then E.set_camera_distance(camera_tyc, tyc_dist) end
-    if hip_zoom then E.set_camera_zoom(camera_hip, hip_zoom) end
-    if tyc_zoom then E.set_camera_zoom(camera_tyc, tyc_zoom) end
+    E.set_camera_distance(camera_hip, hip_dist)
+    E.set_camera_distance(camera_tyc, tyc_dist)
+    E.set_camera_zoom(camera_hip, zoom)
+    E.set_camera_zoom(camera_tyc, zoom)
 
     E.set_entity_rotation(camera_hip, rot_x, rot_y, rot_z)
     E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)

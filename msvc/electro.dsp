@@ -116,6 +116,10 @@ SOURCE=..\src\galaxy.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\glyph.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\image.c
 # End Source File
 # Begin Source File
@@ -209,6 +213,10 @@ SOURCE=..\src\event.h
 # Begin Source File
 
 SOURCE=..\src\galaxy.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\glyph.h
 # End Source File
 # Begin Source File
 

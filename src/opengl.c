@@ -82,6 +82,8 @@ PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
 PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
+PFNGLISPROGRAMARBPROC                glIsProgramARB;
+PFNGLDELETEPROGRAMSARBPROC           glDeleteProgramsARB;
 PFNGLBINDBUFFERARBPROC               glBindBufferARB;
 PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
 PFNGLBUFFERDATAARBPROC               glBufferDataARB;
@@ -96,6 +98,10 @@ void init_opengl(void)
         opengl_proc("glBindProgramARB");
     glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
         opengl_proc("glGenProgramsARB");
+    glIsProgramARB = (PFNGLISPROGRAMARBPROC)
+        opengl_proc("glIsProgramARB");
+    glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)
+        opengl_proc("glDeleteProgramsARB");
     glProgramEnvParameter4fARB = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
         opengl_proc("glProgramEnvParameter4fARB");
 

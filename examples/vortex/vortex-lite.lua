@@ -45,9 +45,12 @@ function do_start()
     hilite = E.create_sprite("hilite.png")
     marker = E.create_sprite("here.png")
 
+    E.set_entity_vert_prog(galaxy, "../star.vp");
+    E.set_entity_frag_prog(galaxy, "../star.fp");
+
     E.parent_entity(galaxy, camera)
-    E.parent_entity(hilite, galaxy)
-    E.parent_entity(marker, galaxy)
+    E.parent_entity(hilite, camera)
+    E.parent_entity(marker, camera)
 
     add_constellation("cassiopeia.obj")
     add_constellation("orion.obj")

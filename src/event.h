@@ -36,13 +36,15 @@
 #define EVENT_SET_ENTITY_SCALE     15
 #define EVENT_SET_ENTITY_ALPHA     16
 #define EVENT_SET_ENTITY_FLAG      17
+#define EVENT_SET_ENTITY_FRAG_PROG 18
+#define EVENT_SET_ENTITY_VERT_PROG 19
 
-#define EVENT_SET_GALAXY_MAGNITUDE 18
-#define EVENT_SET_CAMERA_DISTANCE  19
-#define EVENT_SET_CAMERA_ZOOM      20
-#define EVENT_SET_SPRITE_BOUNDS    21
-#define EVENT_SET_LIGHT_COLOR      22
-#define EVENT_SET_BACKGROUND       23
+#define EVENT_SET_GALAXY_MAGNITUDE 20
+#define EVENT_SET_CAMERA_DISTANCE  21
+#define EVENT_SET_CAMERA_ZOOM      22
+#define EVENT_SET_SPRITE_BOUNDS    23
+#define EVENT_SET_LIGHT_COLOR      24
+#define EVENT_SET_BACKGROUND       25
 
 /*---------------------------------------------------------------------------*/
 

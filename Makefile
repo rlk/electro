@@ -12,7 +12,7 @@ ifdef MPI
 else
 	CC=     cc
 	TARG=   electro
-	CFLAGS= $(shell $(SDL_CONFIG) --cflags) -g -Wall
+	CFLAGS= $(shell $(SDL_CONFIG) --cflags) -g -Wall -ansi -pedantic
 endif
 
 #------------------------------------------------------------------------------

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -167,6 +168,30 @@ void *print(char *format, ...)
     print_console(string);
 
     return NULL;
+}
+
+/*---------------------------------------------------------------------------*/
+
+char *alloc_text(const char *filename)
+{
+    struct stat buf;
+    char *txt = NULL;
+    FILE *fp  = NULL;
+
+    if (stat(filename, &buf) == 0)
+    {
+        if ((fp = fopen(filename, "r")))
+        {
+            if ((txt = (char *) calloc(buf.st_size + 1, 1)))
+                fread(txt, 1, buf.st_size + 1, fp);
+
+            fclose(fp);
+        }
+        else error ("'%s': %s", filename, system_error());
+    }
+    else error("'%s': %s", filename, system_error());
+
+    return txt;
 }
 
 /*---------------------------------------------------------------------------*/

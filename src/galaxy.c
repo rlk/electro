@@ -36,8 +36,6 @@ static struct galaxy *G;
 static int            G_max;
 
 static GLuint star_texture = 0;
-static GLuint star_frag    = 0;
-static GLuint star_vert    = 0;
 
 static int galaxy_exists(int gd)
 {
@@ -59,12 +57,6 @@ int init_galaxy(void)
 
         star_texture = star_make_texture();
 
-        if (GL_has_fragment_program)
-            star_frag = star_frag_program();
-
-        if (GL_has_vertex_program)
-            star_vert = star_vert_program();
-
         return 1;
     }
     return 0;
@@ -72,33 +64,13 @@ int init_galaxy(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void draw_galaxy_programs(int gd)
-{
-    /* Enable and bind the vertex and fragment programs. */
-
-    if (GL_has_vertex_program)
-    {
-        glEnable(GL_VERTEX_PROGRAM_ARB);
-        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-
-        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, star_vert);
-
-        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                   1, G[gd].magnitude, 0, 0, 0);
-    }
-
-    if (GL_has_fragment_program)
-    {
-        glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
-        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
-    }
-}
-
 static void draw_galaxy_arrays(int gd)
 {
     GLsizei sz = sizeof (struct star);
 
+    if (GL_has_vertex_program)
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
+                                   1, G[gd].magnitude, 0, 0, 0);
     /* Enable the star arrays. */
 
     glEnableClientState(GL_COLOR_ARRAY);
@@ -158,7 +130,6 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                               GL_COORD_REPLACE_ARB, GL_TRUE);
                 }
 
-                draw_galaxy_programs(gd);
                 draw_galaxy_arrays(gd);
 
                 /* Render all stars. */

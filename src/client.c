@@ -79,6 +79,8 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
         case EVENT_SET_ENTITY_FLAG:      recv_set_entity_flag();      break;
+        case EVENT_SET_ENTITY_FRAG_PROG: recv_set_entity_frag_prog(); break;
+        case EVENT_SET_ENTITY_VERT_PROG: recv_set_entity_vert_prog(); break;
 
         case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
         case EVENT_SET_CAMERA_DISTANCE:  recv_set_camera_distance();  break;
@@ -106,6 +108,9 @@ static void init_client(void)
 
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glLineWidth(2.0);
 }
 
 static void client_draw(void)

@@ -25,6 +25,11 @@ function do_start()
     galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal")
     galaxy_hip = E.create_galaxy("../galaxy_hip.gal")
 
+    E.set_entity_vert_prog(galaxy_hip, "../star.vp");
+    E.set_entity_frag_prog(galaxy_hip, "../star.fp");
+    E.set_entity_vert_prog(galaxy_tyc, "../star.vp");
+    E.set_entity_frag_prog(galaxy_tyc, "../star.fp");
+
     E.parent_entity(galaxy_hip, camera_hip)
     E.parent_entity(galaxy_tyc, camera_tyc)
 
@@ -35,8 +40,6 @@ function do_start()
 
     E.set_galaxy_magnitude(galaxy_hip, hip_magn)
     E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
-
---  E.set_entity_flag(galaxy_tyc, E.entity_flag_hidden, true);
 
     E.enable_timer(true)
 

@@ -13,6 +13,8 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include "opengl.h"
+
 /*---------------------------------------------------------------------------*/
 
 #define TYPE_ROOT   1
@@ -39,6 +41,9 @@ struct entity
     float rotation[3];
     float scale[3];
     float alpha;
+
+    GLuint frag_prog;
+    GLuint vert_prog;
 
     int car;
     int cdr;
@@ -81,23 +86,26 @@ void recv_parent_entity(void);
 void send_delete_entity(int);
 void recv_delete_entity(void);
 
-void send_set_entity_flag(int, int, int);
-void recv_set_entity_flag(void);
-
 /*---------------------------------------------------------------------------*/
 
-void send_set_entity_position(int, float, float, float);
-void send_set_entity_rotation(int, float, float, float);
-void send_set_entity_scale   (int, float, float, float);
-void send_set_entity_alpha   (int, float);
+void send_set_entity_position (int, float, float, float);
+void send_set_entity_rotation (int, float, float, float);
+void send_set_entity_scale    (int, float, float, float);
+void send_set_entity_alpha    (int, float);
+void send_set_entity_flag     (int, int, int);
+void send_set_entity_frag_prog(int, const char *);
+void send_set_entity_vert_prog(int, const char *);
 
 void send_move_entity(int, float, float, float);
 void send_turn_entity(int, float, float, float);
 
-void recv_set_entity_position(void);
-void recv_set_entity_rotation(void);
-void recv_set_entity_scale   (void);
-void recv_set_entity_alpha   (void);
+void recv_set_entity_position (void);
+void recv_set_entity_rotation (void);
+void recv_set_entity_scale    (void);
+void recv_set_entity_alpha    (void);
+void recv_set_entity_flag     (void);
+void recv_set_entity_frag_prog(void);
+void recv_set_entity_vert_prog(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -38,7 +38,6 @@ static float average_fps = 0.0f;
 
 void grab(int b)
 {
-    /*
     if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -49,7 +48,6 @@ void grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
-    */
     server_grab = b;
 }
 
@@ -113,6 +111,9 @@ static void init_server(void)
 
     glPixelStorei(GL_PACK_ALIGNMENT,   1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glLineWidth(2.0);
 }
 
 static void server_draw(void)
@@ -136,9 +137,12 @@ static void server_draw(void)
     /* Draw the scene into the viewport parts of the frame buffer. */
 
     glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
-
     draw_background();
     draw_entity();
+
+    /* Draw the console overtop both the scene and the mullions. */
+
+    glStencilFunc(GL_ALWAYS,   1, 0xFFffffff);
     draw_console();
 
     /* Sync and swap. */

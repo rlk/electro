@@ -970,6 +970,9 @@ function do_start()
     E.set_entity_position(overlay_init[2], global_l + 19.0, global_t - 2.5, 0)
     E.set_entity_position(overlay_init[3], global_l + 22.0, global_t - 2.5, 0)
     
+    E.set_entity_vert_prog(galaxy, "../star.vp");
+    E.set_entity_frag_prog(galaxy, "../star.fp");
+
     -- Read the current high score
 
     score_init()
