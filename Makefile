@@ -14,6 +14,13 @@ else
 	CFLAGS = -g -Wall -ansi -pedantic
 endif
 
+# To build with trackdAPI: "make TRACKD=1"
+
+ifdef TRACKD
+	LIBS   += -Wl,-rpath $(HOME)/lib -ltrackdAPI_c
+	CFLAGS += -DTRACKD
+endif
+
 #------------------------------------------------------------------------------
 
 # Assume the Fink tree is available under OSX and GL is in a framework.
@@ -51,13 +58,14 @@ LUALIB  = -llua -llualib
 IMGLIB  = -ljpeg -lpng -lz -lm
 OGGLIB  = -lvorbisfile
 
-LIBS = $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+LIBS += $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
 OBJS =	src/version.o  \
 	src/opengl.o   \
 	src/glyph.o    \
 	src/matrix.o   \
 	src/utility.o  \
+	src/tracker.o  \
 	src/joystick.o \
 	src/frustum.o  \
 	src/display.o  \

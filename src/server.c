@@ -14,6 +14,7 @@
 
 #include "opengl.h"
 #include "version.h"
+#include "tracker.h"
 #include "joystick.h"
 #include "console.h"
 #include "display.h"
@@ -309,6 +310,7 @@ void server(int argc, char *argv[])
                 /* Initialize all subsystems. */
 	
                 init_opengl();
+                init_tracker();
                 init_joystick();
                 init_buffer();
                 init_sound();

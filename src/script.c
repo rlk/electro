@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "joystick.h"
+#include "tracker.h"
 #include "display.h"
 #include "console.h"
 #include "server.h"
@@ -398,6 +399,19 @@ static int script_enable_timer(lua_State *L)
     return 0;
 }
 
+static int script_get_tracking(lua_State *L)
+{
+    float x, y, z;
+
+    get_tracker_position(&x, &y, &z);
+
+    lua_pushnumber(L, (double) x);
+    lua_pushnumber(L, (double) y);
+    lua_pushnumber(L, (double) z);
+
+    return 3;
+}
+
 static int script_get_joystick(lua_State *L)
 {
     float a[2];
@@ -733,6 +747,18 @@ static int script_get_star_position(lua_State *L)
     lua_pushnumber(L, p[2]);
 
     return 3;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Camera controls                                                           */
+
+static int script_set_camera_offset(lua_State *L)
+{
+    send_set_camera_offset(script_getcamera(L, -4),
+                           script_getnumber(L, -3),
+                           script_getnumber(L, -2),
+                           script_getnumber(L, -1));
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1076,6 +1102,10 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_star_index",       script_get_star_index);
     lua_function(L, "get_star_position",    script_get_star_position);
 
+    /* Camera control. */
+
+    lua_function(L, "set_camera_offset",    script_set_camera_offset);
+
     /* Light control. */
 
     lua_function(L, "set_light_color",      script_set_light_color);
@@ -1109,6 +1139,7 @@ void luaopen_electro(lua_State *L)
     /* Misc. */
 
     lua_function(L, "enable_timer",         script_enable_timer);
+    lua_function(L, "get_tracking",         script_get_tracking);
     lua_function(L, "get_joystick",         script_get_joystick);
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);

@@ -32,7 +32,20 @@ function do_start()
     E.set_entity_position(thing, 0,  1.0,  0.0)
     E.set_entity_position(sprite, x + w / 2, y + h / 2, 0)
 
-    E.set_entity_position(camera, 0, 1, 5);
+    E.set_entity_position(camera, 0, 0, 5)
+
+    E.set_background(1, 1, 1, 0, 0.5, 1)
+
+    E.enable_timer(true)
+end
+
+function do_timer(dt)
+        local x, y, z = E.get_tracking()
+
+        E.set_camera_offset(camera, x, y, z)
+        print(x, y, z)
+        
+        return true
 end
 
 function do_click(b, s)

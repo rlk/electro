@@ -65,7 +65,7 @@ struct host
 void init_display(void);
 void sync_display(void);
 
-int  draw_ortho(struct frustum *, const float[3], float, float, int);
+int  draw_ortho(struct frustum *,                 float, float, int);
 int  draw_persp(struct frustum *, const float[3], float, float, int);
 
 void add_host(const char *, int, int, int, int);

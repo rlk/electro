@@ -20,6 +20,7 @@
 #include "entity.h"
 #include "event.h"
 #include "display.h"
+#include "tracker.h"
 #include "utility.h"
 #include "camera.h"
 
@@ -54,10 +55,13 @@ int init_camera(void)
 
 /*---------------------------------------------------------------------------*/
 
-int draw_tile(int cd, struct frustum *F1, const float p[3], int i)
+int draw_tile(int cd, struct frustum *F1, int i)
 {
-    if (C[cd].type == CAMERA_PERSP) return draw_persp(F1, p, 1.f, 10000.f, i);
-    if (C[cd].type == CAMERA_ORTHO) return draw_ortho(F1, p, -1000.f, 1000.f, i);
+    if (C[cd].type == CAMERA_PERSP)
+        return draw_persp(F1, C[cd].offset, 1.f, 10000.f, i);
+
+    if (C[cd].type == CAMERA_ORTHO)
+        return draw_ortho(F1, -1000.f,  1000.f, i);
 
     return 0;
 }
@@ -69,7 +73,6 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
     float p[3];
     float r[3];
-    float o[3] = { 0, 0, 0 };
 
     get_entity_position(id, p + 0, p + 1, p + 2);
     get_entity_rotation(id, r + 0, r + 1, r + 2);
@@ -86,7 +89,7 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
         /* Load projection and modelview matrices for each tile. */
 
-        while ((i = draw_tile(cd, &F1, o, i)))
+        while ((i = draw_tile(cd, &F1, i)))
         {
             glLoadIdentity();
             transform_entity(id, &F2, &F1);
@@ -127,6 +130,27 @@ void recv_create_camera(void)
     C[cd].type  = t;
 
     recv_create_entity();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_camera_offset(int cd, float x, float y, float z)
+{
+    pack_event(EVENT_SET_CAMERA_OFFSET);
+    pack_index(cd);
+
+    pack_float((C[cd].offset[0] = x));
+    pack_float((C[cd].offset[1] = y));
+    pack_float((C[cd].offset[2] = z));
+}
+
+void recv_set_camera_offset(void)
+{
+    int cd = unpack_index();
+
+    C[cd].offset[0] = unpack_float();
+    C[cd].offset[1] = unpack_float();
+    C[cd].offset[2] = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/

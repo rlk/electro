@@ -117,7 +117,6 @@ void sync_display(void)
             Hi[i].pix_y = Hi[j].pix_y = MIN(Hi[i].pix_y,     Hi[j].pix_y);
             Hi[i].pix_w = Hi[j].pix_w = MAX(Hi[i].pix_w, r - Hi[i].pix_x);
             Hi[i].pix_h = Hi[j].pix_h = MAX(Hi[i].pix_h, t - Hi[i].pix_y);
-
         }
 
 #ifdef MPI
@@ -162,7 +161,7 @@ void sync_display(void)
 
 /*---------------------------------------------------------------------------*/
 
-int draw_ortho(struct frustum *F1, const float p[3], float N, float F, int i)
+int draw_ortho(struct frustum *F1, float N, float F, int i)
 {
     if (i < Host.n)
     {
@@ -264,10 +263,17 @@ int draw_persp(struct frustum *F1, const float p[3], float N, float F, int i)
 
         glMatrixMode(GL_PROJECTION);
         {
+            /*
             GLdouble L = -N * (n[0]         /  n[2]);
             GLdouble R = -N * (n[0] + r[0]) / (n[2] + r[2]);
             GLdouble B = -N * (n[1]         /  n[2]);
             GLdouble T = -N * (n[1] + u[1]) / (n[2] + u[2]);
+            */
+
+            GLdouble L = o[0] - p[0];
+            GLdouble R = o[0] - p[0] + r[0];
+            GLdouble B = o[1] - p[1];
+            GLdouble T = o[1] - p[1] + u[1];
 
             glLoadIdentity();
             glFrustum(L, R, B, T, N, F);
@@ -420,46 +426,68 @@ void recv_set_background(void)
 
 void draw_background(void)
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+    int i;
+
+    glPushAttrib(GL_ENABLE_BIT   | 
+                 GL_SCISSOR_BIT  |
+                 GL_VIEWPORT_BIT |
+                 GL_DEPTH_BUFFER_BIT);
     {
+        int hL = Host.pix_x;
+        int hR = Host.pix_x + Host.pix_w;
+        int hB = Host.pix_y;
+        int hT = Host.pix_y + Host.pix_h;
+
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
 
         glDepthMask(GL_FALSE);
 
-        glMatrixMode(GL_PROJECTION);
+        for (i = 0; i < Host.n; ++i)
         {
-            glPushMatrix();
-            glLoadIdentity();
-            glOrtho(Host.pix_x, Host.pix_x + Host.pix_w,
-                    Host.pix_y, Host.pix_y + Host.pix_h, -1.0, +1.0);
-        }
-        glMatrixMode(GL_MODELVIEW);
-        {
-            glPushMatrix();
-            glLoadIdentity();
-        }
+            int tL = Host.tile[i].pix_x;
+            int tR = Host.tile[i].pix_x + Host.tile[i].pix_w;
+            int tB = Host.tile[i].pix_y;
+            int tT = Host.tile[i].pix_y + Host.tile[i].pix_h;
 
-        glBegin(GL_QUADS);
-        {
-            glColor3fv(color0);
-            glVertex2i(Host.win_x,              Host.win_y);
-            glVertex2i(Host.win_x + Host.win_w, Host.win_y);
+            glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
+                       Host.tile[i].win_w, Host.tile[i].win_h);
+            glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
+                       Host.tile[i].win_w, Host.tile[i].win_h);
 
-            glColor3fv(color1);
-            glVertex2i(Host.win_x + Host.win_w, Host.win_y + Host.win_h);
-            glVertex2i(Host.win_x,              Host.win_y + Host.win_h);
-        }
-        glEnd();
+            glMatrixMode(GL_PROJECTION);
+            {
+                glPushMatrix();
+                glLoadIdentity();
+                glOrtho(tL, tR, tB, tT, -1.0, +1.0);
+            }
+            glMatrixMode(GL_MODELVIEW);
+            {
+                glPushMatrix();
+                glLoadIdentity();
+            }
 
-        glMatrixMode(GL_PROJECTION);
-        {
-            glPopMatrix();
-        }
-        glMatrixMode(GL_MODELVIEW);
-        {
-            glPopMatrix();
+            glBegin(GL_QUADS);
+            {
+                glColor3fv(color0);
+                glVertex2i(hL, hB);
+                glVertex2i(hR, hB);
+
+                glColor3fv(color1);
+                glVertex2i(hR, hT);
+                glVertex2i(hL, hT);
+            }
+            glEnd();
+
+            glMatrixMode(GL_PROJECTION);
+            {
+                glPopMatrix();
+            }
+            glMatrixMode(GL_MODELVIEW);
+            {
+                glPopMatrix();
+            }
         }
     }
     glPopAttrib();

@@ -40,9 +40,10 @@
 #define EVENT_SET_ENTITY_VERT_PROG 19
 
 #define EVENT_SET_GALAXY_MAGNITUDE 20
-#define EVENT_SET_SPRITE_BOUNDS    21
-#define EVENT_SET_LIGHT_COLOR      22
-#define EVENT_SET_BACKGROUND       23
+#define EVENT_SET_CAMERA_OFFSET    21
+#define EVENT_SET_SPRITE_BOUNDS    22
+#define EVENT_SET_LIGHT_COLOR      23
+#define EVENT_SET_BACKGROUND       24
 
 /*---------------------------------------------------------------------------*/
 
