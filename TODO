@@ -1,8 +1,10 @@
 Documentation up to date
 Windows port
 Relative entity transform
+Propagate alpha
 JPG support
 Website
+TTF support
 
 
 GL error.  glTexParameter WTF?

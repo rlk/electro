@@ -8,8 +8,9 @@
     h2     { margin-left:  -9%; }
     h3     { margin-left:  -6%; }
     h4     { margin-left:  -3%; }
-    pre    { background: #FFFFCC; padding: 1em; }
-    p.note { background: #CCFFFF; padding: 1em; }
+    dt     { background: #EEEEEE; padding: 0.5em; }
+    pre    { background: #FFFFCC; padding: 1.0em; }
+    p.note { background: #CCFFFF; padding: 1.0em; }
   </style>
 </head>
 <body>
@@ -36,6 +37,12 @@ knowledge of the Lua Programming Language, version 5.0, is prerequisite.  Lua
 documentation and tutorials may be found at
 <a href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
 
+<p> Electro API function definitions appear here as follows:
+
+<dl><dt><i>value</i> = <tt>function</tt>(<i>arguments</i>)<dd></p>
+Invoke <tt>function</tt> with <i>arguments</i> giving a <i>value</i>.
+</p></dl>
+
 <p> This document includes a number of Lua code examples.  These examples are
 distinguished from the main text as follows: </p>
 
@@ -61,6 +68,25 @@ consideration. </p>
 
 <h2> Entity API </h2>
 
+<p> The core of any Electro application is the scene graph.  The
+scene graph is a very common organizing scheme in 3D graphics, and
+examples of its use abound.  Other scene graph libraries include
+
+<a href="http://oss.sgi.com/projects/inventor/">Open Inventor</a>,
+<a href="http://www.blitzbasic.com/">Blitz3D</a>,
+<a href="http://www.openscenegraph.org/">Open Scene Graph</a>,
+<a href="http://www.opensg.org/">OpenSG</a>,
+
+and many others.  Users of other scene-graph-based libraries should
+find the Electro API unsurprising. </p>
+
+<p> Scene graph functionality is organized into a small class
+hierarchy.  The entity base class handles all of the common properties
+and behaviours of scene graph elements, most notably 3D transformation,
+and the parent-child relationships that hold a scene hierarchy
+together.  The subclasses handle the specifics of controlling the
+view and lighting, drawing 3D and 2D geometry, etc.  The class
+hierarchy is as follows: </p>
 
 <ul>
 <a href="#entity"> Entity </a>
@@ -78,28 +104,119 @@ consideration. </p>
 
 <h3> Constructors </h3>
 
+<p> Constructor functions instantiate scene graph objects. </p>
+
 <dl>
 
 <dt><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>
+Load an OBJ format 3D object and return an Electro object entity.
+This is the normal means of importing 3D geometry into an Electro
+application.  It fully supports the OBJ file format, including
+material files and texture maps.  The OBJ export capabilities of
+Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.
 </p>
 
 <dt><i>sprite</i> = <tt>create_sprite</tt>(<i>filename</i>)<dd><p>
-</p>
+Load an image file and create a sprite entity.  A sprite consists
+of a single quadrilateral, textured using the given image.  Image
+files may be in JPG or PNG format.  The default size of the sprite
+object is equal to the size of the source image.  Commonly, sprite
+objects are used as billboards in 3D scenes, or are displayed as
+2D overlays using an orthogonal camera.  </p>
+
+<p class="note"> Unextended OpenGL requires that the width and
+height of all texture map images be a power of two.  It can be
+inconvenient to satisfy this requirement, so Electro automatically
+rescales non-power-of-two textures up to the nearest power-of-two
+size.  This is only done internally, so a sprite's size and aspect
+ratio will reflect the <i>original</i> image attributes.  The scaling
+is done using the standard OpenGL utility method, but it can still
+result in image quality degradation.  If you are picky about image
+quality, or you desire pixel-for-pixel correctness, be sure to use
+only power-of-two source images.  The same applies to texture images
+loaded by <tt>create_object</tt>.</p>
 
 <dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p>
-</p>
+Create a camera of the given type.  To be visible in a scene, all
+entities must be descendants of a camera entity.  Because of this,
+cameras are commonly left unparented and allowed to remain at the
+root.  Here are the defined camera types:</p>
 
-<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p>
-</p>
+<dl>
 
-<dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p>
-</p>
+<dt><tt>camera_type_orthogonal</tt><dd><p> An orthogonal camera
+uses an orthogonal projection.  By default, the aperture of an
+orthogonal camera matches the total size of the current display,
+which is appropriate for pixel-correct 2D overlays.</p>
+
+<dt><tt>camera_type_perspective</tt><dd><p>A perspective camera
+uses a perspective projection.  By default the aperture of a
+perspective camera is one unit high, with width determined by the
+aspect ratio of the total display. </p>
+
+</dl>
+
+<p>A scene is allowed to include any number of cameras.
+One reasonable configuration is to include one perspective camera
+for the display of 3D objects, and one orthogonal camera for the
+display of 2D overlays.  </p>
+
+<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p> Create
+a light source of the given type.  To be illuminated, all entities
+must be descendants of a light entity.  Conversely, entities which
+should appear unshaded and fully-bright should not descend from a
+light entity.  Here are the defined light types: </p>
+
+<dl>
+
+<dt><tt>light_type_positional</tt><dd><p> A positional light provides
+a localized light from within the scene.</p>
+
+<dt><tt>light_type_directional</tt><dd><p> A directional light
+source provides a parallel light from infinitely far away.  Light
+is directed along the vector from the position of a directional
+light source to the origin of the light's coordinate system (determined
+by any transformations defined by parent entities).</p>
+
+</dl>
+
+<p class="note"> In the implementation, the only difference between
+positional and directional light sources is the value of the <i>w</i>
+component of the homogeneous position of the light.  A positional
+light has <i>w=1</i> and a directional light has <i>w=0</i>, thus
+the homogeneous position vector is finite or infinite in length,
+respectively. </p>
+
+<dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p> Create a pivot
+entity.  A pivot does nothing, but is useful as a grouping entity.
+As it has all the properties of an entity, including transformation
+and render flags, It provides a mechanism by which the transform
+hierarchy may be extended and controlled.  </p>
 
 <dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename</i>)<dd><p>
-</p>
+Load a galaxy definition from the named file and return a galaxy
+entity.  A galaxy entity is a static 3D collection of particles,
+organized into a BSP structure for efficient rendering.</p>
+
+<p class="note"> The galaxy object should be considered a hack.  It
+has only a very specific use.  It will probably be removed in a
+future revision of the Electro API, or possibly abstracted into a
+general particle system.  </p>
 
 <dt><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>
-</p>
+Duplicate the given entity.  Cloning allows entities to be instanced
+within a scene graph.  Cloning an object is more efficient than
+recreating an object from scrach, so cloning is often useful in
+circumstances where large numbers of similar objects are frequently
+created and destroyed.</p>
+
+<p> Note, however, that a clone is a <i>shallow</i> copy of the
+original.  A clone has all of the attributes of a distinct entity,
+but it shares the attributes specific to its derived type.  For
+example, if a scaling operation is applied to a cloned entity, only
+that entity will be scaled.  However if the color of a cloned light
+source is changed, all instances of the original light source will
+change.
 
 </dl>
 
@@ -110,6 +227,37 @@ consideration. </p>
 <p> The following functions act on entities.  The entity argument
 of each function may take any entity value, including object, sprite,
 camera, light, and pivot. </p>
+
+<h4> Hierarchy Management </h4>
+<dl>
+
+<dt><tt>entity_parent</tt>(<i>entity, parent</i>)<dd><p> Include
+<i>entity</i> as a child of <i>parent</i>.  This will cause
+<i>entity</i> to be drawn in the coordinate system of <i>parent</i>,
+using its graphics state.  If <i>entity</i> is already the child
+of some parent entity prior to the call, it is cleanly removed from
+that parent's child list.
+
+<p>By default, all newly created entities are children of the root
+node.  The root node is inaccessible and unreferencable to Electro
+application, so new entities may be considered to be unparented.</p>
+
+<dt><tt>entity_delete</tt>(<i>entity</i>)<dd><p> Remove <i>entity</i>
+from the scene hierarchy and release all resources associated with it.
+All children of <i>entity</i> will be inherited by <i>entity</i>'s
+parent node, or the root node if it has no parent.  If <i>entity</i>
+is a clone, then the entity itself will be removed, but any resources
+shared by other instances of the same entity will remain.
+
+<p class="note"> While Lua is a garbage-collected language, Electro
+entities are not subject to garbage collection.  They must be
+released manually.  Entity garbage collection is complicated by the
+fact that entity references held by parent entities are not visible to
+the Lua runtime.  Someday the implementation may tackle this problem,
+but until then be careful you don't allow abandoned resources
+to pile up. </p>
+
+</dl>
 
 <h4> Absolute Transformation </h4>
 <dl>
@@ -127,6 +275,14 @@ coordinate system of the entity's parent. </p>
 scale of the entity.  The 3 values give scale multipliers along the
 X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
+
+<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify
+the transparency of the entity.  A value of 1.0 is fully opaque and
+0.0 is fully invisible.  This transparency value propagates down
+the hierarchy.  Transparency values specified by child nodes will
+accumulate.  That is, if a parent and a child both specify
+<i>alpha</i>=0.5 then the child will appear with a transparency of
+0.25.</p>
 
 </dl>
 
@@ -159,15 +315,19 @@ leading to a very intuitive turtle-style system of entity control. </p>
 <dl>
 
 <dt><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)<dd><p>
+Return the position (<i>x, y, z</i>) of the entity in local coordinates.
 </p>
 
 <dt><i>x, y, z</i> = <tt>get_entity_rotation</tt>(<i>entity</i>)<dd><p>
+Return the rotation of the entity about the local X, Y, and Z axes.
 </p>
 
 <dt><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>
+Return the scaling of the entity along the local X, Y, and Z axes.
 </p>
 
 <dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p>
+Return the transparency value of the entity.
 </p>
 
 </dl>
@@ -221,13 +381,23 @@ flag will work properly, but when in doubt, scale below billboarding. </p>
 <dl>
 
 <dt><tt>set_sprite_bounds</tt>(<i>sprite, s0, s1, t0, t1</i>)<dd><p>
-</p>
+Set the texture coordinate rectangle used by a sprite.  By default,
+sprites use the entire texture.  This corresponds to texture
+coordinate rectangle (<i>0.0, 1.0, 0.0, 1.0</i>).  However it is
+frequently useful to display only a subset of a texture on a sprite.
+For example, a numerical display might use a single texture that
+contains images of all of the digits 0-9, and select the digit
+currently displayed simply by modifying the sprite bounds.  </p>
 
-<dt><i>r, g, b, a</i> = <tt>get_sprite_pixel</tt>(<i>sprite, x, y</i>)<dd><p>
-</p>
+<dt><i>r, g, b, a</i> = <tt>get_sprite_pixel</tt>(<i>sprite, x, y</i>)
+<dd><p> Return the color value of the (<i>x, y</i>) pixel of
+a sprite.  This function always returns 4 color components.  If the
+source image does not include all four channels, then values are
+extrapolated: greyscale values are copied to all three color channels
+and opaque textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
-</p>
+Return the size of the sprite in pixels.</p>
 
 </dl>
 
