@@ -7,14 +7,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef _WIN32
-#define FMODE_RB "rb"
-#else
-#define FMODE_RB "r"
-#endif
-
-/*---------------------------------------------------------------------------*/
-
 static GLubyte *image_punt(const char *message)
 {
     fprintf(stderr, "Image error: %s\n", message);

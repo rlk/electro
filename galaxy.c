@@ -31,6 +31,8 @@ void galaxy_init(void)
 
     glBlendFunc(GL_ONE, GL_ONE);
 
+    glPointSize(4);
+
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
     vert_program = gl_read_text("star.vp");

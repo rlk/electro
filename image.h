@@ -1,7 +1,17 @@
-#ifndef PNG_H
-#define PNG_H
+#ifndef IMAGE_H
+#define IMAGE_H
 
 #include "opengl.h"
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef _WIN32
+#define FMODE_RB "rb"
+#define FMODE_WB "wb"
+#else
+#define FMODE_RB "r"
+#define FMODE_WB "w"
+#endif
 
 /*---------------------------------------------------------------------------*/
 

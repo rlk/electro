@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "opengl.h"
+#include "image.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
@@ -17,11 +18,6 @@ static struct star *star_data;
 double log_10(double n)
 {
     return log(n) / log(10);
-}
-
-double log_2(double n)
-{
-    return log(n) / log(2);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -93,10 +89,72 @@ void star_calc_color(char type, unsigned char c[3])
 
 /*---------------------------------------------------------------------------*/
 
+union swapper
+{
+    float f;
+    long  l;
+};
+
+float htonf(float f)
+{
+    union swapper s;
+
+    s.f = f;
+    s.l = htonl(s.l);
+
+    return s.f;
+}
+
+float ntohf(float f)
+{
+    union swapper s;
+
+    s.f = f;
+    s.l = ntohl(s.l);
+
+    return s.f;
+}
+
+/*---------------------------------------------------------------------------*/
+
+int star_write_bin(FILE *fp, struct star *s)
+{
+    struct star t = *s;
+
+    /* Ensure all values are represented in network byte order. */
+
+    t.position[0] = htonf(t.position[0]);
+    t.position[1] = htonf(t.position[1]);
+    t.position[2] = htonf(t.position[2]);
+    t.magnitude   = htonf(t.magnitude);
+
+    /* Write the record to the given file. */
+
+    if (fwrite(s, 1, STAR_BIN_RECLEN, fp))
+        return 1;
+    else
+        return 0;
+}
+
 int star_parse_bin(FILE *fp, struct star *s)
 {
-    
+    /* Read a single star record from the given file. */
+
+    if (fread(s, 1, STAR_BIN_RECLEN, fp))
+    {
+        /* Ensure all values are represented in host byte order. */
+
+        s->position[0] = ntohf(s->position[0]);
+        s->position[1] = ntohf(s->position[1]);
+        s->position[2] = ntohf(s->position[2]);
+        s->magnitude   = ntohf(s->magnitude);
+
+        return +1;
+    }
+    return -1;
 }
+
+/*---------------------------------------------------------------------------*/
 
 int star_parse_txt(FILE *fp, struct star *s)
 {
@@ -144,7 +202,7 @@ int star_parse_txt(FILE *fp, struct star *s)
 
             /* Compute the absolute magnitude. */
 
-            s->magnitude =  (float) (mag - 5.0 * log_10(plx / 10.0));
+            s->magnitude =  (float) (mag - 5.0 * log(plx / 10.0) / log(10.0));
 
             /* Compute the color. */
             
@@ -158,6 +216,58 @@ int star_parse_txt(FILE *fp, struct star *s)
 }
 
 /*---------------------------------------------------------------------------*/
+
+int star_write_catalog_bin(const char *filename)
+{
+    FILE *fp;
+    int n = 0;
+
+    if ((fp = fopen(filename, FMODE_WB)))
+    {
+        for (n = 0; n < star_count; n++)
+            star_write_bin(fp, star_data + n);
+
+        fclose(fp);
+    }
+    else perror("star_write_catalog_bin: fopen()");
+
+    return n;
+}
+
+int star_read_catalog_bin(const char *filename)
+{
+    struct stat buf;
+
+    /* Count the number of stars in the catalog. */
+
+    if (stat(filename, &buf) == 0)
+    {
+        size_t n = 1 + buf.st_size / STAR_BIN_RECLEN;
+        FILE *fp;
+
+        /* Open the catalog, allocate and fill a buffer of stars. */
+
+        if ((fp = fopen(filename, FMODE_RB)))
+        {
+            if ((star_data = (struct star *) calloc(sizeof (struct star), n)))
+            {
+                int c;
+
+                star_count = 0;
+
+                /* Parse all catalog records. */
+               
+                while ((c = star_parse_bin(fp, star_data + star_count)) >= 0)
+                    star_count += c;
+            }
+            fclose(fp);
+        }
+        else perror("star_read_catalog_bin: fopen()");
+    }
+    else perror("star_read_catalog_bin: stat()");
+
+    return star_count;
+}
 
 int star_read_catalog_txt(const char *filename)
 {
@@ -193,20 +303,21 @@ int star_read_catalog_txt(const char *filename)
                
                 while ((c = star_parse_txt(fp, star_data + star_count)) >= 0)
                     star_count += c;
-       
-                fclose(fp);
             }
+            fclose(fp);
         }
         else perror("star_read_catalog_txt: fopen()");
     }
     else perror("star_read_catalog_txt: stat()");
+
+    return star_count;
 }
 
 /*---------------------------------------------------------------------------*/
 
 void star_draw(void)
 {
-    GLsizei stride = sizeof (struct star);
+    GLsizei s = sizeof (struct star);
 
     if (star_texture == 0)
         star_texture = star_make_texture();
@@ -218,9 +329,9 @@ void star_draw(void)
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableVertexAttribArrayARB(6);
 
-        glVertexPointer(3, GL_FLOAT, stride, &star_data[0].position);
-        glColorPointer (3, GL_UNSIGNED_BYTE, stride, &star_data[0].color);
-        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, stride, &star_data[0].magnitude);
+        glVertexPointer(3, GL_FLOAT,         s, &star_data[0].position);
+        glColorPointer (3, GL_UNSIGNED_BYTE, s, &star_data[0].color);
+        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].magnitude);
 
         glDrawArrays(GL_POINTS, 0, star_count);
 
