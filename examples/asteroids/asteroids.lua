@@ -1011,7 +1011,6 @@ function do_start()
     E.set_galaxy_magnitude(galaxy, 8.0 / global_z)
     E.set_camera_distance(space,  100.0)
     E.set_camera_zoom    (space,    0.5)
-    E.set_entity_position(space, 0, 15.5, 9200)
 
     goto_state("title")
     E.enable_timer(true)

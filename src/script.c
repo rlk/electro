@@ -11,7 +11,7 @@
 /*    General Public License for more details.                               */
 
 #ifdef _WIN32
-#include <something.h>
+#include <direct.h>
 #else
 #include <unistd.h>
 #endif

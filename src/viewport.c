@@ -52,8 +52,13 @@ static void set_window_pos(int X, int Y)
 
     /* SDL looks to the environment for window position. */
 
+#ifdef _WIN32
+    sprintf(buf, "SDL_VIDEO_WINDOW_POS=%d,%d", X, Y);
+    putenv(buf);
+#else
     sprintf(buf, "%d,%d", X, Y);
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+#endif
 }
 
 /*---------------------------------------------------------------------------*/

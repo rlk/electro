@@ -26,16 +26,16 @@
 /* File path parsing                                                         */
 
 #ifdef _WIN32
-#define is_separator(c) (((c) == '/' || ((c) == '\\'))
+#define is_sep(c) ((c) == '/' || (c) == '\\')
 #else
-#define is_separator(c)  ((c) == '/')
+#define is_sep(c) ((c) == '/')
 #endif
 
 static int get_file_split(const char *path)
 {
     int l = strlen(path);
 
-    while (l >= 0 && !is_separator(path[l]))
+    while (l >= 0 && !is_sep(path[l]))
         l--;
 
     return l;
