@@ -12,6 +12,7 @@
 
 #include <lua.h>
 #include <lualib.h>
+#include <stdio.h>
 
 #include "server.h"
 #include "status.h"
@@ -24,7 +25,7 @@ static lua_State *L;
 
 /*---------------------------------------------------------------------------*/
 
-static const char *script_getstring(const char * name, lua_State *L, int i)
+static const char *script_getstring(const char *str, lua_State *L, int i)
 {
     int n = lua_gettop(L);
 
@@ -33,17 +34,17 @@ static const char *script_getstring(const char * name, lua_State *L, int i)
         if (lua_isstring(L, i))
             return lua_tostring(L, i);
         else
-            lua_pushfstring(L, "'%s' expected string, got %s", name,
+            lua_pushfstring(L, "'%s' expected string, got %s", str,
                             lua_typename(L, lua_type(L, i)));
     }
-    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", name, -i, n);
+    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", str, -i, n);
 
     lua_error(L);
 
     return "";
 }
 
-static float script_getnumber(const char * name, lua_State *L, int i)
+static float script_getnumber(const char *str, lua_State *L, int i)
 {
     int n = lua_gettop(L);
 
@@ -52,10 +53,10 @@ static float script_getnumber(const char * name, lua_State *L, int i)
         if (lua_isnumber(L, i))
             return (float) lua_tonumber(L, i);
         else
-            lua_pushfstring(L, "'%s' expected number, got %s", name,
+            lua_pushfstring(L, "'%s' expected number, got %s", str,
                             lua_typename(L, lua_type(L, i)));
     }
-    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", name, -i, n);
+    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", str, -i, n);
 
     lua_error(L);
 

@@ -32,13 +32,11 @@
 
 #include "glext.h"
 
-#ifdef _WIN32
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
-#endif
 
 /*---------------------------------------------------------------------------*/
 

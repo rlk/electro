@@ -41,8 +41,6 @@ static void client_recv_exit(void)
     e.user.code = EVENT_EXIT;
 
     SDL_PushEvent(&e);
-
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 static void client_recv_event(void)
@@ -73,10 +71,7 @@ static void client_init(int id)
 {
     glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
 
-/*  star_read_catalog_bin("hip_main.bin"); */
-    star_read_catalog_txt("hip_main.dat");
-
-    status_init();
+    star_read_catalog_bin("hip_main.bin");
     galaxy_init();
     star_init();
 }
@@ -88,6 +83,7 @@ static void client_draw(void)
     status_draw_camera();
     galaxy_draw();
 
+    MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
 }
 
@@ -133,8 +129,14 @@ void client(int np, int id)
         {
             client_init(id);
 
+            /* Handle any SDL events. Block on server messages. */
+
             while (client_loop())
                 client_recv_event();
+
+            /* Ensure everyone finishes all events before exiting. */
+
+            MPI_Barrier(MPI_COMM_WORLD);
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
 

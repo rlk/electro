@@ -11,19 +11,13 @@
 /*    General Public License for more details.                               */
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <math.h>
 
 #include "opengl.h"
 #include "galaxy.h"
 #include "star.h"
-
-/*---------------------------------------------------------------------------*/
-
-static int max_nodes = 0;
-static int num_nodes = 0;
-
-static struct node *N;
 
 /*---------------------------------------------------------------------------*/
 
@@ -44,7 +38,7 @@ void galaxy_init(void)
     glPointSize(4);
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-
+    /*
     vert_program = opengl_read("star.vp");
     frag_program = opengl_read("star.fp");
 
@@ -61,6 +55,7 @@ void galaxy_init(void)
 
     if (glGetError() != GL_NO_ERROR)
         printf("frag_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    */
 }
 
 /*---------------------------------------------------------------------------*/

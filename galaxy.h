@@ -17,18 +17,6 @@
 
 #define RADIUS 15000.0f
 
-struct node
-{
-    int seed;
-    int type;
-
-    int star_first;
-    int star_count;
-
-    float position[3];
-    float radius;
-};
-
 /*---------------------------------------------------------------------------*/
 
 void galaxy_init(void);

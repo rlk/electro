@@ -11,6 +11,7 @@
 /*    General Public License for more details.                               */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "opengl.h"
 
@@ -44,7 +45,7 @@ void status_init(void)
 
     camera_dist   = 1000.0f;
     camera_magn   =  128.0f;
-    camera_zoom   =    0.5f;
+    camera_zoom   =    0.001f;
 
     viewport_X =    0.0f;
     viewport_Y =    0.0f;
@@ -86,27 +87,22 @@ void status_draw_camera(void)
     }
 
     /* Use the view configuration as vertex program parameters. */
-
+    /*
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
                                camera_pos[0], camera_pos[1], camera_pos[2], 1);
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1,
                                camera_magn, 0, 0, 0);
+    */
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void status_position(int X, int Y)
 {
-#ifndef _WIN32
-
     char buf[32];
 
-    /* SDL looks to the environment for window placement. */
-
-    sprintf(buf, "%d, %d", (int) X, (int) Y);
+    sprintf(buf, "%d,%d", X, Y);
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
-
-#endif
 }
 
 void status_set_viewport(float X, float Y, float x, float y, float w, float h)

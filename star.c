@@ -16,9 +16,9 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32
-#include <Winsock2.h>
+#include <winsock2.h>
 #else
-#include <unistd.h>
+#include <netinet/in.h>
 #endif
 
 #include "opengl.h"
@@ -83,18 +83,6 @@ void star_calc_color(char type, GLubyte c[3])
     case 'K': c[0] = 0xFF; c[1] = 0xDF; c[2] = 0xBF; break;
     case 'M': c[0] = 0xFF; c[1] = 0xBF; c[2] = 0x8F; break;
     }
-    /*
-    switch (type)
-    {
-    case 'O': c[0] = 0x6F; c[1] = 0x6F; c[2] = 0xFF; break;
-    case 'B': c[0] = 0x8F; c[1] = 0x8F; c[2] = 0xFF; break;
-    case 'A': c[0] = 0xBF; c[1] = 0xBF; c[2] = 0xFF; break;
-    case 'F': c[0] = 0xDF; c[1] = 0xDF; c[2] = 0xFF; break;
-    case 'G': c[0] = 0xFF; c[1] = 0xFF; c[2] = 0xBF; break;
-    case 'K': c[0] = 0xFF; c[1] = 0xAF; c[2] = 0x8F; break;
-    case 'M': c[0] = 0xFF; c[1] = 0x6F; c[2] = 0x6F; break;
-    }
-    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -343,15 +331,21 @@ void star_draw(void)
     {
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
+        /*
         glEnableVertexAttribArrayARB(6);
+        */
 
         glVertexPointer(3, GL_FLOAT,         s, &star_data[0].pos);
         glColorPointer (3, GL_UNSIGNED_BYTE, s, &star_data[0].col);
+        /*
         glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].mag);
+        */
 
         glDrawArrays(GL_POINTS, 0, star_count);
 
+        /*
         glDisableVertexAttribArrayARB(6);
+        */
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
     }

@@ -10,11 +10,19 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <stdlib.h>
+
 #include "opengl.h"
+#include "galaxy.h"
+#include "node.h"
 
 /*---------------------------------------------------------------------------*/
 
-int node_init_count(int d)
+static struct node *N;
+
+/*---------------------------------------------------------------------------*/
+
+static int node_init_count(int d)
 {
     if (d == 0)
         return 8;
@@ -22,7 +30,7 @@ int node_init_count(int d)
         return 8 * node_init_count(d - 1);
 }
 
-void node_init_position(int i, int d, float x, float y, float z, float r)
+static void node_init_pos(int i, int d, float x, float y, float z, float r)
 {
     float s = r / 2;
 
@@ -33,14 +41,14 @@ void node_init_position(int i, int d, float x, float y, float z, float r)
 
     if (d > 0)
     {
-        node_init_position(8 * i + 1, d - 1, x + s, y + s, z + s, s);
-        node_init_position(8 * i + 2, d - 1, x - s, y + s, z + s, s);
-        node_init_position(8 * i + 3, d - 1, x + s, y - s, z + s, s);
-        node_init_position(8 * i + 4, d - 1, x - s, y - s, z + s, s);
-        node_init_position(8 * i + 5, d - 1, x + s, y + s, z - s, s);
-        node_init_position(8 * i + 6, d - 1, x - s, y + s, z - s, s);
-        node_init_position(8 * i + 7, d - 1, x + s, y - s, z - s, s);
-        node_init_position(8 * i + 8, d - 1, x - s, y - s, z - s, s);
+        node_init_pos(8 * i + 1, d - 1, x + s, y + s, z + s, s);
+        node_init_pos(8 * i + 2, d - 1, x - s, y + s, z + s, s);
+        node_init_pos(8 * i + 3, d - 1, x + s, y - s, z + s, s);
+        node_init_pos(8 * i + 4, d - 1, x - s, y - s, z + s, s);
+        node_init_pos(8 * i + 5, d - 1, x + s, y + s, z - s, s);
+        node_init_pos(8 * i + 6, d - 1, x - s, y + s, z - s, s);
+        node_init_pos(8 * i + 7, d - 1, x + s, y - s, z - s, s);
+        node_init_pos(8 * i + 8, d - 1, x - s, y - s, z - s, s);
     }
 }
 
@@ -50,8 +58,10 @@ int node_init(int d)
 
     if ((N = (struct node *) calloc(n, sizeof (struct node))))
     {
-        node_init_position(0, d, 0, 0, 0, RADIUS);
+        node_init_pos(0, d, 0, 0, 0, RADIUS);
+        return 1;
     }
+    return 0;
 }
 
 void node_draw(int i, int d)

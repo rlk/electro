@@ -13,6 +13,7 @@
 #include <mpi.h>
 #include <SDL.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "opengl.h"
 #include "shared.h"
@@ -21,6 +22,8 @@
 #include "script.h"
 #include "server.h"
 #include "star.h"
+
+static void server_draw(void);
 
 /*---------------------------------------------------------------------------*/
 
@@ -38,6 +41,7 @@ void server_send_draw(void)
     struct event e = { EVENT_DRAW, 0.0f, 0.0f, 0.0f };
 
     server_send_event(&e);
+    server_draw();
 }
 
 void server_send_move(void)
@@ -85,14 +89,14 @@ void server_send_exit(void)
     struct event e = { EVENT_EXIT, 0.0f, 0.0f, 0.0f };
 
     server_send_event(&e);
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void server_init(void)
 {
-    status_init();
+    glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
+
     galaxy_init();
     star_init();
 
@@ -106,6 +110,7 @@ static void server_draw(void)
     status_draw_camera();
     galaxy_draw();
 
+    MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
 }
 
@@ -126,8 +131,6 @@ static int server_loop(void)
             server_send_exit();
             return 0;
         }
-
-    server_draw();
 
     return 1;
 }
@@ -177,17 +180,21 @@ void server(int np, int argc, char *argv[])
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+            SDL_WM_SetCaption(TITLE, TITLE);
+
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
-                SDL_WM_SetCaption(TITLE, TITLE);
-
                 server_init();
 
-                /* Block on events.  Service them as they arrive. */
+                /* Block on SDL events.  Service them as they arrive. */
 
                 while (SDL_WaitEvent(NULL))
                     if (server_loop() == 0)
                         break;
+
+                /* Ensure everyone finishes all events before exiting. */
+
+                MPI_Barrier(MPI_COMM_WORLD);
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 

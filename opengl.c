@@ -22,11 +22,11 @@
 
 GLboolean opengl_need(const char *extension)
 {
-    const GLubyte *string = glGetString(GL_EXTENSIONS);
-    const GLubyte *start  = string;
+    const char *string = (const char *) glGetString(GL_EXTENSIONS);
+    const char *start  = string;
 
-    GLubyte *where;
-    GLubyte *space;
+    char *where;
+    char *space;
 
     while (1)
     {
@@ -49,20 +49,17 @@ GLboolean opengl_need(const char *extension)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef _WIN32
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 PFNGLPROGRAMENVPARAMETER4FARBPROC   glProgramEnvParameter4fARB;
 PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
-#endif
 
 GLboolean opengl_init(void)
 {
     if (opengl_need("GL_ARB_vertex_program") &&
         opengl_need("GL_ARB_fragment_program"))
     {
-#ifdef _WIN32
         glDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)
             SDL_GL_GetProcAddress("glDisableVertexAttribArrayARB");
         glEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)
@@ -73,7 +70,6 @@ GLboolean opengl_init(void)
             SDL_GL_GetProcAddress("glVertexAttribPointerARB");
         glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
             SDL_GL_GetProcAddress("glProgramStringARB");
-#endif
     }
     else return GL_FALSE;
 
