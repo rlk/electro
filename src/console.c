@@ -15,8 +15,10 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "utility.h"
 #include "viewport.h"
 #include "console.h"
+#include "script.h"
 
 #define STEP_X  6
 #define STEP_Y 13
@@ -220,7 +222,10 @@ GLubyte glyph[96][13] = {
 
 /*---------------------------------------------------------------------------*/
 
-static int console_enable = 0;
+static char command[MAXSTR];
+static int  command_i = 0;
+
+static int console_enable = 1;
 
 static int console_w;
 static int console_h;
@@ -260,6 +265,19 @@ static void ident(void)
     faded("  |||  ELECTRO                           \n");
     faded("  O o  Copyright (C) 2005  Robert Kooima \n");
     faded("   -   http://www.evl.uic.edu/rlk/electro\n");
+}
+
+/*---------------------------------------------------------------------------*/
+
+int set_console_enable(int b)
+{
+    console_enable = b;
+    return 1;
+}
+
+int console_is_enabled(void)
+{
+    return console_enable;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -317,8 +335,16 @@ void draw_console(void)
             glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
             glRecti(CONSOLE_X,
                     CONSOLE_Y,
-                    CONSOLE_X + console_w * STEP_X,
-                    CONSOLE_Y + console_h * STEP_Y);
+                    CONSOLE_X + STEP_X * console_w,
+                    CONSOLE_Y + STEP_Y * console_h);
+
+            /* Draw the gray backdrop box. */
+
+            glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+            glRecti(CONSOLE_X + STEP_X *  console_x,
+                    CONSOLE_Y + STEP_Y *  console_y,
+                    CONSOLE_X + STEP_X * (console_x + 1),
+                    CONSOLE_Y + STEP_Y * (console_y + 1));
 
             /* Iterate over the character buffer rendering all glyphs. */
 
@@ -336,7 +362,7 @@ void draw_console(void)
                             glColor3ub(r, g, b);
                         }
 
-                        glRasterPos2i(CONSOLE_X + j * STEP_X,
+                        glRasterPos2i(CONSOLE_X + j * STEP_X - 2,
                                       CONSOLE_Y + i * STEP_Y);
                         glBitmap(8, 13, 0, 0, 0, 0, glyph[CONS_C(i, j) - 32]);
                     }
@@ -345,18 +371,77 @@ void draw_console(void)
     }
 }
 
-int show_console(void)
-{
-    console_enable = 1 - console_enable;
-    return 1;
-}
-
 /*---------------------------------------------------------------------------*/
 
 static void scroll_console(void)
 {
     memmove(console + console_w * 4, console, console_w * (console_h - 1) * 4);
     memset(console, 0, console_w * 4);
+}
+
+static void add_char(char c)
+{
+    if (c == '\n' || c == '\r')
+    {
+        if (console_y == 0)
+            scroll_console();
+        else
+            console_y = console_y - 1;
+            
+        console_x = 0;
+    }
+
+    if (c >= 32)
+    {
+        if (0 <= console_x && console_x < console_w &&
+            0 <= console_y && console_y < console_h)
+        {
+            CONS_C(console_y, console_x) = c;
+            CONS_R(console_y, console_x) = console_r;
+            CONS_G(console_y, console_x) = console_g;
+            CONS_B(console_y, console_x) = console_b;
+        }
+        console_x = console_x + 1;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+int input_console(char c)
+{
+    unsigned char r = console_r;
+    unsigned char g = console_g;
+    unsigned char b = console_b;
+
+    color_console(1.0f, 1.0f, 1.0f);
+
+    if (c == 13)
+    {
+        while (console_x < console_w)
+            CONS_C(console_y, console_x++) = 0;
+
+        add_char(c);
+        command[command_i++] = 0;
+        do_command(command);
+        command_i = 0;
+
+    }
+
+    if (c == 8 && command_i > 0 && console_x > 0)
+    {
+        command_i--;
+        console_x--;
+    }
+
+    if (32 <= c && c < 127 && command_i < MAXSTR)
+    {
+        add_char(c);
+        command[command_i++] = c;
+    }
+
+    color_console(r, g, b);
+
+    return 1;
 }
 
 void clear_console(void)

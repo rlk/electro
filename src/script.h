@@ -20,12 +20,13 @@ void free_script(void);
 void load_script(const char *, int);
 
 int  do_start_script(void);
-
 int  do_click_script(int, int);
 int  do_point_script(int, int);
 int  do_timer_script(int);
 int  do_keyboard_script(int, int);
 int  do_joystick_script(int, int, int);
+
+void do_command(const char *);
 
 /*---------------------------------------------------------------------------*/
 

@@ -41,6 +41,36 @@
 static lua_State *L;
 
 /*---------------------------------------------------------------------------*/
+
+static const char *filereader(lua_State *L, void *data, size_t *size)
+{
+    static char buffer[MAXSTR];
+
+    memset(buffer, 0, MAXSTR);
+
+    if ((*size = fread(buffer, 1, MAXSTR - 1, (FILE *) data)) > 0)
+        return buffer;
+    else
+        return NULL;
+}
+
+static const char *charreader(lua_State *L, void *data, size_t *size)
+{
+    static char buffer[MAXSTR];
+
+    memset(buffer, 0, MAXSTR);
+
+    if ((*size = strlen((char *) data)))
+    {
+        strncpy(buffer, data, MAXSTR);
+        memset(data, 0, *size);
+        return buffer;
+    }
+    else
+        return NULL;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Generic userdata handlers                                                 */
 
 #define USERDATA_ENTITY 0
@@ -905,6 +935,24 @@ int do_joystick_script(int n, int b, int s)
     return 0;
 }
 
+void do_command(const char *command)
+{
+    char buffer[MAXSTR];
+    int err;
+
+    memset(buffer, 0, MAXSTR);
+    strncpy(buffer, command, MAXSTR);
+
+    if ((err = lua_load(L, charreader, buffer, "Console")))
+        error("Syntax: %s", lua_tostring(L, -1));
+    else
+    {
+        if (lua_pcall(L, 0, 0, 0))
+            error("Command: %s", lua_tostring(L, -1));
+    }
+    lua_pop(L, 1);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Script setup/shutdown                                                     */
 
@@ -1034,18 +1082,6 @@ void free_script(void)
     lua_close(L);
 }
 
-static const char *chunkreader(lua_State *L, void *data, size_t *size)
-{
-    static char buffer[MAXSTR];
-
-    memset(buffer, 0, MAXSTR);
-
-    if ((*size = fread(buffer, 1, MAXSTR - 1, (FILE *) data)) > 0)
-        return buffer;
-    else
-        return NULL;
-}
-
 void load_script(const char *file, int push)
 {
     char cwd[MAXSTR];
@@ -1065,7 +1101,7 @@ void load_script(const char *file, int push)
 
     if ((fp = fopen(name, "r")))
     {
-        if ((err = lua_load(L, chunkreader, fp, file)))
+        if ((err = lua_load(L, filereader, fp, file)))
             error("Loading: %s", lua_tostring(L, -1));
         else
         {
@@ -1080,39 +1116,5 @@ void load_script(const char *file, int push)
 
     if (push) chdir(cwd);
 }
-
-#ifdef SNIP
-void load_script(const char *file, int push)
-{
-    char cwd[MAXSTR];
-
-    /* Change the CWD to the directory of the named script. */
-
-    const char *path = get_file_path(file);
-    const char *name = get_file_name(file);
-
-    if (push) getcwd(cwd, MAXSTR);
-
-    chdir(path);
-
-    /* Execute the script. */
-
-    lua_getglobal(L, "dofile");
-
-    if (lua_isfunction(L, -1))
-    {
-        lua_pushstring(L, name);
-
-        if (lua_pcall(L, 1, 0, 0) == LUA_ERRRUN)
-        {
-            error("%s", lua_tostring(L, -1));
-            lua_pop(L, 1);
-        }
-    }
-    else lua_pop(L, 1);
-
-    if (push) chdir(cwd);
-}
-#endif
 
 /*---------------------------------------------------------------------------*/

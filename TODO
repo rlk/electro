@@ -1,3 +1,4 @@
+console script
 css print
 fp/vp per entity (also fixes standard string length)
 Scale and billboard frustum (thorough test)

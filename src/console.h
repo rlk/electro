@@ -19,8 +19,11 @@
 
 int  init_console(int, int);
 void draw_console(void);
-int  show_console(void);
 
+int  set_console_enable(int);
+int  console_is_enabled(void);
+
+int  input_console(char);
 void clear_console(void);
 void color_console(float, float, float);
 void print_console(const char *);

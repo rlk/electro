@@ -178,7 +178,7 @@ static int server_loop(void)
         /* Handle console toggle. */
 
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F1)
-            dirty = show_console();
+            dirty = set_console_enable(!console_is_enabled());
 
         /* Dispatch the event to the scripting system. */
 
@@ -203,10 +203,14 @@ static int server_loop(void)
                                             e.jbutton.button, 0);
                 break;
             case SDL_KEYDOWN:
-                dirty |= do_keyboard_script(e.key.keysym.sym, 1);
+                if (console_is_enabled())
+                    dirty |= input_console(e.key.keysym.unicode);
+                else
+                    dirty |= do_keyboard_script(e.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
-                dirty |= do_keyboard_script(e.key.keysym.sym, 0);
+                if (!console_is_enabled())
+                    dirty |= do_keyboard_script(e.key.keysym.sym, 0);
                 break;
             case SDL_USEREVENT:
                 dirty |= do_timer_script(e.user.code);
@@ -291,6 +295,8 @@ void server(int argc, char *argv[])
 
             if (SDL_SetVideoMode(w, h, 0, m))
             {
+                SDL_EnableUNICODE(1);
+
                 /* Initialize all subsystems. */
 	
                 init_opengl();
