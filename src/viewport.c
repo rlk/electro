@@ -32,7 +32,7 @@ static struct viewport  Vlocal;      /* Local display viewport               */
 static struct viewport *Vin;         /* Viewports input from cluster config  */
 static struct viewport *Vout;        /* Viewports output to render nodes     */
 
-static int V_max =  32;
+static int V_max =  64;
 static int V_num =   0;
 
 /*---------------------------------------------------------------------------*/

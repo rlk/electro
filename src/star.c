@@ -28,7 +28,7 @@
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
-
+/*
 static struct star *star_near_data  = NULL;
 static int          star_near_count = 0;
 static GLuint       star_near_vp    = 0;
@@ -39,7 +39,7 @@ static GLuint       star_far_vp     = 0;
 
 static GLuint       star_texture    = 0;
 static GLuint       star_fp         = 0;
-
+*/
 /*---------------------------------------------------------------------------*/
 
 #ifdef _WIN32
@@ -52,46 +52,7 @@ static GLuint       star_fp         = 0;
 
 /*---------------------------------------------------------------------------*/
 
-GLuint star_make_texture(void)
-{
-    int c, w = 256;
-    int r, h = 256;
-
-    GLubyte *p = NULL;
-    GLuint   o = 0;
-
-    if ((p = (GLubyte *) malloc(w * h)))
-    {
-        const double k = -(2.0 * exp(1)) * (2.0 * exp(1));
-
-        /* Fill the buffer with an exponential gradient. */
-
-        for (r = 0; r < h; r++)
-            for (c = 0; c < w; c++)
-            {
-                double x = (double) c / (double) w - 0.5;
-                double y = (double) r / (double) h - 0.5;
-                double z = sqrt(x * x + y * y);
-
-                p[r * w + c] = (GLubyte) floor(exp(k * z * z) * 255.0);
-            }
-
-        /* Create a texture object, and release the image buffer. */
-
-        o = image_make_tex(p, w, h, 1);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        free(p);
-    }
-
-    return o;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void star_calc_color(char type, GLubyte c[3])
+void star_color(char type, unsigned char c[3])
 {
     c[0] = c[1] = c[2] = 0xFF;
 
@@ -178,21 +139,24 @@ int star_parse_bin(FILE *fp, struct star *s)
 
 int star_parse_hip(FILE *fp, struct star *s)
 {
-    char buf[STAR_HIP_RECLEN + 1];
+    char buf[STAR_HIP_RECLEN];
+
+    /* Constants for use in computing galactic coordinates. */
+
+    const double c1 = PI * 282.25 / 180.0;
+    const double c2 = PI *  62.6  / 180.0;
+    const double c3 = PI *  33.0  / 180.0;
 
     /* Read a single line from the given file. */
 
-    if (fgets(buf, STAR_HIP_RECLEN + 1, fp))
+    if (fgets(buf, STAR_HIP_RECLEN, fp))
     {
-        double ra  = 0.0;
-        double de  = 0.0;
-        double mag = 0.0;
-        double plx = 0.0;
+        double ra;                  /* right ascension    */
+        double de;                  /* declination        */
+        double mag;                 /* apparent magnitude */
+        double plx;                 /* parallax           */
 
-        double n1, c1 = PI * 282.25 / 180.0;
-        double n2, c2 = PI *  62.6  / 180.0;
-        double n3, c3 = PI *  33.0  / 180.0;
-        double b, l;
+        double b, l, n1, n2, n3;
 
         /* Attempt to parse necessary data from the line. */
 
@@ -207,41 +171,42 @@ int star_parse_hip(FILE *fp, struct star *s)
             ra  = PI * ra / 180.0;
             de  = PI * de / 180.0;
 
-            /* Compute the position in galactic coordinates. */
+            if (isnormal(plx))
+            {
+                /* Compute the position in galactic coordinates. */
 
-            n1 =                     cos(de) * cos(ra - c1);
-            n2 = sin(de) * sin(c2) + cos(de) * sin(ra - c1) * cos(c2);
-            n3 = sin(de) * cos(c2) - cos(de) * sin(ra - c1) * sin(c2);
+                n1 =                     cos(de) * cos(ra - c1);
+                n2 = sin(de) * sin(c2) + cos(de) * sin(ra - c1) * cos(c2);
+                n3 = sin(de) * cos(c2) - cos(de) * sin(ra - c1) * sin(c2);
 
-            l = -atan2(n1, n2) + c3;
-            b =  asin(n3);
+                l = -atan2(n1, n2) + c3;
+                b =  asin(n3);
 
-            s->pos[0] = (GLfloat) (sin(l) * cos(b) * plx);
-            s->pos[1] = (GLfloat) (         sin(b) * plx + 15.5);
-            s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx + 9200);
+                s->pos[0] = (float) (sin(l) * cos(b) * plx);
+                s->pos[1] = (float) (         sin(b) * plx + 15.5);
+                s->pos[2] = (float) (cos(l) * cos(b) * plx + 9200);
 
-            /* Compute the absolute magnitude. */
+                /* Compute the absolute magnitude and color. */
 
-            s->mag =  (GLfloat) (mag - 5.0 * log(plx / 10.0) / log(10.0));
+                s->mag =  (float) (mag - 5.0 * log(plx / 10.0) / log(10.0));
 
-            /* Compute the color. */
+                star_color(buf[435], s->col);
             
-            star_calc_color(buf[435], s->col);
-            
-            return +1;
+                return 1;
+            }
         }
-        return 0;
     }
-    return -1;
+    return 0;
 }
 
+#ifdef SNIP
 int star_parse_tyc(FILE *fp, struct star *s)
 {
-    char buf[STAR_HIP_RECLEN + 1];
+    char buf[STAR_TYC_RECLEN];
 
     /* Read a single line from the given file. */
 
-    if (fgets(buf, STAR_HIP_RECLEN + 1, fp))
+    if (fgets(buf, STAR_TYC_RECLEN, fp))
     {
         double ra, de;
         double bt, vt;
@@ -284,14 +249,14 @@ int star_parse_tyc(FILE *fp, struct star *s)
             s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx + 9200);
             s->mag    = mag;
 
-            star_calc_color('K', s->col);
-            return +1;
-        }
-        return 0;
-    }
-    return -1;
-}
+            star_color('K', s->col);
 
+            return 1;
+        }
+    }
+    return 0;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 #ifdef SNIP
 int star_write(const char *filename)
@@ -310,7 +275,6 @@ int star_write(const char *filename)
 
     return n;
 }
-#endif
 
 int star_read_near_bin(const char *filename)
 {
@@ -404,7 +368,7 @@ int star_read_near_sol(void)
         star_near_data[star_near_count].pos[2] = 9200.0;
         star_near_data[star_near_count].mag    =    5.0;
 
-        star_calc_color('G', star_near_data[star_near_count].col);
+        star_color('G', star_near_data[star_near_count].col);
 
         star_near_count++;
 
@@ -488,10 +452,50 @@ int star_read_far_tyc(const char *filename)
 
     return star_far_count;
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 
-static GLuint load_star_fp(void)
+GLuint star_make_texture(void)
+{
+    int c, w = 256;
+    int r, h = 256;
+
+    GLubyte *p = NULL;
+    GLuint   o = 0;
+
+    if ((p = (GLubyte *) malloc(w * h)))
+    {
+        const double k = -(2.0 * exp(1)) * (2.0 * exp(1));
+
+        /* Fill the buffer with an exponential gradient. */
+
+        for (r = 0; r < h; r++)
+            for (c = 0; c < w; c++)
+            {
+                double x = (double) c / (double) w - 0.5;
+                double y = (double) r / (double) h - 0.5;
+                double z = sqrt(x * x + y * y);
+
+                p[r * w + c] = (GLubyte) floor(exp(k * z * z) * 255.0);
+            }
+
+        /* Create a texture object, and release the image buffer. */
+
+        o = image_make_tex(p, w, h, 1);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        free(p);
+    }
+
+    return o;
+}
+
+/*---------------------------------------------------------------------------*/
+
+GLuint star_frag_program(void)
 {
     const char *star_fp =
         "!!ARBfp1.0                                                        \n"
@@ -545,7 +549,7 @@ static GLuint load_star_fp(void)
     return program;
 }
 
-static GLuint load_star_near_vp(void)
+GLuint star_vert_program(void)
 {
     const char *star_vp =
         "!!ARBvp1.0                                                         \n"
@@ -596,7 +600,6 @@ static GLuint load_star_near_vp(void)
         "MOV    ocol, icol;                                                \n"
         "END                                                               \n";
 
-
     GLuint program;
 
     glGenProgramsARB(1, &program);
@@ -608,6 +611,7 @@ static GLuint load_star_near_vp(void)
     return program;
 }
 
+#ifdef SNIP
 static GLuint load_star_far_vp(void)
 {
     const char *star_vp =
@@ -630,9 +634,7 @@ static GLuint load_star_far_vp(void)
         "OUTPUT osiz   = result.pointsize;                                 \n"
         "OUTPUT opos   = result.position;                                  \n"
         "OUTPUT ocol   = result.color;                                     \n"
-        /*
-        "MOV    ipos.w, const.w;                                           \n"
-        */
+
         /* Transform the star position. */
 
         "DP4    opos.x, mvp[0], ipos;                                      \n"
@@ -649,7 +651,6 @@ static GLuint load_star_far_vp(void)
         "MOV    ocol, icol;                                                \n"
         "END                                                               \n";
 
-
     GLuint program;
 
     glGenProgramsARB(1, &program);
@@ -660,9 +661,9 @@ static GLuint load_star_far_vp(void)
 
     return program;
 }
-
+#endif
 /*---------------------------------------------------------------------------*/
-
+#ifdef SNIP
 void star_send_create(void)
 {
     pack_index(star_near_count);
@@ -740,5 +741,5 @@ void star_delete(void)
     star_far_data   = NULL;
     star_far_count  = 0;
 }
-
+#endif
 /*---------------------------------------------------------------------------*/

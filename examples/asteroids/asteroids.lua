@@ -591,7 +591,7 @@ function score_step(id, score)
 
     -- Fade score sprites over 2 seconds.
 
-    E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt / 2)
+    E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt / 3)
     
     -- If this sprite is transparent, delete it.
 

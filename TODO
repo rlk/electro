@@ -1,18 +1,14 @@
-asteroids
-    new sounds and sprites
-    high score initials
-    free ship
-Look into event queueing on heavy client load.
 Octree stars.  Time for offline preprocessor.
-Windows port
-Website
 Object edge
+Look into event queueing on heavy client load.
+Windows port
+Relative entity transform
+Documentation up to date
+Website
 camera near/far
 
-Relative entity transform
 
 short descriptors?  short object indices?
-Documentation up to date
 Particle system? (stars?)
 
 Reorganize MPI abstraction (it's simpler than it once was)

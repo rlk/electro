@@ -13,25 +13,40 @@
 #ifndef STAR_H
 #define STAR_H
 
-/*---------------------------------------------------------------------------*/
-
-#define STAR_HIP_RECLEN 451
-#define STAR_TYC_RECLEN 207
-#define STAR_BIN_RECLEN sizeof (struct star)
+#include <stdio.h>
 
 /*---------------------------------------------------------------------------*/
 
 struct star
 {
-    GLubyte col[3];
-    GLfloat pos[3];
-    GLfloat mag;
+    unsigned char col[3];
+    float         pos[3];
+    float         mag;
 };
 
 /*---------------------------------------------------------------------------*/
 
-int  star_write(const char *);
+#define STAR_BIN_RECLEN sizeof (struct star)
+#define STAR_HIP_RECLEN (451 + 1)
+#define STAR_TYC_RECLEN (207 + 1)
 
+/*---------------------------------------------------------------------------*/
+/*
+int  star_write(const char *);
+*/
+
+void   star_color(char, unsigned char[3]);
+
+int    star_write_bin(FILE *, struct star *);
+int    star_parse_bin(FILE *, struct star *);
+int    star_parse_hip(FILE *, struct star *);
+int    star_parse_tyc(FILE *, struct star *);
+
+GLuint star_make_texture(void);
+GLuint star_frag_program(void);
+GLuint star_vert_program(void);
+
+/*
 int  star_read_sol(void);
 int  star_read_near_hip(const char *);
 int  star_read_near_bin(const char *);
@@ -44,7 +59,7 @@ void star_recv_create(void);
 void star_draw(void);
 
 void star_delete(void);
-
+*/
 /*---------------------------------------------------------------------------*/
 
 #endif

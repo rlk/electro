@@ -22,6 +22,7 @@
 #include "entity.h"
 #include "galaxy.h"
 #include "star.h"
+#include "node.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -29,9 +30,17 @@ static float mag = 1.0f;
 
 /*---------------------------------------------------------------------------*/
 
+void galaxy_foo(void)
+{
+    node_init();
+    prep_init();
+    prep_file_hip("../hip_main.dat");
+    prep_sort();
+}
+
 int galaxy_send_create(const char *nearfile, const char *farfile)
 {
-
+    /*
     if (nearfile)
     {
         if (strcmp(nearfile + strlen(nearfile) - 4, ".bin") == 0)
@@ -46,16 +55,21 @@ int galaxy_send_create(const char *nearfile, const char *farfile)
         else
             star_read_far_tyc(farfile);
     }
-
+    */
     pack_event(EVENT_GALAXY_CREATE);
+    galaxy_foo();
+    /*
     star_send_create();
-
+    */
     return entity_send_create(TYPE_GALAXY, 0);
 }
 
 void galaxy_recv_create(void)
 {
+    galaxy_foo();
+    /*
     star_recv_create();
+    */
     entity_recv_create();
 }
 
@@ -105,8 +119,10 @@ void galaxy_draw(int id, int gd, float a)
             glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, mag, 0, 0, 0);
 
             /* Render all stars. */
-
+            /*
             star_draw();
+            */
+            node_draw();
         }
         glPopAttrib();
 
@@ -123,7 +139,9 @@ void galaxy_draw(int id, int gd, float a)
 
 void galaxy_delete(int gd)
 {
+    /*
     star_delete();
+    */
 }
 
 /*---------------------------------------------------------------------------*/

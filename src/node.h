@@ -15,25 +15,29 @@
 
 /*---------------------------------------------------------------------------*/
 
-struct star
-{
-    unsigned char col[3];
-    float         pos[3];
-    float         mag;
-};
-
 struct node
 {
+    float x0, x1;
+    float y0, y1;
+    float z0, z1;
     int star0;
     int starc;
     int node0;
     int nodec;
+    int nodep;
 };
 
 /*---------------------------------------------------------------------------*/
 
-int  node_init(int);
-void node_draw(int, int);
+void prep_d(int);
+void prep_u(void);
+
+void prep_init(void);
+void prep_sort(void);
+void prep_file_hip(const char *);
+
+void node_init(void);
+void node_draw(void);
 
 /*---------------------------------------------------------------------------*/
 

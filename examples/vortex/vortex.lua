@@ -36,12 +36,12 @@ function do_timer(dt)
 end
 
 function do_keyboard(k, s)
-    if s and k == 282 then -- F1
-        spin = spin + 1
-    end
-    if s and k == 283 then -- F2
-        spin = spin - 1
-    end
+--    if s and k == 284 then -- F3
+--        spin = spin + 1
+--    end
+--    if s and k == 285 then -- F4
+--        spin = spin - 1
+--    end
 
     E.enable_idle(spin ~= 0)
 
@@ -69,7 +69,8 @@ function do_point(dx, dy)
 
     elseif setdist then  -- Set the camera distance from the center.
 
-        dist = dist + dy * 0.1
+--      dist = dist + dy * 0.1
+        dist = dist + dy * 10
         if dist < 0 then
             dist = 0
         end
