@@ -10,7 +10,6 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,6 +18,10 @@
 #include "opengl.h"
 #include "shared.h"
 #include "viewport.h"
+
+#ifdef MPI
+#include <mpi.h>
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* Viewport configuration                                                    */

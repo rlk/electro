@@ -59,6 +59,15 @@ void *opengl_proc(const char *name)
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef __APPLE__
+
+GLboolean opengl_init(void)
+{
+    return GL_TRUE;
+}
+
+#else
+
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
@@ -96,6 +105,8 @@ GLboolean opengl_init(void)
 
     return GL_TRUE;
 }
+
+#endif
 
 /*---------------------------------------------------------------------------*/
 

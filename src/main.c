@@ -10,8 +10,6 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <mpi.h>
-
 #include "shared.h"
 #include "server.h"
 #include "client.h"
@@ -19,6 +17,7 @@
 /*---------------------------------------------------------------------------*/
 
 #ifdef MPI
+#include <mpi.h>
 
 int main(int argc, char *argv[])
 {

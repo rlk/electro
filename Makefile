@@ -2,8 +2,20 @@ PREFIX=/usr/local/Electro
 
 #------------------------------------------------------------------------------
 
-#TARG=	electro
-TARG=	electro-mpi
+# Standalone mode
+
+CC= cc
+TARG= electro
+CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
+
+# Cluster mode
+
+#CC= mpicc
+#TARG= electro-mpi
+#CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+
+#------------------------------------------------------------------------------
+
 OBJS=	src/opengl.o   \
 	src/joystick.o \
 	src/viewport.o \
@@ -28,17 +40,14 @@ DEPS= $(OBJS:.o=.d)
 
 #------------------------------------------------------------------------------
 
-CC= mpicc
 RM= rm -f
 
 SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
-#CFLAGS= -g -Wall $(shell sdl-config --cflags) -DNDEBUG
-CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
-INCDIR= -I$(HOME)/include -I/usr/include/lua
-LIBDIR= -L$(HOME)/lib
+INCDIR= -I/usr/include/lua
+LIBDIR= 
 
 ifeq ($(shell uname), Darwin)
 	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile

@@ -13,12 +13,64 @@
 #include <stdlib.h>
 
 #include "opengl.h"
-#include "galaxy.h"
 #include "node.h"
 
 /*---------------------------------------------------------------------------*/
 
+#define N_MAX    4096
+#define N_SIZ    4096
+#define S_MAX 2621440
+
 static struct node *N;
+static int          N_num;
+static int          N_max;
+
+static struct star *S;
+static int          S_num;
+static int          S_max;
+
+/*---------------------------------------------------------------------------*/
+
+int prep_sort_stars(float k, int i, int a, int z)
+{
+    struct star T;
+
+    while (a < z)
+    {
+        while (S[a].pos[i] < k) a++;
+        while (S[z].pos[i] > k) z--;
+
+        if (a < z)
+        {
+            T    = S[a];
+            S[a] = S[z];
+            S[z] = T;
+        }
+    }
+
+    return a;
+}
+
+void prep_sort(const float bound[6], int star0, int starc)
+{
+    float x = (bound[0] + bound[3]) / 2;
+    float y = (bound[1] + bound[4]) / 2;
+    float z = (bound[2] + bound[5]) / 2;
+}
+
+void prep_init(void)
+{
+    if ((N = (struct node *) calloc(N_MAX, sizeof (struct node))))
+    {
+        N_max = N_MAX;
+        N_num = 0;
+    }
+    if ((S = (struct star *) calloc(S_MAX, sizeof (struct star))))
+    {
+        S_max = S_MAX;
+        S_max = 0;
+    }
+}
 
 /*---------------------------------------------------------------------------*/
 

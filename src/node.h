@@ -15,16 +15,19 @@
 
 /*---------------------------------------------------------------------------*/
 
+struct star
+{
+    unsigned char col[3];
+    float         pos[3];
+    float         mag;
+};
+
 struct node
 {
-    int seed;
-    int type;
-
-    int star_first;
-    int star_count;
-
-    float position[3];
-    float radius;
+    int star0;
+    int starc;
+    int node0;
+    int nodec;
 };
 
 /*---------------------------------------------------------------------------*/

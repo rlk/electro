@@ -1,27 +1,32 @@
 
+
                               * ELECTRO *
 
 * Running
 
     The run scripts must know the location of the MPI machine files and Lua
-    display configuration scripts. Set the ELECTRO_CONFIG environment variable
-    to give their location.
-
-    Using bash:
-
-        $ export ELECTRO_CONFIG=$HOME/electro/data/config
-
-    Or using tcsh:
-
-        > setenv ELECTRO_CONFIG $HOME/electro/data/config
+    display configuration scripts.  Confirm that the ELECTRO_CONFIG variable
+    and ELECTRO_BIN variable specified in the script are correct.
 
     The run scripts take a list of Lua files as parameters.  Each file is
     executed in turn.  Lua code should be careful to manage the location of
     any data files.  By default, application data is loaded from the current
     working directory.
 
-        $ cd electro/data
-        $ ../run_yorda view.lua
+    To run Asteroids on nico:
+
+        $ cd electro/examples/asteroids
+        $ ../../electro-nico asteroids.lua
+
+    Applications may be run in standalone mode in the same fashion:
+
+        $ ../../electro asteroids.lua
+
+    In addition the standalone mode may take a cluster configuration and
+    will run locally in a simulator mode.  The cluster script should appear
+    before the application script on the command line.
+
+        $ ../../electro $ELECTRO_CONFIG/nico.lua asteroids.lua
 
 
 * rlk@evl.uic.edu

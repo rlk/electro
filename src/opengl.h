@@ -23,6 +23,7 @@
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
+#include <OpenGL/glext.h>
 #else
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -31,6 +32,7 @@
 
 /*---------------------------------------------------------------------------*/
 
+#ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
@@ -38,12 +40,19 @@ extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 extern PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
 extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
+#endif
+
+#ifndef GL_POINT_SPRITE_ARB
+#define GL_POINT_SPRITE_ARB GL_POINT_SPRITE_NV
+#endif
+
+#ifndef GL_COORD_REPLACE_ARB
+#define GL_COORD_REPLACE_ARB GL_COORD_REPLACE_NV
+#endif
 
 /*---------------------------------------------------------------------------*/
 
 #define PI 3.1415926535897932384626433832795
-
-#define PROGLEN 2048
 
 /*---------------------------------------------------------------------------*/
 
