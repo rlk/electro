@@ -41,12 +41,12 @@ int viewer_click(int b, int s)
 {
     switch (b)
     {
-    case 1: button[0] = ((s == SDL_PRESSED) ? 1 : 0);  break;
-    case 2: button[1] = ((s == SDL_PRESSED) ? 1 : 0);  break;
-    case 3: button[2] = ((s == SDL_PRESSED) ? 1 : 0);  break;
+    case 1: button[0] = s;  break;
+    case 2: button[1] = s;  break;
+    case 3: button[2] = s;  break;
 
-    case 4: if (s == SDL_PRESSED) position[2] += 0.25; break;
-    case 5: if (s == SDL_PRESSED) position[2] -= 0.25; break;
+    case 4: if (s) position[2] += 0.25; break;
+    case 5: if (s) position[2] -= 0.25; break;
     }
     return 1;
 }
@@ -82,6 +82,13 @@ void viewer_draw(void)
         glRotated(-rotation[1], 0, 1, 0);
         glRotated(-rotation[2], 0, 0, 1);
     }
+}
+
+void viewer_bill(void)
+{
+    glRotated(rotation[2], 0, 0, 1);
+    glRotated(rotation[1], 0, 1, 0);
+    glRotated(rotation[0], 1, 0, 0);
 }
 
 /*---------------------------------------------------------------------------*/

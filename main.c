@@ -33,12 +33,19 @@ static int loop(void)
         switch (e.type)
         {
         case SDL_MOUSEBUTTONDOWN:
+            c += viewer_click(e.button.button, 1);
+            break;
+
         case SDL_MOUSEBUTTONUP:
-            c += viewer_click(e.button.button, e.button.state);
+            c += viewer_click(e.button.button, 0);
             break;
 
         case SDL_MOUSEMOTION:
             c += viewer_point(e.motion.x, e.motion.y);
+            break;
+
+        case SDL_KEYDOWN:
+            if (e.key.keysym.sym == SDLK_ESCAPE) return 1;
             break;
 
         case SDL_QUIT:

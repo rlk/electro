@@ -8,6 +8,7 @@ int viewer_click(int, int);
 
 void viewer_init(void);
 void viewer_draw(void);
+void viewer_bill(void);
 
 /*---------------------------------------------------------------------------*/
 
