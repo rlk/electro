@@ -51,8 +51,6 @@ void galaxy_init(void)
 
     if (glGetError() != GL_NO_ERROR)
         printf("frag_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-
-    star_read_catalog_txt("hip_main.dat");
 }
 
 /*---------------------------------------------------------------------------*/

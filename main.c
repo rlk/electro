@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "opengl.h"
 #include "viewer.h"
@@ -98,8 +99,29 @@ static int loop(void)
 
 /*---------------------------------------------------------------------------*/
 
+static void usage(const char *name)
+{
+    fprintf(stderr, "Usage: %s [OPTION]...\n", name);
+    fprintf(stderr, "\t-f <filename>   Read binary star catalog\n");
+    fprintf(stderr, "\t-t <filename>   Read ascii star catalog\n");
+    fprintf(stderr, "\t-o <filename>   Write binary star catalog\n");
+    fprintf(stderr, "\t-h              Help\n");
+}
+
 int main(int argc, char *argv[])
 {
+    int c;
+
+    while ((c = getopt(argc, argv, "f:t:o:")) > 0)
+        switch (c)
+        {
+        case 'f': star_read_catalog_bin(optarg); break;
+        case 't': star_read_catalog_txt(optarg); break;
+        case 'o': star_write_catalog(optarg);    break;
+        case '?':
+        case 'h': usage(argv[0]); return 1;
+        }
+
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);

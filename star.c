@@ -10,15 +10,8 @@
 /*---------------------------------------------------------------------------*/
 
 static GLuint       star_texture = 0;
-static int          star_count;
-static struct star *star_data;
-
-/*---------------------------------------------------------------------------*/
-
-double log_10(double n)
-{
-    return log(n) / log(10);
-}
+static int          star_count   = 0;
+static struct star *star_data    = NULL;
 
 /*---------------------------------------------------------------------------*/
 
@@ -42,7 +35,6 @@ GLuint star_make_texture(void)
                 double x = (double) c / (double) w - 0.5;
                 double y = (double) r / (double) h - 0.5;
                 double z = sqrt(x * x + y * y);
-                                
 
                 p[r * w + c] = (GLubyte) floor(exp(k * z * z) * 255.0);
             }
@@ -59,7 +51,7 @@ GLuint star_make_texture(void)
 
 /*---------------------------------------------------------------------------*/
 
-void star_calc_color(char type, unsigned char c[3])
+void star_calc_color(char type, GLubyte c[3])
 {
     c[0] = c[1] = c[2] = 0xFF;
 
@@ -123,14 +115,14 @@ int star_write_bin(FILE *fp, struct star *s)
 
     /* Ensure all values are represented in network byte order. */
 
-    t.position[0] = htonf(t.position[0]);
-    t.position[1] = htonf(t.position[1]);
-    t.position[2] = htonf(t.position[2]);
-    t.magnitude   = htonf(t.magnitude);
+    t.pos[0] = htonf(t.pos[0]);
+    t.pos[1] = htonf(t.pos[1]);
+    t.pos[2] = htonf(t.pos[2]);
+    t.mag    = htonf(t.mag);
 
     /* Write the record to the given file. */
 
-    if (fwrite(s, 1, STAR_BIN_RECLEN, fp))
+    if (fwrite(&t, STAR_BIN_RECLEN, 1, fp) > 0)
         return 1;
     else
         return 0;
@@ -140,14 +132,14 @@ int star_parse_bin(FILE *fp, struct star *s)
 {
     /* Read a single star record from the given file. */
 
-    if (fread(s, 1, STAR_BIN_RECLEN, fp))
+    if (fread(s, STAR_BIN_RECLEN, 1, fp) > 0)
     {
         /* Ensure all values are represented in host byte order. */
 
-        s->position[0] = ntohf(s->position[0]);
-        s->position[1] = ntohf(s->position[1]);
-        s->position[2] = ntohf(s->position[2]);
-        s->magnitude   = ntohf(s->magnitude);
+        s->pos[0] = ntohf(s->pos[0]);
+        s->pos[1] = ntohf(s->pos[1]);
+        s->pos[2] = ntohf(s->pos[2]);
+        s->mag    = ntohf(s->mag);
 
         return +1;
     }
@@ -196,17 +188,17 @@ int star_parse_txt(FILE *fp, struct star *s)
             l = -atan2(n1, n2) + c3;
             b =  asin(n3);
 
-            s->position[0] = (float) (sin(l) * cos(b) * plx);
-            s->position[1] = (float) (         sin(b) * plx + 15.5);
-            s->position[2] = (float) (cos(l) * cos(b) * plx + 9200);
+            s->pos[0] = (GLfloat) (sin(l) * cos(b) * plx);
+            s->pos[1] = (GLfloat) (         sin(b) * plx + 15.5);
+            s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx + 9200);
 
             /* Compute the absolute magnitude. */
 
-            s->magnitude =  (float) (mag - 5.0 * log(plx / 10.0) / log(10.0));
+            s->mag =  (GLfloat) (mag - 5.0 * log(plx / 10.0) / log(10.0));
 
             /* Compute the color. */
             
-            star_calc_color(buf[435], s->color);
+            star_calc_color(buf[435], s->col);
             
             return +1;
         }
@@ -217,7 +209,7 @@ int star_parse_txt(FILE *fp, struct star *s)
 
 /*---------------------------------------------------------------------------*/
 
-int star_write_catalog_bin(const char *filename)
+int star_write_catalog(const char *filename)
 {
     FILE *fp;
     int n = 0;
@@ -290,12 +282,12 @@ int star_read_catalog_txt(const char *filename)
 
                 /* The sun is not in the catalog.  Add it manually. */
 
-                star_data[0].position[0] =    0.0;
-                star_data[0].position[1] =   15.5;
-                star_data[0].position[2] = 9200.0;
-                star_data[0].magnitude   =    5.0;
+                star_data[0].pos[0] =    0.0;
+                star_data[0].pos[1] =   15.5;
+                star_data[0].pos[2] = 9200.0;
+                star_data[0].mag    =    5.0;
 
-                star_calc_color('G', star_data[0].color);
+                star_calc_color('G', star_data[0].col);
 
                 star_count = 1;
 
@@ -321,6 +313,8 @@ void star_draw(void)
 
     if (star_texture == 0)
         star_texture = star_make_texture();
+    else
+        glBindTexture(GL_TEXTURE_2D, star_texture);
 
     glEnable(GL_VERTEX_PROGRAM_ARB);
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -329,9 +323,9 @@ void star_draw(void)
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableVertexAttribArrayARB(6);
 
-        glVertexPointer(3, GL_FLOAT,         s, &star_data[0].position);
-        glColorPointer (3, GL_UNSIGNED_BYTE, s, &star_data[0].color);
-        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].magnitude);
+        glVertexPointer(3, GL_FLOAT,         s, &star_data[0].pos);
+        glColorPointer (3, GL_UNSIGNED_BYTE, s, &star_data[0].col);
+        glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].mag);
 
         glDrawArrays(GL_POINTS, 0, star_count);
 

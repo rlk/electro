@@ -10,12 +10,14 @@
 
 struct star
 {
-    float         position[3];
-    float         magnitude;
-    unsigned char color[3];
+    GLubyte col[3];
+    GLfloat pos[3];
+    GLfloat mag;
 };
 
 /*---------------------------------------------------------------------------*/
+
+int star_write_catalog(const char *);
 
 int star_read_catalog_txt(const char *);
 int star_read_catalog_bin(const char *);

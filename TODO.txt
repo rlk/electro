@@ -1,6 +1,4 @@
-Autodetect OS in makefile
 Zoom when distance hits 0.0
 integrate Lua early?
           (console!)
-Compress the catalog
 MPI version

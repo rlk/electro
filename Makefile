@@ -1,11 +1,18 @@
 CC= cc
 RM= rm
 
-OBJS=   opengl.o image.o star.o galaxy.o viewer.o main.o
-TARG=   vortex
-#LIBS=   $(shell sdl-config --libs) -lpng -lz -lGL -lGLU -lm
-LIBS=   $(shell sdl-config --libs) -lpng -lz -lm
+OBJS= opengl.o image.o star.o galaxy.o viewer.o main.o
+TARG= vortex
+
+#------------------------------------------------------------------------------
+
 CFLAGS= $(shell sdl-config --cflags) -g
+
+ifeq (($shell uname), Darwin)
+	LIBS= $(shell sdl-config --libs) -lpng -lz -lGL -lGLU -lm
+else
+	LIBS= $(shell sdl-config --libs) -lpng -lz -lm
+endif
 
 #------------------------------------------------------------------------------
 
