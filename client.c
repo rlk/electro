@@ -100,8 +100,8 @@ static void client_init(int id)
 
     SDL_WM_SetCaption(buf, buf);
 
-    star_read_catalog_bin("hip_main.bin");
     galaxy_init();
+    star_read_catalog_bin("hip_main.bin");
 }
 
 static void client_draw(void)

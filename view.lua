@@ -32,8 +32,6 @@ function do_click(b, s)
         end
                 
         btn[b] = s
-
-        print(b, s)
 end
 
 function do_point(x, y)

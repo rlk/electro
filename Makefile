@@ -16,8 +16,8 @@ CC= mpicc
 RM= rm
 
 CFLAGS= $(shell sdl-config --cflags) -g
-INCDIR=
-LIBDIR=
+INCDIR= -I$(HOME)/include
+LIBDIR= -L$(HOME)/lib
 
 SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua -llualib
