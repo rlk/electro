@@ -13,8 +13,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <mpi.h>
 #include <sys/stat.h>
+
+#ifdef MPI
+#include <mpi.h>
+#endif
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -27,9 +30,11 @@
 #include "camera.h"
 
 /*---------------------------------------------------------------------------*/
+/* Optional MPI function abstractions                                        */
 
 int mpi_assert(int err)
 {
+#ifdef MPI
     char buf[256];
     int len = 256;
 
@@ -41,46 +46,101 @@ int mpi_assert(int err)
         fprintf(stderr, "MPI Error: %s\n", buf);
         return 0;
     }
+#else
+    return 1;
+#endif
 }
 
 int mpi_isroot(void)
 {
     int rank = 0;
-    
+
+#ifdef MPI
     mpi_assert(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+#endif
 
     return (rank == 0);
 }
 
+void mpi_barrier(void)
+{
+#ifdef MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+}
+
+/*---------------------------------------------------------------------------*/
+/* Optional MPI broadcast function abstractions                              */
+
+int mpi_share_byte(int bc, void *bv)
+{
+#ifdef MPI
+    return mpi_assert(MPI_Bcast(bv, bc, MPI_BYTE, 0, MPI_COMM_WORLD));
+#else
+    return 1;
+#endif
+}
+
+int mpi_share_char(int cc, char *cv)
+{
+#ifdef MPI
+    return mpi_assert(MPI_Bcast(cv, cc, MPI_CHAR, 0, MPI_COMM_WORLD));
+#else
+    return 1;
+#endif
+}
+
 int mpi_share_float(int fc, float *fv)
 {
+#ifdef MPI
     return mpi_assert(MPI_Bcast(fv, fc, MPI_FLOAT, 0, MPI_COMM_WORLD));
+#else
+    return 1;
+#endif
 }
 
 int mpi_share_integer(int ic, int *iv)
 {
+#ifdef MPI
     return mpi_assert(MPI_Bcast(iv, ic, MPI_INTEGER, 0, MPI_COMM_WORLD));
+#else
+    return 1;
+#endif
 }
 
 /*---------------------------------------------------------------------------*/
+/* Viewport configuration                                                    */
+
+#ifdef MPI
 
 static struct viewport *Vi;
 static struct viewport *Vo;
 static int              V_max = 0;
 static int              V_num = 0;
 
-void viewport_init(int n)
+#endif
+
+/*---------------------------------------------------------------------------*/
+
+void viewport_init(void)
 {
+#ifdef MPI
+    int n;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &n);
+
     Vi = (struct viewport *) calloc(n, sizeof (struct viewport));
     Vo = (struct viewport *) calloc(n, sizeof (struct viewport));
 
     V_max = n;
     V_num = 0;
+#endif
 }
 
 void viewport_tile(const char *name, float X, float Y,
                                      float x, float y, float w, float h)
 {
+#ifdef MPI
     if (V_num < V_max)
     {
         strncpy(Vi[V_num].name, name, NAMELEN);
@@ -94,10 +154,12 @@ void viewport_tile(const char *name, float X, float Y,
 
         V_num++;
     }
+#endif
 }
 
-void viewport_sync(int n)
+void viewport_sync(void)
 {
+#ifdef MPI
     size_t sz = sizeof (struct viewport);
 
     struct viewport Vt;
@@ -106,12 +168,12 @@ void viewport_sync(int n)
 
     gethostname(Vt.name, NAMELEN);
 
-    Vt.X =    0.0f;
-    Vt.Y =    0.0f;
-    Vt.x = -400.0f;
-    Vt.y = -300.0f;
-    Vt.w =  800.0f;
-    Vt.h =  600.0f;
+    Vt.X = 0.0f;
+    Vt.Y = 0.0f;
+    Vt.x = DEFAULT_X;
+    Vt.y = DEFAULT_Y;
+    Vt.w = DEFAULT_W;
+    Vt.h = DEFAULT_H;
 
     /* Gather all host names at the root. */
 
@@ -124,6 +186,9 @@ void viewport_sync(int n)
     {
         int j;
         int k;
+        int n;
+
+        MPI_Comm_size(MPI_COMM_WORLD, &n);
 
         for (j = 1; j < n; j++)
             for (k = 0; k < V_num; k++)
@@ -154,6 +219,12 @@ void viewport_sync(int n)
     /* Apply this client's viewport. */
 
     if (!mpi_isroot()) viewport_set(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+
+#else  /* MPI */
+
+    viewport_set(0.0f, 0.0f, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+
+#endif /* MPI */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -190,7 +261,7 @@ GLuint shared_load_program(const char *filename, GLenum target)
 
         /* Broadcast the contents of the file. */
 
-        mpi_assert(MPI_Bcast(ptr, len, MPI_CHAR, 0, MPI_COMM_WORLD));
+        mpi_share_char(len, ptr);
 
         /* Generate and initialize a program object. */
 
@@ -236,7 +307,7 @@ GLuint shared_load_texture(const char *filename, int *width, int *height)
 
     /* Broadcast the pixel data. */
 
-    mpi_assert(MPI_Bcast(p, w * h * b, MPI_BYTE, 0, MPI_COMM_WORLD));
+    mpi_share_byte(w * h * b, p);
 
     /* Create a texture object. */
 

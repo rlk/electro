@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <mpi.h>
 
 #include "opengl.h"
 #include "shared.h"

@@ -20,7 +20,7 @@ void enable_idle(int);
 
 void server_send(int);
 
-void server(int, int, char **);
+void server(int, char **);
 
 /*---------------------------------------------------------------------------*/
 

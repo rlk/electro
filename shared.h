@@ -17,15 +17,24 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define TITLE "Total Perspective Vortex"
+#define TITLE "Electro"
+
+#define DEFAULT_X -400.0f
+#define DEFAULT_Y -300.0f
+#define DEFAULT_W  800.0f
+#define DEFAULT_H  600.0f
 
 /*---------------------------------------------------------------------------*/
 
-int mpi_assert(int);
-int mpi_isroot(void);
+int  mpi_assert(int);
+int  mpi_isroot(void);
 
-int mpi_share_float(int, float *);
-int mpi_share_integer(int, int *);
+void mpi_barrier(void);
+
+int  mpi_share_byte(int, void *);
+int  mpi_share_char(int, char *);
+int  mpi_share_float(int, float *);
+int  mpi_share_integer(int, int *);
 
 /*---------------------------------------------------------------------------*/
 
@@ -61,9 +70,9 @@ struct viewport
     float h;                 /* Tile height                                  */
 };
 
-void viewport_init(int);
+void viewport_init(void);
 void viewport_tile(const char *, float, float, float, float, float, float);
-void viewport_sync(int);
+void viewport_sync(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1,4 +1,3 @@
 #!/bin/sh
 
-#mpirun -machinefile local.dat -np 3 ./vortex -f hip_main.bin -s local.lua -s view.lua
-mpirun -machinefile local.dat -np 3 ./vortex -s local.lua -s view.lua
+mpirun -machinefile local.dat -np 3 ./vortex -f hip_main.bin -s local.lua -s view.lua

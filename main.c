@@ -12,30 +12,36 @@
 
 #include <mpi.h>
 
+#include "shared.h"
 #include "server.h"
 #include "client.h"
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef MPI
+
 int main(int argc, char *argv[])
 {
-    int np;
-    int id;
-
     if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
     {
-        if (MPI_Comm_size(MPI_COMM_WORLD, &np) == MPI_SUCCESS &&
-            MPI_Comm_rank(MPI_COMM_WORLD, &id) == MPI_SUCCESS)
-        {
-            if (id == 0)
-                server(np, argc, argv);
-            else
-                client(np, id);
-        }
+        if (mpi_isroot())
+            server(argc, argv);
+        else
+            client();
+
         MPI_Finalize();
     }
-
     return 0;
 }
+
+#else  /* MPI */
+
+int main(int argc, char *argv[])
+{
+    server(argc, argv);
+    return 0;
+}
+
+#endif /* MPI */
 
 /*---------------------------------------------------------------------------*/

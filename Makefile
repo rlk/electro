@@ -24,7 +24,7 @@ SDL_LIBS= $(shell sdl-config --libs)
 LUA_LIBS= -llua50 -llualib50
 PNG_LIBS= -lpng -lz -lm
 
-CFLAGS= -O2 -Wall $(shell sdl-config --cflags)
+CFLAGS= -g -Wall $(shell sdl-config --cflags)
 INCDIR= -I$(HOME)/include -I/usr/include/lua50
 LIBDIR= -L$(HOME)/lib
 
@@ -52,15 +52,16 @@ depend :
 #------------------------------------------------------------------------------
 # DO NOT DELETE
 
-camera.o: opengl.h glext.h shared.h server.h camera.h
+camera.o: opengl.h glext.h shared.h server.h entity.h camera.h
 client.o: opengl.h glext.h shared.h client.h camera.h sprite.h entity.h
 client.o: galaxy.h star.h
-entity.o: opengl.h glext.h shared.h server.h sprite.h entity.h
+entity.o: opengl.h glext.h shared.h server.h camera.h sprite.h object.h
+entity.o: entity.h
 galaxy.o: opengl.h glext.h galaxy.h shared.h star.h
 image.o: opengl.h glext.h image.h
-main.o: server.h client.h
+main.o: shared.h opengl.h glext.h server.h client.h
 node.o: opengl.h glext.h galaxy.h node.h
-object.o: opengl.h glext.h object.h
+object.o: opengl.h glext.h entity.h object.h
 opengl.o: opengl.h glext.h
 script.o: shared.h opengl.h glext.h server.h camera.h object.h sprite.h
 script.o: entity.h script.h

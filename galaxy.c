@@ -14,7 +14,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include <mpi.h>
 
 #include "opengl.h"
 #include "galaxy.h"

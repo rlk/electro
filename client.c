@@ -10,7 +10,6 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <mpi.h>
 #include <SDL.h>
 #include <stdio.h>
 
@@ -95,7 +94,7 @@ static void client_draw(void)
     galaxy_draw();
     */
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    mpi_barrier();
     SDL_GL_SwapBuffers();
 }
 
@@ -121,9 +120,9 @@ static int client_loop(void)
     return 1;
 }
 
-void client(int np, int id)
+void client(void)
 {
-    viewport_sync(np);
+    viewport_sync();
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
@@ -149,7 +148,7 @@ void client(int np, int id)
 
             /* Ensure everyone finishes all events before exiting. */
 
-            MPI_Barrier(MPI_COMM_WORLD);
+            mpi_barrier();
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
 

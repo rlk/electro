@@ -10,7 +10,6 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <mpi.h>
 #include <SDL.h>
 #include <stdio.h>
 #include <string.h>
@@ -118,7 +117,7 @@ static void server_draw(void)
     galaxy_draw();
     */
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    mpi_barrier();
     SDL_GL_SwapBuffers();
 }
 
@@ -131,7 +130,7 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%d FPS\n", fps_new);
+        sprintf(buf, "%s - %d FPS\n", TITLE, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;
@@ -222,13 +221,13 @@ static void parse(int argc, char *argv[])
         else usage(argv[0]);
 }
 
-void server(int np, int argc, char *argv[])
+void server(int argc, char *argv[])
 {
     if (script_init())
     {
-        viewport_init(np);
+        viewport_init();
         parse(argc, argv);
-        viewport_sync(np);
+        viewport_sync();
 
         /* Initialize the main server window. */
 
@@ -256,7 +255,7 @@ void server(int np, int argc, char *argv[])
 
                 /* Ensure everyone finishes all events before exiting. */
 
-                MPI_Barrier(MPI_COMM_WORLD);
+                mpi_barrier();
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 

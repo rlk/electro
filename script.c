@@ -378,7 +378,7 @@ int script_init(void)
 
         lua_register(L, "camera_create",   script_camera_create);
         lua_register(L, "sprite_create",   script_sprite_create);
-        lua_register(L, "sprite_create",   script_object_create);
+        lua_register(L, "object_create",   script_object_create);
 
         lua_register(L, "entity_parent",   script_entity_parent);
         lua_register(L, "entity_delete",   script_entity_delete);
