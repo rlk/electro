@@ -29,7 +29,6 @@
 static void server_draw(void);
 
 static int server_grab = 0;
-static int server_idle = 0;
 static int server_time = 0;
 
 /*---------------------------------------------------------------------------*/
@@ -49,10 +48,39 @@ void enable_grab(int b)
     server_grab = b;
 }
 
+/*---------------------------------------------------------------------------*/
+
+static Uint32 timer_callback(Uint32 interval, void *parameter)
+{
+    Uint32 t = SDL_GetTicks();
+    SDL_Event e;
+
+    /* On callback, push a user event giving time passed since last timer. */
+
+    e.type      = SDL_USEREVENT;
+    e.user.code = t - server_time;
+    server_time = t;
+
+    SDL_PushEvent(&e);
+
+    /* Return the given interval to schedule a repeat timer event. */
+
+    return interval;
+}
+
 void enable_idle(int b)
 {
-    server_idle = b;
-    server_time = SDL_GetTicks();
+    static SDL_TimerID timer_id;
+
+    /* Enable or disable an SDL timer callback. */
+
+    if (b)
+    {
+        timer_id = SDL_AddTimer(1000 / 30, timer_callback, NULL);
+        server_time = SDL_GetTicks();
+    }
+    else
+        SDL_RemoveTimer(timer_id);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -112,8 +140,6 @@ static void server_perf(void)
 static int server_loop(void)
 {
     SDL_Event e;
-
-    int t = SDL_GetTicks();
     int c = 0;
 
     while (SDL_PollEvent(&e))
@@ -138,7 +164,7 @@ static int server_loop(void)
                 c += script_click(e.button.button, 0);
                 break;
             case SDL_USEREVENT:
-                c += script_timer(t - server_time);
+                c += script_timer(e.user.code);
                 break;
             case SDL_KEYDOWN:
                 c += script_keybd(e.key.keysym.sym, 1);
@@ -155,16 +181,6 @@ static int server_loop(void)
             server_send(EVENT_EXIT);
             return 0;
         }
-    }
-
-    server_time = t;
-
-    /* If the idle loop is enabled post a timer event. */
-
-    if (server_idle)
-    {
-        e.type = SDL_USEREVENT;
-        SDL_PushEvent(&e);
     }
 
     /* Redraw a dirty buffer. */
@@ -215,7 +231,7 @@ void server(int np, int argc, char *argv[])
 
         /* Initialize the main server window. */
 
-        if (SDL_Init(SDL_INIT_VIDEO) == 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
         {
             int w = camera_get_viewport_w();
             int h = camera_get_viewport_h();

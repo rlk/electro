@@ -1,5 +1,4 @@
 remove MPI_BYTE uses
-return to mpicc
 fix lua_dofile
 improve lua error handling
 move data to dir
