@@ -1,3 +1,6 @@
 #!/bin/sh
 
-mpirun -machinefile /usr/local/Electro/config/nico.dat -np 17 /usr/local/Electro/bin/electro-mpi /usr/local/Electro/config/nico.lua $@
+export ELECTRO_CONFIG=/home/evl/rlk/src/electro/trunk/config
+export ELECTRO_BIN=/home/evl/rlk/src/electro/trunk
+
+mpirun -machinefile $ELECTRO_CONFIG/nico.dat -np 17 $ELECTRO_BIN/electro-mpi $ELECTRO_CONFIG/nico.lua $@

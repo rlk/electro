@@ -30,10 +30,21 @@ static float mag = 1.0f;
 
 int galaxy_send_create(const char *nearfile, const char *farfile)
 {
-    star_read_sol();
 
-    if (nearfile) star_read_hip(nearfile);
-    if (farfile)  star_read_tyc(farfile);
+    if (nearfile)
+    {
+        if (strcmp(nearfile + strlen(nearfile) - 4, ".bin") == 0)
+            star_read_near_bin(nearfile);
+        else
+            star_read_near_hip(nearfile);
+    }
+    if (farfile)
+    {
+        if (strcmp(farfile + strlen(farfile) - 4, ".bin") == 0)
+            star_read_far_bin(farfile);
+        else
+            star_read_far_tyc(farfile);
+    }
 
     pack_event(EVENT_GALAXY_CREATE);
     star_send_create();
@@ -52,12 +63,17 @@ void galaxy_recv_create(void)
 void galaxy_send_magn(int gd, float m)
 {
     pack_event(EVENT_GALAXY_MAGN);
-    pack_float((mag = m));
+    pack_float(m);
+
+    mag = m / 10;
 }
 
 void galaxy_recv_magn(void)
 {
-    mag = unpack_float();
+    if (mpi_isroot())
+        mag = unpack_float();
+    else
+        mag = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/

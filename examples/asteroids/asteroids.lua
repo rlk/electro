@@ -1,4 +1,6 @@
 
+sound = false
+
 -------------------------------------------------------------------------------
 
 global_ship      = nil
@@ -227,7 +229,7 @@ function add_bullet()
         curr_score_set(curr_score)
     end
 
-    E.sound_play(fire)
+    if sound then E.sound_play(fire) end
 end
 
 function del_bullet(id, bullet)
@@ -255,7 +257,7 @@ function add_explosion(entity, size)
 
     table.insert(explosions, explosion)
 
-    E.sound_play(boom)
+    if sound then E.sound_play(boom) end
 end
 
 function del_explosion(id, explosion)
@@ -611,11 +613,13 @@ function do_start()
 
     math.randomseed(os.time())
 
-    fire  = E.sound_load("fizzle.ogg")
-    boom  = E.sound_load("explosion.ogg")
-    music = E.sound_load("inter.ogg")
+    if sound then
+        fire  = E.sound_load("fizzle.ogg")
+        boom  = E.sound_load("explosion.ogg")
+        music = E.sound_load("inter.ogg")
 
-    E.sound_loop(music)
+        E.sound_loop(music)
+    end
 
     -- Establish the boundries of the viewport.
 
@@ -663,6 +667,7 @@ function do_start()
 
     E.galaxy_magn(galaxy, 500.0)
     E.camera_dist(space,  100.0)
+    E.camera_zoom(space,    0.5)
     E.entity_position(space, 0, 15.5, 9200)
 
     score_init()

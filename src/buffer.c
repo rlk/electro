@@ -25,6 +25,7 @@
 
 static unsigned char *buf;
 static int            pos;
+static int            len;
 static int            max;
 
 union typecast
@@ -58,11 +59,11 @@ void buffer_free(void)
 
 void buffer_sync(void)
 {
-#ifdef MPI
-    int n = pos;
+    len = pos;
 
-    mpi_assert(MPI_Bcast(&n,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
-    mpi_assert(MPI_Bcast(buf, n, MPI_BYTE,    0, MPI_COMM_WORLD));
+#ifdef MPI
+    mpi_assert(MPI_Bcast(&len,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
+    mpi_assert(MPI_Bcast(buf, len, MPI_BYTE,    0, MPI_COMM_WORLD));
 #endif
 
     pos = 0;
@@ -109,6 +110,11 @@ void pack_alloc(int siz, const void *ptr)
 }
 
 /*---------------------------------------------------------------------------*/
+
+int unpack_count(void)
+{
+    return (len - pos);
+}
 
 int unpack_index(void)
 {

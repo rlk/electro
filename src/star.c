@@ -310,8 +310,9 @@ int star_write(const char *filename)
 
     return n;
 }
+#endif
 
-int star_read_bin(const char *filename)
+int star_read_near_bin(const char *filename)
 {
     struct stat buf;
 
@@ -319,35 +320,77 @@ int star_read_bin(const char *filename)
 
     if (stat(filename, &buf) == 0)
     {
-        size_t n = 1 + buf.st_size / STAR_BIN_RECLEN;
+        size_t n = buf.st_size / STAR_BIN_RECLEN;
+        size_t s = sizeof (struct star);
         FILE *fp;
 
         /* Open the catalog, allocate and fill a buffer of stars. */
 
         if ((fp = fopen(filename, FMODE_RB)))
         {
-            if ((star_data = (struct star *) calloc(sizeof (struct star), n)))
+            star_near_data = (struct star *) realloc(star_near_data, s * n);
+
+            if (star_near_data)
             {
                 int c;
 
-                star_count = 0;
+                star_near_count = 0;
 
                 /* Parse all catalog records. */
                
-                while ((c = star_parse_bin(fp, star_data + star_count)) >= 0)
-                    star_count += c;
+                while ((c = star_parse_bin(fp, star_near_data +
+                                               star_near_count)) >= 0)
+                    star_near_count += c;
             }
             fclose(fp);
         }
-        else perror("star_read_catalog_bin: fopen()");
+        else perror("star_read_near_bin: fopen()");
     }
-    else perror("star_read_catalog_bin: stat()");
+    else perror("star_read_near_bin: stat()");
 
-    return star_count;
+    return star_near_count;
 }
-#endif
 
-int star_read_sol(void)
+int star_read_far_bin(const char *filename)
+{
+    struct stat buf;
+
+    /* Count the number of stars in the catalog. */
+
+    if (stat(filename, &buf) == 0)
+    {
+        size_t n = buf.st_size / STAR_BIN_RECLEN;
+        size_t s = sizeof (struct star);
+        FILE *fp;
+
+        /* Open the catalog, allocate and fill a buffer of stars. */
+
+        if ((fp = fopen(filename, FMODE_RB)))
+        {
+            star_far_data = (struct star *) realloc(star_far_data, s * n);
+
+            if (star_far_data)
+            {
+                int c;
+
+                star_far_count = 0;
+
+                /* Parse all catalog records. */
+               
+                while ((c = star_parse_bin(fp, star_far_data +
+                                               star_far_count)) >= 0)
+                    star_far_count += c;
+            }
+            fclose(fp);
+        }
+        else perror("star_read_far_bin: fopen()");
+    }
+    else perror("star_read_far_bin: stat()");
+
+    return star_far_count;
+}
+
+int star_read_near_sol(void)
 {
     size_t n = star_near_count + 1;
     size_t s = sizeof (struct star);
@@ -370,9 +413,11 @@ int star_read_sol(void)
     return 0;
 }
 
-int star_read_hip(const char *filename)
+int star_read_near_hip(const char *filename)
 {
     struct stat buf;
+
+    star_read_near_sol();
 
     /* Count the number of stars in the catalog. */
 
@@ -407,7 +452,7 @@ int star_read_hip(const char *filename)
     return star_near_count;
 }
 
-int star_read_tyc(const char *filename)
+int star_read_far_tyc(const char *filename)
 {
     struct stat buf;
 
@@ -437,9 +482,9 @@ int star_read_tyc(const char *filename)
             }
             fclose(fp);
         }
-        else perror("star_read_tyc: fopen()");
+        else perror("star_read_far_tyc: fopen()");
     }
-    else perror("star_read_tyc: stat()");
+    else perror("star_read_far_tyc: stat()");
 
     return star_far_count;
 }
@@ -635,9 +680,9 @@ void star_send_create(void)
 void star_recv_create(void)
 {
     star_near_count = unpack_index();
-    star_far_count  = unpack_index();
-
     star_near_data  = unpack_alloc(star_near_count * sizeof (struct star));
+
+    star_far_count  = unpack_index();
     star_far_data   = unpack_alloc(star_far_count  * sizeof (struct star));
 
     star_texture = star_make_texture();

@@ -17,7 +17,7 @@ setdist = false
 
 function do_start()
     camera = E.create_camera(E.camera_type_perspective)
-    galaxy = E.create_galaxy("../hip_main.dat", "../tyc2.dat")
+    galaxy = E.create_galaxy("../hip_main.bin", "../tyc2.dat")
 
     E.entity_parent(galaxy, camera)
 

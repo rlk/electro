@@ -25,6 +25,8 @@ void  pack_float(float);
 
 /*---------------------------------------------------------------------------*/
 
+int   unpack_count(void);
+
 void *unpack_alloc(int);
 int   unpack_index(void);
 char  unpack_event(void);
