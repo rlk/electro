@@ -38,8 +38,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-const char *get_cwd(const char *);
-void        set_cwd(const char *);
+const char *get_path_name(const char *);
+const char *get_path_file(const char *);
 
 float htonf(float);
 float ntohf(float);

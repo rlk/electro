@@ -10,6 +10,11 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#ifdef _WIN32
+#endif
+#include <unistd.h>
+#endif
+
 #include <SDL.h>
 #include <lua.h>
 #include <lualib.h>
@@ -775,14 +780,14 @@ static int script_get_entity_debug_id(lua_State *L)
 
 static int script_set_directory(lua_State *L)
 {
-    set_cwd(script_getstring("set_directory", L, -1));
-    return 0;
-}
+    const char *pathname = script_getstring("set_directory", L, -1);
 
-static int script_get_directory(lua_State *L)
-{
-    lua_pushstring(L, get_cwd("/"));
-    return 1;
+    const char *path = get_file_path(pathname);
+    const char *name = get_file_name(pathname);
+
+    chdir(path);
+
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -992,7 +997,6 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_background",       script_set_background);
     lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
     lua_function(L, "set_directory",        script_set_directory);
-    lua_function(L, "get_directory",        script_get_directory);
 
     /* Constants. */
 
@@ -1037,17 +1041,22 @@ void free_script(void)
     lua_close(L);
 }
 
-void load_script(const char *filename)
+void load_script(const char *pathname)
 {
-    set_cwd(filename);
+    /* Change the CWD to the directory of the named script. */
 
-    /* Execute the named script. */
+    const char *path = get_file_path(pathname);
+    const char *name = get_file_name(pathname);
+
+    chdir(path);
+
+    /* Execute the script. */
 
     lua_getglobal(L, "dofile");
 
     if (lua_isfunction(L, -1))
     {
-        lua_pushstring(L, filename);
+        lua_pushstring(L, name);
 
         if (lua_pcall(L, 1, 0, 0) == LUA_ERRRUN)
         {
