@@ -229,7 +229,7 @@ void draw_entity_list(int id, const float V[16], float a)
 
             /* Protect the space-time continuum. */
 
-            opengl_check(get_entity_type_name(jd));
+            opengl_check(get_entity_debug_id(jd));
         }
 }
 

@@ -400,3 +400,24 @@ void delete_camera(int cd)
 }
 
 /*---------------------------------------------------------------------------*/
+
+void get_camera_direction(int id, int cd, float p[3], float v[3])
+{
+    float T, P, r[3];
+
+    get_entity_position(id, p + 0, p + 1, p + 2);
+    get_entity_rotation(id, r + 0, r + 1, r + 2);
+
+    T = PI * r[1] / 180.0f;
+    P = PI * r[0] / 180.0f;
+
+    p[0] += (float) (cos(P) * sin(T) * C[cd].dist);
+    p[1] -= (float) (sin(P)          * C[cd].dist);
+    p[2] += (float) (cos(P) * cos(T) * C[cd].dist);
+
+    v[0] = -(float) (cos(P) * sin(T));
+    v[1] =  (float) (sin(P));
+    v[2] = -(float) (cos(P) * cos(T));
+}
+
+/*---------------------------------------------------------------------------*/

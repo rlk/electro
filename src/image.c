@@ -104,7 +104,7 @@ void *load_png_image(const char *filename, int *width,
     /* Initialize all PNG import data structures. */
 
     if (!(fp = fopen(filename, FMODE_RB)))
-        return error("Failure opening PNG file '%s'", filename);
+        return error("PNG file '%s': %s", filename, system_error());
 
     if (!(readp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
         return error("Failure creating PNG read struct '%s'", filename);
@@ -217,7 +217,7 @@ void *load_jpg_image(const char *filename, int *width,
 
         fclose(fp);
     }
-    else error("Failure opening JPG file '%s'", filename);
+    else error("JPG file '%s': %s", filename, system_error());
 
     return p;
 }

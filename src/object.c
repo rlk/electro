@@ -218,7 +218,7 @@ static void read_mtl(const char *filename)
 
         fclose(fin);
     }
-    else error("Failure opening MTL file '%s'", filename);
+    else error("MTL file '%s': %s", filename, system_error());
 }
 
 static int find_mtl(const char *name)
@@ -521,7 +521,7 @@ static int read_obj(const char *filename, struct object *o)
 
         return 1;
     }
-    else error("Failure opening OBJ file '%s'", filename);
+    else error("OBJ file '%s': %s", filename, system_error());
 
     return 0;
 }

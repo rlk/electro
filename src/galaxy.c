@@ -132,6 +132,10 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
                 /* Render all stars. */
 
                 c = node_draw(G[gd].N, 0, 0, V, G[gd].bound);
+
+                glPointSize(10.0);
+                glDrawArrays(GL_POINTS, G[gd].mark, 1);
+                glPointSize(1);
             }
             glPopClientAttrib();
             glPopAttrib();
@@ -142,6 +146,15 @@ void draw_galaxy(int id, int gd, const float V[16], float a)
         }
         glPopMatrix();
     }
+}
+
+int pick_galaxy(int id, int gd, const float p[3], const float v[3])
+{
+    float d = 0;
+
+    G[gd].mark = node_pick(G[gd].N, 0, G[gd].S, 0, p, v, &d);
+
+    return G[gd].mark;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -187,7 +200,7 @@ int parse_galaxy(const char *filename, struct galaxy *g)
 
         return 1;
     }
-    else error("Failure opening galaxy file '%s'", filename);
+    else error("Galaxy file '%s': %s", filename, system_error());
 
     return 0;
 }
@@ -223,7 +236,7 @@ int write_galaxy(const char *filename, struct galaxy *g)
 
         return 1;
     }
-    else error("Failure opening galaxy file '%s' for writing", filename);
+    else error("Galaxy file '%s': %s", filename, system_error());
 
     return 0;
 }
@@ -462,6 +475,19 @@ void delete_galaxy(int gd)
             memset(G + gd, 0, sizeof (struct galaxy));
         }
     }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void get_star_position(int gd, int si, float p[3])
+{
+    if (galaxy_exists(gd) && 0 <= si && si < G[gd].S_num)
+    {
+        p[0] = G[gd].S[si].pos[0];
+        p[1] = G[gd].S[si].pos[1];
+        p[2] = G[gd].S[si].pos[2];
+    }
+    else p[0] = p[1] = p[2] = 0.0;
 }
 
 /*---------------------------------------------------------------------------*/

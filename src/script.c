@@ -693,6 +693,40 @@ static int script_set_galaxy_magnitude(lua_State *L)
     return 0;
 }
 
+static int script_get_star_index(lua_State *L)
+{
+    const char *name = "get_star_index";
+
+    int id = script_getentity(name, L, -2);
+    int gd = script_getgalaxy(name, L, -2);
+    int jd = script_getentity(name, L, -1);
+    int cd = script_getcamera(name, L, -1);
+
+    float p[3];
+    float v[3];
+
+    get_camera_direction(jd, cd, p, v);
+
+    lua_pushnumber(L, pick_galaxy(id, gd, p, v));
+    return 1;
+}
+
+static int script_get_star_position(lua_State *L)
+{
+    const char *name = "get_star_position";
+
+    float p[3];
+
+    get_star_position(script_getgalaxy(name, L, -2),
+                (int) script_getnumber(name, L, -1), p);
+
+    lua_pushnumber(L, p[0]);
+    lua_pushnumber(L, p[1]);
+    lua_pushnumber(L, p[2]);
+
+    return 3;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Camera controls                                                           */
 
@@ -1030,6 +1064,8 @@ void luaopen_electro(lua_State *L)
     /* Galaxy control. */
 
     lua_function(L, "set_galaxy_magnitude", script_set_galaxy_magnitude);
+    lua_function(L, "get_star_index",       script_get_star_index);
+    lua_function(L, "get_star_position",    script_get_star_position);
 
     /* Light control. */
 

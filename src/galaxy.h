@@ -24,6 +24,8 @@ struct galaxy
     int    S_num;
     int    N_num;
 
+    int mark;
+
     float  magnitude;
     float  bound[6];
 
@@ -35,6 +37,7 @@ struct galaxy
 
 int  init_galaxy(void);
 void draw_galaxy(int, int, const float[16], float);
+int  pick_galaxy(int, int, const float[3], const float[3]);
 
 void prep_galaxy(void);
 
@@ -48,6 +51,10 @@ void recv_set_galaxy_magnitude(void);
 
 void clone_galaxy(int);
 void delete_galaxy(int);
+
+/*---------------------------------------------------------------------------*/
+
+void get_star_position(int, int, float[3]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1,4 +1,5 @@
 PREFIX=/usr/local/Electro
+SDL_CONFIG=/sw/bin/sdl-config
 
 #------------------------------------------------------------------------------
 
@@ -7,16 +8,16 @@ PREFIX=/usr/local/Electro
 ifdef MPI
 	CC=     mpicc
 	TARG=   electro-mpi
-	CFLAGS= $(shell sdl-config --cflags) -g -Wall -DMPI -DNDEBUG
+	CFLAGS= $(shell $(SDL_CONFIG) --cflags) -g -Wall -DMPI -DNDEBUG
 else
 	CC=     cc
 	TARG=   electro
-	CFLAGS= $(shell sdl-config --cflags) -g -Wall
+	CFLAGS= $(shell $(SDL_CONFIG) --cflags) -g -Wall
 endif
 
 #------------------------------------------------------------------------------
 
-SDLLIB= $(shell sdl-config --libs) -lSDLmain
+SDLLIB= $(shell $(SDL_CONFIG) --libs) -lSDLmain
 LUALIB= -llua -llualib
 IMGLIB= -ljpeg -lpng -lz -lm
 OGGLIB= -lvorbisfile

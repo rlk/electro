@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/errno.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -24,6 +25,13 @@
 
 #include "utility.h"
 #include "console.h"
+
+/*---------------------------------------------------------------------------*/
+
+const char *system_error(void)
+{
+    return strerror(errno);
+}
 
 /*---------------------------------------------------------------------------*/
 /* File path parsing                                                         */

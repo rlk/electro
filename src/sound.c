@@ -162,6 +162,7 @@ int create_sound(const char *filename)
             }
             fclose(fp);
         }
+        else error("OGG file '%s': %s", filename, system_error());
     }
     return -1;
 }

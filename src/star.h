@@ -46,6 +46,8 @@ GLuint star_make_texture(void);
 GLuint star_frag_program(void);
 GLuint star_vert_program(void);
 
+float  star_pick(const struct star *, const float[3], const float[3]);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

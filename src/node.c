@@ -11,6 +11,7 @@
 /*    General Public License for more details.                               */
 
 #include <stdlib.h>
+#include <float.h>
 
 #include "utility.h"
 #include "opengl.h"
@@ -157,6 +158,52 @@ int node_draw(const struct node *N, int n, int i,
     }
 
     return c;
+}
+
+int node_pick(const struct node *N, int n,
+              const struct star *S, int i,
+              const float p[3], const float v[3], float *d)
+{
+    int s = -1;
+
+    *d = FLT_MIN;
+
+    if (N[n].nodeL && N[n].nodeR)
+    {
+        float dL = FLT_MIN;
+        float dR = FLT_MIN;
+        int   sL = -1;
+        int   sR = -1;
+
+        /* Test the left and right child nodes, as necessary. */
+
+        if (p[i] <= N[n].k || v[i] < 0)
+            sL = node_pick(N, N[n].nodeL, S, (i + 1) % 3, p, v, &dL);
+
+        if (p[i] >= N[n].k || v[i] > 0)
+            sR = node_pick(N, N[n].nodeR, S, (i + 1) % 3, p, v, &dR);
+
+        /* Note the best find thus far. */
+
+       *d = (dL > dR) ? dL : dR;
+        s = (dL > dR) ? sL : sR;
+    }
+    else
+    {
+        int   si;
+        float di;
+
+        /* Find the nearest star at this node. */
+
+        for (si = 0; si < N[n].starc; ++si)
+            if ((di = star_pick(S + si + N[n].star0, p, v)) > *d)
+            {
+               *d = di;
+                s = si + N[n].star0;
+            }
+    }
+
+    return s;
 }
 
 /*---------------------------------------------------------------------------*/

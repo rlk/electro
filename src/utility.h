@@ -40,6 +40,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+const char *system_error(void);
+
 const char *get_file_name(const char *);
 const char *get_file_path(const char *);
 

@@ -58,6 +58,7 @@ extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 void       *opengl_proc(const char *);
 GLboolean   opengl_need(const char *);
 GLint       opengl_perf(void);
+
 void        init_opengl(void);
 
 /*---------------------------------------------------------------------------*/
