@@ -85,13 +85,13 @@ void viewer_init(void)
 
 void viewer_draw(void)
 {
-    GLdouble a = 1.3333;
+    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
     GLdouble z = 0.5;
 
     glMatrixMode(GL_PROJECTION);
     {
         glLoadIdentity();
-        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000.0);
+        glFrustum(-a * z, +a * z, -z, +z, 1.0, 10000.0);
     }
 
     glMatrixMode(GL_MODELVIEW);

@@ -6,7 +6,6 @@
 struct star
 {
     double position[3];
-    double temperature;
     double magnitude;
 };
 

@@ -9,15 +9,19 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define N 118218
-static int n = 0;
+static GLuint star_texture;
 
-static GLuint texture;
+static int max_stars = 118218;
+static int num_stars = 0;
+static int max_nodes = 0;
+static int num_nodes = 0;
+
 static struct star *S;
+static struct node *N;
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_star(FILE *fp, int i)
+void read_star(FILE *fp)
 {
     char buf[512];
 
@@ -30,23 +34,59 @@ void galaxy_star(FILE *fp, int i)
         sscanf(buf + 64, "%lf", &de);
         sscanf(buf + 79, "%lf", &plx);
 
-        if (mag < 6.0)
+        if (mag < 8.0)
         {
             plx =    1000.0 / plx;
             ra  = M_PI * ra / 180.0;
             de  = M_PI * de / 180.0;
 
-            S[n].position[0] =  sin(ra) * cos(de) * plx;
-            S[n].position[1] =            sin(de) * plx;
-            S[n].position[2] =  cos(ra) * cos(de) * plx;
-        
-            S[n].temperature =  0;
-            S[n].magnitude   =  mag - 5.0 * log(plx / 10.0);
+            S[num_stars].magnitude   =  mag - 5.0 * log(plx / 10.0);
 
-            n++;
+            S[num_stars].position[0] =  sin(ra) * cos(de) * plx;
+            S[num_stars].position[1] =            sin(de) * plx;
+            S[num_stars].position[2] =  cos(ra) * cos(de) * plx;
+
+            num_stars++;
         }
     }
 }
+
+void star_init(void)
+{
+    star_texture = png_load("blob.png");
+
+    if ((S = (struct star *) calloc(sizeof (struct star), max_stars)))
+    {
+        FILE *fp;
+
+        if ((fp = fopen("hip_main.dat", "r")))
+        {
+            int i;
+
+            for (i = 0; i < max_stars; i++)
+                read_star(fp);
+       
+            fclose(fp);
+        }
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int tree_init_count(int d)
+{
+    if (d == 0)
+        return 8;
+    else
+        return 8 * tree_init_count(d - 1);
+}
+
+int tree_init(int d)
+{
+    int n = tree_init_count(d);
+}
+
+/*---------------------------------------------------------------------------*/
 
 void galaxy_init(void)
 {
@@ -57,22 +97,10 @@ void galaxy_init(void)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    texture = png_load("blob.png");
+    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    if ((S = (struct star *) calloc(sizeof (struct star), N)))
-    {
-        FILE *fp;
-
-        if ((fp = fopen("hip_main.dat", "r")))
-        {
-            int i;
-
-            for (i = 0; i < N; i++)
-                galaxy_star(fp, i);
-       
-            fclose(fp);
-        }
-    }
+    star_init();
+    tree_init(2);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -81,11 +109,9 @@ void galaxy_draw(const double p[3])
 {
     int i;
 
-    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-
     glColor4d(1.0, 1.0, 1.0, 1.0);
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < num_stars; i++)
     {
         double dx = S[i].position[0] - p[0];
         double dy = S[i].position[1] - p[1];
