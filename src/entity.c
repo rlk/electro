@@ -273,7 +273,7 @@ void attach_entity(int cd, int pd)
 {
     /* Never allow the root entity to be used as a child. */
 
-    if (cd && entity_exists(pd) && entity_exists(cd))
+    if (cd && entity_exists(pd) && entity_exists(cd) && pd != cd)
     {
         /* Insert the child into the new parent's child list. */
 
@@ -347,91 +347,6 @@ void recv_parent_entity(void)
 }
 
 /*---------------------------------------------------------------------------*/
-
-static void create_clone(int id, int jd)
-{
-    switch (E[id].type)
-    {
-    case TYPE_CAMERA: clone_camera(E[id].data); break;
-    case TYPE_SPRITE: clone_sprite(E[id].data); break;
-    case TYPE_OBJECT: clone_object(E[id].data); break;
-    case TYPE_GALAXY: clone_galaxy(E[id].data); break;
-    case TYPE_LIGHT:  clone_light (E[id].data); break;
-    }
-
-    create_entity(jd, E[id].type, E[id].data);
-}
-
-int send_create_clone(int id)
-{
-    int jd = buffer_unused(E_max, entity_exists);
-
-    pack_event(EVENT_CREATE_CLONE);
-    pack_index(id);
-    pack_index(jd);
-
-    create_clone(id, jd);
-
-    return jd;
-}
-
-void recv_create_clone(void)
-{
-    int id = unpack_index();
-    int jd = unpack_index();
-
-    create_clone(id, jd);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void delete_entity(int id)
-{
-    if (entity_exists(id))
-    {
-        int pd = E[id].par, data = E[id].data;
-
-        /* Let the parent inherit any children. */
-
-        while (E[id].car)
-            attach_entity(E[id].car, pd);
-
-        /* Remove the entity from the parent's child list. */
-
-        detach_entity(id, pd);
-
-        /* Invoke the data delete handler. */
-
-        switch (E[id].type)
-        {
-        case TYPE_CAMERA: delete_camera(data); break;
-        case TYPE_SPRITE: delete_sprite(data); break;
-        case TYPE_OBJECT: delete_object(data); break;
-        case TYPE_GALAXY: delete_galaxy(data); break;
-        case TYPE_LIGHT:  delete_light (data); break;
-        }
-
-        /* Pave it. */
-
-        memset(E + id, 0, sizeof (struct entity));
-    }
-}
-
-void send_delete_entity(int id)
-{
-    pack_event(EVENT_DELETE_ENTITY);
-    pack_index(id);
-
-    delete_entity(id);
-}
-
-void recv_delete_entity(void)
-{
-    delete_entity(unpack_index());
-}
-
-/*---------------------------------------------------------------------------*/
-
 void send_set_entity_flag(int id, int flags, int state)
 {
     pack_event(EVENT_SET_ENTITY_FLAG);
@@ -600,6 +515,115 @@ float get_entity_alpha(int id)
         return E[id].alpha;
     else
         return 0.0f;
+}
+
+/*---------------------------------------------------------------------------*/
+
+
+static void create_clone(int id, int jd)
+{
+    switch (E[id].type)
+    {
+    case TYPE_CAMERA: clone_camera(E[id].data); break;
+    case TYPE_SPRITE: clone_sprite(E[id].data); break;
+    case TYPE_OBJECT: clone_object(E[id].data); break;
+    case TYPE_GALAXY: clone_galaxy(E[id].data); break;
+    case TYPE_LIGHT:  clone_light (E[id].data); break;
+    }
+
+    create_entity(jd, E[id].type, E[id].data);
+}
+
+int send_create_clone(int id)
+{
+    int jd = buffer_unused(E_max, entity_exists);
+
+    pack_event(EVENT_CREATE_CLONE);
+    pack_index(id);
+    pack_index(jd);
+
+    create_clone(id, jd);
+
+    return jd;
+}
+
+void recv_create_clone(void)
+{
+    int id = unpack_index();
+    int jd = unpack_index();
+
+    create_clone(id, jd);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void delete_entity(int id)
+{
+    if (entity_exists(id))
+    {
+        int pd = E[id].par, data = E[id].data;
+
+        /* Delete all child entities. */
+
+        while (E[id].car)
+            delete_entity(E[id].car);
+
+        /* Remove this entity from the parent's child list. */
+
+        detach_entity(id, pd);
+
+        /* Invoke the data delete handler. */
+
+        switch (E[id].type)
+        {
+        case TYPE_CAMERA: delete_camera(data); break;
+        case TYPE_SPRITE: delete_sprite(data); break;
+        case TYPE_OBJECT: delete_object(data); break;
+        case TYPE_GALAXY: delete_galaxy(data); break;
+        case TYPE_LIGHT:  delete_light (data); break;
+        }
+
+        /* Pave it. */
+
+        if (id) memset(E + id, 0, sizeof (struct entity));
+    }
+}
+
+void send_delete_entity(int id)
+{
+    pack_event(EVENT_DELETE_ENTITY);
+    pack_index(id);
+
+    delete_entity(id);
+}
+
+void recv_delete_entity(void)
+{
+    delete_entity(unpack_index());
+}
+
+/*---------------------------------------------------------------------------*/
+
+int get_entity_parent(int id)
+{
+    if (entity_exists(id))
+    {
+        return E[id].par;
+    }
+    return -1;
+}
+
+int get_entity_child(int id, int i)
+{
+    if (entity_exists(id))
+    {
+        int j, jd;
+
+        for (j = 0, jd = E[id].car; jd; j++, jd = E[jd].cdr)
+            if (i == j)
+                return jd;
+    }
+    return -1;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -19,10 +19,9 @@
 
 * Running
 
-    The run scripts take a list of Lua files as parameters.  Each file is
-    executed in turn.  Lua code should be careful to manage the location of
-    any data files, but by default, application data is loaded from the
-    current working directory.
+    The run scripts take a list of Lua files as parameters.  Each file
+    is executed in turn.  By default, application data is loaded from
+    the current working directory.
 
     To run Asteroids on nico:
 
@@ -33,11 +32,17 @@
 
         $ electro asteroids.lua
 
-    In addition the standalone mode may take a cluster configuration and
-    will run locally in a simulator mode.  The cluster script should appear
-    before the application script on the command line.
+    The standalone mode may take a cluster configuration and will run
+    locally in a simulator mode.
 
         $ electro /usr/local/electro/config/nico.lua asteroids.lua
+
+
+* Usage
+
+    Activate the Electro application window by clicking in it.  It
+    will grab the mouse pointer.  Press ESCAPE to release the pointer
+    and pause the application.
 
 
 * rlk@evl.uic.edu

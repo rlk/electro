@@ -66,6 +66,16 @@ serious consideration. </p>
 
 <h1> API </h1>
 
+<p> The Electro API is encapsulated in a Lua namespace "<tt>E</tt>".
+The namespace specifier is omitted in this documentation, though it is
+included in the examples.  Be sure to precede all Lua function and
+constant references with the "<tt>E</tt>" namespace specifier, or they
+will be reported as undefined.  </p>
+
+<pre>
+E.set_background(0.0, 0.5, 1.0)
+</pre>
+
 <h2> Entity API </h2>
 
 <p> The core of any Electro application is the scene graph.  The scene
@@ -240,31 +250,30 @@ camera, light, and pivot. </p>
 <h4> Hierarchy Management </h4>
 <dl>
 
-<dt><tt>entity_parent</tt>(<i>entity, parent</i>)<dd><p> Include
+<dt><tt>parent_entity</tt>(<i>entity, parent</i>)<dd><p> Include
 <i>entity</i> as a child of <i>parent</i>.  This will cause
 <i>entity</i> to be drawn in the coordinate system of <i>parent</i>,
-using its graphics state.  If <i>entity</i> is already the child
-of some parent entity prior to the call, it is cleanly removed from
-that parent's child list.
+using its graphics state.  If <i>entity</i> is already the child of
+some parent entity prior to the call, it is cleanly removed from that
+parent's child list.  An entity may be unparented by specifying a
+<i>parent</i> entity of <tt>nil</tt>.
 
-<p>By default, all newly created entities are children of the root
-node.  The root node is inaccessible and unreferencable to Electro
-application, so new entities may be considered to be unparented.</p>
-
-<dt><tt>entity_delete</tt>(<i>entity</i>)<dd><p> Remove <i>entity</i>
+<dt><tt>delete_entity</tt>(<i>entity</i>)<dd><p> Remove <i>entity</i>
 from the scene hierarchy and release all resources associated with it.
-All children of <i>entity</i> will be inherited by <i>entity</i>'s
-parent node, or the root node if it has no parent.  If <i>entity</i>
-is a clone, then the entity itself will be removed, but any resources
-shared by other instances of the same entity will remain.
+Any children of <i>entity</i> will be recursively deleted as well.  If
+<i>entity</i> is a clone, then the entity itself will be removed, but
+any resources shared by other instances of the same entity will
+remain.
 
-<p class="note"> While Lua is a garbage-collected language, Electro
-entities are not subject to garbage collection.  They must be released
-manually.  Entity garbage collection is complicated by the fact that
-entity references held by parent entities are not visible to the Lua
-runtime.  Someday the implementation may tackle this problem, but
-until then be careful you don't allow abandoned resources to pile
-up. </p>
+<dt><i>parent</i> = <tt>get_entity_parent</tt>(<i>entity</i>)<dd><p>
+Return the parent of <i>entity</i>, or <tt>nil</tt> if it is
+unparented.</p>
+
+<dt><i>child</i> = <tt>get_entity_child</tt>(<i>entity</i>,
+<i>n</i>)<dd><p> Return the <tt>n</tt>th child of <i>entity</i>, or
+<tt>nil</tt> if it has no such child.  Unparented entities may be
+referenced as children of <tt>nil</tt>.  The first child is at index
+<i>0</i>.</p>
 
 </dl>
 
@@ -521,6 +530,14 @@ resources.  The stream may be restarted from the beginning.
 
 <h2> Miscellaneous API </h2>
 <dl>
+
+<dt><tt>set_background</tt>(<i>r0, g0, b0</i>, [<i>r1, g1,
+b1</i>])<dd><p> Set the backgound color of the display.  If only one
+color (<i>r0, g0, b0</i>) is specified, the background will appear a
+solid color.  If an optional second color (<i>r1, g1, b1</i>) is
+supplied, the background will be drawn with a top-to-bottom gradient.
+The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>
+0.1, 0.2, 0.4</i>). </p>
 
 <dt><tt>enable_timer</tt>(<i>enabled</i>)<dd><p> Enable or disable the
 <tt>do_timer</tt> callback.  If <i>enabled</i> has value <tt>true</tt>

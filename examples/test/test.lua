@@ -8,6 +8,17 @@ floor   = nil
 
 tumble = false
 
+function dump(entity, depth)
+    local i = 0
+
+    print(string.rep("   ", depth), entity, E.get_entity_parent(entity))
+
+    while E.get_entity_child(entity, i) do
+        dump(E.get_entity_child(entity, i), depth + 1)
+        i = i + 1
+    end
+end
+
 function do_start()
 
     camera  = E.create_camera(E.camera_type_perspective)
@@ -27,6 +38,8 @@ function do_start()
     E.set_entity_position(thing, 0,  1.0,  0.0)
 
     E.set_camera_distance(camera, 10)
+
+    dump(camera, 1)
 end
 
 function do_click(b, s)
@@ -50,6 +63,13 @@ function do_keyboard(k, s)
     local control = E.get_modifier(64)
 
     if s then
+        if k == keycode.k then
+            E.delete_entity(thing)
+            thing = E.create_object("box.obj")
+            E.parent_entity(thing, pivot)
+            E.set_entity_position(thing, 0,  1.0,  0.0)
+        end
+
         if k == keycode.up        then E.move_entity(thing,  0, 0, -1) end
         if k == keycode.down      then E.move_entity(thing,  0, 0,  1) end
         if k == keycode.right     then E.move_entity(thing,  1, 0,  0) end

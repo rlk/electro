@@ -92,8 +92,6 @@ void enable_timer(int b)
 
 static void init_server(void)
 {
-    glClearColor(0.1, 0.2, 0.4, 0.0);
-
     glViewport(0, 0, get_window_w(), get_window_h());
 
     glEnable(GL_STENCIL_TEST);
@@ -112,6 +110,8 @@ static void init_server(void)
 
 static void server_draw(void)
 {
+    const float gray[3] = { 0.2f, 0.2f, 0.2f };
+
     glClear(GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT |
             GL_STENCIL_BUFFER_BIT);
@@ -124,11 +124,13 @@ static void server_draw(void)
     /* Draw the mullions into the non-viewport parts of the frame buffer. */
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFFFFFFFF);
-    fill_viewport(0.1f, 0.1f, 0.1f);
+    fill_viewport(gray, gray);
 
     /* Draw the scene into the viewport parts of the frame buffer. */
 
     glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
+
+    draw_background();
     draw_entity();
 
     /* Sync and swap. */

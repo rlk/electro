@@ -18,6 +18,8 @@
 
 #include "opengl.h"
 #include "shared.h"
+#include "buffer.h"
+#include "event.h"
 #include "viewport.h"
 
 #ifdef MPI
@@ -34,6 +36,9 @@ static struct viewport *Vout;        /* Viewports output to render nodes     */
 
 static int V_max =  64;
 static int V_num =   0;
+
+static float color0[3] = { 0.0f, 0.0f, 0.0f };
+static float color1[3] = { 0.1f, 0.2f, 0.4f };
 
 /*---------------------------------------------------------------------------*/
 
@@ -126,22 +131,28 @@ void draw_viewport(void)
     glPopAttrib();
 }
 
-void fill_viewport(float r, float g, float b)
+void fill_viewport(const float c0[2], const float c1[3])
 {
-    glPushAttrib(GL_ENABLE_BIT);
+    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
     {
-        glDisable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
 
+        glDepthMask(GL_FALSE);
+
         /* Fill the entire viewport with color R,G,B. */
 
-        glColor3f(r, g, b);
+        glBegin(GL_QUADS);
+        {
+            glColor3fv(c0);
+            glVertex2f(Vtotal.x,            Vtotal.y);
+            glVertex2f(Vtotal.x + Vtotal.w, Vtotal.y);
 
-        glRectf(Vtotal.x,
-                Vtotal.y,
-                Vtotal.x + Vtotal.w,
-                Vtotal.y + Vtotal.h);
+            glColor3fv(c1);
+            glVertex2f(Vtotal.x + Vtotal.w, Vtotal.y + Vtotal.h);
+            glVertex2f(Vtotal.x,            Vtotal.y + Vtotal.h);
+        }
+        glEnd();
     }
     glPopAttrib();
 }
@@ -328,6 +339,37 @@ int get_window_w(void)
 int get_window_h(void)
 {
     return (int) (Vlocal.h * get_viewport_scale());
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_background(const float c0[3], const float c1[3])
+{
+    pack_event(EVENT_SET_BACKGROUND);
+
+    pack_float((color0[0] = c0[0]));
+    pack_float((color0[1] = c0[1]));
+    pack_float((color0[2] = c0[2]));
+
+    pack_float((color1[0] = c1[0]));
+    pack_float((color1[1] = c1[1]));
+    pack_float((color1[2] = c1[2]));
+}
+
+void recv_set_background(void)
+{
+    color0[0] = unpack_float();
+    color0[1] = unpack_float();
+    color0[2] = unpack_float();
+
+    color1[0] = unpack_float();
+    color1[1] = unpack_float();
+    color1[2] = unpack_float();
+}
+
+void draw_background(void)
+{
+    fill_viewport(color1, color0);
 }
 
 /*---------------------------------------------------------------------------*/

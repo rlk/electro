@@ -72,7 +72,7 @@ static int lua_isentity(lua_State *L, int i)
 
 static void lua_pushentity(lua_State *L, int id)
 {
-    if (id < 0)
+    if (id <= 0)
         lua_pushnil(L);
     else
         lua_pushuserdata(L, USERDATA_ENTITY, id);
@@ -215,10 +215,10 @@ static int script_getentity(const char *name, lua_State *L, int i)
 
     if (1 <= -i && -i <= n)
     {
-        if (lua_isentity(L, i))
-            return lua_toentity(L, i);
-        else
-            script_type_error(name, "entity", L, i);
+        if (lua_isnil(L, i))    return 0;
+        if (lua_isentity(L, i)) return lua_toentity(L, i);
+
+        script_type_error(name, "entity", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -373,6 +373,36 @@ static int script_get_modifier(lua_State *L)
     return 1;
 }
 
+static int script_set_background(lua_State *L)
+{
+    const char *name = "set_background";
+
+    int n = lua_gettop(L);
+    float c0[3];
+    float c1[3];
+
+    if (n == 6)
+    {
+        c0[0] = script_getnumber(name, L, -6);
+        c0[1] = script_getnumber(name, L, -5);
+        c0[2] = script_getnumber(name, L, -4);
+        c1[0] = script_getnumber(name, L, -3);
+        c1[1] = script_getnumber(name, L, -2);
+        c1[2] = script_getnumber(name, L, -1);
+
+        send_set_background(c0, c1);
+    }
+    else
+    {
+        c0[0] = script_getnumber(name, L, -3);
+        c0[1] = script_getnumber(name, L, -2);
+        c0[2] = script_getnumber(name, L, -1);
+
+        send_set_background(c0, c0);
+    }
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Entity hierarchy functions                                                */
 
@@ -396,6 +426,25 @@ static int script_delete_entity(lua_State *L)
 static int script_create_clone(lua_State *L)
 {
     int id = send_create_clone(script_getentity("create_clone", L, -1));
+
+    lua_pushentity(L, id);
+    return 1;
+}
+
+static int script_get_entity_parent(lua_State *L)
+{
+    int id = get_entity_parent(script_getentity("get_entity_parent", L, -1));
+
+    lua_pushentity(L, id);
+    return 1;
+}
+
+static int script_get_entity_child(lua_State *L)
+{
+    const char *name = "get_entity_child";
+
+    int id = get_entity_child(script_getentity(name, L, -2),
+                        (int) script_getnumber(name, L, -1));
 
     lua_pushentity(L, id);
     return 1;
@@ -861,6 +910,9 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "parent_entity",        script_parent_entity);
     lua_function(L, "delete_entity",        script_delete_entity);
 
+    lua_function(L, "get_entity_parent",    script_get_entity_parent);
+    lua_function(L, "get_entity_child",     script_get_entity_child);
+
     lua_function(L, "set_entity_position",  script_set_entity_position);
     lua_function(L, "set_entity_rotation",  script_set_entity_rotation);
     lua_function(L, "set_entity_scale",     script_set_entity_scale);
@@ -909,6 +961,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_joystick",         script_get_joystick);
     lua_function(L, "get_viewport",         script_get_viewport);
     lua_function(L, "get_modifier",         script_get_modifier);
+    lua_function(L, "set_background",       script_set_background);
 
     /* Constants. */
 

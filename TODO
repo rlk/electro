@@ -1,4 +1,3 @@
-set background color (gradient?)
 Better deep delete policy / vector grow
     delete subtree on entity delete?
 garbage collection / child metatable

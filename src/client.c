@@ -92,8 +92,6 @@ static void client_recv(void)
 
 static void init_client(void)
 {
-    glClearColor(0.1, 0.2, 0.4, 0.0);
-
     glViewport(0, 0, get_window_w(), get_window_h());
 
     glEnable(GL_TEXTURE_2D);
@@ -111,8 +109,10 @@ static void init_client(void)
 
 static void client_draw(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT |
+            GL_DEPTH_BUFFER_BIT);
 
+    draw_background();
     draw_entity();
 
     mpi_barrier();

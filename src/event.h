@@ -42,6 +42,7 @@
 #define EVENT_SET_CAMERA_ZOOM      20
 #define EVENT_SET_SPRITE_BOUNDS    21
 #define EVENT_SET_LIGHT_COLOR      22
+#define EVENT_SET_BACKGROUND       23
 
 /*---------------------------------------------------------------------------*/
 

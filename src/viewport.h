@@ -34,7 +34,7 @@ struct viewport
 
 void init_viewport(void);
 void draw_viewport(void);
-void fill_viewport(float, float, float);
+void fill_viewport(const float[3], const float[3]);
 void sync_viewport(void);
 
 void add_tile(const char *, float, float, float, float, float, float);
@@ -52,6 +52,13 @@ float get_local_viewport_w(void);
 float get_local_viewport_h(void);
 
 float get_viewport_scale(void);
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_background(const float[3], const float[3]);
+void recv_set_background(void);
+
+void draw_background(void);
 
 /*---------------------------------------------------------------------------*/
 

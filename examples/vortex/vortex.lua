@@ -20,6 +20,8 @@ setdist = false
 -------------------------------------------------------------------------------
 
 function do_start()
+    E.set_background(0, 0, 0, 0, 0, 0)
+
     camera_tyc = E.create_camera(E.camera_type_perspective)
     camera_hip = E.create_camera(E.camera_type_perspective)
     galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal")
