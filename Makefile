@@ -1,7 +1,7 @@
 CC= mpicxx
 RM= rm
 
-OBJS=   server.o client.o main.o
+OBJS=   img.o png.o server.o client.o main.o
 TARG=   vortex
 LIBS=   $(shell sdl-config --libs)
 CFLAGS= $(shell sdl-config --cflags) -g

@@ -1,10 +1,19 @@
+#ifndef PNG_HPP
+#define PNG_HPP
+
+#include <string>
+
+#include "img.hpp"
 
 //-----------------------------------------------------------------------------
 
-int main(int argc, char *argv[])
+class png : public img
 {
-    return 0;
-}
+public:
+
+    png(std::string);
+};
 
 //-----------------------------------------------------------------------------
 
+#endif
