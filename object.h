@@ -39,6 +39,7 @@ struct object_face
 
 struct object_surf
 {
+    int mi;
     int fc;
     struct object_face *fv;
 };

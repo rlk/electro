@@ -71,16 +71,22 @@ static Uint32 timer_callback(Uint32 interval, void *parameter)
 void enable_idle(int b)
 {
     static SDL_TimerID timer_id;
+    static int         timer_on = 1;
 
     /* Enable or disable an SDL timer callback. */
 
-    if (b)
+    if (b && !timer_on)
     {
         timer_id = SDL_AddTimer(1000 / 30, timer_callback, NULL);
+        timer_on = 1;
         server_time = SDL_GetTicks();
     }
-    else
+
+    if (!b && timer_on)
+    {
+        timer_on = 0;
         SDL_RemoveTimer(timer_id);
+    }
 }
 
 /*---------------------------------------------------------------------------*/

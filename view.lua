@@ -23,7 +23,6 @@ function do_start()
 end
 
 function do_keyboard(k, s)
-    print(k)
     return true
 end
 

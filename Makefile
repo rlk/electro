@@ -7,6 +7,7 @@ OBJS=	opengl.o \
 	entity.o \
 	camera.o \
 	sprite.o \
+	object.o \
 	script.o \
 	galaxy.o \
 	node.o   \
