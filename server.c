@@ -94,11 +94,11 @@ void server_send(int type)
 
 static void server_init(void)
 {
-    glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
-
+    glViewport(0, 0, viewport_get_w(), viewport_get_h());
+    /*
     galaxy_init();
     star_init();
-
+    */
     server_send(EVENT_DRAW);
     server_draw();
 }
@@ -107,9 +107,10 @@ static void server_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    camera_draw();
-    galaxy_draw();
     entity_render();
+    /*
+    galaxy_draw();
+    */
 
     MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
@@ -163,10 +164,10 @@ static int server_loop(void)
                 c += script_timer(e.user.code);
                 break;
             case SDL_KEYDOWN:
-                c += script_keybd(e.key.keysym.sym, 1);
+                c += script_keyboard(e.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
-                c += script_keybd(e.key.keysym.sym, 0);
+                c += script_keyboard(e.key.keysym.sym, 0);
                 break;
             }
 
@@ -221,16 +222,14 @@ void server(int np, int argc, char *argv[])
     {
         viewport_init(np);
         parse(argc, argv);
-
-        camera_init();
         viewport_sync(np);
 
         /* Initialize the main server window. */
 
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0)
         {
-            int w = camera_get_viewport_w();
-            int h = camera_get_viewport_h();
+            int w = viewport_get_w();
+            int h = viewport_get_h();
             int m = SDL_OPENGL;
 
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
@@ -241,6 +240,7 @@ void server(int np, int argc, char *argv[])
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
                 server_init();
+                script_start();
 
                 /* Block on SDL events.  Service them as they arrive. */
 

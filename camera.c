@@ -18,93 +18,117 @@
 #include "opengl.h"
 #include "shared.h"
 #include "server.h"
+#include "entity.h"
 #include "camera.h"
 
 /*---------------------------------------------------------------------------*/
 
-static float camera_pos[3];
-static float camera_org[3];
-static float camera_rot[3];
-
-static float camera_dist;
-static float camera_magn;
-static float camera_zoom;
-
-static float viewport_X;
-static float viewport_Y;
-static float viewport_x;
-static float viewport_y;
-static float viewport_w;
-static float viewport_h;
+static float viewport_X =    0.0f;
+static float viewport_Y =    0.0f;
+static float viewport_x = -400.0f;
+static float viewport_y = -300.0f;
+static float viewport_w =  800.0f;
+static float viewport_h =  600.0f;
 
 /*---------------------------------------------------------------------------*/
 
-void camera_init(void)
+static struct camera *C     = NULL;
+static int            C_max =    2;
+
+static int camera_exists(int id)
 {
-    camera_org[0] =    0.0f;
-    camera_org[1] =   15.5f;
-    camera_org[2] = 9200.0f;
-
-    camera_rot[0] =    0.0f;
-    camera_rot[1] =    0.0f;
-    camera_rot[2] =    0.0f;
-
-    camera_dist   =    0.0f;
-    camera_magn   =  256.0f;
-    camera_zoom   =    0.0001f;
-
-    viewport_X    =    0.0f;
-    viewport_Y    =    0.0f;
-    viewport_x    = -400.0f;
-    viewport_y    = -300.0f;
-    viewport_w    =  800.0f;
-    viewport_h    =  600.0f;
-
-    camera_set_pos();
+    return (C && 0 <= id && id < C_max && C[id].type);
 }
 
-void camera_draw(void)
+/*---------------------------------------------------------------------------*/
+
+int camera_create(int type)
 {
+    int id = -1;
+
+    if (C && (id = buffer_unused(C_max, camera_exists)) >= 0)
+    {
+        /* Initialize the new camera. */
+
+        if (mpi_isroot())
+        {
+            C[id].type =  type;
+            C[id].dist =  0.0f;
+            C[id].zoom = (type == CAMERA_ORTHO) ? 1.0f : 0.001f;
+
+            server_send(EVENT_CAMERA_CREATE);
+        }
+
+        /* Syncronize the new camera. */
+
+        mpi_share_integer(1, &id);
+        mpi_share_integer(1, &C[id].type);
+        mpi_share_float  (1, &C[id].dist);
+        mpi_share_float  (1, &C[id].zoom);
+
+        /* Encapsulate this new camera in an entity. */
+
+        id = entity_create(TYPE_CAMERA, id);
+    }
+    else if ((C = buffer_expand(C, &C_max, sizeof (struct camera))))
+        id = camera_create(type);
+
+    return id;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void camera_render(int id, const float pos[3], const float rot[3])
+{
+    double T = PI * rot[1] / 180.0;
+    double P = PI * rot[0] / 180.0;
+
+    float p[3];
+
+    /* Compute the camera position given origin, rotation, and distance. */
+
+    p[0] = pos[0];
+    p[1] = pos[1];
+    p[2] = pos[2];
+
+    if (fabs(C[id].dist) > 0.0f)
+    {
+        p[0] += (float) (sin(T) * cos(P) * C[id].dist);
+        p[1] -= (float) (         sin(P) * C[id].dist);
+        p[2] += (float) (cos(T) * cos(P) * C[id].dist);
+    }
+
     /* Load an off-axis projection for the current tile. */
 
     glMatrixMode(GL_PROJECTION);
     {
-        GLdouble l =  camera_zoom *  viewport_x;
-        GLdouble r =  camera_zoom * (viewport_x + viewport_w);
-        GLdouble b = -camera_zoom * (viewport_y + viewport_h);
-        GLdouble t = -camera_zoom *  viewport_y;
+        GLdouble l =  C[id].zoom *  viewport_x;
+        GLdouble r =  C[id].zoom * (viewport_x + viewport_w);
+        GLdouble b = -C[id].zoom * (viewport_y + viewport_h);
+        GLdouble t = -C[id].zoom *  viewport_y;
 
         glLoadIdentity();
 
-        glFrustum(l, r, b, t, 1.0, 1000000.0);
+        if (C[id].type == CAMERA_PERSP) glFrustum(l, r, b, t, 1.0, CAMERA_FAR);
+        if (C[id].type == CAMERA_ORTHO) glOrtho  (l, r, b, t, -1.0, 1.0);
     }
+    glMatrixMode(GL_MODELVIEW);
 
     /* Load the current camera transform. */
 
-    glMatrixMode(GL_MODELVIEW);
-    {
-        glLoadIdentity();
-
-        glTranslatef(0, 0, -camera_dist);
-
-        glRotatef(-camera_rot[0], 1, 0, 0);
-        glRotatef(-camera_rot[1], 0, 1, 0);
-        glRotatef(-camera_rot[2], 0, 0, 1);
-        
-        glTranslatef(-camera_org[0], -camera_org[1], -camera_org[2]);
-    }
+    glTranslatef(0, 0, -C[id].dist);
 
     /* Use the view configuration as vertex program parameters. */
 
+    /*
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, camera_magn, 0, 0, 0);
-    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, camera_pos[0],
-                                                         camera_pos[1],
-                                                         camera_pos[2], 1);
+    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, p[0], p[1], p[2], 1);
+    */
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void camera_set_window_pos(int X, int Y)
+static void set_window_pos(int X, int Y)
 {
     char buf[32];
 
@@ -114,7 +138,7 @@ static void camera_set_window_pos(int X, int Y)
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
 }
 
-void camera_set_viewport(float X, float Y, float x, float y, float w, float h)
+void viewport_set(float X, float Y, float x, float y, float w, float h)
 {
     viewport_X = X;
     viewport_Y = Y;
@@ -123,103 +147,59 @@ void camera_set_viewport(float X, float Y, float x, float y, float w, float h)
     viewport_w = w;
     viewport_h = h;
 
-    camera_set_window_pos((int) X, (int) Y);
+    set_window_pos((int) X, (int) Y);
 }
 
-int camera_get_viewport_x(void)
+int viewport_get_x(void)
 {
     return (int) viewport_x;
 }
 
-int camera_get_viewport_y(void)
+int viewport_get_y(void)
 {
     return (int) viewport_y;
 }
 
-int camera_get_viewport_w(void)
+int viewport_get_w(void)
 {
     return (int) viewport_w;
 }
 
-int camera_get_viewport_h(void)
+int viewport_get_h(void)
 {
     return (int) viewport_h;
 }
 
 /*---------------------------------------------------------------------------*/
 
-void camera_set_org(float x, float y, float z)
+void camera_set_dist(int id, float d)
 {
-    if (mpi_isroot())
+    if (camera_exists(id))
     {
-        camera_org[0] = x;
-        camera_org[1] = y;
-        camera_org[2] = z;
-        server_send(EVENT_CAMERA_MOVE);
-    }
+        if (mpi_isroot())
+        {
+            C[id].dist = d;
+            server_send(EVENT_CAMERA_DIST);
+        }
 
-    mpi_share_float(3, camera_org);
-    camera_set_pos();
+        mpi_share_integer(1, &id);
+        mpi_share_float(1, &C[id].dist);
+    }
 }
 
-void camera_set_rot(float x, float y, float z)
+void camera_set_zoom(int id, float z)
 {
-    if (mpi_isroot())
+    if (camera_exists(id))
     {
-        camera_rot[0] = x;
-        camera_rot[1] = y;
-        camera_rot[2] = z;
-        server_send(EVENT_CAMERA_TURN);
+        if (mpi_isroot())
+        {
+            C[id].zoom = z;
+            server_send(EVENT_CAMERA_ZOOM);
+        }
+
+        mpi_share_integer(1, &id);
+        mpi_share_float(1, &C[id].zoom);
     }
-
-    mpi_share_float(3, camera_rot);
-    camera_set_pos();
-}
-
-void camera_set_dist(float d)
-{
-    if (mpi_isroot())
-    {
-        camera_dist = d;
-        server_send(EVENT_CAMERA_DIST);
-    }
-
-    mpi_share_float(1, &camera_dist);
-    camera_set_pos();
-}
-
-void camera_set_magn(float m)
-{
-    if (mpi_isroot())
-    {
-        camera_magn = m;
-        server_send(EVENT_CAMERA_MAGN);
-    }
-
-    mpi_share_float(1, &camera_magn);
-}
-
-void camera_set_zoom(float z)
-{
-    if (mpi_isroot())
-    {
-        camera_zoom = z;
-        server_send(EVENT_CAMERA_ZOOM);
-    }
-
-    mpi_share_float(1, &camera_zoom);
-}
-
-void camera_set_pos(void)
-{
-    double T = PI * camera_rot[1] / 180.0;
-    double P = PI * camera_rot[0] / 180.0;
-
-    /* Compute the camera position given origin, rotation, and distance. */
-
-    camera_pos[0] = camera_org[0] + sin(T) * cos(P) * camera_dist;
-    camera_pos[1] = camera_org[1] -          sin(P) * camera_dist;
-    camera_pos[2] = camera_org[2] + cos(T) * cos(P) * camera_dist;
 }
 
 /*---------------------------------------------------------------------------*/

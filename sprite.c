@@ -26,53 +26,18 @@
 static struct sprite *S     = NULL;
 static int            S_max =   64;
 
-#define sprite_exists(id) (S && 0 <= id && id < S_max && S[id].texture)
-
-/*---------------------------------------------------------------------------*/
-
-static int unused_sprite(void)
+static int sprite_exists(int id)
 {
-    int id = 0;
-
-    if (S)
-        for (id = 1; id < S_max; ++id)
-            if (S[id].texture == 0)
-                break;
-
-    return id;
-}
-
-static int expand_sprite(void)
-{
-    struct sprite *T;
-
-    if (S == NULL)
-    {
-        if ((S = (struct sprite *) calloc(S_max, sizeof (struct sprite))))
-            return 1;
-    }
-
-    if ((T = (struct sprite *) realloc(S, S_max * 2 * sizeof (struct sprite))))
-    {
-        memset(T + S_max, 0, S_max * sizeof (struct sprite));
-        S_max *= 2;
-        S      = T;
-
-        return 1;
-    }
-
-    return 0;
+    return (S && 0 <= id && id < S_max && S[id].texture);
 }
 
 /*---------------------------------------------------------------------------*/
 
 int sprite_create(const char *filename)
 {
-    int id;
+    int id = -1;
 
-    /* If the existing buffer still has room... */
-
-    if ((id = unused_sprite()))
+    if (S && (id = buffer_unused(S_max, sprite_exists)) >= 0)
     {
         /* Initialize the new sprite. */
 
@@ -88,17 +53,12 @@ int sprite_create(const char *filename)
 
         /* Encapsulate this new sprite in an entity. */
 
-        return entity_create(TYPE_SPRITE, id);
+        id = entity_create(TYPE_SPRITE, id);
     }
+    else if ((S = buffer_expand(S, &S_max, sizeof (struct sprite))))
+        id = sprite_create(filename);
 
-    /* If the buffer is full, double its size.  Retry. */
-
-    if (expand_sprite())
-        return sprite_create(filename);
-
-    /* If the buffer cannot be doubled, fail. */
-
-    return -1;
+    return id;
 }
 
 void sprite_render(int id)
@@ -112,10 +72,10 @@ void sprite_render(int id)
             int dx = S[id].w / 2;
             int dy = S[id].h / 2;
 
-            glTexCoord2i(0, 0); glVertex2f(-dx, +dy);
-            glTexCoord2i(0, 1); glVertex2f(-dx, -dy);
-            glTexCoord2i(1, 1); glVertex2f(+dx, -dy);
-            glTexCoord2i(1, 0); glVertex2f(+dx, +dy);
+            glTexCoord2i(0, 0); glVertex2f(-dx, -dy);
+            glTexCoord2i(1, 0); glVertex2f(+dx, -dy);
+            glTexCoord2i(1, 1); glVertex2f(+dx, +dy);
+            glTexCoord2i(0, 1); glVertex2f(-dx, +dy);
         }
         glEnd();
     }

@@ -65,12 +65,12 @@ static void client_recv(void)
         case EVENT_ENTITY_SIZE:   entity_scale(0, 0, 0, 0);    break;
 
         case EVENT_SPRITE_CREATE: sprite_create(NULL);     break;
+        case EVENT_CAMERA_CREATE: camera_create(0);        break;
 
-        case EVENT_CAMERA_MOVE: camera_set_org(0, 0, 0);   break;
-        case EVENT_CAMERA_TURN: camera_set_rot(0, 0, 0);   break;
-        case EVENT_CAMERA_DIST: camera_set_dist(0);        break;
-        case EVENT_CAMERA_MAGN: camera_set_magn(0);        break;
-        case EVENT_CAMERA_ZOOM: camera_set_zoom(0);        break;
+        case EVENT_CAMERA_DIST:   camera_set_dist(0, 0);        break;
+        case EVENT_CAMERA_ZOOM:   camera_set_zoom(0, 0);        break;
+
+        default: fprintf(stderr, "Uncaught event\n");
         }
     }
 }
@@ -79,19 +79,21 @@ static void client_recv(void)
 
 static void client_init(void)
 {
-    glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
-
+    glViewport(0, 0, viewport_get_w(), viewport_get_h());
+    /*
     galaxy_init();
     star_init();
+    */
 }
 
 static void client_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    camera_draw();
-    galaxy_draw();
     entity_render();
+    /*
+    galaxy_draw();
+    */
 
     MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
@@ -121,13 +123,12 @@ static int client_loop(void)
 
 void client(int np, int id)
 {
-    camera_init();
     viewport_sync(np);
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
-        int w = camera_get_viewport_w();
-        int h = camera_get_viewport_h();
+        int w = viewport_get_w();
+        int h = viewport_get_h();
         int m = SDL_OPENGL | SDL_NOFRAME;
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);

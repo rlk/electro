@@ -15,28 +15,33 @@
 
 /*---------------------------------------------------------------------------*/
 
-void camera_init(void);
-void camera_draw(void);
+#define CAMERA_FAR 100000.0f
+
+#define CAMERA_ORTHO 1
+#define CAMERA_PERSP 2
+
+struct camera
+{
+    int   type;
+    float dist;
+    float zoom;
+};
 
 /*---------------------------------------------------------------------------*/
 
-void  camera_set_viewport(float, float, float, float, float, float);
-
-int   camera_get_viewport_x(void);
-int   camera_get_viewport_y(void);
-int   camera_get_viewport_w(void);
-int   camera_get_viewport_h(void);
+void  viewport_set(float, float, float, float, float, float);
+int   viewport_get_x(void);
+int   viewport_get_y(void);
+int   viewport_get_w(void);
+int   viewport_get_h(void);
 
 /*---------------------------------------------------------------------------*/
 
-void  camera_set_org(float, float, float);
-void  camera_set_rot(float, float, float);
+int  camera_create(int);
+void camera_render(int, const float[3], const float[3]);
 
-void  camera_set_dist(float);
-void  camera_set_magn(float);
-void  camera_set_zoom(float);
-
-void  camera_set_pos(void);
+void  camera_set_dist(int, float);
+void  camera_set_zoom(int, float);
 
 /*---------------------------------------------------------------------------*/
 

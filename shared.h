@@ -40,12 +40,10 @@ int mpi_share_integer(int, int *);
 #define EVENT_ENTITY_SIZE   8
 
 #define EVENT_SPRITE_CREATE 9
+#define EVENT_CAMERA_CREATE 10
 
-#define EVENT_CAMERA_MOVE 10
-#define EVENT_CAMERA_TURN 11
-#define EVENT_CAMERA_ZOOM 12
-#define EVENT_CAMERA_DIST 13
-#define EVENT_CAMERA_MAGN 14
+#define EVENT_CAMERA_DIST   11
+#define EVENT_CAMERA_ZOOM   12
 
 
 /*---------------------------------------------------------------------------*/

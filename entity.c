@@ -17,6 +17,7 @@
 #include "opengl.h"
 #include "shared.h"
 #include "server.h"
+#include "camera.h"
 #include "sprite.h"
 #include "entity.h"
 
@@ -39,76 +40,87 @@ int entity_istype(int id, int type)
 
 /*---------------------------------------------------------------------------*/
 
-static int unused_entity(void)
+int buffer_unused(int max, int (*exists)(int))
 {
-    int id = 0;
+    int id = -1;
 
-    if (E)
-        for (id = 1; id < E_max; ++id)
-            if (E[id].type == 0)
-                break;
+    for (id = 1; id < max; ++id)
+        if (!exists(id))
+            break;
 
     return id;
 }
 
-static int expand_entity(void)
+void *buffer_expand(void *buf, int *len, int siz)
 {
-    struct entity *F;
+    void *ptr = NULL;
 
-    if (E == NULL)
+    /* If the buffer does not exist, ... */
+
+    if (buf == NULL)
     {
-        if ((E = (struct entity *) calloc(E_max, sizeof (struct entity))))
-            return 1;
+        /* ... allocate and initialize it, ... */
+
+        if ((ptr = malloc(*len * siz)))
+        {
+            memset(ptr, 0, *len * siz);
+        }
+        else ptr = buf;
+    }
+    else
+    {
+        /* ... otherwise, reallocate it and initilize the second half. */
+
+        if ((ptr = realloc(buf, *len * siz * 2)))
+        {
+            memset(ptr + *len, 0, *len * siz);
+            *len *= 2;
+        }
+        else ptr = buf;
     }
 
-    if ((F = (struct entity *) realloc(E, E_max * 2 * sizeof (struct entity))))
-    {
-        memset(F + E_max, 0, E_max * sizeof (struct entity));
-        E_max *= 2;
-        E      = F;
-
-        return 1;
-    }
-
-    return 0;
+    return ptr;
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void entity_transform(int id)
 {
-    /* Translation. */
-
-    if (fabs(E[id].position[0]) > 0.0 ||
-        fabs(E[id].position[1]) > 0.0 ||
-        fabs(E[id].position[2]) > 0.0)
+    if (id)
     {
-        glTranslatef(E[id].position[0],
-                     E[id].position[1],
-                     E[id].position[2]);
+        /* Translation. */
+
+        if (fabs(E[id].position[0]) > 0.0 ||
+            fabs(E[id].position[1]) > 0.0 ||
+            fabs(E[id].position[2]) > 0.0)
+        {
+            glTranslatef(E[id].position[0],
+                         E[id].position[1],
+                         E[id].position[2]);
+        }
+
+        /* Scale. */
+
+        if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
+            fabs(E[id].scale[1] - 1.0) > 0.0 ||
+            fabs(E[id].scale[2] - 1.0) > 0.0)
+        {
+            glScalef(E[id].scale[0],
+                     E[id].scale[1],
+                     E[id].scale[2]);
+        }
+
+        /* Rotation. */
+
+        if (fabs(E[id].rotation[0] > 0.0))
+            glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
+
+        if (fabs(E[id].rotation[1] > 0.0))
+            glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
+
+        if (fabs(E[id].rotation[2] > 0.0))
+            glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
     }
-
-    /* Scale. */
-
-    if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
-        fabs(E[id].scale[1] - 1.0) > 0.0 ||
-        fabs(E[id].scale[2] - 1.0) > 0.0)
-    {
-        glScalef(E[id].scale[0],
-                 E[id].scale[1],
-                 E[id].scale[2]);
-    }
-
-    /* Rotation. */
-
-    if (fabs(E[id].rotation[0] > 0.0))
-        glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
-
-    if (fabs(E[id].rotation[1] > 0.0))
-        glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
-
-    if (fabs(E[id].rotation[2] > 0.0))
-        glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
 }
 
 static void entity_traverse(int id)
@@ -123,7 +135,9 @@ static void entity_traverse(int id)
 
         switch (E[id].type)
         {
-        case TYPE_SPRITE: sprite_render(E[id].data); break;
+        case TYPE_SPRITE: sprite_render(E[id].data);                 break;
+        case TYPE_CAMERA: camera_render(E[id].data, E[id].position,
+                                                    E[id].rotation); break;
         }
 
         /* Render any child entities. */
@@ -140,11 +154,10 @@ static void entity_traverse(int id)
 
 int entity_create(int type, int data)
 {
-    int id;
+    int id = -1;
+    int rd =  0;
 
-    /* If the existing buffer still has room... */
-
-    if ((id = unused_entity()))
+    if (E && (id = buffer_unused(E_max, entity_exists)) >= 0)
     {
         /* Initialize the new entity. */
 
@@ -164,17 +177,16 @@ int entity_create(int type, int data)
         E[id].scale[1] = 1.0f;
         E[id].scale[2] = 1.0f;
 
-        return id;
+        /* Insert the new entity into the root child list. */
+
+        E[id].cdr = E[rd].car;
+        E[rd].car = id;
+        E[id].par = rd;
     }
+    else if ((E = buffer_expand(E, &E_max, sizeof (struct entity))))
+        id = entity_create(type, data);
 
-    /* If the buffer is full, double its size.  Retry. */
-
-    if (expand_entity())
-        return entity_create(type, data);
-
-    /* If the buffer cannot be doubled, fail. */
-
-    return -1;
+    return id;
 }
 
 void entity_parent(int cd, int pd)
@@ -186,12 +198,10 @@ void entity_parent(int cd, int pd)
     /* Trigger the parent operation and sync the arguments. */
 
     if (mpi_isroot())
-    {
         server_send(EVENT_ENTITY_PARENT);
 
-        mpi_share_integer(1, &cd);
-        mpi_share_integer(1, &pd);
-    }
+    mpi_share_integer(1, &cd);
+    mpi_share_integer(1, &pd);
 
     if (entity_exists(pd) && entity_exists(cd))
     {
@@ -237,7 +247,15 @@ void entity_delete(int id)
 
 void entity_render(void)
 {
-    if (E) entity_traverse(0);
+    if (E)
+    {
+        glPushAttrib(GL_ENABLE_BIT);
+        {
+            glEnable(GL_TEXTURE_2D);
+            entity_traverse(0);
+        }
+        glPopAttrib();
+    }
 }
 
 /*---------------------------------------------------------------------------*/

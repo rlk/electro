@@ -37,6 +37,11 @@ struct entity
 
 /*---------------------------------------------------------------------------*/
 
+int   buffer_unused(int, int (*)(int));
+void *buffer_expand(void *, int *, int);
+
+/*---------------------------------------------------------------------------*/
+
 int  entity_exists(int);
 int  entity_istype(int, int);
 

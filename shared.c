@@ -153,7 +153,7 @@ void viewport_sync(int n)
 
     /* Apply this client's viewport. */
 
-    if (!mpi_isroot()) camera_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+    if (!mpi_isroot()) viewport_set(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -45,13 +45,19 @@ static void lua_pushentity(lua_State *L, int id)
     *p = id;
 }
 
-/*
+/*---------------------------------------------------------------------------*/
+
 static int lua_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
         && entity_istype(lua_toentity(L, i), TYPE_SPRITE);
 }
-*/
+
+static int lua_iscamera(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && entity_istype(lua_toentity(L, i), TYPE_CAMERA);
+}
 
 /*---------------------------------------------------------------------------*/
 /* Function argument error reporters                                         */
@@ -158,6 +164,42 @@ static int script_getentity(const char *name, lua_State *L, int i)
     return 0;
 }
 
+static int script_getsprite(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a sprite, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_issprite(L, i))
+            return lua_toentity(L, i);
+        else
+            script_type_error(name, "sprite", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
+static int script_getcamera(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a camera, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_iscamera(L, i))
+            return lua_toentity(L, i);
+        else
+            script_type_error(name, "camera", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int script_add_tile(lua_State *L)
@@ -183,7 +225,7 @@ static int script_enable_idle(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
-
+/*
 static int script_camera_move(lua_State *L)
 {
     const char *name = "camera_move";
@@ -203,15 +245,16 @@ static int script_camera_turn(lua_State *L)
                    script_getnumber(name, L, -1));
     return 0;
 }
-
+*/
 static int script_camera_dist(lua_State *L)
 {
     const char *name = "camera_dist";
 
-    camera_set_dist(script_getnumber(name, L, -1));
+    camera_set_dist(script_getcamera(name, L, -2),
+                    script_getnumber(name, L, -1));
     return 0;
 }
-
+/*
 static int script_camera_magn(lua_State *L)
 {
     const char *name = "camera_magn";
@@ -219,12 +262,13 @@ static int script_camera_magn(lua_State *L)
     camera_set_magn(script_getnumber(name, L, -1));
     return 0;
 }
-
+*/
 static int script_camera_zoom(lua_State *L)
 {
     const char *name = "camera_zoom";
 
-    camera_set_zoom(script_getnumber(name, L, -1));
+    camera_set_zoom(script_getcamera(name, L, -2),
+                    script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -237,6 +281,16 @@ static int script_sprite_create(lua_State *L)
     lua_pushentity(L, sprite_create(script_getstring(name, L, -1)));
     return 1;
 }
+
+static int script_camera_create(lua_State *L)
+{
+    const char *name = "camera_create";
+
+    lua_pushentity(L, camera_create(script_getnumber(name, L, -1)));
+    return 1;
+}
+
+/*---------------------------------------------------------------------------*/
 
 static int script_entity_parent(lua_State *L)
 {
@@ -305,13 +359,12 @@ int script_init(void)
 
         lua_register(L, "enable_idle", script_enable_idle);
 
-        lua_register(L, "camera_move", script_camera_move);
-        lua_register(L, "camera_turn", script_camera_turn);
-        lua_register(L, "camera_dist", script_camera_dist);
-        lua_register(L, "camera_magn", script_camera_magn);
-        lua_register(L, "camera_zoom", script_camera_zoom);
+        lua_register(L, "camera_dist",     script_camera_dist);
+        lua_register(L, "camera_zoom",     script_camera_zoom);
 
         lua_register(L, "sprite_create",   script_sprite_create);
+        lua_register(L, "camera_create",   script_camera_create);
+
         lua_register(L, "entity_parent",   script_entity_parent);
         lua_register(L, "entity_delete",   script_entity_delete);
 
@@ -354,87 +407,121 @@ void script_file(const char *filename)
 /*---------------------------------------------------------------------------*/
 /* Script callback backcallers                                               */
 
-int script_point(int x, int y)
+static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
 {
     int r = 0;
 
-    lua_getglobal(L, "do_point");
+    if (lua_pcall(L, nin, nout, 0) == LUA_ERRRUN)
+        fprintf(stderr, "%s: %s\n", name, lua_tostring(L, -1));
+    else
+        r = lua_toboolean(L, -1);
+
+    lua_pop(L, 1);
+
+    return r;
+}
+
+int script_start(void)
+{
+    const char *name = "do_start";
+
+    lua_getglobal(L, name);
+
+    if (lua_isfunction(L, -1))
+        return lua_callassert(L, 0, 1, name);
+    else
+        lua_pop(L, 1);
+
+    return 0;
+}
+
+int script_point(int x, int y)
+{
+    const char *name = "do_point";
+
+    lua_getglobal(L, name);
 
     if (lua_isfunction(L, -1))
     {
         lua_pushnumber(L, (lua_Number) x);
         lua_pushnumber(L, (lua_Number) y);
 
-        if (lua_pcall(L, 2, 1, 0) == LUA_ERRRUN)
-            fprintf(stderr, "(do_point): %s\n", lua_tostring(L, -1));
-        else
-            r = lua_toboolean(L, -1);
+        return lua_callassert(L, 2, 1, name);
     }
-    lua_pop(L, 1);
+    else lua_pop(L, 1);
 
-    return r;
+    return 0;
 }
 
 int script_click(int b, int s)
 {
-    int r = 0;
+    const char *name = "do_click";
 
-    lua_getglobal(L, "do_click");
+    lua_getglobal(L, name);
 
     if (lua_isfunction(L, -1))
     {
         lua_pushnumber (L, (lua_Number) b);
         lua_pushboolean(L, s);
 
-        if (lua_pcall(L, 2, 1, 0) == LUA_ERRRUN)
-            fprintf(stderr, "(do_click): %s\n", lua_tostring(L, -1));
-        else
-            r = lua_toboolean(L, -1);
+        return lua_callassert(L, 2, 1, name);
     }
-    lua_pop(L, 1);
+    else lua_pop(L, 1);
 
-    return r;
+    return 0;
 }
 
-int script_keybd(int k, int s)
+int script_timer(int t)
 {
-    int r = 0;
+    const char *name = "do_timer";
 
-    lua_getglobal(L, "do_keybd");
+    lua_getglobal(L, name);
+
+    if (lua_isfunction(L, -1))
+    {
+        lua_pushnumber(L, (lua_Number) (t / 1000.0f));
+
+        return lua_callassert(L, 1, 1, name);
+    }
+    else lua_pop(L, 1);
+
+    return 0;
+}
+
+int script_keyboard(int k, int s)
+{
+    const char *name = "do_keyboard";
+
+    lua_getglobal(L, name);
 
     if (lua_isfunction(L, -1))
     {
         lua_pushnumber (L, (lua_Number) k);
         lua_pushboolean(L, s);
 
-        if (lua_pcall(L, 2, 1, 0) == LUA_ERRRUN)
-            fprintf(stderr, "(do_keybd): %s\n", lua_tostring(L, -1));
-        else
-            r = lua_toboolean(L, -1);
+        return lua_callassert(L, 2, 1, name);
     }
-    lua_pop(L, 1);
+    else lua_pop(L, 1);
 
-    return r;
+    return 0;
 }
 
-int script_timer(int t)
+int script_joystick(int x, int y)
 {
-    int r = 0;
+    const char *name = "do_joystick";
 
-    lua_getglobal(L, "do_timer");
+    lua_getglobal(L, name);
 
     if (lua_isfunction(L, -1))
     {
-        lua_pushnumber(L, (lua_Number) (t / 1000.0f));
+        lua_pushnumber(L, (lua_Number) x);
+        lua_pushnumber(L, (lua_Number) y);
 
-        if (lua_pcall(L, 1, 1, 0) == LUA_ERRRUN)
-            fprintf(stderr, "(do_timer): %s\n", lua_tostring(L, -1));
-        else
-            r = lua_toboolean(L, -1);
+        return lua_callassert(L, 2, 1, name);
     }
-    lua_pop(L, 1);
+    else lua_pop(L, 1);
 
-    return r;
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/

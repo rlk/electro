@@ -20,10 +20,12 @@ void script_free(void);
 
 void script_file(const char *);
 
+int  script_start(void);
 int  script_click(int, int);
 int  script_point(int, int);
-int  script_keybd(int, int);
 int  script_timer(int);
+int  script_keyboard(int, int);
+int  script_joystick(int, int);
 
 /*---------------------------------------------------------------------------*/
 
