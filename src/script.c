@@ -615,6 +615,34 @@ static int script_sprite_bounds(lua_State *L)
     return 0;
 }
 
+static int script_sprite_pixel(lua_State *L)
+{
+    const char *name = "sprite_pixel";
+
+    unsigned char p[4];
+
+    sprite_get_p(script_getsprite(name, L, -3),
+           (int) script_getnumber(name, L, -2),
+           (int) script_getnumber(name, L, -1), p);
+
+    lua_pushnumber(L, (double) p[0] / 255.0);
+    lua_pushnumber(L, (double) p[1] / 255.0);
+    lua_pushnumber(L, (double) p[2] / 255.0);
+    lua_pushnumber(L, (double) p[3] / 255.0);
+
+    return 4;
+}
+
+static int script_sprite_size(lua_State *L)
+{
+    int id = script_getsprite("sprite_size", L, -1);
+
+    lua_pushnumber(L, (double) sprite_get_w(id));
+    lua_pushnumber(L, (double) sprite_get_h(id));
+
+    return 2;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Sound functions                                                           */
 
@@ -715,6 +743,8 @@ void luaopen_electro(lua_State *L)
     /* Sprite control. */
 
     lua_function(L, "sprite_bounds",           script_sprite_bounds);
+    lua_function(L, "sprite_pixel",            script_sprite_pixel);
+    lua_function(L, "sprite_size",             script_sprite_size);
 
     /* Light control. */
 

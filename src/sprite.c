@@ -60,9 +60,10 @@ void sprite_draw(int id, int sd, const float V[16])
 
             entity_transform(id, W, V);
 
-            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
 
             image_draw(S[sd].image);
+
             glColor4f(1.0f, 1.0f, 1.0f, entity_get_alpha(id));
 
             glBegin(GL_QUADS);
@@ -155,6 +156,24 @@ void sprite_delete(int sd)
 {
     if (sprite_exists(sd))
         memset(S + sd, 0, sizeof (struct sprite));
+}
+
+/*---------------------------------------------------------------------------*/
+
+void sprite_get_p(int sd, int x, int y, unsigned char p[4])
+{
+    if (sprite_exists(sd))
+        image_get_p(S[sd].image, x, y, p);
+}
+
+int sprite_get_w(int sd)
+{
+    return sprite_exists(sd) ? image_get_w(S[sd].image) : 0;
+}
+
+int sprite_get_h(int sd)
+{
+    return sprite_exists(sd) ? image_get_h(S[sd].image) : 0;
 }
 
 /*---------------------------------------------------------------------------*/

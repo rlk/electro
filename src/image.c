@@ -74,10 +74,13 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
         void *P;
 
         if ((P = malloc(W * H * b)))
+        {
             gluScaleImage(f, w, h, GL_UNSIGNED_BYTE, p,
                              W, H, GL_UNSIGNED_BYTE, P);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, b, W, H, f, GL_UNSIGNED_BYTE, P);
 
-        gluBuild2DMipmaps(GL_TEXTURE_2D, b, W, H, f, GL_UNSIGNED_BYTE, P);
+            free(P);
+        }
     }
     else
         gluBuild2DMipmaps(GL_TEXTURE_2D, b, w, h, f, GL_UNSIGNED_BYTE, p);
@@ -278,18 +281,6 @@ void image_recv_create(void)
 
 /*---------------------------------------------------------------------------*/
 
-int image_get_w(int id)
-{
-    return image_exists(id) ? I[id].w : 128;
-}
-
-int image_get_h(int id)
-{
-    return image_exists(id) ? I[id].h : 128;
-}
-
-/*---------------------------------------------------------------------------*/
-
 void image_delete(int id)
 {
     if (image_exists(id))
@@ -302,6 +293,54 @@ void image_delete(int id)
 
         memset(I + id, 0, sizeof (struct image));
     }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void image_get_p(int id, int x, int y, unsigned char p[4])
+{
+    if (image_exists(id))
+    {
+        unsigned char *pixels = (unsigned char *) I[id].p;
+
+        switch (I[id].b)
+        {
+        case 1:
+            p[0] = pixels[I[id].w * y + x];
+            p[1] = pixels[I[id].w * y + x];
+            p[2] = pixels[I[id].w * y + x];
+            p[3] = 0xff;
+            break;
+        case 2:
+            p[0] = pixels[(I[id].w * y + x) * 2 + 0];
+            p[1] = pixels[(I[id].w * y + x) * 2 + 0];
+            p[2] = pixels[(I[id].w * y + x) * 2 + 0];
+            p[3] = pixels[(I[id].w * y + x) * 2 + 1];
+            break;
+        case 3:
+            p[0] = pixels[(I[id].w * y + x) * 3 + 0];
+            p[1] = pixels[(I[id].w * y + x) * 3 + 1];
+            p[2] = pixels[(I[id].w * y + x) * 3 + 2];
+            p[3] = 0xff;
+            break;
+        case 4:
+            p[0] = pixels[(I[id].w * y + x) * 3 + 0];
+            p[1] = pixels[(I[id].w * y + x) * 3 + 1];
+            p[2] = pixels[(I[id].w * y + x) * 3 + 2];
+            p[3] = pixels[(I[id].w * y + x) * 3 + 3];
+            break;
+        }
+    }
+}
+
+int image_get_w(int id)
+{
+    return image_exists(id) ? I[id].w : 128;
+}
+
+int image_get_h(int id)
+{
+    return image_exists(id) ? I[id].h : 128;
 }
 
 /*---------------------------------------------------------------------------*/

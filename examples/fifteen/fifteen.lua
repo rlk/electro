@@ -13,9 +13,13 @@ time   = 0
 
 function sprite_position(sprite, i, j)
     local l, r, b, t = E.viewport_get()
+    local w = r - l
+    local h = t - b
 
-    E.entity_position(sprite, l + (r - l) * ((i - 1) / 4 + 0.125),
-                              t - (t - b) * ((j - 1) / 4 + 0.125), 0)
+--  E.entity_position(sprite, l + (r - l) * ((i - 1) / 4 + 0.125),
+--                            t - (t - b) * ((j - 1) / 4 + 0.125), 0)
+    E.entity_position(sprite, l + w * ((i - 1) / 4) + w / 8 + 128,
+                              t - h * ((j - 1) / 4) + h / 8 + 128, 0)
 end
 
 function solved()
@@ -69,10 +73,8 @@ end
 -------------------------------------------------------------------------------
 
 function do_start()
-    local sx = 6.4321608040
-    local sy = 7.1641791044
 
-    local x, y, w, h = E.viewport_get()
+    local l, r, b, t = E.viewport_get()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.entity_flag(camera, E.entity_flag_unlit, true);
@@ -84,13 +86,17 @@ function do_start()
     numbers[3] = {  9, 10, 11, 12 }
     numbers[4] = { 13, 14, 15, 16 }
 
-    -- Add 16 piece sprites to the puzzle and scale each to 1/16th size.
+    -- Add 16 sprites and scale each to 1/16th the size of the display.
 
     for i = 1, 16 do
         sprites[i] = E.create_sprite(image_file)
 
+        local sw, sh = E.sprite_size(sprites[i])
+
         E.entity_parent(sprites[i], camera)
-        E.entity_scale (sprites[i], sx * 0.25, sy * 0.25, 0.25)
+
+        E.entity_scale (sprites[i], 0.25 * (r - l) / sw,
+                                    0.25 * (t - b) / sh, 0.25)
     end
 
     -- Assign 1/16th of the image to each sprite.

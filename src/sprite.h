@@ -42,4 +42,10 @@ void sprite_delete(int);
 
 /*---------------------------------------------------------------------------*/
 
+void sprite_get_p(int, int, int, unsigned char[4]);
+int  sprite_get_w(int);
+int  sprite_get_h(int);
+
+/*---------------------------------------------------------------------------*/
+
 #endif

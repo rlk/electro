@@ -1,29 +1,25 @@
-fifteen
-image width/height query
+be consistent about noun-verb function naming
 Documentation up to date
 GL error.  glTexParameter WTF?
-disable depth writes on sprites instead of depth test?
 Star VBO?  (Ok if tree is NOT pruned)
 asteroids text overlay models?
 Scale and billboard frustum
 Object edge
 
-frustum transform = matrix multiplication?
-        identity matrix is idempotent frustum?
-
-Look into event queueing on heavy client load.
 Windows port
 Relative entity transform
 Website
 camera near/far
 
+Reorganize MPI abstraction (it's simpler than it once was)
+Improve assertions (delineate necessary thing_exists vs thing_assert)
+Improve linear descriptor seaching (next-free list) (growable buffer?)
+Improve clone reference counting
 
 short descriptors?  short object indices?
 Particle system? (stars?)
 
-Reorganize MPI abstraction (it's simpler than it once was)
-Improve assertions (delineate necessary thing_exists vs thing_assert)
-Improve linear descriptor seaching
-Improve clone reference counting
+frustum transform = matrix multiplication?
+        identity matrix is idempotent frustum?
 
 Audit includes
