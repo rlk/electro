@@ -44,6 +44,7 @@ extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 
 /*---------------------------------------------------------------------------*/
 
+void       *opengl_proc(const char *);
 GLboolean   opengl_need(const char *);
 GLboolean   opengl_init(void);
 GLint       opengl_perf(void);

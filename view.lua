@@ -6,7 +6,7 @@ pos_y =   15.5
 pos_z = 9200.0
 rot_x =    0.0
 rot_y =    0.0
-dist  = 1000.0
+dist  =    0.0
 
 btn    = { }
 btn[1] = false
@@ -23,14 +23,14 @@ last_y = 0.0
 function do_click(b, s)
 
    if b == 4 then
-      dist = dist + 128.0
+      dist = dist + 16.0
       camera_dist(dist)
 
       return true
    end
 
    if b == 5 then
-      dist = dist - 128.0
+      dist = dist - 16.0
       if dist < 0 then dist = 0 end
       camera_dist(dist)
 

@@ -48,7 +48,7 @@ void server_send_move(void)
 {
     struct event e = { EVENT_MOVE, 0.0f, 0.0f, 0.0f };
 
-    status_get_camera_pos(&e.x, &e.y, &e.z);
+    status_get_camera_org(&e.x, &e.y, &e.z);
     server_send_event(&e);
 }
 

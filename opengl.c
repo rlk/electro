@@ -47,11 +47,21 @@ GLboolean opengl_need(const char *extension)
     return GL_FALSE;
 }
 
+void *opengl_proc(const char *name)
+{
+    void *p = SDL_GL_GetProcAddress(name);
+
+    if (p == NULL)
+        fprintf(stderr, "%s not found\n", name);
+
+    return p;
+}
+
 /*---------------------------------------------------------------------------*/
 
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
-PFNGLPROGRAMENVPARAMETER4FARBPROC   glProgramEnvParameter4fARB;
+PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 
@@ -61,22 +71,24 @@ GLboolean opengl_init(void)
         opengl_need("GL_ARB_fragment_program"))
     {
         glDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)
-            SDL_GL_GetProcAddress("glDisableVertexAttribArrayARB");
+            opengl_proc("glDisableVertexAttribArrayARB");
         glEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)
-            SDL_GL_GetProcAddress("glEnableVertexAttribArrayARB");
+            opengl_proc("glEnableVertexAttribArrayARB");
         glProgramEnvParameter4fARB = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
-            SDL_GL_GetProcAddress("glProgramenvParameter4fARB");
+            opengl_proc("glProgramEnvParameter4fARB");
         glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)
-            SDL_GL_GetProcAddress("glVertexAttribPointerARB");
+            opengl_proc("glVertexAttribPointerARB");
         glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
-            SDL_GL_GetProcAddress("glProgramStringARB");
+            opengl_proc("glProgramStringARB");
     }
     else return GL_FALSE;
 
     if (opengl_need("GL_ARB_point_sprite"))
-        return GL_TRUE;
-    else
-        return GL_FALSE;
+    {
+    }
+    else return GL_FALSE;
+
+    return GL_TRUE;
 }
 
 /*---------------------------------------------------------------------------*/

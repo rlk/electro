@@ -324,35 +324,25 @@ void star_draw(void)
 
     glBindTexture(GL_TEXTURE_2D, star_texture);
 
-    /*
     glEnable(GL_VERTEX_PROGRAM_ARB);
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
-    */
     {
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
-        /*
         glEnableVertexAttribArrayARB(6);
-        */
 
         glVertexPointer(3, GL_FLOAT,         s, &star_data[0].pos);
         glColorPointer (3, GL_UNSIGNED_BYTE, s, &star_data[0].col);
-        /*
         glVertexAttribPointerARB(6, 1, GL_FLOAT, 0, s, &star_data[0].mag);
-        */
 
         glDrawArrays(GL_POINTS, 0, star_count);
 
-        /*
         glDisableVertexAttribArrayARB(6);
-        */
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
     }
-    /*
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
     glDisable(GL_VERTEX_PROGRAM_ARB);
-    */
 }
 
 /*---------------------------------------------------------------------------*/

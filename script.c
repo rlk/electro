@@ -81,7 +81,7 @@ static int script_add_tile(lua_State *L)
 static int script_camera_move(lua_State *L)
 {
     const char *name = "camera_move";
-    status_set_camera_pos(script_getnumber(name, L, -3),
+    status_set_camera_org(script_getnumber(name, L, -3),
                           script_getnumber(name, L, -2),
                           script_getnumber(name, L, -1));
     server_send_move();

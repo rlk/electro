@@ -54,7 +54,7 @@ static void client_recv_event(void)
         switch (e.type)
         {
         case EVENT_DRAW: client_recv_draw();                   break;
-        case EVENT_MOVE: status_set_camera_pos(e.x, e.y, e.z); break;
+        case EVENT_MOVE: status_set_camera_org(e.x, e.y, e.z); break;
         case EVENT_TURN: status_set_camera_rot(e.x, e.y, e.z); break;
         case EVENT_DIST: status_set_camera_dist(e.x);          break;
         case EVENT_MAGN: status_set_camera_magn(e.x);          break;

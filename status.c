@@ -12,12 +12,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "opengl.h"
 
 /*---------------------------------------------------------------------------*/
 
 static float camera_pos[3];
+static float camera_org[3];
 static float camera_rot[3];
 
 static float camera_dist;
@@ -33,17 +35,41 @@ static float viewport_h;
 
 /*---------------------------------------------------------------------------*/
 
+static void status_set_camera_pos(void)
+{
+    double T = PI * camera_rot[1] / 180.0;
+    double P = PI * camera_rot[0] / 180.0;
+
+    /* Compute the camera position given origin, rotation, and distance. */
+
+    camera_pos[0] = camera_org[0] + sin(T) * cos(P) * camera_dist;
+    camera_pos[1] = camera_org[1] -          sin(P) * camera_dist;
+    camera_pos[2] = camera_org[2] + cos(T) * cos(P) * camera_dist;
+}
+
+static void status_set_window_pos(int X, int Y)
+{
+    char buf[32];
+
+    /* SDL looks to the environment for window position. */
+
+    sprintf(buf, "%d,%d", X, Y);
+    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+}
+
+/*---------------------------------------------------------------------------*/
+
 void status_init(void)
 {
-    camera_pos[0] =    0.0f;
-    camera_pos[1] =   15.5f;
-    camera_pos[2] = 9200.0f;
+    camera_org[0] =    0.0f;
+    camera_org[1] =   15.5f;
+    camera_org[2] = 9200.0f;
 
     camera_rot[0] =    0.0f;
     camera_rot[1] =    0.0f;
     camera_rot[2] =    0.0f;
 
-    camera_dist   = 1000.0f;
+    camera_dist   =    0.0f;
     camera_magn   =  128.0f;
     camera_zoom   =    0.001f;
 
@@ -53,6 +79,8 @@ void status_init(void)
     viewport_y = -300.0f;
     viewport_w =  800.0f;
     viewport_h =  600.0f;
+
+    status_set_camera_pos();
 }
 
 void status_draw_camera(void)
@@ -61,10 +89,10 @@ void status_draw_camera(void)
 
     glMatrixMode(GL_PROJECTION);
     {
-        GLdouble l = camera_zoom *  viewport_x;
-        GLdouble r = camera_zoom * (viewport_x + viewport_w);
-        GLdouble b = camera_zoom * (viewport_y + viewport_h);
-        GLdouble t = camera_zoom *  viewport_y;
+        GLdouble l =  camera_zoom *  viewport_x;
+        GLdouble r =  camera_zoom * (viewport_x + viewport_w);
+        GLdouble b = -camera_zoom * (viewport_y + viewport_h);
+        GLdouble t = -camera_zoom *  viewport_y;
 
         glLoadIdentity();
 
@@ -83,27 +111,18 @@ void status_draw_camera(void)
         glRotatef(-camera_rot[1], 0, 1, 0);
         glRotatef(-camera_rot[2], 0, 0, 1);
         
-        glTranslatef(-camera_pos[0], -camera_pos[1], -camera_pos[2]);
+        glTranslatef(-camera_org[0], -camera_org[1], -camera_org[2]);
     }
 
     /* Use the view configuration as vertex program parameters. */
-    /*
+
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
                                camera_pos[0], camera_pos[1], camera_pos[2], 1);
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1,
                                camera_magn, 0, 0, 0);
-    */
 }
 
 /*---------------------------------------------------------------------------*/
-
-static void status_position(int X, int Y)
-{
-    char buf[32];
-
-    sprintf(buf, "%d,%d", X, Y);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
-}
 
 void status_set_viewport(float X, float Y, float x, float y, float w, float h)
 {
@@ -114,14 +133,16 @@ void status_set_viewport(float X, float Y, float x, float y, float w, float h)
     viewport_w = w;
     viewport_h = h;
 
-    status_position((int) X, (int) Y);
+    status_set_window_pos((int) X, (int) Y);
 }
 
-void status_set_camera_pos(float x, float y, float z)
+void status_set_camera_org(float x, float y, float z)
 {
-    camera_pos[0] = x;
-    camera_pos[1] = y;
-    camera_pos[2] = z;
+    camera_org[0] = x;
+    camera_org[1] = y;
+    camera_org[2] = z;
+
+    status_set_camera_pos();
 }
 
 void status_set_camera_rot(float x, float y, float z)
@@ -134,6 +155,8 @@ void status_set_camera_rot(float x, float y, float z)
 void status_set_camera_dist(float d)
 {
     camera_dist = d;
+
+    status_set_camera_pos();
 }
 
 void status_set_camera_magn(float d)
@@ -158,11 +181,11 @@ int status_get_viewport_h(void)
     return (int) viewport_h;
 }
 
-void status_get_camera_pos(float *x, float *y, float *z)
+void status_get_camera_org(float *x, float *y, float *z)
 {
-    *x = camera_pos[0];
-    *y = camera_pos[1];
-    *z = camera_pos[2];
+    *x = camera_org[0];
+    *y = camera_org[1];
+    *z = camera_org[2];
 }
 
 void status_get_camera_rot(float *x, float *y, float *z)

@@ -38,7 +38,9 @@ void galaxy_init(void)
     glPointSize(4);
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-    /*
+
+    /* Load vertex and fragment programs. */
+
     vert_program = opengl_read("star.vp");
     frag_program = opengl_read("star.fp");
 
@@ -55,7 +57,6 @@ void galaxy_init(void)
 
     if (glGetError() != GL_NO_ERROR)
         printf("frag_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-    */
 }
 
 /*---------------------------------------------------------------------------*/

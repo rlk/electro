@@ -23,7 +23,7 @@ void status_draw_camera(void);
 
 void  status_set_viewport(float, float, float, float, float, float);
 
-void  status_set_camera_pos(float, float, float);
+void  status_set_camera_org(float, float, float);
 void  status_set_camera_rot(float, float, float);
 
 void  status_set_camera_dist(float);
@@ -35,7 +35,7 @@ void  status_set_camera_zoom(float);
 int   status_get_viewport_w(void);
 int   status_get_viewport_h(void);
 
-void  status_get_camera_pos(float *, float *, float *);
+void  status_get_camera_org(float *, float *, float *);
 void  status_get_camera_rot(float *, float *, float *);
 
 float status_get_camera_dist(void);
