@@ -116,6 +116,16 @@ material files and texture maps.  The OBJ export capabilities of
 Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.
 </p>
 
+<p class="note"> The Electro OBJ loader allows two non-standard
+extensions to the OBJ specification.  An OBJ file may include "e"
+specifiers which behave like "f" specifiers but define edges rather
+than faces.  An MTL file may include "Ke" specifiers which behave
+like "Kd", "Ka", and "Ks" specifiers but define an emissive material
+property rather than a diffuse, ambient, or specular property.
+Standard exporters do not produce these tags, and importers simply
+ignore them, so they do not get in the way of normal OBJ file
+usage.</p>
+
 <dt><i>sprite</i> = <tt>create_sprite</tt>(<i>filename</i>)<dd><p>
 Load an image file and create a sprite entity.  A sprite consists
 of a single quadrilateral, textured using the given image.  Image
@@ -407,10 +417,23 @@ Return the size of the sprite in pixels.</p>
 <dl>
 
 <dt><tt>set_camera_distance</tt>(<i>camera, distance</i>)<dd><p>
-</p>
+Set the distance to the focus point of the camera.  More precisely,
+<i>distance</i> is a translation along the positive Z axis applied
+prior to the actual positioning and rotation of the camera.  Think
+of the camera's position and rotation not as motions of the camera,
+but as motions of the camera's focal point. </p>
 
-<dt><tt>set_camera_zoom</tt>(<i>camera, zoom</i>)<dd><p>
-</p>
+<p>A camera distance of zero commonly corresponds to a first-person
+view, while a positive distance is useful as an object-viewer tumbler
+camera.  Negative camera distance would place the camera position
+behind the viewer. </p>
+
+<dt><tt>set_camera_zoom</tt>(<i>camera, zoom</i>)<dd><p> Set the
+zoom factor of a camera.  This value normally ranges from 0 to 1
+but may reasonably be higher.  In effect, it linearly scales the
+size of the view area of the camera.  Large values widen the view
+(theoretically, an infinite zoom value gives a 180 degree field of
+view) and small values narrow it. </p>
 
 </dl>
 
@@ -419,8 +442,8 @@ Return the size of the sprite in pixels.</p>
 <a name="light"><h3> Light </h3>
 <dl>
 
-<dt><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p>
-</p>
+<dt><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p> Set the
+diffuse color of a light source.  </p>
 
 </dl>
 
@@ -429,29 +452,56 @@ Return the size of the sprite in pixels.</p>
 <a name="galaxy"><h3> Galaxy </h3>
 <dl>
 
-<dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p>
-</p>
+<dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p> Set the
+magnitude multiplier of a galaxy.  By default, stars are rendered
+using their computed luminosity.  For all but a few stars, this is
+far too dim to be visible.  The magnitude multiplier can be treated
+as a linear scale of apparent star size.  For example, a magnitude
+value of 100 will result in the very largest of stars being rendered
+approximately 100 pixels across.  </p>
+
+<p> Note that this is completely distinct from camera zoom.  Tightening
+the view of a camera will not result in apparently brighter stars.
+Commonly, any linear change applied to camera zoom should also be
+applied to galaxy magnitude in order to provide the illusion of
+increased magnification. </p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
 <h2> Sound API </h2>
+
+<p> Electro provides a basic audio API suitable for adding simple
+sounds to an application.  It supports streaming of arbitrary stereo
+or mono Ogg Vorbis audio sources.  Any number of audio streams may
+play simultaneously. </p>
+
 <dl>
 
-<dt><i>sound</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p>
+<dt><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p> Open
+a reference to the named Ogg Vorbis audio stream.  This is the normal
+means by which audio is imported into an Electro application.  This
+function initializes a sound for playback, but does not start
+playback.</p>
+
+<dt><tt>free_sound</tt>(<i>stream</i>)<dd><p>
+Close an audio stream and release all resources associated with it.
 </p>
 
-<dt><tt>free_sound</tt>(<i>sound</i>)<dd><p>
-</p>
+<dt><tt>play_sound</tt>(<i>stream</i>)<dd><p> Start playback of an
+audio stream.  If <i>stream</i> is already playing when this function
+is called, then the original playback will stop and the stream will
+be rewound to the beginning before being restarted.  If it is
+necessary to mix multiple instances of one specific sound, then
+multiple sound objects must be used.  </p>
 
-<dt><tt>play_sound</tt>(<i>sound</i>)<dd><p>
-</p>
+<dt><tt>loop_sound</tt>(<i>stream</i>)<dd><p> Begin playing an audio
+stream, but automatically rewind it when the end is reached.  </p>
 
-<dt><tt>loop_sound</tt>(<i>sound</i>)<dd><p>
-</p>
-
-<dt><tt>stop_sound</tt>(<i>sound</i>)<dd><p>
+<dt><tt>stop_sound</tt>(<i>stream</i>)<dd><p> Stop a playing audio
+stream.  This function merely stops playback, and does not release
+any resources.  The stream may be restarted from the beginning.
 </p>
 
 </dl>
@@ -461,14 +511,27 @@ Return the size of the sprite in pixels.</p>
 <h2> Miscellaneous API </h2>
 <dl>
 
-<dt><tt>set_idle</tt>(<i>enabled</i>)<dd><p>
-</p>
+<dt><tt>set_idle</tt>(<i>enabled</i>)<dd><p> Enable or disable the
+<tt>do_timer</tt> callback.  If <i>enabled</i> has value <tt>true</tt>
+then callback will occur.  </p>
 
-<dt><tt>get_joystick</tt>()<dd><p>
-</p>
+<dt><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>
+Return the current value of the X and Y axes of joystick <i>number</i>.</p>
 
-<dt><tt>get_viewport</tt>()<dd><p>
-</p>
+<p class="note"> There is no direct mechanism provided to determine
+the number of joysticks connected to the system.  The capability
+exists in SDL, but it isn't really necessary in Electro.  If an
+application needs to count joysticks, it should observe the device
+numbers recieved by the <tt>do_joystick</tt> callback.  For example,
+allow the user to select the number of active joysticks by pressing
+Start on each.</p>
+
+<dt><i>l, r, b, t</i> = <tt>get_viewport</tt>()<dd><p> Return the
+total size of the display.  The return values <i>l, r, b, t</i>
+give the left, right, bottom, and top extents of the rectangular
+union of all tiles, in pixels.  This information is often useful
+when positioning entities on screen or scaling entities to some
+screen-relative size.  </p>
 
 <dt><tt>add_tile</tt>(<i>name, local_x, local_y, global_x, global_y, width, height</i>)
 <dd><p> Add a tile.  This function is used by configuration scripts
@@ -595,6 +658,8 @@ relative mouse motion. </p>
 
 <pre>
 time = 0
+
+E.enable_idle(true)
 
 function do_timer(dt)
     time = time + dt
