@@ -7,7 +7,7 @@ struct star
 {
     double position[3];
     double temperature;
-    double brightness;
+    double magnitude;
 };
 
 struct node
@@ -23,7 +23,7 @@ struct node
 /*---------------------------------------------------------------------------*/
 
 void galaxy_init(void);
-void galaxy_draw(void);
+void galaxy_draw(const double[3]);
 
 /*---------------------------------------------------------------------------*/
 

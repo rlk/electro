@@ -14,10 +14,14 @@ static void init(void)
 
 static void draw(void)
 {
+    double p[3];
+
+    viewer_get_pos(p);
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     viewer_draw();
-    galaxy_draw();
+    galaxy_draw(p);
 
     SDL_GL_SwapBuffers();
 }
@@ -68,7 +72,7 @@ int main(int argc, char *argv[])
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        if (SDL_SetVideoMode(1024, 1024, 0, SDL_OPENGL))
+        if (SDL_SetVideoMode(800, 600, 0, SDL_OPENGL))
         {
             init();
             draw();

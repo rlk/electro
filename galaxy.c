@@ -10,7 +10,6 @@
 /*---------------------------------------------------------------------------*/
 
 #define N 118218
-static int n = 0;
 
 static GLuint texture;
 static struct star *S;
@@ -30,30 +29,22 @@ void galaxy_star(FILE *fp, int i)
         sscanf(buf + 64, "%lf", &de);
         sscanf(buf + 79, "%lf", &plx);
 
-        if (mag < 15.0)
-        {
-            ra  = M_PI * ra / 180.0;
-            de  = M_PI * de / 180.0;
+        plx =    1000.0 / plx;
+        ra  = M_PI * ra / 180.0;
+        de  = M_PI * de / 180.0;
 
-            if (plx > 0.0001)
-                plx = 1000.0 / plx;
-            else
-                plx = 1000.0;
-
-            S[n].position[0] =  sin(ra) * cos(de) * 10;
-            S[n].position[1] =            sin(de) * 10;
-            S[n].position[2] =  cos(ra) * cos(de) * 10;
-            
-            S[n].temperature =  1;
-            S[n].brightness  =  sqrt(pow(10, -mag / 2.5)) * 0.25;
-
-            n++;
-        }
+        S[i].position[0] =  sin(ra) * cos(de) * plx;
+        S[i].position[1] =            sin(de) * plx;
+        S[i].position[2] =  cos(ra) * cos(de) * plx;
+        
+        S[i].temperature =  0;
+        S[i].magnitude   =  mag - 5.0 * log(plx / 10.0);
     }
 }
 
 void galaxy_init(void)
 {
+    glEnable(GL_POINT_SPRITE_ARB);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -80,36 +71,28 @@ void galaxy_init(void)
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_bill(double x, double y, double z, double k)
-{
-    glPushMatrix();
-    {
-        glTranslated(x, y, z);
-
-        viewer_bill();
-
-        glBegin(GL_QUADS);
-        {
-            glTexCoord2i(0, 0); glVertex3d(+k, +k, 0.0);
-            glTexCoord2i(0, 1); glVertex3d(+k, -k, 0.0);
-            glTexCoord2i(1, 1); glVertex3d(-k, -k, 0.0);
-            glTexCoord2i(1, 0); glVertex3d(-k, +k, 0.0);
-        }
-        glEnd();
-    }
-    glPopMatrix();
-}
-
-void galaxy_draw(void)
+void galaxy_draw(const double p[3])
 {
     int i;
 
+    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+
     glColor4d(1.0, 1.0, 1.0, 1.0);
 
-    for (i = 0; i < n; i++)
-        galaxy_bill(S[i].position[0],
-                    S[i].position[1],
-                    S[i].position[2], S[i].brightness);
+    for (i = 0; i < N; i++)
+    {
+        double dx = S[i].position[0] - p[0];
+        double dy = S[i].position[1] - p[1];
+        double dz = S[i].position[2] - p[2];
+        double d  = sqrt(dx * dx + dy * dy + dz * dz);
+        double m  = S[i].magnitude + 5.0 * log(d / 10.0);
+        double L  = pow(10.0, -m / 2.5);
+
+        glPointSize(sqrt(L) * 25.0);
+        glBegin(GL_POINTS);
+        glVertex3dv(S[i].position);
+        glEnd();
+    }
 }
 
 /*---------------------------------------------------------------------------*/

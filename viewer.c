@@ -1,10 +1,13 @@
 #include <SDL.h>
+#include <math.h>
+
 #include "opengl.h"
 
 /*---------------------------------------------------------------------------*/
 
 static double position[3];
-static double rotation[3];
+static double rotation[2];
+static double distance;
 
 static int button[3];
 
@@ -33,6 +36,15 @@ int viewer_point(int x, int y)
 
         return 1;
     }
+    if (button[2])
+    {
+        distance += dy / 10.0;
+
+        if (distance < 0.0)
+            distance = 0.0;
+
+        return 1;
+    }
 
     return 0;
 }
@@ -45,12 +57,12 @@ int viewer_click(int b, int s)
     case 2: button[1] = s;  break;
     case 3: button[2] = s;  break;
 
-    case 4: if (s) position[2] += 0.25; break;
-    case 5: if (s) position[2] -= 0.25; break;
+    case 4: if (s) distance += 1.0; break;
+    case 5: if (s) distance -= 1.0; break;
     }
 
-    if (position[2] < 0.0)
-        position[2] = 0.0;
+    if (distance < 0.0)
+        distance = 0.0;
 
     return 1;
 }
@@ -59,43 +71,46 @@ int viewer_click(int b, int s)
 
 void viewer_init(void)
 {
-    position[0] =   0;
-    position[1] =   0;
-    position[2] =   0;
-    rotation[0] =   0;
-    rotation[1] =   0;
-    rotation[2] =   0;
-    button[0]   =   0;
-    button[1]   =   0;
-    button[2]   =   0;
+    button[0]   = 0;
+    button[1]   = 0;
+    button[2]   = 0;
+
+    position[0] = 0;
+    position[1] = 0;
+    position[2] = 0;
+    rotation[0] = 0;
+    rotation[1] = 0;
+    distance    = 0;
 }
 
 void viewer_draw(void)
 {
-    GLdouble a = 1.0;
+    GLdouble a = 1.3333;
     GLdouble z = 0.5;
 
     glMatrixMode(GL_PROJECTION);
     {
         glLoadIdentity();
-        glFrustum(-a * z, +a * z, -z, +z, 1.0, 100.0);
+        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000.0);
     }
 
     glMatrixMode(GL_MODELVIEW);
     {
         glLoadIdentity();
-        glTranslated(-position[0], -position[1], -position[2]);
+        glTranslated(0, 0, -distance);
         glRotated(-rotation[0], 1, 0, 0);
         glRotated(-rotation[1], 0, 1, 0);
-        glRotated(-rotation[2], 0, 0, 1);
     }
 }
 
-void viewer_bill(void)
+void viewer_get_pos(double p[3])
 {
-    glRotated(rotation[2], 0, 0, 1);
-    glRotated(rotation[1], 0, 1, 0);
-    glRotated(rotation[0], 1, 0, 0);
+    double T = M_PI * rotation[1] / 180.0;
+    double P = M_PI * rotation[0] / 180.0;
+
+    p[0] = position[0] + sin(T) * cos(P) * distance;
+    p[1] = position[1] -          sin(P) * distance;
+    p[2] = position[2] + cos(T) * cos(P) * distance;
 }
 
 /*---------------------------------------------------------------------------*/
