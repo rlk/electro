@@ -18,202 +18,125 @@
 #include "opengl.h"
 #include "shared.h"
 #include "server.h"
-#include "camera.h"
+#include "entity.h"
 #include "sprite.h"
 
 /*---------------------------------------------------------------------------*/
 
-static struct sprite *S;
+static struct sprite *S     = NULL;
+static int            S_max =   64;
 
-int sprite_exists(int id)
-{
-    return (S && 0 <= id && id < MAXSPRITE && S[id].texture);
-}
+#define sprite_exists(id) (S && 0 <= id && id < S_max && S[id].texture)
 
 /*---------------------------------------------------------------------------*/
 
-int sprite_init(void)
+static int unused_sprite(void)
 {
-    if ((S = (struct sprite *) calloc(MAXSPRITE, sizeof (struct sprite))))
-        return 1;
-    else
-        return 0;
-}
+    int id = 0;
 
-void sprite_draw(void)
-{
-    int x = camera_get_viewport_x();
-    int y = camera_get_viewport_y();
-    int w = camera_get_viewport_w();
-    int h = camera_get_viewport_h();
-    int id;
-
-    glPushAttrib(GL_COLOR_BUFFER_BIT);
-    {
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        /* Load a 1-to-1 pixel orthogonal projection. */
-
-        glMatrixMode(GL_PROJECTION);
-        {
-            glLoadIdentity();
-            glOrtho(x, x + w, y + h, y, -1, 1);
-        }
-        glMatrixMode(GL_MODELVIEW);
-        {
-            glLoadIdentity();
-        }
-
-        /* Iterate across all sprites, rendering each. */
-
-        for (id = 0; id < MAXSPRITE; id++)
-            if (S[id].texture)
-            {
-                glBindTexture(GL_TEXTURE_2D, S[id].texture);
-                
-                glPushMatrix();
-                {
-                    glTranslatef(S[id].pos[0], S[id].pos[1], 0.0f);
-                    glScalef(S[id].size, S[id].size, 1.0f);
-                    glRotatef(S[id].rot, 0.0f, 0.0f, 1.0f);
-                    glColor4f(1.0f, 1.0f, 1.0f, S[id].alpha);
-
-                    glBegin(GL_QUADS);
-                    {
-                        int dx = S[id].w / 2;
-                        int dy = S[id].h / 2;
-
-                        glTexCoord2i(0, 0); glVertex2f(-dx, +dy);
-                        glTexCoord2i(0, 1); glVertex2f(-dx, -dy);
-                        glTexCoord2i(1, 1); glVertex2f(+dx, -dy);
-                        glTexCoord2i(1, 0); glVertex2f(+dx, +dy);
-                    }
-                    glEnd();
-                }
-                glPopMatrix();
-            }
-    }
-    glPopAttrib();
-}
-
-/*---------------------------------------------------------------------------*/
-
-int sprite_load(const char *filename)
-{
-    char buf[NAMELEN];
-    int id = -1;
-
-    if (mpi_isroot())
-    {
-        /* If this host is root, find a free sprite descriptor. */
-
-        for (id = MAXSPRITE - 1; id >= 0; --id)
+    if (S)
+        for (id = 1; id < S_max; ++id)
             if (S[id].texture == 0)
                 break;
-
-        strncpy(buf, filename, NAMELEN);
-        server_send(EVENT_SPRITE_LOAD);
-    }
-
-    /* Broadcast the descriptor and the filename. */
-
-    mpi_assert(MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
-    mpi_assert(MPI_Bcast(buf, NAMELEN, MPI_CHAR, 0, MPI_COMM_WORLD));
-
-    /* Initialize the sprite object. */
-
-    if (id >= 0)
-    {
-        S[id].texture = shared_load_texture(buf, &S[id].w, &S[id].h);
-        S[id].pos[0]  = 0.0f;
-        S[id].pos[1]  = 0.0f;
-        S[id].rot     = 0.0f;
-        S[id].size    = 1.0f;
-        S[id].alpha   = 1.0f;
-    }
 
     return id;
 }
 
-void sprite_free(int id)
+static int expand_sprite(void)
 {
-    if (mpi_isroot())
-        server_send(EVENT_SPRITE_FREE);
+    struct sprite *T;
 
-    /* Broadcast the descriptor. */
+    if (S == NULL)
+    {
+        if ((S = (struct sprite *) calloc(S_max, sizeof (struct sprite))))
+            return 1;
+    }
+
+    if ((T = (struct sprite *) realloc(S, S_max * 2 * sizeof (struct sprite))))
+    {
+        memset(T + S_max, 0, S_max * sizeof (struct sprite));
+        S_max *= 2;
+        S      = T;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+int sprite_create(const char *filename)
+{
+    int id;
+
+    /* If the existing buffer still has room... */
+
+    if ((id = unused_sprite()))
+    {
+        /* Initialize the new sprite. */
+
+        if (mpi_isroot())
+            server_send(EVENT_SPRITE_CREATE);
+
+        /* Syncronize the new sprite. */
+
+        mpi_share_integer(1, &id);
+
+        S[id].texture = shared_load_texture(filename, &S[id].w, &S[id].h);
+        S[id].a       = 1.0f;
+
+        /* Encapsulate this new sprite in an entity. */
+
+        return entity_create(TYPE_SPRITE, id);
+    }
+
+    /* If the buffer is full, double its size.  Retry. */
+
+    if (expand_sprite())
+        return sprite_create(filename);
+
+    /* If the buffer cannot be doubled, fail. */
+
+    return -1;
+}
+
+void sprite_render(int id)
+{
+    if (sprite_exists(id))
+    {
+        glBindTexture(GL_TEXTURE_2D, S[id].texture);
+                
+        glBegin(GL_QUADS);
+        {
+            int dx = S[id].w / 2;
+            int dy = S[id].h / 2;
+
+            glTexCoord2i(0, 0); glVertex2f(-dx, +dy);
+            glTexCoord2i(0, 1); glVertex2f(-dx, -dy);
+            glTexCoord2i(1, 1); glVertex2f(+dx, -dy);
+            glTexCoord2i(1, 0); glVertex2f(+dx, +dy);
+        }
+        glEnd();
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+/* This function should be called only by the entity delete function. */
+
+void sprite_delete(int id)
+{
+    /* Assume delete was triggered by entity delete.  Share the descriptor. */
 
     mpi_share_integer(1, &id);
 
     /* Release the sprite object. */
 
-    if (sprite_exists(id))
-    {
+    if (glIsTexture(S[id].texture))
         glDeleteTextures(1, &S[id].texture);
-        S[id].texture = 0;
-    }
-}
 
-/*---------------------------------------------------------------------------*/
-
-void sprite_move(int id, float x, float y)
-{
-    if (sprite_exists(id))
-    {
-        if (mpi_isroot())
-        {
-            S[id].pos[0] = x;
-            S[id].pos[1] = y;
-
-            server_send(EVENT_SPRITE_MOVE);
-        }
-        mpi_share_integer(1, &id);
-        mpi_share_float(2, S[id].pos);
-    }
-}
-
-void sprite_turn(int id, float a)
-{
-    if (sprite_exists(id))
-    {
-        if (mpi_isroot())
-        {
-            S[id].rot = a;
-
-            server_send(EVENT_SPRITE_TURN);
-        }
-        mpi_share_integer(1, &id);
-        mpi_share_float(1, &S[id].rot);
-    }
-}
-
-void sprite_size(int id, float s)
-{
-    if (sprite_exists(id))
-    {
-        if (mpi_isroot())
-        {
-            S[id].size = s;
-
-            server_send(EVENT_SPRITE_SIZE);
-        }
-        mpi_share_integer(1, &id);
-        mpi_share_float(1, &S[id].size);
-    }
-}
-
-void sprite_fade(int id, float f)
-{
-    if (sprite_exists(id))
-    {
-        if (mpi_isroot())
-        {
-            S[id].alpha = f;
-
-            server_send(EVENT_SPRITE_FADE);
-        }
-        mpi_share_integer(1, &id);
-        mpi_share_float(1, &S[id].alpha);
-    }
+    memset(S + id, 0, sizeof (struct sprite));
 }
 
 /*---------------------------------------------------------------------------*/

@@ -317,7 +317,6 @@ int star_read_catalog_txt(const char *filename)
 
 void star_init(void)
 {
-    int err;
     int len;
 
     star_texture = star_make_texture();

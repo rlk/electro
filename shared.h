@@ -32,18 +32,21 @@ int mpi_share_integer(int, int *);
 #define EVENT_DRAW 1
 #define EVENT_EXIT 2
 
-#define EVENT_CAMERA_MOVE 3
-#define EVENT_CAMERA_TURN 4
-#define EVENT_CAMERA_ZOOM 5
-#define EVENT_CAMERA_DIST 6
-#define EVENT_CAMERA_MAGN 7
+#define EVENT_ENTITY_CREATE 3
+#define EVENT_ENTITY_PARENT 4
+#define EVENT_ENTITY_DELETE 5
+#define EVENT_ENTITY_MOVE   6
+#define EVENT_ENTITY_TURN   7
+#define EVENT_ENTITY_SIZE   8
 
-#define EVENT_SPRITE_LOAD 8
-#define EVENT_SPRITE_FREE 9
-#define EVENT_SPRITE_MOVE 10
-#define EVENT_SPRITE_TURN 11
-#define EVENT_SPRITE_SIZE 12
-#define EVENT_SPRITE_FADE 13
+#define EVENT_SPRITE_CREATE 9
+
+#define EVENT_CAMERA_MOVE 10
+#define EVENT_CAMERA_TURN 11
+#define EVENT_CAMERA_ZOOM 12
+#define EVENT_CAMERA_DIST 13
+#define EVENT_CAMERA_MAGN 14
+
 
 /*---------------------------------------------------------------------------*/
 

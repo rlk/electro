@@ -10,28 +10,44 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef SPRITE_H
-#define SPRITE_H
-
-#include "opengl.h"
+#ifndef ENTITY_H
+#define ENTITY_H
 
 /*---------------------------------------------------------------------------*/
 
-struct sprite
+#define TYPE_PIVOT  1
+#define TYPE_CAMERA 2
+#define TYPE_SPRITE 3
+#define TYPE_OBJECT 4
+#define TYPE_LIGHT  5
+
+struct entity
 {
-    GLuint texture;
-    int    w;
-    int    h;
-    float  a;
+    int type;
+    int data;
+
+    float position[3];
+    float rotation[3];
+    float scale[3];
+
+    int car;
+    int cdr;
+    int par;
 };
 
 /*---------------------------------------------------------------------------*/
 
-int  sprite_create(const char *);
-void sprite_render(int);
-void sprite_delete(int);
+int  entity_exists(int);
+int  entity_istype(int, int);
 
-void sprite_alpha(int, float);
+int  entity_create(int, int);
+void entity_parent(int, int);
+void entity_delete(int);
+void entity_render(void);
+
+void entity_position(int, float, float, float);
+void entity_rotation(int, float, float, float);
+void entity_scale   (int, float, float, float);
 
 /*---------------------------------------------------------------------------*/
 

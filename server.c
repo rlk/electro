@@ -20,7 +20,7 @@
 #include "server.h"
 #include "script.h"
 #include "camera.h"
-#include "sprite.h"
+#include "entity.h"
 #include "galaxy.h"
 #include "star.h"
 
@@ -96,7 +96,6 @@ static void server_init(void)
 {
     glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
 
-    sprite_init();
     galaxy_init();
     star_init();
 
@@ -110,7 +109,7 @@ static void server_draw(void)
 
     camera_draw();
     galaxy_draw();
-    sprite_draw();
+    entity_render();
 
     MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
@@ -228,7 +227,7 @@ void server(int np, int argc, char *argv[])
 
         /* Initialize the main server window. */
 
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0)
         {
             int w = camera_get_viewport_w();
             int h = camera_get_viewport_h();

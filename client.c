@@ -18,7 +18,9 @@
 #include "shared.h"
 #include "client.h"
 #include "camera.h"
+#include "shared.h"
 #include "sprite.h"
+#include "entity.h"
 #include "galaxy.h"
 #include "star.h"
 
@@ -52,21 +54,23 @@ static void client_recv(void)
     {
         switch (type)
         {
-        case EVENT_DRAW: client_recv_draw();             break;
-        case EVENT_EXIT: client_recv_exit();             break;
+        case EVENT_DRAW:          client_recv_draw();      break;
+        case EVENT_EXIT:          client_recv_exit();      break;
 
-        case EVENT_CAMERA_MOVE: camera_set_org(0, 0, 0); break;
-        case EVENT_CAMERA_TURN: camera_set_rot(0, 0, 0); break;
-        case EVENT_CAMERA_DIST: camera_set_dist(0);      break;
-        case EVENT_CAMERA_MAGN: camera_set_magn(0);      break;
-        case EVENT_CAMERA_ZOOM: camera_set_zoom(0);      break;
+        case EVENT_ENTITY_PARENT: entity_parent(0, 0);     break;
+        case EVENT_ENTITY_DELETE: entity_delete(0);        break;
 
-        case EVENT_SPRITE_LOAD: sprite_load(NULL);       break;
-        case EVENT_SPRITE_FREE: sprite_free(0);          break;
-        case EVENT_SPRITE_MOVE: sprite_move(0, 0, 0);    break;
-        case EVENT_SPRITE_TURN: sprite_turn(0, 0);       break;
-        case EVENT_SPRITE_SIZE: sprite_size(0, 0);       break;
-        case EVENT_SPRITE_FADE: sprite_fade(0, 0);       break;
+        case EVENT_ENTITY_MOVE:   entity_position(0, 0, 0, 0); break;
+        case EVENT_ENTITY_TURN:   entity_rotation(0, 0, 0, 0); break;
+        case EVENT_ENTITY_SIZE:   entity_scale(0, 0, 0, 0);    break;
+
+        case EVENT_SPRITE_CREATE: sprite_create(NULL);     break;
+
+        case EVENT_CAMERA_MOVE: camera_set_org(0, 0, 0);   break;
+        case EVENT_CAMERA_TURN: camera_set_rot(0, 0, 0);   break;
+        case EVENT_CAMERA_DIST: camera_set_dist(0);        break;
+        case EVENT_CAMERA_MAGN: camera_set_magn(0);        break;
+        case EVENT_CAMERA_ZOOM: camera_set_zoom(0);        break;
         }
     }
 }
@@ -77,7 +81,6 @@ static void client_init(void)
 {
     glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
 
-    sprite_init();
     galaxy_init();
     star_init();
 }
@@ -88,7 +91,7 @@ static void client_draw(void)
 
     camera_draw();
     galaxy_draw();
-    sprite_draw();
+    entity_render();
 
     MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();

@@ -17,38 +17,41 @@
 #include "shared.h"
 #include "server.h"
 #include "camera.h"
-#include "sprite.h"
 #include "object.h"
+#include "sprite.h"
+#include "entity.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/
 
 static lua_State *L;
 
-#define TYPE_SPRITE 1
-#define TYPE_OBJECT 2
-
 /*---------------------------------------------------------------------------*/
-/* Sprite descriptor userdata handlers                                       */
+/* Entity userdata handlers                                                  */
 
+static int lua_toentity(lua_State *L, int i)
+{
+    return ((int *) lua_touserdata(L, i))[0];
+}
+
+static int lua_isentity(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i);
+}
+
+static void lua_pushentity(lua_State *L, int id)
+{
+    int *p = (int *) lua_newuserdata(L, sizeof (int));
+    *p = id;
+}
+
+/*
 static int lua_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && ((int *) lua_touserdata(L, i))[0] == TYPE_SPRITE;
+        && entity_istype(lua_toentity(L, i), TYPE_SPRITE);
 }
-
-static int lua_tosprite(lua_State *L, int i)
-{
-    return ((int *) lua_touserdata(L, i))[1];
-}
-
-static void lua_pushsprite(lua_State *L, int id)
-{
-    int *p = lua_newuserdata(L, sizeof (int) * 2);
-
-    p[0] = TYPE_SPRITE;
-    p[1] = id;
-}
+*/
 
 /*---------------------------------------------------------------------------*/
 /* Function argument error reporters                                         */
@@ -62,8 +65,10 @@ static void script_type_error(const char *name,
     {
         switch (((int *) lua_touserdata(L, i))[0])
         {
+        /*
         case TYPE_SPRITE: got = "sprite"; break;
         case TYPE_OBJECT: got = "object"; break;
+        */
         }
     }
     else got = lua_typename(L, lua_type(L, i));
@@ -135,18 +140,18 @@ static int script_getboolean(const char *name, lua_State *L, int i)
     return 0;
 }
 
-static int script_getsprite(const char *name, lua_State *L, int i)
+static int script_getentity(const char *name, lua_State *L, int i)
 {
     int n = lua_gettop(L);
 
-    /* Check the argument count, check for a sprite, and return it. */
+    /* Check the argument count, check for a entity, and return it. */
 
     if (1 <= -i && -i <= n)
     {
-        if (lua_issprite(L, i))
-            return lua_tosprite(L, i);
+        if (lua_isentity(L, i))
+            return lua_toentity(L, i);
         else
-            script_type_error(name, "sprite", L, i);
+            script_type_error(name, "entity", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -225,56 +230,63 @@ static int script_camera_zoom(lua_State *L)
 
 /*---------------------------------------------------------------------------*/
 
-static int script_sprite_load(lua_State *L)
+static int script_sprite_create(lua_State *L)
 {
-    const char *name = "sprite_load";
+    const char *name = "sprite_create";
 
-    lua_pushsprite(L, sprite_load(script_getstring(name, L, -1)));
+    lua_pushentity(L, sprite_create(script_getstring(name, L, -1)));
     return 1;
 }
 
-static int script_sprite_free(lua_State *L)
+static int script_entity_parent(lua_State *L)
 {
-    const char *name = "sprite_free";
+    const char *name = "entity_parent";
 
-    sprite_free(script_getsprite(name, L, -1));
+    entity_parent(script_getentity(name, L, -2),
+                  script_getentity(name, L, -1));
     return 0;
 }
 
-static int script_sprite_move(lua_State *L)
+static int script_entity_delete(lua_State *L)
 {
-    const char *name = "sprite_move";
+    const char *name = "entity_delete";
 
-    sprite_move(script_getsprite(name, L, -3),
-                script_getnumber(name, L, -2),
-                script_getnumber(name, L, -1));
+    entity_delete(script_getentity(name, L, -1));
     return 0;
 }
 
-static int script_sprite_turn(lua_State *L)
-{
-    const char *name = "sprite_turn";
+/*---------------------------------------------------------------------------*/
 
-    sprite_turn(script_getsprite(name, L, -2),
-                script_getnumber(name, L, -1));
+static int script_entity_position(lua_State *L)
+{
+    const char *name = "entity_position";
+
+    entity_position(script_getentity(name, L, -4),
+                    script_getnumber(name, L, -3),
+                    script_getnumber(name, L, -2),
+                    script_getnumber(name, L, -1));
     return 0;
 }
 
-static int script_sprite_size(lua_State *L)
+static int script_entity_rotation(lua_State *L)
 {
-    const char *name = "sprite_size";
+    const char *name = "entity_rotation";
 
-    sprite_size(script_getsprite(name, L, -2),
-                script_getnumber(name, L, -1));
+    entity_rotation(script_getentity(name, L, -4),
+                    script_getnumber(name, L, -3),
+                    script_getnumber(name, L, -2),
+                    script_getnumber(name, L, -1));
     return 0;
 }
 
-static int script_sprite_fade(lua_State *L)
+static int script_entity_scale(lua_State *L)
 {
-    const char *name = "sprite_fade";
+    const char *name = "entity_scale";
 
-    sprite_fade(script_getsprite(name, L, -2),
-                script_getnumber(name, L, -1));
+    entity_scale(script_getentity(name, L, -4),
+                 script_getnumber(name, L, -3),
+                 script_getnumber(name, L, -2),
+                 script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -299,13 +311,19 @@ int script_init(void)
         lua_register(L, "camera_magn", script_camera_magn);
         lua_register(L, "camera_zoom", script_camera_zoom);
 
+        lua_register(L, "sprite_create",   script_sprite_create);
+        lua_register(L, "entity_parent",   script_entity_parent);
+        lua_register(L, "entity_delete",   script_entity_delete);
+
+        lua_register(L, "entity_position", script_entity_position);
+        lua_register(L, "entity_rotation", script_entity_rotation);
+        lua_register(L, "entity_scale",    script_entity_scale);
+
+/*
         lua_register(L, "sprite_load", script_sprite_load);
         lua_register(L, "sprite_free", script_sprite_free);
-        lua_register(L, "sprite_move", script_sprite_move);
-        lua_register(L, "sprite_turn", script_sprite_turn);
-        lua_register(L, "sprite_size", script_sprite_size);
         lua_register(L, "sprite_fade", script_sprite_fade);
-
+*/
         return 1;
     }
     return 0;

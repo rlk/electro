@@ -76,11 +76,10 @@ function do_click(b, s)
 
         if b == 3 then
             if foo == -1 then
-                foo = sprite_load("head.png")
-                sprite_size(foo, 0.5)
-                sprite_move(foo, foo_x, foo_y)
+                foo = sprite_create("head.png")
+--                entity_position(foo, foo_x, foo_y, 0)
             else
-                sprite_free(foo)
+                entity_delete(foo)
                 foo = -1
             end
 
@@ -98,7 +97,7 @@ function do_point(dx, dy)
     if btn[1] and foo ~= -1 then
         foo_x = foo_x + dx
         foo_y = foo_y + dy
-        sprite_move(foo, foo_x, foo_y)
+        entity_position(foo, foo_x, foo_y, 0)
     end
 
     if btn[2] then
@@ -133,7 +132,7 @@ function do_timer(dt)
 
     camera_turn(rot_x, rot_y, 0)
 
-    if (foo ~= -1) then sprite_turn(foo, foo_a) end
+    if (foo ~= -1) then entity_rotation(foo, foo_a, 0, 0) end
 
     return true
 end
