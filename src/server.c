@@ -23,6 +23,7 @@
 #include "sound.h"
 #include "image.h"
 #include "event.h"
+#include "version.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -149,7 +150,7 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%s - %d FPS", TITLE, fps_new);
+        sprintf(buf, "%s -%s- %d FPS", TITLE, REV, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;

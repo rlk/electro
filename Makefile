@@ -70,6 +70,11 @@ OBJS=	src/opengl.o   \
 .c.o :
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
+all: src/version.h $(TARG)
+
+src/version.h :
+	echo "#define REV \"" `svn info | grep Revision` "\""> src/version.h
+
 $(TARG) : $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
