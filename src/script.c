@@ -940,6 +940,20 @@ int do_click_script(int b, int s)
     return 0;
 }
 
+int do_frame_script(void)
+{
+    const char *name = "do_frame";
+
+    lua_getglobal(L, name);
+
+    if (lua_isfunction(L, -1))
+        return lua_callassert(L, 0, 1, name);
+    else
+        lua_pop(L, 1);
+
+    return 0;
+}
+
 int do_timer_script(int t)
 {
     const char *name = "do_timer";

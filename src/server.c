@@ -247,6 +247,8 @@ static int server_loop(void)
 
     if (server_grab || dirty)
     {
+        do_frame_script();
+
         if (dirty)
             pack_event(EVENT_DRAW);
 

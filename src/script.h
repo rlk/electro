@@ -23,6 +23,7 @@ int  do_start_script(void);
 int  do_click_script(int, int);
 int  do_point_script(int, int);
 int  do_timer_script(int);
+int  do_frame_script(void);
 int  do_keyboard_script(int, int);
 int  do_joystick_script(int, int, int);
 

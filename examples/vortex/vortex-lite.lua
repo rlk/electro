@@ -50,6 +50,13 @@ function do_keyboard(k, s)
     return true
 end
 
+function do_frame()
+    local i       = E.get_star_index(galaxy, camera)
+    local x, y, z = E.get_star_position(galaxy, i)
+
+--  E.print_console(string.format("%d %f %f %f\n", i, x, y, z))
+end
+
 function do_point(dx, dy)
 
     if setzoom then      -- Set the camera zoom.
@@ -92,11 +99,6 @@ function do_point(dx, dy)
 
         E.set_entity_rotation(camera, x, y, z)
     end
-
-    local i       = E.get_star_index(galaxy, camera)
-    local x, y, z = E.get_star_position(galaxy, i)
-
---  E.print_console(string.format("%d %f %f %f\n", i, x, y, z))
 
     return true
 end

@@ -160,28 +160,42 @@ int node_draw(const struct node *N, int n, int i,
     return c;
 }
 
+
+static int node_pick_L(const struct node *N, int n,
+                       const struct star *S, int i,
+                       const float p[3], const float v[3], float *d)
+{
+    if (p[i] > N[n].k && v[i] > 0)
+        return -1;
+    else
+        return node_pick(N, N[n].nodeL, S, (i + 1) % 3, p, v, d);
+}
+
+static int node_pick_R(const struct node *N, int n,
+                       const struct star *S, int i,
+                       const float p[3], const float v[3], float *d)
+{
+    if (p[i] < N[n].k && v[i] < 0)
+        return -1;
+    else
+        return node_pick(N, N[n].nodeR, S, (i + 1) % 3, p, v, d);
+}
+
 int node_pick(const struct node *N, int n,
               const struct star *S, int i,
               const float p[3], const float v[3], float *d)
 {
     int s = -1;
 
-    *d = FLT_MIN;
-
     if (N[n].nodeL && N[n].nodeR)
     {
-        float dL = FLT_MIN;
-        float dR = FLT_MIN;
-        int   sL = -1;
-        int   sR = -1;
+        float dL = -1.0f;
+        float dR = -1.0f;
 
         /* Test the left and right child nodes, as necessary. */
-
-        if (p[i] <= N[n].k || v[i] < 0)
-            sL = node_pick(N, N[n].nodeL, S, (i + 1) % 3, p, v, &dL);
-
-        if (p[i] >= N[n].k || v[i] > 0)
-            sR = node_pick(N, N[n].nodeR, S, (i + 1) % 3, p, v, &dR);
+        
+        int sL = node_pick_L(N, n, S, (i + 1) % 3, p, v, &dL);
+        int sR = node_pick_R(N, n, S, (i + 1) % 3, p, v, &dR);
 
         /* Note the best find thus far. */
 
@@ -192,6 +206,8 @@ int node_pick(const struct node *N, int n,
     {
         int   si;
         float di;
+
+        *d = FLT_MIN;
 
         /* Find the nearest star at this node. */
 
