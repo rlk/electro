@@ -10,12 +10,26 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <png.h>
 
 #include "opengl.h"
+#include "buffer.h"
+#include "shared.h"
+#include "entity.h"
 #include "image.h"
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef _WIN32
+#define FMODE_RB "rb"
+#define FMODE_WB "wb"
+#else
+#define FMODE_RB "r"
+#define FMODE_WB "w"
+#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -27,7 +41,7 @@ static GLubyte *image_punt(const char *message)
 
 /*---------------------------------------------------------------------------*/
 
-GLuint image_make_tex(const GLubyte *p, int w, int h, int b)
+GLuint image_make_tex(const void *p, int w, int h, int b)
 {
     GLenum f = GL_RGB;
     GLuint o;
@@ -36,10 +50,10 @@ GLuint image_make_tex(const GLubyte *p, int w, int h, int b)
 
     switch (b)
     {
-    case 1: f = GL_LUMINANCE;        break;
-    case 2: f = GL_LUMINANCE_ALPHA;  break;
-    case 3: f = GL_RGB;              break;
-    case 4: f = GL_RGBA;             break;
+    case 1: f = GL_LUMINANCE;       break;
+    case 2: f = GL_LUMINANCE_ALPHA; break;
+    case 3: f = GL_RGB;             break;
+    case 4: f = GL_RGBA;            break;
     }
 
     /* Create a GL texture object. */
@@ -47,15 +61,18 @@ GLuint image_make_tex(const GLubyte *p, int w, int h, int b)
     glGenTextures(1, &o);
     glBindTexture(GL_TEXTURE_2D, o);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, f, w, h, f, GL_UNSIGNED_BYTE, p);
+
     opengl_check("image_make_tex");
 
     return o;
@@ -63,9 +80,9 @@ GLuint image_make_tex(const GLubyte *p, int w, int h, int b)
 
 /*---------------------------------------------------------------------------*/
 
-GLubyte *image_load_png(const char *filename, int *width,
-                                              int *height,
-                                              int *bytes)
+void *image_load_png(const char *filename, int *width,
+                                           int *height,
+                                           int *bytes)
 {
     FILE   *fp = NULL;
     GLubyte *p = NULL;
@@ -142,3 +159,103 @@ GLubyte *image_load_png(const char *filename, int *width,
 }
 
 /*---------------------------------------------------------------------------*/
+
+#define IMAXINIT 256
+
+static struct image *I;
+static int           I_max;
+
+static int image_exists(int id)
+{
+    return (I && 0 <= id && id < I_max && I[id].texture);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int image_init(void)
+{
+    if ((I = (struct image *) calloc(IMAXINIT, sizeof (struct image))))
+    {
+        I_max = IMAXINIT;
+        return 1;
+    }
+    return 0;
+}
+
+void image_draw(int id)
+{
+    if (image_exists(id))
+        glBindTexture(GL_TEXTURE_2D, I[id].texture);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int image_send_create(const char *filename)
+{
+    int id;
+
+    /* Scan the current images for an existing instance of the named file. */
+
+    for (id = 0; id < IMAXINIT; ++id)
+        if (I[id].filename && strcmp(I[id].filename, filename) == 0)
+            return id;
+
+    /* Didn't find it.  It's new. */
+
+    if ((id = buffer_unused(I_max, image_exists)) >= 0)
+    {
+        /* Note the file name. */
+
+        I[id].filename = (char *) calloc(strlen(filename) + 1, 1);
+
+        strcpy(I[id].filename, filename);
+
+        /* Load and pack the image. */
+
+        if ((I[id].p = image_load_png(filename, &I[id].w, &I[id].h, &I[id].b)))
+        {
+            pack_event(EVENT_IMAGE_CREATE);
+            pack_index(id);
+            pack_index(I[id].w);
+            pack_index(I[id].h);
+            pack_index(I[id].b);
+            pack_alloc(I[id].w * I[id].h * I[id].b, I[id].p);
+
+            I[id].texture = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+
+            return id;
+        }
+    }
+    return -1;
+}
+
+void image_recv_create(void)
+{
+    int  id = unpack_index();
+
+    I[id].w = unpack_index();
+    I[id].h = unpack_index();
+    I[id].b = unpack_index();
+    I[id].p = unpack_alloc(I[id].w * I[id].h * I[id].b);
+
+    I[id].texture = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void image_delete(int id)
+{
+    if (image_exists(id))
+    {
+        if (I[id].filename) free(I[id].filename);
+        if (I[id].p)        free(I[id].p);
+
+        if (glIsTexture(I[id].texture))
+            glDeleteTextures(1, &I[id].texture);
+
+        memset(I + id, 0, sizeof (struct image));
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+

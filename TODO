@@ -1,8 +1,16 @@
-Object texture / image type
+Image type
+Sprite image / texcoord
+Object edge
+Galaxy object
+
+Object texture
 Relative entity transform
 
-Galaxy object
 Documentation up to date
 Particle system? (stars?)
+
+Improve assertions (delineate necessary thing_exists vs thing_assert)
+Improve linear descriptor seaching
+Improve clone reference counting
 
 Audit includes

@@ -60,9 +60,10 @@ int  mpi_share_integer(int, int *);
 #define EVENT_OBJECT_CREATE 13
 #define EVENT_LIGHT_CREATE  14
 #define EVENT_PIVOT_CREATE  15
+#define EVENT_IMAGE_CREATE  16
 
-#define EVENT_CAMERA_DIST   16
-#define EVENT_CAMERA_ZOOM   17
+#define EVENT_CAMERA_DIST   17
+#define EVENT_CAMERA_ZOOM   18
 
 /*---------------------------------------------------------------------------*/
 

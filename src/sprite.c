@@ -134,12 +134,15 @@ void sprite_delete(int sd)
 {
     /* Release the sprite object. */
 
-    if (S[sd].p) free(S[sd].p);
+    if (sprite_exists(sd))
+    {
+        if (S[sd].p) free(S[sd].p);
 
-    if (glIsTexture(S[sd].texture))
-        glDeleteTextures(1, &S[sd].texture);
+        if (glIsTexture(S[sd].texture))
+            glDeleteTextures(1, &S[sd].texture);
 
-    memset(S + sd, 0, sizeof (struct sprite));
+        memset(S + sd, 0, sizeof (struct sprite));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

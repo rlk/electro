@@ -17,18 +17,30 @@
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef _WIN32
-#define FMODE_RB "rb"
-#define FMODE_WB "wb"
-#else
-#define FMODE_RB "r"
-#define FMODE_WB "w"
-#endif
+struct image
+{
+    GLuint texture;
+    char *filename;
+    void *p;
+    int   w;
+    int   h;
+    int   b;
+};
 
 /*---------------------------------------------------------------------------*/
 
-GLuint   image_make_tex(const GLubyte *, int, int, int);
-GLubyte *image_load_png(const char *, int *, int *, int *);
+GLuint image_make_tex(const void *, int,   int,   int);
+void  *image_load_png(const char *, int *, int *, int *);
+
+/*---------------------------------------------------------------------------*/
+
+int  image_init(void);
+void image_draw(int);
+
+int  image_send_create(const char *);
+void image_recv_create(void);
+
+void image_delete(int);
 
 /*---------------------------------------------------------------------------*/
 

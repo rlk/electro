@@ -23,6 +23,7 @@
 #include "object.h"
 #include "light.h"
 #include "pivot.h"
+#include "image.h"
 #include "entity.h"
 #include "galaxy.h"
 #include "star.h"
@@ -81,6 +82,7 @@ static void client_recv(void)
         case EVENT_OBJECT_CREATE: object_recv_create();   break;
         case EVENT_LIGHT_CREATE:  light_recv_create();    break;
         case EVENT_PIVOT_CREATE:  pivot_recv_create();    break;
+        case EVENT_IMAGE_CREATE:  image_recv_create();    break;
 
         case EVENT_CAMERA_DIST:   camera_recv_dist();     break;
         case EVENT_CAMERA_ZOOM:   camera_recv_zoom();     break;
