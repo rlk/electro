@@ -1,0 +1,26 @@
+
+                              * ELECTRO *
+
+* Running
+
+    Set the ELECTRO_CONFIG environment variable to give the location
+    of the MPI machinefiles and Lua display configuration scripts.
+
+    Using bash:
+
+        $ export ELECTRO_CONFIG=$HOME/electro/data/config
+
+    Or using tcsh:
+
+        > setenv ELECTRO_CONFIG $HOME/electro/data/config
+
+    The run scripts take a list of Lua files as parameters.  Each file is
+    executed in turn.  Lua code should be careful to manage the location of
+    any data files.  By default, application data is loaded from the current
+    working directory.
+
+        $ cd electro/data
+        $ ../run_yorda view.lua
+
+
+* rlk@evl.uic.edu

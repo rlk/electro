@@ -1,12 +1,10 @@
 Fix server viewport
-remove glext.h?
 Delete light / camera / object
 Add alpha to entity.  Remove it from sprite.
 Wire mode to object.
 Relative entity transform
 Separate electro/galaxy
 Remove MPI_BYTE uses (separate hostname from viewport)
-Move data to dir
 Audio
 Joystick
 Audit includes
