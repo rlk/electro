@@ -23,15 +23,25 @@ button_thrust = 3
 
 -------------------------------------------------------------------------------
 
+sound_bullet          = nil
+sound_free            = nil
+sound_rock1_explosion = nil
+sound_rock2_explosion = nil
+sound_rock3_explosion = nil
+sound_ship_explosion  = nil
+sound_thrust1         = nil
+sound_thrust2         = nil
+sound_thrust3         = nil
+music                 = nil
+
+-------------------------------------------------------------------------------
+
 state     = "none"
 
 init      = { }
 init_flag = true
 
 time  = 0
-fire  = nil
-boom  = nil
-music = nil
 index = 0
 
 serial    = 1
@@ -303,7 +313,7 @@ function add_bullet()
         curr_score_set(curr_score)
     end
 
-    if sound then E.sound_play(fire) end
+    if sound then E.sound_play(sound_bullet) end
 end
 
 function del_bullet(id, bullet)
@@ -331,7 +341,10 @@ function add_explosion(entity, source, size)
 
     table.insert(explosions, explosion)
 
-    if sound then E.sound_play(boom) end
+    if size == 1 then E.sound_play(sound_rock1_explosion) end
+    if size == 2 then E.sound_play(sound_rock2_explosion) end
+    if size == 3 then E.sound_play(sound_rock3_explosion) end
+    if size == 5 then E.sound_play(sound_ship_explosion) end
 end
 
 function del_explosion(id, explosion)
@@ -382,6 +395,7 @@ function add_score(entity, value)
         ships = ships + 1
         spare_set(ships)
         free_score = free_score + 1000
+        E.sound_play(sound_free)
     end
 
     -- Select the correct sprite for the given value.
@@ -833,8 +847,15 @@ function do_start()
     math.randomseed(os.time())
 
     if sound then
-        fire  = E.sound_load("fizzle.ogg")
-        boom  = E.sound_load("explosion.ogg")
+        sound_bullet          = E.sound_load("bullet.ogg")
+        sound_free            = E.sound_load("free.ogg")
+        sound_rock1_explosion = E.sound_load("rock1_explosion.ogg")
+        sound_rock2_explosion = E.sound_load("rock2_explosion.ogg")
+        sound_rock3_explosion = E.sound_load("rock3_explosion.ogg")
+        sound_ship_explosion  = E.sound_load("ship_explosion.ogg")
+        sound_thrust1         = E.sound_load("thrust1.ogg")
+        sound_thrust2         = E.sound_load("thrust2.ogg")
+        sound_thrust3         = E.sound_load("thrust3.ogg")
     end
     if music then
         music = E.sound_load("inter.ogg")
@@ -1015,6 +1036,20 @@ function do_joystick(n, b, s)
     if b == button_thrust then
         thrusting = s
         E.entity_flag(thrust, E.entity_flag_hidden, not thrusting)
+
+        if state == "ready" then
+            goto_state("play")
+        end
+
+        if state == "play" then
+            if thrusting then
+                E.sound_play(sound_thrust1)
+                E.sound_loop(sound_thrust2)
+            else
+                E.sound_stop(sound_thrust2)
+                E.sound_play(sound_thrust3)
+            end
+        end
 
         if state == "high" and index > 1 then
             E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
