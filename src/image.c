@@ -15,21 +15,12 @@
 #include <string.h>
 #include <png.h>
 
+#include "utility.h"
 #include "opengl.h"
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
 #include "image.h"
-
-/*---------------------------------------------------------------------------*/
-
-#ifdef _WIN32
-#define FMODE_RB "rb"
-#define FMODE_WB "wb"
-#else
-#define FMODE_RB "r"
-#define FMODE_WB "w"
-#endif
 
 /*---------------------------------------------------------------------------*/
 

@@ -238,6 +238,8 @@ void server(int argc, char *argv[])
 {
     int argi;
 
+    galaxy_prep();
+
     if (script_init())
     {
         viewport_init();
@@ -278,7 +280,6 @@ void server(int argc, char *argv[])
                 server_init();
                 entity_init();
                 script_start();
-                enable_grab(1);
 
                 /* Block on SDL events.  Service them as they arrive. */
 

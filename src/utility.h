@@ -10,42 +10,30 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef GALAXY_H
-#define GALAXY_H
+#ifndef UTILITY_H
+#define UTILITY_H
 
-#include "node.h"
-#include "star.h"
-
-/*---------------------------------------------------------------------------*/
-
-struct galaxy
-{
-    int    S_num;
-    int    N_num;
-
-    float  magn;
-    float  bound[6];
-
-    struct star *S;
-    struct node *N;
-};
+#include <netinet/in.h>
 
 /*---------------------------------------------------------------------------*/
 
-int  galaxy_init(void);
-void galaxy_draw(int, int, const float[16]);
-
-void galaxy_prep(void);
+#ifdef _WIN32
+#define FMODE_RB "rb"
+#define FMODE_WB "wb"
+#else
+#define FMODE_RB "r"
+#define FMODE_WB "w"
+#endif
 
 /*---------------------------------------------------------------------------*/
 
-int  galaxy_send_create(const char *);
-void galaxy_recv_create(void);
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
-void galaxy_send_magn(int, float);
-void galaxy_recv_magn(void);
+/*---------------------------------------------------------------------------*/
 
-void galaxy_delete(int);
+float htonf(float);
+float ntohf(float);
 
 /*---------------------------------------------------------------------------*/
 

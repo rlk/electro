@@ -96,10 +96,64 @@ static void camera_plane(float plane[4], const float a[3],
     plane[3]  = (plane[0] * a[0] + plane[1] * a[1] + plane[2] * a[2]);
 }
 
-static void camera_persp(float V[16], const float P[3],
-                         float th, float ph,
-                         float l,  float r,
-                         float b,  float t)
+/*---------------------------------------------------------------------------*/
+
+static void camera_ortho(float V[16], const float pos[3], float T, float P,
+                                                          float l, float r,
+                                                          float b, float t)
+{
+    float R[3], U[3], v[3];
+
+    /* Find the view vector. */
+
+    v[0] = -(float) (cos(P) * sin(T));
+    v[1] =  (float) (sin(P));
+    v[2] = -(float) (cos(P) * cos(T));
+
+    /* Find the view right vector. */
+
+    R[0] =  (float) cos(T);
+    R[1] =  0;
+    R[2] = -(float) sin(T);
+
+    /* Find the view up vector. */
+    
+    U[0] = R[1] * v[2] - R[2] * v[1];
+    U[1] = R[2] * v[0] - R[0] * v[2];
+    U[2] = R[0] * v[1] - R[1] * v[0];
+
+    /* Find the bottom plane. */
+
+    V[0] =  U[0];
+    V[1] =  U[1];
+    V[2] =  U[2];
+    V[3] =  V[0] * pos[0] + V[1] * pos[1] + V[2] * pos[2] + b;
+
+    /* Find the top plane. */
+
+    V[4] = -U[0];
+    V[5] = -U[1];
+    V[6] = -U[2];
+    V[7] =  V[4] * pos[0] + V[5] * pos[1] + V[6] * pos[2] - t;
+
+    /* Find the left plane. */
+
+    V[ 8] =  R[0];
+    V[ 9] =  R[1];
+    V[10] =  R[2];
+    V[11] =  V[8] * pos[0] + V[9] * pos[1] + V[10] * pos[2] + l;
+
+    /* Find the right plane. */
+
+    V[12] = -R[0];
+    V[13] = -R[1];
+    V[14] = -R[2];
+    V[15] =  V[12] * pos[0] + V[13] * pos[1] + V[14] * pos[2] - r;
+}
+
+static void camera_persp(float V[16], const float pos[3], float T, float P,
+                                                          float l, float r,
+                                                          float b, float t)
 {
     const float n = CAMERA_NEAR;
 
@@ -108,15 +162,15 @@ static void camera_persp(float V[16], const float P[3],
 
     /* Find the view vector. */
 
-    v[0] = -(float) (cos(ph) * sin(th));
-    v[1] =  (float) (sin(ph));
-    v[2] = -(float) (cos(ph) * cos(th));
+    v[0] = -(float) (cos(P) * sin(T));
+    v[1] =  (float) (sin(P));
+    v[2] = -(float) (cos(P) * cos(T));
 
     /* Find the view right vector. */
 
-    R[0] =  (float) cos(th);
+    R[0] =  (float) cos(T);
     R[1] =  0;
-    R[2] = -(float) sin(th);
+    R[2] = -(float) sin(T);
 
     /* Find the view up vector. */
     
@@ -126,9 +180,9 @@ static void camera_persp(float V[16], const float P[3],
 
     /* Find the view center.*/
 
-    c[0] = P[0] + v[0] * n;
-    c[1] = P[1] + v[1] * n;
-    c[2] = P[2] + v[2] * n;
+    c[0] = pos[0] + v[0] * n;
+    c[1] = pos[1] + v[1] * n;
+    c[2] = pos[2] + v[2] * n;
 
     /* Find the bottom left position. */
 
@@ -156,10 +210,10 @@ static void camera_persp(float V[16], const float P[3],
 
     /* Find the view frustum planes. */
 
-    camera_plane(V +  0, P, A, B);
-    camera_plane(V +  4, P, B, C);
-    camera_plane(V +  8, P, C, D);
-    camera_plane(V + 12, P, D, A);
+    camera_plane(V +  0, pos, B, A);
+    camera_plane(V +  4, pos, C, B);
+    camera_plane(V +  8, pos, D, C);
+    camera_plane(V + 12, pos, A, D);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -194,14 +248,14 @@ void camera_draw(int id, int cd, const float V[16])
         int viewport_y1 = viewport_local_h() + viewport_y0;
         int viewport_W  = viewport_total_w();
 
-        double th = PI * rot[1] / 180.0;
-        double ph = PI * rot[0] / 180.0;
+        double T = PI * rot[1] / 180.0;
+        double P = PI * rot[0] / 180.0;
 
         /* Compute the camera position and orientation vectors. */
 
-        pos[0] += (float) (sin(th) * cos(ph) * C[cd].dist);
-        pos[1] -= (float) (          sin(ph) * C[cd].dist);
-        pos[2] += (float) (cos(th) * cos(ph) * C[cd].dist);
+        pos[0] += (float) (sin(T) * cos(P) * C[cd].dist);
+        pos[1] -= (float) (         sin(P) * C[cd].dist);
+        pos[2] += (float) (cos(T) * cos(P) * C[cd].dist);
 
         /* Load projection and modelview matrices for this camera. */
 
@@ -216,6 +270,8 @@ void camera_draw(int id, int cd, const float V[16])
                 b = -C[cd].zoom * viewport_y1;
                 t = -C[cd].zoom * viewport_y0;
 
+                camera_ortho(W, pos, T, P, l, r, b, t);
+
                 glOrtho(l, r, b, t, -CAMERA_FAR, CAMERA_FAR);
             }
             if (C[cd].type == CAMERA_PERSP)
@@ -225,9 +281,9 @@ void camera_draw(int id, int cd, const float V[16])
                 b = -C[cd].zoom * viewport_y1 / viewport_W;
                 t = -C[cd].zoom * viewport_y0 / viewport_W;
 
-                glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR);
+                camera_persp(W, pos, T, P, l, r, b, t);
 
-                camera_persp(W, pos, th, ph, l, r, b, t);
+                glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR);
             }
         }
         glMatrixMode(GL_MODELVIEW);
@@ -240,8 +296,8 @@ void camera_draw(int id, int cd, const float V[16])
 
         /* Use the view configuration as vertex program parameters. */
 
-        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                   0, pos[0], pos[1], pos[2], 1);
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
+                                   pos[0], pos[1], pos[2], 1);
 
         /* Render all children using this camera. */
 

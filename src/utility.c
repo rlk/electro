@@ -10,43 +10,40 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef GALAXY_H
-#define GALAXY_H
-
-#include "node.h"
-#include "star.h"
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <netinet/in.h>
+#endif
 
 /*---------------------------------------------------------------------------*/
+/* Byte order float handlers                                                 */
 
-struct galaxy
+union swapper
 {
-    int    S_num;
-    int    N_num;
-
-    float  magn;
-    float  bound[6];
-
-    struct star *S;
-    struct node *N;
+    float f;
+    long  l;
 };
 
+float htonf(float f)
+{
+    union swapper s;
+
+    s.f = f;
+    s.l = htonl(s.l);
+
+    return s.f;
+}
+
+float ntohf(float f)
+{
+    union swapper s;
+
+    s.f = f;
+    s.l = ntohl(s.l);
+
+    return s.f;
+}
+
 /*---------------------------------------------------------------------------*/
 
-int  galaxy_init(void);
-void galaxy_draw(int, int, const float[16]);
-
-void galaxy_prep(void);
-
-/*---------------------------------------------------------------------------*/
-
-int  galaxy_send_create(const char *);
-void galaxy_recv_create(void);
-
-void galaxy_send_magn(int, float);
-void galaxy_recv_magn(void);
-
-void galaxy_delete(int);
-
-/*---------------------------------------------------------------------------*/
-
-#endif

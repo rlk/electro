@@ -15,16 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utility.h"
 #include "entity.h"
 #include "sound.h"
-
-/*---------------------------------------------------------------------------*/
-
-#ifdef _WIN32
-#define FMODE_RB "rb"
-#else
-#define FMODE_RB "r"
-#endif
 
 /*---------------------------------------------------------------------------*/
 

@@ -17,7 +17,7 @@ setdist = false
 
 function do_start()
     camera = E.create_camera(E.camera_type_perspective)
-    galaxy = E.create_galaxy("../hip_main.bin")
+    galaxy = E.create_galaxy("../galaxy_small.gal")
 
     E.entity_parent(galaxy, camera)
 

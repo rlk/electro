@@ -16,6 +16,7 @@ endif
 
 OBJS=	src/opengl.o   \
 	src/matrix.o   \
+	src/utility.o \
 	src/joystick.o \
 	src/viewport.o \
 	src/buffer.o   \

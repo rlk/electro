@@ -15,51 +15,37 @@
 
 #include <stdio.h>
 
+#include "opengl.h"
+
 /*---------------------------------------------------------------------------*/
 
 struct star
 {
+    unsigned char col[3];
     float         pos[3];
     float         mag;
-    unsigned char col[3];
 };
 
 /*---------------------------------------------------------------------------*/
 
 #define STAR_BIN_RECLEN sizeof (struct star)
-#define STAR_HIP_RECLEN (451 + 1)
-#define STAR_TYC_RECLEN (207 + 1)
+#define STAR_HIP_RECLEN 451
+#define STAR_TYC_RECLEN 207
 
 /*---------------------------------------------------------------------------*/
-/*
-int  star_write(const char *);
-*/
 
-void   star_color(char, unsigned char[3]);
+extern int (*star_cmp[3])(const void *, const void *);
 
-int    star_write_bin(FILE *, struct star *);
-int    star_parse_bin(FILE *, struct star *);
-int    star_parse_hip(FILE *, struct star *);
-int    star_parse_tyc(FILE *, struct star *);
+int    star_write_bin(struct star *, FILE *);
+int    star_parse_bin(struct star *, FILE *);
+int    star_parse_hip(struct star *, FILE *);
+int    star_parse_tyc(struct star *, FILE *);
+int    star_gimme_sol(struct star *);
 
 GLuint star_make_texture(void);
 GLuint star_frag_program(void);
 GLuint star_vert_program(void);
 
-/*
-int  star_read_sol(void);
-int  star_read_near_hip(const char *);
-int  star_read_near_bin(const char *);
-int  star_read_far_tyc(const char *);
-int  star_read_far_bin(const char *);
-
-void star_send_create(void);
-void star_recv_create(void);
-
-void star_draw(void);
-
-void star_delete(void);
-*/
 /*---------------------------------------------------------------------------*/
 
 #endif

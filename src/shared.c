@@ -25,9 +25,7 @@
 #include <unistd.h>
 #endif
 
-#include "image.h"
 #include "shared.h"
-#include "camera.h"
 
 /*---------------------------------------------------------------------------*/
 /* Optional MPI function abstractions                                        */

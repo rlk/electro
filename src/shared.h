@@ -35,11 +35,6 @@ void mpi_barrier_clients(void);
 void mpi_barrier_all(void);
 void mpi_split(void);
 
-int  mpi_share_byte(int, void *);
-int  mpi_share_char(int, char *);
-int  mpi_share_float(int, float *);
-int  mpi_share_integer(int, int *);
-
 /*---------------------------------------------------------------------------*/
 
 #define EVENT_NULL           0
@@ -68,18 +63,6 @@ int  mpi_share_integer(int, int *);
 #define EVENT_CAMERA_ZOOM   20
 #define EVENT_SPRITE_BOUNDS 21
 #define EVENT_LIGHT_COLOR   22
-
-/*---------------------------------------------------------------------------*/
-
-GLuint shared_load_program(const char *, GLenum);
-GLuint shared_load_texture(const char *, int *, int *);
-
-void   shared_set_camera_org(float, float, float);
-void   shared_set_camera_rot(float, float, float);
-
-void   shared_set_camera_dist(float);
-void   shared_set_camera_magn(float);
-void   shared_set_camera_zoom(float);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1,7 +1,3 @@
-invert frustum planes?
-    (commit first)
-orthogonal frustum
-Galaxy binary file
 Star VBO?  (Ok if tree is NOT pruned)
 Scale and billboard frustum
 Parse tyc (tune N_SIZ)

@@ -13,6 +13,8 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "star.h"
+
 /*---------------------------------------------------------------------------*/
 
 struct node
@@ -27,13 +29,15 @@ struct node
 
 /*---------------------------------------------------------------------------*/
 
-void prep_init(void);
-void prep_sort(float[6]);
+int node_write_bin(struct node *, FILE *);
+int node_parse_bin(struct node *, FILE *);
 
-void prep_file_hip(const char *);
+/*---------------------------------------------------------------------------*/
 
-void node_init(void);
-void node_draw(const float[16], const float[6]);
+int node_sort(struct node *, int, int,
+              struct star *, int, int, int);
+int node_draw(const struct node *, int, int,
+              const float[16], const float[6]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -15,181 +15,128 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
+#include "utility.h"
 #include "opengl.h"
 #include "star.h"
 #include "node.h"
 
 /*---------------------------------------------------------------------------*/
 
-#define N_MAX    4096
-/*
-#define N_SIZ    1024
-*/
-#define N_SIZ     256
-#define S_MAX 2621440
-
-static struct node *N;
-static int          N_num;
-static int          N_max;
-
-static struct star *S;
-static int          S_num;
-static int          S_max;
+#define N_SIZ 256    /* Maximum number of stars at one leaf of the BSP tree. */
 
 /*---------------------------------------------------------------------------*/
 
-static int star_cmp0(const void *p1,
-                     const void *p2)
+int node_write_bin(struct node *n, FILE *fp)
 {
-    return (((const struct star *) p1)->pos[0] <
-            ((const struct star *) p2)->pos[0]);
+    struct node t = *n;
+
+    /* Ensure all values are represented in network byte order. */
+
+    t.k     = htonf(t.k);
+    t.star0 = htonl(t.star0);
+    t.starc = htonl(t.starc);
+    t.nodeL = htonl(t.nodeL);
+    t.nodeR = htonl(t.nodeR);
+
+    /* Write the record to the given file. */
+
+    if (fwrite(&t, sizeof (struct node), 1, fp) > 0)
+        return 1;
+    else
+        return 0;
 }
 
-static int star_cmp1(const void *p1,
-                     const void *p2)
+int node_parse_bin(struct node *n, FILE *fp)
 {
-    return (((const struct star *) p1)->pos[1] <
-            ((const struct star *) p2)->pos[1]);
-}
+    /* Read a single node record from the given file. */
 
-static int star_cmp2(const void *p1,
-                     const void *p2)
-{
-    return (((const struct star *) p1)->pos[2] <
-            ((const struct star *) p2)->pos[2]);
-}
-
-static int (*star_cmp[3])(const void *, const void *) = {
-    star_cmp0,
-    star_cmp1,
-    star_cmp2
-};
-
-static void prep_node(int n, int i, int a, int z)
-{
-    N[n].star0 = a;
-    N[n].starc = z - a;
-
-    if (z - a > N_SIZ && N_num < N_max)
+    if (fread(n, sizeof (struct node), 1, fp) > 0)
     {
-        int m = (a + z) / 2;
+        /* Ensure all values are represented in host byte order. */
 
-        qsort(S + a, z - a, sizeof (struct star), star_cmp[i]);
+        n->k     = ntohf(n->k);
+        n->star0 = ntohl(n->star0);
+        n->starc = ntohl(n->starc);
+        n->nodeL = ntohl(n->nodeL);
+        n->nodeR = ntohl(n->nodeR);
 
-        N[n].k     = S[m].pos[i];
-        N[n].nodeL = N_num++;
-        N[n].nodeR = N_num++;
-
-        prep_node(N[n].nodeL, (i + 1) % 3, a, m);
-        prep_node(N[n].nodeR, (i + 1) % 3, m, z);
+        return 1;
     }
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 
-void prep_init(void)
+int node_sort(struct node *N, int n0, int n1,
+              struct star *S, int s0, int s1, int i)
 {
-    if ((N = (struct node *) calloc(N_MAX, sizeof (struct node))))
+    /* This node contains stars s0 through s1. */
+
+    N[n0].starc = s1 - s0;
+    N[n0].star0 = s0;
+
+    /* If this node has too many stars, subdivide it. */
+
+    if (s1 - s0 > N_SIZ)
     {
-        N_max = N_MAX;
-        N_num = 0;
+        int sm = (s1 + s0) / 2;
+
+        /* Sort these stars along the i-axis. */
+
+        qsort(S + s0, s1 - s0, sizeof (struct star), star_cmp[i]);
+
+        /* Create a BSP split at the i-position of the middle star. */
+
+        N[n0].k     = S[sm].pos[i];
+        N[n0].nodeL = n1++;
+        N[n0].nodeR = n1++;
+
+        /* Create new nodes, each containing half of the stars. */
+
+        n1 = node_sort(N, N[n0].nodeL, n1, S, s0, sm, (i + 1) % 3);
+        n1 = node_sort(N, N[n0].nodeR, n1, S, sm, s1, (i + 1) % 3);
     }
-    if ((S = (struct star *) calloc(S_MAX, sizeof (struct star))))
-    {
-        S_max = S_MAX;
-        S_num = 0;
-    }
-}
-
-void prep_sort(float bound[6])
-{
-    int i;
-
-    N_num = 1;
-
-    prep_node(0, 0, 0, S_num);
-
-    bound[0] = bound[1] = bound[2] =  1000000.0f;
-    bound[3] = bound[4] = bound[5] = -1000000.0f;
-
-    for (i = 0; i < S_num; ++i)
-    {
-        if (bound[0] > S[i].pos[0]) bound[0] = S[i].pos[0];
-        if (bound[1] > S[i].pos[1]) bound[1] = S[i].pos[1];
-        if (bound[2] > S[i].pos[2]) bound[2] = S[i].pos[2];
-        if (bound[3] < S[i].pos[0]) bound[3] = S[i].pos[0];
-        if (bound[4] < S[i].pos[1]) bound[4] = S[i].pos[1];
-        if (bound[5] < S[i].pos[2]) bound[5] = S[i].pos[2];
-    }
+    return n1;
 }
 
 /*---------------------------------------------------------------------------*/
-
-void prep_file_hip(const char *filename)
-{
-    struct stat buf;
-    FILE *fp;
-
-    if (stat(filename, &buf) == 0)
-    {
-        int n = (int) buf.st_size / STAR_HIP_RECLEN;
-        int i;
-
-        if ((fp = fopen(filename, "r")))
-        {
-            for (i = 0; i < n && S_num < S_max; i++)
-                S_num += star_parse_hip(fp, S + S_num);
-
-            fclose(fp);
-        }
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-
-static GLuint star_texture;
-static GLuint star_frag;
-static GLuint star_vert;
-
-void node_init(void)
-{
-    star_texture = star_make_texture();
-    star_frag    = star_frag_program();
-    star_vert    = star_vert_program();
-}
-
-/*---------------------------------------------------------------------------*/
-
-static int star_count;
-static int node_count;
 
 static int node_test(const float V[4], const float b[6])
 {
-    if (b[0] * V[0] + b[1] * V[1] + b[2] * V[2] < V[3]) return 0;
-    if (b[0] * V[0] + b[1] * V[1] + b[5] * V[2] < V[3]) return 0;
-    if (b[0] * V[0] + b[4] * V[1] + b[2] * V[2] < V[3]) return 0;
-    if (b[0] * V[0] + b[4] * V[1] + b[5] * V[2] < V[3]) return 0;
-    if (b[3] * V[0] + b[1] * V[1] + b[2] * V[2] < V[3]) return 0;
-    if (b[3] * V[0] + b[1] * V[1] + b[5] * V[2] < V[3]) return 0;
-    if (b[3] * V[0] + b[4] * V[1] + b[2] * V[2] < V[3]) return 0;
-    if (b[3] * V[0] + b[4] * V[1] + b[5] * V[2] < V[3]) return 0;
+    /* Test all 8 points of the bounding box against the view frustum. */
 
-    return 1; /* cull */
+    if (b[0] * V[0] + b[1] * V[1] + b[2] * V[2] > V[3]) return 0;
+    if (b[0] * V[0] + b[1] * V[1] + b[5] * V[2] > V[3]) return 0;
+    if (b[0] * V[0] + b[4] * V[1] + b[2] * V[2] > V[3]) return 0;
+    if (b[0] * V[0] + b[4] * V[1] + b[5] * V[2] > V[3]) return 0;
+    if (b[3] * V[0] + b[1] * V[1] + b[2] * V[2] > V[3]) return 0;
+    if (b[3] * V[0] + b[1] * V[1] + b[5] * V[2] > V[3]) return 0;
+    if (b[3] * V[0] + b[4] * V[1] + b[2] * V[2] > V[3]) return 0;
+    if (b[3] * V[0] + b[4] * V[1] + b[5] * V[2] > V[3]) return 0;
+
+    /* All points are outsite the frustum.  Cull the box. */
+
+    return 1;
 }
 
-static void node_draw_tree(int n, int i, const float V[16], const float b[6])
+int node_draw(const struct node *N, int n, int i,
+              const float V[16], const float b[6])
 {
-    node_count += 1;
+    int c = 0;
 
-    if (node_test(V +  0, b)) return;
-    if (node_test(V +  4, b)) return;
-    if (node_test(V +  8, b)) return;
-    if (node_test(V + 12, b)) return;
+    /* Test this node against the view frustem. */
+
+    if (node_test(V +  0, b)) return 0;
+    if (node_test(V +  4, b)) return 0;
+    if (node_test(V +  8, b)) return 0;
+    if (node_test(V + 12, b)) return 0;
 
     if (N[n].nodeL && N[n].nodeR)
     {
         float bR[6];
         float bL[6];
+
+        /* We're at a branch.  Cut the bounding box in two. */
 
         bL[0] = bR[0] = b[0];
         bL[1] = bR[1] = b[1];
@@ -200,48 +147,20 @@ static void node_draw_tree(int n, int i, const float V[16], const float b[6])
 
         bL[i] = bR[i + 3] = N[n].k;
 
-        node_draw_tree(N[n].nodeL, (i + 1) % 3, V, bL);
-        node_draw_tree(N[n].nodeR, (i + 1) % 3, V, bR);
+        /* Render each subtree in its own bounding box. */
+
+        c += node_draw(N, N[n].nodeL, (i + 1) % 3, V, bL);
+        c += node_draw(N, N[n].nodeR, (i + 1) % 3, V, bR);
     }
     else
     {
-        star_count += N[n].starc;
+        /* We've hit a leaf.  Apparently, it is visible.  Draw it. */
+
         glDrawArrays(GL_POINTS, N[n].star0, N[n].starc);
+        c = N[n].starc;
     }
-}
 
-void node_draw(const float V[16], const float b[6])
-{
-    GLenum  ub = GL_UNSIGNED_BYTE;
-    GLenum  fl = GL_FLOAT;
-    GLsizei sz = sizeof (struct star);
-
-    star_count = 0;
-    node_count = 0;
-
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    {
-        glEnable(GL_VERTEX_PROGRAM_ARB);
-        glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
-        glEnableVertexAttribArrayARB(6);
-
-        glBindTexture(GL_TEXTURE_2D, star_texture);
-
-        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, star_frag);
-        glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   star_vert);
-
-        glVertexPointer            (3, fl,    sz, &S[0].pos);
-        glColorPointer             (3, ub,    sz, &S[0].col);
-        glVertexAttribPointerARB(6, 1, fl, 0, sz, &S[0].mag);
-
-        node_draw_tree(0, 0, V, b);
-    }
-    glPopClientAttrib();
-    glPopAttrib();
+    return c;
 }
 
 /*---------------------------------------------------------------------------*/

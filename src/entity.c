@@ -213,6 +213,7 @@ int entity_init(void)
         E[0].type = TYPE_ROOT;
 
         camera_init();
+        galaxy_init();
         sprite_init();
         object_init();
         light_init();
