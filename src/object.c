@@ -599,10 +599,12 @@ void draw_object(int id, int od, const float V[16], float a)
 
                     /* Draw everything. */
 
-                    glDrawElements(GL_TRIANGLES, 3 * O[od].sv[si].fc,
-                                   GL_UNSIGNED_INT,  O[od].sv[si].fv);
-                    glDrawElements(GL_LINES,     2 * O[od].sv[si].ec,
-                                   GL_UNSIGNED_INT,  O[od].sv[si].ev);
+                    if (O[od].sv[si].fc > 0)
+                        glDrawElements(GL_TRIANGLES, 3 * O[od].sv[si].fc,
+                                       GL_UNSIGNED_INT,  O[od].sv[si].fv);
+                    if (O[od].sv[si].ec > 0)
+                        glDrawElements(GL_LINES,     2 * O[od].sv[si].ec,
+                                       GL_UNSIGNED_INT,  O[od].sv[si].ev);
                 }
             }
             glPopAttrib();

@@ -38,6 +38,7 @@ static float average_fps = 0.0f;
 
 void grab(int b)
 {
+    /*
     if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -48,6 +49,7 @@ void grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
+    */
     server_grab = b;
 }
 
@@ -109,7 +111,7 @@ static void init_server(void)
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT,   1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 

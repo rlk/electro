@@ -155,6 +155,20 @@ void *error(char *format, ...)
     return NULL;
 }
 
+void *print(char *format, ...)
+{
+    char string[MAXSTR];
+    va_list args;
+
+    va_start(args, format);
+    vsprintf(string, format, args);
+    va_end(args);
+
+    print_console(string);
+
+    return NULL;
+}
+
 /*---------------------------------------------------------------------------*/
 
 #ifdef MPI

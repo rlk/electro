@@ -96,14 +96,12 @@ void init_opengl(void)
         opengl_proc("glBindProgramARB");
     glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
         opengl_proc("glGenProgramsARB");
+    glProgramEnvParameter4fARB = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
+        opengl_proc("glProgramEnvParameter4fARB");
 
     if (opengl_need("GL_ARB_fragment_program"))
     {
-        glProgramEnvParameter4fARB = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
-            opengl_proc("glProgramEnvParameter4fARB");
-
-        GL_has_fragment_program = (glProgramEnvParameter4fARB
-                                && glProgramStringARB
+        GL_has_fragment_program = (glProgramStringARB
                                 && glBindProgramARB
                                 && glGenProgramsARB);
     }
@@ -117,7 +115,8 @@ void init_opengl(void)
         glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)
             opengl_proc("glVertexAttribPointerARB");
 
-        GL_has_vertex_program = (glDisableVertexAttribArrayARB
+        GL_has_vertex_program = (glProgramEnvParameter4fARB
+                              && glDisableVertexAttribArrayARB
                               && glEnableVertexAttribArrayARB
                               && glVertexAttribPointerARB
                               && glProgramStringARB
@@ -148,13 +147,6 @@ void init_opengl(void)
     if (opengl_need("GL_ARB_point_sprite"))
     {
         GL_has_point_sprite = GL_TRUE;
-    }
-
-    if (!GL_has_vertex_program ||
-        !GL_has_fragment_program)
-    {
-        GL_has_vertex_program = 0;
-        GL_has_fragment_program = 0;
     }
 }
 

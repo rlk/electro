@@ -10,55 +10,13 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef UTILITY_H
-#define UTILITY_H
-
-#include <stdarg.h>
-
-#ifdef MPI
-#include <mpi.h>
-#endif
-
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#endif
+#include "opengl.h"
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef _WIN32
-#define FMODE_RB "rb"
-#define FMODE_WB "wb"
-#else
-#define FMODE_RB "r"
-#define FMODE_WB "w"
-#endif
+#define GLYPH_W  6
+#define GLYPH_H 13
+
+extern GLubyte glyph[96][GLYPH_W * GLYPH_H];
 
 /*---------------------------------------------------------------------------*/
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-
-#define MAXSTR 256
-
-/*---------------------------------------------------------------------------*/
-
-const char *system_error(void);
-
-const char *get_file_name(const char *);
-const char *get_file_path(const char *);
-
-float htonf(float);
-float ntohf(float);
-
-int  balloc(void **, int *, size_t, int (*)(int));
-
-void *error(char *, ...);
-void *print(char *, ...);
-
-void assert_mpi(int);
-
-/*---------------------------------------------------------------------------*/
-
-#endif

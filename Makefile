@@ -52,6 +52,7 @@ endif
 LIBS= $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lm
 
 OBJS=	src/opengl.o   \
+	src/glyph.o    \
 	src/matrix.o   \
 	src/utility.o  \
 	src/joystick.o \

@@ -11,7 +11,13 @@ hip_magn = 100.0
 tyc_magn = 100.0
 hip_dist =   0.0
 tyc_dist =   0.0
-spin     =   0.0
+
+d_zoom     = 0.0
+d_hip_dist = 0.0
+d_tyc_dist = 0.0
+d_rot_x    = 0.0
+d_rot_y    = 0.0
+d_rot_z    = 0.0
 
 setzoom = false
 setmagn = false
@@ -38,28 +44,53 @@ function do_start()
     E.set_galaxy_magnitude(galaxy_hip, hip_magn)
     E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
 
+    E.enable_timer(true)
+
     return true
 end
 
 function do_timer(dt)
-    local x, y, z = E.get_entity_rotation(camera_hip)
+    local rot_x, rot_y, rot_z = E.get_entity_rotation(camera_hip);
 
-    E.set_entity_rotation(camera_hip, x, y + dt * spin, z)
-    E.set_entity_rotation(camera_tyc, x, y + dt * spin, z)
+    zoom     = zoom     + d_zoom     * dt;
+    hip_dist = hip_dist + d_hip_dist * dt;
+    tyc_dist = tyc_dist + d_tyc_dist * dt;
+    rot_x    = rot_x    + d_rot_x    * dt;
+    rot_y    = rot_y    + d_rot_y    * dt;
+    rot_z    = rot_z    + d_rot_z    * dt;
+
+    if rot_x <  -90 then rot_x = -90 end
+    if rot_x >   90 then rot_x =  90 end
+
+    if rot_y < -180 then rot_y = rot_y + 360 end
+    if rot_y >  180 then rot_y = rot_y - 360 end
+
+    if hip_dist then E.set_camera_distance(camera_hip, hip_dist) end
+    if tyc_dist then E.set_camera_distance(camera_tyc, tyc_dist) end
+    if hip_zoom then E.set_camera_zoom(camera_hip, hip_zoom) end
+    if tyc_zoom then E.set_camera_zoom(camera_tyc, tyc_zoom) end
+
+    E.set_entity_rotation(camera_hip, rot_x, rot_y, rot_z)
+    E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
+
     return true
 end
 
 function do_keyboard(k, s)
-    if s and k == 284 then -- F3
-        spin = spin + 1
+    if s and k == 32 then
+        d_zoom     = 0
+        d_hip_dist = 0
+        d_tyc_dist = 0
+        d_rot_x    = 0
+        d_rot_y    = 0
+        d_rot_z    = 0
     end
-    if s and k == 285 then -- F4
-        spin = spin - 1
+    if s and k == 13 then
+        hip_dist = 0
+        tyc_dist = 0
+        E.set_camera_distance(camera_hip, hip_dist)
+        E.set_camera_distance(camera_tyc, tyc_dist)
     end
-
-    E.enable_timer(spin ~= 0)
-
-    return true
 end
 
 function do_point(dx, dy)
@@ -68,51 +99,26 @@ function do_point(dx, dy)
 
     if setzoom then      -- Set the camera zoom.
 
-        zoom = zoom + dy * 0.01
-        if zoom < 0.001 then
-            zoom = 0.001
-        end
-
-        E.set_camera_zoom(camera_hip, zoom * zoom)
-        E.set_camera_zoom(camera_tyc, zoom * zoom)
-        E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
-        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
+        d_zoom = d_zoom + dy * 0.001
 
     elseif setmagn then  -- Set the stellar magnitude multiplier.
 
         if not shift   then hip_magn = hip_magn - dy * 1.0 end
         if not control then tyc_magn = tyc_magn - dy * 1.0 end
 
-        if hip_magn < 0 then hip_magn = 0 end
-        if tyc_magn < 0 then tyc_magn = 0 end
-
-        E.set_galaxy_magnitude(galaxy_hip, hip_magn / (zoom * zoom))
-        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn / (zoom * zoom))
+        E.set_galaxy_magnitude(galaxy_hip, hip_magn)
+        E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
 
     elseif setdist then  -- Set the camera distance from the center.
 
-        if not shift   then hip_dist = hip_dist + dy * 0.1 end
-        if not control then tyc_dist = tyc_dist + dy * 0.1 end
-
-        E.set_camera_distance(camera_hip, hip_dist)
-        E.set_camera_distance(camera_tyc, tyc_dist)
+        if not shift   then d_hip_dist = d_hip_dist + dy * 0.1 end
 
     else                 -- None of the above.  Just pan the camera
 
-        local x, y, z = E.get_entity_rotation(camera_hip)
-
-        x = x - dy * 0.1 * zoom * zoom
-        y = y - dx * 0.1 * zoom * zoom
-
-        if x < -90 then x = -90 end
-        if x >  90 then x =  90 end
-
-        if y < -180 then y = y + 360 end
-        if y >  180 then y = y - 360 end
-
-        E.set_entity_rotation(camera_hip, x, y, z)
-        E.set_entity_rotation(camera_tyc, x, y, z)
+        d_rot_x = d_rot_x - dy * 0.005 * zoom
     end
+
+    d_rot_y = d_rot_y - dx * 0.005 * zoom
 
     return true
 end
