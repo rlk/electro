@@ -523,6 +523,7 @@ void error_console(const char *str)
     console_r = r;
     console_g = g;
     console_b = b;
+    console_enable = 1;
 
     draw_image();
 }

@@ -53,6 +53,7 @@ function do_start()
 
     E.print_console("---------- CONTROLS ---------\n")
     E.print_console("F1:          toggle console\n")
+    E.print_console("F2:          toggle server draw\n")
     E.print_console("Space bar:   stop motion\n")
     E.print_console("Enter:       re-center camera\n")
     E.print_console("Mouse move:  camera pan\n")

@@ -29,8 +29,11 @@
 
 static void server_draw(void);
 
-static int server_grab = 0;
-static int server_time = 0;
+static int server_grab   = 0;
+static int server_time   = 0;
+static int server_mirror = 1;
+
+static int timer_on = 0;
 
 static float average_fps = 0.0f;
 
@@ -51,46 +54,10 @@ void grab(int b)
     server_grab = b;
 }
 
-/*---------------------------------------------------------------------------*/
-
-static Uint32 timer_callback(Uint32 interval, void *parameter)
-{
-    Uint32 t = SDL_GetTicks();
-    SDL_Event e;
-
-    /* On callback, push a user event giving time passed since last timer. */
-
-    e.type      = SDL_USEREVENT;
-    e.user.code = t - server_time;
-    server_time = t;
-
-    SDL_PushEvent(&e);
-
-    /* Return the given interval to schedule a repeat timer event. */
-
-    return interval;
-}
-
-static int         timer_on = 0;
-
 void enable_timer(int b)
 {
-/*  static SDL_TimerID timer_id; */
-
-    /* Enable or disable an SDL timer callback. */
-
-    if (b && !timer_on)
-    {
-/*      timer_id = SDL_AddTimer(1000 / 40, timer_callback, NULL); */
-        timer_on = 1;
-        server_time = SDL_GetTicks();
-    }
-
-    if (!b && timer_on)
-    {
-        timer_on = 0;
-/*      SDL_RemoveTimer(timer_id); */
-    }
+    timer_on    = b;
+    server_time = SDL_GetTicks();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -138,7 +105,9 @@ static void server_draw(void)
 
     glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
     draw_background();
-    draw_entity();
+
+    if (server_mirror)
+        draw_entity();
 
     /* Draw the console overtop both the scene and the mullions. */
 
@@ -203,10 +172,12 @@ static int server_loop(void)
         if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) grab(0);
         if (e.type == SDL_MOUSEBUTTONDOWN)                 grab(1);
 
-        /* Handle console toggle. */
+        /* Handle console and server mirror toggle. */
 
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F1)
             dirty = set_console_enable(!console_is_enabled());
+        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F2)
+            server_mirror = 1 - server_mirror;
 
         /* Dispatch the event to the scripting system. */
 
