@@ -128,9 +128,9 @@ int script_init(void)
 {
     if ((L = lua_open()))
     {
-        luaopen_io(L);
         luaopen_base(L);
         luaopen_math(L);
+        luaopen_io(L);
 
         lua_register(L, "add_tile",    script_add_tile);
 

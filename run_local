@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mpirun -np 3 ./vortex -f hip_main.bin -s local.lua -s view.lua
