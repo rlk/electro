@@ -656,7 +656,7 @@ function player_step()
     if joy_x < -0.5 then
         rot_z = rot_z + global_dt * 180
     end
-    if joy_y >  0.5 then
+    if joy_x >  0.5 then
         rot_z = rot_z - global_dt * 180
     end
 
