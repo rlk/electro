@@ -134,6 +134,8 @@ void client(int np, int id)
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+        SDL_ShowCursor(0);
+
         if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
             client_init();

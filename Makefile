@@ -26,8 +26,10 @@ LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 MPI_LIBS= -lmpich
 
-MPI_LIBDIR= -L/usr/local/mpich-1.2.6/lib
-MPI_INCDIR= -I/usr/local/mpich-1.2.6/include
+#MPI_LIBDIR= -L/usr/local/mpich-1.2.6/lib
+#MPI_INCDIR= -I/usr/local/mpich-1.2.6/include
+MPI_LIBDIR= -L/opt/mpich/ch-p4/lib64
+MPI_INCDIR= -I/opt/mpich/ch-p4/include
 
 CFLAGS= -g -ansi -pedantic -Wall $(MPI_CFLAGS) $(shell sdl-config --cflags)
 INCDIR= $(MPI_INCDIR) -I$(HOME)/include

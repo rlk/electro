@@ -50,8 +50,8 @@ void camera_init(void)
     camera_rot[2] =    0.0f;
 
     camera_dist   =    0.0f;
-    camera_magn   =  128.0f;
-    camera_zoom   =    0.001f;
+    camera_magn   =  256.0f;
+    camera_zoom   =    0.0001f;
 
     viewport_X    =    0.0f;
     viewport_Y    =    0.0f;

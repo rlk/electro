@@ -8,8 +8,8 @@ rot_x  =    0.0
 rot_y  =    0.0
 rot_dy =    0.0
 dist   =    1.5
-magn   =  128.0
-zoom   =    0.001
+magn   =  256.0
+zoom   =    0.0001
 
 btn    = { }
 btn[1] = false
@@ -19,7 +19,7 @@ btn[3] = false
 foo    = -1
 foo_a  =  0
 foo_x  =   global_x + 96
-foo_y  =  -global_y + global_h - 96
+foo_y  =   global_y + 96
 
 -------------------------------------------------------------------------------
 

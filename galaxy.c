@@ -61,7 +61,7 @@ void circum_draw(void)
 
 void galaxy_draw(void)
 {
-    circum_draw();
+/*  circum_draw(); */
     star_draw();
 }
 
