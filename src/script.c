@@ -512,7 +512,7 @@ int script_keyboard(int k, int s)
     return 0;
 }
 
-int script_joystick(int x, int y)
+int script_joystick(int n, int b, int s)
 {
     const char *name = "do_joystick";
 
@@ -520,10 +520,11 @@ int script_joystick(int x, int y)
 
     if (lua_isfunction(L, -1))
     {
-        lua_pushnumber(L, (lua_Number) x);
-        lua_pushnumber(L, (lua_Number) y);
+        lua_pushnumber (L, (lua_Number) n);
+        lua_pushnumber (L, (lua_Number) b);
+        lua_pushboolean(L, s);
 
-        return lua_callassert(L, 2, 1, name);
+        return lua_callassert(L, 3, 1, name);
     }
     else lua_pop(L, 1);
 

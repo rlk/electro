@@ -58,6 +58,16 @@ serious consideration. </p>
 
 <h1> Types </h1>
 
+<h2> Entity </h2>
+
+<h2> Object </h2>
+
+<h2> Sprite </h2>
+
+<h2> Light </h2>
+
+<h2> Pivot </h2>
+
 <!---------------------------------------------------------------------------->
 
 <h1> Functions </h1>
@@ -149,6 +159,116 @@ add_tile("nico1-10", 1600, 0, global_x + dx * 3, global_y,          w, h)
 add_tile("nico2-10",    0, 0, global_x + dx * 2, global_y + dy,     w, h)
 add_tile("nico2-10", 1600, 0, global_x + dx * 3, global_y + dy,     w, h)
 </pre>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Callbacks </h1>
+
+<p> Callback functions are the mechanism by which Electro Lua
+applications respond to user interface events.  An application may
+define these functions as needed.  If a function exists then it is
+invoked when the corresponding event occurs.  Callback functions
+should return a boolean value to indicate whether the event resulted
+in a dirty screen.  Returning <tt>true</tt> schedules a screen update
+to occur at the next opportunity. </p>
+
+<dl>
+<dt><tt> do_start() </tt> <dd><p> This callback is invoked precisely
+once at the beginning of a run.  It occurs after all of the scripts
+named on the command line have finished executing, but before any
+event processing begins.  Applications are free to perform Lua state
+initialization upon initial execution, but Electro object
+initialization <i>must</i> be performed in the <tt>do_start</tt>
+function.</p>
+
+<p class="note"> This callback is a bit of a hack.  It is necessary
+because Electro objects cannot be initialized until the OpenGL context
+exists.  However, the OpenGL context cannot be created until the
+viewport configuration is known.  So, startup must proceed in two
+distinct phases, one before context creation, and one after.  The
+<tt>do_start</tt> callback is this second phase. </p>
+
+<dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
+whenever the mouse pointer moves within the Electro main window.
+Motion is reported relatively, so the pointer may move an unlimited
+distance in any direction.  Absolute position is not reported.  If
+absolute mouse position is necessary, then it must be tracked
+manually, as follows: </p>
+
+<pre>
+mouse_x = 0
+mouse_y = 0
+
+function do_point(dx, dy)
+    mouse_x = mouse_x + dx
+    mouse_y = mouse_y + dy
+    return true
+end
+</pre>
+
+<dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked whenever
+a mouse button is pressed or released.  The <tt>b</tt> argument gives
+the button number, 1, 2, 3, etc.  The <tt>s</tt> argument is a boolean
+giving button state.  A value of <tt>true</tt> indicates the button
+has been pressed, and <tt>false</tt> indicates it has been released.
+Note, on most modern systems mouse wheel up and down are reported as
+presses of buttons 4 and 5.  Button press events on wheel buttons do
+not have accompanying release events. </p>
+
+<dt><tt> do_timer(t) </tt><dd><p> The <tt>do_timer</tt> callback is
+invoked regularly while idling is enabled.  The <tt>t</tt> argument
+gives the amount of time, in seconds, that has passed since the last
+time the callback was invoked.  The rate of callback is not defined,
+though it may be inferred to be "often enough."  In practice it is
+usually around 30 times per second, though this will decrease with
+graphical complexity.  The <tt>do_timer</tt> function is intended to
+be used to update animations and other background processes.
+Applications should be sure to return <tt>true</tt> in order to force
+an update to the display.</p>
+
+<p class="note"> The update rate of the <tt>do_timer</tt> callback is
+deliberately obscured because it is nearly impossible to guarantee.
+While it might make sense to allow an application to request a
+callback rate, this request can only be precisely filled in a limited
+number of cases.  The idle timer does <i>not</i> free-run.
+Free-running in Electro is bad because MPI synchronization is
+unpredictable and events tend to queue up, leading to sluggish
+behavior.  The application developer may count on the fact that
+<tt>do_timer</tt> is invoked as often as is possible, such that
+performance will not suffer. </p>
+
+<dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
+whenever a key is pressed or released.  The <tt>s</tt> argument is a
+boolean giving the key state.  The <tt>k</tt> argument gives a key
+identifier.  For most keys, this gives the ASCII value of the
+unshifted character.  For non-ASCII keys and modifiers it is a unique
+identifier outside of the range of ASCII.  A full listing of keys and
+their associated values would be lengthy and uninteresting.  When in
+doubt about the value of a key, query it interactively as follows:
+</p>
+
+<pre>
+function do_keyboard(k, s)
+    if s then
+        print(k, "down")
+    else
+        print(k, "up")
+    end
+    return false
+end
+</pre>
+
+<dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is invoked
+whenever a joystick button is pressed or released.  The <tt>n</tt>
+argument gives the joystick device number.  The <tt>b</tt> argument
+gives the button number.  The <tt>s</tt> argument is a boolean giving
+button state.  Applications respond to button presses in an
+event-driven fashion, but they should read joystick axis input more
+continuously.  Usually joystick axes are aquired by calling
+<tt>joystick_x(n)</tt> and <tt>joystick_y(n)</tt> in a
+<tt>do_timer</tt> callback. </p>
+
+</dl>
 
 <!---------------------------------------------------------------------------->
 

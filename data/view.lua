@@ -45,7 +45,12 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    return true
+    if s then
+        print(k, "down")
+    else
+        print(k, "up")
+    end
+    return false
 end
 
 -------------------------------------------------------------------------------

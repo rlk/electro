@@ -3,7 +3,7 @@ Wire mode to object.
 Relative entity transform
 Remove MPI_BYTE uses (separate hostname from viewport)
 Audio
-Joystick
+Joystick (get axes, do_joystick buttons)
 Audit includes
 Script tile configuration query system/standard
 Abstract stars into particle system
