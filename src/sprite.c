@@ -47,8 +47,10 @@ int sprite_init(void)
     return 0;
 }
 
-void sprite_draw(int id, int sd, float a)
+void sprite_draw(int id, int sd, float P[3], float V[4][4])
 {
+    float Q[3], W[4][4];
+
     if (sprite_exists(sd))
     {
         glPushAttrib(GL_DEPTH_BUFFER_BIT);
@@ -56,12 +58,12 @@ void sprite_draw(int id, int sd, float a)
         {
             /* Apply the local coordinate system transformation. */
 
-            entity_transform(id);
+            entity_transform(id, Q, W, P, V);
 
             glDisable(GL_DEPTH_TEST);
 
             image_draw(S[sd].image);
-            glColor4f(1.0f, 1.0f, 1.0f, a);
+            glColor4f(1.0f, 1.0f, 1.0f, entity_get_alpha(id));
 
             glBegin(GL_QUADS);
             {
@@ -75,11 +77,9 @@ void sprite_draw(int id, int sd, float a)
             }
             glEnd();
 
-            opengl_check("sprite_draw");
-
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, a);
+            entity_traversal(id, Q, W);
         }
         glPopMatrix();
         glPopAttrib();

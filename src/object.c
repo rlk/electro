@@ -485,9 +485,10 @@ int object_init(void)
     return 0;
 }
 
-void object_draw(int id, int od, float a)
+void object_draw(int id, int od, float P[3], float V[4][4])
 {
     GLsizei stride = sizeof (struct object_vert);
+    float Q[3], W[4][4];
 
     if (object_exists(od))
     {
@@ -495,7 +496,7 @@ void object_draw(int id, int od, float a)
         {
             /* Apply the local coordinate system transformation. */
 
-            entity_transform(id);
+            entity_transform(id, Q, W, P, V);
 
             /* Render this object. */
 
@@ -513,12 +514,12 @@ void object_draw(int id, int od, float a)
 
                     image_draw(m->image);
 
-                    /* Modulate the diffule color by the current alpha. */
+                    /* Modulate the diffuse color by the current alpha. */
 
                     d[0] = m->d[0];
                     d[1] = m->d[1];
                     d[2] = m->d[2];
-                    d[3] = m->d[3] * a;
+                    d[3] = m->d[3] * entity_get_alpha(id);
 
                     /* Apply the material properties. */
 
@@ -537,11 +538,9 @@ void object_draw(int id, int od, float a)
             glPopClientAttrib();
             glPopAttrib();
 
-            opengl_check("object_draw");
-
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, a);
+            entity_traversal(id, Q, W);
         }
         glPopMatrix();
     }

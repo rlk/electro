@@ -17,27 +17,27 @@
 
 struct node
 {
-    float x0, x1;
-    float y0, y1;
-    float z0, z1;
+    float k;
+
     int star0;
     int starc;
-    int node0;
-    int nodec;
+    int nodeL;
+    int nodeR;
     int nodep;
 };
 
 /*---------------------------------------------------------------------------*/
 
-void prep_d(int);
-void prep_u(void);
+void prep_L(void);
+void prep_R(void);
+void prep_p(void);
 
 void prep_init(void);
 void prep_sort(void);
 void prep_file_hip(const char *);
 
 void node_init(void);
-void node_draw(void);
+void node_draw(float P[3], float V[4][4]);
 
 /*---------------------------------------------------------------------------*/
 

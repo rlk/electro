@@ -4,11 +4,11 @@ PREFIX=/usr/local/Electro
 
 ifdef MPI
 	CC= mpicc
-	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+	CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
 	TARG= electro-mpi
 else
 	CC= cc
-	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags) -DNDEBUG
+	CFLAGS= -ansi -pedantic -g -Wall $(shell sdl-config --cflags) -DNDEBUG
 	TARG= electro
 endif
 

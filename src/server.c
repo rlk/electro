@@ -171,15 +171,9 @@ static int server_loop(void)
         if (e.type == SDL_KEYDOWN)
             switch (e.key.keysym.sym)
             {
-            case SDLK_F1: prep_d(0); break;
-            case SDLK_F2: prep_d(1); break;
-            case SDLK_F3: prep_d(2); break;
-            case SDLK_F4: prep_d(3); break;
-            case SDLK_F5: prep_d(4); break;
-            case SDLK_F6: prep_d(5); break;
-            case SDLK_F7: prep_d(6); break;
-            case SDLK_F8: prep_d(7); break;
-            case SDLK_F10: prep_u(); break;
+            case SDLK_F1: prep_p(); break;
+            case SDLK_F2: prep_L(); break;
+            case SDLK_F3: prep_R(); break;
             default: break;
             }
 

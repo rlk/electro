@@ -25,7 +25,7 @@ void galaxy_recv_create(void);
 void galaxy_send_magn(int, float);
 void galaxy_recv_magn(void);
 
-void galaxy_draw(int, int, float);
+void galaxy_draw(int, int, float[3], float[4][4]);
 
 void galaxy_delete(int);
 

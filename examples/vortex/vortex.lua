@@ -6,7 +6,7 @@ galaxy = nil
 
 zoom =   1.0
 magn = 100.0
-dist =   2.0
+dist =   0.0
 spin =   0.0
 
 setzoom = false
@@ -57,6 +57,7 @@ function do_point(dx, dy)
         end
 
         E.camera_zoom(camera, zoom * zoom)
+        E.galaxy_magn(galaxy, magn / (zoom * zoom))
 
     elseif setmagn then  -- Set the stellar magnitude multiplier.
 
@@ -65,12 +66,11 @@ function do_point(dx, dy)
             magn = 0
         end
 
-        E.galaxy_magn(galaxy, magn)
+        E.galaxy_magn(galaxy, magn / (zoom * zoom))
 
     elseif setdist then  -- Set the camera distance from the center.
 
---      dist = dist + dy * 0.1
-        dist = dist + dy * 10
+        dist = dist + dy * 0.1
         if dist < 0 then
             dist = 0
         end

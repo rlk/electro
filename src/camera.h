@@ -15,7 +15,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define CAMERA_FAR 1000000.0f
+#define CAMERA_NEAR     1.0f
+#define CAMERA_FAR 100000.0f
 
 #define CAMERA_ORTHO 1
 #define CAMERA_PERSP 2
@@ -30,7 +31,7 @@ struct camera
 /*---------------------------------------------------------------------------*/
 
 int  camera_init(void);
-void camera_draw(int, int, float);
+void camera_draw(int, int, float[3], float[4][4]);
 
 int  camera_send_create(int);
 void camera_recv_create(void);

@@ -20,12 +20,14 @@
 
 /*---------------------------------------------------------------------------*/
 
-void pivot_draw(int id, int pd, float a)
+void pivot_draw(int id, int pd, float P[3], float V[4][4])
 {
+    float Q[3], W[4][4];
+
     glPushMatrix();
     {
-        entity_transform(id);
-        entity_traversal(id, a);
+        entity_transform(id, Q, W, P, V);
+        entity_traversal(id, Q, W);
     }
     glPopMatrix();
 

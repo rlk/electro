@@ -45,35 +45,40 @@ int light_init(void)
     return 0;
 }
 
-void light_draw(int id, int ld, float a)
+void light_draw(int id, int ld, float P[3], float V[4][4])
 {
+    float Q[3], W[4][4];
+
     if (light_exists(ld))
     {
-        GLfloat pos[4];
-
-        /* Determine the homogenous coordinate lightsource position. */
-
-        entity_get_position(id, pos + 0, pos + 1, pos + 2);
-
-        if (L[ld].type == LIGHT_POSITIONAL)  pos[3] = 1.0f;
-        if (L[ld].type == LIGHT_DIRECTIONAL) pos[3] = 0.0f;
-
-        /* Enable this light and render all child entities. */
-
         glPushAttrib(GL_ENABLE_BIT);
+        glPushMatrix();
         {
             GLenum light = GL_LIGHT0 + ld;
+            GLfloat p[4];
+
+            entity_transform(id, Q, W, P, V);
+
+            /* Determine the homogenous coordinate lightsource position. */
+
+            entity_get_position(id, p + 0, p + 1, p + 2);
+
+            if (L[ld].type == LIGHT_POSITIONAL)  p[3] = 1.0f;
+            if (L[ld].type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
+
+            /* Enable this light and render all child entities. */
 
             glEnable(GL_LIGHTING);
             glEnable(light);
         
             glLightfv(light, GL_DIFFUSE, L[ld].d);
-            glLightfv(light, GL_POSITION, pos);
+            glLightfv(light, GL_POSITION, p);
 
-            opengl_check("light_draw");
+            /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, a);
+            entity_traversal(id, Q, W);
         }
+        glPopMatrix();
         glPopAttrib();
     }
 }

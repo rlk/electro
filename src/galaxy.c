@@ -91,14 +91,16 @@ void galaxy_recv_magn(void)
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_draw(int id, int gd, float a)
+void galaxy_draw(int id, int gd, float P[3], float V[4][4])
 {
+    float Q[3], W[4][4];
+
     glPushMatrix();
     {
         /* Apply the local coordinate system transformation. */
-
-        entity_transform(id);
-
+        /*
+        entity_transform(id, Q, W, P, V);
+        */
         glPushAttrib(GL_ENABLE_BIT  |
                      GL_TEXTURE_BIT |
                      GL_COLOR_BUFFER_BIT);
@@ -122,7 +124,7 @@ void galaxy_draw(int id, int gd, float a)
             /*
             star_draw();
             */
-            node_draw();
+            node_draw(P, V);
         }
         glPopAttrib();
 
@@ -130,7 +132,7 @@ void galaxy_draw(int id, int gd, float a)
 
         /* Render all child entities in this coordinate system. */
 
-        entity_traversal(id, a);
+        entity_traversal(id, Q, W);
     }
     glPopMatrix();
 }

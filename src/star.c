@@ -171,7 +171,7 @@ int star_parse_hip(FILE *fp, struct star *s)
             ra  = PI * ra / 180.0;
             de  = PI * de / 180.0;
 
-            if (isnormal(plx))
+/* TODO:    if (isnormal(plx)) */
             {
                 /* Compute the position in galactic coordinates. */
 
