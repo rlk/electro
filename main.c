@@ -1,4 +1,7 @@
 #include <SDL.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "opengl.h"
 #include "viewer.h"
@@ -6,8 +9,39 @@
 
 /*---------------------------------------------------------------------------*/
 
+int supported(const char *extension)
+{
+    const GLubyte *string = glGetString(GL_EXTENSIONS);
+    const GLubyte *start  = string;
+
+    GLubyte *where;
+    GLubyte *space;
+
+    for (;;)
+    {
+        if ((where = strstr(start, extension)) == NULL)
+            return 0;
+
+        space = where + strlen(extension);
+
+        if (where == start || *(where - 1) == ' ')
+            if (*space == ' ' || *space == '\0')
+                return 1;
+
+        start = space;
+    }
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
 static void init(void)
 {
+    if (!supported("GL_ARB_vertex_program"))
+        fprintf(stderr, "Requires GL_ARB_vertex_program\n");
+    if (!supported("GL_ARB_point_sprite"))
+        fprintf(stderr, "Requires GL_ARB_point_sprite\n");
+
     viewer_init();
     galaxy_init();
 }
