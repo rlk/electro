@@ -150,9 +150,7 @@ int camera_get_viewport_h(void)
 
 void camera_set_org(float x, float y, float z)
 {
-    int err;
-
-    if (mpi_root())
+    if (mpi_isroot())
     {
         camera_org[0] = x;
         camera_org[1] = y;
@@ -160,17 +158,13 @@ void camera_set_org(float x, float y, float z)
         server_send(EVENT_CAMERA_MOVE);
     }
 
-    if ((err = MPI_Bcast(camera_org, 3, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-
+    mpi_share_float(3, camera_org);
     camera_set_pos();
 }
 
 void camera_set_rot(float x, float y, float z)
 {
-    int err;
-
-    if (mpi_root())
+    if (mpi_isroot())
     {
         camera_rot[0] = x;
         camera_rot[1] = y;
@@ -178,54 +172,42 @@ void camera_set_rot(float x, float y, float z)
         server_send(EVENT_CAMERA_TURN);
     }
 
-    if ((err = MPI_Bcast(camera_rot, 3, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-
+    mpi_share_float(3, camera_rot);
     camera_set_pos();
 }
 
 void camera_set_dist(float d)
 {
-    int err;
-
-    if (mpi_root())
+    if (mpi_isroot())
     {
         camera_dist = d;
         server_send(EVENT_CAMERA_DIST);
     }
 
-    if ((err = MPI_Bcast(&camera_dist, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-
+    mpi_share_float(1, &camera_dist);
     camera_set_pos();
 }
 
 void camera_set_magn(float m)
 {
-    int err;
-
-    if (mpi_root())
+    if (mpi_isroot())
     {
         camera_magn = m;
         server_send(EVENT_CAMERA_MAGN);
     }
 
-    if ((err = MPI_Bcast(&camera_magn, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_float(1, &camera_magn);
 }
 
 void camera_set_zoom(float z)
 {
-    int err;
-
-    if (mpi_root())
+    if (mpi_isroot())
     {
         camera_zoom = z;
         server_send(EVENT_CAMERA_ZOOM);
     }
 
-    if ((err = MPI_Bcast(&camera_zoom, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_float(1, &camera_zoom);
 }
 
 void camera_set_pos(void)

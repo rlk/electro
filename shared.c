@@ -28,24 +28,38 @@
 
 /*---------------------------------------------------------------------------*/
 
-void mpi_error(int err)
+int mpi_assert(int err)
 {
     char buf[256];
     int len = 256;
 
-    MPI_Error_string(err, buf, &len);
-    fprintf(stderr, "MPI Error: %s\n", buf);
+    if (err == MPI_SUCCESS)
+        return 1;
+    else
+    {
+        MPI_Error_string(err, buf, &len);
+        fprintf(stderr, "MPI Error: %s\n", buf);
+        return 0;
+    }
 }
 
-int mpi_root(void)
+int mpi_isroot(void)
 {
     int rank = 0;
-    int err;
-
-    if ((err = MPI_Comm_rank(MPI_COMM_WORLD, &rank)))
-        mpi_error(err);
+    
+    mpi_assert(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
 
     return (rank == 0);
+}
+
+int mpi_share_float(int fc, float *fv)
+{
+    return mpi_assert(MPI_Bcast(fv, fc, MPI_FLOAT, 0, MPI_COMM_WORLD));
+}
+
+int mpi_share_integer(int ic, int *iv)
+{
+    return mpi_assert(MPI_Bcast(iv, ic, MPI_INTEGER, 0, MPI_COMM_WORLD));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -85,7 +99,6 @@ void viewport_tile(const char *name, float X, float Y,
 void viewport_sync(int n)
 {
     size_t sz = sizeof (struct viewport);
-    int err;
 
     struct viewport Vt;
 
@@ -102,14 +115,12 @@ void viewport_sync(int n)
 
     /* Gather all host names at the root. */
 
-    if ((err = MPI_Gather(&Vt, sz, MPI_BYTE,
-                           Vo, sz, MPI_BYTE, 0, MPI_COMM_WORLD))
-            != MPI_SUCCESS)
-        mpi_error(err);
+    mpi_assert(MPI_Gather(&Vt, sz, MPI_BYTE,
+                           Vo, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
     /* If this is the root, assign viewports by matching host names. */
 
-    if (mpi_root())
+    if (mpi_isroot())
     {
         int j;
         int k;
@@ -137,14 +148,12 @@ void viewport_sync(int n)
 
     /* Scatter the assignments to all clients. */
 
-    if ((err = MPI_Scatter(Vo, sz, MPI_BYTE,
-                          &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD))
-            != MPI_SUCCESS)
-        mpi_error(err);
+    mpi_assert(MPI_Scatter(Vo, sz, MPI_BYTE,
+                          &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
     /* Apply this client's viewport. */
 
-    if (!mpi_root()) camera_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+    if (!mpi_isroot()) camera_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -155,19 +164,17 @@ GLuint shared_load_program(const char *filename, GLenum target)
 
     char *ptr = NULL;
     int   len = 0;
-    int   err;
 
     GLuint program = 0;
 
     /* If this host is root, determine the file size. */
 
-    if (mpi_root() && (stat(filename, &buf) == 0))
+    if (mpi_isroot() && (stat(filename, &buf) == 0))
         len = buf.st_size + 1;
         
     /* Broadcast the size and allocate that much memory. */
 
-    if ((err = MPI_Bcast(&len, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_integer(1, &len);
 
     if ((ptr = (char *) calloc(1, len)))
     {
@@ -175,7 +182,7 @@ GLuint shared_load_program(const char *filename, GLenum target)
 
         /* If this host is root, read the contents of the file. */
 
-        if (mpi_root() && (fp = fopen(filename, "r")))
+        if (mpi_isroot() && (fp = fopen(filename, "r")))
         {
             fread(ptr, 1, len, fp);
             fclose(fp);
@@ -183,8 +190,7 @@ GLuint shared_load_program(const char *filename, GLenum target)
 
         /* Broadcast the contents of the file. */
 
-        if ((err = MPI_Bcast(ptr, len, MPI_CHAR, 0, MPI_COMM_WORLD)))
-            mpi_error(err);
+        mpi_assert(MPI_Bcast(ptr, len, MPI_CHAR, 0, MPI_COMM_WORLD));
 
         /* Generate and initialize a program object. */
 
@@ -194,7 +200,7 @@ GLuint shared_load_program(const char *filename, GLenum target)
 
         /* If this host is root, report any error in the program text. */
 
-        if (mpi_root() && (glGetError() != GL_NO_ERROR))
+        if (mpi_isroot() && (glGetError() != GL_NO_ERROR))
         {
             const GLubyte *msg = glGetString(GL_PROGRAM_ERROR_STRING_ARB);
             fprintf(stderr, "%s", (const char *) msg);
@@ -213,27 +219,24 @@ GLuint shared_load_texture(const char *filename, int *width, int *height)
     int      b = 0;
 
     GLuint texture = 0;
-    int err;
 
     /* If this host is root, load the image file. */
 
-    if (mpi_root()) p = (GLubyte *) image_load_png(filename, &w, &h, &b);
+    if (mpi_isroot()) p = (GLubyte *) image_load_png(filename, &w, &h, &b);
 
     /* Broadcast the image attributes. */
 
-    if ((err = MPI_Bcast(&w, 1, MPI_INT, 0, MPI_COMM_WORLD)) ||
-        (err = MPI_Bcast(&h, 1, MPI_INT, 0, MPI_COMM_WORLD)) ||
-        (err = MPI_Bcast(&b, 1, MPI_INT, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_integer(1, &w);
+    mpi_share_integer(1, &h);
+    mpi_share_integer(1, &b);
 
     /* If this host is not root, allocate a pixel buffer. */
 
-    if (!mpi_root()) p = (GLubyte *) malloc(w * h * b);
+    if (!mpi_isroot()) p = (GLubyte *) malloc(w * h * b);
 
     /* Broadcast the pixel data. */
 
-    if ((err = MPI_Bcast(p, w * h * b, MPI_BYTE, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_assert(MPI_Bcast(p, w * h * b, MPI_BYTE, 0, MPI_COMM_WORLD));
 
     /* Create a texture object. */
 

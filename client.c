@@ -47,9 +47,8 @@ static void client_recv_exit(void)
 static void client_recv(void)
 {
     int type;
-    int err;
 
-    if (!(err = MPI_Bcast(&type, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
+    if (mpi_share_integer(1, &type))
     {
         switch (type)
         {
@@ -70,7 +69,6 @@ static void client_recv(void)
         case EVENT_SPRITE_FADE: sprite_fade(0, 0);       break;
         }
     }
-    else mpi_error(err);
 }
 
 /*---------------------------------------------------------------------------*/

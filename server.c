@@ -87,10 +87,7 @@ void enable_idle(int b)
 
 void server_send(int type)
 {
-    int err;
-
-    if ((err = MPI_Bcast(&type, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_integer(1, &type);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1,8 +1,11 @@
+abstract pos/rot/siz to entity
+object entity
+light entity
+separate electro/galaxy
+doc
 remove MPI_BYTE uses (separate hostname from viewport)
-abstract pos/rot/siz to entity?
 move data to dir
 audio
 audit includes
 script tile configuration query system/standard
-object loader (geometry api?)
 abstract stars into particle system

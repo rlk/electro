@@ -101,11 +101,9 @@ void sprite_draw(void)
 int sprite_load(const char *filename)
 {
     char buf[NAMELEN];
-
     int id = -1;
-    int err;
 
-    if (mpi_root())
+    if (mpi_isroot())
     {
         /* If this host is root, find a free sprite descriptor. */
 
@@ -119,10 +117,8 @@ int sprite_load(const char *filename)
 
     /* Broadcast the descriptor and the filename. */
 
-    if ((err = MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-    if ((err = MPI_Bcast(buf, NAMELEN, MPI_CHAR, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_assert(MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
+    mpi_assert(MPI_Bcast(buf, NAMELEN, MPI_CHAR, 0, MPI_COMM_WORLD));
 
     /* Initialize the sprite object. */
 
@@ -141,15 +137,12 @@ int sprite_load(const char *filename)
 
 void sprite_free(int id)
 {
-    int err;
-
-    if (mpi_root())
+    if (mpi_isroot())
         server_send(EVENT_SPRITE_FREE);
 
     /* Broadcast the descriptor. */
 
-    if ((err = MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_integer(1, &id);
 
     /* Release the sprite object. */
 
@@ -164,80 +157,63 @@ void sprite_free(int id)
 
 void sprite_move(int id, float x, float y)
 {
-    int err;
-
-    if (mpi_root())
+    if (sprite_exists(id))
     {
-        if (sprite_exists(id))
+        if (mpi_isroot())
         {
             S[id].pos[0] = x;
             S[id].pos[1] = y;
-        }
-        server_send(EVENT_SPRITE_MOVE);
-    }
 
-    if ((err = MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-    if (sprite_exists(id))
-        if ((err = MPI_Bcast(S[id].pos, 2, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-            mpi_error(err);
+            server_send(EVENT_SPRITE_MOVE);
+        }
+        mpi_share_integer(1, &id);
+        mpi_share_float(2, S[id].pos);
+    }
 }
 
 void sprite_turn(int id, float a)
 {
-    int err;
-
-    if (mpi_root())
+    if (sprite_exists(id))
     {
-        if (sprite_exists(id))
+        if (mpi_isroot())
+        {
             S[id].rot = a;
 
-        server_send(EVENT_SPRITE_TURN);
+            server_send(EVENT_SPRITE_TURN);
+        }
+        mpi_share_integer(1, &id);
+        mpi_share_float(1, &S[id].rot);
     }
-
-    if ((err = MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-    if (sprite_exists(id))
-        if ((err = MPI_Bcast(&S[id].rot, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-            mpi_error(err);
 }
 
 void sprite_size(int id, float s)
 {
-    int err;
-
-    if (mpi_root())
+    if (sprite_exists(id))
     {
-        if (sprite_exists(id))
+        if (mpi_isroot())
+        {
             S[id].size = s;
 
-        server_send(EVENT_SPRITE_SIZE);
+            server_send(EVENT_SPRITE_SIZE);
+        }
+        mpi_share_integer(1, &id);
+        mpi_share_float(1, &S[id].size);
     }
-
-    if ((err = MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-    if (sprite_exists(id))
-        if ((err = MPI_Bcast(&S[id].size, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-            mpi_error(err);
 }
 
 void sprite_fade(int id, float f)
 {
-    int err;
-
-    if (mpi_root())
+    if (sprite_exists(id))
     {
-        if (sprite_exists(id))
+        if (mpi_isroot())
+        {
             S[id].alpha = f;
 
-        server_send(EVENT_SPRITE_FADE);
+            server_send(EVENT_SPRITE_FADE);
+        }
+        mpi_share_integer(1, &id);
+        mpi_share_float(1, &S[id].alpha);
     }
-
-    if ((err = MPI_Bcast(&id, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
-    if (sprite_exists(id))
-        if ((err = MPI_Bcast(&S[id].alpha, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
-            mpi_error(err);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -21,8 +21,11 @@
 
 /*---------------------------------------------------------------------------*/
 
-void mpi_error(int);
-int  mpi_root(void);
+int mpi_assert(int);
+int mpi_isroot(void);
+
+int mpi_share_float(int, float *);
+int mpi_share_integer(int, int *);
 
 /*---------------------------------------------------------------------------*/
 

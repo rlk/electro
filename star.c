@@ -324,20 +324,18 @@ void star_init(void)
 
     /* Broadcast the size of the star catalog. */
 
-    if ((err = MPI_Bcast(&star_count, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_share_integer(1, &star_count);
 
     /* If this host is not root, acquire storage for the catalog. */
 
-    if (!mpi_root())
+    if (!mpi_isroot())
         star_data = (struct star *) calloc(sizeof (struct star), star_count);
 
     /* Broadcast the star catalog data. */
 
     len = star_count * sizeof (struct star);
 
-    if ((err = MPI_Bcast(star_data, len, MPI_BYTE, 0, MPI_COMM_WORLD)))
-        mpi_error(err);
+    mpi_assert(MPI_Bcast(star_data, len, MPI_BYTE, 0, MPI_COMM_WORLD));
 }
 
 void star_draw(void)
