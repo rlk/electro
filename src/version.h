@@ -1,1 +1,1 @@
-#define REV " Revision: 165 "
+#define REV "$Rev$"

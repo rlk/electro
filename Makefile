@@ -70,11 +70,6 @@ OBJS=	src/opengl.o   \
 .c.o :
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
-all: src/version.h $(TARG)
-
-src/version.h : FORCE
-	echo "#define REV \"" `svn info | grep Revision` "\""> src/version.h
-
 $(TARG) : $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
@@ -84,7 +79,5 @@ clean :
 install : $(TARG)
 	cp $(TARG) $(PREFIX)/bin
 	cp config/* $(PREFIX)/config
-
-FORCE:
 
 #------------------------------------------------------------------------------
