@@ -10,8 +10,8 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef STATUS_H
-#define STATUS_H
+#ifndef CAMERA_H
+#define CAMERA_H
 
 /*---------------------------------------------------------------------------*/
 
