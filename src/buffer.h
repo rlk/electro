@@ -10,41 +10,25 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef CAMERA_H
-#define CAMERA_H
+/*---------------------------------------------------------------------------*/
+
+void  buffer_init(void);
+void  buffer_free(void);
+void  buffer_sync(void);
 
 /*---------------------------------------------------------------------------*/
 
-#define CAMERA_FAR 1000.0f
-
-#define CAMERA_ORTHO 1
-#define CAMERA_PERSP 2
-
-struct camera
-{
-    int   type;
-    float dist;
-    float zoom;
-};
+void  pack_index(int);
+void  pack_event(char);
+void  pack_float(float);
+void  pack_alloc(const void *, int);
 
 /*---------------------------------------------------------------------------*/
 
-int  camera_init(void);
-void camera_draw(int, int);
-
-int  camera_send_create(int);
-void camera_recv_create(void);
-
-void camera_delete(int);
+int   unpack_index(void);
+char  unpack_event(void);
+float unpack_float(void);
+void *unpack_alloc(int);
 
 /*---------------------------------------------------------------------------*/
 
-void camera_send_dist(int, float);
-void camera_recv_dist(void);
-
-void camera_send_zoom(int, float);
-void camera_recv_zoom(void);
-
-/*---------------------------------------------------------------------------*/
-
-#endif

@@ -55,17 +55,28 @@ void entity_traversal(int);
 /*---------------------------------------------------------------------------*/
 
 int  entity_init(void);
-
-int  entity_create(int, int);
-void entity_parent(int, int);
-void entity_render(void);
-void entity_delete(int);
+void entity_draw(void);
 
 /*---------------------------------------------------------------------------*/
 
-void entity_position(int, float, float, float);
-void entity_rotation(int, float, float, float);
-void entity_scale   (int, float, float, float);
+int  entity_send_create(int, int);
+void entity_recv_create(void);
+
+void entity_send_parent(int, int);
+void entity_recv_parent(void);
+
+void entity_send_delete(int);
+void entity_recv_delete(void);
+
+/*---------------------------------------------------------------------------*/
+
+void entity_send_position(int, float, float, float);
+void entity_send_rotation(int, float, float, float);
+void entity_send_scale   (int, float, float, float);
+
+void entity_recv_position(void);
+void entity_recv_rotation(void);
+void entity_recv_scale   (void);
 
 void entity_get_position(int, float *, float *, float *);
 void entity_get_rotation(int, float *, float *, float *);

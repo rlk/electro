@@ -255,8 +255,8 @@ static int script_entity_parent(lua_State *L)
 {
     const char *name = "entity_parent";
 
-    entity_parent(script_getentity(name, L, -2),
-                  script_getentity(name, L, -1));
+    entity_send_parent(script_getentity(name, L, -2),
+                       script_getentity(name, L, -1));
     return 0;
 }
 
@@ -264,7 +264,7 @@ static int script_entity_delete(lua_State *L)
 {
     const char *name = "entity_delete";
 
-    entity_delete(script_getentity(name, L, -1));
+    entity_send_delete(script_getentity(name, L, -1));
     return 0;
 }
 
@@ -275,10 +275,10 @@ static int script_entity_position(lua_State *L)
 {
     const char *name = "entity_position";
 
-    entity_position(script_getentity(name, L, -4),
-                    script_getnumber(name, L, -3),
-                    script_getnumber(name, L, -2),
-                    script_getnumber(name, L, -1));
+    entity_send_position(script_getentity(name, L, -4),
+                         script_getnumber(name, L, -3),
+                         script_getnumber(name, L, -2),
+                         script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -286,10 +286,10 @@ static int script_entity_rotation(lua_State *L)
 {
     const char *name = "entity_rotation";
 
-    entity_rotation(script_getentity(name, L, -4),
-                    script_getnumber(name, L, -3),
-                    script_getnumber(name, L, -2),
-                    script_getnumber(name, L, -1));
+    entity_send_rotation(script_getentity(name, L, -4),
+                         script_getnumber(name, L, -3),
+                         script_getnumber(name, L, -2),
+                         script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -297,10 +297,10 @@ static int script_entity_scale(lua_State *L)
 {
     const char *name = "entity_scale";
 
-    entity_scale(script_getentity(name, L, -4),
-                 script_getnumber(name, L, -3),
-                 script_getnumber(name, L, -2),
-                 script_getnumber(name, L, -1));
+    entity_send_scale(script_getentity(name, L, -4),
+                      script_getnumber(name, L, -3),
+                      script_getnumber(name, L, -2),
+                      script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -353,31 +353,41 @@ static int script_viewport_get(lua_State *L)
 
 static int script_camera_create(lua_State *L)
 {
-    lua_pushentity(L, camera_create(script_getnumber("camera_create", L, -1)));
+    int id = camera_send_create(script_getnumber("camera_create", L, -1));
+
+    lua_pushentity(L, id);
     return 1;
 }
 
 static int script_sprite_create(lua_State *L)
 {
-    lua_pushentity(L, sprite_create(script_getstring("sprite_create", L, -1)));
+    int id = sprite_send_create(script_getstring("sprite_create", L, -1));
+
+    lua_pushentity(L, id);
     return 1;
 }
 
 static int script_object_create(lua_State *L)
 {
-    lua_pushentity(L, object_create(script_getstring("object_create", L, -1)));
+    int id = object_send_create(script_getstring("object_create", L, -1));
+
+    lua_pushentity(L, id);
     return 1;
 }
 
 static int script_light_create(lua_State *L)
 {
-    lua_pushentity(L, light_create(script_getnumber("light_create", L, -1)));
+    int id = light_send_create(script_getnumber("light_create", L, -1));
+
+    lua_pushentity(L, id);
     return 1;
 }
 
 static int script_pivot_create(lua_State *L)
 {
-    lua_pushentity(L, pivot_create());
+    int id = pivot_send_create();
+
+    lua_pushentity(L, id);
     return 1;
 }
 
@@ -388,8 +398,8 @@ static int script_camera_dist(lua_State *L)
 {
     const char *name = "camera_dist";
 
-    camera_set_dist(script_getcamera(name, L, -2),
-                    script_getnumber(name, L, -1));
+    camera_send_dist(script_getcamera(name, L, -2),
+                     script_getnumber(name, L, -1));
     return 0;
 }
 
@@ -397,8 +407,8 @@ static int script_camera_zoom(lua_State *L)
 {
     const char *name = "camera_zoom";
 
-    camera_set_zoom(script_getcamera(name, L, -2),
-                    script_getnumber(name, L, -1));
+    camera_send_zoom(script_getcamera(name, L, -2),
+                     script_getnumber(name, L, -1));
     return 0;
 }
 

@@ -17,6 +17,7 @@
 
 #include "opengl.h"
 #include "viewport.h"
+#include "buffer.h"
 #include "shared.h"
 #include "server.h"
 #include "entity.h"
@@ -24,8 +25,10 @@
 
 /*---------------------------------------------------------------------------*/
 
-static struct camera *C     = NULL;
-static int            C_max =    0;
+#define CMAXINIT 8
+
+static struct camera *C;
+static int            C_max;
 
 static int camera_exists(int cd)
 {
@@ -36,49 +39,15 @@ static int camera_exists(int cd)
 
 int camera_init(void)
 {
-    if ((C = (struct camera *) calloc(2, sizeof (struct camera))))
+    if ((C = (struct camera *) calloc(CMAXINIT, sizeof (struct camera))))
     {
-        C_max = 2;
+        C_max = CMAXINIT;
         return 1;
     }
     return 0;
 }
 
-int camera_create(int type)
-{
-    int cd;
-
-    if (C && (cd = buffer_unused(C_max, camera_exists)) >= 0)
-    {
-        /* Initialize the new camera. */
-
-        if (mpi_isroot())
-        {
-            C[cd].type =  type;
-            server_send(EVENT_CAMERA_CREATE);
-        }
-
-        C[cd].dist = 0.0f;
-        C[cd].zoom = 1.0f;
-
-        /* Syncronize the new camera. */
-
-        mpi_share_integer(1, &cd);
-        mpi_share_integer(1, &C[cd].type);
-
-        /* Encapsulate this new camera in an entity. */
-
-        return entity_create(TYPE_CAMERA, cd);
-    }
-    else if ((C = buffer_expand(C, &C_max, sizeof (struct camera))))
-        return camera_create(type);
-
-    return -1;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void camera_render(int id, int cd)
+void camera_draw(int id, int cd)
 {
     float p[3];
     float r[3];
@@ -145,51 +114,75 @@ void camera_render(int id, int cd)
 
 /*---------------------------------------------------------------------------*/
 
-/* This function should be called only by the entity delete function. */
+static void camera_create(int cd, int type)
+{
+    C[cd].type = type;
+    C[cd].dist = 0.0f;
+    C[cd].zoom = 1.0f;
+}
+
+int camera_send_create(int type)
+{
+    int cd = buffer_unused(C_max, camera_exists);
+
+    pack_event(EVENT_CAMERA_CREATE);
+    pack_index(cd);
+    pack_index(type);
+
+    camera_create(cd, type);
+
+    return entity_send_create(TYPE_CAMERA, cd);
+}
+
+void camera_recv_create(void)
+{
+    int cd   = unpack_index();
+    int type = unpack_index();
+
+    camera_create(cd, type);
+
+    entity_recv_create();
+}
+
+/*---------------------------------------------------------------------------*/
 
 void camera_delete(int cd)
 {
-    mpi_share_integer(1, &cd);
-
     memset(C + cd, 0, sizeof (struct camera));
 }
 
 /*---------------------------------------------------------------------------*/
 
-void camera_set_dist(int cd, float d)
+void camera_send_dist(int cd, float d)
 {
-    if (mpi_isroot())
-    {
-        C[cd].dist = d;
+    pack_event(EVENT_CAMERA_DIST);
+    pack_index(cd);
 
-        server_send(EVENT_CAMERA_DIST);
-
-        mpi_share_integer(1, &cd);
-        mpi_share_float(1, &C[cd].dist);
-    }
-    else
-    {
-        mpi_share_integer(1, &cd);
-        mpi_share_float(1, &C[cd].dist);
-    }
+    pack_float((C[cd].dist = d));
 }
 
-void camera_set_zoom(int cd, float z)
+void camera_recv_dist(void)
 {
-    if (mpi_isroot())
-    {
-        C[cd].zoom = z;
+    int cd = unpack_index();
 
-        server_send(EVENT_CAMERA_ZOOM);
+    C[cd].dist = unpack_float();
+}
 
-        mpi_share_integer(1, &cd);
-        mpi_share_float(1, &C[cd].zoom);
-    }
-    else
-    {
-        mpi_share_integer(1, &cd);
-        mpi_share_float(1, &C[cd].zoom);
-    }
+/*---------------------------------------------------------------------------*/
+
+void camera_send_zoom(int cd, float z)
+{
+    pack_event(EVENT_CAMERA_DIST);
+    pack_index(cd);
+
+    pack_float((C[cd].zoom = z));
+}
+
+void camera_recv_zoom(void)
+{
+    int cd = unpack_index();
+
+    C[cd].zoom = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/

@@ -15,6 +15,7 @@
 
 #include "opengl.h"
 #include "viewport.h"
+#include "buffer.h"
 #include "shared.h"
 #include "client.h"
 #include "camera.h"
@@ -48,37 +49,41 @@ static void client_recv_exit(void)
     SDL_PushEvent(&e);
 }
 
+/*---------------------------------------------------------------------------*/
+
 static void client_recv(void)
 {
-    int type = 0;
+    char event = EVENT_NULL;
 
-    if (mpi_share_integer(1, &type))
+    buffer_sync();
+
+    while (unpack_event())
     {
 #ifndef NDEBUG
     printf("%d of %d: client_recv(%s)\n", mpi_rank(),
-                                          mpi_size(), event_string(type));
+                                          mpi_size(), event_string(event));
 #endif
-
-        switch (type)
+        switch (event)
         {
-        case EVENT_DRAW:          client_recv_draw();          break;
-        case EVENT_EXIT:          client_recv_exit();          break;
+        case EVENT_DRAW:          client_recv_draw();     break;
+        case EVENT_EXIT:          client_recv_exit();     break;
 
-        case EVENT_ENTITY_PARENT: entity_parent(0, 0);         break;
-        case EVENT_ENTITY_DELETE: entity_delete(0);            break;
+        case EVENT_ENTITY_PARENT: entity_recv_parent();   break;
+        case EVENT_ENTITY_DELETE: entity_recv_delete();   break;
+        case EVENT_ENTITY_MOVE:   entity_recv_position(); break;
+        case EVENT_ENTITY_TURN:   entity_recv_rotation(); break;
+        case EVENT_ENTITY_SIZE:   entity_recv_scale();    break;
 
-        case EVENT_ENTITY_MOVE:   entity_position(0, 0, 0, 0); break;
-        case EVENT_ENTITY_TURN:   entity_rotation(0, 0, 0, 0); break;
-        case EVENT_ENTITY_SIZE:   entity_scale   (0, 0, 0, 0); break;
-
-        case EVENT_CAMERA_CREATE: camera_create(0);            break;
+        case EVENT_CAMERA_CREATE: camera_recv_create();   break;
+/*
         case EVENT_SPRITE_CREATE: sprite_create(NULL);         break;
         case EVENT_OBJECT_CREATE: object_create(NULL);         break;
         case EVENT_LIGHT_CREATE:  light_create(0);             break;
         case EVENT_PIVOT_CREATE:  pivot_create();              break;
+*/
 
-        case EVENT_CAMERA_DIST:   camera_set_dist(0, 0);       break;
-        case EVENT_CAMERA_ZOOM:   camera_set_zoom(0, 0);       break;
+        case EVENT_CAMERA_DIST:   camera_recv_dist();       break;
+        case EVENT_CAMERA_ZOOM:   camera_recv_zoom();       break;
         }
     }
 }
@@ -104,9 +109,9 @@ static void client_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    entity_render();
+    entity_draw();
 
-    mpi_barrier();
+/*  mpi_barrier(); */
     SDL_GL_SwapBuffers();
 }
 
@@ -152,6 +157,7 @@ void client(void)
 
         if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
+            buffer_init();
             client_init();
             entity_init();
 

@@ -21,6 +21,10 @@
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef MPI
+#include <mpi.h>
+#endif
+
 int  mpi_assert(int);
 int  mpi_isroot(void);
 
@@ -36,6 +40,7 @@ int  mpi_share_integer(int, int *);
 
 /*---------------------------------------------------------------------------*/
 
+#define EVENT_NULL           0
 #define EVENT_DRAW           1
 #define EVENT_EXIT           2
 

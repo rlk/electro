@@ -15,16 +15,20 @@
 #include <stdio.h>
 
 #include "opengl.h"
+#include "buffer.h"
 #include "shared.h"
 #include "server.h"
 #include "entity.h"
+#include "image.h"
 #include "sprite.h"
 
 /*---------------------------------------------------------------------------*/
 /* Sprite entity storage                                                     */
 
-static struct sprite *S     = NULL;
-static int            S_max =    0;
+#define SMAXINIT 256
+
+static struct sprite *S;
+static int            S_max;
 
 static int sprite_exists(int id)
 {
@@ -35,56 +39,18 @@ static int sprite_exists(int id)
 
 int sprite_init(void)
 {
-    if ((S = (struct sprite *) calloc(32, sizeof (struct sprite))))
+    if ((S = (struct sprite *) calloc(SMAXINIT, sizeof (struct sprite))))
     {
-        S_max = 32;
+        S_max = SMAXINIT;
         return 1;
     }
     return 0;
 }
 
-static void sprite_share(struct sprite *s, const char *filename)
-{
-    s->texture = shared_load_texture(filename, &s->w, &s->h);
-    s->a       = 1.0f;
-}
-
-int sprite_create(const char *filename)
-{
-    int sd;
-
-    if (S && (sd = buffer_unused(S_max, sprite_exists)) >= 0)
-    {
-        /* Initialize the new sprite. */
-
-        if (mpi_isroot())
-            server_send(EVENT_SPRITE_CREATE);
-
-        /* Syncronize the new sprite. */
-
-        mpi_share_integer(1, &sd);
-
-        sprite_share(S + sd, filename);
-        opengl_check("sprite_create");
-
-        /* Encapsulate this new sprite in an entity. */
-
-        return entity_create(TYPE_SPRITE, sd);
-    }
-    else if ((S = buffer_expand(S, &S_max, sizeof (struct sprite))))
-        return sprite_create(filename);
-
-    return -1;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void sprite_render(int id, int sd)
+void sprite_draw(int id, int sd)
 {
     if (sprite_exists(sd))
     {
-        opengl_check("sprite_render before");
-
         glPushMatrix();
         {
             /* Apply the local coordinate system transformation. */
@@ -94,7 +60,7 @@ void sprite_render(int id, int sd)
             /* Render this sprite. */
 
             glBindTexture(GL_TEXTURE_2D, S[sd].texture);
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            glColor4f(1.0f, 1.0f, 1.0f, S[sd].a);
 
             glBegin(GL_QUADS);
             {
@@ -108,7 +74,7 @@ void sprite_render(int id, int sd)
             }
             glEnd();
 
-            opengl_check("sprite_render after");
+            opengl_check("sprite_render");
 
             /* Render all child entities in this coordinate system. */
 
@@ -120,13 +86,55 @@ void sprite_render(int id, int sd)
 
 /*---------------------------------------------------------------------------*/
 
+static void sprite_create(int sd, int w, int h, int b, void *p)
+{
+    S[sd].texture = image_make_tex(p, w, h, b);
+    S[sd].a       = 1.0f;
+}
+
+int sprite_send_create(const char *filename)
+{
+    int w, h, b, sd = buffer_unused(S_max, sprite_exists);
+    void *p;
+
+    if ((p = image_load_png(filename, &w, &h, &b)))
+    {
+        pack_event(EVENT_SPRITE_CREATE);
+        pack_index(sd);
+        pack_index(w);
+        pack_index(h);
+        pack_index(b);
+        pack_alloc(p, w * h * b);
+
+        sprite_create(sd, w, h, b, p);
+
+        return entity_send_create(TYPE_SPRITE, sd);
+    }
+    return -1;
+}
+
+void sprite_recv_create(void)
+{
+    int  sd = unpack_index();
+    int   w = unpack_index();
+    int   h = unpack_index();
+    int   b = unpack_index();
+    void *p = unpack_alloc(w * h * b);
+
+    sprite_create(sd, w, h, b, p);
+
+    entity_recv_create();
+}
+
+/*---------------------------------------------------------------------------*/
+
 /* This function should be called only by the entity delete function. */
 
 void sprite_delete(int sd)
 {
-    mpi_share_integer(1, &sd);
-
     /* Release the sprite object. */
+
+    if (S[sd].p) free(S[sd].p);
 
     if (glIsTexture(S[sd].texture))
         glDeleteTextures(1, &S[sd].texture);

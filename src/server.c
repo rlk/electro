@@ -17,6 +17,7 @@
 #include "opengl.h"
 #include "joystick.h"
 #include "viewport.h"
+#include "buffer.h"
 #include "shared.h"
 #include "server.h"
 #include "script.h"
@@ -93,7 +94,7 @@ void enable_idle(int b)
 }
 
 /*---------------------------------------------------------------------------*/
-
+/*
 void server_send(int type)
 {
 #ifndef NDEBUG
@@ -102,7 +103,7 @@ void server_send(int type)
 #endif
     mpi_share_integer(1, &type);
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 static void server_init(void)
@@ -140,11 +141,11 @@ static void server_draw(void)
     /* Draw the scene into the viewport parts of the frame buffer. */
 
     glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
-    entity_render();
+    entity_draw();
 
     /* Sync and swap. */
 
-    mpi_barrier();
+/*  mpi_barrier(); */
     SDL_GL_SwapBuffers();
 }
 
@@ -214,7 +215,8 @@ static int server_loop(void)
 
         if (e.type == SDL_QUIT)
         {
-            server_send(EVENT_EXIT);
+            pack_event(EVENT_EXIT);
+            pack_event(EVENT_NULL);
             return 0;
         }
     }
@@ -223,12 +225,16 @@ static int server_loop(void)
 
     if (dirty)
     {
-        server_send(EVENT_DRAW);
+        pack_event(EVENT_DRAW);
+
         server_draw();
         server_perf();
 
         dirty = 0;
     }
+
+    pack_event(EVENT_NULL);
+    buffer_sync();
 
     return 1;
 }
@@ -270,6 +276,7 @@ void server(int argc, char *argv[])
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
                 joystick_init();
+                buffer_init();
                 server_init();
                 entity_init();
                 script_start();

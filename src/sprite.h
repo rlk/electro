@@ -20,20 +20,22 @@
 struct sprite
 {
     GLuint texture;
+    void  *p;
     int    w;
     int    h;
+    int    b;
     float  a;
 };
 
 /*---------------------------------------------------------------------------*/
 
 int  sprite_init(void);
+void sprite_draw(int, int);
 
-int  sprite_create(const char *);
-void sprite_render(int, int);
+int  sprite_send_create(const char *);
+void sprite_recv_create(void);
+
 void sprite_delete(int);
-
-void sprite_alpha(int, float);
 
 /*---------------------------------------------------------------------------*/
 
