@@ -157,7 +157,7 @@ int parse_galaxy(const char *filename, struct galaxy *g)
 {
     FILE *fp;
 
-    if ((fp = fopen(filename, FMODE_RB)))
+    if ((fp = fopen(get_cwd(filename), FMODE_RB)))
     {
         struct head H;
 
@@ -194,7 +194,7 @@ int write_galaxy(const char *filename, struct galaxy *g)
 {
     FILE *fp;
 
-    if ((fp = fopen(filename, FMODE_WB)))
+    if ((fp = fopen(get_cwd(filename), FMODE_WB)))
     {
         struct head H;
 
@@ -276,7 +276,7 @@ static int prep_parse_hip(struct star *S, int S_num, const char *filename)
 
     if (stat(filename, &buf) == 0)
     {
-        if ((fp = fopen(filename, "r")))
+        if ((fp = fopen(get_cwd(filename), "r")))
         {
             int n = (int) buf.st_size / STAR_HIP_RECLEN;
             int i;
@@ -297,7 +297,7 @@ static int prep_parse_tyc(struct star *S, int S_num, const char *filename)
 
     if (stat(filename, &buf) == 0)
     {
-        if ((fp = fopen(filename, "r")))
+        if ((fp = fopen(get_cwd(filename), "r")))
         {
             int n = (int) buf.st_size / STAR_TYC_RECLEN;
             int i;

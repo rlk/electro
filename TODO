@@ -1,8 +1,13 @@
+console
+directory fixes (can't use manual CWD because of lua state)
+    on script load, chdir path, dofile filename
+    (thus LAST script will set cwd)
+    (don't forget PWD env)
+
+arguments to lua script?
 fp/vp per entity (also fixes standard string length)
 
 Scale and billboard frustum (thorough test)
-Windows port
-Website
 
 TTF support (distribute the ttf?  Just the image?)
 Star VBO?  (Ok if tree is NOT pruned)

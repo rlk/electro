@@ -19,6 +19,7 @@
 #include "shared.h"
 #include "script.h"
 #include "entity.h"
+#include "utility.h"
 #include "sound.h"
 #include "image.h"
 #include "event.h"
@@ -244,6 +245,8 @@ static int server_loop(void)
 void server(int argc, char *argv[])
 {
     int argi;
+
+    set_cwd(".");
     
     /*
     prep_tyc_galaxy();

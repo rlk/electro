@@ -17,7 +17,46 @@
 #include <winsock2.h>
 #else
 #include <arpa/inet.h>
+#include <unistd.h>
 #endif
+
+#include "utility.h"
+
+/*---------------------------------------------------------------------------*/
+/* Current working directory management                                      */
+
+static char path[MAXSTR];
+
+const char *get_cwd(const char *file)
+{
+    /*
+    static char absolute[MAXSTR];
+
+    size_t d = strlen(path);
+
+    strncpy(absolute, path, MAXSTR - 1);
+    strncat(absolute, "/",  MAXSTR - d - 1);
+    strncat(absolute, file, MAXSTR - d - 2);
+
+    return absolute;
+    */
+    return file;
+}
+
+void set_cwd(const char *pathname)
+{
+    int l = strlen(pathname);
+
+    strncpy(path, pathname, MAXSTR);
+
+    /* Strip everything beyond the last directory divider. */
+
+    while (l >= 0 && path[l] != '/' &&
+                     path[l] != '\\')
+        path[l--] = '\0';
+
+    chdir(path);
+}
 
 /*---------------------------------------------------------------------------*/
 /* Byte order float handlers                                                 */

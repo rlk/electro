@@ -139,31 +139,6 @@ GLint opengl_perf(void)
 
 /*---------------------------------------------------------------------------*/
 
-const char *opengl_read(const char *filename)
-{
-    struct stat buf;
-
-    char *ptr = NULL;
-    FILE *fp;
-
-    if (stat(filename, &buf) == 0)
-    {
-        if ((fp = fopen(filename, "r")))
-        {
-            if ((ptr = (char *) calloc(1, buf.st_size + 1)))
-                fread(ptr, 1, buf.st_size + 1, fp);
-
-            fclose(fp);
-        }
-        else perror("gl_read_text: fopen()");
-    }
-    else perror("gl_read_text: stat()");
-
-    return ptr;
-}
-
-/*---------------------------------------------------------------------------*/
-
 #ifndef NDEBUG
 
 void opengl_check(const char *str)

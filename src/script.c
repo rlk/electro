@@ -23,6 +23,7 @@
 #include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
+#include "utility.h"
 #include "entity.h"
 #include "sound.h"
 #include "script.h"
@@ -772,6 +773,18 @@ static int script_get_entity_debug_id(lua_State *L)
     return 1;
 }
 
+static int script_set_directory(lua_State *L)
+{
+    set_cwd(script_getstring("set_directory", L, -1));
+    return 0;
+}
+
+static int script_get_directory(lua_State *L)
+{
+    lua_pushstring(L, get_cwd("/"));
+    return 1;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Script callback backcallers                                               */
 
@@ -978,6 +991,8 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);
     lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
+    lua_function(L, "set_directory",        script_set_directory);
+    lua_function(L, "get_directory",        script_get_directory);
 
     /* Constants. */
 
@@ -1024,6 +1039,10 @@ void free_script(void)
 
 void load_script(const char *filename)
 {
+    set_cwd(filename);
+
+    /* Execute the named script. */
+
     lua_getglobal(L, "dofile");
 
     if (lua_isfunction(L, -1))

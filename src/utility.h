@@ -34,7 +34,12 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
+#define MAXSTR 256
+
 /*---------------------------------------------------------------------------*/
+
+const char *get_cwd(const char *);
+void        set_cwd(const char *);
 
 float htonf(float);
 float ntohf(float);

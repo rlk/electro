@@ -752,7 +752,7 @@ function leave_state(s)
         E.set_entity_flag(overlay_high,  E.entity_flag_hidden, true)
         E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
 
-        local fout = io.open(high_score_file, "w")
+        local fout = io.open(E.get_directory()..high_score_file, "w")
         if fout then
             fout:write(high_score, init[1], init[2], init[3])
             fout:close()

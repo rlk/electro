@@ -111,7 +111,7 @@ void *load_png_image(const char *filename, int *width,
 
     /* Initialize all PNG import data structures. */
 
-    if (!(fp = fopen(filename, FMODE_RB)))
+    if (!(fp = fopen(get_cwd(filename), FMODE_RB)))
         return punt_image("Failure opening PNG file");
 
     if (!(readp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
@@ -184,7 +184,7 @@ void *load_jpg_image(const char *filename, int *width,
     GLubyte *p = NULL;
     FILE   *fp;
 
-    if ((fp = fopen(filename, FMODE_RB)))
+    if ((fp = fopen(get_cwd(filename), FMODE_RB)))
     {
         struct jpeg_decompress_struct cinfo;
         struct jpeg_error_mgr         jerr;
