@@ -6,8 +6,8 @@
 #define WINDOW
 
 #ifdef WINDOW
-#define WIN_W 1024
-#define WIN_H 768
+#define WIN_W 640
+#define WIN_H 480
 #define WIN_M 0
 #else
 #define WIN_W 1600
@@ -37,6 +37,8 @@
 
 GLboolean   gl_supported(const char *);
 const char *gl_read_text(const char *);
+
+void gl_fps(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1,3 +1,4 @@
+#include <SDL.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -31,6 +32,8 @@ GLboolean gl_supported(const char *extension)
     return 0;
 }
 
+/*---------------------------------------------------------------------------*/
+
 const char *gl_read_text(const char *filename)
 {
     struct stat buf;
@@ -52,6 +55,30 @@ const char *gl_read_text(const char *filename)
     else perror("gl_read_text: stat()");
 
     return ptr;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void gl_fps(void)
+{
+    static int fps   = 0;
+    static int then  = 0;
+    static int count = 0;
+
+    int now = SDL_GetTicks();
+
+    if (now - then > 250)
+    {
+        char buf[16];
+
+        fps   = count * 1000 / (now - then);
+        then  = now;
+        count = 0;
+
+        sprintf(buf, "%d", fps);
+        SDL_WM_SetCaption(buf, buf);
+    }
+    else count++;
 }
 
 /*---------------------------------------------------------------------------*/

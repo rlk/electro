@@ -1,144 +1,26 @@
-#include <SDL.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <mpi.h>
 
-#include "opengl.h"
-#include "viewer.h"
-#include "galaxy.h"
+#include "server.h"
+#include "client.h"
 
 /*---------------------------------------------------------------------------*/
-
-static void fps(void)
-{
-    static int fps   = 0;
-    static int then  = 0;
-    static int count = 0;
-
-    int now = SDL_GetTicks();
-
-    if (now - then > 250)
-    {
-        char buf[16];
-
-        fps   = count * 1000 / (now - then);
-        then  = now;
-        count = 0;
-
-        sprintf(buf, "%d", fps);
-        SDL_WM_SetCaption(buf, buf);
-    }
-    else count++;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void init(void)
-{
-    viewer_init();
-    galaxy_init();
-}
-
-static void draw(void)
-{
-    double p[3];
-
-    viewer_get_pos(p);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    viewer_draw();
-    galaxy_draw(p);
-
-    SDL_GL_SwapBuffers();
-    fps();
-}
-
-/*---------------------------------------------------------------------------*/
-
-static int loop(void)
-{
-    SDL_Event e;
-    int c = 0;
-
-    while (SDL_PollEvent(&e))
-        switch (e.type)
-        {
-        case SDL_MOUSEBUTTONDOWN:
-            c += viewer_click(e.button.button, 1);
-            break;
-
-        case SDL_MOUSEBUTTONUP:
-            c += viewer_click(e.button.button, 0);
-            break;
-
-        case SDL_MOUSEMOTION:
-            c += viewer_point(e.motion.x, e.motion.y);
-            break;
-
-        case SDL_USEREVENT:
-            c += viewer_event(e.user.code);
-            break;
-
-        case SDL_KEYDOWN:
-            if (e.key.keysym.sym == SDLK_ESCAPE)
-                return 1;
-            else
-                c += viewer_keybd(e.key.keysym.sym, 1);
-            break;
-
-        case SDL_QUIT:
-            return 1;
-        }
-
-    if (c) draw();
-
-    return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void usage(const char *name)
-{
-    fprintf(stderr, "Usage: %s [OPTION]...\n", name);
-    fprintf(stderr, "\t-f <filename>   Read binary star catalog\n");
-    fprintf(stderr, "\t-t <filename>   Read ascii star catalog\n");
-    fprintf(stderr, "\t-o <filename>   Write binary star catalog\n");
-    fprintf(stderr, "\t-h              Help\n");
-}
 
 int main(int argc, char *argv[])
 {
-    int c;
+    int np;
+    int id;
 
-    while ((c = getopt(argc, argv, "f:t:o:")) > 0)
-        switch (c)
-        {
-        case 'f': star_read_catalog_bin(optarg); break;
-        case 't': star_read_catalog_txt(optarg); break;
-        case 'o': star_write_catalog(optarg);    break;
-        case '?':
-        case 'h': usage(argv[0]); return 1;
-        }
-
-    if (SDL_Init(SDL_INIT_VIDEO) == 0)
+    if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
     {
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-        if (SDL_SetVideoMode(WIN_W, WIN_H, 0, WIN_M | SDL_OPENGL))
+        if (MPI_Comm_size(MPI_COMM_WORLD, &np) == MPI_SUCCESS &&
+            MPI_Comm_rank(MPI_COMM_WORLD, &id) == MPI_SUCCESS)
         {
-            init();
-            draw();
-
-            while (SDL_WaitEvent(NULL))
-                if (loop())
-                    break;
+            if (id == 0)
+                server(np, argc, argv);
+            else
+                client(np, id);
         }
-        SDL_Quit();
+        MPI_Finalize();
     }
 
     return 0;
