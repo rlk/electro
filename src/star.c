@@ -620,13 +620,12 @@ static GLuint load_star_far_vp(void)
 
 void star_send_create(void)
 {
-    /*
-    star_near_count = unpack_index();
-    star_far_count  = unpack_index();
+    pack_index(star_near_count);
+    pack_alloc(star_near_count * sizeof (struct star), star_near_data);
 
-    star_near_data  = unpack_alloc(star_near_count * sizeof (struct star));
-    star_far_data   = unpack_alloc(star_far_count  * sizeof (struct star));
-    */
+    pack_index(star_far_count);
+    pack_alloc(star_far_count  * sizeof (struct star), star_far_data);
+
     star_texture = star_make_texture();
     star_fp      = load_star_fp();
     star_near_vp = load_star_near_vp();
