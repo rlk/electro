@@ -13,7 +13,7 @@ OBJS=	opengl.o \
 
 #------------------------------------------------------------------------------
 
-CC= /usr/local/mpich-1.2.6/bin/mpicc
+CC= mpicc
 RM= rm
 
 CFLAGS= $(shell sdl-config --cflags) -g
@@ -21,7 +21,7 @@ INCDIR=
 LIBDIR=
 
 SDL_LIBS= $(shell sdl-config --libs)
-LUA_LIBS= -llua -lualib
+LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
 ifeq ($(shell uname), Darwin)
