@@ -53,21 +53,21 @@ static void client_recv(void)
     {
         switch (type)
         {
-        case EVENT_DRAW:          client_recv_draw();      break;
-        case EVENT_EXIT:          client_recv_exit();      break;
+        case EVENT_DRAW:          client_recv_draw();          break;
+        case EVENT_EXIT:          client_recv_exit();          break;
 
-        case EVENT_ENTITY_PARENT: entity_parent(0, 0);     break;
-        case EVENT_ENTITY_DELETE: entity_delete(0);        break;
+        case EVENT_ENTITY_PARENT: entity_parent(0, 0);         break;
+        case EVENT_ENTITY_DELETE: entity_delete(0);            break;
 
         case EVENT_ENTITY_MOVE:   entity_position(0, 0, 0, 0); break;
         case EVENT_ENTITY_TURN:   entity_rotation(0, 0, 0, 0); break;
         case EVENT_ENTITY_SIZE:   entity_scale(0, 0, 0, 0);    break;
 
-        case EVENT_SPRITE_CREATE: sprite_create(NULL);     break;
-        case EVENT_CAMERA_CREATE: camera_create(0);        break;
+        case EVENT_SPRITE_CREATE: sprite_create(NULL);         break;
+        case EVENT_CAMERA_CREATE: camera_create(0);            break;
 
-        case EVENT_CAMERA_DIST:   camera_set_dist(0, 0);        break;
-        case EVENT_CAMERA_ZOOM:   camera_set_zoom(0, 0);        break;
+        case EVENT_CAMERA_DIST:   camera_set_dist(0, 0);       break;
+        case EVENT_CAMERA_ZOOM:   camera_set_zoom(0, 0);       break;
 
         default: fprintf(stderr, "Uncaught event\n");
         }
@@ -83,11 +83,12 @@ static void client_init(void)
     galaxy_init();
     star_init();
     */
+    glEnable(GL_DEPTH_TEST);
 }
 
 static void client_draw(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     entity_render();
     /*
@@ -133,6 +134,7 @@ void client(void)
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
         SDL_ShowCursor(0);

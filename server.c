@@ -104,13 +104,15 @@ static void server_init(void)
     galaxy_init();
     star_init();
     */
-    server_send(EVENT_DRAW);
-    server_draw();
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
 }
 
 static void server_draw(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     entity_render();
     /*
@@ -141,8 +143,9 @@ static void server_perf(void)
 
 static int server_loop(void)
 {
+    static int dirty = 1;
+
     SDL_Event e;
-    int c = 0;
 
     while (SDL_PollEvent(&e))
     {
@@ -157,22 +160,22 @@ static int server_loop(void)
             switch (e.type)
             {
             case SDL_MOUSEMOTION:
-                c += script_point(e.motion.xrel, e.motion.yrel);
+                dirty |= script_point(e.motion.xrel, e.motion.yrel);
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                c += script_click(e.button.button, 1);
+                dirty |= script_click(e.button.button, 1);
                 break;
             case SDL_MOUSEBUTTONUP:
-                c += script_click(e.button.button, 0);
+                dirty |= script_click(e.button.button, 0);
                 break;
             case SDL_USEREVENT:
-                c += script_timer(e.user.code);
+                dirty |= script_timer(e.user.code);
                 break;
             case SDL_KEYDOWN:
-                c += script_keyboard(e.key.keysym.sym, 1);
+                dirty |= script_keyboard(e.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
-                c += script_keyboard(e.key.keysym.sym, 0);
+                dirty |= script_keyboard(e.key.keysym.sym, 0);
                 break;
             }
 
@@ -187,11 +190,13 @@ static int server_loop(void)
 
     /* Redraw a dirty buffer. */
 
-    if (c)
+    if (dirty)
     {
         server_send(EVENT_DRAW);
         server_draw();
         server_perf();
+
+        dirty = 0;
     }
 
     return 1;
@@ -240,6 +245,7 @@ void server(int argc, char *argv[])
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())

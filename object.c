@@ -69,9 +69,9 @@ static int surfc;
 
 static void *memdup(void *src, size_t num, size_t len)
 {
-    void *dst;
+    void *dst = NULL;
 
-    if ((dst = malloc(num * len)))
+    if ((num * len > 0) && (dst = malloc(num * len)))
         memcpy(dst, src, num * len);
 
     return dst;
@@ -85,7 +85,7 @@ static void read_newmtl(const char *name)
     {
         mtrlc++;
 
-        strncpy(namev[mtrlc], name, MAXSTR);
+        sscanf(name, "%s", namev[mtrlc]);
 
         /* Default diffuse */
 
@@ -160,21 +160,19 @@ static void read_Ke(const char *line)
 static void read_Ns(const char *line)
 {
     if (mtrlc >= 0)
-        sscanf(line, "%f", mtrlv[mtrlc].d + 3);
+        sscanf(line, "%f", mtrlv[mtrlc].x + 0);
 }
 
 static void read_d(const char *line)
 {
     if (mtrlc >= 0)
-        sscanf(line, "%f", mtrlv[mtrlc].x + 0);
+        sscanf(line, "%f", mtrlv[mtrlc].d + 3);
 }
 
 static void read_mtl(const char *filename)
 {
     char line[MAXSTR];
     FILE *fin;
-
-    mtrlc = 0;
 
     if ((fin = fopen(filename, "r")))
     {
@@ -185,13 +183,18 @@ static void read_mtl(const char *filename)
             if      (strncmp(line, "newmtl", 6) == 0) read_newmtl(line + 7);
             else if (strncmp(line, "map_Kd", 6) == 0) read_map_Kd(line + 7);
 
-            else if (strncmp(line, "Kd", 2) == 0) read_Kd(line + 2);
-            else if (strncmp(line, "Ka", 2) == 0) read_Ka(line + 2);
-            else if (strncmp(line, "Ks", 2) == 0) read_Ks(line + 2);
-            else if (strncmp(line, "Ke", 2) == 0) read_Ke(line + 2);
-            else if (strncmp(line, "Ns", 2) == 0) read_Ns(line + 2);
+            else if (strncmp(line, "Kd", 2) == 0) read_Kd(line + 3);
+            else if (strncmp(line, "Ka", 2) == 0) read_Ka(line + 3);
+            else if (strncmp(line, "Ks", 2) == 0) read_Ks(line + 3);
+            else if (strncmp(line, "Ke", 2) == 0) read_Ke(line + 3);
+            else if (strncmp(line, "Ns", 2) == 0) read_Ns(line + 3);
             else if (strncmp(line, "d",  1) == 0) read_d (line + 2);
         }
+
+        /* Close out the last material being read. */
+
+        read_newmtl("");
+
         fclose(fin);
     }
 }
@@ -253,32 +256,76 @@ static void read_f(const char *line)
 
         if (i == ic)
         {
-            /* Copy vector data from the cache. */
+            int vi = iv[ic][0];
+            int ti = iv[ic][1];
+            int ni = iv[ic][2];
 
-            vertv[vertc].v[0] = vv[iv[i][0]][0];
-            vertv[vertc].v[1] = vv[iv[i][0]][1];
-            vertv[vertc].v[2] = vv[iv[i][0]][2];
+            /* Initialize vector data defaults. */
 
-            vertv[vertc].n[0] = nv[iv[i][1]][0];
-            vertv[vertc].n[1] = nv[iv[i][1]][1];
-            vertv[vertc].n[2] = nv[iv[i][1]][2];
+            vertv[vertc].v[0] = 0.0f;
+            vertv[vertc].v[1] = 0.0f;
+            vertv[vertc].v[2] = 0.0f;
 
-            vertv[vertc].t[0] = tv[iv[i][2]][0];
-            vertv[vertc].t[1] = tv[iv[i][2]][1];
+            vertv[vertc].t[0] = 0.0f;
+            vertv[vertc].t[1] = 0.0f;
+
+            vertv[vertc].n[0] = 0.0f;
+            vertv[vertc].n[1] = 0.0f;
+            vertv[vertc].n[2] = 1.0f;
+
+            /* Copy specified vector data from the cache. */
+
+            if (vi > 0)
+            {
+                vertv[vertc].v[0] = vv[vi -  1][0];
+                vertv[vertc].v[1] = vv[vi -  1][1];
+                vertv[vertc].v[2] = vv[vi -  1][2];
+            }
+            if (vi < 0)
+            {
+                vertv[vertc].v[0] = vv[vc - vi][0];
+                vertv[vertc].v[1] = vv[vc - vi][1];
+                vertv[vertc].v[2] = vv[vc - vi][2];
+            }
+
+            if (ti > 0)
+            {
+                vertv[vertc].t[0] = tv[ti -  1][0];
+                vertv[vertc].t[1] = tv[ti -  1][1];
+            }
+            if (ti < 0)
+            {
+                vertv[vertc].t[0] = tv[tc - ti][0];
+                vertv[vertc].t[1] = tv[tc - ti][1];
+            }
+
+            if (ni > 0)
+            {
+                vertv[vertc].n[0] = nv[ni -  1][0];
+                vertv[vertc].n[1] = nv[ni -  1][1];
+                vertv[vertc].n[2] = nv[ni -  1][2];
+            }
+            if (ni < 0)
+            {
+                vertv[vertc].n[0] = nv[nc - ni][0];
+                vertv[vertc].n[1] = nv[nc - ni][1];
+                vertv[vertc].n[2] = nv[nc - ni][2];
+            }
 
             /* Associate the index set with the new vertex. */
 
-            iv[ic++][3] = vertc++;
+            iv[ic][3] = vertc++;
         }
 
-        c += dc;
+        c  += dc;
+        ic +=  1;
     }
 
     /* Convert our N new index sets into N-2 new triangles. */
 
-    for (i = i0; i < ic - 2 && facec && MAXFACE; ++i)
+    for (i = i0; i < ic - 2 && facec < MAXFACE; ++i)
     {
-        facev[facec].vi[0] = iv[i0][3];
+        facev[facec].vi[0] = iv[i0   ][3];
         facev[facec].vi[1] = iv[i + 1][3];
         facev[facec].vi[2] = iv[i + 2][3];
 
@@ -294,6 +341,7 @@ static void read_g(void)
     {
         /* Close out the existing surface by copying the face cache. */
 
+        surfv[surfc].fc = facec;
         surfv[surfc].fv =
             (struct object_face *) memdup(facev,
                                           facec, sizeof (struct object_face));
@@ -309,26 +357,26 @@ static void read_g(void)
         surfv[surfc].mi =    0;
         surfv[surfc].fc =    0;
         surfv[surfc].fv = NULL;
-
-        /* Reset all the vector caches. */
-
-        vc = 0;
-        tc = 0;
-        nc = 0;
-        ic = 0;
     }
 }
 
 static void read_mtllib(const char *line)
 {
-    read_mtl(line);
-    read_g();
+    char file[MAXSTR];
+
+    sscanf(line, "%s", file);
+    read_mtl(file);
 }
 
 static void read_usemtl(const char *line)
 {
     if (surfc >= 0)
-        surfv[surfc].mi = find_mtl(line);
+    {
+        char name[MAXSTR];
+
+        sscanf(line, "%s", name);
+        surfv[surfc].mi = find_mtl(name);
+    }
 }
 
 static void read_vt(const char *line)
@@ -358,7 +406,12 @@ static void read_obj(const char *filename, struct object *o)
     char line[MAXSTR];
     FILE *fin;
 
-    /* Initialize the element caches. */
+    /* Initialize the vector and element caches. */
+
+    vc = 0;
+    tc = 0;
+    nc = 0;
+    ic = 0;
 
     mtrlc = -1;
     vertc =  0;
@@ -375,13 +428,17 @@ static void read_obj(const char *filename, struct object *o)
             else if (strncmp(line, "usemtl", 6) == 0) read_usemtl(line + 7);
 
             else if (strncmp(line, "g",  1) == 0) read_g ();
-            else if (strncmp(line, "f",  1) == 0) read_f (line + 1);
-            else if (strncmp(line, "vt", 2) == 0) read_vt(line + 2);
-            else if (strncmp(line, "vn", 2) == 0) read_vn(line + 2);
-            else if (strncmp(line, "v",  1) == 0) read_v (line + 1);
+            else if (strncmp(line, "f",  1) == 0) read_f (line + 2);
+            else if (strncmp(line, "vt", 2) == 0) read_vt(line + 3);
+            else if (strncmp(line, "vn", 2) == 0) read_vn(line + 3);
+            else if (strncmp(line, "v",  1) == 0) read_v (line + 2);
         }
         fclose(fin);
     }
+
+    /* Close out the last group being read. */
+
+    read_g();
 
     /* Close out the object by copying the element caches. */
 
@@ -405,6 +462,8 @@ int object_create(const char *filename)
 
     if (O && (id = buffer_unused(O_max, object_exists)) >= 0)
     {
+        read_obj(filename, O + id);
+
         /* Initialize the new object. */
         /*
         if (mpi_isroot())
@@ -435,6 +494,7 @@ void object_render(int id)
 
     if (object_exists(id))
     {
+        glPushAttrib(GL_LIGHTING_BIT);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         {
             int si;
@@ -456,6 +516,7 @@ void object_render(int id)
             }
         }
         glPopClientAttrib();
+        glPopAttrib();
     }
 }
 

@@ -123,7 +123,7 @@ void camera_render(int id, const float pos[3], const float rot[3])
 
     /* Use the view configuration as vertex program parameters. */
 
-    /*
+    /* TODO: Re-enable this.
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, camera_magn, 0, 0, 0);
     glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, p[0], p[1], p[2], 1);
     */

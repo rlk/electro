@@ -15,7 +15,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define CAMERA_FAR 100000.0f
+#define CAMERA_FAR 1000.0f
 
 #define CAMERA_ORTHO 1
 #define CAMERA_PERSP 2

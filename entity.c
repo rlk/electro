@@ -112,13 +112,13 @@ static void entity_transform(int id)
 
         /* Rotation. */
 
-        if (fabs(E[id].rotation[0] > 0.0))
+        if (fabs(E[id].rotation[0]) > 0.0)
             glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
 
-        if (fabs(E[id].rotation[1] > 0.0))
+        if (fabs(E[id].rotation[1]) > 0.0)
             glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
 
-        if (fabs(E[id].rotation[2] > 0.0))
+        if (fabs(E[id].rotation[2]) > 0.0)
             glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
     }
 }
