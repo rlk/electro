@@ -1,3 +1,4 @@
+Fix server viewport
 remove glext.h?
 Delete light / camera / object
 Add alpha to entity.  Remove it from sprite.

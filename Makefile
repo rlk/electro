@@ -1,20 +1,20 @@
 
 TARG=	electro
-OBJS=	opengl.o \
-	shared.o \
-	server.o \
-	client.o \
-	entity.o \
-	camera.o \
-	sprite.o \
-	object.o \
-	light.o  \
-	script.o \
-	galaxy.o \
-	node.o   \
-	star.o   \
-	image.o  \
-	main.o
+OBJS=	src/opengl.o \
+	src/shared.o \
+	src/server.o \
+	src/client.o \
+	src/entity.o \
+	src/camera.o \
+	src/sprite.o \
+	src/object.o \
+	src/light.o  \
+	src/script.o \
+	src/galaxy.o \
+	src/node.o   \
+	src/star.o   \
+	src/image.o  \
+	src/main.o
 
 DEPS= $(OBJS:.o=.d)
 
@@ -43,7 +43,7 @@ endif
 	$(CC) $(CFLAGS) $(INCDIR) -MM -MF $@ $<
 
 %.o : %.c
-	$(CC) $(CFLAGS) $(INCDIR) -c $<
+	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
 #------------------------------------------------------------------------------
 

@@ -208,34 +208,19 @@ static int server_loop(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void usage(const char *name)
-{
-    fprintf(stderr, "Usage: %s [OPTION]...\n", name);
-    fprintf(stderr, "\t-s <filename>   Source Lua script\n");
-    fprintf(stderr, "\t-f <filename>   Read binary star catalog\n");
-    fprintf(stderr, "\t-t <filename>   Read ascii star catalog\n");
-    fprintf(stderr, "\t-o <filename>   Write binary star catalog\n");
-    fprintf(stderr, "\t-h              Help\n");
-}
-
-static void parse(int argc, char *argv[])
-{
-    int i;
-
-    for (i = 1; i < argc; i++)
-        if      (!strcmp(argv[i], "-s")) script_file(argv[++i]);
-        else if (!strcmp(argv[i], "-f")) star_read_catalog_bin(argv[++i]);
-        else if (!strcmp(argv[i], "-t")) star_read_catalog_txt(argv[++i]);
-        else if (!strcmp(argv[i], "-o")) star_write_catalog(argv[++i]);
-        else usage(argv[0]);
-}
-
 void server(int argc, char *argv[])
 {
+    int argi;
+
     if (script_init())
     {
         viewport_init();
-        parse(argc, argv);
+
+        /* Read and execute all scripts given on the command line. */
+
+        for (argi = 1; argi < argc; argi++)
+            script_file(argv[argi]);
+
         viewport_sync();
 
         /* Initialize the main server window. */
