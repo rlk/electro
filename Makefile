@@ -8,6 +8,7 @@ OBJS=	opengl.o \
 	camera.o \
 	sprite.o \
 	object.o \
+	light.o  \
 	script.o \
 	galaxy.o \
 	node.o   \

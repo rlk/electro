@@ -20,6 +20,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
+#include "light.h"
 #include "entity.h"
 
 /*---------------------------------------------------------------------------*/
@@ -137,7 +138,7 @@ static void entity_traverse(int id)
         {
         case TYPE_SPRITE: sprite_render(E[id].data);                 break;
         case TYPE_OBJECT: object_render(E[id].data);                 break;
-
+        case TYPE_LIGHT:   light_render(E[id].data, E[id].position); break;
         case TYPE_CAMERA: camera_render(E[id].data, E[id].position,
                                                     E[id].rotation); break;
         }
@@ -244,6 +245,7 @@ void entity_delete(int id)
     case TYPE_CAMERA: camera_delete(E[id].data); break;
     case TYPE_SPRITE: sprite_delete(E[id].data); break;
     case TYPE_OBJECT: object_delete(E[id].data); break;
+    case TYPE_LIGHT:   light_delete(E[id].data); break;
     }
 
     memset(E + id, 0, sizeof (struct entity));

@@ -28,7 +28,7 @@ static int            S_max =   64;
 
 static int sprite_exists(int id)
 {
-    return (S && 0 <= id && id < S_max && S[id].texture);
+    return (S && 0 < id && id < S_max && S[id].texture);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -6,17 +6,22 @@ rot_y  = 0.0
 
 camera = nil
 object = nil
+light  = nil
 
 -------------------------------------------------------------------------------
 
 function do_start()
     camera = camera_create(2)
     object = object_create("ball.obj")
+    light  = light_create(2)
 
     entity_parent(object, camera)
+    entity_parent(light,  camera)
 
     camera_zoom(camera, 0.001)
     camera_dist(camera, 5.000)
+
+    entity_position(light, 1, 1, 1)
 
     return true
 end

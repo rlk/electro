@@ -107,7 +107,6 @@ static void server_init(void)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
 }
 
 static void server_draw(void)

@@ -1,10 +1,13 @@
-relative entity transform
-light entity
-separate electro/galaxy
-remove MPI_BYTE uses (separate hostname from viewport)
-move data to dir
-audio
-joystick
-audit includes
-script tile configuration query system/standard
-abstract stars into particle system
+Share object.
+Add alpha to entity.  Remove it from sprite.
+Wire mode to object.
+Relative entity transform
+Light entity
+Separate electro/galaxy
+Remove MPI_BYTE uses (separate hostname from viewport)
+Move data to dir
+Audio
+Joystick
+Audit includes
+Script tile configuration query system/standard
+Abstract stars into particle system

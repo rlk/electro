@@ -17,8 +17,9 @@
 #include "shared.h"
 #include "server.h"
 #include "camera.h"
-#include "object.h"
 #include "sprite.h"
+#include "object.h"
+#include "light.h"
 #include "entity.h"
 #include "script.h"
 
@@ -63,6 +64,12 @@ static int lua_isobject(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
         && entity_istype(lua_toentity(L, i), TYPE_OBJECT);
+}
+
+static int lua_islight(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && entity_istype(lua_toentity(L, i), TYPE_LIGHT);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -304,6 +311,14 @@ static int script_object_create(lua_State *L)
     return 1;
 }
 
+static int script_light_create(lua_State *L)
+{
+    const char *name = "light_create";
+
+    lua_pushentity(L, light_create(script_getnumber(name, L, -1)));
+    return 1;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int script_entity_parent(lua_State *L)
@@ -379,6 +394,7 @@ int script_init(void)
         lua_register(L, "camera_create",   script_camera_create);
         lua_register(L, "sprite_create",   script_sprite_create);
         lua_register(L, "object_create",   script_object_create);
+        lua_register(L, "light_create",    script_light_create);
 
         lua_register(L, "entity_parent",   script_entity_parent);
         lua_register(L, "entity_delete",   script_entity_delete);
