@@ -1,0 +1,126 @@
+<html>
+<head>
+  <style type="text/css">
+    body   { text-align:   justify;
+             margin-right: 10%;
+             margin-left:  10%; }
+    h1     { margin-left:  -9%; }
+    h2     { margin-left:  -6%; }
+    h3     { margin-left:  -3%; }
+    pre    { background: #FFFFCC; padding: 1em; border: none; }
+    p.note { background: #CCCCFF; padding: 1em; }
+  </style>
+</head>
+<body>
+
+<!---------------------------------------------------------------------------->
+
+<pre style="font-size:3em; font-weight:bold; padding: 0.25em">
+  |||
+  O o  Electro
+   -
+</pre>
+
+<p> Electro is an application development framework designed for use
+on cluster-driven tiled displays.  Electro is based upon the MPI
+process model and is bound to the Lua programming language.  With
+support for 3D graphics, 2D graphics, audio, and input handling,
+Electro provides an easy-to-use scripting system for interactive
+applications spanning multiple processors and displays. </p>
+
+<h1> This Document </h1>
+
+<p> This document details the functions and data types of the Electro
+API.  A knowledge of the Lua Programming Language, version 5.0, is
+prerequisite.  Lua documentation and tutorials may be found at <a
+href="http://www.lua.org/docs.html"> the official Lua site. </a></p>
+
+<p> This document includes a number of Lua code examples.  These
+examples are distinguished from the main text as follows: </p>
+
+<pre>
+print("Hello, World!")
+</pre>
+
+<p> This document also includes a number of paragraphs giving design
+rationale.  These describe some of the trade-offs and design decisions
+made during the development of Electro.  They are presented here in
+the hope that they will provide the reader with a more thorough
+understanding of the details of the implementation.  Rationale
+paragraphs are distinguished from the main text as follows: </p>
+
+<p class="note"> Electro adheres to a number of closely-held design
+principles.  It is influenced by several existing software systems,
+but only as far as these basic principles are not violated.  The
+primary design principle is simplicity. </p>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Types </h1>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Functions </h1>
+
+<!---------------------------------------------------------------------------->
+
+<h2> Entity Functions </h2>
+
+<p> The following functions act on entities.  The entity argument of
+each function may take any entity value, including object, sprite,
+lightsource, and camera. </p>
+
+<dl>
+
+<dt><tt> entity_position(entity, x, y, z) </tt>
+
+<dd><p> Specify the position of the entity.  Position is given in the
+coordinate system of the entity's parent. </p>
+
+<dt><tt> entity_rotation(entity, x, y, z) </tt>
+
+<dd><p> Specify the rotation of the entity.  The 3 values give the
+angles of rotation in degrees about the X, Y, and Z.  These correspond
+to pitch, yaw, and roll, respectively.  Rotation is given in the
+coordinate system of the entity's parent. </p>
+
+<dt><tt> entity_scale(entity, x, y, z) </tt>
+
+<dd><p> Specify the scale of the entity.  The 3 values give scale
+multipliers along the X, Y, and Z axes.  Scale is given in the
+coordinate system of the entity's parent. </p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<h2> Configuration Functions </h2>
+
+<dl>
+
+<dt><tt> add_tile(local_x, local_y, global_x, global_y, width, height) </tt>
+
+<dd><p> Make a tile. </p>
+
+</dl>
+
+<pre>
+w  = 1600
+h  = 1200
+dx = w + 128
+dy = h + 128
+
+global_w  =  dx * 2
+global_h  =  dy * 2
+global_x  = -global_w / 2
+global_y  = -global_h / 2
+
+add_tile("nico1-10",    0, 0, global_x + dx * 2, global_y,          w, h)
+add_tile("nico1-10", 1600, 0, global_x + dx * 3, global_y,          w, h)
+add_tile("nico2-10",    0, 0, global_x + dx * 2, global_y + dy,     w, h)
+add_tile("nico2-10", 1600, 0, global_x + dx * 3, global_y + dy,     w, h)
+</pre>
+
+<!---------------------------------------------------------------------------->
+
+<p><address> rlk (at) evl.uic.edu </address></p>

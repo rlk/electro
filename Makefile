@@ -20,11 +20,11 @@ CC= mpicc
 RM= rm
 
 SDL_LIBS= $(shell sdl-config --libs)
-LUA_LIBS= -llua -llualib
+LUA_LIBS= -llua50 -llualib50
 PNG_LIBS= -lpng -lz -lm
 
 CFLAGS= -O2 -Wall -Wno-long-long $(shell sdl-config --cflags)
-INCDIR= -I$(HOME)/include
+INCDIR= -I$(HOME)/include -I/usr/include/lua50
 LIBDIR= -L$(HOME)/lib
 
 ifeq ($(shell uname), Darwin)
