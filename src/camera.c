@@ -190,12 +190,22 @@ int viewport_get_y(void)
 
 int viewport_get_w(void)
 {
-    return (int) viewport_w;
+    /* Scale the server window width down to a reasonable size. */
+
+    if (mpi_isroot())
+        return (int) (viewport_w * DEFAULT_W / viewport_w);
+    else
+        return (int) (viewport_w);
 }
 
 int viewport_get_h(void)
 {
-    return (int) viewport_h;
+    /* Scale the server window height down to a reasonable size. */
+
+    if (mpi_isroot())
+        return (int) (viewport_h * DEFAULT_W / viewport_w);
+    else
+        return (int) (viewport_h);
 }
 
 /*---------------------------------------------------------------------------*/

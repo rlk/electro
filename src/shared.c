@@ -126,13 +126,13 @@ int mpi_share_integer(int ic, int *iv)
 /*---------------------------------------------------------------------------*/
 /* Viewport configuration                                                    */
 
+static struct viewport  Vs = { "", 0, 0, DEFAULT_X, DEFAULT_Y,
+                                         DEFAULT_W, DEFAULT_H };
 #ifdef MPI
-
 static struct viewport *Vi;
 static struct viewport *Vo;
 static int              V_max = 0;
 static int              V_num = 0;
-
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -168,26 +168,26 @@ void viewport_tile(const char *name, float X, float Y,
 
         V_num++;
     }
+
+    if (x < Vs.x) Vs.x = x;
+    if (y < Vs.y) Vs.y = y;
+
+    if (x + w > Vs.x + Vs.w) Vs.w = x + w - Vs.x;
+    if (y + h > Vs.y + Vs.h) Vs.h = y + h - Vs.y;
+
 #endif
 }
 
 void viewport_sync(void)
 {
+    static struct viewport Vt = { "", 0, 0, DEFAULT_X, DEFAULT_Y,
+                                            DEFAULT_W, DEFAULT_H };
 #ifdef MPI
     size_t sz = sizeof (struct viewport);
-
-    struct viewport Vt;
 
     /* Get this client's host name.  Set a default viewport. */
 
     gethostname(Vt.name, NAMELEN);
-
-    Vt.X = 0.0f;
-    Vt.Y = 0.0f;
-    Vt.x = DEFAULT_X;
-    Vt.y = DEFAULT_Y;
-    Vt.w = DEFAULT_W;
-    Vt.h = DEFAULT_H;
 
     /* Gather all host names at the root. */
 
@@ -230,15 +230,14 @@ void viewport_sync(void)
     mpi_assert(MPI_Scatter(Vo, sz, MPI_BYTE,
                           &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
+#endif  /* MPI */
+
     /* Apply this client's viewport. */
 
-    if (!mpi_isroot()) viewport_set(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
-
-#else  /* MPI */
-
-    viewport_set(0.0f, 0.0f, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-
-#endif /* MPI */
+    if (mpi_isroot())
+        viewport_set(Vs.X, Vs.Y, Vs.x, Vs.y, Vs.w, Vs.h);
+    else
+        viewport_set(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/
