@@ -321,11 +321,11 @@ void prep_tyc_galaxy(void)
 
     init_galaxy_prep(&g);
     {
-        g.S_num = prep_parse_tyc(g.S, g.S_num, "../tyc2.dat");
+        g.S_num = prep_parse_tyc(g.S, g.S_num, "examples/tyc2.dat");
     }
     fini_galaxy_prep(&g);
 
-    write_galaxy("../galaxy_tyc.gal", &g);
+    write_galaxy("examples/galaxy_tyc.gal", &g);
     free_galaxy_prep(&g);
 }
 
@@ -336,11 +336,11 @@ void prep_hip_galaxy(void)
     init_galaxy_prep(&g);
     {
         g.S_num = star_gimme_sol(g.S);
-        g.S_num = prep_parse_hip(g.S, g.S_num, "../hip_main.dat");
+        g.S_num = prep_parse_hip(g.S, g.S_num, "examples/hip_main.dat");
     }
     fini_galaxy_prep(&g);
 
-    write_galaxy("../galaxy_hip.gal", &g);
+    write_galaxy("examples/galaxy_hip.gal", &g);
     free_galaxy_prep(&g);
 }
 

@@ -152,8 +152,8 @@ int star_parse_hip(struct star *s, FILE *fp)
             b =  asin(n3);
 
             s->pos[0] = (float) (sin(l) * cos(b) * plx);
-            s->pos[1] = (float) (         sin(b) * plx + 15.5);
-            s->pos[2] = (float) (cos(l) * cos(b) * plx + 9200);
+            s->pos[1] = (float) (         sin(b) * plx);
+            s->pos[2] = (float) (cos(l) * cos(b) * plx);
 
             /* Compute the absolute magnitude and color. */
 
@@ -214,8 +214,8 @@ int star_parse_tyc(struct star *s, FILE *fp)
             b =  asin(n3);
 
             s->pos[0] = (GLfloat) (sin(l) * cos(b) * plx);
-            s->pos[1] = (GLfloat) (         sin(b) * plx + 15.5);
-            s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx + 9200);
+            s->pos[1] = (GLfloat) (         sin(b) * plx);
+            s->pos[2] = (GLfloat) (cos(l) * cos(b) * plx);
             s->mag    =   (float) mag;
 
             star_color('K', s->col);

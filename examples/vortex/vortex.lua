@@ -30,9 +30,6 @@ function do_start()
     E.parent_entity(galaxy_hip, camera_hip)
     E.parent_entity(galaxy_tyc, camera_tyc)
 
-    E.set_entity_position(camera_hip, 0, 15.5, 9200)
-    E.set_entity_position(camera_tyc, 0, 15.5, 9200)
-
     E.set_camera_zoom    (camera_hip, zoom)
     E.set_camera_zoom    (camera_tyc, zoom)
     E.set_camera_distance(camera_hip, hip_dist)
