@@ -1,12 +1,14 @@
 Propagate alpha
 Object edge
-JPG support
 Relative entity transform
 Update README
 Audit includes
 Remove .d usage
 Windows port
 Website
+
+Better deep delete policy / garbage collection
+Address light position inconsistency
 
 TTF support
 GL error.  glTexParameter WTF?

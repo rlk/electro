@@ -4,7 +4,7 @@ PREFIX=/usr/local/Electro
 
 ifdef MPI
 	CC= mpicc
-	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+	CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
 	TARG= electro-mpi
 else
 	CC= cc
@@ -45,16 +45,16 @@ RM= rm -f
 
 SDL_LIBS= $(shell sdl-config --libs) -lSDLmain
 LUA_LIBS= -llua -llualib
-PNG_LIBS= -lpng -lz -lm
+IMG_LIBS= -ljpeg -lpng -lz -lm
 
 ifeq ($(shell uname), Darwin)
     INCDIR= -I/sw/include -I/usr/include/lua
     LIBDIR= -L/sw/lib
-    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lm
+    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(IMG_LIBS) -lvorbisfile -lm
 else
     INCDIR= -I$(HOME)/include -I/usr/include/lua
     LIBDIR= -L$(HOME)/lib
-    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lGL -lGLU -lm
+    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(IMG_LIBS) -lvorbisfile -lGL -lGLU -lm
 endif
 
 #------------------------------------------------------------------------------

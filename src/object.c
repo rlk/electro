@@ -230,18 +230,23 @@ static int find_mtl(const char *name)
 
 static int read_indices(const char *line, int *vi, int *ti, int *ni)
 {
-    int n;
+    char vert[MAXSTR];
+    int n = 0;
 
     *vi = 0;
     *ti = 0;
     *ni = 0;
 
-    /* Allow either vertex/texcoord/normal or missing texcoord. */
+    if (sscanf(line, "%s%n", vert, &n) >= 1)
+    {
+        char *texc = strstr(vert, "/") + 1;
+        char *norm = strstr(texc, "/") + 1;
 
-    if (sscanf(line, "%d/%d/%d%n", vi, ti, ni, &n) >= 3) return n;
-    if (sscanf(line, "%d//%d%n",   vi,     ni, &n) >= 2) return n;
-
-    return 0;
+        *vi = atoi(vert);
+        *ti = atoi(texc);
+        *ni = atoi(norm);
+    }
+    return n;
 }
 
 static void read_f(const char *line)

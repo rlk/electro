@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
+#include <jpeglib.h>
 
 #include "utility.h"
 #include "opengl.h"
@@ -104,8 +105,8 @@ void *load_png_image(const char *filename, int *width,
                                            int *height,
                                            int *bytes)
 {
-    FILE   *fp = NULL;
     GLubyte *p = NULL;
+    FILE   *fp;
 
     png_structp readp = NULL;
     png_infop   infop = NULL;
@@ -157,16 +158,17 @@ void *load_png_image(const char *filename, int *width,
 
         /* Allocate the final pixel buffer and copy pixels there. */
 
-        p = (GLubyte *) malloc(w * h * b);
+        if ((p = (GLubyte *) malloc(w * h * b)))
+        {
+            for (r = 0; r < h; r++)
+                for (c = 0; c < w; c++)
+                    for (i = 0; i < b; i++)
+                        p[r*w*b + c*b + i] = (GLubyte) bytep[h-r-1][c*b+i];
 
-        for (r = 0; r < h; r++)
-            for (c = 0; c < w; c++)
-                for (i = 0; i < b; i++)
-                    p[r*w*b + c*b + i] = (GLubyte) bytep[h - r - 1][c*b + i];
-
-        *width  = w;
-        *height = h;
-        *bytes  = b;
+            *width  = w;
+            *height = h;
+            *bytes  = b;
+        }
     }
     else return punt_image("PNG read error");
 
@@ -174,6 +176,58 @@ void *load_png_image(const char *filename, int *width,
 
     png_destroy_read_struct(&readp, &infop, NULL);
     fclose(fp);
+
+    return p;
+}
+
+void *load_jpg_image(const char *filename, int *width,
+                                           int *height,
+                                           int *bytes)
+{
+    GLubyte *p = NULL;
+    FILE   *fp;
+
+    if ((fp = fopen(filename, FMODE_RB)))
+    {
+        struct jpeg_decompress_struct cinfo;
+        struct jpeg_error_mgr         jerr;
+        int w, h, b, i = 0;
+
+        /* Initialize the JPG decompressor. */
+
+        cinfo.err = jpeg_std_error(&jerr);
+        jpeg_create_decompress(&cinfo);
+        jpeg_stdio_src(&cinfo, fp);
+
+        /* Grab the JPG header info. */
+
+        jpeg_read_header(&cinfo, TRUE);
+        jpeg_start_decompress(&cinfo);
+
+        w = cinfo.output_width;
+        h = cinfo.output_height;
+        b = cinfo.output_components;
+
+        /* Allocate the final pixel buffer and copy pixels there. */
+
+        if ((p = (GLubyte *) malloc (w * h * b)))
+        {
+            while (cinfo.output_scanline < cinfo.output_height)
+            {
+                GLubyte *buffer = p + w * b * (h - i - 1);
+                i += jpeg_read_scanlines(&cinfo, &buffer, 1);
+            }
+
+            *width  = w;
+            *height = h;
+            *bytes  = b;
+        }
+
+        jpeg_finish_decompress(&cinfo);
+        jpeg_destroy_decompress(&cinfo);
+
+        fclose(fp);
+    }
 
     return p;
 }
@@ -214,15 +268,17 @@ void draw_image(int id)
         glBindTexture(GL_TEXTURE_2D, I[id].texture);
 }
 
-void *image_load(const char *filename, int *width,
+void *load_image(const char *filename, int *width,
                                        int *height,
                                        int *bytes)
 {
     const char *extension = filename + strlen(filename) - 4;
+    
 
-    if (strcmp(extension, ".png") == 0 ||
-        strcmp(extension, ".PNG") == 0)
+    if      (strcasecmp(extension, ".png") == 0)
         return load_png_image(filename, width, height, bytes);
+    else if (strcasecmp(extension, ".jpg") == 0)
+        return load_jpg_image(filename, width, height, bytes);
     else
         return punt_image("Unsupported image format");
 }
@@ -250,7 +306,7 @@ int send_create_image(const char *filename)
 
         /* Load and pack the image. */
 
-        if ((I[id].p = load_png_image(filename, &I[id].w, &I[id].h, &I[id].b)))
+        if ((I[id].p = load_image(filename, &I[id].w, &I[id].h, &I[id].b)))
         {
             pack_event(EVENT_CREATE_IMAGE);
             pack_index(id);
