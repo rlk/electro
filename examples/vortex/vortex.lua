@@ -130,6 +130,7 @@ function do_point(dx, dy)
     elseif setdist then  -- Set the camera distance from the center.
 
         if not shift   then d_hip_dist = d_hip_dist + dy * 0.1 end
+        if not control then d_tyc_dist = d_tyc_dist + dy * 0.1 end
 
     else                 -- None of the above.  Just pan the camera
 

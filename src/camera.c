@@ -223,6 +223,7 @@ int init_camera(void)
 void draw_camera(int id, int cd, const struct frustum *F0, float a)
 {
     struct frustum F1;
+    struct frustum F2;
 
     float p[3];
     float r[3];
@@ -256,11 +257,13 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
             glLoadIdentity();
             glTranslatef(0, 0, -C[cd].dist);
 
-            transform_camera(id);
+/*          transform_camera(id); */
+
+            transform_entity(id, &F2, &F1);
 
             /* Render all children using this camera. */
             
-            draw_entity_list(id, &F1, a * get_entity_alpha(id));
+            draw_entity_list(id, &F2, a * get_entity_alpha(id));
         }
     }
 }

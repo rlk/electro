@@ -1,4 +1,6 @@
-test glFinish
+check culling of tyc.  (seems odd)
+camera frustum transform
+get_viewport
 zoom remove
 ortho remove
 camera offset per tile (for geowall and planar)

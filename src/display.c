@@ -117,23 +117,46 @@ void sync_display(void)
 
 int draw_display(struct frustum *F1, const float p[3], float N, float F, int i)
 {
+    const float x[3] = { 1.0f, 0.0f, 0.0f };
+    const float y[3] = { 0.0f, 1.0f, 0.0f };
+
     if (i < Host.n)
     {
-        GLdouble l = -N * ((Host.tile[i].o[0]                     - p[0]) /
-                           (Host.tile[i].o[2]                     - p[2]));
-        GLdouble r = -N * ((Host.tile[i].o[0] + Host.tile[i].r[0] - p[0]) /
-                           (Host.tile[i].o[2] + Host.tile[i].r[2] - p[2]));
-        GLdouble b = -N * ((Host.tile[i].o[1]                     - p[1]) /
-                           (Host.tile[i].o[2]                     - p[2]));
-        GLdouble t = -N * ((Host.tile[i].o[1] + Host.tile[i].u[1] - p[1]) /
-                           (Host.tile[i].o[2] + Host.tile[i].u[2] - p[2]));
+        GLdouble l, r, b, t;
+
+        float n0[3];
+        float n1[3];
+
+        n0[0] = Host.tile[i].o[0] - p[0];
+        n0[1] = Host.tile[i].o[1] - p[1];
+        n0[2] = Host.tile[i].o[2] - p[2];
+
+        n1[0] = n0[0] + Host.tile[i].r[0] + Host.tile[i].u[0];
+        n1[1] = n0[1] + Host.tile[i].r[1] + Host.tile[i].u[1];
+        n1[2] = n0[2] + Host.tile[i].r[2] + Host.tile[i].u[2];
+
+        /* Compute the frustum extents. */
+
+        l = -N *  n0[0] / n0[2];
+        r = -N * (n0[0] + Host.tile[i].r[0]) / (n0[2] + Host.tile[i].r[2]);
+        b = -N *  n0[1] / n0[2];
+        t = -N * (n0[1] + Host.tile[i].u[1]) / (n0[2] + Host.tile[i].u[2]);
+
+        /* Compute the frustum planes. */
+
+        v_cross(F1->V[0], x, n0);
+        v_cross(F1->V[1], n1, x);
+        v_cross(F1->V[2], n0, y);
+        v_cross(F1->V[3], y, n1);
+
+        F1->V[0][3] = F1->V[1][3] = F1->V[2][3] = F1->V[3][3] = 0.0f;
 
         /* Configure the viewport. */
 
         glViewport(Host.tile[i].x, Host.tile[i].y,
-                   Host.tile[i].w - 1, Host.tile[i].h);
+                   Host.tile[i].w, Host.tile[i].h);
         glScissor (Host.tile[i].x, Host.tile[i].y,
-                   Host.tile[i].w - 1, Host.tile[i].h);
+                   Host.tile[i].w, Host.tile[i].h);
 
         /* Apply the projection. */
 
