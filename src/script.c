@@ -410,6 +410,30 @@ static int script_entity_get_rotation(lua_State *L)
     return 3;
 }
 
+static int script_entity_get_scale(lua_State *L)
+{
+    float x, y, z;
+    int id = script_getentity("entity_get_scale", L, -1);
+
+    entity_get_scale(id, &x, &y, &z);
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+    lua_pushnumber(L, z);
+
+    return 3;
+}
+
+static int script_entity_get_alpha(lua_State *L)
+{
+    int  id = script_getentity("entity_get_alpha", L, -1);
+    float a = entity_get_alpha(id);
+
+    lua_pushnumber(L, a);
+
+    return 1;
+}
+
 static int script_viewport_get(lua_State *L)
 {
     float x, y, w, h;
@@ -550,7 +574,7 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "entity_parent",           script_entity_parent);
     lua_function(L, "entity_clone",            script_entity_clone);
-    lua_function(L, "delete_entity",           script_entity_delete);
+    lua_function(L, "entity_delete",           script_entity_delete);
 
     lua_function(L, "entity_position",         script_entity_position);
     lua_function(L, "entity_rotation",         script_entity_rotation);
@@ -560,9 +584,11 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "entity_get_position",     script_entity_get_position);
     lua_function(L, "entity_get_rotation",     script_entity_get_rotation);
+    lua_function(L, "entity_get_scale",        script_entity_get_scale);
+    lua_function(L, "entity_get_alpha",        script_entity_get_alpha);
 
-    lua_constant(L, "entity_flag_hide",        FLAG_HIDDEN);
-    lua_constant(L, "entity_flag_wire",        FLAG_WIREFRAME);
+    lua_constant(L, "entity_flag_hidden",      FLAG_HIDDEN);
+    lua_constant(L, "entity_flag_wireframe",   FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
 
     /* Camera control. */

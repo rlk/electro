@@ -92,9 +92,12 @@ void entity_recv_rotation(void);
 void entity_recv_scale   (void);
 void entity_recv_alpha   (void);
 
-void entity_get_position(int, float *, float *, float *);
-void entity_get_rotation(int, float *, float *, float *);
-void entity_get_scale   (int, float *, float *, float *);
+/*---------------------------------------------------------------------------*/
+
+void  entity_get_position(int, float *, float *, float *);
+void  entity_get_rotation(int, float *, float *, float *);
+void  entity_get_scale   (int, float *, float *, float *);
+float entity_get_alpha   (int);
 
 /*---------------------------------------------------------------------------*/
 

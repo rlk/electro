@@ -527,5 +527,13 @@ void entity_get_scale(int id, float *x, float *y, float *z)
     }
 }
 
+float entity_get_alpha(int id)
+{
+    if (entity_exists(id))
+        return E[id].alpha;
+    else
+        return 0.0f;
+}
+
 /*---------------------------------------------------------------------------*/
 

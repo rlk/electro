@@ -1,20 +1,38 @@
 
 -------------------------------------------------------------------------------
 
-global_ship   = nil
-global_rock   = nil
-global_bullet = nil
+global_ship      = nil
+global_rock      = nil
+global_bullet    = nil
+global_score05   = nil
+global_score10   = nil
+global_score25   = nil
+global_explosion = nil
+global_shockwave = nil
+
+-------------------------------------------------------------------------------
 
 serial    = 1
 camera    = nil
-pivot     = nil
+above     = nil
+below     = nil
 light     = nil
-asteroids = { }
-bullets   = { }
+ship      = nil
 
-level     = 1
-score     = 0
-speed     = 5
+bullets    = { }
+asteroids  = { }
+explosions = { }
+shockwaves = { }
+scores     = { }
+
+thrusting   = false
+velocity_dx = 0
+velocity_dy = 0
+
+level      = 1
+curr_score = 0
+high_score = 0
+speed      = 5
 
 -------------------------------------------------------------------------------
 
@@ -29,6 +47,9 @@ global_z = 1
 -------------------------------------------------------------------------------
 
 function add_asteroid(entity, size)
+    local asteroid = { }
+
+    local scale = size / 3
 
     local a  = math.rad(math.random(-180, 180))
     local dx = math.sin(a)
@@ -41,31 +62,29 @@ function add_asteroid(entity, size)
         x, y, z = E.entity_get_position(entity)
     end
 
-    local asteroid = { }
-
-    asteroid.object = E.entity_clone(global_rock)
+    asteroid.entity = E.entity_clone(global_rock)
     asteroid.size   = size
     asteroid.dx     = dx * speed
     asteroid.dy     = dy * speed
     asteroid.wx     = math.random(-90, 90)
     asteroid.wy     = math.random(-90, 90)
 
-    E.entity_scale   (asteroid.object, size / 3, size / 3, size / 3)
-    E.entity_parent  (asteroid.object, light)
-    E.entity_position(asteroid.object, x , y, 0)
+    E.entity_scale   (asteroid.entity, scale, scale, scale)
+    E.entity_parent  (asteroid.entity, light)
+    E.entity_position(asteroid.entity, x, y, 0)
 
     table.insert(asteroids, asteroid)
 end
 
 function del_asteroid(id, asteroid)
-    E.entity_delete(asteroid.object)
-
+    E.entity_delete(asteroid.entity)
     table.remove(asteroids, id)
 end
 
 -------------------------------------------------------------------------------
 
 function add_bullet()
+    local bullet = { }
 
     local pos_x, pos_y, pos_z = E.entity_get_position(ship)
     local rot_x, rot_y, rot_z = E.entity_get_rotation(ship)
@@ -74,25 +93,93 @@ function add_bullet()
     local x =  math.sin(a)
     local y =  math.cos(a)
 
-    local bullet = { }
-
-    bullet.object = E.entity_clone(global_bullet)
+    bullet.entity = E.entity_clone(global_bullet)
     bullet.dx     = x * 15
     bullet.dy     = y * 15
 
-    E.entity_position(bullet.object, pos_x + x,
-                                           pos_y + y, pos_z)
+    E.entity_position(bullet.entity, pos_x + x,
+                      pos_y + y,
+                      pos_z)
 
-    E.entity_scale (bullet.object, 1 / 64, 1 / 64, 1 / 64)
-    E.entity_parent(bullet.object, pivot)
+    E.entity_scale (bullet.entity, 1 / 64, 1 / 64, 1 / 64)
+    E.entity_parent(bullet.entity, below)
 
     table.insert(bullets, bullet)
 end
 
 function del_bullet(id, bullet)
-    E.entity_delete(bullet.object)
-
+    E.entity_delete(bullet.entity)
     table.remove(bullets, id)
+end
+
+-------------------------------------------------------------------------------
+
+function add_explosion(entity, size)
+    local explosion = { }
+    local scale = 0.05 * size / 3.0
+
+    x, y, z = E.entity_get_position(entity)
+
+    explosion.entity = E.entity_clone(global_explosion)
+
+    E.entity_scale   (explosion.entity, scale, scale, scale)
+    E.entity_parent  (explosion.entity, above)
+    E.entity_position(explosion.entity, x, y, 0)
+
+    table.insert(explosions, explosion)
+end
+
+function del_explosion(id, explosion)
+    E.entity_delete(explosion.entity)
+    table.remove(explosions, id)
+end
+
+-------------------------------------------------------------------------------
+
+function add_shockwave(entity, size)
+    local shockwave = { }
+    local scale = 0.025 * size / 3.0
+
+    x, y, z = E.entity_get_position(entity)
+
+    shockwave.entity = E.entity_clone(global_shockwave)
+
+    E.entity_scale   (shockwave.entity, scale, scale, scale)
+    E.entity_parent  (shockwave.entity, above)
+    E.entity_position(shockwave.entity, x, y, 0)
+
+    table.insert(shockwaves, shockwave)
+end
+
+function del_shockwave(id, shockwave)
+    E.entity_delete(shockwave.entity)
+    table.remove(shockwaves, id)
+end
+
+-------------------------------------------------------------------------------
+
+function add_score(entity, value)
+    local score = { }
+    local scale = 0.01
+
+    curr_score = curr_score + value
+
+    x, y, z = E.entity_get_position(entity)
+
+    if value ==  5 then score.entity = E.entity_clone(global_score05) end
+    if value == 10 then score.entity = E.entity_clone(global_score10) end
+    if value == 25 then score.entity = E.entity_clone(global_score25) end
+
+    E.entity_scale   (score.entity, scale, scale, scale)
+    E.entity_parent  (score.entity, above)
+    E.entity_position(score.entity, x, y, 0)
+
+    table.insert(scores, score)
+end
+
+function del_score(id, score)
+    E.entity_delete(score.entity)
+    table.remove(scores, id)
 end
 
 -------------------------------------------------------------------------------
@@ -101,19 +188,19 @@ global_dt = 0
 
 function asteroid_step(id, asteroid)
 
-    local object = asteroid.object
+    local entity = asteroid.entity
     local size   = asteroid.size
     local dx     = asteroid.dx
     local dy     = asteroid.dy
     local wx     = asteroid.wx
     local wy     = asteroid.wy
 
-    if object then
+    if entity then
 
         -- Find the asteroid's new position and orientation.
         
-        local pos_x, pos_y, pos_z = E.entity_get_position(object)
-        local rot_x, rot_y, rot_z = E.entity_get_rotation(object)
+        local pos_x, pos_y, pos_z = E.entity_get_position(entity)
+        local rot_x, rot_y, rot_z = E.entity_get_rotation(entity)
 
         pos_x = pos_x + dx * global_dt
         pos_y = pos_y + dy * global_dt
@@ -152,13 +239,13 @@ function asteroid_step(id, asteroid)
 
         -- Apply the new position and orientation.
 
-        E.entity_position(object, pos_x, pos_y, pos_z)
-        E.entity_rotation(object, rot_x, rot_y, rot_z)
+        E.entity_position(entity, pos_x, pos_y, pos_z)
+        E.entity_rotation(entity, rot_x, rot_y, rot_z)
 
         -- Check this asteroid against all bullets.
 
         for jd, bullet in pairs(bullets) do
-            local pos_X, pos_Y, pos_Z = E.entity_get_position(bullet.object)
+            local pos_X, pos_Y, pos_Z = E.entity_get_position(bullet.entity)
 
             local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
                                    (pos_Y - pos_y) * (pos_Y - pos_y));
@@ -166,11 +253,18 @@ function asteroid_step(id, asteroid)
 
                 -- Break a big asteroid into smaller asteroids.
 
+                add_shockwave(entity, size)
+                add_explosion(entity, size)
+
                 if size > 1 then
-                    add_asteroid(object, size - 1)
-                    add_asteroid(object, size - 1)
-                    add_asteroid(object, size - 1)
+                    add_asteroid(entity, size - 1)
+                    add_asteroid(entity, size - 1)
+                    add_asteroid(entity, size - 1)
                 end
+
+                if size == 3 then add_score(entity, 25) end
+                if size == 2 then add_score(entity, 10) end
+                if size == 1 then add_score(entity,  5) end
 
                 -- Delete the original asteroid and the bullet.
 
@@ -183,14 +277,14 @@ end
 
 function bullet_step(id, bullet)
 
-    local object = bullet.object
+    local entity = bullet.entity
     local dx     = bullet.dx
     local dy     = bullet.dy
 
-    if object then
+    if entity then
         -- Find the bullet's new position.
         
-        local pos_x, pos_y, pos_z = E.entity_get_position(object)
+        local pos_x, pos_y, pos_z = E.entity_get_position(entity)
 
         pos_x = pos_x + dx * global_dt
         pos_y = pos_y + dy * global_dt
@@ -206,10 +300,52 @@ function bullet_step(id, bullet)
         elseif pos_y > global_t then
             del_bullet(id, bullet)
 
-        -- Apply the new position and orientation.
+            -- Apply the new position and orientation.
 
         else
-            E.entity_position(object, pos_x, pos_y, pos_z)
+            E.entity_position(entity, pos_x, pos_y, pos_z)
+        end
+    end
+end
+
+function explosion_step(id, explosion)
+    local entity = explosion.entity
+
+    if entity then
+        E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt)
+
+        if E.entity_get_alpha(entity) < 0 then
+            del_explosion(id, explosion)
+        end
+    end
+end
+
+function shockwave_step(id, shockwave)
+    local entity = shockwave.entity
+
+    if entity then
+        local scl_x, scl_y, scl_z = E.entity_get_scale(entity);
+
+        scl_x = scl_x + global_dt * 0.05
+        scl_y = scl_y + global_dt * 0.05
+
+        E.entity_scale(entity, scl_x, scl_y, scl_z)
+        E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt)
+
+        if E.entity_get_alpha(entity) < 0 then
+            del_shockwave(id, shockwave)
+        end
+    end
+end
+
+function score_step(id, score)
+    local entity = score.entity
+
+    if entity then
+        E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt / 2)
+        
+        if E.entity_get_alpha(entity) < 0 then
+            del_score(id, score)
         end
     end
 end
@@ -225,27 +361,97 @@ function level_init()
 end
 
 function level_step()
-    table.foreach(asteroids, asteroid_step)
-    table.foreach(bullets,   bullet_step)
+    table.foreach(bullets,    bullet_step)
+    table.foreach(asteroids,  asteroid_step)
+    table.foreach(explosions, explosion_step)
+    table.foreach(shockwaves, shockwave_step)
+    table.foreach(scores,     score_step)
 end
 
 -------------------------------------------------------------------------------
 
 function player_step()
 
+    local pos_x, pos_y, pos_z = E.entity_get_position(ship)
     local rot_x, rot_y, rot_z = E.entity_get_rotation(ship)
-    local changed = false
 
-    if (E.joystick_axis(0, 0) < -0.5) then
+    -- Handle thrust
+
+    if thrusting then
+        local r = global_dt * 20
+
+        velocity_dx = velocity_dx - math.sin(math.rad(rot_z)) * r
+        velocity_dy = velocity_dy + math.cos(math.rad(rot_z)) * r
+    end
+
+    -- Handle rotation change
+
+    if E.joystick_axis(0, 0) < -0.5 then
         rot_z = rot_z + global_dt * 180
-        changed = true
     end
-    if (E.joystick_axis(0, 0) >  0.5) then
+    if E.joystick_axis(0, 0) >  0.5 then
         rot_z = rot_z - global_dt * 180
-        changed = true
     end
 
-    if changed then E.entity_rotation(ship, rot_x, rot_y, rot_z) end
+    -- Handle position change
+
+    if math.abs(velocity_dx) > 0.0 then
+        pos_x = pos_x + velocity_dx * global_dt
+    end
+    if math.abs(velocity_dy) > 0.0 then
+        pos_y = pos_y + velocity_dy * global_dt
+    end
+
+    -- Wrap the orientation to (-180, 180).
+
+    if rot_x < -180 then
+        rot_x = rot_x + 360
+    end
+    if rot_x >  180 then
+        rot_x = rot_x - 360
+    end
+    if rot_y < -180 then
+        rot_y = rot_y + 360
+    end
+    if rot_y >  180 then
+        rot_y = rot_y - 360
+    end
+
+    -- Wrap the position to the viewport.
+
+    if pos_x < global_l then
+        pos_x = pos_x + global_w
+    end
+    if pos_x > global_r then
+        pos_x = pos_x - global_w
+    end
+    if pos_y < global_b then
+        pos_y = pos_y + global_h
+    end
+    if pos_y > global_t then
+        pos_y = pos_y - global_h
+    end
+
+    -- Apply the new position and rotation.
+
+    E.entity_position(ship, pos_x, pos_y, pos_z)
+    E.entity_rotation(ship, rot_x, rot_y, rot_z)
+end
+
+-------------------------------------------------------------------------------
+
+function new_global_object(filename)
+    object = E.create_object(filename)
+    E.entity_flag(object, E.entity_flag_hidden, true)
+
+    return object
+end
+
+function new_global_sprite(filename)
+    sprite = E.create_sprite(filename)
+    E.entity_flag(sprite, E.entity_flag_hidden, true)
+
+    return sprite
 end
 
 -------------------------------------------------------------------------------
@@ -269,33 +475,34 @@ function do_start()
 
     -- Initialize some source objects.
 
-    global_ship   = E.create_object("ship.obj")
-    global_rock   = E.create_object("rock.obj")
-    global_bullet = E.create_sprite("bullet.png")
-
-    E.entity_flag(global_ship,   1, 1);
-    E.entity_flag(global_rock,   1, 1);
-    E.entity_flag(global_bullet, 1, 1);
+    global_ship      = new_global_object("ship.obj")
+    global_rock      = new_global_object("rock.obj")
+    global_bullet    = new_global_sprite("bullet.png")
+    global_score05   = new_global_sprite("score05.png")
+    global_score10   = new_global_sprite("score10.png")
+    global_score25   = new_global_sprite("score25.png")
+    global_explosion = new_global_sprite("explosion.png")
+    global_shockwave = new_global_sprite("shockwave.png")
 
     -- Initialize the scene.
 
-    camera = E.create_camera(E.camera_orthogonal)
-    light  = E.create_light(E.light_positional)
-    pivot  = E.create_pivot()
+    camera = E.create_camera(E.camera_type_orthogonal)
+    light  = E.create_light(E.light_type_positional)
+    above  = E.create_pivot()
+    below  = E.create_pivot()
     ship   = E.entity_clone(global_ship);
 
-    E.entity_parent(pivot, camera)
+    E.entity_parent(above, camera)
     E.entity_parent(light, camera)
     E.entity_parent(ship,  light)
+    E.entity_parent(below, camera)
 
     E.entity_position(light, 0, 0, 10)
-
     E.camera_zoom(camera, global_z)
 
     level_init()
 
     E.enable_idle(true)
-
     return true
 end
 
@@ -313,8 +520,11 @@ function do_timer(dt)
 end
 
 function do_joystick(n, b, s)
-    if s and b == 1 then
+    if b == 1 and s then
         add_bullet()
+    end
+    if b == 2 then
+        thrusting = s
     end
 end
 

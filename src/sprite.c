@@ -51,11 +51,14 @@ void sprite_draw(int id, int sd, float a)
 {
     if (sprite_exists(sd))
     {
+        glPushAttrib(GL_DEPTH_BUFFER_BIT);
         glPushMatrix();
         {
             /* Apply the local coordinate system transformation. */
 
             entity_transform(id);
+
+            glDisable(GL_DEPTH_TEST);
 
             glBindTexture(GL_TEXTURE_2D, S[sd].texture);
             glColor4f(1.0f, 1.0f, 1.0f, a);
@@ -79,6 +82,7 @@ void sprite_draw(int id, int sd, float a)
             entity_traversal(id, a);
         }
         glPopMatrix();
+        glPopAttrib();
     }
 }
 
