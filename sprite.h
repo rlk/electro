@@ -10,31 +10,31 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef STATUS_H
-#define STATUS_H
+#ifndef SPRITE_H
+#define SPRITE_H
 
 /*---------------------------------------------------------------------------*/
 
-void camera_init(void);
-void camera_draw(void);
+#define MAXSPRITE 128
+
+struct sprite
+{
+    GLuint texture;
+    float  pos[2];
+    float  rot;
+    float  size;
+    float  alpha;
+};
 
 /*---------------------------------------------------------------------------*/
 
-void  camera_set_viewport(float, float, float, float, float, float);
+int   sprite_load(const char *);
+void  sprite_free(int);
 
-int   camera_get_viewport_w(void);
-int   camera_get_viewport_h(void);
-
-/*---------------------------------------------------------------------------*/
-
-void  camera_set_org(float, float, float);
-void  camera_set_rot(float, float, float);
-
-void  camera_set_dist(float);
-void  camera_set_magn(float);
-void  camera_set_zoom(float);
-
-void  camera_set_pos(void);
+void  sprite_move(int, float, float);
+void  sprite_turn(int, float);
+void  sprite_size(int, float);
+void  sprite_fade(int, float);
 
 /*---------------------------------------------------------------------------*/
 

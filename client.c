@@ -43,23 +43,23 @@ static void client_recv_exit(void)
     SDL_PushEvent(&e);
 }
 
-static void client_recv_event(void)
+static void client_recv(void)
 {
-    size_t sz = sizeof (struct event);
-    struct event e;
+    int type;
     int err;
 
-    if ((err = MPI_Bcast(&e, sz, MPI_BYTE, 0, MPI_COMM_WORLD)) == MPI_SUCCESS)
+    if (!(err = MPI_Bcast(&type, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
     {
-        switch (e.type)
+        switch (type)
         {
-        case EVENT_DRAW: client_recv_draw();                   break;
-        case EVENT_MOVE: status_set_camera_org(e.x, e.y, e.z); break;
-        case EVENT_TURN: status_set_camera_rot(e.x, e.y, e.z); break;
-        case EVENT_DIST: status_set_camera_dist(e.x);          break;
-        case EVENT_MAGN: status_set_camera_magn(e.x);          break;
-        case EVENT_ZOOM: status_set_camera_zoom(e.x);          break;
-        case EVENT_EXIT: client_recv_exit();                   break;
+        case EVENT_DRAW: client_recv_draw();             break;
+        case EVENT_EXIT: client_recv_exit();             break;
+
+        case EVENT_CAMERA_MOVE: camera_set_org(0, 0, 0); break;
+        case EVENT_CAMERA_TURN: camera_set_rot(0, 0, 0); break;
+        case EVENT_CAMERA_DIST: camera_set_dist(0);      break;
+        case EVENT_CAMERA_MAGN: camera_set_magn(0);      break;
+        case EVENT_CAMERA_ZOOM: camera_set_zoom(0);      break;
         }
     }
     else mpi_error(err);
@@ -69,7 +69,7 @@ static void client_recv_event(void)
 
 static void client_init(int id)
 {
-    glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
+    glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
 
     galaxy_init(id);
     star_init(id);
@@ -79,7 +79,7 @@ static void client_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    status_draw_camera();
+    camera_draw();
     galaxy_draw();
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -110,13 +110,13 @@ static int client_loop(void)
 
 void client(int np, int id)
 {
-    status_init();
+    camera_init();
     viewport_sync(id, np);
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
-        int w = status_get_viewport_w();
-        int h = status_get_viewport_h();
+        int w = camera_get_viewport_w();
+        int h = camera_get_viewport_h();
         int m = SDL_OPENGL | SDL_NOFRAME;
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
@@ -131,7 +131,7 @@ void client(int np, int id)
             /* Handle any SDL events. Block on server messages. */
 
             while (client_loop())
-                client_recv_event();
+                client_recv();
 
             /* Ensure everyone finishes all events before exiting. */
 

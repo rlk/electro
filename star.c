@@ -23,6 +23,7 @@
 #endif
 
 #include "opengl.h"
+#include "shared.h"
 #include "image.h"
 #include "star.h"
 

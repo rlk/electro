@@ -18,12 +18,7 @@
 void enable_grab(int);
 void enable_idle(int);
 
-void server_send_draw(void);
-void server_send_move(void);
-void server_send_turn(void);
-void server_send_zoom(void);
-void server_send_dist(void);
-void server_send_magn(void);
+void server_send(int);
 
 void server(int, int, char **);
 

@@ -13,8 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <mpi.h>
 
 #include "opengl.h"
+#include "server.h"
+#include "shared.h"
+#include "status.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -35,31 +39,7 @@ static float viewport_h;
 
 /*---------------------------------------------------------------------------*/
 
-static void status_set_camera_pos(void)
-{
-    double T = PI * camera_rot[1] / 180.0;
-    double P = PI * camera_rot[0] / 180.0;
-
-    /* Compute the camera position given origin, rotation, and distance. */
-
-    camera_pos[0] = camera_org[0] + sin(T) * cos(P) * camera_dist;
-    camera_pos[1] = camera_org[1] -          sin(P) * camera_dist;
-    camera_pos[2] = camera_org[2] + cos(T) * cos(P) * camera_dist;
-}
-
-static void status_set_window_pos(int X, int Y)
-{
-    char buf[32];
-
-    /* SDL looks to the environment for window position. */
-
-    sprintf(buf, "%d,%d", X, Y);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
-}
-
-/*---------------------------------------------------------------------------*/
-
-void status_init(void)
+void camera_init(void)
 {
     camera_org[0] =    0.0f;
     camera_org[1] =   15.5f;
@@ -73,17 +53,17 @@ void status_init(void)
     camera_magn   =  128.0f;
     camera_zoom   =    0.001f;
 
-    viewport_X =    0.0f;
-    viewport_Y =    0.0f;
-    viewport_x = -400.0f;
-    viewport_y = -300.0f;
-    viewport_w =  800.0f;
-    viewport_h =  600.0f;
+    viewport_X    =    0.0f;
+    viewport_Y    =    0.0f;
+    viewport_x    = -400.0f;
+    viewport_y    = -300.0f;
+    viewport_w    =  800.0f;
+    viewport_h    =  600.0f;
 
-    status_set_camera_pos();
+    camera_set_pos();
 }
 
-void status_draw_camera(void)
+void camera_draw(void)
 {
     /* Load an off-axis projection for the current tile. */
 
@@ -116,15 +96,25 @@ void status_draw_camera(void)
 
     /* Use the view configuration as vertex program parameters. */
 
-    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
-                               camera_pos[0], camera_pos[1], camera_pos[2], 1);
-    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1,
-                               camera_magn, 0, 0, 0);
+    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 1, camera_magn, 0, 0, 0);
+    glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, camera_pos[0],
+                                                         camera_pos[1],
+                                                         camera_pos[2], 1);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void status_set_viewport(float X, float Y, float x, float y, float w, float h)
+static void camera_set_window_pos(int X, int Y)
+{
+    char buf[32];
+
+    /* SDL looks to the environment for window position. */
+
+    sprintf(buf, "%d,%d", X, Y);
+    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+}
+
+void camera_set_viewport(float X, float Y, float x, float y, float w, float h)
 {
     viewport_X = X;
     viewport_Y = Y;
@@ -133,83 +123,111 @@ void status_set_viewport(float X, float Y, float x, float y, float w, float h)
     viewport_w = w;
     viewport_h = h;
 
-    status_set_window_pos((int) X, (int) Y);
+    camera_set_window_pos((int) X, (int) Y);
 }
 
-void status_set_camera_org(float x, float y, float z)
-{
-    camera_org[0] = x;
-    camera_org[1] = y;
-    camera_org[2] = z;
-
-    status_set_camera_pos();
-}
-
-void status_set_camera_rot(float x, float y, float z)
-{
-    camera_rot[0] = x;
-    camera_rot[1] = y;
-    camera_rot[2] = z;
-
-    status_set_camera_pos();
-}
-
-void status_set_camera_dist(float d)
-{
-    camera_dist = d;
-
-    status_set_camera_pos();
-}
-
-void status_set_camera_magn(float d)
-{
-    camera_magn = d;
-}
-
-void status_set_camera_zoom(float d)
-{
-    camera_zoom = d;
-}
-
-/*---------------------------------------------------------------------------*/
-
-int status_get_viewport_w(void)
+int camera_get_viewport_w(void)
 {
     return (int) viewport_w;
 }
 
-int status_get_viewport_h(void)
+int camera_get_viewport_h(void)
 {
     return (int) viewport_h;
 }
 
-void status_get_camera_org(float *x, float *y, float *z)
+/*---------------------------------------------------------------------------*/
+
+void camera_set_org(float x, float y, float z)
 {
-    *x = camera_org[0];
-    *y = camera_org[1];
-    *z = camera_org[2];
+    int err;
+
+    if (mpi_root())
+    {
+        camera_org[0] = x;
+        camera_org[1] = y;
+        camera_org[2] = z;
+        server_send(EVENT_CAMERA_MOVE);
+    }
+
+    if ((err = MPI_Bcast(camera_org, 3, MPI_FLOAT, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    camera_set_pos();
 }
 
-void status_get_camera_rot(float *x, float *y, float *z)
+void camera_set_rot(float x, float y, float z)
 {
-    *x = camera_rot[0];
-    *y = camera_rot[1];
-    *z = camera_rot[2];
+    int err;
+
+    if (mpi_root())
+    {
+        camera_rot[0] = x;
+        camera_rot[1] = y;
+        camera_rot[2] = z;
+        server_send(EVENT_CAMERA_TURN);
+    }
+
+    if ((err = MPI_Bcast(camera_rot, 3, MPI_FLOAT, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    camera_set_pos();
 }
 
-float status_get_camera_dist(void)
+void camera_set_dist(float d)
 {
-    return camera_dist;
+    int err;
+
+    if (mpi_root())
+    {
+        camera_dist = d;
+        server_send(EVENT_CAMERA_DIST);
+    }
+
+    if ((err = MPI_Bcast(&camera_dist, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    camera_set_pos();
 }
 
-float status_get_camera_magn(void)
+void camera_set_magn(float m)
 {
-    return camera_magn;
+    int err;
+
+    if (mpi_root())
+    {
+        camera_magn = m;
+        server_send(EVENT_CAMERA_MAGN);
+    }
+
+    if ((err = MPI_Bcast(&camera_magn, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
 }
 
-float status_get_camera_zoom(void)
+void camera_set_zoom(float z)
 {
-    return camera_zoom;
+    int err;
+
+    if (mpi_root())
+    {
+        camera_zoom = z;
+        server_send(EVENT_CAMERA_ZOOM);
+    }
+
+    if ((err = MPI_Bcast(&camera_zoom, 1, MPI_FLOAT, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+}
+
+void camera_set_pos(void)
+{
+    double T = PI * camera_rot[1] / 180.0;
+    double P = PI * camera_rot[0] / 180.0;
+
+    /* Compute the camera position given origin, rotation, and distance. */
+
+    camera_pos[0] = camera_org[0] + sin(T) * cos(P) * camera_dist;
+    camera_pos[1] = camera_org[1] -          sin(P) * camera_dist;
+    camera_pos[2] = camera_org[2] + cos(T) * cos(P) * camera_dist;
 }
 
 /*---------------------------------------------------------------------------*/

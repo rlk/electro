@@ -56,87 +56,29 @@ void enable_idle(int b)
 
 /*---------------------------------------------------------------------------*/
 
-static void server_send_event(struct event *e)
+void server_send(int type)
 {
-    size_t sz = sizeof (struct event);
-    int  err;
+    int err;
 
-    if ((err = MPI_Bcast(e, sz, MPI_BYTE, 0, MPI_COMM_WORLD)) != MPI_SUCCESS)
+    if ((err = MPI_Bcast(&type, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
         mpi_error(err);
-}
-
-void server_send_draw(void)
-{
-    struct event e = { EVENT_DRAW, 0.0f, 0.0f, 0.0f };
-
-    server_send_event(&e);
-    server_draw();
-}
-
-void server_send_move(void)
-{
-    struct event e = { EVENT_MOVE, 0.0f, 0.0f, 0.0f };
-
-    status_get_camera_org(&e.x, &e.y, &e.z);
-    server_send_event(&e);
-}
-
-void server_send_turn(void)
-{
-    struct event e = { EVENT_TURN, 0.0f, 0.0f, 0.0f };
-
-    status_get_camera_rot(&e.x, &e.y, &e.z);
-    server_send_event(&e);
-}
-
-void server_send_dist(void)
-{
-    struct event e = { EVENT_DIST, 0.0f, 0.0f, 0.0f };
-
-    e.x = status_get_camera_dist();
-    server_send_event(&e);
-}
-
-void server_send_magn(void)
-{
-    struct event e = { EVENT_MAGN, 0.0f, 0.0f, 0.0f };
-
-    e.x = status_get_camera_magn();
-    server_send_event(&e);
-}
-
-void server_send_zoom(void)
-{
-    struct event e = { EVENT_ZOOM, 0.0f, 0.0f, 0.0f };
-
-    e.x = status_get_camera_zoom();
-    server_send_event(&e);
-}
-
-void server_send_exit(void)
-{
-    struct event e = { EVENT_EXIT, 0.0f, 0.0f, 0.0f };
-
-    server_send_event(&e);
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void server_init(void)
 {
-    glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
+    glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
 
     galaxy_init(0);
     star_init(0);
-
-    server_send_draw();
 }
 
 static void server_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    status_draw_camera();
+    camera_draw();
     galaxy_draw();
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -204,7 +146,7 @@ static int server_loop(void)
 
         if (e.type == SDL_QUIT)
         {
-            server_send_exit();
+            server_send(EVENT_EXIT);
             return 0;
         }
     }
@@ -223,7 +165,8 @@ static int server_loop(void)
 
     if (c)
     {
-        server_send_draw();
+        server_send(EVENT_DRAW);
+        server_draw();
         server_perf();
     }
 
@@ -259,15 +202,15 @@ void server(int np, int argc, char *argv[])
             else if (!strcmp(argv[i], "-o")) star_write_catalog(argv[++i]);
             else usage(argv[0]);
 
-        status_init();
+        camera_init();
         viewport_sync(0, np);
 
         /* Initialize the main server window. */
 
         if (SDL_Init(SDL_INIT_VIDEO) == 0)
         {
-            int w = status_get_viewport_w();
-            int h = status_get_viewport_h();
+            int w = camera_get_viewport_w();
+            int h = camera_get_viewport_h();
             int m = SDL_OPENGL;
 
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);

@@ -37,6 +37,17 @@ void mpi_error(int err)
     fprintf(stderr, "MPI Error: %s\n", buf);
 }
 
+int mpi_root(void)
+{
+    int rank = 0;
+    int err;
+
+    if ((err = MPI_Comm_rank(MPI_COMM_WORLD, &rank)))
+        mpi_error(err);
+
+    return (rank == 0);
+}
+
 /*---------------------------------------------------------------------------*/
 
 static struct viewport *Vi;
@@ -133,12 +144,12 @@ void viewport_sync(int i, int n)
 
     /* Apply this client's viewport. */
 
-    if (i) status_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+    if (i) camera_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/
 
-GLuint mpi_load_program(int id, const char *filename, GLenum target)
+GLuint shared_load_program(int id, const char *filename, GLenum target)
 {
     struct stat buf;
 
@@ -191,7 +202,7 @@ GLuint mpi_load_program(int id, const char *filename, GLenum target)
     return program;
 }
 
-GLuint mpi_load_texture(int id, const char *filename)
+GLuint shared_load_texture(int id, const char *filename)
 {
     GLubyte *p = NULL;
     int      w = 0;

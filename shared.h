@@ -21,21 +21,26 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define EVENT_DRAW 1
-#define EVENT_MOVE 2
-#define EVENT_TURN 3
-#define EVENT_ZOOM 4
-#define EVENT_DIST 5
-#define EVENT_MAGN 6
-#define EVENT_EXIT 7
+void mpi_error(int);
+int  mpi_root(void);
 
-struct event
-{
-    int   type;
-    float x;
-    float y;
-    float z;
-};
+/*---------------------------------------------------------------------------*/
+
+#define EVENT_DRAW 1
+#define EVENT_EXIT 2
+
+#define EVENT_CAMERA_MOVE 3
+#define EVENT_CAMERA_TURN 4
+#define EVENT_CAMERA_ZOOM 5
+#define EVENT_CAMERA_DIST 6
+#define EVENT_CAMERA_MAGN 7
+
+#define EVENT_SPRITE_LOAD 8
+#define EVENT_SPRITE_FREE 9
+#define EVENT_SPRITE_MOVE 10
+#define EVENT_SPRITE_TURN 11
+#define EVENT_SPRITE_SIZE 12
+#define EVENT_SPRITE_FADE 13
 
 /*---------------------------------------------------------------------------*/
 
@@ -58,10 +63,15 @@ void viewport_sync(int, int);
 
 /*---------------------------------------------------------------------------*/
 
-void mpi_error(int);
+GLuint shared_load_program(int id, const char *, GLenum);
+GLuint shared_load_texture(int id, const char *);
 
-GLuint mpi_load_program(int id, const char *, GLenum);
-GLuint mpi_load_texture(int id, const char *);
+void   shared_set_camera_org(float, float, float);
+void   shared_set_camera_rot(float, float, float);
+
+void   shared_set_camera_dist(float);
+void   shared_set_camera_magn(float);
+void   shared_set_camera_zoom(float);
 
 /*---------------------------------------------------------------------------*/
 

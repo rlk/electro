@@ -87,6 +87,7 @@ static int script_getboolean(const char *str, lua_State *L, int i)
 static int script_add_tile(lua_State *L)
 {
     const char *name = "add_tile";
+
     viewport_tile(script_getstring(name, L, -7),
                   script_getnumber(name, L, -6),
                   script_getnumber(name, L, -5),
@@ -100,6 +101,7 @@ static int script_add_tile(lua_State *L)
 static int script_enable_idle(lua_State *L)
 {
     const char *name = "enable_idle";
+
     enable_idle(script_getboolean(name, L, -1));
     return 0;
 }
@@ -107,44 +109,44 @@ static int script_enable_idle(lua_State *L)
 static int script_camera_move(lua_State *L)
 {
     const char *name = "camera_move";
-    status_set_camera_org(script_getnumber(name, L, -3),
-                          script_getnumber(name, L, -2),
-                          script_getnumber(name, L, -1));
-    server_send_move();
+
+    camera_set_org(script_getnumber(name, L, -3),
+                   script_getnumber(name, L, -2),
+                   script_getnumber(name, L, -1));
     return 0;
 }
 
 static int script_camera_turn(lua_State *L)
 {
     const char *name = "camera_turn";
-    status_set_camera_rot(script_getnumber(name, L, -3),
-                          script_getnumber(name, L, -2),
-                          script_getnumber(name, L, -1));
-    server_send_turn();
+
+    camera_set_rot(script_getnumber(name, L, -3),
+                   script_getnumber(name, L, -2),
+                   script_getnumber(name, L, -1));
     return 0;
 }
 
 static int script_camera_dist(lua_State *L)
 {
     const char *name = "camera_dist";
-    status_set_camera_dist(script_getnumber(name, L, -1));
-    server_send_dist();
+
+    camera_set_dist(script_getnumber(name, L, -1));
     return 0;
 }
 
 static int script_camera_magn(lua_State *L)
 {
     const char *name = "camera_magn";
-    status_set_camera_magn(script_getnumber(name, L, -1));
-    server_send_magn();
+
+    camera_set_magn(script_getnumber(name, L, -1));
     return 0;
 }
 
 static int script_camera_zoom(lua_State *L)
 {
     const char *name = "camera_zoom";
-    status_set_camera_zoom(script_getnumber(name, L, -1));
-    server_send_zoom();
+
+    camera_set_zoom(script_getnumber(name, L, -1));
     return 0;
 }
 
