@@ -84,7 +84,7 @@ function init_viewport()
     viewport.x, viewport.y, viewport.w, viewport.h = E.get_viewport()
 
     viewport.a = viewport.h / viewport.w
-    viewport.k =     1024.0 / viewport.w
+    viewport.k = viewport.w / 1024.0
 
     viewport.h =     1024.0 * viewport.a
     viewport.B =     -512.0 * viewport.a
@@ -114,8 +114,10 @@ function init_scene()
 
     -- Move the origin to the center of the screen.
 
-    E.set_entity_position(camera_2d, -viewport.w / 2, -viewport.h / 2, 0)
-    E.set_entity_position(camera_3d, -viewport.w / 2, -viewport.h / 2, 0)
+    E.set_entity_position(camera_2d, -viewport.k * viewport.w / 2,
+                                     -viewport.k * viewport.h / 2, 0)
+    E.set_entity_position(camera_3d, -viewport.k * viewport.w / 2,
+                                     -viewport.k * viewport.h / 2, 0)
 
     -- Scale the scene to match the resolution of the display.
 
@@ -346,7 +348,7 @@ end
 
 function create_bullet(x, y, z)
     local object = E.create_clone(entity.bullet)
-    local s = 0.50
+    local s = 0.30
 
     E.parent_entity      (object, scene_3d)
     E.set_entity_position(object, x, y, z)
@@ -709,6 +711,17 @@ function del_asteroid(id, asteroid)
     curr_count = curr_count - 1
 end
 
+function test_asteroid(asteroid, jd, bullet)
+    local size = asteroid.size
+
+    if entity_distance(asteroid.entity, bullet.entity) < 15 * size then
+        del_bullet(jd, bullet)
+        return true
+    else
+        return nil
+    end
+end
+
 function frag_asteroid(id, asteroid)
 
     local size = asteroid.size
@@ -771,11 +784,10 @@ function step_asteroid(dt, id, asteroid)
 
     -- Check this asteroid against all bullets.
 
-    for jd, bullet in pairs(bullets) do
-        if entity_distance(asteroid.entity, bullet.entity) < 15 * size then
-            frag_asteroid(id, asteroid)
-            del_bullet   (jd, bullet)
-        end
+    if (table.foreach(bullets, function (jd, bullet)
+                                   return test_asteroid(asteroid, jd, bullet)
+                               end)) then
+        frag_asteroid(id, asteroid)
     end
 
     return true
@@ -1078,8 +1090,9 @@ function state.clear.leave()
 end
 
 function state.clear.timer(dt)
+    step_player(dt)
     step_scene(dt)
-    return state.over
+    return state.clear
 end
 
 function state.clear.button_A(s)
