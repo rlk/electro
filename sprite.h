@@ -28,7 +28,7 @@ struct sprite
 /*---------------------------------------------------------------------------*/
 
 int  sprite_create(const char *);
-void sprite_render(int);
+void sprite_render(int, int);
 void sprite_delete(int);
 
 void sprite_alpha(int, float);

@@ -61,23 +61,37 @@ int sprite_create(const char *filename)
     return id;
 }
 
-void sprite_render(int id)
-{
-    if (sprite_exists(id))
-    {
-        glBindTexture(GL_TEXTURE_2D, S[id].texture);
-                
-        glBegin(GL_QUADS);
-        {
-            int dx = S[id].w / 2;
-            int dy = S[id].h / 2;
+/*---------------------------------------------------------------------------*/
 
-            glTexCoord2i(0, 0); glVertex2f(-dx, -dy);
-            glTexCoord2i(1, 0); glVertex2f(+dx, -dy);
-            glTexCoord2i(1, 1); glVertex2f(+dx, +dy);
-            glTexCoord2i(0, 1); glVertex2f(-dx, +dy);
+void sprite_render(int id, int sd)
+{
+    if (sprite_exists(sd))
+    {
+        glPushMatrix();
+        {
+            /* Apply the local coordinate system transformation. */
+
+            entity_transform(id);
+
+            /* Render this sprite. */
+
+            glBindTexture(GL_TEXTURE_2D, S[sd].texture);
+                
+            glBegin(GL_QUADS);
+            {
+                int dx = S[sd].w / 2;
+                int dy = S[sd].h / 2;
+
+                glTexCoord2i(0, 0); glVertex2f(-dx, -dy);
+                glTexCoord2i(1, 0); glVertex2f(+dx, -dy);
+                glTexCoord2i(1, 1); glVertex2f(+dx, +dy);
+                glTexCoord2i(0, 1); glVertex2f(-dx, +dy);
+            }
+            glEnd();
+
+            /* Render all child entities in this coordinate system. */
         }
-        glEnd();
+        glPopMatrix();
     }
 }
 

@@ -12,11 +12,11 @@ light  = nil
 
 function do_start()
     camera = camera_create(2)
+    light  =  light_create(2)
     object = object_create("ball.obj")
-    light  = light_create(2)
 
-    entity_parent(object, camera)
     entity_parent(light,  camera)
+    entity_parent(object, light)
 
     camera_zoom(camera, 0.001)
     camera_dist(camera, 5.000)

@@ -72,32 +72,33 @@ void light_delete(int id)
 
 /*---------------------------------------------------------------------------*/
 
-void light_render(int id, const float pos[3])
+void light_render(int id, int ld)
 {
-    if (light_exists(id))
+    if (light_exists(ld))
     {
-        GLenum light = GL_LIGHT0 + (id - 1);
-        GLfloat p[4];
+        GLfloat pos[4];
 
-        glEnable (light);
+        /* Determine the homogenous coordinate lightsource position. */
 
-        if (L[id].type == LIGHT_POSITIONAL)
+        entity_get_position(id, pos + 0, pos + 1, pos + 2);
+
+        if (L[ld].type == LIGHT_POSITIONAL)  pos[3] = 1.0f;
+        if (L[ld].type == LIGHT_DIRECTIONAL) pos[3] = 0.0f;
+
+        /* Enable this light and render all child entities. */
+
+        glPushAttrib(GL_ENABLE_BIT);
         {
-            p[0] = pos[0];
-            p[1] = pos[1];
-            p[2] = pos[2];
-            p[3] =   1.0f;
-        }
-        if (L[id].type == LIGHT_DIRECTIONAL)
-        {
-            p[0] = pos[0];
-            p[1] = pos[1];
-            p[2] = pos[2];
-            p[3] =   0.0f;
-        }
+            GLenum light = GL_LIGHT0 + (ld - 1);
 
-        glLightfv(light, GL_DIFFUSE,  L[id].d);
-        glLightfv(light, GL_POSITION, p);
+            glEnable(light);
+        
+            glLightfv(light, GL_DIFFUSE, L[ld].d);
+            glLightfv(light, GL_POSITION, pos);
+
+            entity_traversal(id);
+        }
+        glPopAttrib();
     }
 }
 

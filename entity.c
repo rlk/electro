@@ -85,70 +85,56 @@ void *buffer_expand(void *buf, int *len, int siz)
 
 /*---------------------------------------------------------------------------*/
 
-static void entity_transform(int id)
+void entity_transform(int id)
 {
-    if (id)
+    /* Translation. */
+
+    if (fabs(E[id].position[0]) > 0.0 ||
+        fabs(E[id].position[1]) > 0.0 ||
+        fabs(E[id].position[2]) > 0.0)
     {
-        /* Translation. */
-
-        if (fabs(E[id].position[0]) > 0.0 ||
-            fabs(E[id].position[1]) > 0.0 ||
-            fabs(E[id].position[2]) > 0.0)
-        {
-            glTranslatef(E[id].position[0],
-                         E[id].position[1],
-                         E[id].position[2]);
-        }
-
-        /* Scale. */
-
-        if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
-            fabs(E[id].scale[1] - 1.0) > 0.0 ||
-            fabs(E[id].scale[2] - 1.0) > 0.0)
-        {
-            glScalef(E[id].scale[0],
-                     E[id].scale[1],
-                     E[id].scale[2]);
-        }
-
-        /* Rotation. */
-
-        if (fabs(E[id].rotation[0]) > 0.0)
-            glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
-
-        if (fabs(E[id].rotation[1]) > 0.0)
-            glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
-
-        if (fabs(E[id].rotation[2]) > 0.0)
-            glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
+        glTranslatef(E[id].position[0],
+                     E[id].position[1],
+                     E[id].position[2]);
     }
+
+    /* Scale. */
+
+    if (fabs(E[id].scale[0] - 1.0) > 0.0 ||
+        fabs(E[id].scale[1] - 1.0) > 0.0 ||
+        fabs(E[id].scale[2] - 1.0) > 0.0)
+    {
+        glScalef(E[id].scale[0],
+                 E[id].scale[1],
+                 E[id].scale[2]);
+    }
+
+    /* Rotation. */
+
+    if (fabs(E[id].rotation[0]) > 0.0)
+        glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
+
+    if (fabs(E[id].rotation[1]) > 0.0)
+        glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
+
+    if (fabs(E[id].rotation[2]) > 0.0)
+        glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
 }
 
-static void entity_traverse(int id)
+void entity_traversal(int id)
 {
     int jd;
 
-    glPushMatrix();
-    {
-        entity_transform(id);
+    /* Traverse the child list, recursively invoking render functions. */
 
-        /* Invoke the entity render function. */
-
-        switch (E[id].type)
+    for (jd = E[id].car; jd; jd = E[jd].cdr)
+        switch (E[jd].type)
         {
-        case TYPE_SPRITE: sprite_render(E[id].data);                 break;
-        case TYPE_OBJECT: object_render(E[id].data);                 break;
-        case TYPE_LIGHT:   light_render(E[id].data, E[id].position); break;
-        case TYPE_CAMERA: camera_render(E[id].data, E[id].position,
-                                                    E[id].rotation); break;
+        case TYPE_SPRITE: sprite_render(jd, E[jd].data); break;
+        case TYPE_OBJECT: object_render(jd, E[jd].data); break;
+        case TYPE_LIGHT:   light_render(jd, E[jd].data); break;
+        case TYPE_CAMERA: camera_render(jd, E[jd].data); break;
         }
-
-        /* Render any child entities. */
-
-        for (jd = E[id].car; jd; jd = E[jd].cdr)
-            entity_traverse(jd);
-    }
-    glPopMatrix();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -229,6 +215,11 @@ void entity_parent(int cd, int pd)
     }
 }
 
+void entity_render(void)
+{
+    if (E) entity_traversal(0);
+}
+
 void entity_delete(int id)
 {
     /* Trigger the delete operation and share the descriptor. */
@@ -249,19 +240,6 @@ void entity_delete(int id)
     }
 
     memset(E + id, 0, sizeof (struct entity));
-}
-
-void entity_render(void)
-{
-    if (E)
-    {
-        glPushAttrib(GL_ENABLE_BIT);
-        {
-            glEnable(GL_TEXTURE_2D);
-            entity_traverse(0);
-        }
-        glPopAttrib();
-    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -317,6 +295,38 @@ void entity_scale(int id, float x, float y, float z)
 
         mpi_share_integer(1, &id);
         mpi_share_float(3, E[id].scale);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void entity_get_position(int id, float *x, float *y, float *z)
+{
+    if (entity_exists(id))
+    {
+        *x = E[id].position[0];
+        *y = E[id].position[1];
+        *z = E[id].position[2];
+    }
+}
+
+void entity_get_rotation(int id, float *x, float *y, float *z)
+{
+    if (entity_exists(id))
+    {
+        *x = E[id].rotation[0];
+        *y = E[id].rotation[1];
+        *z = E[id].rotation[2];
+    }
+}
+
+void entity_get_scale(int id, float *x, float *y, float *z)
+{
+    if (entity_exists(id))
+    {
+        *x = E[id].scale[0];
+        *y = E[id].scale[1];
+        *z = E[id].scale[2];
     }
 }
 

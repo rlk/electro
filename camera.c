@@ -81,45 +81,64 @@ void camera_delete(int id)
 
 /*---------------------------------------------------------------------------*/
 
-void camera_render(int id, const float pos[3], const float rot[3])
+void camera_render(int id, int cd)
 {
-    double T = PI * rot[1] / 180.0;
-    double P = PI * rot[0] / 180.0;
-
     float p[3];
+    float r[3];
 
-    /* Compute the camera position given origin, rotation, and distance. */
+    entity_get_position(id, p + 0, p + 1, p + 2);
+    entity_get_rotation(id, r + 0, r + 1, r + 2);
 
-    p[0] = pos[0];
-    p[1] = pos[1];
-    p[2] = pos[2];
-
-    if (fabs(C[id].dist) > 0.0f)
+    if (camera_exists(cd))
     {
-        p[0] += (float) (sin(T) * cos(P) * C[id].dist);
-        p[1] -= (float) (         sin(P) * C[id].dist);
-        p[2] += (float) (cos(T) * cos(P) * C[id].dist);
+        double T = PI * r[1] / 180.0;
+        double P = PI * r[0] / 180.0;
+
+        /* Compute the camera position given origin, rotation, and distance. */
+
+        if (fabs(C[cd].dist) > 0.0f)
+        {
+            p[0] += (float) (sin(T) * cos(P) * C[cd].dist);
+            p[1] -= (float) (         sin(P) * C[cd].dist);
+            p[2] += (float) (cos(T) * cos(P) * C[cd].dist);
+        }
+
+        /* Load projection and modelview matrices for this camera. */
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            GLdouble l =  C[cd].zoom *  viewport_x;
+            GLdouble r =  C[cd].zoom * (viewport_x + viewport_w);
+            GLdouble b = -C[cd].zoom * (viewport_y + viewport_h);
+            GLdouble t = -C[cd].zoom *  viewport_y;
+            GLdouble f =  CAMERA_FAR;
+
+            glPushMatrix();
+            glLoadIdentity();
+
+            if (C[cd].type == CAMERA_PERSP) glFrustum(l, r, b, t,  1.0, f);
+            if (C[cd].type == CAMERA_ORTHO) glOrtho  (l, r, b, t, -1.0, 1.0);
+        }
+        glMatrixMode(GL_MODELVIEW);
+        {
+            glPushMatrix();
+            glTranslatef(0, 0, -C[cd].dist);
+
+            entity_transform(id);
+        }
+
+        /* Render all children using this camera. */
+
+        entity_traversal(id);
+
+        /* Revert to the previous camera configuration. */
+
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
     }
-
-    /* Load an off-axis projection for the current tile. */
-
-    glMatrixMode(GL_PROJECTION);
-    {
-        GLdouble l =  C[id].zoom *  viewport_x;
-        GLdouble r =  C[id].zoom * (viewport_x + viewport_w);
-        GLdouble b = -C[id].zoom * (viewport_y + viewport_h);
-        GLdouble t = -C[id].zoom *  viewport_y;
-
-        glLoadIdentity();
-
-        if (C[id].type == CAMERA_PERSP) glFrustum(l, r, b, t, 1.0, CAMERA_FAR);
-        if (C[id].type == CAMERA_ORTHO) glOrtho  (l, r, b, t, -1.0, 1.0);
-    }
-    glMatrixMode(GL_MODELVIEW);
-
-    /* Load the current camera transform. */
-
-    glTranslatef(0, 0, -C[id].dist);
 
     /* Use the view configuration as vertex program parameters. */
 

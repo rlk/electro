@@ -488,35 +488,49 @@ int object_create(const char *filename)
 
 /*---------------------------------------------------------------------------*/
 
-void object_render(int id)
+void object_render(int id, int od)
 {
     GLsizei stride = sizeof (struct object_vert);
 
-    if (object_exists(id))
+    if (object_exists(od))
     {
-        glPushAttrib(GL_LIGHTING_BIT);
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glPushMatrix();
         {
-            int si;
+            /* Apply the local coordinate system transformation. */
 
-            glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[id].vv);
+            entity_transform(id);
 
-            for (si = 0; si < O[id].sc; ++si)
+            /* Render this object. */
+
+            glPushAttrib(GL_LIGHTING_BIT);
+            glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             {
-                int mi = O[id].sv[si].mi;
+                int si;
 
-                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   O[id].mv[mi].d);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   O[id].mv[mi].a);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  O[id].mv[mi].s);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  O[id].mv[mi].e);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, O[id].mv[mi].x);
+                glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[od].vv);
 
-                glDrawElements(GL_TRIANGLES, 3 * O[id].sv[si].fc,
-                               GL_UNSIGNED_INT,  O[id].sv[si].fv);
+                for (si = 0; si < O[od].sc; ++si)
+                {
+                    const struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
+
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   m->d);
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
+
+                    glDrawElements(GL_TRIANGLES, 3 * O[od].sv[si].fc,
+                                   GL_UNSIGNED_INT,  O[od].sv[si].fv);
+                }
             }
+            glPopClientAttrib();
+            glPopAttrib();
+
+            /* Render all child entities in this coordinate system. */
+
+            entity_traversal(id);
         }
-        glPopClientAttrib();
-        glPopAttrib();
+        glPopMatrix();
     }
 }
 

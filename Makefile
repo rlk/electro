@@ -1,5 +1,5 @@
 
-TARG=	vortex
+TARG=	electro
 OBJS=	opengl.o \
 	shared.o \
 	server.o \

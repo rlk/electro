@@ -57,7 +57,7 @@ struct object
 /*---------------------------------------------------------------------------*/
 
 int  object_create(const char *);
+void object_render(int, int);
 void object_delete(int);
-void object_render(int);
 
 /*---------------------------------------------------------------------------*/

@@ -24,7 +24,7 @@ struct light
 /*---------------------------------------------------------------------------*/
 
 int  light_create(int);
-void light_render(int, const float[3]);
+void light_render(int, int);
 void light_delete(int);
 
 void light_color(int, float, float, float);

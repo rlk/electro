@@ -1,3 +1,3 @@
 #!/bin/sh
 
-mpirun -machinefile nico.dat -np 17 ./vortex -f hip_main.bin -s nico.lua -s view.lua
+mpirun -machinefile nico.dat -np 17 ./electro -f hip_main.bin -s nico.lua -s view.lua

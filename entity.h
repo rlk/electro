@@ -45,14 +45,25 @@ void *buffer_expand(void *, int *, int);
 int  entity_exists(int);
 int  entity_istype(int, int);
 
+void entity_transform(int);
+void entity_traversal(int);
+
+/*---------------------------------------------------------------------------*/
+
 int  entity_create(int, int);
 void entity_parent(int, int);
-void entity_delete(int);
 void entity_render(void);
+void entity_delete(int);
+
+/*---------------------------------------------------------------------------*/
 
 void entity_position(int, float, float, float);
 void entity_rotation(int, float, float, float);
 void entity_scale   (int, float, float, float);
+
+void entity_get_position(int, float *, float *, float *);
+void entity_get_rotation(int, float *, float *, float *);
+void entity_get_scale   (int, float *, float *, float *);
 
 /*---------------------------------------------------------------------------*/
 
