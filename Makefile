@@ -50,12 +50,12 @@ PNG_LIBS= -lpng -lz -lm
 ifeq ($(shell uname), Darwin)
     INCDIR= -I/sw/include -I/usr/include/lua
     LIBDIR= -L/sw/lib
+    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lm
 else
     INCDIR= -I$(HOME)/include -I/usr/include/lua
     LIBDIR= -L$(HOME)/lib
+    LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lGL -lGLU -lm
 endif
-
-LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lm
 
 #------------------------------------------------------------------------------
 

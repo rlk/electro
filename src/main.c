@@ -15,11 +15,20 @@
 #include "client.h"
 
 /*---------------------------------------------------------------------------*/
+/* This hack works around an apparent bug in the OSX port of SDL.            */
+
+#ifdef __APPLE__
+#define MAIN SDL_main
+#else
+#define MAIN main
+#endif
+
+/*---------------------------------------------------------------------------*/
 
 #ifdef MPI
 #include <mpi.h>
 
-int SDL_main(int argc, char *argv[])
+int MAIN(int argc, char *argv[])
 {
     if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
     {
@@ -35,7 +44,7 @@ int SDL_main(int argc, char *argv[])
 
 #else  /* MPI */
 
-int SDL_main(int argc, char *argv[])
+int MAIN(int argc, char *argv[])
 {
     server(argc, argv);
     return 0;
