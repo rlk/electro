@@ -812,17 +812,18 @@ function init_player()
     -- If any ships remain, initialize one of them.
 
     if curr_ships > 0 then
+        curr_ships = curr_ships - 1
+
         E.set_entity_position(player.entity, 0, 0, 0)
+        E.set_entity_rotation(player.entity, 0, 0, 0)
         E.set_entity_flag    (player.entity, E.entity_flag_hidden, false)
         E.set_entity_flag    (thrust,        E.entity_flag_hidden, true)
 
         player.thrusting = false
         player.turning_L = false
         player.turning_R = false
-        player.dx = 0
-        player.dy = 0
-
-        curr_ships = curr_ships - 1
+        player.dx        = 0
+        player.dy        = 0
 
         set_overlay_curr_ships(curr_ships)
 
@@ -1007,7 +1008,6 @@ state.play = { }
 function state.play.timer(dt)
     if step_player(dt) then
         kill_player()
-
         return state.dead
     else
         step_scene(dt)
@@ -1073,6 +1073,7 @@ function state.clear.enter()
 end
 
 function state.clear.leave()
+    curr_speed = curr_speed * 1.25
     E.set_entity_flag(overlay.clear, E.entity_flag_hidden, true)
 end
 
@@ -1083,9 +1084,6 @@ end
 
 function state.clear.button_A(s)
     if s and time_state > 1 then
-        curr_speed = curr_speed * 1.25
-        curr_level = curr_level + 1
-
         return state.ready
     else
         return state.clear

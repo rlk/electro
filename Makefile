@@ -1,40 +1,31 @@
-PREFIX=/usr/local/Electro
-
-ifeq ($(shell uname), Darwin)
-	SDL_CONFIG=/sw/bin/sdl-config
-else
-	SDL_CONFIG=/usr/bin/sdl-config
-endif
+PREFIX = /usr/local/Electro
 
 #------------------------------------------------------------------------------
 
 # To build in cluster mode: "make MPI=1".
 
 ifdef MPI
-	CC=     mpicc
-	TARG=   electro-mpi
-	CFLAGS= $(shell $(SDL_CONFIG) --cflags) -g -Wall -DMPI -DNDEBUG
+	CC     = mpicc
+	TARG   = electro-mpi
+	CFLAGS =  -g -Wall -DMPI -DNDEBUG
 else
-	CC=     cc
-	TARG=   electro
-	CFLAGS= $(shell $(SDL_CONFIG) --cflags) -g -Wall -ansi -pedantic
+	CC     = cc
+	TARG   = electro
+	CFLAGS = -g -Wall -ansi -pedantic
 endif
 
 #------------------------------------------------------------------------------
 
-SDLLIB= $(shell $(SDL_CONFIG) --libs) -lSDLmain
-LUALIB= -llua -llualib
-IMGLIB= -ljpeg -lpng -lz -lm
-OGGLIB= -lvorbisfile
-
 # Assume the Fink tree is available under OSX and GL is in a framework.
 
 ifeq ($(shell uname), Darwin)
-	INCDIR= -I/sw/include
-	LIBDIR= -L/sw/lib
-	OGLLIB=
+	INCDIR = -I/sw/include
+	LIBDIR = -L/sw/lib
+	OGLLIB =
+	SDL_CONFIG = /sw/bin/sdl-config
 else
-	OGLLIB= -lGL -lGLU
+	OGLLIB = -lGL -lGLU
+	SDL_CONFIG = /usr/bin/sdl-config
 endif
 
 # Include Lua, if it exists.
@@ -54,9 +45,15 @@ endif
 
 #------------------------------------------------------------------------------
 
-LIBS= $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lm
+CFLAGS += $(shell $(SDL_CONFIG) --cflags)
+SDLLIB  = $(shell $(SDL_CONFIG) --libs) -lSDLmain
+LUALIB  = -llua -llualib
+IMGLIB  = -ljpeg -lpng -lz -lm
+OGGLIB  = -lvorbisfile
 
-OBJS=	src/version.o  \
+LIBS = $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+
+OBJS =	src/version.o  \
 	src/opengl.o   \
 	src/glyph.o    \
 	src/matrix.o   \
@@ -98,7 +95,7 @@ install : $(TARG)
 	cp config/* $(PREFIX)/config
 
 #------------------------------------------------------------------------------
-# If Subversion is installed report the revision number in the source.
+# If Subversion is installed then report the revision number in the source.
 
 ifneq ($(shell which svnversion),)
 
