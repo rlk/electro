@@ -42,6 +42,7 @@ static float average_fps = 0.0f;
 
 void grab(int b)
 {
+    /*
     if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -52,6 +53,7 @@ void grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
+    */
     server_grab = b;
 }
 
@@ -266,6 +268,7 @@ static int server_loop(void)
 void server(int argc, char *argv[])
 {
     int argi;
+
     /*
     prep_tyc_galaxy();
     prep_hip_galaxy();

@@ -125,7 +125,7 @@ int init_sound(void)
     spec.format   = BUFFORM;
     spec.freq     = BUFFREQ;
 
-    if (SDL_OpenAudio(&spec, NULL) >= 0)
+    if (SDL_OpenAudio(&spec, NULL) == 0)
     {
         buff = (float *) malloc(spec.samples * spec.channels * sizeof (float));
 

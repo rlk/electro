@@ -63,6 +63,23 @@ static void default_host(struct host *H)
 
 /*---------------------------------------------------------------------------*/
 
+static void set_window_pos(int x, int y)
+{
+    char buf[32];
+
+    /* SDL looks to the environment for window position. */
+
+#ifdef _WIN32
+    sprintf(buf, "SDL_VIDEO_WINDOW_POS=%d,%d", x, y);
+    putenv(buf);
+#else
+    sprintf(buf, "%d,%d", x, y);
+    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+#endif
+}
+
+/*---------------------------------------------------------------------------*/
+
 void init_display(void)
 {
     int n = 0;
@@ -139,6 +156,8 @@ void sync_display(void)
 
     if (rank == 0 && H_num > 0)
         memcpy(&Host, Hi, sizeof (struct host));
+
+    set_window_pos(Host.win_x, Host.win_y);
 }
 
 /*---------------------------------------------------------------------------*/
