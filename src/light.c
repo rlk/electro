@@ -82,19 +82,23 @@ void light_draw(int id, int ld, float a)
 
 int light_send_create(int type)
 {
-    int ld = buffer_unused(L_max, light_exists);
+    int ld;
 
-    pack_event(EVENT_LIGHT_CREATE);
-    pack_index(ld);
-    pack_index(type);
+    if ((ld = buffer_unused(L_max, light_exists)) >= 0)
+    {
+        pack_event(EVENT_LIGHT_CREATE);
+        pack_index(ld);
+        pack_index(type);
 
-    L[ld].type = type;
-    L[ld].d[0] = 1.0f;
-    L[ld].d[1] = 1.0f;
-    L[ld].d[2] = 1.0f;
-    L[ld].d[3] = 1.0f;
+        L[ld].type = type;
+        L[ld].d[0] = 1.0f;
+        L[ld].d[1] = 1.0f;
+        L[ld].d[2] = 1.0f;
+        L[ld].d[3] = 1.0f;
 
-    return entity_send_create(TYPE_LIGHT, ld);
+        return entity_send_create(TYPE_LIGHT, ld);
+    }
+    return -1;
 }
 
 void light_recv_create(void)

@@ -30,9 +30,9 @@
 static struct sprite *S;
 static int            S_max;
 
-static int sprite_exists(int id)
+static int sprite_exists(int sd)
 {
-    return (S && 0 <= id && id < S_max && S[id].texture);
+    return (S && 0 <= sd && sd < S_max && S[sd].texture);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -86,21 +86,24 @@ void sprite_draw(int id, int sd, float a)
 
 int sprite_send_create(const char *filename)
 {
-    int sd = buffer_unused(S_max, sprite_exists);
+    int sd;
 
-    if ((S[sd].p = image_load_png(filename, &S[sd].w, &S[sd].h, &S[sd].b)))
+    if ((sd = buffer_unused(S_max, sprite_exists)) >= 0)
     {
-        pack_event(EVENT_SPRITE_CREATE);
-        pack_index(sd);
+        if ((S[sd].p = image_load_png(filename, &S[sd].w, &S[sd].h, &S[sd].b)))
+        {
+            pack_event(EVENT_SPRITE_CREATE);
+            pack_index(sd);
 
-        pack_index(S[sd].w);
-        pack_index(S[sd].h);
-        pack_index(S[sd].b);
-        pack_alloc(S[sd].w * S[sd].h * S[sd].b, S[sd].p);
+            pack_index(S[sd].w);
+            pack_index(S[sd].h);
+            pack_index(S[sd].b);
+            pack_alloc(S[sd].w * S[sd].h * S[sd].b, S[sd].p);
 
-        S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
+            S[sd].texture = image_make_tex(S[sd].p, S[sd].w, S[sd].h, S[sd].b);
 
-        return entity_send_create(TYPE_SPRITE, sd);
+            return entity_send_create(TYPE_SPRITE, sd);
+        }
     }
     return -1;
 }

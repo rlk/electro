@@ -31,7 +31,9 @@ int  mpi_isroot(void);
 int  mpi_rank(void);
 int  mpi_size(void);
 
-void mpi_barrier(void);
+void mpi_barrier_clients(void);
+void mpi_barrier_all(void);
+void mpi_split(void);
 
 int  mpi_share_byte(int, void *);
 int  mpi_share_char(int, char *);

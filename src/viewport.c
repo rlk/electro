@@ -23,8 +23,7 @@
 /*---------------------------------------------------------------------------*/
 /* Viewport configuration                                                    */
 
-static struct viewport  Vs = { "", 0, 0, DEFAULT_X, DEFAULT_Y,
-                                         DEFAULT_W, DEFAULT_H };
+static struct viewport  Vs;
 static struct viewport *Vi;
 static struct viewport *Vo;
 static int              V_max = 128;
@@ -212,6 +211,16 @@ void viewport_sync(void)
                           &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
 #endif  /* MPI */
+
+    if (V_num == 0)
+    {
+        Vs.X = 0;
+        Vs.Y = 0;
+        Vs.x = DEFAULT_X;
+        Vs.y = DEFAULT_Y;
+        Vs.w = DEFAULT_W;
+        Vs.h = DEFAULT_H;
+    }
 
     /* Apply this client's viewport. */
 

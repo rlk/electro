@@ -23,8 +23,7 @@
 #include "script.h"
 #include "camera.h"
 #include "entity.h"
-#include "galaxy.h"
-#include "star.h"
+#include "sound.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -134,7 +133,6 @@ static void server_draw(void)
 
     /* Sync and swap. */
 
-/*  mpi_barrier(); */
     SDL_GL_SwapBuffers();
 }
 
@@ -252,7 +250,8 @@ void server(int argc, char *argv[])
 
         /* Initialize the main server window. */
 
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) == 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK |
+                     SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
         {
             int w = window_get_w();
             int h = window_get_h();
@@ -269,13 +268,18 @@ void server(int argc, char *argv[])
 
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {
+                /* Initialize all subsystems. */
+
                 joystick_init();
                 buffer_init();
+                sound_init();
                 server_init();
                 entity_init();
                 script_start();
 
                 /* Block on SDL events.  Service them as they arrive. */
+
+                SDL_PauseAudio(0);
 
                 while (SDL_WaitEvent(NULL))
                     if (server_loop() == 0)
@@ -283,16 +287,13 @@ void server(int argc, char *argv[])
 
                 /* Ensure everyone finishes all events before exiting. */
 
-                mpi_barrier();
-                joystick_free();
+                mpi_barrier_all();
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 
             SDL_Quit();
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
-
-        script_free();
     }
 }
 

@@ -74,13 +74,31 @@ int mpi_isroot(void)
     return (mpi_rank() == 0);
 }
 
-void mpi_barrier(void)
+/*---------------------------------------------------------------------------*/
+
+static MPI_Comm clients;
+
+void mpi_barrier_clients(void)
 {
 #ifdef MPI
-#ifndef NDEBUG
-    printf("%d of %d: barrier\n", mpi_rank(), mpi_size());
+    mpi_assert(MPI_Barrier(clients));
 #endif
-    MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void mpi_barrier_all(void)
+{
+#ifdef MPI
+    mpi_assert(MPI_Barrier(MPI_COMM_WORLD));
+#endif
+}
+
+void mpi_split(void)
+{
+#ifdef MPI
+    if (mpi_isroot())
+        mpi_assert(MPI_Comm_split(MPI_COMM_WORLD, 0, 0, &clients));
+    else
+        mpi_assert(MPI_Comm_split(MPI_COMM_WORLD, 1, 0, &clients));
 #endif
 }
 

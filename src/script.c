@@ -24,6 +24,7 @@
 #include "light.h"
 #include "pivot.h"
 #include "entity.h"
+#include "sound.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/
@@ -31,22 +32,72 @@
 static lua_State *L;
 
 /*---------------------------------------------------------------------------*/
-/* Entity userdata handlers                                                  */
+/* Generic userdata handlers                                                 */
 
-static int lua_toentity(lua_State *L, int i)
+#define USERDATA_ENTITY 0
+#define USERDATA_SOUND  1
+#define USERDATA_IMAGE  2
+
+static int lua_touserdata_type(lua_State *L, int i)
 {
     return ((int *) lua_touserdata(L, i))[0];
 }
 
+static int lua_touserdata_data(lua_State *L, int i)
+{
+    return ((int *) lua_touserdata(L, i))[1];
+}
+
+static void lua_pushuserdata(lua_State *L, int type, int data)
+{
+    int *p = (int *) lua_newuserdata(L, 2 * sizeof (int));
+
+    p[0] = type;
+    p[1] = data;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Entity userdata handlers                                                  */
+
+static int lua_toentity(lua_State *L, int i)
+{
+    return lua_touserdata_data(L, i);
+}
+
 static int lua_isentity(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i);
+    return ((lua_isuserdata(L, i)) &&
+            (lua_touserdata_type(L, i) == USERDATA_ENTITY));
 }
 
 static void lua_pushentity(lua_State *L, int id)
 {
-    int *p = (int *) lua_newuserdata(L, sizeof (int));
-    *p = id;
+    if (id < 0)
+        lua_pushnil(L);
+    else
+        lua_pushuserdata(L, USERDATA_ENTITY, id);
+}
+
+/*---------------------------------------------------------------------------*/
+/* Sound userdata handlers                                                   */
+
+static int lua_tosound(lua_State *L, int i)
+{
+    return lua_touserdata_data(L, i);
+}
+
+static int lua_issound(lua_State *L, int i)
+{
+    return ((lua_isuserdata(L, i)) &&
+            (lua_touserdata_type(L, i) == USERDATA_SOUND));
+}
+
+static void lua_pushsound(lua_State *L, int id)
+{
+    if (id < 0)
+        lua_pushnil(L);
+    else
+        lua_pushuserdata(L, USERDATA_SOUND, id);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -176,26 +227,6 @@ static int script_getentity(const char *name, lua_State *L, int i)
     return 0;
 }
 
-#ifdef SNIP
-static int script_getsprite(const char *name, lua_State *L, int i)
-{
-    int n = lua_gettop(L);
-
-    /* Check the argument count, check for a sprite, and return it. */
-
-    if (1 <= -i && -i <= n)
-    {
-        if (lua_issprite(L, i))
-            return lua_toentity(L, i);
-        else
-            script_type_error(name, "sprite", L, i);
-    }
-    else script_arity_error(name, L, i, n);
-
-    return 0;
-}
-#endif
-
 static int script_getcamera(const char *name, lua_State *L, int i)
 {
     int n = lua_gettop(L);
@@ -208,6 +239,24 @@ static int script_getcamera(const char *name, lua_State *L, int i)
             return entity_todata(lua_toentity(L, i));
         else
             script_type_error(name, "camera", L, i);
+    }
+    else script_arity_error(name, L, i, n);
+
+    return 0;
+}
+
+static int script_getsound(const char *name, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    /* Check the argument count, check for a sound, and return it. */
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_issound(L, i))
+            return lua_tosound(L, i);
+        else
+            script_type_error(name, "sound", L, i);
     }
     else script_arity_error(name, L, i, n);
 
@@ -440,6 +489,39 @@ static int script_camera_zoom(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Sound functions                                                           */
+
+static int script_sound_load(lua_State *L)
+{
+    lua_pushsound(L, sound_create(script_getstring("sound_load", L, -1)));
+    return 1;
+}
+
+static int script_sound_free(lua_State *L)
+{
+    sound_delete(script_getsound("sound_free", L, -1));
+    return 0;
+}
+
+static int script_sound_stop(lua_State *L)
+{
+    sound_stop(script_getsound("sound_stop", L, -1));
+    return 0;
+}
+
+static int script_sound_play(lua_State *L)
+{
+    sound_play(script_getsound("sound_play", L, -1));
+    return 0;
+}
+
+static int script_sound_loop(lua_State *L)
+{
+    sound_loop(script_getsound("sound_loop", L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Script setup/shutdown                                                     */
 
 #define lua_function(L, n, f) (lua_pushstring(L, n),    \
@@ -456,7 +538,7 @@ void luaopen_electro(lua_State *L)
     lua_pushstring(L, "E");
     lua_newtable(L);
 
-    /* Entity contructors. */
+    /* Entity contructors and destructor. */
 
     lua_function(L, "create_camera",           script_create_camera);
     lua_function(L, "create_sprite",           script_create_sprite);
@@ -467,8 +549,8 @@ void luaopen_electro(lua_State *L)
     /* Entity control. */
 
     lua_function(L, "entity_parent",           script_entity_parent);
-    lua_function(L, "entity_delete",           script_entity_delete);
     lua_function(L, "entity_clone",            script_entity_clone);
+    lua_function(L, "delete_entity",           script_entity_delete);
 
     lua_function(L, "entity_position",         script_entity_position);
     lua_function(L, "entity_rotation",         script_entity_rotation);
@@ -495,6 +577,14 @@ void luaopen_electro(lua_State *L)
 
     lua_constant(L, "light_type_positional",   LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",  LIGHT_DIRECTIONAL);
+
+    /* Sound control. */
+
+    lua_function(L, "sound_load",              script_sound_load);
+    lua_function(L, "sound_free",              script_sound_free);
+    lua_function(L, "sound_stop",              script_sound_stop);
+    lua_function(L, "sound_play",              script_sound_play);
+    lua_function(L, "sound_loop",              script_sound_loop);
 
     /* Misc. */
 

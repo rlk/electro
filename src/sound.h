@@ -10,40 +10,38 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <mpi.h>
+#ifndef SOUND_H
+#define SOUND_H
 
-#include "shared.h"
-#include "server.h"
-#include "client.h"
+#include <vorbis/codec.h>
+#include <vorbis/vorbisfile.h>
+
+/*---------------------------------------------------------------------------*/
+
+#define SOUND_NULL 0
+#define SOUND_STOP 1
+#define SOUND_PLAY 2
+#define SOUND_LOOP 3
+
+struct sound
+{
+    int   mode;
+    int   chan;
+
+    OggVorbis_File file;
+};
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef MPI
+int  sound_init(void);
 
-int main(int argc, char *argv[])
-{
-    if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
-    {
-        mpi_split();
+int  sound_create(const char *);
+void sound_delete(int);
 
-        if (mpi_isroot())
-            server(argc, argv);
-        else
-            client();
-
-        MPI_Finalize();
-    }
-    return 0;
-}
-
-#else  /* MPI */
-
-int main(int argc, char *argv[])
-{
-    server(argc, argv);
-    return 0;
-}
-
-#endif /* MPI */
+void sound_stop(int);
+void sound_play(int);
+void sound_loop(int);
 
 /*---------------------------------------------------------------------------*/
+
+#endif

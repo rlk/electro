@@ -111,7 +111,7 @@ static void client_draw(void)
 
     entity_draw();
 
-/*  mpi_barrier(); */
+    mpi_barrier_clients();
     SDL_GL_SwapBuffers();
 }
 
@@ -168,7 +168,7 @@ void client(void)
 
             /* Ensure everyone finishes all events before exiting. */
 
-            mpi_barrier();
+            mpi_barrier_all();
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
 

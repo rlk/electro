@@ -115,17 +115,21 @@ void camera_draw(int id, int cd, float a)
 
 int camera_send_create(int type)
 {
-    int cd = buffer_unused(C_max, camera_exists);
+    int cd;
 
-    pack_event(EVENT_CAMERA_CREATE);
-    pack_index(cd);
-    pack_index(type);
+    if ((cd = buffer_unused(C_max, camera_exists)) >= 0)
+    {
+        pack_event(EVENT_CAMERA_CREATE);
+        pack_index(cd);
+        pack_index(type);
 
-    C[cd].type = type;
-    C[cd].dist = 0.0f;
-    C[cd].zoom = 1.0f;
+        C[cd].type = type;
+        C[cd].dist = 0.0f;
+        C[cd].zoom = 1.0f;
 
-    return entity_send_create(TYPE_CAMERA, cd);
+        return entity_send_create(TYPE_CAMERA, cd);
+    }
+    return -1;
 }
 
 void camera_recv_create(void)

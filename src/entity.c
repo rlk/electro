@@ -274,15 +274,19 @@ static void entity_create(int id, int type, int data)
 
 int entity_send_create(int type, int data)
 {
-    int id = buffer_unused(E_max, entity_exists);
+    int id;
 
-    pack_index(id);
-    pack_index(type);
-    pack_index(data);
+    if ((id = buffer_unused(E_max, entity_exists)) >= 0)
+    {
+        pack_index(id);
+        pack_index(type);
+        pack_index(data);
     
-    entity_create(id, type, data);
+        entity_create(id, type, data);
 
-    return id;
+        return id;
+    }
+    return -1;
 }
 
 void entity_recv_create(void)

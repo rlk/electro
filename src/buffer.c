@@ -58,9 +58,9 @@ void buffer_free(void)
 
 void buffer_sync(void)
 {
+#ifdef MPI
     int n = pos;
 
-#ifdef MPI
     mpi_assert(MPI_Bcast(&n,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
     mpi_assert(MPI_Bcast(buf, n, MPI_BYTE,    0, MPI_COMM_WORLD));
 #endif

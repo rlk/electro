@@ -15,6 +15,7 @@ OBJS=	src/opengl.o   \
 	src/pivot.o    \
 	src/script.o   \
 	src/image.o    \
+	src/sound.o    \
 	src/main.o
 
 DEPS= $(OBJS:.o=.d)
@@ -33,9 +34,9 @@ INCDIR= -I$(HOME)/include -I/usr/include/lua50
 LIBDIR= -L$(HOME)/lib
 
 ifeq ($(shell uname), Darwin)
-	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) $(MPI_LIBS)
+	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile
 else
-	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) $(MPI_LIBS) -lGL -lGLU
+	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lGL -lGLU
 endif
 
 #------------------------------------------------------------------------------

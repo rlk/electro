@@ -7,6 +7,9 @@ pnt_y  = 0.0
 rot_x  = 0.0
 rot_y  = 0.0
 
+music  = nil
+sound  = nil
+
 persp  = nil
 ortho  = nil
 obj1   = nil
@@ -51,8 +54,13 @@ function init_3D()
 end
 
 function do_start()
+    sound = E.sound_load("fizzle.ogg")
+    music = E.sound_load("inter.ogg")
+
     init_2D()
     init_3D()
+
+    E.sound_loop(music);
 
     E.enable_idle(true)
 
@@ -61,6 +69,14 @@ end
 
 function do_click(b, s)
    btn[b] = s
+
+   if b == 1 and s then
+       E.sound_play(sound)
+   end
+   if b == 2 and s then
+       E.sound_stop(sound)
+   end
+
    return false
 end
 

@@ -543,40 +543,43 @@ void object_draw(int id, int od, float a)
 
 int object_send_create(const char *filename)
 {
-    int od = buffer_unused(O_max, object_exists);
+    int od;
     int si;
 
-    /* If the file exists and is successfully read... */
-
-    if ((read_obj(filename, O + od)))
+    if ((od = buffer_unused(O_max, object_exists)) >= 0)
     {
-        /* Pack the object header. */
+        /* If the file exists and is successfully read... */
 
-        pack_event(EVENT_OBJECT_CREATE);
-        pack_index(od);
-        pack_index(O[od].vc);
-        pack_index(O[od].mc);
-        pack_index(O[od].sc);
-
-        /* Pack the vertices and materials. */
-
-        pack_alloc(O[od].vc * sizeof (struct object_vert), O[od].vv);
-        pack_alloc(O[od].mc * sizeof (struct object_mtrl), O[od].mv);
-
-        /* Pack each of the surfaces. */
-
-        for (si = 0; si < O[od].sc; ++si)
+        if ((read_obj(filename, O + od)))
         {
-            struct object_surf *s = O[od].sv + si;
+            /* Pack the object header. */
 
-            pack_index(s->mi);
-            pack_index(s->fc);
-            pack_alloc(s->fc * sizeof (struct object_face), s->fv);
+            pack_event(EVENT_OBJECT_CREATE);
+            pack_index(od);
+            pack_index(O[od].vc);
+            pack_index(O[od].mc);
+            pack_index(O[od].sc);
+
+            /* Pack the vertices and materials. */
+
+            pack_alloc(O[od].vc * sizeof (struct object_vert), O[od].vv);
+            pack_alloc(O[od].mc * sizeof (struct object_mtrl), O[od].mv);
+
+            /* Pack each of the surfaces. */
+
+            for (si = 0; si < O[od].sc; ++si)
+            {
+                struct object_surf *s = O[od].sv + si;
+
+                pack_index(s->mi);
+                pack_index(s->fc);
+                pack_alloc(s->fc * sizeof (struct object_face), s->fv);
+            }
+
+            /* Encapsulate this object in an entity. */
+
+            return entity_send_create(TYPE_OBJECT, od);
         }
-
-        /* Encapsulate this object in an entity. */
-
-        return entity_send_create(TYPE_OBJECT, od);
     }
     return -1;
 }
