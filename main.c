@@ -9,6 +9,28 @@
 
 /*---------------------------------------------------------------------------*/
 
+static void fps(void)
+{
+    static int fps   = 0;
+    static int then  = 0;
+    static int count = 0;
+
+    int now = SDL_GetTicks();
+
+    if (now - then > 250)
+    {
+        char buf[16];
+
+        fps   = count * 1000 / (now - then);
+        then  = now;
+        count = 0;
+
+        sprintf(buf, "%d", fps);
+        SDL_WM_SetCaption(buf, buf);
+    }
+    else count++;
+}
+
 int supported(const char *extension)
 {
     const GLubyte *string = glGetString(GL_EXTENSIONS);
@@ -58,6 +80,7 @@ static void draw(void)
     galaxy_draw(p);
 
     SDL_GL_SwapBuffers();
+    fps();
 }
 
 /*---------------------------------------------------------------------------*/

@@ -14,6 +14,7 @@ void viewer_bill(void);
 
 void viewer_get_pos(double[3]);
 void viewer_get_vec(double[3]);
+void viewer_get_mag(double[1]);
 
 /*---------------------------------------------------------------------------*/
 

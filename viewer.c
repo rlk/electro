@@ -8,6 +8,7 @@
 static double position[4];
 static double rotation[2];
 static double distance;
+static double magnifier;
 
 static int button[3];
 
@@ -75,6 +76,10 @@ int viewer_keybd(int k, int s)
         spinning++;
     if (k == SDLK_F11 && s)
         spinning--;
+    if (k == SDLK_F10 && s)
+        magnifier += 10;
+    if (k == SDLK_F9  && s)
+        magnifier -= 10;
 
     return 1;
 }
@@ -100,17 +105,18 @@ void viewer_post(void)
 
 void viewer_init(void)
 {
-    button[0]   = 0;
-    button[1]   = 0;
-    button[2]   = 0;
+    button[0]   =  0;
+    button[1]   =  0;
+    button[2]   =  0;
 
-    position[0] = 0;
-    position[1] = 0;
-    position[2] = 0;
-    position[3] = 1;
-    rotation[0] = 0;
-    rotation[1] = 0;
-    distance    = 0;
+    position[0] =  0;
+    position[1] =  0;
+    position[2] =  0;
+    position[3] =  1;
+    rotation[0] =  0;
+    rotation[1] =  0;
+    distance    =  0;
+    magnifier   = 50;
 }
 
 void viewer_draw(void)
@@ -143,6 +149,11 @@ void viewer_get_pos(double p[3])
     p[0] = position[0] + sin(T) * cos(P) * distance;
     p[1] = position[1] -          sin(P) * distance;
     p[2] = position[2] + cos(T) * cos(P) * distance;
+}
+
+void viewer_get_mag(double m[1])
+{
+    m[0] = magnifier;
 }
 
 /*---------------------------------------------------------------------------*/

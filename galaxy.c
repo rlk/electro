@@ -107,57 +107,7 @@ int tree_init(int d)
 
 void galaxy_init(void)
 {
-    const char *prog =
-        "!!ARBvp1.0                            \n"
-        "ATTRIB ipos   = vertex.position;      \n"
-        "ATTRIB icol   = vertex.color;         \n"
-        "ATTRIB imag   = vertex.attrib[6];     \n"
-
-        "PARAM  view   = program.env[0];       \n"
-        "PARAM  mvp[4] = { state.matrix.mvp }; \n"
-        "PARAM  const  = { 0.01, -0.2, 10.0, 50.0 }; \n"
-        "PARAM  foo  = { -1 }; \n"
-
-        "TEMP   dist;                          \n"
-        "TEMP   amag;                          \n"
-        "TEMP   luma;                          \n"
-        "TEMP   tmp1;                          \n"
-        "TEMP   tmp2;                          \n"
-        "TEMP   tmp3;                          \n"
-        "TEMP   tmp4;                          \n"
-        "TEMP   tmp5;                          \n"
-
-        "OUTPUT osiz   = result.pointsize;     \n"
-        "OUTPUT opos   = result.position;      \n"
-        "OUTPUT ocol   = result.color;         \n"
-
-        /* Transform the star position. */
-
-        "DP4    opos.x, mvp[0], ipos;          \n"
-        "DP4    opos.y, mvp[1], ipos;          \n"
-        "DP4    opos.z, mvp[2], ipos;          \n"
-        "DP4    opos.w, mvp[3], ipos;          \n"
-
-        /* Compute the distance (squared) from the viewpoint to the star. */
-
-        "SUB    tmp1, ipos, view;              \n"
-        "DP3    dist, tmp1, tmp1;              \n"
-
-        /* Compute the apparent magnitude. */
-
-        "MUL    tmp2, dist, const.x;           \n"
-        "LG2    tmp3, tmp2.x;                  \n"
-        "MUL    tmp4, tmp3, 0.7525749;         \n"
-        "ADD    amag, imag, tmp4;              \n"
-
-        /* Compute the luminosity and sprite scale. */
-
-        "MUL    tmp5, amag, const.y;           \n"
-        "POW    luma, const.z, tmp5.x;         \n"
-        "MUL    osiz, luma, const.w;           \n"
-
-        "MOV    ocol, icol;                    \n"
-        "END                                   \n";
+    FILE  *fp;
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -171,11 +121,20 @@ void galaxy_init(void)
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
-                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(prog), prog);
+    if ((fp = fopen("star.vp", "r")))
+    {
+        char   buf[VPMAXLEN];
+        size_t len;
 
-    if (glGetError() != GL_NO_ERROR)
-        printf("%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+        if ((len = fread(buf, 1, VPMAXLEN, fp)) > 0)
+            glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                               GL_PROGRAM_FORMAT_ASCII_ARB, len, buf);
+
+        if (glGetError() != GL_NO_ERROR)
+            printf("%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+
+        fclose(fp);
+    }
 
     star_init();
     tree_init(2);
@@ -187,10 +146,13 @@ void galaxy_draw(const double p[3])
 {
     GLsizei stride = sizeof (struct star);
     double  viewpoint[3];
+    double  magnifier[1];
 
     viewer_get_pos(viewpoint);
+    viewer_get_mag(magnifier);
 
     glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 0, viewpoint);
+    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 1, magnifier);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
