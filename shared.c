@@ -1,3 +1,15 @@
+/*    Copyright (C) 2005 Robert Kooima                                       */
+/*                                                                           */
+/*    TOTAL PERSPECTIVE VORTEX is free software;  you can redistribute it    */
+/*    and/or modify it under the terms of the  GNU General Public License    */
+/*    as published by the  Free Software Foundation;  either version 2 of    */
+/*    the License, or (at your option) any later version.                    */
+/*                                                                           */
+/*    This program is distributed in the hope that it will be useful, but    */
+/*    WITHOUT  ANY  WARRANTY;  without   even  the  implied  warranty  of    */
+/*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
+/*    General Public License for more details.                               */
+
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,12 +67,12 @@ void viewport_sync(int i, int n)
     Vt.lx =   0;
     Vt.ly =   0;
     Vt.w  = 800;
-    Vt.w  = 600;
+    Vt.h  = 600;
 
     /* Gather all names at the root. */
 
-    if ((err = MPI_Gather(&Vt, sz,     MPI_BYTE,
-                           Vo, sz * n, MPI_BYTE, 0, MPI_COMM_WORLD))
+    if ((err = MPI_Gather(&Vt, sz, MPI_BYTE,
+                           Vo, sz, MPI_BYTE, 0, MPI_COMM_WORLD))
             != MPI_SUCCESS)
         mpi_error(err);
 
@@ -71,8 +83,8 @@ void viewport_sync(int i, int n)
         int j;
         int k;
 
-        for (j = 0; j < n; j++)
-            for (k = 1; k < V_num; k++)
+        for (j = 1; j < n; j++)
+            for (k = 0; k < V_num; k++)
                 if (strcmp(Vo[j].name, Vi[k].name) == 0)
                 {
                     /* A name matches.  Copy the viewport definition. */
@@ -94,14 +106,14 @@ void viewport_sync(int i, int n)
 
     /* Scatter the assignments to all clients. */
 
-    if ((err = MPI_Scatter(Vo, sz * n, MPI_BYTE,
-                          &Vt, sz,     MPI_BYTE, 0, MPI_COMM_WORLD))
+    if ((err = MPI_Scatter(Vo, sz, MPI_BYTE,
+                          &Vt, sz, MPI_BYTE, 0, MPI_COMM_WORLD))
             != MPI_SUCCESS)
         mpi_error(err);
 
     /* Apply this client's viewport. */
 
-    status_set_viewport(Vt.gx, Vt.gy, Vt.lx, Vt.ly, Vt.w, Vt.h); 
+    status_set_viewport(Vt.gx, Vt.gy, Vt.lx, Vt.ly, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/

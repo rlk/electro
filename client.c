@@ -1,3 +1,15 @@
+/*    Copyright (C) 2005 Robert Kooima                                       */
+/*                                                                           */
+/*    TOTAL PERSPECTIVE VORTEX is free software;  you can redistribute it    */
+/*    and/or modify it under the terms of the  GNU General Public License    */
+/*    as published by the  Free Software Foundation;  either version 2 of    */
+/*    the License, or (at your option) any later version.                    */
+/*                                                                           */
+/*    This program is distributed in the hope that it will be useful, but    */
+/*    WITHOUT  ANY  WARRANTY;  without   even  the  implied  warranty  of    */
+/*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
+/*    General Public License for more details.                               */
+
 #include <mpi.h>
 #include <SDL.h>
 #include <stdio.h>
@@ -68,6 +80,8 @@ static void client_init(int id)
 
 static void client_draw(void)
 {
+    glClear(GL_COLOR_BUFFER_BIT);
+
     status_draw_camera();
     galaxy_draw();
 
@@ -98,6 +112,7 @@ static int client_loop(void)
 
 void client(int np, int id)
 {
+    status_init();
     viewport_sync(id, np);
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
