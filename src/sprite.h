@@ -17,7 +17,7 @@
 
 struct sprite
 {
-    int   flag;
+    int   count;
     int   image;
     float s0;
     float s1;
@@ -36,6 +36,7 @@ void recv_create_sprite(void);
 void send_set_sprite_bounds(int, float, float, float, float);
 void recv_set_sprite_bounds(void);
 
+void clone_sprite(int);
 void delete_sprite(int);
 
 /*---------------------------------------------------------------------------*/

@@ -53,6 +53,7 @@ struct object_surf
 
 struct object
 {
+    int count;
     int vc;
     int mc;
     int sc;
@@ -69,6 +70,7 @@ void draw_object(int, int, const float[16], float);
 int  send_create_object(const char *);
 void recv_create_object(void);
 
+void clone_object(int);
 void delete_object(int);
 
 /*---------------------------------------------------------------------------*/

@@ -29,7 +29,7 @@ static int           L_max;
 
 static int light_exists(int ld)
 {
-    return (L && 0 <= ld && ld < L_max && L[ld].type);
+    return (L && 0 <= ld && ld < L_max && L[ld].count);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -92,11 +92,12 @@ int send_create_light(int type)
         pack_index(ld);
         pack_index(type);
 
-        L[ld].type = type;
-        L[ld].d[0] = 1.0f;
-        L[ld].d[1] = 1.0f;
-        L[ld].d[2] = 1.0f;
-        L[ld].d[3] = 1.0f;
+        L[ld].count = 1;
+        L[ld].type  = type;
+        L[ld].d[0]  = 1.0f;
+        L[ld].d[1]  = 1.0f;
+        L[ld].d[2]  = 1.0f;
+        L[ld].d[3]  = 1.0f;
 
         return send_create_entity(TYPE_LIGHT, ld);
     }
@@ -107,11 +108,12 @@ void recv_create_light(void)
 {
     int ld = unpack_index();
 
-    L[ld].type = unpack_index();
-    L[ld].d[0] = 1.0f;
-    L[ld].d[1] = 1.0f;
-    L[ld].d[2] = 1.0f;
-    L[ld].d[3] = 1.0f;
+    L[ld].count = 1;
+    L[ld].type  = unpack_index();
+    L[ld].d[0]  = 1.0f;
+    L[ld].d[1]  = 1.0f;
+    L[ld].d[2]  = 1.0f;
+    L[ld].d[3]  = 1.0f;
 
     recv_create_entity();
 }
@@ -138,12 +140,23 @@ void recv_set_light_color(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/* These may only be called by create_clone and delete_entity, respectively. */
 
-/* This function should be called only by the entity delete function. */
+void clone_light(int ld)
+{
+    if (light_exists(ld))
+        L[ld].count++;
+}
 
 void delete_light(int ld)
 {
-    memset(L + ld, 0, sizeof (struct light));
+    if (light_exists(ld))
+    {
+        L[ld].count--;
+
+        if (L[ld].count == 0)
+            memset(L + ld, 0, sizeof (struct light));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

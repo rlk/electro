@@ -33,7 +33,7 @@ static int            O_max;
 
 static int object_exists(int od)
 {
-    return (O && ((od == 0) || (0 < od && od < O_max && O[od].vc)));
+    return (O && 0 <= od && od < O_max && O[od].count);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -614,6 +614,8 @@ int send_create_object(const char *filename)
 
         if ((read_obj(filename, O + od)))
         {
+            O[od].count = 1;
+
             /* Pack the object header. */
 
             pack_event(EVENT_CREATE_OBJECT);
@@ -651,6 +653,8 @@ void recv_create_object(void)
     int od = unpack_index();
     int si;
 
+    O[od].count = 1;
+
     /* Unpack the object header. */
 
     O[od].vc = unpack_index();
@@ -682,20 +686,33 @@ void recv_create_object(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/* These may only be called by create_clone and delete_entity, respectively. */
 
-/* This function should be called only by the entity delete function. */
+void clone_object(int od)
+{
+    if (object_exists(od))
+        O[od].count++;
+}
 
 void delete_object(int od)
 {
-    int si;
+    if (object_exists(od))
+    {
+        O[od].count--;
 
-    for (si = 0; si < O[od].sc; ++si)
-        if (O[od].sv[si].fv) free(O[od].sv[si].fv);
+        if (O[od].count == 0)
+        {
+            int si;
 
-    if (O[od].mv) free(O[od].mv);
-    if (O[od].vv) free(O[od].vv);
+            for (si = 0; si < O[od].sc; ++si)
+                if (O[od].sv[si].fv) free(O[od].sv[si].fv);
 
-    memset(O + od, 0, sizeof (struct object));
+            if (O[od].mv) free(O[od].mv);
+            if (O[od].vv) free(O[od].vv);
+
+            memset(O + od, 0, sizeof (struct object));
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------*/

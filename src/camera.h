@@ -23,6 +23,7 @@
 
 struct camera
 {
+    int   count;
     int   type;
     float dist;
     float zoom;
@@ -36,6 +37,7 @@ void draw_camera(int, int, const float[16], float);
 int  send_create_camera(int);
 void recv_create_camera(void);
 
+void clone_camera(int);
 void delete_camera(int);
 
 /*---------------------------------------------------------------------------*/

@@ -85,14 +85,13 @@ GLuint make_texture(const void *p, int w, int h, int b)
     else
         gluBuild2DMipmaps(GL_TEXTURE_2D, b, w, h, f, GL_UNSIGNED_BYTE, p);
 
+
     /* Enable mipmapping on it. */
 
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MAG_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     return o;
 }

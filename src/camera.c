@@ -31,7 +31,7 @@ static int            C_max;
 
 static int camera_exists(int cd)
 {
-    return (C && 0 <= cd && cd < C_max && C[cd].type);
+    return (C && 0 <= cd && cd < C_max && C[cd].count);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -316,9 +316,10 @@ int send_create_camera(int type)
         pack_index(cd);
         pack_index(type);
 
-        C[cd].type = type;
-        C[cd].dist = 0.0f;
-        C[cd].zoom = 1.0f;
+        C[cd].count = 1;
+        C[cd].type  = type;
+        C[cd].dist  = 0.0f;
+        C[cd].zoom  = 1.0f;
 
         return send_create_entity(TYPE_CAMERA, cd);
     }
@@ -329,20 +330,12 @@ void recv_create_camera(void)
 {
     int cd = unpack_index();
 
-    C[cd].type = unpack_index();
-    C[cd].dist = 0.0f;
-    C[cd].zoom = 1.0f;
+    C[cd].count = 1;
+    C[cd].type  = unpack_index();
+    C[cd].dist  = 0.0f;
+    C[cd].zoom  = 1.0f;
 
     recv_create_entity();
-}
-
-/*---------------------------------------------------------------------------*/
-
-/* This function should be called only by the entity delete function. */
-
-void delete_camera(int cd)
-{
-    memset(C + cd, 0, sizeof (struct camera));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -377,6 +370,26 @@ void recv_set_camera_zoom(void)
     int cd = unpack_index();
 
     C[cd].zoom = unpack_float();
+}
+
+/*---------------------------------------------------------------------------*/
+/* These may only be called by create_clone and delete_entity, respectively. */
+
+void clone_camera(int cd)
+{
+    if (camera_exists(cd))
+        C[cd].count++;
+}
+
+void delete_camera(int cd)
+{
+    if (camera_exists(cd))
+    {
+        C[cd].count--;
+
+        if (C[cd].count == 0)
+            memset(C + cd, 0, sizeof (struct camera));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

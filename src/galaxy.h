@@ -20,6 +20,7 @@
 
 struct galaxy
 {
+    int    count;
     int    S_num;
     int    N_num;
 
@@ -45,6 +46,7 @@ void recv_create_galaxy(void);
 void send_set_galaxy_magnitude(int, float);
 void recv_set_galaxy_magnitude(void);
 
+void clone_galaxy(int);
 void delete_galaxy(int);
 
 /*---------------------------------------------------------------------------*/

@@ -30,7 +30,7 @@ static int            S_max;
 
 static int sprite_exists(int sd)
 {
-    return (S && 0 <= sd && sd < S_max && S[sd].flag);
+    return (S && 0 <= sd && sd < S_max && S[sd].count);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -93,7 +93,7 @@ int send_create_sprite(const char *filename)
     if ((sd = buffer_unused(S_max, sprite_exists)) >= 0)
     {
         S[sd].image = send_create_image(filename);
-        S[sd].flag  = 1;
+        S[sd].count = 1;
 
         pack_event(EVENT_CREATE_SPRITE);
         pack_index(sd);
@@ -112,7 +112,7 @@ void recv_create_sprite(void)
     int sd = unpack_index();
 
     S[sd].image = unpack_index();
-    S[sd].flag  = 1;
+    S[sd].count = 1;
 
     S[sd].s0 = S[sd].t0 = 0.0f;
     S[sd].s1 = S[sd].t1 = 1.0f;
@@ -147,16 +147,6 @@ void recv_set_sprite_bounds(void)
 
 /*---------------------------------------------------------------------------*/
 
-/* This function should be called only by the entity delete function. */
-
-void delete_sprite(int sd)
-{
-    if (sprite_exists(sd))
-        memset(S + sd, 0, sizeof (struct sprite));
-}
-
-/*---------------------------------------------------------------------------*/
-
 void get_sprite_p(int sd, int x, int y, unsigned char p[4])
 {
     if (sprite_exists(sd))
@@ -171,6 +161,26 @@ int get_sprite_w(int sd)
 int get_sprite_h(int sd)
 {
     return sprite_exists(sd) ? get_image_h(S[sd].image) : 0;
+}
+
+/*---------------------------------------------------------------------------*/
+/* These may only be called by create_clone and delete_entity, respectively. */
+
+void clone_sprite(int sd)
+{
+    if (sprite_exists(sd))
+        S[sd].count++;
+}
+
+void delete_sprite(int sd)
+{
+    if (sprite_exists(sd))
+    {
+        S[sd].count--;
+
+        if (S[sd].count == 0)
+            memset(S + sd, 0, sizeof (struct sprite));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

@@ -92,6 +92,8 @@ void enable_timer(int b)
 
 static void init_server(void)
 {
+    glClearColor(0.1, 0.2, 0.4, 0.0);
+
     glViewport(0, 0, get_window_w(), get_window_h());
 
     glEnable(GL_STENCIL_TEST);

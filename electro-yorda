@@ -1,3 +1,6 @@
 #!/bin/sh
 
-mpirun -machinefile /usr/local/Electro/config/yorda.dat -np 16 /usr/local/Electro/bin/electro-mpi /usr/local/Electro/config/yorda.lua $@
+export ELECTRO_CONFIG=/usr/local/Electro/config
+export ELECTRO_BIN=/usr/local/Electro/bin
+
+mpirun -machinefile $ELECTRO_CONFIG/yorda.dat -np 16 $ELECTRO_BIN/electro-mpi $ELECTRO_CONFIG/yorda.lua $@

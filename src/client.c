@@ -92,6 +92,8 @@ static void client_recv(void)
 
 static void init_client(void)
 {
+    glClearColor(0.1, 0.2, 0.4, 0.0);
+
     glViewport(0, 0, get_window_w(), get_window_h());
 
     glEnable(GL_TEXTURE_2D);

@@ -1,3 +1,6 @@
 #!/bin/sh
 
-mpirun -machinefile /usr/local/Electro/config/zod.dat -np 5 /usr/local/Electro/bin/electro-mpi /usr/local/Electro/config/zod.lua $@
+export ELECTRO_CONFIG=/home/rlk/src/electro/trunk/config
+export ELECTRO_BIN=/home/rlk/src/electro/trunk
+
+mpirun -machinefile $ELECTRO_CONFIG/zod.dat -np 5 $ELECTRO_BIN/electro-mpi $ELECTRO_CONFIG/zod.lua $@

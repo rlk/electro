@@ -39,7 +39,7 @@ static GLuint star_vert;
 
 static int galaxy_exists(int gd)
 {
-    return (G && 0 <= gd && gd < G_max && G[gd].S_num);
+    return (G && 0 <= gd && gd < G_max && G[gd].count);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -338,6 +338,8 @@ int send_create_galaxy(const char *filename)
 
         if ((parse_galaxy(filename, G + gd)))
         {
+            G[gd].count = 1;
+
             /* Pack the object header. */
 
             pack_event(EVENT_CREATE_GALAXY);
@@ -396,6 +398,8 @@ void recv_create_galaxy(void)
 
 void send_set_galaxy_magnitude(int gd, float m)
 {
+    G[gd].count = 1;
+
     pack_event(EVENT_SET_GALAXY_MAGNITUDE);
     pack_index(gd);
 
@@ -412,16 +416,28 @@ void recv_set_galaxy_magnitude(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/* These may only be called by create_clone and delete_entity, respectively. */
+
+void clone_galaxy(int gd)
+{
+    if (galaxy_exists(gd))
+        G[gd].count++;
+}
 
 void delete_galaxy(int gd)
 {
     if (galaxy_exists(gd))
     {
-        if (G[gd].S) free(G[gd].S);
-        if (G[gd].N) free(G[gd].N);
-    }
+        G[gd].count--;
 
-    memset(G + gd, 0, sizeof (struct galaxy));
+        if (G[gd].count == 0)
+        {
+            if (G[gd].S) free(G[gd].S);
+            if (G[gd].N) free(G[gd].N);
+
+            memset(G + gd, 0, sizeof (struct galaxy));
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------*/

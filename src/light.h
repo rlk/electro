@@ -17,6 +17,7 @@
 
 struct light
 {
+    int   count;
     int   type;
     float d[4];
 };
@@ -32,6 +33,7 @@ void recv_create_light(void);
 void send_set_light_color(int, float, float, float);
 void recv_set_light_color(void);
 
+void clone_light(int);
 void delete_light(int);
 
 /*---------------------------------------------------------------------------*/

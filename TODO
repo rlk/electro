@@ -1,22 +1,22 @@
+set background color (gradient?)
+Better deep delete policy / vector grow
+    delete subtree on entity delete?
+garbage collection / child metatable
+Scale and billboard frustum (thorough test)
 Windows port
 Website
 
-Better deep delete policy / garbage collection
-
-TTF support
-GL error.  glTexParameter WTF?
+TTF support (distribute the ttf?  Just the image?)
 Star VBO?  (Ok if tree is NOT pruned)
 asteroids text overlay models?
-Scale and billboard frustum
 
-camera near/far
+camera near/far (automatic? (entity bounding sphere?))
 
 Reorganize MPI abstraction (it's simpler than it once was)
 Improve assertions (delineate necessary thing_exists vs thing_assert)
 Improve linear descriptor seaching (next-free list) (growable buffer?)
 Improve clone reference counting
 
-short descriptors?  short object indices?
 Particle system? (stars?)
 
 frustum transform = matrix multiplication?
