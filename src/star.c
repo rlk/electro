@@ -171,13 +171,13 @@ int star_parse_bin(FILE *fp, struct star *s)
 
 /*---------------------------------------------------------------------------*/
 
-int star_parse_txt(FILE *fp, struct star *s)
+int star_parse_hip(FILE *fp, struct star *s)
 {
-    char buf[STAR_TXT_RECLEN + 1];
+    char buf[STAR_HIP_RECLEN + 1];
 
     /* Read a single line from the given file. */
 
-    if (fgets(buf, STAR_TXT_RECLEN + 1, fp))
+    if (fgets(buf, STAR_HIP_RECLEN + 1, fp))
     {
         double ra  = 0;
         double de  = 0;
@@ -232,7 +232,7 @@ int star_parse_txt(FILE *fp, struct star *s)
 
 /*---------------------------------------------------------------------------*/
 
-int star_write_catalog(const char *filename)
+int star_write(const char *filename)
 {
     FILE *fp;
     int n = 0;
@@ -249,7 +249,7 @@ int star_write_catalog(const char *filename)
     return n;
 }
 
-int star_read_catalog_bin(const char *filename)
+int star_read_bin(const char *filename)
 {
     struct stat buf;
 
@@ -284,7 +284,7 @@ int star_read_catalog_bin(const char *filename)
     return star_count;
 }
 
-int star_read_catalog_txt(const char *filename)
+int star_read_hip(const char *filename)
 {
     struct stat buf;
 
@@ -292,7 +292,7 @@ int star_read_catalog_txt(const char *filename)
 
     if (stat(filename, &buf) == 0)
     {
-        size_t n = 1 + buf.st_size / STAR_TXT_RECLEN;
+        size_t n = 1 + buf.st_size / STAR_HIP_RECLEN;
         FILE *fp = NULL;
 
         /* Open the catalog, allocate and fill a buffer of stars. */
@@ -316,7 +316,7 @@ int star_read_catalog_txt(const char *filename)
 
                 /* Parse all catalog records. */
                
-                while ((c = star_parse_txt(fp, star_data + star_count)) >= 0)
+                while ((c = star_parse_hip(fp, star_data + star_count)) >= 0)
                     star_count += c;
             }
             fclose(fp);

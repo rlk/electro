@@ -15,7 +15,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define STAR_TXT_RECLEN 451
+#define STAR_HIP_RECLEN 451
+#define STAR_TYC_RECLEN 207
 #define STAR_BIN_RECLEN sizeof (struct star)
 
 /*---------------------------------------------------------------------------*/
@@ -29,10 +30,11 @@ struct star
 
 /*---------------------------------------------------------------------------*/
 
-int star_write_catalog(const char *);
+int star_write(const char *);
 
-int star_read_catalog_txt(const char *);
-int star_read_catalog_bin(const char *);
+int star_read_hip(const char *);
+int star_read_typ(const char *);
+int star_read_bin(const char *);
 
 void star_send_create(void);
 void star_recv_create(void);

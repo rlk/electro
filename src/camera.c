@@ -89,6 +89,7 @@ void camera_draw(int id, int cd, float a)
         int viewport_x1 = viewport_get_x() + viewport_get_w();
         int viewport_y0 = viewport_get_y();
         int viewport_y1 = viewport_get_y() + viewport_get_h();
+        int viewport_w  = viewport_get_w();
 
         double T = PI * r[1] / 180.0;
         double P = PI * r[0] / 180.0;
@@ -106,16 +107,28 @@ void camera_draw(int id, int cd, float a)
 
         glMatrixMode(GL_PROJECTION);
         {
-            GLdouble l =  C[cd].zoom * viewport_x0;
-            GLdouble r =  C[cd].zoom * viewport_x1;
-            GLdouble b = -C[cd].zoom * viewport_y1;
-            GLdouble t = -C[cd].zoom * viewport_y0;
-            GLdouble f =  CAMERA_FAR;
-
             glLoadIdentity();
 
-            if (C[cd].type == CAMERA_PERSP) glFrustum(l, r, b, t, 1.0, f);
-            if (C[cd].type == CAMERA_ORTHO) glOrtho  (l, r, b, t,  -f, f);
+            if (C[cd].type == CAMERA_ORTHO)
+            {
+                GLdouble l =  C[cd].zoom * viewport_x0;
+                GLdouble r =  C[cd].zoom * viewport_x1;
+                GLdouble b = -C[cd].zoom * viewport_y1;
+                GLdouble t = -C[cd].zoom * viewport_y0;
+                GLdouble f =  CAMERA_FAR;
+
+                glOrtho(l, r, b, t, -f, f);
+            }
+            if (C[cd].type == CAMERA_PERSP)
+            {
+                GLdouble l =  C[cd].zoom * viewport_x0 / viewport_w;
+                GLdouble r =  C[cd].zoom * viewport_x1 / viewport_w;
+                GLdouble b = -C[cd].zoom * viewport_y1 / viewport_w;
+                GLdouble t = -C[cd].zoom * viewport_y0 / viewport_w;
+                GLdouble f =  CAMERA_FAR;
+
+                glFrustum(l, r, b, t, 1.0, f);
+            }
         }
         glMatrixMode(GL_MODELVIEW);
         {

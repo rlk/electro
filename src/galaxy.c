@@ -30,7 +30,7 @@ static float mag = 1.0f;
 
 int galaxy_send_create(const char *filename)
 {
-    star_read_catalog_bin(filename);
+    star_read_bin(filename);
 
     pack_event(EVENT_GALAXY_CREATE);
     star_send_create();

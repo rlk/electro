@@ -37,7 +37,6 @@ static int server_time = 0;
 
 void enable_grab(int b)
 {
-    /*
     if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -48,7 +47,6 @@ void enable_grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
-    */
     server_grab = b;
 }
 
