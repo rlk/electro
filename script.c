@@ -63,6 +63,25 @@ static float script_getnumber(const char *str, lua_State *L, int i)
     return 0.0;
 }
 
+static int script_getboolean(const char *str, lua_State *L, int i)
+{
+    int n = lua_gettop(L);
+
+    if (1 <= -i && -i <= n)
+    {
+        if (lua_isboolean(L, i))
+            return lua_toboolean(L, i);
+        else
+            lua_pushfstring(L, "'%s' expected boolean, got %s", str,
+                            lua_typename(L, lua_type(L, i)));
+    }
+    else lua_pushfstring(L, "'%s' expected %d parameters, got %d", str, -i, n);
+
+    lua_error(L);
+
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int script_add_tile(lua_State *L)
@@ -75,6 +94,13 @@ static int script_add_tile(lua_State *L)
                   script_getnumber(name, L, -3),
                   script_getnumber(name, L, -2),
                   script_getnumber(name, L, -1));
+    return 0;
+}
+
+static int script_enable_idle(lua_State *L)
+{
+    const char *name = "enable_idle";
+    enable_idle(script_getboolean(name, L, -1));
     return 0;
 }
 
@@ -133,6 +159,8 @@ int script_init(void)
         luaopen_io(L);
 
         lua_register(L, "add_tile",    script_add_tile);
+
+        lua_register(L, "enable_idle", script_enable_idle);
 
         lua_register(L, "camera_move", script_camera_move);
         lua_register(L, "camera_turn", script_camera_turn);
@@ -209,6 +237,25 @@ int script_keybd(int k, int s)
         lua_pushboolean(L, s);
 
         lua_call(L, 2, 1);
+
+        r = lua_toboolean(L, -1);
+    }
+    else lua_pop(L, 1);
+
+    return r;
+}
+
+int script_timer(int t)
+{
+    int r = 0;
+
+    lua_getglobal(L, "do_timer");
+
+    if (lua_isfunction(L, -1))
+    {
+        lua_pushnumber(L, (lua_Number) (t / 1000.0f));
+
+        lua_call(L, 1, 1);
 
         r = lua_toboolean(L, -1);
     }

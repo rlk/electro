@@ -26,21 +26,32 @@
 /*---------------------------------------------------------------------------*/
 
 static void server_draw(void);
-static int  server_grab = 0;
 
-void switch_grab(int g)
+static int server_grab = 0;
+static int server_idle = 0;
+static int server_time = 0;
+
+/*---------------------------------------------------------------------------*/
+
+void enable_grab(int b)
 {
-    if (g && !server_grab)
+    if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
         SDL_ShowCursor(0);
     }
-    if (!g && server_grab)
+    if (!b && server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
-    server_grab = g;
+    server_grab = b;
+}
+
+void enable_idle(int b)
+{
+    server_idle = b;
+    server_time = SDL_GetTicks();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -148,17 +159,21 @@ static void server_perf(void)
     }
 }
 
+/*---------------------------------------------------------------------------*/
+
 static int server_loop(void)
 {
     SDL_Event e;
+
+    int t = SDL_GetTicks();
     int c = 0;
 
     while (SDL_PollEvent(&e))
     {
         /* Handle point grab toggle. */
 
-        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) switch_grab(0);
-        if (e.type == SDL_MOUSEBUTTONDOWN)                 switch_grab(1);
+        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) enable_grab(0);
+        if (e.type == SDL_MOUSEBUTTONDOWN)                 enable_grab(1);
 
         /* Dispatch the event to the scripting system. */
 
@@ -173,6 +188,9 @@ static int server_loop(void)
                 break;
             case SDL_MOUSEBUTTONUP:
                 c += script_click(e.button.button, 0);
+                break;
+            case SDL_USEREVENT:
+                c += script_timer(t - server_time);
                 break;
             case SDL_KEYDOWN:
                 c += script_keybd(e.key.keysym.sym, 1);
@@ -189,6 +207,16 @@ static int server_loop(void)
             server_send_exit();
             return 0;
         }
+    }
+
+    server_time = t;
+
+    /* If the idle loop is enabled post a timer event. */
+
+    if (server_idle)
+    {
+        e.type = SDL_USEREVENT;
+        SDL_PushEvent(&e);
     }
 
     /* Redraw a dirty buffer. */

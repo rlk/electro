@@ -23,6 +23,7 @@ void script_file(const char *);
 int  script_click(int, int);
 int  script_point(int, int);
 int  script_keybd(int, int);
+int  script_timer(int);
 
 /*---------------------------------------------------------------------------*/
 

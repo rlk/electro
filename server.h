@@ -15,6 +15,9 @@
 
 /*---------------------------------------------------------------------------*/
 
+void enable_grab(int);
+void enable_idle(int);
+
 void server_send_draw(void);
 void server_send_move(void);
 void server_send_turn(void);
