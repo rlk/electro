@@ -54,6 +54,22 @@ void grab(int b)
     server_grab = b;
 }
 
+/*---------------------------------------------------------------------------*/
+
+static void timer_callback(void)
+{
+    Uint32 t = SDL_GetTicks();
+    SDL_Event e;
+
+    /* On callback, push a user event giving time passed since last timer. */
+
+    e.type      = SDL_USEREVENT;
+    e.user.code = t - server_time;
+    server_time = t;
+
+    SDL_PushEvent(&e);
+}
+
 void enable_timer(int b)
 {
     timer_on    = b;
@@ -246,7 +262,7 @@ static int server_loop(void)
         }
     }
 
-    if (timer_on && server_grab) timer_callback(0, NULL);
+    if (timer_on && server_grab) timer_callback();
 
     return 1;
 }
