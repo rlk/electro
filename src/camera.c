@@ -52,6 +52,16 @@ int init_camera(void)
     return 0;
 }
 
+/*---------------------------------------------------------------------------*/
+
+int draw_tile(int cd, struct frustum *F1, const float p[3], int i)
+{
+    if (C[cd].type == CAMERA_PERSP) return draw_persp(F1, p, 1.f, 10000.f, i);
+    if (C[cd].type == CAMERA_ORTHO) return draw_ortho(F1, p, -1000.f, 1000.f, i);
+
+    return 0;
+}
+
 void draw_camera(int id, int cd, const struct frustum *F0, float a)
 {
     struct frustum F1;
@@ -76,7 +86,7 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
         /* Load projection and modelview matrices for each tile. */
 
-        while ((i = draw_display(&F1, o, 1, 10000, i)))
+        while ((i = draw_tile(cd, &F1, o, i)))
         {
             glLoadIdentity();
             transform_entity(id, &F2, &F1);
@@ -90,7 +100,7 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
 /*---------------------------------------------------------------------------*/
 
-int send_create_camera(void)
+int send_create_camera(int t)
 {
     int cd;
 
@@ -98,8 +108,10 @@ int send_create_camera(void)
     {
         pack_event(EVENT_CREATE_CAMERA);
         pack_index(cd);
+        pack_index(t);
 
         C[cd].count = 1;
+        C[cd].type  = t;
 
         return send_create_entity(TYPE_CAMERA, cd);
     }
@@ -109,8 +121,10 @@ int send_create_camera(void)
 void recv_create_camera(void)
 {
     int cd = unpack_index();
+    int t  = unpack_index();
 
     C[cd].count = 1;
+    C[cd].type  = t;
 
     recv_create_entity();
 }

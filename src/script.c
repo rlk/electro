@@ -367,19 +367,24 @@ static int script_add_host(lua_State *L)
 
 static int script_add_tile(lua_State *L)
 {
-    float o[3];
-    float r[3];
-    float u[3];
+    const char *n = script_getstring(L, -12);
+    int   x = (int) script_getnumber(L, -11);
+    int   y = (int) script_getnumber(L, -10);
+    int   w = (int) script_getnumber(L, -9);
+    int   h = (int) script_getnumber(L, -8);
+    int   X = (int) script_getnumber(L, -7);
+    int   Y = (int) script_getnumber(L, -6);
+    int   W = (int) script_getnumber(L, -5);
+    int   H = (int) script_getnumber(L, -4);
 
-    script_getvector(L, -3, o, 3);
-    script_getvector(L, -2, r, 3);
-    script_getvector(L, -1, u, 3);
+    float p[3][3];
 
-    add_tile(script_getstring(L, -8),
-             script_getnumber(L, -7),
-             script_getnumber(L, -6),
-             script_getnumber(L, -5),
-             script_getnumber(L, -4), o, r, u);
+    script_getvector(L, -3, p[0], 3);
+    script_getvector(L, -2, p[1], 3);
+    script_getvector(L, -1, p[2], 3);
+
+    add_tile(n, x, y, w, h,
+                X, Y, W, H, p);
 
     return 0;
 }
@@ -406,22 +411,10 @@ static int script_get_joystick(lua_State *L)
 
 static int script_get_viewport(lua_State *L)
 {
-    /*
-    float x = get_total_viewport_x();
-    float y = get_total_viewport_y();
-    float w = get_total_viewport_w();
-    float h = get_total_viewport_h();
-
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, x + w);
-    lua_pushnumber(L, y);
-    lua_pushnumber(L, y + h);
-    */
-
-    lua_pushnumber(L, -100);
-    lua_pushnumber(L,  100);
-    lua_pushnumber(L, -100);
-    lua_pushnumber(L,  100);
+    lua_pushnumber(L, (float) get_viewport_x());
+    lua_pushnumber(L, (float) get_viewport_y());
+    lua_pushnumber(L, (float) get_viewport_w());
+    lua_pushnumber(L, (float) get_viewport_h());
 
     return 4;
 }
@@ -654,7 +647,8 @@ static int script_get_entity_alpha(lua_State *L)
 
 static int script_create_camera(lua_State *L)
 {
-    int id = send_create_camera();
+    int fl = (int) script_getnumber(L, -1);
+    int id = send_create_camera(fl);
 
     lua_pushentity(L, id);
     return 1;
@@ -1110,12 +1104,12 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "add_host",             script_add_host);
     lua_function(L, "add_tile",             script_add_tile);
+    lua_function(L, "get_viewport",         script_get_viewport);
 
     /* Misc. */
 
     lua_function(L, "enable_timer",         script_enable_timer);
     lua_function(L, "get_joystick",         script_get_joystick);
-    lua_function(L, "get_viewport",         script_get_viewport);
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);
     lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
@@ -1128,6 +1122,9 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
     lua_constant(L, "entity_flag_unlit",       FLAG_UNLIT);
     lua_constant(L, "entity_flag_line_smooth", FLAG_LINE_SMOOTH);
+
+    lua_constant(L, "camera_type_orthogonal",  CAMERA_ORTHO);
+    lua_constant(L, "camera_type_perspective", CAMERA_PERSP);
 
     lua_constant(L, "light_type_positional",   LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",  LIGHT_DIRECTIONAL);

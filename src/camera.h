@@ -26,6 +26,7 @@
 struct camera
 {
     int count;
+    int type;
 };
 
 /*---------------------------------------------------------------------------*/
@@ -33,7 +34,7 @@ struct camera
 int  init_camera(void);
 void draw_camera(int, int, const struct frustum *, float);
 
-int  send_create_camera(void);
+int  send_create_camera(int);
 void recv_create_camera(void);
 
 void clone_camera(int);

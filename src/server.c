@@ -110,6 +110,8 @@ static void server_draw(void)
             GL_DEPTH_BUFFER_BIT |
             GL_STENCIL_BUFFER_BIT);
 
+    draw_background();
+
     if (server_mirror)
         draw_entity();
 

@@ -74,7 +74,7 @@ ships      = 0
 curr_score = 0
 free_score = 0
 high_score = 100
-speed      = 7
+speed      = 40
 
 total_time = 0
 state_time = 0
@@ -89,6 +89,8 @@ overlay_init  = { }
 
 -------------------------------------------------------------------------------
 
+global_x = 0
+global_y = 0
 global_l = 0
 global_r = 0
 global_b = 0
@@ -98,6 +100,7 @@ global_h = 0
 global_z = 1
 
 function player_reset()
+    local scale = 32 * global_z
 
     thrusting   = false
     velocity_dx = 0
@@ -108,10 +111,49 @@ function player_reset()
 
     if ship then
         E.set_entity_flag(ship, E.entity_flag_hidden, false)
-
-        E.set_entity_position(ship, 0, 0, 0)
+        E.set_entity_scale(ship, scale, scale, scale)
         E.set_entity_rotation(ship, 0, 0, 0)
+        E.set_entity_position(ship, global_x + global_w / 2,
+                                    global_y + global_h / 2, 0)
     end
+end
+
+-------------------------------------------------------------------------------
+
+function new_global_object(filename)
+    object = E.create_object(filename)
+
+    E.set_entity_flag(object, E.entity_flag_hidden, true)
+
+    return object
+end
+
+function new_global_sprite(filename)
+    sprite = E.create_sprite(filename)
+
+    E.set_entity_flag(sprite, E.entity_flag_hidden, true)
+
+    return sprite
+end
+
+function new_scaled_overlay(filename, parent)
+    sprite = E.create_sprite(filename)
+
+    E.parent_entity(sprite, parent)
+
+    E.set_entity_flag(sprite, E.entity_flag_hidden, true)
+    E.set_entity_scale(sprite, global_z, global_z, global_z);
+    E.set_entity_position(sprite, global_x + global_w / 2,
+                                  global_y + global_h / 2, 0)
+    return sprite
+end
+
+function clone_scale_object(entity)
+    local new = E.clone_entity(entity)
+    
+    E.scale_entity(entity, scale, scale, scale)
+
+    return new
 end
 
 -------------------------------------------------------------------------------
@@ -194,9 +236,10 @@ function high_score_set(n)
 end
 
 function score_init()
-    local scale = 1 / 128
-    local dx    = 2.5
-    local dy    = 2.5
+    print(global_z)
+    local scale =  0.125 * global_z
+    local dx    = 40.0   * global_z
+    local dy    = 40.0   * global_z
 
     local curr_r = global_r
     local high_r = global_l + dx * 6
@@ -232,7 +275,7 @@ end
 
 function add_asteroid(entity, size)
     local asteroid = { }
-    local scale = size / 3
+    local scale = 16 * global_z * size / 3
 
     -- Pick a random velocity vector.
 
@@ -285,7 +328,7 @@ end
 
 function add_bullet()
     local bullet = { }
-    local scale  = 1 / 64
+    local scale  = 0.5 * global_z
 
     -- Clone a new bullet sprite.
 
@@ -300,8 +343,8 @@ function add_bullet()
     local x =  math.sin(a)
     local y =  math.cos(a)
 
-    bullet.dx = x * 15 + velocity_dx
-    bullet.dy = y * 15 + velocity_dy
+    bullet.dx = x * 200 + velocity_dx
+    bullet.dy = y * 200 + velocity_dy
 
     -- Add the new sprite to the scene.
 
@@ -833,22 +876,6 @@ end
 
 -------------------------------------------------------------------------------
 
-function new_global_object(filename)
-    object = E.create_object(filename)
-    E.set_entity_flag(object, E.entity_flag_hidden, true)
-
-    return object
-end
-
-function new_global_sprite(filename)
-    sprite = E.create_sprite(filename)
-    E.set_entity_flag(sprite, E.entity_flag_hidden, true)
-
-    return sprite
-end
-
--------------------------------------------------------------------------------
-
 function do_start()
 
     math.randomseed(os.time())
@@ -871,16 +898,13 @@ function do_start()
 
     -- Establish the boundries of the viewport.
 
-    global_l, global_r, global_b, global_t = E.get_viewport()
+    global_x, global_y, global_w, global_h = E.get_viewport()
 
-    global_z = 64 / (global_r - global_l)
-    
-    global_l = global_l * global_z
-    global_r = global_r * global_z
-    global_b = global_b * global_z
-    global_t = global_t * global_z
-    global_w = global_r - global_l
-    global_h = global_t - global_b
+    global_l = global_x
+    global_r = global_x + global_w
+    global_b = global_y
+    global_t = global_y + global_h
+    global_z = global_w / 1024
 
     -- Initialize some source objects.
 
@@ -915,16 +939,15 @@ function do_start()
         E.set_entity_position(spares[i], global_r - 3 * i, global_b + 3, 0)
     end
 
-    overlay_title = E.create_sprite("title.png")
-    overlay_ready = E.create_sprite("ready.png")
-    overlay_level = E.create_sprite("digit.png")
-    overlay_clear = E.create_sprite("clear.png")
-    overlay_high  = E.create_sprite("high.png")
-    overlay_over  = E.create_sprite("over.png")
-
-    overlay_init[1] = E.create_sprite("alpha.png")
-    overlay_init[2] = E.create_sprite("alpha.png")
-    overlay_init[3] = E.create_sprite("alpha.png")
+    overlay_title   = new_overlay("title.png", below)
+    overlay_ready   = new_overlay("ready.png", below)
+    overlay_level   = new_overlay("digit.png", below)
+    overlay_clear   = new_overlay("clear.png", below)
+    overlay_high    = new_overlay("high.png",  below)
+    overlay_over    = new_overlay("over.png",  below)
+    overlay_init[1] = new_overlay("alpha.png", below)
+    overlay_init[2] = new_overlay("alpha.png", below)
+    overlay_init[3] = new_overlay("alpha.png", below)
 
     -- Initialize the hierarchy
 
@@ -936,29 +959,8 @@ function do_start()
     E.parent_entity(thrust, ship)
     E.parent_entity(galaxy, space)
 
-    E.set_entity_scale(thrust, 0.05, 0.05, 0.05)
     E.set_entity_flag(thrust, E.entity_flag_unlit,  true)
     E.set_entity_flag(thrust, E.entity_flag_hidden, true)
-
-    E.parent_entity(overlay_title,   below)
-    E.parent_entity(overlay_level,   below)
-    E.parent_entity(overlay_ready,   below)
-    E.parent_entity(overlay_clear,   below)
-    E.parent_entity(overlay_high,    below)
-    E.parent_entity(overlay_over,    below)
-    E.parent_entity(overlay_init[1], below)
-    E.parent_entity(overlay_init[2], below)
-    E.parent_entity(overlay_init[3], below)
-
-    E.set_entity_scale(overlay_title,   0.07, 0.07, 0.07)
-    E.set_entity_scale(overlay_level,   0.02, 0.02, 0.02)
-    E.set_entity_scale(overlay_ready,   0.07, 0.07, 0.07)
-    E.set_entity_scale(overlay_clear,   0.07, 0.07, 0.07)
-    E.set_entity_scale(overlay_high,    0.07, 0.07, 0.07)
-    E.set_entity_scale(overlay_over,    0.07, 0.07, 0.07)
-    E.set_entity_scale(overlay_init[1], 0.004, 0.008, 0.008)
-    E.set_entity_scale(overlay_init[2], 0.004, 0.008, 0.008)
-    E.set_entity_scale(overlay_init[3], 0.004, 0.008, 0.008)
 
     E.set_entity_flag(overlay_ready, E.entity_flag_hidden, true)
     E.set_entity_flag(overlay_level, E.entity_flag_hidden, true)
@@ -966,9 +968,12 @@ function do_start()
     E.set_entity_flag(overlay_high,  E.entity_flag_hidden, true)
     E.set_entity_flag(overlay_over,  E.entity_flag_hidden, true)
 
-    E.set_entity_position(overlay_init[1], global_l + 16.0, global_t - 2.5, 0)
-    E.set_entity_position(overlay_init[2], global_l + 19.0, global_t - 2.5, 0)
-    E.set_entity_position(overlay_init[3], global_l + 22.0, global_t - 2.5, 0)
+    E.set_entity_position(overlay_init[1], global_l + global_z * 40,
+                                           global_t - global_z * 40, 0)
+    E.set_entity_position(overlay_init[2], global_l + global_z * 80,
+                                           global_t - global_z * 40, 0)
+    E.set_entity_position(overlay_init[3], global_l + global_z * 120,
+                                           global_t - global_z * 40, 0)
     
     E.set_entity_vert_prog(galaxy, "../star.vp");
     E.set_entity_frag_prog(galaxy, "../star.fp");
@@ -1005,17 +1010,13 @@ function do_start()
 
     -- Initialize the view
 
-    E.set_entity_position(light1,  10, 0, 10)
-    E.set_entity_position(light2, -10, 0, 10)
+    E.set_entity_position(light1, global_x + global_w * 0.33, 0, global_h)
+    E.set_entity_position(light2, global_x + global_w * 0.66, 0, global_h)
 
     E.set_light_color(light1, 1.0, 0.8, 0.5)
     E.set_light_color(light2, 0.5, 0.8, 1.0)
 
-    E.set_camera_zoom(camera, global_z)
-
-    E.set_galaxy_magnitude(galaxy, 8.0 / global_z)
-    E.set_camera_distance(space,  100.0)
-    E.set_camera_zoom    (space,    0.5)
+    E.set_galaxy_magnitude(galaxy, 100.0)
 
     goto_state("title")
     E.enable_timer(true)
@@ -1059,7 +1060,6 @@ function hit_fire()
         end
 
     elseif state == "high" then
-        E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
         if index < 3 then
             index = index + 1
         else
@@ -1082,7 +1082,6 @@ function do_timer(dt)
     state_time = state_time + dt
     total_time = total_time + dt
 
-    E.set_camera_distance(space, 100 * math.sin(total_time / 10))
     E.set_entity_rotation(space, 0, total_time, 0)
 
     timer_state(state)
@@ -1124,7 +1123,6 @@ function do_joystick(n, b, s)
         end
 
         if state == "high" and index > 1 then
-            E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
             index = index - 1
         end
     end

@@ -1,10 +1,8 @@
 
 image_file = "venus.jpg"
 
-view_l = 0
-view_r = 0
-view_b = 0
-view_t = 0
+view_x = 0
+view_y = 0
 view_w = 0
 view_h = 0
 
@@ -19,8 +17,8 @@ time    = 0
 -------------------------------------------------------------------------------
 
 function move_sprite(sprite, i, j)
-    E.set_entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
-                                  view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
+    E.set_entity_position(sprite, view_x + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_y + view_h * (4 - i) / 4 + view_h / 8, 0)
 end
 
 function solved()
@@ -91,9 +89,7 @@ end
 
 function do_start()
 
-    view_l, view_r, view_b, view_t = E.get_viewport()
-    view_w = view_r - view_l
-    view_h = view_t - view_b
+    view_x, view_y, view_w, view_h = E.get_viewport()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);

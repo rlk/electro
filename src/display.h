@@ -27,14 +27,19 @@
 
 struct tile
 {
-    int x;
-    int y;
-    int w;
-    int h;
-
     float o[3];
     float r[3];
     float u[3];
+
+    int   win_x;
+    int   win_y;
+    int   win_w;
+    int   win_h;
+
+    int   pix_x;
+    int   pix_y;
+    int   pix_w;
+    int   pix_h;
 };
 
 struct host
@@ -42,28 +47,40 @@ struct host
     char        name[MAXNAME];
     struct tile tile[MAXTILE];
 
-    int X;
-    int Y;
-    int W;
-    int H;
     int n;
+
+    int win_x;
+    int win_y;
+    int win_w;
+    int win_h;
+
+    int pix_x;
+    int pix_y;
+    int pix_w;
+    int pix_h;
 };
 
 /*---------------------------------------------------------------------------*/
 
 void init_display(void);
 void sync_display(void);
-int  draw_display(struct frustum *, const float[3], float, float, int);
+
+int  draw_ortho(struct frustum *, const float[3], float, float, int);
+int  draw_persp(struct frustum *, const float[3], float, float, int);
 
 void add_host(const char *, int, int, int, int);
-void add_tile(const char *, int, int, int, int, const float[3],
-                                                const float[3],
-                                                const float[3]);
+void add_tile(const char *, int, int, int, int,
+                            int, int, int, int, float[3][3]);
 
 /*---------------------------------------------------------------------------*/
 
 int get_window_w(void);
 int get_window_h(void);
+
+int get_viewport_x(void);
+int get_viewport_y(void);
+int get_viewport_w(void);
+int get_viewport_h(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1,6 +1,8 @@
 dofile("../keyboard.lua")
 
 camera  = nil
+ortho   = nil
+sprite  = nil
 light   = nil
 pivot   = nil
 thing   = nil
@@ -9,21 +11,26 @@ floor   = nil
 tumble = false
 
 function do_start()
+    local x, y, w, h = E.get_viewport()
 
-    camera  = E.create_camera(E.camera_type_perspective)
-    light   = E.create_light(E.light_type_positional)
-    pivot   = E.create_pivot()
-    thing   = E.create_object("box.obj")
-    floor   = E.create_object("checker.obj")
+    ortho  = E.create_camera(E.camera_type_orthogonal)
+    camera = E.create_camera(E.camera_type_perspective)
+    light  = E.create_light(E.light_type_positional)
+    pivot  = E.create_pivot()
+    thing  = E.create_object("box.obj")
+    floor  = E.create_object("checker.obj")
+    sprite = E.create_sprite("box_rgb.jpg")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(thing, pivot)
     E.parent_entity(floor, pivot)
+    E.parent_entity(sprite, ortho)
 
     E.set_entity_position(light, 0,  2.0,  2.0)
     E.set_entity_position(pivot, 0, -2.0, -2.0)
     E.set_entity_position(thing, 0,  1.0,  0.0)
+    E.set_entity_position(sprite, x + w / 2, y + h / 2, 0)
 
     E.set_entity_position(camera, 0, 1, 5);
 end

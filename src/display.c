@@ -32,27 +32,32 @@ static struct host *Ho;
 static int          H_num =  0;
 static int          H_max = 64;
 
-static float color0[3] = { 0.0f, 0.0f, 0.0f };
-static float color1[3] = { 0.1f, 0.2f, 0.4f };
+static float color0[3] = { 0.1f, 0.2f, 0.4f };
+static float color1[3] = { 0.0f, 0.0f, 0.0f };
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef SNIP
-static void set_window_pos(int X, int Y)
+static void default_host(struct host *H)
 {
-    char buf[32];
+    float a  = (float) DEFAULT_H / (float) DEFAULT_W;
 
-    /* SDL looks to the environment for window position. */
+    /* Set a default configuration to be used in case of config failure. */
 
-#ifdef _WIN32
-    sprintf(buf, "SDL_VIDEO_WINDOW_POS=%d,%d", X, Y);
-    putenv(buf);
-#else
-    sprintf(buf, "%d,%d", X, Y);
-    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
-#endif
+    H->win_w = DEFAULT_W;
+    H->win_h = DEFAULT_H;
+    H->n     = 1;
+
+    H->tile[0].win_w = DEFAULT_W;
+    H->tile[0].win_h = DEFAULT_H;
+    H->tile[0].pix_w = DEFAULT_W;
+    H->tile[0].pix_h = DEFAULT_H;
+
+    H->tile[0].o[0]  = -0.5f;
+    H->tile[0].o[1]  = -0.5f * a;
+    H->tile[0].o[2]  = -1.0f;
+    H->tile[0].r[0]  =  1.0f;
+    H->tile[0].u[1]  =  1.0f * a;
 }
-#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -77,14 +82,30 @@ void init_display(void)
 
 void sync_display(void)
 {
-    int rank = 0;
+    int i, j, rank = 0;
+
+    default_host(&Host);
+
+    /* Find the union of all host exents.  Copy to all hosts. */
+
+    for (i = 0; i < H_num - 1; i++)
+        for (j = i + 1; j < H_num; j++)
+        {
+            int r = Hi[j].pix_x + Hi[j].pix_w;
+            int t = Hi[j].pix_y + Hi[j].pix_h;
+
+            Hi[i].pix_x = Hi[j].pix_x = MIN(Hi[i].pix_x,     Hi[j].pix_x);
+            Hi[i].pix_y = Hi[j].pix_y = MIN(Hi[i].pix_y,     Hi[j].pix_y);
+            Hi[i].pix_w = Hi[j].pix_w = MAX(Hi[i].pix_w, r - Hi[i].pix_x);
+            Hi[i].pix_h = Hi[j].pix_h = MAX(Hi[i].pix_h, t - Hi[i].pix_y);
+
+        }
 
 #ifdef MPI
-
     if (gethostname(Host.name, MAXNAME) == 0)
     {
         size_t sz = sizeof (struct host);
-        int i, j, size;
+        int size;
 
         assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
         assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
@@ -102,8 +123,6 @@ void sync_display(void)
                     if (strcmp(Hi[j].name, Ho[i].name) == 0)
                     {
                         memcpy(Ho + i, Hi + j, sizeof (struct host));
-                        strcpy(Hi[j].name,  "");
-
                         break;
                     }
 
@@ -114,92 +133,119 @@ void sync_display(void)
     }
 #endif
 
-    if (rank == 0)
-    {
-        if (H_num > 0)
-            memcpy(&Host, Hi, sizeof (struct host));
-        else
-        {
-            float a = (float) DEFAULT_H / (float) DEFAULT_W;
+    /* Assume the first host configuration is the server's. */
 
-            /* No configuration is given.  Use a simple default. */
-
-            Host.W = DEFAULT_W;
-            Host.H = DEFAULT_H;
-            Host.n = 1;
-
-            Host.tile[0].w = DEFAULT_W;
-            Host.tile[0].h = DEFAULT_H;
-
-            Host.tile[0].o[0] = -0.5f;
-            Host.tile[0].o[1] = -0.5f * a;
-            Host.tile[0].o[2] = -1.0f;
-
-            Host.tile[0].r[0] =  1.0f;
-            Host.tile[0].u[1] =  1.0f * a;
-        }
-    }
+    if (rank == 0 && H_num > 0)
+        memcpy(&Host, Hi, sizeof (struct host));
 }
 
-int draw_display(struct frustum *F1, const float p[3], float N, float F, int i)
+/*---------------------------------------------------------------------------*/
+
+int draw_ortho(struct frustum *F1, const float p[3], float N, float F, int i)
 {
     if (i < Host.n)
     {
-        GLdouble l, r, b, t;
+        /* Set the frustum planes. */
 
-        float A[3];
-        float B[3];
-        float C[3];
-        float D[3];
-        float n[3];
+        F1->V[0][0] =  0.0f;
+        F1->V[0][1] =  1.0f;
+        F1->V[0][2] =  0.0f;
 
-        n[0] = Host.tile[i].o[0] - p[0];
-        n[1] = Host.tile[i].o[1] - p[1];
-        n[2] = Host.tile[i].o[2] - p[2];
+        F1->V[1][0] = -1.0f;
+        F1->V[1][1] =  0.0f;
+        F1->V[1][2] =  0.0f;
 
-        /* Compute the frustum extents. */
+        F1->V[2][0] =  0.0f;
+        F1->V[2][1] = -1.0f;
+        F1->V[2][2] =  0.0f;
 
-        l = -N *  n[0] / n[2];
-        r = -N * (n[0] + Host.tile[i].r[0]) / (n[2] + Host.tile[i].r[2]);
-        b = -N *  n[1] / n[2];
-        t = -N * (n[1] + Host.tile[i].u[1]) / (n[2] + Host.tile[i].u[2]);
-
-        /* Compute the frustum planes. */
-
-        A[0] = Host.tile[i].o[0];
-        A[1] = Host.tile[i].o[1];
-        A[2] = Host.tile[i].o[2];
-
-        B[0] = Host.tile[i].r[0] + A[0];
-        B[1] = Host.tile[i].r[1] + A[1];
-        B[2] = Host.tile[i].r[2] + A[2];
-
-        C[0] = Host.tile[i].u[0] + B[0];
-        C[1] = Host.tile[i].u[1] + B[1];
-        C[2] = Host.tile[i].u[2] + B[2];
-
-        D[0] = Host.tile[i].u[0] + A[0];
-        D[1] = Host.tile[i].u[1] + A[1];
-        D[2] = Host.tile[i].u[2] + A[2];
-
-        v_plane(F1->V[0], p, B, A);
-        v_plane(F1->V[1], p, C, B);
-        v_plane(F1->V[2], p, D, C);
-        v_plane(F1->V[3], p, A, D);
+        F1->V[3][0] =  1.0f;
+        F1->V[3][1] =  0.0f;
+        F1->V[3][2] =  0.0f;
 
         /* Configure the viewport. */
 
-        glViewport(Host.tile[i].x, Host.tile[i].y,
-                   Host.tile[i].w, Host.tile[i].h);
-        glScissor (Host.tile[i].x, Host.tile[i].y,
-                   Host.tile[i].w, Host.tile[i].h);
+        glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
+                   Host.tile[i].win_w, Host.tile[i].win_h);
+        glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
+                   Host.tile[i].win_w, Host.tile[i].win_h);
 
         /* Apply the projection. */
 
         glMatrixMode(GL_PROJECTION);
         {
             glLoadIdentity();
-            glFrustum(l, r, b, t, N, F);
+            glOrtho(Host.tile[i].pix_x,
+                    Host.tile[i].pix_x + Host.tile[i].pix_w,
+                    Host.tile[i].pix_y,
+                    Host.tile[i].pix_y + Host.tile[i].pix_h, N, F);
+        }
+        glMatrixMode(GL_MODELVIEW);
+
+        return i + 1;
+    }
+    return 0;
+}
+
+int draw_persp(struct frustum *F1, const float p[3], float N, float F, int i)
+{
+    if (i < Host.n)
+    {
+        const float *o = Host.tile[i].o;
+        const float *r = Host.tile[i].r;
+        const float *u = Host.tile[i].u;
+
+        float p0[3];
+        float p1[3];
+        float p2[3];
+        float p3[3];
+        float n[3];
+
+        n[0] = o[0] - p[0];
+        n[1] = o[1] - p[1];
+        n[2] = o[2] - p[2];
+
+        /* Compute the frustum planes. */
+
+        p0[0] = o[0];
+        p0[1] = o[1];
+        p0[2] = o[2];
+
+        p1[0] = r[0] + p0[0];
+        p1[1] = r[1] + p0[1];
+        p1[2] = r[2] + p0[2];
+
+        p2[0] = u[0] + p1[0];
+        p2[1] = u[1] + p1[1];
+        p2[2] = u[2] + p1[2];
+
+        p3[0] = u[0] + p0[0];
+        p3[1] = u[1] + p0[1];
+        p3[2] = u[2] + p0[2];
+
+        v_plane(F1->V[0], p, p1, p0);
+        v_plane(F1->V[1], p, p2, p1);
+        v_plane(F1->V[2], p, p3, p2);
+        v_plane(F1->V[3], p, p0, p3);
+
+        /* Configure the viewport. */
+
+        glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
+                   Host.tile[i].win_w, Host.tile[i].win_h);
+        glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
+                   Host.tile[i].win_w, Host.tile[i].win_h);
+
+        /* Apply the projection. */
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            GLdouble L = -N * (n[0]         /  n[2]);
+            GLdouble R = -N * (n[0] + r[0]) / (n[2] + r[2]);
+            GLdouble B = -N * (n[1]         /  n[2]);
+            GLdouble T = -N * (n[1] + u[1]) / (n[2] + u[2]);
+
+            glLoadIdentity();
+            glFrustum(L, R, B, T, N, F);
         }
         glMatrixMode(GL_MODELVIEW);
 
@@ -221,50 +267,71 @@ static int get_host(const char *name)
     return -1;
 }
 
-void add_host(const char *name, int X, int Y, int W, int H)
+void add_host(const char *name, int x, int y, int w, int h)
 {
     if (H_num < H_max)
     {
         strncpy(Hi[H_num].name, name, MAXNAME);
 
-        Hi[H_num].X = X;
-        Hi[H_num].Y = Y;
-        Hi[H_num].W = W;
-        Hi[H_num].H = H;
-        Hi[H_num].n = 0;
+        Hi[H_num].win_x = x;
+        Hi[H_num].win_y = y;
+        Hi[H_num].win_w = w;
+        Hi[H_num].win_h = h;
+        Hi[H_num].n     = 0;
 
         H_num++;
     }
 }
 
-void add_tile(const char *name, int x, int y, int w, int h, const float o[3],
-                                                            const float r[3],
-                                                            const float u[3])
+void add_tile(const char *name, int x, int y, int w, int h,
+                                int X, int Y, int W, int H, float p[3][3])
 {
     int i = get_host(name);
 
     if (0 <= i && i < H_num)
     {
-        int n = Hi[i].n;
+        int n = Hi[i].n++;
 
-        Hi[i].tile[n].x    = x;
-        Hi[i].tile[n].y    = y;
-        Hi[i].tile[n].w    = w;
-        Hi[i].tile[n].h    = h;
+        /* Add a new tile to this host using the given configuration. */
 
-        Hi[i].tile[n].o[0] = o[0];
-        Hi[i].tile[n].o[1] = o[1];
-        Hi[i].tile[n].o[2] = o[2];
+        Hi[i].tile[n].win_x = x;
+        Hi[i].tile[n].win_y = y;
+        Hi[i].tile[n].win_w = w;
+        Hi[i].tile[n].win_h = h;
 
-        Hi[i].tile[n].r[0] = r[0];
-        Hi[i].tile[n].r[1] = r[1];
-        Hi[i].tile[n].r[2] = r[2];
+        Hi[i].tile[n].o[0]  = p[0][0];
+        Hi[i].tile[n].o[1]  = p[0][1];
+        Hi[i].tile[n].o[2]  = p[0][2];
 
-        Hi[i].tile[n].u[0] = u[0];
-        Hi[i].tile[n].u[1] = u[1];
-        Hi[i].tile[n].u[2] = u[2];
+        Hi[i].tile[n].r[0]  = p[1][0];
+        Hi[i].tile[n].r[1]  = p[1][1];
+        Hi[i].tile[n].r[2]  = p[1][2];
 
-        Hi[i].n++;
+        Hi[i].tile[n].u[0]  = p[2][0];
+        Hi[i].tile[n].u[1]  = p[2][1];
+        Hi[i].tile[n].u[2]  = p[2][2];
+
+        Hi[i].tile[n].pix_x = X;
+        Hi[i].tile[n].pix_y = Y;
+        Hi[i].tile[n].pix_w = W;
+        Hi[i].tile[n].pix_h = H;
+
+        /* Compute the total pixel size of all tiles of this host. */
+
+        if (n == 0)
+        {
+            Hi[i].pix_x = X;
+            Hi[i].pix_y = Y;
+            Hi[i].pix_w = W;
+            Hi[i].pix_h = H;
+        }
+        else
+        {
+            Hi[i].pix_x = MIN(Hi[i].pix_x, X);
+            Hi[i].pix_y = MIN(Hi[i].pix_y, Y);
+            Hi[i].pix_w = MAX(Hi[i].pix_w, X + W - Hi[i].pix_x);
+            Hi[i].pix_h = MAX(Hi[i].pix_h, Y + H - Hi[i].pix_y);
+        }
     }
 }
 
@@ -272,12 +339,32 @@ void add_tile(const char *name, int x, int y, int w, int h, const float o[3],
 
 int get_window_w(void)
 {
-    return Host.W;
+    return Host.win_w;
 }
 
 int get_window_h(void)
 {
-    return Host.H;
+    return Host.win_h;
+}
+
+int get_viewport_x(void)
+{
+    return Host.pix_x;
+}
+
+int get_viewport_y(void)
+{
+    return Host.pix_y;
+}
+
+int get_viewport_w(void)
+{
+    return Host.pix_w;
+}
+
+int get_viewport_h(void)
+{
+    return Host.pix_h;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -308,6 +395,49 @@ void recv_set_background(void)
 
 void draw_background(void)
 {
+    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+    {
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+
+        glDepthMask(GL_FALSE);
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            glPushMatrix();
+            glLoadIdentity();
+            glOrtho(Host.pix_x, Host.pix_x + Host.pix_w,
+                    Host.pix_y, Host.pix_y + Host.pix_h, -1.0, +1.0);
+        }
+        glMatrixMode(GL_MODELVIEW);
+        {
+            glPushMatrix();
+            glLoadIdentity();
+        }
+
+        glBegin(GL_QUADS);
+        {
+            glColor3fv(color0);
+            glVertex2i(Host.win_x,              Host.win_y);
+            glVertex2i(Host.win_x + Host.win_w, Host.win_y);
+
+            glColor3fv(color1);
+            glVertex2i(Host.win_x + Host.win_w, Host.win_y + Host.win_h);
+            glVertex2i(Host.win_x,              Host.win_y + Host.win_h);
+        }
+        glEnd();
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            glPopMatrix();
+        }
+        glMatrixMode(GL_MODELVIEW);
+        {
+            glPopMatrix();
+        }
+    }
+    glPopAttrib();
 }
 
 /*---------------------------------------------------------------------------*/

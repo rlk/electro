@@ -102,7 +102,7 @@ The class hierarchy is as follows: </p>
 <ul>
 <li><a href="#object"> Object </a>
 <li><a href="#sprite"> Sprite </a>
-<li><a href="#camera"> Camera </a>
+<li> Camera
 <li><a href="#light">  Light  </a>
 <li><a href="#pivot">  Pivot  </a>
 <li><a href="#galaxy"> Galaxy </a>
@@ -401,6 +401,8 @@ the given flags, and <tt>false</tt> will clear them. </p>
 
 <ul>
 
+<li>
+
 <li><tt> entity_flag_wireframe </tt><p> The wireframe flag causes
 an entity and its descendants to be rendered in wireframe.  An entire
 scene may be rendered in wireframe by setting the wireframe flag on a
@@ -429,6 +431,12 @@ leaves of the scene hierarchy anyway.  The common case of an entity
 with local scaling <i>and</i> a local billboard flag will work
 properly, but when in doubt, scale below billboarding. </p>
 
+<li><tt> entity_flag_unlit </tt><p> Entities with the unlit flag are
+drawn with all lighting disabled.  They will appear fully bright.
+This is especially useful for sprite and wireframe objects which do
+not have lightable surfaces.  The unlit flag affects all sub entities
+and cannot be reversed lower in the hierarchy.</p>
+
 </ul>
 </dl>
 
@@ -455,32 +463,6 @@ textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
 Return the size of the sprite in pixels.</p>
-
-</dl>
-
-<!---------------------------------------------------------------------------->
-
-<a name="camera"><h3> Camera </h3>
-<dl>
-
-<dt><tt>set_camera_distance</tt>(<i>camera, distance</i>)<dd><p> Set
-the distance to the focus point of the camera.  More precisely,
-<i>distance</i> is a translation along the positive Z axis applied
-prior to the actual positioning and rotation of the camera.  Think
-of the camera's position and rotation not as motions of the camera,
-but as motions of the camera's focal point. </p>
-
-<p>A camera distance of zero commonly corresponds to a first-person
-view, while a positive distance is useful as an object-viewer tumbler
-camera.  Negative camera distance would place the camera position
-behind the viewer. </p>
-
-<dt><tt>set_camera_zoom</tt>(<i>camera, zoom</i>)<dd><p> Set the zoom
-factor of a camera.  This value normally ranges from 0 to 1 but may
-reasonably be higher.  In effect, it linearly scales the size of the
-view area of the camera.  Large values widen the view (theoretically,
-an infinite zoom value gives a 180 degree field of view) and small
-values narrow it. </p>
 
 </dl>
 
@@ -587,6 +569,66 @@ concatenation or Lua <tt>string.format</tt> function. </p>
 
 <!---------------------------------------------------------------------------->
 
+<h2> Configuration API </h2>
+<dl>
+
+<dt><tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p> Add a host.
+This function is used by configuration scripts to define the structure
+of the cluster driving a tiled display.  The specified parameters are
+only accessed prior to the execution of the <tt>on_start</tt>
+callback, so any use of it must be at the global scope. </p>
+
+<p> The <i>name</i> argument gives the Internet hostname of the
+rendering node to be used.  The <i>x, y, w, h</i> arguments give the
+position and size of the area of that host's desktop to be used for
+OpenGL rendering.  A given render node can only support one Electro
+host.  If the same <i>name</i> argument is reused for multiple hosts,
+only the first configuration will be used.  If a render node is to
+handle multiple displays, they must be defined as Electro tiles...</p>
+
+<dt><tt>add_tile</tt>(<i>name, wx, wy, ww, wh, px, py, pw, ph, origin,
+right, up</i>)<dd><p> Add a tile to a host.  Like <tt>add_host</tt>,
+this function is used for configuration prior to the execution of
+<tt>on_start</tt>. </p>
+
+<p> The <i>name</i> argument gives the name of the host rendering the
+defined tile.  The <i>wx, wy, wh, ww</i> arguments give the position,
+width, and height of the area of the host's render area to be used for
+this tile.  The <i>px, py, pw, ph</i> arguments give the pixel
+position and width in the global array of pixels displayed by the tile
+display.  The <i>origin, right, up</i> arguments give the vectors
+defining the position of the actual screen in real-space
+coordinates. </p>
+
+<p> In general, <i>wx, wy, ww, wh</i> define a framebuffer.  <i>px,
+py, pw, ph</i> define the parameters of the orthogonal camera.
+<i>origin, right, up</i> define the parameters of the perspective
+camera.  In many cases the <i>w</i>-arguments and <i>p</i>-arguments
+will be the same, but a display configuration is free to draw a
+distinction between real pixel and virtual pixels.  Likewise, the tile
+position vectors will be largely similar to the pixel definitions,
+though a display configuration is free to define a non-planar
+display.</p>
+
+<p class="note"> There are currently some limitations on the
+<i>origin, right</i> and <i>up</i> vectors.  The <i>right</i> vector
+must lie in the XZ plane.  The <i>up</i> vector must lie in the YZ
+plane.  The <i>origin</i> must have <i>z < 0</i>.  This rules out
+CAVEs for the moment, but not a lot else.  Someday the intrepid author
+will work out the math to remove this limitation in a non-hacky
+fashion. </p>
+
+<dt><i>x, y, w, h</i> = <tt>get_viewport</tt>()<dd><p> Return the
+total size of the display.  The return values <i>x, y, w, h</i> give
+the X position, Y position, width, and height of the rectangular union
+of all tiles, in pixels.  This information is often useful when
+positioning entities before an orthogonal camera, or configuring a
+scene to match the aspect ratio of a display. </p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
 <h2> Miscellaneous API </h2>
 <dl>
 
@@ -624,69 +666,6 @@ are:
 <li><tt>key_modifier_alt</tt>
 </ul>
 </p>
-
-<dt><i>l, r, b, t</i> = <tt>get_viewport</tt>()<dd><p> Return the
-total size of the display.  The return values <i>l, r, b, t</i> give
-the left, right, bottom, and top extents of the rectangular union of
-all tiles, in pixels.  This information is often useful when
-positioning entities on screen or scaling entities to some
-screen-relative size.  </p>
-
-<dt><tt>add_tile</tt>(<i>name, local_x, local_y, global_x, global_y,
-width, height</i>) <dd><p> Add a tile.  This function is used by
-configuration scripts to define the structure of a tiled display.  The
-specified parameters are only accessed prior to the execution of the
-<tt>on_start</tt> callback, so any use of it must be at the global
-scope. </p>
-
-<p> The <i>name</i> argument gives the name of the rendering node
-responsible for rendering the defined tile.  The <i>local_x</i> and
-<i>local_y</i> arguments give the X and Y pixel position of the
-rendering window on that node's desktop.  The <i>global_x</i> and
-<i>global_y</i> arguments give the pixel location of the window
-within the total display.  The <i>width</i> and <i>height</i>
-arguments give the size of the tile being defined in pixels.  The
-width and height apply to both the size of the window on the render
-node's desktop and the size of the defined portion of the total
-display. </p>
-
-<p> As an example, here is a configuration for the 16-tile, 8-node
-nico display. </p>
-
-<pre>
-mullion_w = 128
-mullion_h = 128
-
-w  = 1600
-h  = 1200
-dx = w + mullion_w
-dy = h + mullion_h
-
-W  =  dx * 4
-H  =  dy * 4
-X  = -W / 2 + mullion_w / 2
-Y  = -H / 2 + mullion_h / 2
-
-E.add_tile("nico5-10",    0, 0, X,          Y,          w, h)
-E.add_tile("nico6-10",    0, 0, X,          Y + dy,     w, h)
-E.add_tile("nico7-10",    0, 0, X,          Y + dy * 2, w, h)
-E.add_tile("nico8-10",    0, 0, X,          Y + dy * 3, w, h)
-
-E.add_tile("nico5-10", 1600, 0, X + dx,     Y,          w, h)
-E.add_tile("nico6-10", 1600, 0, X + dx,     Y + dy,     w, h)
-E.add_tile("nico7-10", 1600, 0, X + dx,     Y + dy * 2, w, h)
-E.add_tile("nico8-10", 1600, 0, X + dx,     Y + dy * 3, w, h)
-
-E.add_tile("nico1-10",    0, 0, X + dx * 2, Y,          w, h)
-E.add_tile("nico2-10",    0, 0, X + dx * 2, Y + dy,     w, h)
-E.add_tile("nico3-10",    0, 0, X + dx * 2, Y + dy * 2, w, h)
-E.add_tile("nico4-10",    0, 0, X + dx * 2, Y + dy * 3, w, h)
-
-E.add_tile("nico1-10", 1600, 0, X + dx * 3, Y,          w, h)
-E.add_tile("nico2-10", 1600, 0, X + dx * 3, Y + dy,     w, h)
-E.add_tile("nico3-10", 1600, 0, X + dx * 3, Y + dy * 2, w, h)
-E.add_tile("nico4-10", 1600, 0, X + dx * 3, Y + dy * 3, w, h)
-</pre>
 
 </dl>
 
@@ -750,12 +729,10 @@ not have accompanying release events. </p>
 invoked regularly while idling is enabled.  The <tt>dt</tt> argument
 gives the amount of time, in seconds, that has passed since the last
 time the callback was invoked.  The rate of callback is not defined,
-though it may be inferred to be "often enough."  In practice it is
-usually around 30 times per second, though this will decrease with
-graphical complexity.  The <tt>do_timer</tt> function is intended to
-be used to update animations and other background processes.
-Applications should be sure to return <tt>true</tt> in order to force
-an update to the display.</p>
+but it will happen as often as is possible.  The <tt>do_timer</tt>
+function is intended to be used to update animations and other
+background processes.  Applications should be sure to return
+<tt>true</tt> in order to force an update to the display.</p>
 
 <p> If an absolute measure of time is necessary, applications should
 accumulate  the <tt>dt</tt> parameter, just as they would accumulate
@@ -776,12 +753,7 @@ end
 deliberately obscured because it is nearly impossible to guarantee.
 While it might make sense to allow an application to request a
 callback rate, this request can only be precisely filled in a limited
-number of cases.  The idle timer does <i>not</i> free-run.
-Free-running in Electro is bad because MPI synchronization is
-unpredictable and events tend to queue up, leading to sluggish
-behavior.  The application developer may count on the fact that
-<tt>do_timer</tt> is invoked as often as is possible, such that
-performance will not suffer. </p>
+number of cases.  Just trust the <tt>dt</tt>.</p>
 
 <dt><tt> do_frame() </tt><dd><p> This callback is invoked immediately
 before a frame is rendered.  This is useful for operations that should
@@ -900,13 +872,8 @@ a boolean indicating the result. </p>
 
 <pre>
 function move_sprite(sprite, i, j)
-    local t, l, b, r = E.get_viewport()
-
-    local w = r - l
-    local h = t - b
-
-    E.set_entity_position(sprite, l + w * (j - 1) / 4 + w / 8,
-                                  b + h * (4 - i) / 4 + h / 8, 0)
+    E.set_entity_position(sprite, view_x + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_y + view_h * (4 - i) / 4 + view_h / 8, 0)
 end
 </pre>
 
@@ -1027,13 +994,16 @@ trigger a screen update.  This is unnecessary, but brief.</p>
 
 <pre>
 function do_start()
-    local t, l, b, r = E.get_viewport()
 
-    local w = r - l
-    local h = t - b
+    view_x, view_y, view_w, view_h = E.get_viewport()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
 
     for i = 1, 16 do
         sprites[i] = E.create_sprite(image_file)
@@ -1041,14 +1011,9 @@ function do_start()
         local sw, sh = E.get_sprite_size(sprites[i])
 
         E.parent_entity(sprites[i], camera)
-        E.set_entity_scale(sprites[i], 0.25 * w / sw,
-                                       0.25 * h / sh, 1.0)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
+                                       0.25 * view_h / sh, 1.0)
     end
-
-    numbers[1] = {  1,  2,  3,  4 }
-    numbers[2] = {  5,  6,  7,  8 }
-    numbers[3] = {  9, 10, 11, 12 }
-    numbers[4] = { 13, 14, 15, 16 }
 
     for i = 1, 4 do
         for j = 1, 4 do
@@ -1093,24 +1058,25 @@ be mapped onto each sprite. </p>
 
 <h2> The full source of the Fifteen Puzzle example </h2>
 <pre>
-image_file = "venus.png"
+
+image_file = "venus.jpg"
+
+view_x = 0
+view_y = 0
+view_w = 0
+view_h = 0
 
 camera  = nil
 numbers = { }
 sprites = { }
 
-curr_i = 4
-curr_j = 4
-time   = 0
+curr_i  = 4
+curr_j  = 4
+time    = 0
 
 function move_sprite(sprite, i, j)
-    local t, l, b, r = E.get_viewport()
-
-    local w = r - l
-    local h = t - b
-
-    E.set_entity_position(sprite, l + w * (j - 1) / 4 + w / 8,
-                                  b + h * (4 - i) / 4 + h / 8, 0)
+    E.set_entity_position(sprite, view_x + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_y + view_h * (4 - i) / 4 + view_h / 8, 0)
 end
 
 function solved()
@@ -1134,8 +1100,8 @@ function move_piece(di, dj)
 
     -- Confirm that the move is valid.
 
-    if 1 &lt;= next_i and next_i &lt;= 4 and
-       1 &lt;= next_j and next_j &lt;= 4 then
+    if 1 <= next_i and next_i <= 4 and
+       1 <= next_j and next_j <= 4 then
 
         -- Swap the moving piece with the blank piece.
 
@@ -1178,13 +1144,18 @@ function move_random()
 end
 
 function do_start()
-    local t, l, b, r = E.get_viewport()
 
-    local w = r - l
-    local h = t - b
+    view_x, view_y, view_w, view_h = E.get_viewport()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);
+
+    -- Initialize an array that maps rows and columns onto puzzle pieces.
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
 
     -- Add 16 sprites and scale each to 1/16th the size of the display.
 
@@ -1194,16 +1165,9 @@ function do_start()
         local sw, sh = E.get_sprite_size(sprites[i])
 
         E.parent_entity(sprites[i], camera)
-        E.set_entity_scale(sprites[i], 0.25 * w / sw,
-                                       0.25 * h / sh, 1.0)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
+                                       0.25 * view_h / sh, 1.0)
     end
-
-    -- Initialize an array that maps rows and columns onto puzzle pieces.
-
-    numbers[1] = {  1,  2,  3,  4 }
-    numbers[2] = {  5,  6,  7,  8 }
-    numbers[3] = {  9, 10, 11, 12 }
-    numbers[4] = { 13, 14, 15, 16 }
 
     -- Assign 1/16th of the image to each sprite.
 
@@ -1233,8 +1197,8 @@ function do_keyboard(k, s)
 
         -- If autoplay has been switched, toggle the idle function.
 
-        if k == 282 then E.enable_timer(true)  end
-        if k == 283 then E.enable_timer(false) end
+        if k == 283 then E.enable_timer(true)  end
+        if k == 284 then E.enable_timer(false) end
     end
     return true
 end
@@ -1242,10 +1206,10 @@ end
 function do_timer(dt)
     time = time + dt
 
-    if time &gt; 0.25 then
+    if time > 0.25 then
         move_random()
         time = 0
-        return true
+      return true
     end
 
     return false
