@@ -23,7 +23,25 @@
 #include "server.h"
 #include "star.h"
 
+/*---------------------------------------------------------------------------*/
+
 static void server_draw(void);
+static int  server_grab = 0;
+
+void switch_grab(int g)
+{
+    if (g && !server_grab)
+    {
+        SDL_WM_GrabInput(SDL_GRAB_ON);
+        SDL_ShowCursor(0);
+    }
+    if (!g && server_grab)
+    {
+        SDL_WM_GrabInput(SDL_GRAB_OFF);
+        SDL_ShowCursor(1);
+    }
+    server_grab = g;
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -114,35 +132,72 @@ static void server_draw(void)
     SDL_GL_SwapBuffers();
 }
 
+static void server_perf(void)
+{
+    static int fps_old = 0;
+    int        fps_new = opengl_perf();
+
+    if (fps_new != fps_old)
+    {
+        char buf[32];
+
+        sprintf(buf, "%d FPS\n", fps_new);
+        SDL_WM_SetCaption(buf, buf);
+
+        fps_old = fps_new;
+    }
+}
+
 static int server_loop(void)
 {
     SDL_Event e;
     int c = 0;
 
     while (SDL_PollEvent(&e))
-        switch (e.type)
+    {
+        /* Handle point grab toggle. */
+
+        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) switch_grab(0);
+        if (e.type == SDL_MOUSEBUTTONDOWN)                 switch_grab(1);
+
+        /* Dispatch the event to the scripting system. */
+
+        if (server_grab)
+            switch (e.type)
+            {
+            case SDL_MOUSEMOTION:
+                c += script_point(e.motion.xrel, e.motion.yrel);
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                c += script_click(e.button.button, 1);
+                break;
+            case SDL_MOUSEBUTTONUP:
+                c += script_click(e.button.button, 0);
+                break;
+            case SDL_KEYDOWN:
+                c += script_keybd(e.key.keysym.sym, 1);
+                break;
+            case SDL_KEYUP:
+                c += script_keybd(e.key.keysym.sym, 0);
+                break;
+            }
+
+        /* Handle a clean exit. */
+
+        if (e.type == SDL_QUIT)
         {
-        case SDL_MOUSEMOTION:
-            c += script_point(e.motion.x, e.motion.y);
-            break;
-        case SDL_MOUSEBUTTONDOWN:
-            c += script_click(e.button.button, 1);
-            break;
-        case SDL_MOUSEBUTTONUP:
-            c += script_click(e.button.button, 0);
-            break;
-        case SDL_KEYDOWN:
-            c += script_keybd(e.key.keysym.sym, 1);
-            break;
-        case SDL_KEYUP:
-            c += script_keybd(e.key.keysym.sym, 0);
-            break;
-        case SDL_QUIT:
             server_send_exit();
             return 0;
         }
+    }
 
-    if (c) server_send_draw();
+    /* Redraw a dirty buffer. */
+
+    if (c)
+    {
+        server_send_draw();
+        server_perf();
+    }
 
     return 1;
 }
@@ -191,8 +246,6 @@ void server(int np, int argc, char *argv[])
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-            SDL_WM_SetCaption(TITLE, TITLE);
 
             if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
             {

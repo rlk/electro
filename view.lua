@@ -7,62 +7,67 @@ pos_z = 9200.0
 rot_x =    0.0
 rot_y =    0.0
 dist  =    0.0
+magn  =  128.0
 
 btn    = { }
-btn[1] = false
-btn[2] = false
-btn[3] = false
-btn[4] = false
-btn[5] = false
-
-last_x = 0.0
-last_y = 0.0
 
 -------------------------------------------------------------------------------
 
+function do_keybd(k, s)
+   if s then
+      if k == 282 then -- F1
+         magn = magn - 32.0
+         camera_magn(magn)
+         return true
+      end
+      if k == 283 then -- F2
+         magn = magn + 32.0
+         camera_magn(magn)
+         return true
+      end
+   end
+
+   return true
+end
+
 function do_click(b, s)
 
-   if b == 4 then
+   if b == 4 then -- mouse wheel down
       dist = dist + 16.0
       camera_dist(dist)
-
       return true
    end
 
-   if b == 5 then
+   if b == 5 then -- mouse wheel up
       dist = dist - 16.0
-      if dist < 0 then dist = 0 end
       camera_dist(dist)
-
       return true
    end
    
-   btn[b] = s
-   return false
-end
-
-function do_point(x, y)
-   local dx = last_x - x
-   local dy = last_y - y
-
-   last_x = x
-   last_y = y
-
-   if btn[1] then
-      rot_x = rot_x - 180 * dy / 500.0
-      rot_y = rot_y - 180 * dx / 500.0
-
-      if rot_x >   90 then rot_x =  90 end
-      if rot_x <  -90 then rot_x = -90 end
-      if rot_y >  180 then rot_y = rot_y - 360 end
-      if rot_y < -180 then rot_y = rot_y + 360 end
-
-      camera_turn(rot_x, rot_y, 0)
-
+   if b == 2 then -- middle button click
+      dist = 0
+      camera_dist(dist)
       return true
    end
 
+   btn[b] = s
+
    return false
+end
+
+function do_point(dx, dy)
+
+   rot_x = rot_x - 180 * dy / 500.0
+   rot_y = rot_y - 180 * dx / 500.0
+
+   if rot_x >   90 then rot_x =  90 end
+   if rot_x <  -90 then rot_x = -90 end
+   if rot_y >  180 then rot_y = rot_y - 360 end
+   if rot_y < -180 then rot_y = rot_y + 360 end
+
+   camera_turn(rot_x, rot_y, 0)
+
+   return true
 end
 
 -------------------------------------------------------------------------------
