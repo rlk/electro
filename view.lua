@@ -9,10 +9,14 @@ rot_y  =    0.0
 rot_dy =    0.0
 dist   =    1.5
 magn   =  128.0
+zoom   =    0.001
 
 btn    = { }
-foo    = -1
+btn[1] = false
+btn[2] = false
+btn[3] = false
 
+foo    = -1
 foo_a  =  0
 foo_x  =   global_x + 96
 foo_y  =  -global_y + global_h - 96
@@ -48,30 +52,25 @@ end
 
 function do_click(b, s)
 
+   r = false
+
    if s then
       if b == 4 then -- mouse wheel down
-         dist = dist * 1.5;
+         dist = dist + 10;
          camera_dist(dist)
-         return true
+         r = true
       end
 
       if b == 5 then -- mouse wheel up
-         dist = dist / 1.5;
+         dist = dist - 10;
          camera_dist(dist)
-         return true
+         r = true
       end
       
       if b == 2 then -- middle button click
-         dist  = 1.5
+         dist  = 0
          camera_dist(dist)
-
-         if foo ~= -1 then
-            foo_x =   global_x + 96
-            foo_y =  -global_y + global_h - 96
-            sprite_move(foo, foo_x, foo_y)
-         end
-
-         return true
+         r = true
       end
 
       if b == 3 then
@@ -83,13 +82,14 @@ function do_click(b, s)
             sprite_free(foo)
             foo = -1
          end
-         return true
+
+         r = true
       end
    end
 
    btn[b] = s
 
-   return false
+   return r
 end
 
 function do_point(dx, dy)
@@ -98,9 +98,16 @@ function do_point(dx, dy)
       foo_x = foo_x + dx
       foo_y = foo_y + dy
       sprite_move(foo, foo_x, foo_y)
-   else
-      rot_x = rot_x - 180 * dy / 500.0
-      rot_y = rot_y - 180 * dx / 500.0
+   end
+
+   if btn[2] then
+      zoom = zoom + dy * 0.00001
+      camera_zoom(zoom)
+   end
+
+   if btn[1] == false and btn[2] == false and btn[3] == false then
+      rot_x = rot_x - 180 * dy * zoom
+      rot_y = rot_y - 180 * dx * zoom
 
       if rot_x >   90 then rot_x =  90 end
       if rot_x <  -90 then rot_x = -90 end
