@@ -25,13 +25,14 @@
 #include "light.h"
 #include "pivot.h"
 #include "image.h"
+#include "event.h"
 #include "entity.h"
 #include "galaxy.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
 
-static void client_recv_draw(void)
+static void recv_draw_client(void)
 {
     SDL_Event e;
 
@@ -41,7 +42,7 @@ static void client_recv_draw(void)
     SDL_PushEvent(&e);
 }
 
-static void client_recv_exit(void)
+static void recv_exit_client(void)
 {
     SDL_Event e;
 
@@ -57,7 +58,7 @@ static void client_recv(void)
 {
     char event = EVENT_NULL;
 
-    buffer_sync();
+    sync_buffer();
 
     while ((event = unpack_event()))
     {
@@ -67,40 +68,41 @@ static void client_recv(void)
 #endif
         switch (event)
         {
-        case EVENT_DRAW:          client_recv_draw();     break;
-        case EVENT_EXIT:          client_recv_exit();     break;
+        case EVENT_DRAW:                 recv_draw_client();          break;
+        case EVENT_EXIT:                 recv_exit_client();          break;
 
-        case EVENT_ENTITY_PARENT: entity_recv_parent();   break;
-        case EVENT_ENTITY_DELETE: entity_recv_delete();   break;
-        case EVENT_ENTITY_CLONE:  entity_recv_clone();    break;
-        case EVENT_ENTITY_MOVE:   entity_recv_position(); break;
-        case EVENT_ENTITY_TURN:   entity_recv_rotation(); break;
-        case EVENT_ENTITY_SIZE:   entity_recv_scale();    break;
-        case EVENT_ENTITY_FADE:   entity_recv_alpha();    break;
-        case EVENT_ENTITY_FLAG:   entity_recv_flag();     break;
+        case EVENT_CREATE_CAMERA:        recv_create_camera();        break;
+        case EVENT_CREATE_SPRITE:        recv_create_sprite();        break;
+        case EVENT_CREATE_OBJECT:        recv_create_object();        break;
+        case EVENT_CREATE_GALAXY:        recv_create_galaxy();        break;
+        case EVENT_CREATE_LIGHT:         recv_create_light();         break;
+        case EVENT_CREATE_PIVOT:         recv_create_pivot();         break;
+        case EVENT_CREATE_IMAGE:         recv_create_image();         break;
+        case EVENT_CREATE_CLONE:         recv_create_clone();         break;
 
-        case EVENT_CAMERA_CREATE: camera_recv_create();   break;
-        case EVENT_SPRITE_CREATE: sprite_recv_create();   break;
-        case EVENT_OBJECT_CREATE: object_recv_create();   break;
-        case EVENT_GALAXY_CREATE: galaxy_recv_create();   break;
-        case EVENT_LIGHT_CREATE:  light_recv_create();    break;
-        case EVENT_PIVOT_CREATE:  pivot_recv_create();    break;
-        case EVENT_IMAGE_CREATE:  image_recv_create();    break;
+        case EVENT_PARENT_ENTITY:        recv_parent_entity();        break;
+        case EVENT_DELETE_ENTITY:        recv_delete_entity();        break;
 
-        case EVENT_GALAXY_MAGN:   galaxy_recv_magn();     break;
-        case EVENT_CAMERA_DIST:   camera_recv_dist();     break;
-        case EVENT_CAMERA_ZOOM:   camera_recv_zoom();     break;
-        case EVENT_SPRITE_BOUNDS: sprite_recv_bounds();   break;
-        case EVENT_LIGHT_COLOR:   light_recv_color();     break;
+        case EVENT_SET_ENTITY_POSITION:  recv_set_entity_position();  break;
+        case EVENT_SET_ENTITY_ROTATION:  recv_set_entity_rotation();  break;
+        case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
+        case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
+        case EVENT_SET_ENTITY_FLAG:      recv_set_entity_flag();      break;
+
+        case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
+        case EVENT_SET_CAMERA_DISTANCE:  recv_set_camera_distance();  break;
+        case EVENT_SET_CAMERA_ZOOM:      recv_set_camera_zoom();      break;
+        case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
+        case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         }
     }
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void client_init(void)
+static void init_client(void)
 {
-    glViewport(0, 0, window_w(), window_h());
+    glViewport(0, 0, get_window_w(), get_window_h());
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -111,19 +113,17 @@ static void client_init(void)
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    opengl_check("client_init");
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 
 static void client_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    entity_draw();
+    draw_entity();
 
-/*
-    mpi_barrier_clients();
-*/
-    mpi_barrier_all();
+    mpi_barrier();
     SDL_GL_SwapBuffers();
 }
 
@@ -151,12 +151,12 @@ static int client_loop(void)
 
 void client(void)
 {
-    viewport_sync();
+    sync_viewport();
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
-        int w = window_w();
-        int h = window_h();
+        int w = get_window_w();
+        int h = get_window_h();
         int m = SDL_OPENGL | SDL_NOFRAME;
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
@@ -169,10 +169,10 @@ void client(void)
 
         if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
-            buffer_init();
-            image_init();
-            client_init();
-            entity_init();
+            init_buffer();
+            init_image();
+            init_client();
+            init_entity();
 
             /* Handle any SDL events. Block on server messages. */
 
@@ -181,7 +181,7 @@ void client(void)
 
             /* Ensure everyone finishes all events before exiting. */
 
-            mpi_barrier_all();
+            mpi_barrier();
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
 

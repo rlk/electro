@@ -21,6 +21,7 @@
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
+#include "event.h"
 #include "camera.h"
 
 /*---------------------------------------------------------------------------*/
@@ -37,13 +38,13 @@ static int camera_exists(int cd)
 
 /*---------------------------------------------------------------------------*/
 
-static void camera_transform(int id)
+static void transform_camera(int id)
 {
     float p[3];
     float r[3];
 
-    entity_get_position(id, p + 0, p + 1, p + 2);
-    entity_get_rotation(id, r + 0, r + 1, r + 2);
+    get_entity_position(id, p + 0, p + 1, p + 2);
+    get_entity_rotation(id, r + 0, r + 1, r + 2);
 
     /* Rotation. */
 
@@ -98,7 +99,7 @@ static void camera_plane(float plane[4], const float a[3],
 
 /*---------------------------------------------------------------------------*/
 
-static void camera_ortho(float V[16], const float pos[3], float T, float P,
+static void ortho_camera(float V[16], const float pos[3], float T, float P,
                                                           float l, float r,
                                                           float b, float t)
 {
@@ -151,7 +152,7 @@ static void camera_ortho(float V[16], const float pos[3], float T, float P,
     V[15] =  V[12] * pos[0] + V[13] * pos[1] + V[14] * pos[2] - r;
 }
 
-static void camera_persp(float V[16], const float pos[3], float T, float P,
+static void persp_camera(float V[16], const float pos[3], float T, float P,
                                                           float l, float r,
                                                           float b, float t)
 {
@@ -218,7 +219,7 @@ static void camera_persp(float V[16], const float pos[3], float T, float P,
 
 /*---------------------------------------------------------------------------*/
 
-int camera_init(void)
+int init_camera(void)
 {
     if ((C = (struct camera *) calloc(CMAXINIT, sizeof (struct camera))))
     {
@@ -228,25 +229,25 @@ int camera_init(void)
     return 0;
 }
 
-void camera_draw(int id, int cd, const float V[16])
+void draw_camera(int id, int cd, const float V[16])
 {
     float W[16];
 
     float pos[3];
     float rot[3];
 
-    entity_get_position(id, pos + 0, pos + 1, pos + 2);
-    entity_get_rotation(id, rot + 0, rot + 1, rot + 2);
+    get_entity_position(id, pos + 0, pos + 1, pos + 2);
+    get_entity_rotation(id, rot + 0, rot + 1, rot + 2);
 
     if (camera_exists(cd))
     {
         GLdouble l, r, b, t;
 
-        int viewport_x0 = viewport_local_x();
-        int viewport_x1 = viewport_local_w() + viewport_x0;
-        int viewport_y0 = viewport_local_y();
-        int viewport_y1 = viewport_local_h() + viewport_y0;
-        int viewport_W  = viewport_total_w();
+        int viewport_x0 = get_local_viewport_x();
+        int viewport_x1 = get_local_viewport_w() + viewport_x0;
+        int viewport_y0 = get_local_viewport_y();
+        int viewport_y1 = get_local_viewport_h() + viewport_y0;
+        int viewport_W  = get_total_viewport_w();
 
         double T = PI * rot[1] / 180.0;
         double P = PI * rot[0] / 180.0;
@@ -270,7 +271,7 @@ void camera_draw(int id, int cd, const float V[16])
                 b = -C[cd].zoom * viewport_y1;
                 t = -C[cd].zoom * viewport_y0;
 
-                camera_ortho(W, pos, T, P, l, r, b, t);
+                ortho_camera(W, pos, T, P, l, r, b, t);
 
                 glOrtho(l, r, b, t, -CAMERA_FAR, CAMERA_FAR);
             }
@@ -281,7 +282,7 @@ void camera_draw(int id, int cd, const float V[16])
                 b = -C[cd].zoom * viewport_y1 / viewport_W;
                 t = -C[cd].zoom * viewport_y0 / viewport_W;
 
-                camera_persp(W, pos, T, P, l, r, b, t);
+                persp_camera(W, pos, T, P, l, r, b, t);
 
                 glFrustum(l, r, b, t, CAMERA_NEAR, CAMERA_FAR);
             }
@@ -291,7 +292,7 @@ void camera_draw(int id, int cd, const float V[16])
             glLoadIdentity();
             glTranslatef(0, 0, -C[cd].dist);
 
-            camera_transform(id);
+            transform_camera(id);
         }
 
         /* Use the view configuration as vertex program parameters. */
@@ -301,19 +302,19 @@ void camera_draw(int id, int cd, const float V[16])
 
         /* Render all children using this camera. */
 
-        entity_traversal(id, W);
+        draw_entity_list(id, W);
     }
 }
 
 /*---------------------------------------------------------------------------*/
 
-int camera_send_create(int type)
+int send_create_camera(int type)
 {
     int cd;
 
     if ((cd = buffer_unused(C_max, camera_exists)) >= 0)
     {
-        pack_event(EVENT_CAMERA_CREATE);
+        pack_event(EVENT_CREATE_CAMERA);
         pack_index(cd);
         pack_index(type);
 
@@ -321,12 +322,12 @@ int camera_send_create(int type)
         C[cd].dist = 0.0f;
         C[cd].zoom = 1.0f;
 
-        return entity_send_create(TYPE_CAMERA, cd);
+        return send_create_entity(TYPE_CAMERA, cd);
     }
     return -1;
 }
 
-void camera_recv_create(void)
+void recv_create_camera(void)
 {
     int cd = unpack_index();
 
@@ -334,29 +335,29 @@ void camera_recv_create(void)
     C[cd].dist = 0.0f;
     C[cd].zoom = 1.0f;
 
-    entity_recv_create();
+    recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
 /* This function should be called only by the entity delete function. */
 
-void camera_delete(int cd)
+void delete_camera(int cd)
 {
     memset(C + cd, 0, sizeof (struct camera));
 }
 
 /*---------------------------------------------------------------------------*/
 
-void camera_send_dist(int cd, float d)
+void send_set_camera_distance(int cd, float d)
 {
-    pack_event(EVENT_CAMERA_DIST);
+    pack_event(EVENT_SET_CAMERA_DISTANCE);
     pack_index(cd);
 
     pack_float((C[cd].dist = d));
 }
 
-void camera_recv_dist(void)
+void recv_set_camera_distance(void)
 {
     int cd = unpack_index();
 
@@ -365,15 +366,15 @@ void camera_recv_dist(void)
 
 /*---------------------------------------------------------------------------*/
 
-void camera_send_zoom(int cd, float z)
+void send_set_camera_zoom(int cd, float z)
 {
-    pack_event(EVENT_CAMERA_ZOOM);
+    pack_event(EVENT_SET_CAMERA_ZOOM);
     pack_index(cd);
 
     pack_float((C[cd].zoom = z));
 }
 
-void camera_recv_zoom(void)
+void recv_set_camera_zoom(void)
 {
     int cd = unpack_index();
 

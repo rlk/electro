@@ -12,9 +12,10 @@
 
 /*---------------------------------------------------------------------------*/
 
-void  joystick_init(void);
-void  joystick_free(void);
-float joystick_axis(int, int);
+void  init_joystick(void);
+void  free_joystick(void);
+
+float get_joystick(int, int);
 
 /*---------------------------------------------------------------------------*/
 

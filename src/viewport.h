@@ -32,31 +32,30 @@ struct viewport
     float h;                 /* Tile height                                  */
 };
 
-void viewport_init(void);
-void viewport_draw(void);
-void viewport_fill(float, float, float);
-void viewport_tile(const char *, float, float, float, float, float, float);
-void viewport_sync(void);
+void init_viewport(void);
+void draw_viewport(void);
+void fill_viewport(float, float, float);
+void sync_viewport(void);
+
+void add_tile(const char *, float, float, float, float, float, float);
 
 /*---------------------------------------------------------------------------*/
 
-void viewport_set(float, float, float, float, float, float);
+float get_total_viewport_x(void);
+float get_total_viewport_y(void);
+float get_total_viewport_w(void);
+float get_total_viewport_h(void);
 
-float viewport_total_x(void);
-float viewport_total_y(void);
-float viewport_total_w(void);
-float viewport_total_h(void);
+float get_local_viewport_x(void);
+float get_local_viewport_y(void);
+float get_local_viewport_w(void);
+float get_local_viewport_h(void);
 
-float viewport_local_x(void);
-float viewport_local_y(void);
-float viewport_local_w(void);
-float viewport_local_h(void);
-
-float viewport_scale(void);
+float get_viewport_scale(void);
 
 /*---------------------------------------------------------------------------*/
 
-int window_w(void);
-int window_h(void);
+int get_window_w(void);
+int get_window_h(void);
 
 /*---------------------------------------------------------------------------*/

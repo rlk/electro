@@ -18,6 +18,7 @@
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
+#include "event.h"
 #include "light.h"
 
 /*---------------------------------------------------------------------------*/
@@ -35,7 +36,7 @@ static int light_exists(int ld)
 
 /*---------------------------------------------------------------------------*/
 
-int light_init(void)
+int init_light(void)
 {
     if ((L = (struct light *) calloc(8, sizeof (struct light))))
     {
@@ -45,7 +46,7 @@ int light_init(void)
     return 0;
 }
 
-void light_draw(int id, int ld, const float V[16])
+void draw_light(int id, int ld, const float V[16])
 {
     float W[16];
 
@@ -57,11 +58,11 @@ void light_draw(int id, int ld, const float V[16])
             GLenum light = GL_LIGHT0 + ld;
             GLfloat p[4];
 
-            entity_transform(id, W, V);
+            transform_entity(id, W, V);
 
             /* Determine the homogenous coordinate lightsource position. */
 
-            entity_get_position(id, p + 0, p + 1, p + 2);
+            get_entity_position(id, p + 0, p + 1, p + 2);
 
             if (L[ld].type == LIGHT_POSITIONAL)  p[3] = 1.0f;
             if (L[ld].type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
@@ -76,7 +77,7 @@ void light_draw(int id, int ld, const float V[16])
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, W);
+            draw_entity_list(id, W);
         }
         glPopMatrix();
         glPopAttrib();
@@ -85,13 +86,13 @@ void light_draw(int id, int ld, const float V[16])
 
 /*---------------------------------------------------------------------------*/
 
-int light_send_create(int type)
+int send_create_light(int type)
 {
     int ld;
 
     if ((ld = buffer_unused(L_max, light_exists)) >= 0)
     {
-        pack_event(EVENT_LIGHT_CREATE);
+        pack_event(EVENT_CREATE_LIGHT);
         pack_index(ld);
         pack_index(type);
 
@@ -101,12 +102,12 @@ int light_send_create(int type)
         L[ld].d[2] = 1.0f;
         L[ld].d[3] = 1.0f;
 
-        return entity_send_create(TYPE_LIGHT, ld);
+        return send_create_entity(TYPE_LIGHT, ld);
     }
     return -1;
 }
 
-void light_recv_create(void)
+void recv_create_light(void)
 {
     int ld = unpack_index();
 
@@ -116,14 +117,14 @@ void light_recv_create(void)
     L[ld].d[2] = 1.0f;
     L[ld].d[3] = 1.0f;
 
-    entity_recv_create();
+    recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void light_send_color(int ld, float r, float g, float b)
+void send_set_light_color(int ld, float r, float g, float b)
 {
-    pack_event(EVENT_LIGHT_COLOR);
+    pack_event(EVENT_SET_LIGHT_COLOR);
     pack_index(ld);
 
     pack_float((L[ld].d[0] = r));
@@ -131,7 +132,7 @@ void light_send_color(int ld, float r, float g, float b)
     pack_float((L[ld].d[2] = b));
 }
 
-void light_recv_color(void)
+void recv_set_light_color(void)
 {
     int ld = unpack_index();
 
@@ -144,7 +145,7 @@ void light_recv_color(void)
 
 /* This function should be called only by the entity delete function. */
 
-void light_delete(int ld)
+void delete_light(int ld)
 {
     memset(L + ld, 0, sizeof (struct light));
 }

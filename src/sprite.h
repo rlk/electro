@@ -29,22 +29,22 @@ struct sprite
 
 /*---------------------------------------------------------------------------*/
 
-int  sprite_init(void);
-void sprite_draw(int, int, const float[16]);
+int  init_sprite(void);
+void draw_sprite(int, int, const float[16]);
 
-int  sprite_send_create(const char *);
-void sprite_recv_create(void);
+int  send_create_sprite(const char *);
+void recv_create_sprite(void);
 
-void sprite_send_bounds(int, float, float, float, float);
-void sprite_recv_bounds(void);
+void send_set_sprite_bounds(int, float, float, float, float);
+void recv_set_sprite_bounds(void);
 
-void sprite_delete(int);
+void delete_sprite(int);
 
 /*---------------------------------------------------------------------------*/
 
-void sprite_get_p(int, int, int, unsigned char[4]);
-int  sprite_get_w(int);
-int  sprite_get_h(int);
+void get_sprite_p(int, int, int, unsigned char[4]);
+int  get_sprite_w(int);
+int  get_sprite_h(int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1,5 +1,5 @@
 
-image_file = "moon.png"
+image_file = "venus.png"
 
 view_l = 0
 view_r = 0
@@ -19,8 +19,8 @@ time   = 0
 -------------------------------------------------------------------------------
 
 function sprite_position(sprite, i, j)
-    E.entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
-                              view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
+    E.set_entity_position(sprite, view_l + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_b + view_h * (4 - i) / 4 + view_h / 8, 0)
 end
 
 function solved()
@@ -63,7 +63,7 @@ function move_piece(di, dj)
 
         -- Set the visibility of the 16th piece to indicate solution.
 
-        E.entity_flag(sprites[16], E.entity_flag_hidden, not solved())
+        E.set_entity_flag(sprites[16], E.entity_flag_hidden, not solved())
 
         return true
     else
@@ -91,12 +91,12 @@ end
 
 function do_start()
 
-    view_l, view_r, view_b, view_t = E.viewport_get()
+    view_l, view_r, view_b, view_t = E.get_viewport()
     view_w = view_r - view_l
     view_h = view_t - view_b
 
     camera = E.create_camera(E.camera_type_orthogonal)
-    E.entity_flag(camera, E.entity_flag_unlit, true);
+    E.set_entity_flag(camera, E.entity_flag_unlit, true);
 
     -- Initialize an array that maps rows and columns onto puzzle pieces.
 
@@ -110,11 +110,11 @@ function do_start()
     for i = 1, 16 do
         sprites[i] = E.create_sprite(image_file)
 
-        local sw, sh = E.sprite_size(sprites[i])
+        local sw, sh = E.get_sprite_size(sprites[i])
 
-        E.entity_parent(sprites[i], camera)
-        E.entity_scale (sprites[i], 0.25 * view_w / sw,
-                                    0.25 * view_h / sh, 1.0)
+        E.parent_entity(sprites[i], camera)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
+                                       0.25 * view_h / sh, 1.0)
     end
 
     -- Assign 1/16th of the image to each sprite.
@@ -127,7 +127,7 @@ function do_start()
             local y1 = (5 - i) / 4
 
             sprite_position(sprites[numbers[i][j]], i, j)
-            E.sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
+            E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
     end
 
@@ -145,8 +145,8 @@ function do_keyboard(k, s)
 
         -- If autoplay has been switched, toggle the idle function.
 
-        if k == 282 then E.enable_idle(true)  end
-        if k == 283 then E.enable_idle(false) end
+        if k == 282 then E.set_idle(true)  end
+        if k == 283 then E.set_idle(false) end
     end
     return true
 end

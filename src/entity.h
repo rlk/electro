@@ -46,60 +46,60 @@ struct entity
 
 /*---------------------------------------------------------------------------*/
 
-int   buffer_unused(int, int (*)(int));
-void *buffer_expand(void *, int *, int);
+int buffer_unused(int, int (*)(int));
 
 /*---------------------------------------------------------------------------*/
 
-const char *entity_typename(int);
+const char *get_entity_type_name(int);
 
 int  entity_exists(int);
-int  entity_todata(int);
-int  entity_istype(int, int);
 
-void entity_transform(int, float[16], const float[16]);
-void entity_traversal(int,            const float[16]);
+int  entity_data(int);
+int  entity_type(int);
 
-/*---------------------------------------------------------------------------*/
-
-int  entity_init(void);
-void entity_draw(void);
+void transform_entity(int, float[16], const float[16]);
+void draw_entity_list(int,            const float[16]);
 
 /*---------------------------------------------------------------------------*/
 
-int  entity_send_create(int, int);
-void entity_recv_create(void);
-
-void entity_send_parent(int, int);
-void entity_recv_parent(void);
-
-void entity_send_delete(int);
-void entity_recv_delete(void);
-
-int  entity_send_clone(int);
-void entity_recv_clone(void);
-
-void entity_send_flag(int, int, int);
-void entity_recv_flag(void);
+int  init_entity(void);
+void draw_entity(void);
 
 /*---------------------------------------------------------------------------*/
 
-void entity_send_position(int, float, float, float);
-void entity_send_rotation(int, float, float, float);
-void entity_send_scale   (int, float, float, float);
-void entity_send_alpha   (int, float);
+int  send_create_entity(int, int);
+void recv_create_entity(void);
 
-void entity_recv_position(void);
-void entity_recv_rotation(void);
-void entity_recv_scale   (void);
-void entity_recv_alpha   (void);
+int  send_create_clone(int);
+void recv_create_clone(void);
+
+void send_parent_entity(int, int);
+void recv_parent_entity(void);
+
+void send_delete_entity(int);
+void recv_delete_entity(void);
+
+void send_set_entity_flag(int, int, int);
+void recv_set_entity_flag(void);
 
 /*---------------------------------------------------------------------------*/
 
-void  entity_get_position(int, float *, float *, float *);
-void  entity_get_rotation(int, float *, float *, float *);
-void  entity_get_scale   (int, float *, float *, float *);
-float entity_get_alpha   (int);
+void send_set_entity_position(int, float, float, float);
+void send_set_entity_rotation(int, float, float, float);
+void send_set_entity_scale   (int, float, float, float);
+void send_set_entity_alpha   (int, float);
+
+void recv_set_entity_position(void);
+void recv_set_entity_rotation(void);
+void recv_set_entity_scale   (void);
+void recv_set_entity_alpha   (void);
+
+/*---------------------------------------------------------------------------*/
+
+void  get_entity_position(int, float *, float *, float *);
+void  get_entity_rotation(int, float *, float *, float *);
+void  get_entity_scale   (int, float *, float *, float *);
+float get_entity_alpha   (int);
 
 /*---------------------------------------------------------------------------*/
 

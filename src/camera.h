@@ -30,21 +30,21 @@ struct camera
 
 /*---------------------------------------------------------------------------*/
 
-int  camera_init(void);
-void camera_draw(int, int, const float[16]);
+int  init_camera(void);
+void draw_camera(int, int, const float[16]);
 
-int  camera_send_create(int);
-void camera_recv_create(void);
+int  send_create_camera(int);
+void recv_create_camera(void);
 
-void camera_delete(int);
+void delete_camera(int);
 
 /*---------------------------------------------------------------------------*/
 
-void camera_send_dist(int, float);
-void camera_recv_dist(void);
+void send_set_camera_distance(int, float);
+void recv_set_camera_distance(void);
 
-void camera_send_zoom(int, float);
-void camera_recv_zoom(void);
+void send_set_camera_zoom(int, float);
+void recv_set_camera_zoom(void);
 
 /*---------------------------------------------------------------------------*/
 

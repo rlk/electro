@@ -273,7 +273,7 @@ GLuint star_make_texture(void)
 
         /* Create a texture object, and release the image buffer. */
 
-        o = image_make_tex(p, w, h, 1);
+        o = make_texture(p, w, h, 1);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

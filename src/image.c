@@ -20,11 +20,12 @@
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
+#include "event.h"
 #include "image.h"
 
 /*---------------------------------------------------------------------------*/
 
-static void *image_punt(const char *message)
+static void *punt_image(const char *message)
 {
     fprintf(stderr, "Image error: %s\n", message);
     return NULL;
@@ -44,7 +45,7 @@ static int power_of_two(int n)
 
 /*---------------------------------------------------------------------------*/
 
-GLuint image_make_tex(const void *p, int w, int h, int b)
+GLuint make_texture(const void *p, int w, int h, int b)
 {
     GLenum f = GL_RGB;
     GLuint o = 0;
@@ -99,7 +100,7 @@ GLuint image_make_tex(const void *p, int w, int h, int b)
 
 /*---------------------------------------------------------------------------*/
 
-void *image_load_png(const char *filename, int *width,
+void *load_png_image(const char *filename, int *width,
                                            int *height,
                                            int *bytes)
 {
@@ -113,13 +114,13 @@ void *image_load_png(const char *filename, int *width,
     /* Initialize all PNG import data structures. */
 
     if (!(fp = fopen(filename, FMODE_RB)))
-        return image_punt("Failure opening PNG file");
+        return punt_image("Failure opening PNG file");
 
     if (!(readp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
-        return image_punt("Failure creating PNG read struct");
+        return punt_image("Failure creating PNG read struct");
         
     if (!(infop = png_create_info_struct(readp)))
-        return image_punt("Failure creating PNG info struct");
+        return punt_image("Failure creating PNG info struct");
 
     /* Enable the default PNG error handler. */
 
@@ -146,13 +147,13 @@ void *image_load_png(const char *filename, int *width,
         case PNG_COLOR_TYPE_RGB:        b = 3; break;
         case PNG_COLOR_TYPE_RGB_ALPHA:  b = 4; break;
 
-        default: return image_punt("Unsupported PNG color type");
+        default: return punt_image("Unsupported PNG color type");
         }
 
         /* Read the pixel data. */
 
         if (!(bytep = png_get_rows(readp, infop)))
-            return image_punt("Failure reading PNG pixel data");
+            return punt_image("Failure reading PNG pixel data");
 
         /* Allocate the final pixel buffer and copy pixels there. */
 
@@ -167,7 +168,7 @@ void *image_load_png(const char *filename, int *width,
         *height = h;
         *bytes  = b;
     }
-    else return image_punt("PNG read error");
+    else return punt_image("PNG read error");
 
     /* Free all resources. */
 
@@ -191,7 +192,7 @@ static int image_exists(int id)
 
 /*---------------------------------------------------------------------------*/
 
-int image_init(void)
+int init_image(void)
 {
     if ((I = (struct image *) calloc(IMAXINIT, sizeof (struct image))))
     {
@@ -207,7 +208,7 @@ int image_init(void)
     return 0;
 }
 
-void image_draw(int id)
+void draw_image(int id)
 {
     if (image_exists(id))
         glBindTexture(GL_TEXTURE_2D, I[id].texture);
@@ -221,14 +222,14 @@ void *image_load(const char *filename, int *width,
 
     if (strcmp(extension, ".png") == 0 ||
         strcmp(extension, ".PNG") == 0)
-        return image_load_png(filename, width, height, bytes);
+        return load_png_image(filename, width, height, bytes);
     else
-        return image_punt("Unsupported image format");
+        return punt_image("Unsupported image format");
 }
 
 /*---------------------------------------------------------------------------*/
 
-int image_send_create(const char *filename)
+int send_create_image(const char *filename)
 {
     int id;
 
@@ -249,16 +250,16 @@ int image_send_create(const char *filename)
 
         /* Load and pack the image. */
 
-        if ((I[id].p = image_load_png(filename, &I[id].w, &I[id].h, &I[id].b)))
+        if ((I[id].p = load_png_image(filename, &I[id].w, &I[id].h, &I[id].b)))
         {
-            pack_event(EVENT_IMAGE_CREATE);
+            pack_event(EVENT_CREATE_IMAGE);
             pack_index(id);
             pack_index(I[id].w);
             pack_index(I[id].h);
             pack_index(I[id].b);
             pack_alloc(I[id].w * I[id].h * I[id].b, I[id].p);
 
-            I[id].texture = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+            I[id].texture = make_texture(I[id].p, I[id].w, I[id].h, I[id].b);
 
             return id;
         }
@@ -266,7 +267,7 @@ int image_send_create(const char *filename)
     return -1;
 }
 
-void image_recv_create(void)
+void recv_create_image(void)
 {
     int  id = unpack_index();
 
@@ -275,13 +276,13 @@ void image_recv_create(void)
     I[id].b = unpack_index();
     I[id].p = unpack_alloc(I[id].w * I[id].h * I[id].b);
 
-    I[id].texture  = image_make_tex(I[id].p, I[id].w, I[id].h, I[id].b);
+    I[id].texture  = make_texture(I[id].p, I[id].w, I[id].h, I[id].b);
     I[id].filename = "exists";
 }
 
 /*---------------------------------------------------------------------------*/
 
-void image_delete(int id)
+void delete_image(int id)
 {
     if (image_exists(id))
     {
@@ -297,11 +298,13 @@ void image_delete(int id)
 
 /*---------------------------------------------------------------------------*/
 
-void image_get_p(int id, int x, int y, unsigned char p[4])
+void get_image_p(int id, int x, int y, unsigned char p[4])
 {
     if (image_exists(id))
     {
         unsigned char *pixels = (unsigned char *) I[id].p;
+
+        /* Return a pixel in any format as RGBA format. */
 
         switch (I[id].b)
         {
@@ -333,12 +336,12 @@ void image_get_p(int id, int x, int y, unsigned char p[4])
     }
 }
 
-int image_get_w(int id)
+int get_image_w(int id)
 {
     return image_exists(id) ? I[id].w : 128;
 }
 
-int image_get_h(int id)
+int get_image_h(int id)
 {
     return image_exists(id) ? I[id].h : 128;
 }

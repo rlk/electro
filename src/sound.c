@@ -43,7 +43,7 @@ static int sound_exists(int sd)
 
 /*---------------------------------------------------------------------------*/
 
-static int sound_mix(int sd, float *fbuf, short *sbuf, int max)
+static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
 {
     char *buf = (char *) sbuf;
 
@@ -84,7 +84,7 @@ static int sound_mix(int sd, float *fbuf, short *sbuf, int max)
     return (tot == 0);
 }
 
-static void sound_step(void *data, Uint8 *stream, int length)
+static void step_sound(void *data, Uint8 *stream, int length)
 {
     short *output = (short *) stream;
     int i, sd;
@@ -99,7 +99,7 @@ static void sound_step(void *data, Uint8 *stream, int length)
         if (S[sd].mode == SOUND_PLAY ||
             S[sd].mode == SOUND_LOOP)
         {
-            if (sound_mix(sd, buff, output, length))
+            if (mix_sound(sd, buff, output, length))
                 S[sd].mode = SOUND_STOP;
         }
 
@@ -113,9 +113,9 @@ static void sound_step(void *data, Uint8 *stream, int length)
 
 /*---------------------------------------------------------------------------*/
 
-int sound_init(void)
+int init_sound(void)
 {
-    spec.callback = sound_step;
+    spec.callback = step_sound;
     spec.channels = BUFCHAN;
     spec.samples  = BUFSIZE;
     spec.format   = BUFFORM;
@@ -138,7 +138,7 @@ int sound_init(void)
 
 /*---------------------------------------------------------------------------*/
 
-int sound_create(const char *filename)
+int create_sound(const char *filename)
 {
     int   sd;
     FILE *fp;
@@ -162,7 +162,7 @@ int sound_create(const char *filename)
     return -1;
 }
 
-void sound_delete(int sd)
+void delete_sound(int sd)
 {
     if (sound_exists(sd))
     {
@@ -174,7 +174,7 @@ void sound_delete(int sd)
 
 /*---------------------------------------------------------------------------*/
 
-static void sound_mode(int sd, int mode)
+static void set_sound_mode(int sd, int mode)
 {
     if (sound_exists(sd))
     {
@@ -187,19 +187,19 @@ static void sound_mode(int sd, int mode)
     }
 }
 
-void sound_stop(int sd)
+void stop_sound(int sd)
 {
-    sound_mode(sd, SOUND_STOP);
+    set_sound_mode(sd, SOUND_STOP);
 }
 
-void sound_play(int sd)
+void play_sound(int sd)
 {
-    sound_mode(sd, SOUND_PLAY);
+    set_sound_mode(sd, SOUND_PLAY);
 }
 
-void sound_loop(int sd)
+void loop_sound(int sd)
 {
-    sound_mode(sd, SOUND_LOOP);
+    set_sound_mode(sd, SOUND_LOOP);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -25,6 +25,7 @@
 #include "entity.h"
 #include "sound.h"
 #include "image.h"
+#include "event.h"
 #include "node.h"
 
 /*---------------------------------------------------------------------------*/
@@ -36,7 +37,7 @@ static int server_time = 0;
 
 /*---------------------------------------------------------------------------*/
 
-void enable_grab(int b)
+void set_grab(int b)
 {
     if (b && !server_grab)
     {
@@ -71,7 +72,7 @@ static Uint32 timer_callback(Uint32 interval, void *parameter)
     return interval;
 }
 
-void enable_idle(int b)
+void set_idle(int b)
 {
     static SDL_TimerID timer_id;
     static int         timer_on = 0;
@@ -94,9 +95,9 @@ void enable_idle(int b)
 
 /*---------------------------------------------------------------------------*/
 
-static void server_init(void)
+static void init_server(void)
 {
-    glViewport(0, 0, window_w(), window_h());
+    glViewport(0, 0, get_window_w(), get_window_h());
 
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_2D);
@@ -107,6 +108,9 @@ static void server_init(void)
 
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 
 static void server_draw(void)
@@ -118,21 +122,21 @@ static void server_draw(void)
     /* Draw the defined viewports to the stencil buffer. */
 
     glStencilFunc(GL_ALWAYS,   1, 0xFFFFFFFF);
-    viewport_draw();
+    draw_viewport();
 
     /* Draw the mullions into the non-viewport parts of the frame buffer. */
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFFFFFFFF);
-    viewport_fill(0.1f, 0.1f, 0.1f);
+    fill_viewport(0.1f, 0.1f, 0.1f);
 
     /* Draw the scene into the viewport parts of the frame buffer. */
 
     glStencilFunc(GL_EQUAL,    1, 0xFFFFFFFF);
-    entity_draw();
+    draw_entity();
 
     /* Sync and swap. */
 
-    mpi_barrier_all();
+    mpi_barrier();
     SDL_GL_SwapBuffers();
 }
 
@@ -165,8 +169,8 @@ static int server_loop(void)
     {
         /* Handle point grab toggle. */
 
-        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) enable_grab(0);
-        if (e.type == SDL_MOUSEBUTTONDOWN)                 enable_grab(1);
+        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) set_grab(0);
+        if (e.type == SDL_MOUSEBUTTONDOWN)                 set_grab(1);
 
         /* Dispatch the event to the scripting system. */
 
@@ -174,28 +178,30 @@ static int server_loop(void)
             switch (e.type)
             {
             case SDL_MOUSEMOTION:
-                dirty |= script_point(e.motion.xrel, e.motion.yrel);
+                dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                dirty |= script_click(e.button.button, 1);
+                dirty |= do_click_script(e.button.button, 1);
                 break;
             case SDL_MOUSEBUTTONUP:
-                dirty |= script_click(e.button.button, 0);
+                dirty |= do_click_script(e.button.button, 0);
                 break;
             case SDL_JOYBUTTONDOWN:
-                dirty |= script_joystick(e.jbutton.which, e.jbutton.button, 1);
+                dirty |= do_joystick_script(e.jbutton.which,
+                                            e.jbutton.button, 1);
                 break;
             case SDL_JOYBUTTONUP:
-                dirty |= script_joystick(e.jbutton.which, e.jbutton.button, 0);
+                dirty |= do_joystick_script(e.jbutton.which,
+                                            e.jbutton.button, 0);
                 break;
             case SDL_KEYDOWN:
-                dirty |= script_keyboard(e.key.keysym.sym, 1);
+                dirty |= do_keyboard_script(e.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
-                dirty |= script_keyboard(e.key.keysym.sym, 0);
+                dirty |= do_keyboard_script(e.key.keysym.sym, 0);
                 break;
             case SDL_USEREVENT:
-                dirty |= script_timer(e.user.code);
+                dirty |= do_timer_script(e.user.code);
                 break;
             }
 
@@ -205,7 +211,7 @@ static int server_loop(void)
         {
             pack_event(EVENT_EXIT);
             pack_event(EVENT_NULL);
-            buffer_sync();
+            sync_buffer();
 
             return 0;
         }
@@ -219,7 +225,7 @@ static int server_loop(void)
             pack_event(EVENT_DRAW);
 
         pack_event(EVENT_NULL);
-        buffer_sync();
+        sync_buffer();
 
         if (dirty)
         {
@@ -245,24 +251,24 @@ void server(int argc, char *argv[])
     galaxy_prep_small();
     */
 
-    if (script_init())
+    if (init_script())
     {
-        viewport_init();
+        init_viewport();
 
         /* Read and execute all scripts given on the command line. */
 
         for (argi = 1; argi < argc; argi++)
-            script_file(argv[argi]);
+            load_script(argv[argi]);
 
-        viewport_sync();
+        sync_viewport();
 
         /* Initialize the main server window. */
 
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK |
                      SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
         {
-            int w = window_w();
-            int h = window_h();
+            int w = get_window_w();
+            int h = get_window_h();
             int m = SDL_OPENGL;
 
             /* Set some OpenGL framebuffer attributes. */
@@ -278,13 +284,14 @@ void server(int argc, char *argv[])
             {
                 /* Initialize all subsystems. */
 
-                joystick_init();
-                buffer_init();
-                sound_init();
-                image_init();
-                server_init();
-                entity_init();
-                script_start();
+                init_joystick();
+                init_buffer();
+                init_sound();
+                init_image();
+                init_server();
+                init_entity();
+
+                do_start_script();
 
                 /* Block on SDL events.  Service them as they arrive. */
 
@@ -296,7 +303,7 @@ void server(int argc, char *argv[])
 
                 /* Ensure everyone finishes all events before exiting. */
 
-                mpi_barrier_all();
+                mpi_barrier();
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 

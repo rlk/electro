@@ -15,8 +15,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-void enable_grab(int);
-void enable_idle(int);
+void set_grab(int);
+void set_idle(int);
 
 void server_send(int);
 

@@ -33,14 +33,14 @@ struct sound
 
 /*---------------------------------------------------------------------------*/
 
-int  sound_init(void);
+int  init_sound(void);
 
-int  sound_create(const char *);
-void sound_delete(int);
+int  create_sound(const char *);
+void delete_sound(int);
 
-void sound_stop(int);
-void sound_play(int);
-void sound_loop(int);
+void stop_sound(int);
+void play_sound(int);
+void loop_sound(int);
 
 /*---------------------------------------------------------------------------*/
 

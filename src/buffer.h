@@ -12,9 +12,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-void  buffer_init(void);
-void  buffer_free(void);
-void  buffer_sync(void);
+void  init_buffer(void);
+void  free_buffer(void);
+void  sync_buffer(void);
 
 /*---------------------------------------------------------------------------*/
 

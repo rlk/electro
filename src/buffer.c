@@ -37,7 +37,7 @@ union typecast
 
 /*---------------------------------------------------------------------------*/
 
-void buffer_init(void)
+void init_buffer(void)
 {
     if ((buf = (unsigned char *) calloc(BUFINIT, 1)))
     {
@@ -46,7 +46,7 @@ void buffer_init(void)
     }
 }
 
-void buffer_free(void)
+void free_buffer(void)
 {
     free(buf);
 
@@ -57,7 +57,7 @@ void buffer_free(void)
 
 /*---------------------------------------------------------------------------*/
 
-void buffer_sync(void)
+void sync_buffer(void)
 {
     len = pos;
 

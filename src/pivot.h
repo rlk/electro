@@ -12,9 +12,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-void pivot_draw(int, int, const float[16]);
+void draw_pivot(int, int, const float[16]);
 
-int  pivot_send_create(void);
-void pivot_recv_create(void);
+int  send_create_pivot(void);
+void recv_create_pivot(void);
 
 /*---------------------------------------------------------------------------*/

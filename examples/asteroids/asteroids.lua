@@ -101,14 +101,14 @@ function player_reset()
     velocity_dx = 0
     velocity_dy = 0
 
-    E.sound_stop(sound_thrust2)
-    E.entity_flag(thrust, E.entity_flag_hidden, not thrusting)
+    E.stop_sound(sound_thrust2)
+    E.set_entity_flag(thrust, E.entity_flag_hidden, not thrusting)
 
     if ship then
-        E.entity_flag(ship, E.entity_flag_hidden, false)
+        E.set_entity_flag(ship, E.entity_flag_hidden, false)
 
-        E.entity_position(ship, 0, 0, 0)
-        E.entity_rotation(ship, 0, 0, 0)
+        E.set_entity_position(ship, 0, 0, 0)
+        E.set_entity_rotation(ship, 0, 0, 0)
     end
 end
 
@@ -116,50 +116,52 @@ end
 
 function spare_set(n)
     for i = 1, 5 do
-        E.entity_flag(spares[i], E.entity_flag_hidden, (n < i))
+        E.set_entity_flag(spares[i], E.entity_flag_hidden, (n < i))
     end
 end
 
 function digit_set(sprite, n)
-    if     n == 0 then E.sprite_bounds(sprite, 0.00, 0.25, 0.75, 1.00)
-    elseif n == 1 then E.sprite_bounds(sprite, 0.25, 0.50, 0.75, 1.00)
-    elseif n == 2 then E.sprite_bounds(sprite, 0.50, 0.75, 0.75, 1.00)
-    elseif n == 3 then E.sprite_bounds(sprite, 0.75, 1.00, 0.75, 1.00)
-    elseif n == 4 then E.sprite_bounds(sprite, 0.00, 0.25, 0.50, 0.75)
-    elseif n == 5 then E.sprite_bounds(sprite, 0.25, 0.50, 0.50, 0.75)
-    elseif n == 6 then E.sprite_bounds(sprite, 0.50, 0.75, 0.50, 0.75)
-    elseif n == 7 then E.sprite_bounds(sprite, 0.75, 1.00, 0.50, 0.75)
-    elseif n == 8 then E.sprite_bounds(sprite, 0.00, 0.25, 0.25, 0.50)
-    elseif n == 9 then E.sprite_bounds(sprite, 0.25, 0.50, 0.25, 0.50) end
+    if     n == 0 then E.set_sprite_bounds(sprite, 0.00, 0.25, 0.75, 1.00)
+    elseif n == 1 then E.set_sprite_bounds(sprite, 0.25, 0.50, 0.75, 1.00)
+    elseif n == 2 then E.set_sprite_bounds(sprite, 0.50, 0.75, 0.75, 1.00)
+    elseif n == 3 then E.set_sprite_bounds(sprite, 0.75, 1.00, 0.75, 1.00)
+    elseif n == 4 then E.set_sprite_bounds(sprite, 0.00, 0.25, 0.50, 0.75)
+    elseif n == 5 then E.set_sprite_bounds(sprite, 0.25, 0.50, 0.50, 0.75)
+    elseif n == 6 then E.set_sprite_bounds(sprite, 0.50, 0.75, 0.50, 0.75)
+    elseif n == 7 then E.set_sprite_bounds(sprite, 0.75, 1.00, 0.50, 0.75)
+    elseif n == 8 then E.set_sprite_bounds(sprite, 0.00, 0.25, 0.25, 0.50)
+    elseif n == 9 then E.set_sprite_bounds(sprite, 0.25, 0.50, 0.25, 0.50)
+    end
 end
 
 function alpha_set(sprite, c)
-    if     c == "A" then E.sprite_bounds(sprite, 0.000, 0.125, 0.75, 1.00)
-    elseif c == "B" then E.sprite_bounds(sprite, 0.125, 0.250, 0.75, 1.00)
-    elseif c == "C" then E.sprite_bounds(sprite, 0.250, 0.375, 0.75, 1.00)
-    elseif c == "D" then E.sprite_bounds(sprite, 0.375, 0.500, 0.75, 1.00)
-    elseif c == "E" then E.sprite_bounds(sprite, 0.500, 0.625, 0.75, 1.00)
-    elseif c == "F" then E.sprite_bounds(sprite, 0.625, 0.750, 0.75, 1.00)
-    elseif c == "G" then E.sprite_bounds(sprite, 0.750, 0.875, 0.75, 1.00)
-    elseif c == "H" then E.sprite_bounds(sprite, 0.875, 1.000, 0.75, 1.00)
-    elseif c == "I" then E.sprite_bounds(sprite, 0.000, 0.125, 0.50, 0.75)
-    elseif c == "J" then E.sprite_bounds(sprite, 0.125, 0.250, 0.50, 0.75)
-    elseif c == "K" then E.sprite_bounds(sprite, 0.250, 0.375, 0.50, 0.75)
-    elseif c == "L" then E.sprite_bounds(sprite, 0.375, 0.500, 0.50, 0.75)
-    elseif c == "M" then E.sprite_bounds(sprite, 0.500, 0.625, 0.50, 0.75)
-    elseif c == "N" then E.sprite_bounds(sprite, 0.625, 0.750, 0.50, 0.75)
-    elseif c == "O" then E.sprite_bounds(sprite, 0.750, 0.875, 0.50, 0.75)
-    elseif c == "P" then E.sprite_bounds(sprite, 0.875, 1.000, 0.50, 0.75)
-    elseif c == "Q" then E.sprite_bounds(sprite, 0.000, 0.125, 0.25, 0.50)
-    elseif c == "R" then E.sprite_bounds(sprite, 0.125, 0.250, 0.25, 0.50)
-    elseif c == "S" then E.sprite_bounds(sprite, 0.250, 0.375, 0.25, 0.50)
-    elseif c == "T" then E.sprite_bounds(sprite, 0.375, 0.500, 0.25, 0.50)
-    elseif c == "U" then E.sprite_bounds(sprite, 0.500, 0.625, 0.25, 0.50)
-    elseif c == "V" then E.sprite_bounds(sprite, 0.625, 0.750, 0.25, 0.50)
-    elseif c == "W" then E.sprite_bounds(sprite, 0.750, 0.875, 0.25, 0.50)
-    elseif c == "X" then E.sprite_bounds(sprite, 0.875, 1.000, 0.25, 0.50)
-    elseif c == "Y" then E.sprite_bounds(sprite, 0.000, 0.125, 0.00, 0.25)
-    elseif c == "Z" then E.sprite_bounds(sprite, 0.125, 0.250, 0.00, 0.25) end
+    if     c == "A" then E.set_sprite_bounds(sprite, 0.000, 0.125, 0.75, 1.00)
+    elseif c == "B" then E.set_sprite_bounds(sprite, 0.125, 0.250, 0.75, 1.00)
+    elseif c == "C" then E.set_sprite_bounds(sprite, 0.250, 0.375, 0.75, 1.00)
+    elseif c == "D" then E.set_sprite_bounds(sprite, 0.375, 0.500, 0.75, 1.00)
+    elseif c == "E" then E.set_sprite_bounds(sprite, 0.500, 0.625, 0.75, 1.00)
+    elseif c == "F" then E.set_sprite_bounds(sprite, 0.625, 0.750, 0.75, 1.00)
+    elseif c == "G" then E.set_sprite_bounds(sprite, 0.750, 0.875, 0.75, 1.00)
+    elseif c == "H" then E.set_sprite_bounds(sprite, 0.875, 1.000, 0.75, 1.00)
+    elseif c == "I" then E.set_sprite_bounds(sprite, 0.000, 0.125, 0.50, 0.75)
+    elseif c == "J" then E.set_sprite_bounds(sprite, 0.125, 0.250, 0.50, 0.75)
+    elseif c == "K" then E.set_sprite_bounds(sprite, 0.250, 0.375, 0.50, 0.75)
+    elseif c == "L" then E.set_sprite_bounds(sprite, 0.375, 0.500, 0.50, 0.75)
+    elseif c == "M" then E.set_sprite_bounds(sprite, 0.500, 0.625, 0.50, 0.75)
+    elseif c == "N" then E.set_sprite_bounds(sprite, 0.625, 0.750, 0.50, 0.75)
+    elseif c == "O" then E.set_sprite_bounds(sprite, 0.750, 0.875, 0.50, 0.75)
+    elseif c == "P" then E.set_sprite_bounds(sprite, 0.875, 1.000, 0.50, 0.75)
+    elseif c == "Q" then E.set_sprite_bounds(sprite, 0.000, 0.125, 0.25, 0.50)
+    elseif c == "R" then E.set_sprite_bounds(sprite, 0.125, 0.250, 0.25, 0.50)
+    elseif c == "S" then E.set_sprite_bounds(sprite, 0.250, 0.375, 0.25, 0.50)
+    elseif c == "T" then E.set_sprite_bounds(sprite, 0.375, 0.500, 0.25, 0.50)
+    elseif c == "U" then E.set_sprite_bounds(sprite, 0.500, 0.625, 0.25, 0.50)
+    elseif c == "V" then E.set_sprite_bounds(sprite, 0.625, 0.750, 0.25, 0.50)
+    elseif c == "W" then E.set_sprite_bounds(sprite, 0.750, 0.875, 0.25, 0.50)
+    elseif c == "X" then E.set_sprite_bounds(sprite, 0.875, 1.000, 0.25, 0.50)
+    elseif c == "Y" then E.set_sprite_bounds(sprite, 0.000, 0.125, 0.00, 0.25)
+    elseif c == "Z" then E.set_sprite_bounds(sprite, 0.125, 0.250, 0.00, 0.25)
+    end
 end
 
 function init_set()
@@ -202,10 +204,10 @@ function score_init()
     for i = 0, 4 do
         curr_score_digit[i] = E.create_sprite("digit.png")
 
-        E.entity_scale   (curr_score_digit[i], scale, scale, scale);
-        E.entity_parent  (curr_score_digit[i], camera)
-        E.entity_position(curr_score_digit[i], curr_r - dx * (i + 1),
-                                             global_t - dy, 0)
+        E.parent_entity      (curr_score_digit[i], camera)
+        E.set_entity_scale   (curr_score_digit[i], scale, scale, scale);
+        E.set_entity_position(curr_score_digit[i], curr_r - dx * (i + 1),
+                                                 global_t - dy, 0)
     end
 
     -- Create the high score display.
@@ -213,10 +215,10 @@ function score_init()
     for i = 0, 4 do
         high_score_digit[i] = E.create_sprite("digit.png")
 
-        E.entity_scale   (high_score_digit[i], scale, scale, scale);
-        E.entity_parent  (high_score_digit[i], camera)
-        E.entity_position(high_score_digit[i], high_r - dx * (i + 1),
-                                             global_t - dy, 0)
+        E.parent_entity      (high_score_digit[i], camera)
+        E.set_entity_scale   (high_score_digit[i], scale, scale, scale);
+        E.set_entity_position(high_score_digit[i], high_r - dx * (i + 1),
+                                                 global_t - dy, 0)
     end
 
     curr_score_set(curr_score)
@@ -239,7 +241,7 @@ function add_asteroid(entity, size)
     -- If an entity is given, use that location, else use the random velocity.
 
     if entity then
-        x, y, z = E.entity_get_position(entity)
+        x, y, z = E.get_entity_position(entity)
     else
         x = dx * global_h * 0.4
         y = dy * global_h * 0.4
@@ -248,7 +250,7 @@ function add_asteroid(entity, size)
 
     -- Clone a new asteroid object and define its motion parameters.
 
-    asteroid.entity = E.entity_clone(global_rock)
+    asteroid.entity = E.create_clone(global_rock)
     asteroid.size   = size
     asteroid.dx     = dx * speed
     asteroid.dy     = dy * speed
@@ -257,16 +259,16 @@ function add_asteroid(entity, size)
 
     -- Add the new asteroid to the scene.
 
-    E.entity_scale   (asteroid.entity, scale, scale, scale)
-    E.entity_parent  (asteroid.entity, light2)
-    E.entity_position(asteroid.entity, x, y, 0)
+    E.parent_entity      (asteroid.entity, light2)
+    E.set_entity_scale   (asteroid.entity, scale, scale, scale)
+    E.set_entity_position(asteroid.entity, x, y, 0)
 
     table.insert(asteroids, asteroid)
     undone = undone + 1
 end
 
 function del_asteroid(id, asteroid)
-    E.entity_delete(asteroid.entity)
+    E.delete_entity(asteroid.entity)
     table.remove(asteroids, id)
     undone = undone - 1
 
@@ -285,12 +287,12 @@ function add_bullet()
 
     -- Clone a new bullet sprite.
 
-    bullet.entity = E.entity_clone(global_bullet)
+    bullet.entity = E.create_clone(global_bullet)
 
     -- Compute the bullet's position and velocity from the ship's location.
 
-    local pos_x, pos_y, pos_z = E.entity_get_position(ship)
-    local rot_x, rot_y, rot_z = E.entity_get_rotation(ship)
+    local pos_x, pos_y, pos_z = E.get_entity_position(ship)
+    local rot_x, rot_y, rot_z = E.get_entity_rotation(ship)
 
     local a = -math.rad(rot_z)
     local x =  math.sin(a)
@@ -301,9 +303,9 @@ function add_bullet()
 
     -- Add the new sprite to the scene.
 
-    E.entity_scale   (bullet.entity, scale, scale, scale)
-    E.entity_parent  (bullet.entity, below)
-    E.entity_position(bullet.entity, pos_x + x, pos_y + y, pos_z)
+    E.parent_entity      (bullet.entity, below)
+    E.set_entity_scale   (bullet.entity, scale, scale, scale)
+    E.set_entity_position(bullet.entity, pos_x + x, pos_y + y, pos_z)
 
     table.insert(bullets, bullet)
 
@@ -314,11 +316,11 @@ function add_bullet()
         curr_score_set(curr_score)
     end
 
-    if sound then E.sound_play(sound_bullet) end
+    if sound then E.play_sound(sound_bullet) end
 end
 
 function del_bullet(id, bullet)
-    E.entity_delete(bullet.entity)
+    E.delete_entity(bullet.entity)
     table.remove(bullets, id)
 end
 
@@ -330,26 +332,26 @@ function add_explosion(entity, source, size)
 
     -- Clone a new explosion sprite.
 
-    explosion.entity = E.entity_clone(source)
+    explosion.entity = E.create_clone(source)
 
     -- Add the new sprite to the scene.
 
-    local x, y, z = E.entity_get_position(entity)
+    local x, y, z = E.get_entity_position(entity)
 
-    E.entity_scale   (explosion.entity, scale, scale, scale)
-    E.entity_parent  (explosion.entity, above)
-    E.entity_position(explosion.entity, x, y, 0)
+    E.parent_entity      (explosion.entity, above)
+    E.set_entity_scale   (explosion.entity, scale, scale, scale)
+    E.set_entity_position(explosion.entity, x, y, 0)
 
     table.insert(explosions, explosion)
 
-    if size == 1 then E.sound_play(sound_rock1_explosion) end
-    if size == 2 then E.sound_play(sound_rock2_explosion) end
-    if size == 3 then E.sound_play(sound_rock3_explosion) end
-    if size == 5 then E.sound_play(sound_ship_explosion) end
+    if size == 1 then E.play_sound(sound_rock1_explosion) end
+    if size == 2 then E.play_sound(sound_rock2_explosion) end
+    if size == 3 then E.play_sound(sound_rock3_explosion) end
+    if size == 5 then E.play_sound(sound_ship_explosion) end
 end
 
 function del_explosion(id, explosion)
-    E.entity_delete(explosion.entity)
+    E.delete_entity(explosion.entity)
     table.remove(explosions, id)
 end
 
@@ -361,21 +363,21 @@ function add_shockwave(entity, source, size)
 
     -- Clone a new shockwave sprite.
 
-    shockwave.entity = E.entity_clone(source)
+    shockwave.entity = E.create_clone(source)
 
     -- Add the new sprite to the scene.
 
-    local x, y, z = E.entity_get_position(entity)
+    local x, y, z = E.get_entity_position(entity)
 
-    E.entity_scale   (shockwave.entity, scale, scale, scale)
-    E.entity_parent  (shockwave.entity, below)
-    E.entity_position(shockwave.entity, x, y, 0)
+    E.parent_entity      (shockwave.entity, below)
+    E.set_entity_scale   (shockwave.entity, scale, scale, scale)
+    E.set_entity_position(shockwave.entity, x, y, 0)
 
     table.insert(shockwaves, shockwave)
 end
 
 function del_shockwave(id, shockwave)
-    E.entity_delete(shockwave.entity)
+    E.delete_entity(shockwave.entity)
     table.remove(shockwaves, id)
 end
 
@@ -396,28 +398,28 @@ function add_score(entity, value)
         ships = ships + 1
         spare_set(ships)
         free_score = free_score + 1000
-        E.sound_play(sound_free)
+        E.play_sound(sound_free)
     end
 
     -- Select the correct sprite for the given value.
 
-    if value ==  5 then score.entity = E.entity_clone(global_score05) end
-    if value == 10 then score.entity = E.entity_clone(global_score10) end
-    if value == 25 then score.entity = E.entity_clone(global_score25) end
+    if value ==  5 then score.entity = E.create_clone(global_score05) end
+    if value == 10 then score.entity = E.create_clone(global_score10) end
+    if value == 25 then score.entity = E.create_clone(global_score25) end
 
     -- Add the new sprite to the scene.
 
-    local x, y, z = E.entity_get_position(entity)
+    local x, y, z = E.get_entity_position(entity)
 
-    E.entity_scale   (score.entity, scale, scale, scale)
-    E.entity_parent  (score.entity, above)
-    E.entity_position(score.entity, x, y, 0)
+    E.parent_entity      (score.entity, above)
+    E.set_entity_scale   (score.entity, scale, scale, scale)
+    E.set_entity_position(score.entity, x, y, 0)
 
     table.insert(scores, score)
 end
 
 function del_score(id, score)
-    E.entity_delete(score.entity)
+    E.delete_entity(score.entity)
     table.remove(scores, id)
 end
 
@@ -463,8 +465,8 @@ function asteroid_step(id, asteroid)
 
     -- Find the asteroid's new position and orientation.
     
-    local pos_x, pos_y, pos_z = E.entity_get_position(entity)
-    local rot_x, rot_y, rot_z = E.entity_get_rotation(entity)
+    local pos_x, pos_y, pos_z = E.get_entity_position(entity)
+    local rot_x, rot_y, rot_z = E.get_entity_rotation(entity)
 
     pos_x = pos_x + dx * global_dt
     pos_y = pos_y + dy * global_dt
@@ -487,13 +489,13 @@ function asteroid_step(id, asteroid)
 
     -- Apply the new position and orientation.
 
-    E.entity_position(entity, pos_x, pos_y, pos_z)
-    E.entity_rotation(entity, rot_x, rot_y, rot_z)
+    E.set_entity_position(entity, pos_x, pos_y, pos_z)
+    E.set_entity_rotation(entity, rot_x, rot_y, rot_z)
 
     -- Check this asteroid against all bullets.
 
     for jd, bullet in pairs(bullets) do
-        local pos_X, pos_Y, pos_Z = E.entity_get_position(bullet.entity)
+        local pos_X, pos_Y, pos_Z = E.get_entity_position(bullet.entity)
 
         local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
                                (pos_Y - pos_y) * (pos_Y - pos_y));
@@ -506,7 +508,7 @@ function asteroid_step(id, asteroid)
     -- Check this asteroid against the player.
 
     if state == "play" and ship then
-        local pos_X, pos_Y, pos_Z = E.entity_get_position(ship)
+        local pos_X, pos_Y, pos_Z = E.get_entity_position(ship)
 
         local dist = math.sqrt((pos_X - pos_x) * (pos_X - pos_x) +
                                (pos_Y - pos_y) * (pos_Y - pos_y));
@@ -515,11 +517,11 @@ function asteroid_step(id, asteroid)
             add_explosion(ship, global_ship_explosion, 5)
             add_shockwave(ship, global_ship_shockwave, 5)
 
-            E.entity_flag(ship, E.entity_flag_hidden, true)
+            E.set_entity_flag(ship, E.entity_flag_hidden, true)
 
             velocity_dx = 0
             velocity_dy = 0
-            E.sound_stop(sound_thrust2)
+            E.stop_sound(sound_thrust2)
             goto_state("dead")
         end
     end
@@ -533,7 +535,7 @@ function bullet_step(id, bullet)
 
     -- Find the bullet's new position.
     
-    local pos_x, pos_y, pos_z = E.entity_get_position(entity)
+    local pos_x, pos_y, pos_z = E.get_entity_position(entity)
 
     pos_x = pos_x + dx * global_dt
     pos_y = pos_y + dy * global_dt
@@ -552,7 +554,7 @@ function bullet_step(id, bullet)
     -- Apply the new position and orientation.
 
     else
-        E.entity_position(entity, pos_x, pos_y, pos_z)
+        E.set_entity_position(entity, pos_x, pos_y, pos_z)
     end
 end
 
@@ -561,11 +563,11 @@ function explosion_step(id, explosion)
 
     -- Fade explosion sprites over 1 second.
 
-    E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt)
+    E.set_entity_alpha(entity, E.get_entity_alpha(entity) - global_dt)
 
     -- If this sprite is transparent, delete it.
 
-    if E.entity_get_alpha(entity) < 0 then
+    if E.get_entity_alpha(entity) < 0 then
         del_explosion(id, explosion)
     end
 end
@@ -573,17 +575,17 @@ end
 function shockwave_step(id, shockwave)
     local entity = shockwave.entity
 
-    local scl_x, scl_y, scl_z = E.entity_get_scale(entity);
+    local scl_x, scl_y, scl_z = E.get_entity_scale(entity);
 
     -- Fade and scale shockwave sprites oven 1 second.
 
-    E.entity_scale(entity, scl_x + global_dt * 0.05,
-                   scl_y + global_dt * 0.05, scl_z)
-    E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt)
+    E.set_entity_scale(entity, scl_x + global_dt * 0.05,
+                               scl_y + global_dt * 0.05, scl_z)
+    E.set_entity_alpha(entity, E.get_entity_alpha(entity) - global_dt)
 
     -- If this sprite is transparent, delete it.
 
-    if E.entity_get_alpha(entity) < 0 then
+    if E.get_entity_alpha(entity) < 0 then
         del_shockwave(id, shockwave)
     end
 end
@@ -593,11 +595,11 @@ function score_step(id, score)
 
     -- Fade score sprites over 2 seconds.
 
-    E.entity_alpha(entity, E.entity_get_alpha(entity) - global_dt / 3)
+    E.set_entity_alpha(entity, E.get_entity_alpha(entity) - global_dt / 3)
     
     -- If this sprite is transparent, delete it.
 
-    if E.entity_get_alpha(entity) < 0 then
+    if E.get_entity_alpha(entity) < 0 then
         del_score(id, score)
     end
 end
@@ -636,8 +638,8 @@ end
 
 function player_step()
 
-    local pos_x, pos_y, pos_z = E.entity_get_position(ship)
-    local rot_x, rot_y, rot_z = E.entity_get_rotation(ship)
+    local pos_x, pos_y, pos_z = E.get_entity_position(ship)
+    local rot_x, rot_y, rot_z = E.get_entity_rotation(ship)
 
     -- Handle thrust
 
@@ -650,10 +652,10 @@ function player_step()
 
     -- Handle rotation change
 
-    if E.joystick_axis(0, 0) < -0.5 then
+    if E.get_joystick(0, 0) < -0.5 then
         rot_z = rot_z + global_dt * 180
     end
-    if E.joystick_axis(0, 0) >  0.5 then
+    if E.get_joystick(0, 0) >  0.5 then
         rot_z = rot_z - global_dt * 180
     end
 
@@ -682,8 +684,8 @@ function player_step()
 
     -- Apply the new position and rotation.
 
-    E.entity_position(ship, pos_x, pos_y, pos_z)
-    E.entity_rotation(ship, rot_x, rot_y, rot_z)
+    E.set_entity_position(ship, pos_x, pos_y, pos_z)
+    E.set_entity_rotation(ship, rot_x, rot_y, rot_z)
 end
 
 -------------------------------------------------------------------------------
@@ -696,7 +698,7 @@ function enter_state(s)
         ships      = 2
         level      = 1
         spare_set(ships)
-        E.entity_flag(overlay_title, E.entity_flag_hidden, false)
+        E.set_entity_flag(overlay_title, E.entity_flag_hidden, false)
 
     elseif s == "ready" then
 
@@ -706,48 +708,48 @@ function enter_state(s)
         player_reset()
         curr_score_set(curr_score)
 
-        E.entity_flag(overlay_ready, E.entity_flag_hidden, false)
-        E.entity_flag(overlay_level, E.entity_flag_hidden, false)
+        E.set_entity_flag(overlay_ready, E.entity_flag_hidden, false)
+        E.set_entity_flag(overlay_level, E.entity_flag_hidden, false)
 
     elseif s == "play"  then
 
     elseif s == "dead"  then
 
     elseif s == "clear" then
-        E.entity_flag(overlay_clear, E.entity_flag_hidden, false)
+        E.set_entity_flag(overlay_clear, E.entity_flag_hidden, false)
 
     elseif s == "high" then
         init_flag = true
         high_score = curr_score
         high_score_set(high_score)
         index = 1
-        E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
-        E.entity_flag(overlay_high, E.entity_flag_hidden,  false)
+        E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+        E.set_entity_flag(overlay_high, E.entity_flag_hidden,  false)
 
     elseif s == "over"  then
-        E.entity_flag(overlay_over,  E.entity_flag_hidden, false)
+        E.set_entity_flag(overlay_over,  E.entity_flag_hidden, false)
 
     end
 end
 
 function leave_state(s)
     if     s == "title" then
-        E.entity_flag(overlay_title, E.entity_flag_hidden, true)
+        E.set_entity_flag(overlay_title, E.entity_flag_hidden, true)
 
     elseif s == "ready" then
-        E.entity_flag(overlay_ready, E.entity_flag_hidden, true)
-        E.entity_flag(overlay_level, E.entity_flag_hidden, true)
+        E.set_entity_flag(overlay_ready, E.entity_flag_hidden, true)
+        E.set_entity_flag(overlay_level, E.entity_flag_hidden, true)
 
     elseif s == "play"  then
 
     elseif s == "dead"  then
 
     elseif s == "clear" then
-        E.entity_flag(overlay_clear, E.entity_flag_hidden, true)
+        E.set_entity_flag(overlay_clear, E.entity_flag_hidden, true)
 
     elseif s == "high" then
-        E.entity_flag(overlay_high,  E.entity_flag_hidden, true)
-        E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+        E.set_entity_flag(overlay_high,  E.entity_flag_hidden, true)
+        E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
 
         local fout = io.open(high_score_file, "w")
         if fout then
@@ -756,7 +758,7 @@ function leave_state(s)
         end
 
     elseif s == "over"  then
-        E.entity_flag(overlay_over,  E.entity_flag_hidden, true)
+        E.set_entity_flag(overlay_over,  E.entity_flag_hidden, true)
     end
 end
 
@@ -783,9 +785,9 @@ function timer_state(s)
         local byte  = string.byte(init[index])
         local scale = 0.01 + 0.001 * math.sin(state_time * 8)
 
-        E.entity_scale(overlay_init[index], scale / 2, scale, scale)
+        E.set_entity_scale(overlay_init[index], scale / 2, scale, scale)
 
-        if      E.joystick_axis(0, 0) >  0.5 then
+        if      E.get_joystick(0, 0) >  0.5 then
             if  init_flag then
                 init_flag = false
 
@@ -797,7 +799,7 @@ function timer_state(s)
                 alpha_set(overlay_init[index], init[index])
             end
 
-        elseif  E.joystick_axis(0, 0) < -0.5 then
+        elseif  E.get_joystick(0, 0) < -0.5 then
             if init_flag then
                 init_flag = false
 
@@ -830,14 +832,14 @@ end
 
 function new_global_object(filename)
     object = E.create_object(filename)
-    E.entity_flag(object, E.entity_flag_hidden, true)
+    E.set_entity_flag(object, E.entity_flag_hidden, true)
 
     return object
 end
 
 function new_global_sprite(filename)
     sprite = E.create_sprite(filename)
-    E.entity_flag(sprite, E.entity_flag_hidden, true)
+    E.set_entity_flag(sprite, E.entity_flag_hidden, true)
 
     return sprite
 end
@@ -849,24 +851,24 @@ function do_start()
     math.randomseed(os.time())
 
     if sound then
-        sound_bullet          = E.sound_load("bullet.ogg")
-        sound_free            = E.sound_load("free.ogg")
-        sound_rock1_explosion = E.sound_load("rock1_explosion.ogg")
-        sound_rock2_explosion = E.sound_load("rock2_explosion.ogg")
-        sound_rock3_explosion = E.sound_load("rock3_explosion.ogg")
-        sound_ship_explosion  = E.sound_load("ship_explosion.ogg")
-        sound_thrust1         = E.sound_load("thrust1.ogg")
-        sound_thrust2         = E.sound_load("thrust2.ogg")
-        sound_thrust3         = E.sound_load("thrust3.ogg")
+        sound_bullet          = E.load_sound("bullet.ogg")
+        sound_free            = E.load_sound("free.ogg")
+        sound_rock1_explosion = E.load_sound("rock1_explosion.ogg")
+        sound_rock2_explosion = E.load_sound("rock2_explosion.ogg")
+        sound_rock3_explosion = E.load_sound("rock3_explosion.ogg")
+        sound_ship_explosion  = E.load_sound("ship_explosion.ogg")
+        sound_thrust1         = E.load_sound("thrust1.ogg")
+        sound_thrust2         = E.load_sound("thrust2.ogg")
+        sound_thrust3         = E.load_sound("thrust3.ogg")
     end
     if music then
-        music = E.sound_load("inter.ogg")
-        E.sound_loop(music)
+        music = E.load_sound("inter.ogg")
+        E.loop_sound(music)
     end
 
     -- Establish the boundries of the viewport.
 
-    global_l, global_r, global_b, global_t = E.viewport_get()
+    global_l, global_r, global_b, global_t = E.get_viewport()
 
     global_z = 64 / (global_r - global_l)
     
@@ -900,14 +902,14 @@ function do_start()
     light2 = E.create_light(E.light_type_positional)
     above  = E.create_pivot()
     below  = E.create_pivot()
-    ship   = E.entity_clone(global_ship)
+    ship   = E.create_clone(global_ship)
     thrust = E.create_sprite("thrust.png")
     galaxy = E.create_galaxy("../galaxy_small.gal")
 
     for i = 1, 5 do
-        spares[i] = E.entity_clone(global_ship)
-        E.entity_parent  (spares[i], light2)
-        E.entity_position(spares[i], global_r - 3 * i, global_b + 3, 0)
+        spares[i] = E.create_clone(global_ship)
+        E.parent_entity      (spares[i], light2)
+        E.set_entity_position(spares[i], global_r - 3 * i, global_b + 3, 0)
     end
 
     overlay_title = E.create_sprite("title.png")
@@ -923,47 +925,47 @@ function do_start()
 
     -- Initialize the hierarchy
 
-    E.entity_parent(above,  camera)
-    E.entity_parent(below,  camera)
-    E.entity_parent(light1, camera)
-    E.entity_parent(light2, light1)
-    E.entity_parent(ship,   light2)
-    E.entity_parent(thrust, ship)
-    E.entity_parent(galaxy, space)
+    E.parent_entity(above,  camera)
+    E.parent_entity(below,  camera)
+    E.parent_entity(light1, camera)
+    E.parent_entity(light2, light1)
+    E.parent_entity(ship,   light2)
+    E.parent_entity(thrust, ship)
+    E.parent_entity(galaxy, space)
 
-    E.entity_scale(thrust, 0.05, 0.05, 0.05)
-    E.entity_flag(thrust, E.entity_flag_unlit,  true)
-    E.entity_flag(thrust, E.entity_flag_hidden, true)
+    E.set_entity_scale(thrust, 0.05, 0.05, 0.05)
+    E.set_entity_flag(thrust, E.entity_flag_unlit,  true)
+    E.set_entity_flag(thrust, E.entity_flag_hidden, true)
 
-    E.entity_parent(overlay_title,   below)
-    E.entity_parent(overlay_level,   below)
-    E.entity_parent(overlay_ready,   below)
-    E.entity_parent(overlay_clear,   below)
-    E.entity_parent(overlay_high,    below)
-    E.entity_parent(overlay_over,    below)
-    E.entity_parent(overlay_init[1], below)
-    E.entity_parent(overlay_init[2], below)
-    E.entity_parent(overlay_init[3], below)
+    E.parent_entity(overlay_title,   below)
+    E.parent_entity(overlay_level,   below)
+    E.parent_entity(overlay_ready,   below)
+    E.parent_entity(overlay_clear,   below)
+    E.parent_entity(overlay_high,    below)
+    E.parent_entity(overlay_over,    below)
+    E.parent_entity(overlay_init[1], below)
+    E.parent_entity(overlay_init[2], below)
+    E.parent_entity(overlay_init[3], below)
 
-    E.entity_scale(overlay_title,   0.07, 0.07, 0.07)
-    E.entity_scale(overlay_level,   0.02, 0.02, 0.02)
-    E.entity_scale(overlay_ready,   0.07, 0.07, 0.07)
-    E.entity_scale(overlay_clear,   0.07, 0.07, 0.07)
-    E.entity_scale(overlay_high,    0.07, 0.07, 0.07)
-    E.entity_scale(overlay_over,    0.07, 0.07, 0.07)
-    E.entity_scale(overlay_init[1], 0.004, 0.008, 0.008)
-    E.entity_scale(overlay_init[2], 0.004, 0.008, 0.008)
-    E.entity_scale(overlay_init[3], 0.004, 0.008, 0.008)
+    E.set_entity_scale(overlay_title,   0.07, 0.07, 0.07)
+    E.set_entity_scale(overlay_level,   0.02, 0.02, 0.02)
+    E.set_entity_scale(overlay_ready,   0.07, 0.07, 0.07)
+    E.set_entity_scale(overlay_clear,   0.07, 0.07, 0.07)
+    E.set_entity_scale(overlay_high,    0.07, 0.07, 0.07)
+    E.set_entity_scale(overlay_over,    0.07, 0.07, 0.07)
+    E.set_entity_scale(overlay_init[1], 0.004, 0.008, 0.008)
+    E.set_entity_scale(overlay_init[2], 0.004, 0.008, 0.008)
+    E.set_entity_scale(overlay_init[3], 0.004, 0.008, 0.008)
 
-    E.entity_flag(overlay_ready, E.entity_flag_hidden, true)
-    E.entity_flag(overlay_level, E.entity_flag_hidden, true)
-    E.entity_flag(overlay_clear, E.entity_flag_hidden, true)
-    E.entity_flag(overlay_high,  E.entity_flag_hidden, true)
-    E.entity_flag(overlay_over,  E.entity_flag_hidden, true)
+    E.set_entity_flag(overlay_ready, E.entity_flag_hidden, true)
+    E.set_entity_flag(overlay_level, E.entity_flag_hidden, true)
+    E.set_entity_flag(overlay_clear, E.entity_flag_hidden, true)
+    E.set_entity_flag(overlay_high,  E.entity_flag_hidden, true)
+    E.set_entity_flag(overlay_over,  E.entity_flag_hidden, true)
 
-    E.entity_position(overlay_init[1], global_l + 16.0, global_t - 2.5, 0)
-    E.entity_position(overlay_init[2], global_l + 19.0, global_t - 2.5, 0)
-    E.entity_position(overlay_init[3], global_l + 22.0, global_t - 2.5, 0)
+    E.set_entity_position(overlay_init[1], global_l + 16.0, global_t - 2.5, 0)
+    E.set_entity_position(overlay_init[2], global_l + 19.0, global_t - 2.5, 0)
+    E.set_entity_position(overlay_init[3], global_l + 22.0, global_t - 2.5, 0)
     
     -- Read the current high score
 
@@ -997,21 +999,21 @@ function do_start()
 
     -- Initialize the view
 
-    E.entity_position(light1,  10, 0, 10)
-    E.entity_position(light2, -10, 0, 10)
+    E.set_entity_position(light1,  10, 0, 10)
+    E.set_entity_position(light2, -10, 0, 10)
 
-    E.light_color(light1, 1.0, 0.8, 0.5)
-    E.light_color(light2, 0.5, 0.8, 1.0)
+    E.set_light_color(light1, 1.0, 0.8, 0.5)
+    E.set_light_color(light2, 0.5, 0.8, 1.0)
 
-    E.camera_zoom(camera, global_z)
+    E.set_camera_zoom(camera, global_z)
 
-    E.galaxy_magn(galaxy, 500.0)
-    E.camera_dist(space,  100.0)
-    E.camera_zoom(space,    0.5)
-    E.entity_position(space, 0, 15.5, 9200)
+    E.set_galaxy_magnitude(galaxy, 500.0)
+    E.set_camera_distance(space,  100.0)
+    E.set_camera_zoom(space,    0.5)
+    E.set_entity_position(space, 0, 15.5, 9200)
 
     goto_state("title")
-    E.enable_idle(true)
+    E.set_idle(true)
 
     return true
 end
@@ -1025,8 +1027,8 @@ function do_timer(dt)
     state_time = state_time + dt
     total_time = total_time + dt
 
-    E.camera_dist(space, 100 * math.sin(total_time / 10))
-    E.entity_rotation(space, 0, total_time, 0)
+    E.set_camera_distance(space, 100 * math.sin(total_time / 10))
+    E.set_entity_rotation(space, 0, total_time, 0)
 
     timer_state(state)
 
@@ -1037,7 +1039,7 @@ function do_joystick(n, b, s)
     
     if b == button_thrust then
         thrusting = s
-        E.entity_flag(thrust, E.entity_flag_hidden, not thrusting)
+        E.set_entity_flag(thrust, E.entity_flag_hidden, not thrusting)
 
         if state == "ready" then
             goto_state("play")
@@ -1045,16 +1047,16 @@ function do_joystick(n, b, s)
 
         if state == "play" then
             if thrusting then
-                E.sound_play(sound_thrust1)
-                E.sound_loop(sound_thrust2)
+                E.play_sound(sound_thrust1)
+                E.loop_sound(sound_thrust2)
             else
-                E.sound_stop(sound_thrust2)
-                E.sound_play(sound_thrust3)
+                E.stop_sound(sound_thrust2)
+                E.play_sound(sound_thrust3)
             end
         end
 
         if state == "high" and index > 1 then
-            E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+            E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
             index = index - 1
         end
     end
@@ -1093,7 +1095,7 @@ function do_joystick(n, b, s)
             end
 
         elseif state == "high" then
-            E.entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
+            E.set_entity_scale(overlay_init[index], 0.004, 0.008, 0.008)
             if index < 3 then
                 index = index + 1
             else

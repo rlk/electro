@@ -23,15 +23,15 @@ struct light
 
 /*---------------------------------------------------------------------------*/
 
-int  light_init(void);
-void light_draw(int, int, const float[16]);
+int  init_light(void);
+void draw_light(int, int, const float[16]);
 
-int  light_send_create(int);
-void light_recv_create(void);
+int  send_create_light(int);
+void recv_create_light(void);
 
-void light_send_color(int, float, float, float);
-void light_recv_color(void);
+void send_set_light_color(int, float, float, float);
+void recv_set_light_color(void);
 
-void light_delete(int);
+void delete_light(int);
 
 /*---------------------------------------------------------------------------*/

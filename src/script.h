@@ -15,17 +15,17 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  script_init(void);
-void script_free(void);
+int  init_script(void);
+void free_script(void);
+void load_script(const char *);
 
-void script_file(const char *);
+int  do_start_script(void);
 
-int  script_start(void);
-int  script_click(int, int);
-int  script_point(int, int);
-int  script_timer(int);
-int  script_keyboard(int, int);
-int  script_joystick(int, int, int);
+int  do_click_script(int, int);
+int  do_point_script(int, int);
+int  do_timer_script(int);
+int  do_keyboard_script(int, int);
+int  do_joystick_script(int, int, int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -17,14 +17,15 @@
 #include <sys/stat.h>
 
 #include "opengl.h"
+#include "star.h"
+#include "node.h"
 #include "utility.h"
 #include "viewport.h"
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
+#include "event.h"
 #include "galaxy.h"
-#include "star.h"
-#include "node.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -47,7 +48,7 @@ static int galaxy_exists(int gd)
 
 /*---------------------------------------------------------------------------*/
 
-int galaxy_init(void)
+int init_galaxy(void)
 {
     if ((G = (struct galaxy *) calloc(GMAXINIT, sizeof (struct galaxy))))
     {
@@ -62,7 +63,7 @@ int galaxy_init(void)
     return 0;
 }
 
-void galaxy_draw(int id, int gd, const float V[16])
+void draw_galaxy(int id, int gd, const float V[16])
 {
     GLsizei stride = sizeof (struct star);
 
@@ -78,7 +79,7 @@ void galaxy_draw(int id, int gd, const float V[16])
         {
             /* Apply the local coordinate system transformation. */
 
-            entity_transform(id, W, V);
+            transform_entity(id, W, V);
 
             glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -101,7 +102,7 @@ void galaxy_draw(int id, int gd, const float V[16])
 
                 glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
                 glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                           1, G[gd].magn, 0, 0, 0);
+                                           1, G[gd].magnitude, 0, 0, 0);
                 glBlendFunc(GL_ONE, GL_ONE);
 
                 /* Enable the star arrays. */
@@ -123,7 +124,7 @@ void galaxy_draw(int id, int gd, const float V[16])
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, W);
+            draw_entity_list(id, W);
         }
         glPopMatrix();
     }
@@ -142,7 +143,7 @@ struct head
     float bound[6];
 };
 
-int galaxy_parse(const char *filename, struct galaxy *g)
+int parse_galaxy(const char *filename, struct galaxy *g)
 {
     FILE *fp;
 
@@ -154,15 +155,15 @@ int galaxy_parse(const char *filename, struct galaxy *g)
         {
             int i;
 
-            g->magn     = 1.0;
-            g->N_num    = ntohl(H.N_num);
-            g->S_num    = ntohl(H.S_num);
-            g->bound[0] = ntohf(H.bound[0]);
-            g->bound[1] = ntohf(H.bound[1]);
-            g->bound[2] = ntohf(H.bound[2]);
-            g->bound[3] = ntohf(H.bound[3]);
-            g->bound[4] = ntohf(H.bound[4]);
-            g->bound[5] = ntohf(H.bound[5]);
+            g->magnitude = 1.0;
+            g->N_num     = ntohl(H.N_num);
+            g->S_num     = ntohl(H.S_num);
+            g->bound[0]  = ntohf(H.bound[0]);
+            g->bound[1]  = ntohf(H.bound[1]);
+            g->bound[2]  = ntohf(H.bound[2]);
+            g->bound[3]  = ntohf(H.bound[3]);
+            g->bound[4]  = ntohf(H.bound[4]);
+            g->bound[5]  = ntohf(H.bound[5]);
 
             if ((g->N = (struct node *) calloc(g->N_num, sizeof(struct node))))
                 for (i = 0; i < g->N_num; ++i)
@@ -179,7 +180,7 @@ int galaxy_parse(const char *filename, struct galaxy *g)
     return 0;
 }
 
-int galaxy_write(const char *filename, struct galaxy *g)
+int write_galaxy(const char *filename, struct galaxy *g)
 {
     FILE *fp;
 
@@ -215,7 +216,7 @@ int galaxy_write(const char *filename, struct galaxy *g)
 
 /*---------------------------------------------------------------------------*/
 
-static void galaxy_prep_init(struct galaxy *g)
+static void init_galaxy_prep(struct galaxy *g)
 {
     if ((g->N = (struct node *) calloc(N_MAX, sizeof (struct node))))
         g->N_num = 0;
@@ -224,7 +225,7 @@ static void galaxy_prep_init(struct galaxy *g)
         g->S_num = 0;
 }
 
-static void galaxy_prep_free(struct galaxy *g)
+static void free_galaxy_prep(struct galaxy *g)
 {
     if (g->N) free(g->N);
     if (g->S) free(g->S);
@@ -232,7 +233,7 @@ static void galaxy_prep_free(struct galaxy *g)
     memset(g, 0, sizeof (struct galaxy));
 }
 
-static void galaxy_prep_fini(struct galaxy *g)
+static void fini_galaxy_prep(struct galaxy *g)
 {
     int i;
 
@@ -258,7 +259,7 @@ static void galaxy_prep_fini(struct galaxy *g)
 
 /*---------------------------------------------------------------------------*/
 
-static int galaxy_prep_hip(struct star *S, int S_num, const char *filename)
+static int prep_galaxy_hip(struct star *S, int S_num, const char *filename)
 {
     struct stat buf;
     FILE *fp;
@@ -279,7 +280,7 @@ static int galaxy_prep_hip(struct star *S, int S_num, const char *filename)
     return S_num;
 }
 
-static int galaxy_prep_tyc(struct star *S, int S_num, const char *filename)
+static int prep_galaxy_tyc(struct star *S, int S_num, const char *filename)
 {
     struct stat buf;
     FILE *fp;
@@ -304,44 +305,44 @@ static int galaxy_prep_tyc(struct star *S, int S_num, const char *filename)
 
 /* TODO: Generalize galaxy preprocessing. */
 
-void galaxy_prep_large(void)
+void prep_large_galaxy(void)
 {
     struct galaxy g;
 
-    galaxy_prep_init(&g);
+    init_galaxy_prep(&g);
 
     g.S_num = star_gimme_sol(g.S);
-    g.S_num = galaxy_prep_hip(g.S, g.S_num, "../hip_main.dat");
-    g.S_num = galaxy_prep_tyc(g.S, g.S_num, "../tyc2.dat");
+    g.S_num = prep_galaxy_hip(g.S, g.S_num, "../hip_main.dat");
+    g.S_num = prep_galaxy_tyc(g.S, g.S_num, "../tyc2.dat");
 
-    galaxy_prep_fini(&g);
+    fini_galaxy_prep(&g);
 
     printf("large: %d stars, %d nodes.\n", g.S_num, g.N_num);
 
-    galaxy_write("../galaxy_large.gal", &g);
-    galaxy_prep_free(&g);
+    write_galaxy("../galaxy_large.gal", &g);
+    free_galaxy_prep(&g);
 }
 
-void galaxy_prep_small(void)
+void prep_small_galaxy(void)
 {
     struct galaxy g;
 
-    galaxy_prep_init(&g);
+    init_galaxy_prep(&g);
 
     g.S_num = star_gimme_sol(g.S);
-    g.S_num = galaxy_prep_hip(g.S, g.S_num, "../hip_main.dat");
+    g.S_num = prep_galaxy_hip(g.S, g.S_num, "../hip_main.dat");
 
-    galaxy_prep_fini(&g);
+    fini_galaxy_prep(&g);
 
     printf("small: %d stars, %d nodes.\n", g.S_num, g.N_num);
 
-    galaxy_write("../galaxy_small.gal", &g);
-    galaxy_prep_free(&g);
+    write_galaxy("../galaxy_small.gal", &g);
+    free_galaxy_prep(&g);
 }
 
 /*---------------------------------------------------------------------------*/
 
-int galaxy_send_create(const char *filename)
+int send_create_galaxy(const char *filename)
 {
     int gd;
 
@@ -349,11 +350,11 @@ int galaxy_send_create(const char *filename)
     {
         /* If the file exists and is successfully read... */
 
-        if ((galaxy_parse(filename, G + gd)))
+        if ((parse_galaxy(filename, G + gd)))
         {
             /* Pack the object header. */
 
-            pack_event(EVENT_GALAXY_CREATE);
+            pack_event(EVENT_CREATE_GALAXY);
             pack_index(gd);
 
             pack_index(G[gd].S_num);
@@ -373,13 +374,13 @@ int galaxy_send_create(const char *filename)
 
             /* Encapsulate this object in an entity. */
 
-            return entity_send_create(TYPE_GALAXY, 0);
+            return send_create_entity(TYPE_GALAXY, 0);
         }
     }
     return -1;
 }
 
-void galaxy_recv_create(void)
+void recv_create_galaxy(void)
 {
     int gd = unpack_index();
 
@@ -402,31 +403,31 @@ void galaxy_recv_create(void)
     
     /* Encapsulate this object in an entity. */
 
-    entity_recv_create();
+    recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_send_magn(int gd, float m)
+void send_set_galaxy_magnitude(int gd, float m)
 {
-    pack_event(EVENT_GALAXY_MAGN);
+    pack_event(EVENT_SET_GALAXY_MAGNITUDE);
     pack_index(gd);
 
     pack_float(m);
 
-    G[gd].magn = m * viewport_scale();
+    G[gd].magnitude = m * get_viewport_scale();
 }
 
-void galaxy_recv_magn(void)
+void recv_set_galaxy_magnitude(void)
 {
     int gd = unpack_index();
 
-    G[gd].magn = unpack_float();
+    G[gd].magnitude = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_delete(int gd)
+void delete_galaxy(int gd)
 {
     if (galaxy_exists(gd))
     {

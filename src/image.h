@@ -29,24 +29,24 @@ struct image
 
 /*---------------------------------------------------------------------------*/
 
-GLuint image_make_tex(const void *, int,   int,   int);
-void  *image_load_png(const char *, int *, int *, int *);
+GLuint make_texture(const void *, int,   int,   int);
+void  *load_image  (const char *, int *, int *, int *);
 
 /*---------------------------------------------------------------------------*/
 
-int  image_init(void);
-void image_draw(int);
+int  init_image(void);
+void draw_image(int);
 
-int  image_send_create(const char *);
-void image_recv_create(void);
+int  send_create_image(const char *);
+void recv_create_image(void);
 
-void image_delete(int);
+void delete_image(int);
 
 /*---------------------------------------------------------------------------*/
 
-void image_get_p(int, int, int, unsigned char[4]);
-int  image_get_w(int);
-int  image_get_h(int);
+void get_image_p(int, int, int, unsigned char[4]);
+int  get_image_w(int);
+int  get_image_h(int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -19,6 +19,7 @@
 #include "shared.h"
 #include "entity.h"
 #include "image.h"
+#include "event.h"
 #include "object.h"
 
 #define MAXSTR 256
@@ -135,7 +136,7 @@ static void read_map_Kd(const char *line)
         char name[MAXSTR];
 
         if (sscanf(line, "%s", name) == 1)
-            mtrlv[mtrlc].image = image_send_create(name);
+            mtrlv[mtrlc].image = send_create_image(name);
     }
 }
 
@@ -475,7 +476,7 @@ static int read_obj(const char *filename, struct object *o)
 
 /*---------------------------------------------------------------------------*/
 
-int object_init(void)
+int init_object(void)
 {
     if ((O = (struct object *) calloc(OMAXINIT, sizeof (struct object))))
     {
@@ -485,7 +486,7 @@ int object_init(void)
     return 0;
 }
 
-void object_draw(int id, int od, const float V[16])
+void draw_object(int id, int od, const float V[16])
 {
     GLsizei stride = sizeof (struct object_vert);
     float W[16];
@@ -496,7 +497,7 @@ void object_draw(int id, int od, const float V[16])
         {
             /* Apply the local coordinate system transformation. */
 
-            entity_transform(id, W, V);
+            transform_entity(id, W, V);
 
             /* Render this object. */
 
@@ -512,14 +513,14 @@ void object_draw(int id, int od, const float V[16])
                     const struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
                     float d[4];
 
-                    image_draw(m->image);
+                    draw_image(m->image);
 
                     /* Modulate the diffuse color by the current alpha. */
 
                     d[0] = m->d[0];
                     d[1] = m->d[1];
                     d[2] = m->d[2];
-                    d[3] = m->d[3] * entity_get_alpha(id);
+                    d[3] = m->d[3] * get_entity_alpha(id);
 
                     /* Apply the material properties. */
 
@@ -540,7 +541,7 @@ void object_draw(int id, int od, const float V[16])
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, W);
+            draw_entity_list(id, W);
         }
         glPopMatrix();
     }
@@ -548,7 +549,7 @@ void object_draw(int id, int od, const float V[16])
 
 /*---------------------------------------------------------------------------*/
 
-int object_send_create(const char *filename)
+int send_create_object(const char *filename)
 {
     int od;
     int si;
@@ -561,7 +562,7 @@ int object_send_create(const char *filename)
         {
             /* Pack the object header. */
 
-            pack_event(EVENT_OBJECT_CREATE);
+            pack_event(EVENT_CREATE_OBJECT);
             pack_index(od);
             pack_index(O[od].vc);
             pack_index(O[od].mc);
@@ -585,13 +586,13 @@ int object_send_create(const char *filename)
 
             /* Encapsulate this object in an entity. */
 
-            return entity_send_create(TYPE_OBJECT, od);
+            return send_create_entity(TYPE_OBJECT, od);
         }
     }
     return -1;
 }
 
-void object_recv_create(void)
+void recv_create_object(void)
 {
     int od = unpack_index();
     int si;
@@ -623,14 +624,14 @@ void object_recv_create(void)
 
     /* Encapsulate this object in an entity. */
 
-    entity_recv_create();
+    recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
 /* This function should be called only by the entity delete function. */
 
-void object_delete(int od)
+void delete_object(int od)
 {
     int si;
 

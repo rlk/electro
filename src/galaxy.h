@@ -23,7 +23,7 @@ struct galaxy
     int    S_num;
     int    N_num;
 
-    float  magn;
+    float  magnitude;
     float  bound[6];
 
     struct star *S;
@@ -32,20 +32,20 @@ struct galaxy
 
 /*---------------------------------------------------------------------------*/
 
-int  galaxy_init(void);
-void galaxy_draw(int, int, const float[16]);
+int  init_galaxy(void);
+void draw_galaxy(int, int, const float[16]);
 
-void galaxy_prep(void);
+void prep_galaxy(void);
 
 /*---------------------------------------------------------------------------*/
 
-int  galaxy_send_create(const char *);
-void galaxy_recv_create(void);
+int  send_create_galaxy(const char *);
+void recv_create_galaxy(void);
 
-void galaxy_send_magn(int, float);
-void galaxy_recv_magn(void);
+void send_set_galaxy_magnitude(int, float);
+void recv_set_galaxy_magnitude(void);
 
-void galaxy_delete(int);
+void delete_galaxy(int);
 
 /*---------------------------------------------------------------------------*/
 

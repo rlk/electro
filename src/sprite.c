@@ -20,6 +20,7 @@
 #include "server.h"
 #include "entity.h"
 #include "image.h"
+#include "event.h"
 #include "sprite.h"
 
 /*---------------------------------------------------------------------------*/
@@ -37,7 +38,7 @@ static int sprite_exists(int sd)
 
 /*---------------------------------------------------------------------------*/
 
-int sprite_init(void)
+int init_sprite(void)
 {
     if ((S = (struct sprite *) calloc(SMAXINIT, sizeof (struct sprite))))
     {
@@ -47,7 +48,7 @@ int sprite_init(void)
     return 0;
 }
 
-void sprite_draw(int id, int sd, const float V[16])
+void draw_sprite(int id, int sd, const float V[16])
 {
     float W[16];
 
@@ -58,18 +59,18 @@ void sprite_draw(int id, int sd, const float V[16])
         {
             /* Apply the local coordinate system transformation. */
 
-            entity_transform(id, W, V);
+            transform_entity(id, W, V);
 
             glDepthMask(GL_FALSE);
 
-            image_draw(S[sd].image);
+            draw_image(S[sd].image);
 
-            glColor4f(1.0f, 1.0f, 1.0f, entity_get_alpha(id));
+            glColor4f(1.0f, 1.0f, 1.0f, get_entity_alpha(id));
 
             glBegin(GL_QUADS);
             {
-                int dx = image_get_w(S[sd].image) / 2;
-                int dy = image_get_h(S[sd].image) / 2;
+                int dx = get_image_w(S[sd].image) / 2;
+                int dy = get_image_h(S[sd].image) / 2;
 
                 glTexCoord2f(S[sd].s0, S[sd].t0); glVertex2f(-dx, -dy);
                 glTexCoord2f(S[sd].s1, S[sd].t0); glVertex2f(+dx, -dy);
@@ -80,7 +81,7 @@ void sprite_draw(int id, int sd, const float V[16])
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, W);
+            draw_entity_list(id, W);
         }
         glPopMatrix();
         glPopAttrib();
@@ -89,28 +90,28 @@ void sprite_draw(int id, int sd, const float V[16])
 
 /*---------------------------------------------------------------------------*/
 
-int sprite_send_create(const char *filename)
+int send_create_sprite(const char *filename)
 {
     int sd;
 
     if ((sd = buffer_unused(S_max, sprite_exists)) >= 0)
     {
-        S[sd].image = image_send_create(filename);
+        S[sd].image = send_create_image(filename);
         S[sd].flag  = 1;
 
-        pack_event(EVENT_SPRITE_CREATE);
+        pack_event(EVENT_CREATE_SPRITE);
         pack_index(sd);
         pack_index(S[sd].image);
 
         S[sd].s0 = S[sd].t0 = 0.0f;
         S[sd].s1 = S[sd].t1 = 1.0f;
 
-        return entity_send_create(TYPE_SPRITE, sd);
+        return send_create_entity(TYPE_SPRITE, sd);
     }
     return -1;
 }
 
-void sprite_recv_create(void)
+void recv_create_sprite(void)
 {
     int sd = unpack_index();
 
@@ -120,16 +121,16 @@ void sprite_recv_create(void)
     S[sd].s0 = S[sd].t0 = 0.0f;
     S[sd].s1 = S[sd].t1 = 1.0f;
 
-    entity_recv_create();
+    recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void sprite_send_bounds(int sd, float s0, float s1, float t0, float t1)
+void send_set_sprite_bounds(int sd, float s0, float s1, float t0, float t1)
 {
     if (sprite_exists(sd))
     {
-        pack_event(EVENT_SPRITE_BOUNDS);
+        pack_event(EVENT_SET_SPRITE_BOUNDS);
         pack_index(sd);
         pack_float((S[sd].s0 = s0));
         pack_float((S[sd].s1 = s1));
@@ -138,7 +139,7 @@ void sprite_send_bounds(int sd, float s0, float s1, float t0, float t1)
     }
 }
 
-void sprite_recv_bounds(void)
+void recv_set_sprite_bounds(void)
 {
     int sd   = unpack_index();
 
@@ -152,7 +153,7 @@ void sprite_recv_bounds(void)
 
 /* This function should be called only by the entity delete function. */
 
-void sprite_delete(int sd)
+void delete_sprite(int sd)
 {
     if (sprite_exists(sd))
         memset(S + sd, 0, sizeof (struct sprite));
@@ -160,20 +161,20 @@ void sprite_delete(int sd)
 
 /*---------------------------------------------------------------------------*/
 
-void sprite_get_p(int sd, int x, int y, unsigned char p[4])
+void get_sprite_p(int sd, int x, int y, unsigned char p[4])
 {
     if (sprite_exists(sd))
-        image_get_p(S[sd].image, x, y, p);
+        get_image_p(S[sd].image, x, y, p);
 }
 
-int sprite_get_w(int sd)
+int get_sprite_w(int sd)
 {
-    return sprite_exists(sd) ? image_get_w(S[sd].image) : 0;
+    return sprite_exists(sd) ? get_image_w(S[sd].image) : 0;
 }
 
-int sprite_get_h(int sd)
+int get_sprite_h(int sd)
 {
-    return sprite_exists(sd) ? image_get_h(S[sd].image) : 0;
+    return sprite_exists(sd) ? get_image_h(S[sd].image) : 0;
 }
 
 /*---------------------------------------------------------------------------*/

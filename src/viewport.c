@@ -49,7 +49,7 @@ static void set_window_pos(int X, int Y)
 
 /*---------------------------------------------------------------------------*/
 
-void viewport_init(void)
+void init_viewport(void)
 {
     int n = mpi_size();
 
@@ -69,7 +69,7 @@ void viewport_init(void)
     V_num = 0;
 }
 
-void viewport_draw(void)
+void draw_viewport(void)
 {
     int i;
 
@@ -126,7 +126,7 @@ void viewport_draw(void)
     glPopAttrib();
 }
 
-void viewport_fill(float r, float g, float b)
+void fill_viewport(float r, float g, float b)
 {
     glPushAttrib(GL_ENABLE_BIT);
     {
@@ -146,8 +146,8 @@ void viewport_fill(float r, float g, float b)
     glPopAttrib();
 }
 
-void viewport_tile(const char *name, float X, float Y,
-                                     float x, float y, float w, float h)
+void add_tile(const char *name, float X, float Y,
+                                float x, float y, float w, float h)
 {
     /* Note a new incoming render node viewport definition. */
 
@@ -174,7 +174,7 @@ void viewport_tile(const char *name, float X, float Y,
     if (Vtotal.y + Vtotal.h < y + h) Vtotal.h = y + h - Vtotal.y;
 }
 
-void viewport_sync(void)
+void sync_viewport(void)
 {
 #ifdef MPI
     size_t sz = sizeof (struct viewport);
@@ -266,51 +266,51 @@ void viewport_sync(void)
 
 /*---------------------------------------------------------------------------*/
 
-float viewport_total_x(void)
+float get_total_viewport_x(void)
 {
     return Vtotal.x;
 }
 
-float viewport_total_y(void)
+float get_total_viewport_y(void)
 {
     return Vtotal.y;
 }
 
-float viewport_total_w(void)
+float get_total_viewport_w(void)
 {
     return Vtotal.w;
 }
 
-float viewport_total_h(void)
+float get_total_viewport_h(void)
 {
     return Vtotal.h;
 }
 
 /*---------------------------------------------------------------------------*/
 
-float viewport_local_x(void)
+float get_local_viewport_x(void)
 {
     return Vlocal.x;
 }
 
-float viewport_local_y(void)
+float get_local_viewport_y(void)
 {
     return Vlocal.y;
 }
 
-float viewport_local_w(void)
+float get_local_viewport_w(void)
 {
     return Vlocal.w;
 }
 
-float viewport_local_h(void)
+float get_local_viewport_h(void)
 {
     return Vlocal.h;
 }
 
 /*---------------------------------------------------------------------------*/
 
-float viewport_scale(void)
+float get_viewport_scale(void)
 {
     /* Scale the server window width down to a reasonable size. */
 
@@ -320,14 +320,14 @@ float viewport_scale(void)
         return 1.0f;
 }
 
-int window_w(void)
+int get_window_w(void)
 {
-    return (int) (Vlocal.w * viewport_scale());
+    return (int) (Vlocal.w * get_viewport_scale());
 }
 
-int window_h(void)
+int get_window_h(void)
 {
-    return (int) (Vlocal.h * viewport_scale());
+    return (int) (Vlocal.h * get_viewport_scale());
 }
 
 /*---------------------------------------------------------------------------*/

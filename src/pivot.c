@@ -16,34 +16,35 @@
 #include "buffer.h"
 #include "shared.h"
 #include "entity.h"
+#include "event.h"
 #include "pivot.h"
 
 /*---------------------------------------------------------------------------*/
 
-void pivot_draw(int id, int pd, const float V[16])
+void draw_pivot(int id, int pd, const float V[16])
 {
     float W[16];
 
     glPushMatrix();
     {
-        entity_transform(id, W, V);
-        entity_traversal(id, W);
+        transform_entity(id, W, V);
+        draw_entity_list(id, W);
     }
     glPopMatrix();
 }
 
 /*---------------------------------------------------------------------------*/
 
-int pivot_send_create(void)
+int send_create_pivot(void)
 {
-    pack_event(EVENT_PIVOT_CREATE);
+    pack_event(EVENT_CREATE_PIVOT);
 
-    return entity_send_create(TYPE_PIVOT, 0);
+    return send_create_entity(TYPE_PIVOT, 0);
 }
 
-void pivot_recv_create(void)
+void recv_create_pivot(void)
 {
-    entity_recv_create();
+    recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/

@@ -26,6 +26,7 @@
 #include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
+#include "event.h"
 #include "entity.h"
 
 /*---------------------------------------------------------------------------*/
@@ -43,7 +44,7 @@ int entity_exists(int id)
 
 /*---------------------------------------------------------------------------*/
 
-const char *entity_typename(int id)
+const char *get_entity_type_name(int id)
 {
     if (entity_exists(id))
         switch (E[id].type)
@@ -60,14 +61,14 @@ const char *entity_typename(int id)
     return "UNKNOWN";
 }
 
-int entity_todata(int id)
+int entity_data(int id)
 {
     return entity_exists(id) ? E[id].data : -1;
 }
 
-int entity_istype(int id, int type)
+int entity_type(int id)
 {
-    return entity_exists(id) && (E[id].type == type);
+    return entity_exists(id) ? E[id].type : -1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -85,7 +86,7 @@ int buffer_unused(int max, int (*exists)(int))
 
 /*---------------------------------------------------------------------------*/
 
-void entity_transform(int id, float frustum1[16], const float frustum0[16])
+void transform_entity(int id, float frustum1[16], const float frustum0[16])
 {
     float M[16];
     float I[16];
@@ -161,7 +162,7 @@ void entity_transform(int id, float frustum1[16], const float frustum0[16])
     m_pfrm(frustum1 + 12, M, frustum0 + 12);
 }
 
-void entity_traversal(int id, const float V[16])
+void draw_entity_list(int id, const float V[16])
 {
     int jd;
 
@@ -188,12 +189,12 @@ void entity_traversal(int id, const float V[16])
 
             switch (E[jd].type)
             {
-            case TYPE_CAMERA: camera_draw(jd, E[jd].data, V); break;
-            case TYPE_SPRITE: sprite_draw(jd, E[jd].data, V); break;
-            case TYPE_OBJECT: object_draw(jd, E[jd].data, V); break;
-            case TYPE_GALAXY: galaxy_draw(jd, E[jd].data, V); break;
-            case TYPE_LIGHT:   light_draw(jd, E[jd].data, V); break;
-            case TYPE_PIVOT:   pivot_draw(jd, E[jd].data, V); break;
+            case TYPE_CAMERA: draw_camera(jd, E[jd].data, V); break;
+            case TYPE_SPRITE: draw_sprite(jd, E[jd].data, V); break;
+            case TYPE_OBJECT: draw_object(jd, E[jd].data, V); break;
+            case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, V); break;
+            case TYPE_LIGHT:  draw_light (jd, E[jd].data, V); break;
+            case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, V); break;
             }
 
             /* Revert to previous render modes, as necessary. */
@@ -205,36 +206,36 @@ void entity_traversal(int id, const float V[16])
 
 /*---------------------------------------------------------------------------*/
 
-int entity_init(void)
+int init_entity(void)
 {
     if ((E = (struct entity *) calloc(EMAXINIT, sizeof (struct entity))))
     {
         E_max     = EMAXINIT;
         E[0].type = TYPE_ROOT;
 
-        camera_init();
-        galaxy_init();
-        sprite_init();
-        object_init();
-        light_init();
+        init_camera();
+        init_galaxy();
+        init_sprite();
+        init_object();
+        init_light();
 
         return 1;
     }
     return 0;
 }
 
-void entity_draw(void)
+void draw_entity(void)
 {
     float W[16];
 
     memset(W, 0, 16 * sizeof (float));
 
-    if (E) entity_traversal(0, W);
+    if (E) draw_entity_list(0, W);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void entity_detach(int cd, int pd)
+void detach_entity(int cd, int pd)
 {
     /* Never allow the root entity to be used as a child. */
 
@@ -257,7 +258,7 @@ void entity_detach(int cd, int pd)
     }
 }
 
-void entity_attach(int cd, int pd)
+void attach_entity(int cd, int pd)
 {
     /* Never allow the root entity to be used as a child. */
 
@@ -273,7 +274,7 @@ void entity_attach(int cd, int pd)
 
 /*---------------------------------------------------------------------------*/
 
-static void entity_create(int id, int type, int data)
+static void create_entity(int id, int type, int data)
 {
     E[id].type = type;
     E[id].data = data;
@@ -284,10 +285,10 @@ static void entity_create(int id, int type, int data)
     E[id].scale[2] = 1.0f;
     E[id].alpha    = 1.0f;
 
-    entity_attach(id, 0);
+    attach_entity(id, 0);
 }
 
-int entity_send_create(int type, int data)
+int send_create_entity(int type, int data)
 {
     int id;
 
@@ -297,46 +298,69 @@ int entity_send_create(int type, int data)
         pack_index(type);
         pack_index(data);
     
-        entity_create(id, type, data);
+        create_entity(id, type, data);
 
         return id;
     }
     return -1;
 }
 
-void entity_recv_create(void)
+void recv_create_entity(void)
 {
     int id   = unpack_index();
     int type = unpack_index();
     int data = unpack_index();
 
-    entity_create(id, type, data);
+    create_entity(id, type, data);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void entity_send_parent(int cd, int pd)
+int send_create_clone(int id)
 {
-    pack_event(EVENT_ENTITY_PARENT);
+    int jd = buffer_unused(E_max, entity_exists);
+
+    pack_event(EVENT_CREATE_CLONE);
+    pack_index(id);
+    pack_index(jd);
+
+    create_entity(jd, E[id].type, E[id].data);
+
+    return jd;
+}
+
+void recv_create_clone(void)
+{
+    int id = unpack_index();
+    int jd = unpack_index();
+
+    create_entity(jd, E[id].type, E[id].data);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_parent_entity(int cd, int pd)
+{
+    pack_event(EVENT_PARENT_ENTITY);
     pack_index(cd);
     pack_index(pd);
 
-    entity_detach(cd, E[cd].par);
-    entity_attach(cd, pd);
+    detach_entity(cd, E[cd].par);
+    attach_entity(cd, pd);
 }
 
-void entity_recv_parent(void)
+void recv_parent_entity(void)
 {
     int cd = unpack_index();
     int pd = unpack_index();
 
-    entity_detach(cd, E[cd].par);
-    entity_attach(cd, pd);
+    detach_entity(cd, E[cd].par);
+    attach_entity(cd, pd);
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void entity_delete(int id)
+static void delete_entity(int id)
 {
     if (entity_exists(id))
     {
@@ -345,11 +369,11 @@ static void entity_delete(int id)
         /* Let the parent inherit any children. */
 
         while (E[id].car)
-            entity_attach(E[id].car, pd);
+            attach_entity(E[id].car, pd);
 
         /* Remove the entity from the parent's child list. */
 
-        entity_detach(id, pd);
+        detach_entity(id, pd);
 
         memset(E + id, 0, sizeof (struct entity));
 
@@ -363,56 +387,33 @@ static void entity_delete(int id)
 
         switch (E[id].type)
         {
-        case TYPE_CAMERA: camera_delete(data); break;
-        case TYPE_SPRITE: sprite_delete(data); break;
-        case TYPE_OBJECT: object_delete(data); break;
-        case TYPE_GALAXY: galaxy_delete(data); break;
-        case TYPE_LIGHT:   light_delete(data); break;
+        case TYPE_CAMERA: delete_camera(data); break;
+        case TYPE_SPRITE: delete_sprite(data); break;
+        case TYPE_OBJECT: delete_object(data); break;
+        case TYPE_GALAXY: delete_galaxy(data); break;
+        case TYPE_LIGHT:  delete_light (data); break;
         }
     }
 }
 
-void entity_send_delete(int id)
+void send_delete_entity(int id)
 {
-    pack_event(EVENT_ENTITY_DELETE);
+    pack_event(EVENT_DELETE_ENTITY);
     pack_index(id);
 
-    entity_delete(id);
+    delete_entity(id);
 }
 
-void entity_recv_delete(void)
+void recv_delete_entity(void)
 {
-    entity_delete(unpack_index());
+    delete_entity(unpack_index());
 }
 
 /*---------------------------------------------------------------------------*/
 
-int entity_send_clone(int id)
+void send_set_entity_flag(int id, int flags, int state)
 {
-    int jd = buffer_unused(E_max, entity_exists);
-
-    pack_event(EVENT_ENTITY_CLONE);
-    pack_index(id);
-    pack_index(jd);
-
-    entity_create(jd, E[id].type, E[id].data);
-
-    return jd;
-}
-
-void entity_recv_clone(void)
-{
-    int id = unpack_index();
-    int jd = unpack_index();
-
-    entity_create(jd, E[id].type, E[id].data);
-}
-
-/*---------------------------------------------------------------------------*/
-
-void entity_send_flag(int id, int flags, int state)
-{
-    pack_event(EVENT_ENTITY_FLAG);
+    pack_event(EVENT_SET_ENTITY_FLAG);
     pack_index(id);
     pack_index(flags);
     pack_index(state);
@@ -423,7 +424,7 @@ void entity_send_flag(int id, int flags, int state)
         E[id].flag = E[id].flag & (~flags);
 }
 
-void entity_recv_flag(void)
+void recv_set_entity_flag(void)
 {
     int id    = unpack_index();
     int flags = unpack_index();
@@ -437,9 +438,9 @@ void entity_recv_flag(void)
 
 /*---------------------------------------------------------------------------*/
 
-void entity_send_position(int id, float x, float y, float z)
+void send_set_entity_position(int id, float x, float y, float z)
 {
-    pack_event(EVENT_ENTITY_MOVE);
+    pack_event(EVENT_SET_ENTITY_POSITION);
     pack_index(id);
 
     pack_float((E[id].position[0] = x));
@@ -447,9 +448,9 @@ void entity_send_position(int id, float x, float y, float z)
     pack_float((E[id].position[2] = z));
 }
 
-void entity_send_rotation(int id, float x, float y, float z)
+void send_set_entity_rotation(int id, float x, float y, float z)
 {
-    pack_event(EVENT_ENTITY_TURN);
+    pack_event(EVENT_SET_ENTITY_ROTATION);
     pack_index(id);
 
     pack_float((E[id].rotation[0] = x));
@@ -457,9 +458,9 @@ void entity_send_rotation(int id, float x, float y, float z)
     pack_float((E[id].rotation[2] = z));
 }
 
-void entity_send_scale(int id, float x, float y, float z)
+void send_set_entity_scale(int id, float x, float y, float z)
 {
-    pack_event(EVENT_ENTITY_SIZE);
+    pack_event(EVENT_SET_ENTITY_SCALE);
     pack_index(id);
 
     pack_float((E[id].scale[0] = x));
@@ -467,9 +468,9 @@ void entity_send_scale(int id, float x, float y, float z)
     pack_float((E[id].scale[2] = z));
 }
 
-void entity_send_alpha(int id, float a)
+void send_set_entity_alpha(int id, float a)
 {
-    pack_event(EVENT_ENTITY_FADE);
+    pack_event(EVENT_SET_ENTITY_ALPHA);
     pack_index(id);
 
     pack_float((E[id].alpha = a));
@@ -477,7 +478,7 @@ void entity_send_alpha(int id, float a)
 
 /*---------------------------------------------------------------------------*/
 
-void entity_recv_position(void)
+void recv_set_entity_position(void)
 {
     int id = unpack_index();
 
@@ -486,7 +487,7 @@ void entity_recv_position(void)
     E[id].position[2] = unpack_float();
 }
 
-void entity_recv_rotation(void)
+void recv_set_entity_rotation(void)
 {
     int id = unpack_index();
 
@@ -495,7 +496,7 @@ void entity_recv_rotation(void)
     E[id].rotation[2] = unpack_float();
 }
 
-void entity_recv_scale(void)
+void recv_set_entity_scale(void)
 {
     int id = unpack_index();
 
@@ -504,7 +505,7 @@ void entity_recv_scale(void)
     E[id].scale[2] = unpack_float();
 }
 
-void entity_recv_alpha(void)
+void recv_set_entity_alpha(void)
 {
     int id = unpack_index();
 
@@ -513,7 +514,7 @@ void entity_recv_alpha(void)
 
 /*---------------------------------------------------------------------------*/
 
-void entity_get_position(int id, float *x, float *y, float *z)
+void get_entity_position(int id, float *x, float *y, float *z)
 {
     if (entity_exists(id))
     {
@@ -523,7 +524,7 @@ void entity_get_position(int id, float *x, float *y, float *z)
     }
 }
 
-void entity_get_rotation(int id, float *x, float *y, float *z)
+void get_entity_rotation(int id, float *x, float *y, float *z)
 {
     if (entity_exists(id))
     {
@@ -533,7 +534,7 @@ void entity_get_rotation(int id, float *x, float *y, float *z)
     }
 }
 
-void entity_get_scale(int id, float *x, float *y, float *z)
+void get_entity_scale(int id, float *x, float *y, float *z)
 {
     if (entity_exists(id))
     {
@@ -543,7 +544,7 @@ void entity_get_scale(int id, float *x, float *y, float *z)
     }
 }
 
-float entity_get_alpha(int id)
+float get_entity_alpha(int id)
 {
     if (entity_exists(id))
         return E[id].alpha;

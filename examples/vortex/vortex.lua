@@ -19,21 +19,21 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     galaxy = E.create_galaxy("../galaxy_large.gal")
 
-    E.entity_parent(galaxy, camera)
+    E.parent_entity(galaxy, camera)
 
-    E.entity_position(camera, 0, 15.5, 9200)
+    E.set_entity_position(camera, 0, 15.5, 9200)
 
-    E.camera_zoom(camera, zoom)
-    E.camera_dist(camera, dist)
-    E.galaxy_magn(galaxy, magn)
+    E.set_camera_zoom(camera, zoom)
+    E.set_camera_distance(camera, dist)
+    E.set_galaxy_magnitude(galaxy, magn)
 
     return true
 end
 
 function do_timer(dt)
-    local x, y, z = E.entity_get_rotation(camera)
+    local x, y, z = E.get_entity_rotation(camera)
 
-    E.entity_rotation(camera, x, y + dt * spin, z)
+    E.set_entity_rotation(camera, x, y + dt * spin, z)
     return true
 end
 
@@ -45,7 +45,7 @@ function do_keyboard(k, s)
         spin = spin - 1
     end
 
-    E.enable_idle(spin ~= 0)
+    E.set_idle(spin ~= 0)
 
     return true
 end
@@ -58,8 +58,8 @@ function do_point(dx, dy)
             zoom = 0.001
         end
 
-        E.camera_zoom(camera, zoom * zoom)
-        E.galaxy_magn(galaxy, magn / (zoom * zoom))
+        E.set_camera_zoom(camera, zoom * zoom)
+        E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
 
     elseif setmagn then  -- Set the stellar magnitude multiplier.
 
@@ -68,7 +68,7 @@ function do_point(dx, dy)
             magn = 0
         end
 
-        E.galaxy_magn(galaxy, magn / (zoom * zoom))
+        E.set_galaxy_magnitude(galaxy, magn / (zoom * zoom))
 
     elseif setdist then  -- Set the camera distance from the center.
 
@@ -77,11 +77,11 @@ function do_point(dx, dy)
             dist = 0
         end
 
-        E.camera_dist(camera, dist)
+        E.set_camera_distance(camera, dist)
 
     else                 -- None of the above.  Just pan the camera
 
-        local x, y, z = E.entity_get_rotation(camera)
+        local x, y, z = E.get_entity_rotation(camera)
 
         x = x - dy * 0.1 * zoom * zoom
         y = y - dx * 0.1 * zoom * zoom
@@ -92,7 +92,7 @@ function do_point(dx, dy)
         if y < -180 then y = y + 360 end
         if y >  180 then y = y - 360 end
 
-        E.entity_rotation(camera, x, y, z)
+        E.set_entity_rotation(camera, x, y, z)
     end
 
     return true

@@ -20,7 +20,7 @@ static SDL_Joystick *joy[MAXJOY];
 
 /*---------------------------------------------------------------------------*/
 
-void joystick_init(void)
+void init_joystick(void)
 {
     int i, n = SDL_NumJoysticks();
 
@@ -28,7 +28,7 @@ void joystick_init(void)
         joy[i] = SDL_JoystickOpen(i);
 }
 
-void joystick_free(void)
+void free_joystick(void)
 {
     int i, n = SDL_NumJoysticks();
 
@@ -39,7 +39,7 @@ void joystick_free(void)
 
 /*---------------------------------------------------------------------------*/
 
-float joystick_axis(int i, int a)
+float get_joystick(int i, int a)
 {
     if (SDL_JoystickOpened(i))
         if (0 <= a && a < SDL_JoystickNumAxes(joy[i]))
