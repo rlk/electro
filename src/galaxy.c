@@ -27,6 +27,7 @@
 /*---------------------------------------------------------------------------*/
 
 static float mag = 1.0f;
+static float bound[6];
 
 /*---------------------------------------------------------------------------*/
 
@@ -34,8 +35,10 @@ void galaxy_foo(void)
 {
     node_init();
     prep_init();
+
     prep_file_hip("../hip_main.dat");
-    prep_sort();
+
+    prep_sort(bound);
 }
 
 int galaxy_send_create(const char *nearfile, const char *farfile)
@@ -91,16 +94,16 @@ void galaxy_recv_magn(void)
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_draw(int id, int gd, float P[3], float V[4][4])
+void galaxy_draw(int id, int gd, const float V[16])
 {
-    float Q[3], W[4][4];
+    float W[16];
 
     glPushMatrix();
     {
         /* Apply the local coordinate system transformation. */
-        /*
-        entity_transform(id, Q, W, P, V);
-        */
+
+        entity_transform(id, W, V);
+
         glPushAttrib(GL_ENABLE_BIT  |
                      GL_TEXTURE_BIT |
                      GL_COLOR_BUFFER_BIT);
@@ -124,15 +127,13 @@ void galaxy_draw(int id, int gd, float P[3], float V[4][4])
             /*
             star_draw();
             */
-            node_draw(P, V);
+            node_draw(V, bound);
         }
         glPopAttrib();
 
-        opengl_check("galaxy_draw");
-
         /* Render all child entities in this coordinate system. */
 
-        entity_traversal(id, Q, W);
+        entity_traversal(id, W);
     }
     glPopMatrix();
 }

@@ -6,3 +6,7 @@ all :
 
 clean :
 	(cd ..; $(MAKE) clean)
+
+install :
+	(cd ..; $(MAKE) install)
+

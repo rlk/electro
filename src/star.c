@@ -23,6 +23,7 @@
 #endif
 
 #include "opengl.h"
+#include "matrix.h"
 #include "buffer.h"
 #include "image.h"
 #include "star.h"
@@ -171,7 +172,7 @@ int star_parse_hip(FILE *fp, struct star *s)
             ra  = PI * ra / 180.0;
             de  = PI * de / 180.0;
 
-/* TODO:    if (isnormal(plx)) */
+            if (isnormal(plx))
             {
                 /* Compute the position in galactic coordinates. */
 

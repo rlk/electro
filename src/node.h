@@ -23,21 +23,17 @@ struct node
     int starc;
     int nodeL;
     int nodeR;
-    int nodep;
 };
 
 /*---------------------------------------------------------------------------*/
 
-void prep_L(void);
-void prep_R(void);
-void prep_p(void);
-
 void prep_init(void);
-void prep_sort(void);
+void prep_sort(float[6]);
+
 void prep_file_hip(const char *);
 
 void node_init(void);
-void node_draw(float P[3], float V[4][4]);
+void node_draw(const float[16], const float[6]);
 
 /*---------------------------------------------------------------------------*/
 

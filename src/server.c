@@ -107,8 +107,6 @@ static void server_init(void)
 
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    opengl_check("server_init");
 }
 
 static void server_draw(void)
@@ -158,6 +156,7 @@ static void server_perf(void)
 static int server_loop(void)
 {
     static int dirty = 1;
+    static int count = 0;
 
     SDL_Event e;
 
@@ -167,15 +166,6 @@ static int server_loop(void)
 
         if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) enable_grab(0);
         if (e.type == SDL_MOUSEBUTTONDOWN)                 enable_grab(1);
-
-        if (e.type == SDL_KEYDOWN)
-            switch (e.key.keysym.sym)
-            {
-            case SDLK_F1: prep_p(); break;
-            case SDLK_F2: prep_L(); break;
-            case SDLK_F3: prep_R(); break;
-            default: break;
-            }
 
         /* Dispatch the event to the scripting system. */
 
@@ -232,6 +222,7 @@ static int server_loop(void)
             server_perf();
 
             dirty = 0;
+            count = count + 1;
         }
 
         pack_event(EVENT_NULL);
@@ -287,6 +278,7 @@ void server(int argc, char *argv[])
                 server_init();
                 entity_init();
                 script_start();
+                enable_grab(1);
 
                 /* Block on SDL events.  Service them as they arrive. */
 

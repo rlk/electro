@@ -57,9 +57,8 @@ int  entity_exists(int);
 int  entity_todata(int);
 int  entity_istype(int, int);
 
-void entity_transform(int, float[3], float[4][4],
-                           float[3], float[4][4]);
-void entity_traversal(int, float[3], float[4][4]);
+void entity_transform(int, float[16], const float[16]);
+void entity_traversal(int,            const float[16]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -30,7 +30,7 @@ struct sprite
 /*---------------------------------------------------------------------------*/
 
 int  sprite_init(void);
-void sprite_draw(int, int, float[3], float[4][4]);
+void sprite_draw(int, int, const float[16]);
 
 int  sprite_send_create(const char *);
 void sprite_recv_create(void);

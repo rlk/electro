@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "opengl.h"
+#include "matrix.h"
 #include "viewport.h"
 #include "buffer.h"
 #include "shared.h"
@@ -65,9 +66,9 @@ static void camera_transform(int id)
 
 /*---------------------------------------------------------------------------*/
 
-static void camera_plane(float d[4], const float a[3],
-                                     const float b[3],
-                                     const float c[3])
+static void camera_plane(float plane[4], const float a[3],
+                                         const float b[3],
+                                         const float c[3])
 {
     float x[3];
     float y[3];
@@ -81,19 +82,21 @@ static void camera_plane(float d[4], const float a[3],
     y[1] = c[1] - a[1];
     y[2] = c[2] - a[2];
 
-    d[0] = x[1] * y[2] - x[2] * y[1];
-    d[1] = x[2] * y[0] - x[0] * y[2];
-    d[2] = x[0] * y[1] - x[1] * y[0];
+    plane[0] = x[1] * y[2] - x[2] * y[1];
+    plane[1] = x[2] * y[0] - x[0] * y[2];
+    plane[2] = x[0] * y[1] - x[1] * y[0];
 
-    k = (float) sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+    k = (float) sqrt(plane[0] * plane[0] +
+                     plane[1] * plane[1] +
+                     plane[2] * plane[2]);
 
-    d[0] /= k;
-    d[1] /= k;
-    d[2] /= k;
-    d[3]  = (d[0] * a[0] + d[1] * a[1] + d[2] * a[2]);
+    plane[0] /= k;
+    plane[1] /= k;
+    plane[2] /= k;
+    plane[3]  = (plane[0] * a[0] + plane[1] * a[1] + plane[2] * a[2]);
 }
 
-static void camera_persp(float V[4][4], float P[3],
+static void camera_persp(float V[16], const float P[3],
                          float th, float ph,
                          float l,  float r,
                          float b,  float t)
@@ -153,94 +156,10 @@ static void camera_persp(float V[4][4], float P[3],
 
     /* Find the view frustum planes. */
 
-    camera_plane(V[0], P, A, B);
-    camera_plane(V[1], P, B, C);
-    camera_plane(V[2], P, C, D);
-    camera_plane(V[3], P, D, A);
-}
-
-static void camera_frustum(float P[3],
-                         float th, float ph,
-                         float l,  float r,
-                         float b,  float t)
-{
-    const float n = CAMERA_NEAR;
-
-    float R[3], U[3], v[3], c[3];
-    float A[3], B[3], C[3], D[3];
-
-    /* Find the view vector. */
-
-    v[0] = -(float) (cos(ph) * sin(th));
-    v[1] =  (float) (sin(ph));
-    v[2] = -(float) (cos(ph) * cos(th));
-
-    /* Find the view right vector. */
-
-    R[0] =  (float) cos(th);
-    R[1] =  0;
-    R[2] = -(float) sin(th);
-
-    /* Find the view up vector. */
-    
-    U[0] = R[1] * v[2] - R[2] * v[1];
-    U[1] = R[2] * v[0] - R[0] * v[2];
-    U[2] = R[0] * v[1] - R[1] * v[0];
-
-    /* Find the view center.*/
-
-    c[0] = P[0] + v[0] * n;
-    c[1] = P[1] + v[1] * n;
-    c[2] = P[2] + v[2] * n;
-
-    /* Find the bottom left position. */
-
-    A[0] = c[0] + l * R[0] + b * U[0];
-    A[1] = c[1] + l * R[1] + b * U[1];
-    A[2] = c[2] + l * R[2] + b * U[2];
-
-    /* Find the bottom right position. */
-
-    B[0] = c[0] + r * R[0] + b * U[0];
-    B[1] = c[1] + r * R[1] + b * U[1];
-    B[2] = c[2] + r * R[2] + b * U[2];
-
-    /* Find the top right position. */
-
-    C[0] = c[0] + r * R[0] + t * U[0];
-    C[1] = c[1] + r * R[1] + t * U[1];
-    C[2] = c[2] + r * R[2] + t * U[2];
-
-    /* Find the top left position. */
-
-    D[0] = c[0] + l * R[0] + t * U[0];
-    D[1] = c[1] + l * R[1] + t * U[1];
-    D[2] = c[2] + l * R[2] + t * U[2];
-
-    glPushAttrib(GL_ENABLE_BIT);
-    {
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_LIGHTING);
-
-        glLineWidth(8);
-
-        glBegin(GL_LINES);
-        {
-            glColor3f(1.0f, 1.0f, 1.0f);
-
-            glVertex3fv(A); glVertex3fv(B);
-            glVertex3fv(B); glVertex3fv(C);
-            glVertex3fv(C); glVertex3fv(D);
-            glVertex3fv(D); glVertex3fv(A);
-
-            glVertex3fv(P); glVertex3fv(A);
-            glVertex3fv(P); glVertex3fv(B);
-            glVertex3fv(P); glVertex3fv(C);
-            glVertex3fv(P); glVertex3fv(D);
-        }
-        glEnd();
-    }
-    glPopAttrib();
+    camera_plane(V +  0, P, A, B);
+    camera_plane(V +  4, P, B, C);
+    camera_plane(V +  8, P, C, D);
+    camera_plane(V + 12, P, D, A);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -255,9 +174,9 @@ int camera_init(void)
     return 0;
 }
 
-void camera_draw(int id, int cd, float P[3], float V[4][4])
+void camera_draw(int id, int cd, const float V[16])
 {
-    float Q[3], W[4][4];
+    float W[16];
 
     float pos[3];
     float rot[3];
@@ -326,7 +245,7 @@ void camera_draw(int id, int cd, float P[3], float V[4][4])
 
         /* Render all children using this camera. */
 
-        entity_traversal(id, pos, W);
+        entity_traversal(id, W);
     }
 }
 

@@ -20,18 +20,16 @@
 
 /*---------------------------------------------------------------------------*/
 
-void pivot_draw(int id, int pd, float P[3], float V[4][4])
+void pivot_draw(int id, int pd, const float V[16])
 {
-    float Q[3], W[4][4];
+    float W[16];
 
     glPushMatrix();
     {
-        entity_transform(id, Q, W, P, V);
-        entity_traversal(id, Q, W);
+        entity_transform(id, W, V);
+        entity_traversal(id, W);
     }
     glPopMatrix();
-
-    opengl_check("pivot_draw");
 }
 
 /*---------------------------------------------------------------------------*/

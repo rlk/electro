@@ -4,17 +4,18 @@ PREFIX=/usr/local/Electro
 
 ifdef MPI
 	CC= mpicc
-	CFLAGS= -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
+	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags) -DMPI -DNDEBUG
 	TARG= electro-mpi
 else
 	CC= cc
-	CFLAGS= -ansi -pedantic -g -Wall $(shell sdl-config --cflags) -DNDEBUG
+	CFLAGS= -std=c99 -g -Wall $(shell sdl-config --cflags)
 	TARG= electro
 endif
 
 #------------------------------------------------------------------------------
 
 OBJS=	src/opengl.o   \
+	src/matrix.o   \
 	src/joystick.o \
 	src/viewport.o \
 	src/buffer.o   \

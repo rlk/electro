@@ -10,58 +10,36 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-/*---------------------------------------------------------------------------*/
-
-#define MAXOBJECT 128
-
-struct object_mtrl
-{
-    int image;
-
-    float d[4];
-    float a[4];
-    float s[4];
-    float e[4];
-    float x[1];
-};
-
-struct object_vert
-{
-    float t[2];
-    float n[3];
-    float v[3];
-};
-
-struct object_face
-{
-    int vi[3];
-};
-
-struct object_surf
-{
-    int mi;
-    int fc;
-    struct object_face *fv;
-};
-
-struct object
-{
-    int vc;
-    int mc;
-    int sc;
-    struct object_vert *vv;
-    struct object_mtrl *mv;
-    struct object_surf *sv;
-};
+#ifndef MATRIX_H
+#define MATRIX_H
 
 /*---------------------------------------------------------------------------*/
 
-int  object_init(void);
-void object_draw(int, int, const float[16]);
+#define PI 3.14159265f
 
-int  object_send_create(const char *);
-void object_recv_create(void);
-
-void object_delete(int);
+#define M_DEG(r) (180.0f * (r) / PI)
+#define M_RAD(d) (PI * (d) / 180.0f)
 
 /*---------------------------------------------------------------------------*/
+
+void m_init(float[16]);
+void m_copy(float[16], const float[16]);
+void m_xpos(float[16], const float[16]);
+void m_mult(float[16], const float[16], const float[16]);
+
+/*---------------------------------------------------------------------------*/
+
+void m_xfrm(float[4], const float[16], const float[4]);
+void m_pfrm(float[4], const float[16], const float[4]);
+
+/*---------------------------------------------------------------------------*/
+
+void m_trns(float[16], float[16], float, float, float);
+void m_xrot(float[16], float[16], float);
+void m_yrot(float[16], float[16], float);
+void m_zrot(float[16], float[16], float);
+void m_scal(float[16], float[16], float, float, float);
+
+/*---------------------------------------------------------------------------*/
+
+#endif

@@ -485,10 +485,10 @@ int object_init(void)
     return 0;
 }
 
-void object_draw(int id, int od, float P[3], float V[4][4])
+void object_draw(int id, int od, const float V[16])
 {
     GLsizei stride = sizeof (struct object_vert);
-    float Q[3], W[4][4];
+    float W[16];
 
     if (object_exists(od))
     {
@@ -496,7 +496,7 @@ void object_draw(int id, int od, float P[3], float V[4][4])
         {
             /* Apply the local coordinate system transformation. */
 
-            entity_transform(id, Q, W, P, V);
+            entity_transform(id, W, V);
 
             /* Render this object. */
 
@@ -540,7 +540,7 @@ void object_draw(int id, int od, float P[3], float V[4][4])
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, Q, W);
+            entity_traversal(id, W);
         }
         glPopMatrix();
     }

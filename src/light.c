@@ -45,9 +45,9 @@ int light_init(void)
     return 0;
 }
 
-void light_draw(int id, int ld, float P[3], float V[4][4])
+void light_draw(int id, int ld, const float V[16])
 {
-    float Q[3], W[4][4];
+    float W[16];
 
     if (light_exists(ld))
     {
@@ -57,7 +57,7 @@ void light_draw(int id, int ld, float P[3], float V[4][4])
             GLenum light = GL_LIGHT0 + ld;
             GLfloat p[4];
 
-            entity_transform(id, Q, W, P, V);
+            entity_transform(id, W, V);
 
             /* Determine the homogenous coordinate lightsource position. */
 
@@ -76,7 +76,7 @@ void light_draw(int id, int ld, float P[3], float V[4][4])
 
             /* Render all child entities in this coordinate system. */
 
-            entity_traversal(id, Q, W);
+            entity_traversal(id, W);
         }
         glPopMatrix();
         glPopAttrib();

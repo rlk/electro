@@ -26,6 +26,8 @@ function do_start()
     E.camera_zoom(camera, zoom)
     E.camera_dist(camera, dist)
     E.galaxy_magn(galaxy, magn)
+
+    return true
 end
 
 function do_timer(dt)
@@ -36,12 +38,12 @@ function do_timer(dt)
 end
 
 function do_keyboard(k, s)
---    if s and k == 284 then -- F3
---        spin = spin + 1
---    end
---    if s and k == 285 then -- F4
---        spin = spin - 1
---    end
+    if s and k == 284 then -- F3
+        spin = spin + 1
+    end
+    if s and k == 285 then -- F4
+        spin = spin - 1
+    end
 
     E.enable_idle(spin ~= 0)
 

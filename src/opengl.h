@@ -52,10 +52,6 @@ extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 
 /*---------------------------------------------------------------------------*/
 
-#define PI 3.1415926535897932384626433832795
-
-/*---------------------------------------------------------------------------*/
-
 void       *opengl_proc(const char *);
 GLboolean   opengl_need(const char *);
 GLboolean   opengl_init(void);
