@@ -4,20 +4,12 @@
 
 #include "opengl.h"
 #include "shared.h"
+#include "status.h"
 #include "client.h"
 
 /*---------------------------------------------------------------------------*/
 
-static float pos[4] = { 0.0, 15.5, 9200.0, 1.0 };
-static float rot[3] = { 0.0, 0.0, 0.0 };
-
-static float dist   = 1000.0f;
-static float magn   =  128.0f;
-static float zoom   =    0.5f;
-
-/*---------------------------------------------------------------------------*/
-
-void client_recv_draw(void)
+static void client_recv_draw(void)
 {
     SDL_Event e;
 
@@ -27,36 +19,7 @@ void client_recv_draw(void)
     SDL_PushEvent(&e);
 }
 
-void client_recv_move(const struct event *e)
-{
-    pos[0] = e->x;
-    pos[1] = e->y;
-    pos[2] = e->z;
-}
-
-void client_recv_turn(const struct event *e)
-{
-    rot[0] = e->x;
-    rot[1] = e->y;
-    rot[2] = e->z;
-}
-
-void client_recv_zoom(const struct event *e)
-{
-    zoom = e->x;
-}
-
-void client_recv_dist(const struct event *e)
-{
-    dist = e->x;
-}
-
-void client_recv_magn(const struct event *e)
-{
-    magn = e->x;
-}
-
-void client_recv_exit(void)
+static void client_recv_exit(void)
 {
     SDL_Event e;
 
@@ -68,7 +31,7 @@ void client_recv_exit(void)
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void client_recv_event(void)
+static void client_recv_event(void)
 {
     size_t sz = sizeof (struct event);
     struct event e;
@@ -78,13 +41,13 @@ void client_recv_event(void)
     {
         switch (e.type)
         {
-        case EVENT_DRAW: client_recv_draw();   break;
-        case EVENT_MOVE: client_recv_move(&e); break;
-        case EVENT_TURN: client_recv_turn(&e); break;
-        case EVENT_ZOOM: client_recv_zoom(&e); break;
-        case EVENT_DIST: client_recv_dist(&e); break;
-        case EVENT_MAGN: client_recv_magn(&e); break;
-        case EVENT_EXIT: client_recv_exit();   break;
+        case EVENT_DRAW: client_recv_draw();                   break;
+        case EVENT_MOVE: status_set_camera_pos(e.x, e.y, e.z); break;
+        case EVENT_TURN: status_set_camera_rot(e.x, e.y, e.z); break;
+        case EVENT_DIST: status_set_camera_dist(e.x);          break;
+        case EVENT_MAGN: status_set_camera_magn(e.x);          break;
+        case EVENT_ZOOM: status_set_camera_zoom(e.x);          break;
+        case EVENT_EXIT: client_recv_exit();                   break;
         }
     }
     else mpi_error(err);
@@ -94,43 +57,27 @@ void client_recv_event(void)
 
 static void client_init(int id)
 {
-    char buf[32];
-
-    sprintf(buf, "Client %d\n", id);
-
-    SDL_WM_SetCaption(buf, buf);
-
-    galaxy_init();
     star_read_catalog_bin("hip_main.bin");
+
+    status_init();
+    galaxy_init();
 }
 
 static void client_draw(void)
 {
     GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
+    GLdouble z = (GLdouble) status_get_camera_zoom();
 
     glClear(GL_COLOR_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
     {
         glLoadIdentity();
-        glFrustum(-a * zoom, +a * zoom, -zoom, +zoom, 1.0, 1000000.0);
+        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000000.0);
     }
-
     glMatrixMode(GL_MODELVIEW);
-    {
-        glLoadIdentity();
-        glTranslatef(0, 0, -dist);
 
-        glRotatef(-rot[0], 1, 0, 0);
-        glRotatef(-rot[1], 0, 1, 0);
-        glRotatef(-rot[2], 0, 0, 1);
-
-        glTranslatef(-pos[0], -pos[1], -pos[2]);
-    }
-
-    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 0, pos);
-    glProgramEnvParameter4dvARB(GL_VERTEX_PROGRAM_ARB, 1, magn);
-
+    status_draw_camera();
     galaxy_draw();
 
     SDL_GL_SwapBuffers();
@@ -160,6 +107,11 @@ static int client_loop(void)
 
 void client(int np, int id)
 {
+    char buf[32];
+
+    sprintf(buf, "%d, %d", (id - 1) * WIN_W, 0);
+    setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
+
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
@@ -167,7 +119,7 @@ void client(int np, int id)
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        if (SDL_SetVideoMode(WIN_W, WIN_H, 0, WIN_M | SDL_OPENGL))
+        if (SDL_SetVideoMode(WIN_W, WIN_H, 0, SDL_OPENGL | SDL_NOFRAME))
         {
             client_init(id);
 

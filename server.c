@@ -5,12 +5,13 @@
 
 #include "opengl.h"
 #include "shared.h"
+#include "status.h"
 #include "server.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
 
-void server_send_event(struct event *e)
+static void server_send_event(struct event *e)
 {
     size_t sz = sizeof (struct event);
     int  err;
@@ -21,87 +22,56 @@ void server_send_event(struct event *e)
 
 void server_send_draw(void)
 {
-    struct event e;
-
-    e.type = EVENT_DRAW;
-    e.x    = 0.0f;
-    e.y    = 0.0f;
-    e.z    = 0.0f;
+    struct event e = { EVENT_DRAW, 0.0f, 0.0f, 0.0f };
 
     server_send_event(&e);
 }
 
-void server_send_move(float x, float y, float z)
+void server_send_move(void)
 {
-    struct event e;
+    struct event e = { EVENT_MOVE, 0.0f, 0.0f, 0.0f };
 
-    e.type = EVENT_MOVE;
-    e.x    = x;
-    e.y    = y;
-    e.z    = z;
-
+    status_get_camera_pos(&e.x, &e.y, &e.z);
     server_send_event(&e);
 }
 
-void server_send_turn(float x, float y, float z)
+void server_send_turn(void)
 {
-    struct event e;
+    struct event e = { EVENT_TURN, 0.0f, 0.0f, 0.0f };
 
-    e.type = EVENT_TURN;
-    e.x    = x;
-    e.y    = y;
-    e.z    = z;
-
+    status_get_camera_rot(&e.x, &e.y, &e.z);
     server_send_event(&e);
 }
 
-void server_send_zoom(float k)
+void server_send_dist(void)
 {
-    struct event e;
+    struct event e = { EVENT_DIST, 0.0f, 0.0f, 0.0f };
 
-    e.type = EVENT_ZOOM;
-    e.x    = k;
-    e.y    = 0.0f;
-    e.z    = 0.0f;
-
+    e.x = status_get_camera_dist();
     server_send_event(&e);
 }
 
-void server_send_dist(float k)
+void server_send_magn(void)
 {
-    struct event e;
+    struct event e = { EVENT_MAGN, 0.0f, 0.0f, 0.0f };
 
-    e.type = EVENT_DIST;
-    e.x    = k;
-    e.y    = 0.0f;
-    e.z    = 0.0f;
-
+    e.x = status_get_camera_magn();
     server_send_event(&e);
 }
 
-void server_send_magn(float k)
+void server_send_zoom(void)
 {
-    struct event e;
+    struct event e = { EVENT_ZOOM, 0.0f, 0.0f, 0.0f };
 
-    e.type = EVENT_MAGN;
-    e.x    = k;
-    e.y    = 0.0f;
-    e.z    = 0.0f;
-
+    e.x = status_get_camera_zoom();
     server_send_event(&e);
 }
 
 void server_send_exit(void)
 {
-    struct event e;
-
-    e.type = EVENT_EXIT;
-    e.x    = 0.0f;
-    e.y    = 0.0f;
-    e.z    = 0.0f;
+    struct event e = { EVENT_EXIT, 0.0f, 0.0f, 0.0f };
 
     server_send_event(&e);
-
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -109,12 +79,28 @@ void server_send_exit(void)
 
 static void server_init(void)
 {
-    SDL_WM_SetCaption("Server", "Server");
+    status_init();
+    galaxy_init();
+
+    server_send_draw();
 }
 
 static void server_draw(void)
 {
+    GLdouble a = (GLdouble) WIN_W / (GLdouble) WIN_H;
+    GLdouble z = (GLdouble) status_get_camera_zoom();
+
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    {
+        glLoadIdentity();
+        glFrustum(-a * z, +a * z, -z, +z, 1.0, 1000000.0);
+    }
+    glMatrixMode(GL_MODELVIEW);
+
+    status_draw_camera();
+    galaxy_draw();
 
     SDL_GL_SwapBuffers();
 }
@@ -127,8 +113,8 @@ static int server_loop(void)
         switch (e.type)
         {
         case SDL_MOUSEMOTION:     script_point(e.motion.x, e.motion.y); break;
-        case SDL_MOUSEBUTTONDOWN: script_click(e.button.button, 1);     break;
-        case SDL_MOUSEBUTTONUP:   script_click(e.button.button, 0);     break;
+        case SDL_MOUSEBUTTONDOWN: script_click(e.button.button,  1);    break;
+        case SDL_MOUSEBUTTONUP:   script_click(e.button.button,  0);    break;
         case SDL_KEYDOWN:         script_keybd(e.key.keysym.sym, 1);    break;
         case SDL_KEYUP:           script_keybd(e.key.keysym.sym, 0);    break;
 
@@ -136,6 +122,8 @@ static int server_loop(void)
             server_send_exit();
             return 0;
         }
+
+    server_draw();
 
     return 1;
 }
@@ -180,6 +168,8 @@ void server(int np, int argc, char *argv[])
 
             if (SDL_SetVideoMode(WIN_W, WIN_H, 0, WIN_M | SDL_OPENGL))
             {
+                SDL_WM_SetCaption(TITLE, TITLE);
+
                 server_init();
 
                 while (SDL_WaitEvent(NULL))

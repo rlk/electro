@@ -23,9 +23,6 @@ void galaxy_init(void)
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    glEnable(GL_VERTEX_PROGRAM_ARB);
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
     glEnable(GL_POINT_SPRITE_ARB);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_TEXTURE_2D);

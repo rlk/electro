@@ -317,7 +317,9 @@ void star_draw(void)
         glBindTexture(GL_TEXTURE_2D, star_texture);
 
     glEnable(GL_VERTEX_PROGRAM_ARB);
+    /*
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    */
     {
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
@@ -333,7 +335,9 @@ void star_draw(void)
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
     }
+    /*
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    */
     glDisable(GL_VERTEX_PROGRAM_ARB);
 }
 

@@ -4,6 +4,7 @@ OBJS=	opengl.o \
 	image.o  \
 	star.o   \
 	galaxy.o \
+	status.o \
 	shared.o \
 	client.o \
 	server.o \
@@ -47,14 +48,15 @@ depend :
 #------------------------------------------------------------------------------
 # DO NOT DELETE
 
-client.o: opengl.h glext.h shared.h client.h
-galaxy.o: opengl.h glext.h galaxy.h viewer.h star.h
+client.o: opengl.h glext.h shared.h status.h client.h
+galaxy.o: opengl.h glext.h galaxy.h star.h
 image.o: opengl.h glext.h image.h
 main.o: server.h client.h
 node.o: opengl.h glext.h
 opengl.o: opengl.h glext.h
-script.o: server.h script.h
-server.o: opengl.h glext.h shared.h server.h star.h
+script.o: server.h status.h script.h
+server.o: opengl.h glext.h shared.h status.h server.h star.h
 shared.o: shared.h
 star.o: opengl.h glext.h image.h star.h
+status.o: opengl.h glext.h
 viewer.o: opengl.h glext.h
