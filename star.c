@@ -307,17 +307,19 @@ int star_read_catalog_txt(const char *filename)
 
 /*---------------------------------------------------------------------------*/
 
+void star_init(void)
+{
+    star_texture = star_make_texture();
+}
+
 void star_draw(void)
 {
     GLsizei s = sizeof (struct star);
 
-    if (star_texture == 0)
-        star_texture = star_make_texture();
-    else
-        glBindTexture(GL_TEXTURE_2D, star_texture);
+    glBindTexture(GL_TEXTURE_2D, star_texture);
 
-    glEnable(GL_VERTEX_PROGRAM_ARB);
     /*
+    glEnable(GL_VERTEX_PROGRAM_ARB);
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
     */
     {
@@ -337,8 +339,8 @@ void star_draw(void)
     }
     /*
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
-    */
     glDisable(GL_VERTEX_PROGRAM_ARB);
+    */
 }
 
 /*---------------------------------------------------------------------------*/

@@ -22,6 +22,7 @@ int star_write_catalog(const char *);
 int star_read_catalog_txt(const char *);
 int star_read_catalog_bin(const char *);
 
+void star_init(void);
 void star_draw(void);
 
 /*---------------------------------------------------------------------------*/

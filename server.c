@@ -81,6 +81,7 @@ static void server_init(void)
 {
     status_init();
     galaxy_init();
+    star_init();
 
     server_send_draw();
 }

@@ -61,6 +61,7 @@ static void client_init(int id)
 
     status_init();
     galaxy_init();
+    star_init();
 }
 
 static void client_draw(void)

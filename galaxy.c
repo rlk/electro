@@ -71,20 +71,10 @@ void circum_draw(void)
     glEnable(GL_TEXTURE_2D);
 }
 
-void galaxy_draw(const double p[3])
+void galaxy_draw(void)
 {
     circum_draw();
     star_draw();
-
-    /*
-    glPointSize(50);
-    glBegin(GL_POINTS);
-    {
-        glColor3f(0.1, 0.1, 0.1);
-        node_draw(0, viewer_depth());
-    }
-    glEnd();
-    */
 }
 
 /*---------------------------------------------------------------------------*/
