@@ -1,9 +1,9 @@
 # Exported from Wings 3D 0.98.28a
-newmtl icosahedron1_auv
-Ns 100.000
+newmtl rock
+Ns 25.000
 d 1.00000
 illum 2
 Kd 1.00000 1.00000 1.00000
 Ka 1.00000 1.00000 1.00000
-Ks 1.00000 1.00000 1.00000
+Ks 0.50000 0.50000 0.50000
 map_Kd rock.png

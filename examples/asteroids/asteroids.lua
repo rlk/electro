@@ -10,7 +10,7 @@
 --    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
 --    General Public License for more details.
 
-sound_on = true
+sound_on = false
 music_on = false
 
 -------------------------------------------------------------------------------
@@ -24,10 +24,11 @@ viewport   = { }
 overlay    = { }
 player     = { }
 entity     = { }
+scores     = { }
 bullets    = { }
-asteroids  = { }
 shockwaves = { }
 explosions = { }
+asteroids  = { }
 
 space      = nil
 scene_2d   = nil
@@ -40,6 +41,7 @@ curr_ships = 0
 curr_speed = 0
 curr_level = 0
 curr_score = 0
+curr_count = 0
 free_score = 0
 high_score = 0
 
@@ -72,8 +74,8 @@ end
 function init_scene()
     local camera_2d = E.create_camera(E.camera_type_orthogonal)
     local camera_3d = E.create_camera(E.camera_type_orthogonal)
-    local light_L   = E.create_light(E.light_type_positional)
-    local light_R   = E.create_light(E.light_type_positional)
+    local light_L   = E.create_light (E.light_type_positional)
+    local light_R   = E.create_light (E.light_type_positional)
     local galaxy    = E.create_galaxy("../galaxy_hip.gal")
 
     space    = E.create_camera(E.camera_type_perspective)
@@ -99,15 +101,14 @@ function init_scene()
     -- Configure the background stars.
 
     E.set_galaxy_magnitude(galaxy, 100.0 * viewport.k)
-    E.set_entity_vert_prog(galaxy, "../star.vp");
-    E.set_entity_frag_prog(galaxy, "../star.fp");
+    E.set_entity_vert_prog(galaxy, "../star.vp")
+    E.set_entity_frag_prog(galaxy, "../star.fp")
 
     -- Configure the lights.
 
     E.set_entity_position(light_L,  -viewport.w / 2, 0,  viewport.h / 2)
     E.set_entity_position(light_R,   viewport.w,     0,               0)
     E.set_entity_position(scene_3d, -viewport.w / 2, 0, -viewport.h / 2)
-    
 
     E.set_light_color(light_L, 1.0, 0.8, 0.5)
     E.set_light_color(light_R, 0.5, 0.8, 1.0)
@@ -134,7 +135,7 @@ function create_overlay(filename, scale, hidden)
     -- Add the new overlay sprite to the scene, hidden if requested.
 
     E.parent_entity  (sprite, scene_2d)
-    E.set_entity_flag(sprite, E.entity_flag_hidden, hidden);
+    E.set_entity_flag(sprite, E.entity_flag_hidden, hidden)
 
     -- Marginal hack: the aspect ratio of the alphabet sprite is 2:1.
 
@@ -298,73 +299,77 @@ function init_entity()
 end
 
 function create_ship(x, y, z)
-    local entity = E.create_clone(entity.ship)
-    local s      = 16
+    local object = E.create_clone(entity.ship)
+    local s = 16.0
 
-    E.parent_entity      (entity, scene_3d)
-    E.set_entity_scale   (entity, s, s, s)
-    E.set_entity_position(entity, x, y, z)
+    E.parent_entity      (object, scene_3d)
+    E.set_entity_scale   (object, s, s, s)
+    E.set_entity_position(object, x, y, z)
 
-    return entity
+    return object
 end
 
 function create_rock(size, x, y, z)
-    local entity = E.create_clone(entity.ship)
-    local s      = 16 * size / 3
+    local object = E.create_clone(entity.rock)
+    local s = 20.0 * size / 3.0
 
-    E.parent_entity      (entity, scene_3d)
-    E.set_entity_scale   (entity, s, s, s)
-    E.set_entity_position(entity, x, y, z)
+    E.parent_entity      (object, scene_3d)
+    E.set_entity_scale   (object, s, s, s)
+    E.set_entity_position(object, x, y, z)
 
-    return entity
+    return object
 end
 
 function create_bullet(x, y, z)
-    local entity = E.create_clone(entity.bullet)
-    local s      = 16
+    local object = E.create_clone(entity.bullet)
+    local s = 0.50
 
-    E.parent_entity      (entity, scene_3d)
-    E.set_entity_scale   (entity, s, s, s)
-    E.set_entity_position(entity, x, y, z)
+    E.parent_entity      (object, scene_3d)
+    E.set_entity_position(object, x, y, z)
+    E.set_entity_scale   (object, s, s, s)
+    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
-    return entity
+    return object
 end
 
-function create_explosion(x, y, z)
-    local entity = E.create_clone(entity.explosions)
-    local s      = 16
+function create_explosion(source, size, x, y, z)
+    local object = E.create_clone(source)
+    local s = 1.0 * size / 3.0
 
-    E.parent_entity      (entity, scene_3d)
-    E.set_entity_scale   (entity, s, s, s)
-    E.set_entity_position(entity, x, y, z)
+    E.parent_entity      (object, scene_3d)
+    E.set_entity_position(object, x, y, z)
+    E.set_entity_scale   (object, s, s, s)
+    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
-    return entity
+    return object
 end
 
-function create_shockwave(x, y, z)
-    local entity = E.create_clone(entity.shockwave)
-    local s      = 16
+function create_shockwave(source, size, x, y, z)
+    local object = E.create_clone(source)
+    local s = 0.25 * size / 3.0
 
-    E.parent_entity      (entity, scene_3d)
-    E.set_entity_scale   (entity, s, s, s)
-    E.set_entity_position(entity, x, y, z)
+    E.parent_entity      (object, scene_3d)
+    E.set_entity_position(object, x, y, z)
+    E.set_entity_scale   (object, s, s, s)
+    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
-    return entity
+    return object
 end
 
 function create_score(value, x, y, z)
-    local entity
-    local s = 16
+    local object
+    local s = 0.25
 
-    if value ==  5 then entity = E.create_clone(entity.score05) end
-    if value == 10 then entity = E.create_clone(entity.score10) end
-    if value == 25 then entity = E.create_clone(entity.score25) end
+    if value ==  5 then object = E.create_clone(entity.score05) end
+    if value == 10 then object = E.create_clone(entity.score10) end
+    if value == 25 then object = E.create_clone(entity.score25) end
 
-    E.parent_entity      (entity, scene_3d)
-    E.set_entity_scale   (entity, s, s, s)
-    E.set_entity_position(entity, x, y, z)
+    E.parent_entity      (object, scene_3d)
+    E.set_entity_position(object, x, y, z)
+    E.set_entity_scale   (object, s, s, s)
+    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
-    return entity
+    return object
 end
 
 -------------------------------------------------------------------------------
@@ -414,7 +419,7 @@ function init_score()
             high_score = score
         end
 
-        if player then
+        if name then
             init1 = string.sub(name, 1, 1)
             init2 = string.sub(name, 2, 2)
             init3 = string.sub(name, 3, 3)
@@ -451,16 +456,16 @@ function add_bullet()
     local pos_x, pos_y, pos_z = E.get_entity_position(player.entity)
     local rot_x, rot_y, rot_z = E.get_entity_rotation(player.entity)
 
-    local a = -math.rad(rot_z)
-    local x =  math.sin(a)
-    local y =  math.cos(a)
+    local a  = -math.rad(rot_z)
+    local dx =  math.sin(a)
+    local dy =  math.cos(a)
 
-    bullet.dx = x * 200 + player.dx
-    bullet.dy = y * 200 + player.dy
+    bullet.dx = dx * 250 + player.dx
+    bullet.dy = dy * 250 + player.dy
 
     -- Add a new bullet sprite to the scene.
 
-    bullet.entity = create_bullet(pos_x + x, pos_y + y, pos_z + z)
+    bullet.entity = create_bullet(pos_x + dx * 10, pos_y + dy * 10, pos_z)
 
     table.insert(bullets, bullet)
 
@@ -471,7 +476,9 @@ function add_bullet()
         set_overlay_curr_score(curr_score)
     end
 
-    if sound then E.play_sound(sound.bullet) end
+    if sound_on then
+        E.play_sound(sound.bullet)
+    end
 end
 
 function del_bullet(id, bullet)
@@ -498,7 +505,7 @@ function step_bullet(dt, id, bullet)
     -- Apply the new position and orientation.
 
     else
-        E.set_entity_position(entity, x, y, z)
+        E.set_entity_position(bullet.entity, x, y, z)
     end
 end
 
@@ -511,14 +518,16 @@ function add_explosion(entity, source, size)
 
     -- Add the new explosion sprite to the scene.
 
-    explosion.entity = create_explosion(x, y, 0)
+    explosion.entity = create_explosion(source, size, x, y, 0)
 
     table.insert(explosions, explosion)
 
-    if size == 1 then E.play_sound(sound_rock1_explosion) end
-    if size == 2 then E.play_sound(sound_rock2_explosion) end
-    if size == 3 then E.play_sound(sound_rock3_explosion) end
-    if size == 5 then E.play_sound(sound_ship_explosion) end
+    if sound_on then
+        if     size == 1 then E.play_sound(sound.rock1_explosion)
+        elseif size == 2 then E.play_sound(sound.rock2_explosion)
+        elseif size == 3 then E.play_sound(sound.rock3_explosion)
+        elseif size == 5 then E.play_sound(sound.ship_explosion) end
+    end
 end
 
 function del_explosion(id, explosion)
@@ -527,7 +536,7 @@ function del_explosion(id, explosion)
 end
 
 function step_explosion(dt, id, explosion)
-    local a = E.get_entity_alpha(explosion.entity) - dt;
+    local a = E.get_entity_alpha(explosion.entity) - dt
 
     -- Fade an explosion over 1 second, delete it when it disappears.
 
@@ -547,7 +556,7 @@ function add_shockwave(entity, source, size)
 
     -- Add the new shockwave sprite to the scene.
 
-    shockwave.entity = create_shockwave(x, y, 0)
+    shockwave.entity = create_shockwave(source, size, x, y, 0)
 
     table.insert(shockwaves, shockwave)
 end
@@ -558,13 +567,13 @@ function del_shockwave(id, shockwave)
 end
 
 function step_shockwave(dt, id, shockwave)
-    local a       = E.get_entity_alpha(shockwave.entity) - dt;
-    local x, y, z = E.get_entity_scale(shockwave.entity);
+    local a       = E.get_entity_alpha(shockwave.entity) - dt
+    local x, y, z = E.get_entity_scale(shockwave.entity)
 
     -- Fade and expand a shockwave over 1 second, delete it when it disappears.
 
-    x = x + dt * 0.05
-    y = y + dt * 0.05
+    x = x + dt
+    y = y + dt
 
     if a < 0 then
         del_shockwave(id, shockwave)
@@ -594,7 +603,9 @@ function add_score(entity, value)
 
         set_overlay_curr_ships(curr_ships)
 
-        E.play_sound(sound.free)
+        if sound_on then
+            E.play_sound(sound.free)
+        end
     end
 
     -- Add the new score sprite to the scene.
@@ -610,7 +621,7 @@ function del_score(id, score)
 end
 
 function step_score(dt, id, score)
-    local a = E.get_entity_alpha(score.entity) - dt / 3.0;
+    local a = E.get_entity_alpha(score.entity) - dt / 3.0
 
     -- Fade a score over 3 seconds, delete it when it disappears.
 
@@ -655,37 +666,34 @@ function add_asteroid(entity, size)
 
     table.insert(asteroids, asteroid)
 
-    asteroids.count = asteroids.count + 1
+    curr_count = curr_count + 1
 end
 
 function del_asteroid(id, asteroid)
     E.delete_entity(asteroid.entity)
     table.remove(asteroids, id)
 
-    asteroids.count = asteroids.count - 1
-
-    return (asteroids.count == 0)
+    curr_count = curr_count - 1
 end
 
 function frag_asteroid(id, asteroid)
 
-    local entity = asteroid.entity
     local size   = asteroid.size
 
     -- Break a big asteroid into smaller asteroids.
 
-    add_shockwave(entity, global.rock_shockwave, size)
-    add_explosion(entity, global.rock_explosion, size)
+    add_shockwave(asteroid.entity, entity.rock_shockwave, size)
+    add_explosion(asteroid.entity, entity.rock_explosion, size)
 
     if size > 1 then
-        add_asteroid(entity, size - 1)
-        add_asteroid(entity, size - 1)
-        add_asteroid(entity, size - 1)
+        add_asteroid(asteroid.entity, size - 1)
+        add_asteroid(asteroid.entity, size - 1)
+        add_asteroid(asteroid.entity, size - 1)
     end
 
-    if size == 3 then add_score(entity, 25) end
-    if size == 2 then add_score(entity, 10) end
-    if size == 1 then add_score(entity,  5) end
+    if size == 3 then add_score(asteroid.entity, 25) end
+    if size == 2 then add_score(asteroid.entity, 10) end
+    if size == 1 then add_score(asteroid.entity,  5) end
 
     -- Delete the original asteroid.
 
@@ -725,24 +733,15 @@ function step_asteroid(dt, id, asteroid)
 
     -- Apply the new position and orientation.
 
-    E.set_entity_position(entity, pos_x, pos_y, pos_z)
-    E.set_entity_rotation(entity, rot_x, rot_y, rot_z)
+    E.set_entity_position(asteroid.entity, pos_x, pos_y, pos_z)
+    E.set_entity_rotation(asteroid.entity, rot_x, rot_y, rot_z)
 
     -- Check this asteroid against all bullets.
 
     for jd, bullet in pairs(bullets) do
-        if entity_distance(asteroid.entity, bullet.entity) < size then
+        if entity_distance(asteroid.entity, bullet.entity) < 15 * size then
             frag_asteroid(id, asteroid)
             del_bullet   (jd, bullet)
-        end
-    end
-
-    -- Check this asteroid against the player.
-
-    if player.alive then
-        if entity_distance(asteroid.entity, player.entity) < size then
-            kill_player()
-            return false
         end
     end
 
@@ -750,6 +749,16 @@ function step_asteroid(dt, id, asteroid)
 end
 
 -------------------------------------------------------------------------------
+
+function test_player(id, asteroid)
+    local size = asteroid.size
+
+    if entity_distance(asteroid.entity, player.entity) < 20 * size then
+        return asteroid
+    else
+        return nil
+    end
+end
 
 function init_player()
     if not player.entity then
@@ -776,7 +785,7 @@ function init_player()
     end
 end
 
-function step_player(id)
+function step_player(dt)
     local pos_x, pos_y, pos_z = E.get_entity_position(player.entity)
     local rot_x, rot_y, rot_z = E.get_entity_rotation(player.entity)
     local joy_x, joy_y        = E.get_joystick(0)
@@ -784,8 +793,8 @@ function step_player(id)
     -- Handle thrust.
 
     if player.thrusting then
-        player.dx = player.dx - math.sin(math.rad(rot_z)) * dt * 20
-        player.dy = player.dy + math.cos(math.rad(rot_z)) * dt * 20
+        player.dx = player.dx - math.sin(math.rad(rot_z)) * dt * 200
+        player.dy = player.dy + math.cos(math.rad(rot_z)) * dt * 200
     end
 
     -- Handle position change.
@@ -814,8 +823,12 @@ function step_player(id)
 
     -- Apply the new position and rotation.
 
-    E.set_entity_position(ship, pos_x, pos_y, pos_z)
-    E.set_entity_rotation(ship, rot_x, rot_y, rot_z)
+    E.set_entity_position(player.entity, pos_x, pos_y, pos_z)
+    E.set_entity_rotation(player.entity, rot_x, rot_y, rot_z)
+
+    -- Check the player against all asteroids.
+
+    return table.foreach(asteroids, test_player)
 end
 
 function kill_player()
@@ -825,12 +838,36 @@ function kill_player()
     player.thrusting = false
     player.turning_L = false
     player.turning_r = false
-    player.dx = 0
-    player.dy = 0
+    player.dx        = 0
+    player.dy        = 0
 
-    E.stop_sound(sound.thrust2)
+    E.set_entity_flag(player.entity, E.entity_flag_hidden, true)
 
-    E.set_entity_flag(player.entity. E.entity_flag_hidden, true)
+    if sound_on then
+        E.stop_sound(sound.thrust2)
+    end
+end
+
+-------------------------------------------------------------------------------
+
+function init_level()
+    for i = 1, curr_level + 3 do
+        add_asteroid(nil, 3)
+    end
+end
+
+function stop_level()
+    while curr_count > 0 do
+        table.foreach(asteroids, del_asteroid)
+    end
+end
+
+function step_level(dt)
+    table.foreach(scores,     function (i, v) step_score    (dt, i, v) end)
+    table.foreach(bullets,    function (i, v) step_bullet   (dt, i, v) end)
+    table.foreach(asteroids,  function (i, v) step_asteroid (dt, i, v) end)
+    table.foreach(shockwaves, function (i, v) step_shockwave(dt, i, v) end)
+    table.foreach(explosions, function (i, v) step_explosion(dt, i, v) end)
 end
 
 -------------------------------------------------------------------------------
@@ -853,7 +890,7 @@ end
 
 function state.title.leave()
     curr_ships =    3
-    curr_speed =   10
+    curr_speed =  100
     curr_level =    0
     curr_score =    0
     free_score = 1000
@@ -886,6 +923,11 @@ function state.ready.enter()
     E.set_entity_flag(overlay.ready, E.entity_flag_hidden, false)
     E.set_entity_flag(overlay.level, E.entity_flag_hidden, false)
 
+    curr_level = curr_level + 1
+
+    init_player()
+    init_level()
+
     set_overlay_digit(overlay.level, curr_level)
 end
 
@@ -901,7 +943,7 @@ end
 
 function state.ready.button_A(s)
     if s then
-        return state.title
+        return state.play
     else
         return state.ready
     end
@@ -923,14 +965,28 @@ function state.play.leave()
 end
 
 function state.play.timer(dt)
-    return state.play
+
+    if step_player(dt) then
+        kill_player()
+
+        return state.dead
+    else
+        step_scene(dt)
+        step_level(dt)
+
+        return state.play
+    end
 end
 
 function state.play.button_A(s)
+    if s then
+        add_bullet(player.entity)
+    end
     return state.play
 end
 
 function state.play.button_B(s)
+    player.thrusting = s
     return state.play
 end
 
@@ -980,8 +1036,8 @@ end
 
 function state.clear.button_A(s)
     if s and time_state > 1 then
-        curr_speed = curr_speed + 10
-        curr_level = curr_level +  1
+        curr_speed = curr_speed * 1.25
+        curr_level = curr_level + 1
         return state.ready
     else
         return state.clear
@@ -1063,6 +1119,8 @@ end
 -- state's event handlers.
 
 function do_start()
+    math.randomseed(os.time())
+
     init_viewport()
     init_scene()
     init_entity()
@@ -1073,7 +1131,7 @@ function do_start()
     curr_state = state.null
     high_score = 100
 
-    E.enable_timer(true);
+    E.enable_timer(true)
 end
 
 function do_timer(time)
@@ -1113,10 +1171,10 @@ function do_keyboard(key, down)
     end
 
     if key == 275 then
-        player.turning_L = down
+        player.turning_R = down
     end
     if key == 276 then
-        player.turning_R = down
+        player.turning_L = down
     end
 
     return false
