@@ -37,6 +37,8 @@ extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
+extern PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
+extern PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 
 /*---------------------------------------------------------------------------*/
 

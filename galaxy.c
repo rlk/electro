@@ -23,37 +23,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-static void galaxy_init_prog(GLenum T, int id, const char *filename)
-{
-    int  len = PROGLEN;
-    int  err;
-    char buf[PROGLEN];
-
-    FILE  *fp;
-
-    memset(buf, 0, PROGLEN);
-
-    /* If this host is root, load the shader file. */
-
-    if ((id == 0) && (fp = fopen(filename, "r")))
-    {
-        len = (int) fread(buf, 1, PROGLEN, fp);
-        fclose(fp);
-    }
-
-    /* Make sure all hosts have the shader.  Load it. */
-
-    if ((err = MPI_Bcast(buf, len, MPI_BYTE, 0, MPI_COMM_WORLD)) !=MPI_SUCCESS)
-        mpi_error(err);
-    else
-    {
-        glProgramStringARB(T, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(buf), buf);
-
-        if (glGetError() != GL_NO_ERROR)
-            printf("%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-    }
-}
-
 void galaxy_init(int id)
 {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
@@ -67,8 +36,8 @@ void galaxy_init(int id)
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    galaxy_init_prog(GL_VERTEX_PROGRAM_ARB,   id, "star.vp");
-    galaxy_init_prog(GL_FRAGMENT_PROGRAM_ARB, id, "star.fp");
+    mpi_load_program(id, "star.vp", GL_VERTEX_PROGRAM_ARB);
+    mpi_load_program(id, "star.fp", GL_FRAGMENT_PROGRAM_ARB);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -13,6 +13,8 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include "opengl.h"
+
 /*---------------------------------------------------------------------------*/
 
 #define TITLE "Total Perspective Vortex"
@@ -57,6 +59,9 @@ void viewport_sync(int, int);
 /*---------------------------------------------------------------------------*/
 
 void mpi_error(int);
+
+GLuint mpi_load_program(int id, const char *, GLenum);
+GLuint mpi_load_texture(int id, const char *);
 
 /*---------------------------------------------------------------------------*/
 

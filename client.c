@@ -71,9 +71,8 @@ static void client_init(int id)
 {
     glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
 
-    star_read_catalog_bin("hip_main.bin");
     galaxy_init(id);
-    star_init();
+    star_init(id);
 }
 
 static void client_draw(void)

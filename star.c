@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <mpi.h>
 #include <sys/stat.h>
 
 #ifdef _WIN32
@@ -313,9 +314,29 @@ int star_read_catalog_txt(const char *filename)
 
 /*---------------------------------------------------------------------------*/
 
-void star_init(void)
+void star_init(int id)
 {
+    int err;
+    int len;
+
     star_texture = star_make_texture();
+
+    /* Broadcast the size of the star catalog. */
+
+    if ((err = MPI_Bcast(&star_count, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    /* If this host is not root, acquire storage for the catalog. */
+
+    if (id != 0)
+        star_data = (struct star *) calloc(sizeof (struct star), star_count);
+
+    /* Broadcast the star catalog data. */
+
+    len = star_count * sizeof (struct star);
+
+    if ((err = MPI_Bcast(star_data, len, MPI_BYTE, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
 }
 
 void star_draw(void)

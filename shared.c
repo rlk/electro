@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <mpi.h>
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -21,8 +22,20 @@
 #include <unistd.h>
 #endif
 
+#include "image.h"
 #include "status.h"
 #include "shared.h"
+
+/*---------------------------------------------------------------------------*/
+
+void mpi_error(int err)
+{
+    char buf[256];
+    int len = 256;
+
+    MPI_Error_string(err, buf, &len);
+    fprintf(stderr, "MPI Error: %s\n", buf);
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -125,13 +138,96 @@ void viewport_sync(int i, int n)
 
 /*---------------------------------------------------------------------------*/
 
-void mpi_error(int err)
+GLuint mpi_load_program(int id, const char *filename, GLenum target)
 {
-    char buf[256];
-    int len = 256;
+    struct stat buf;
 
-    MPI_Error_string(err, buf, &len);
-    fprintf(stderr, "%s\n", buf);
+    char *ptr = NULL;
+    int   len = 0;
+    int   err;
+
+    GLuint program = 0;
+
+    /* If this host is root, determine the file size. */
+
+    if ((id == 0) && (stat(filename, &buf) == 0))
+        len = buf.st_size + 1;
+        
+    /* Broadcast the size and allocate that much memory. */
+
+    if ((err = MPI_Bcast(&len, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    if ((ptr = (char *) calloc(1, len)))
+    {
+        FILE *fp;
+
+        /* If this host is root, read the contents of the file. */
+
+        if ((id == 0) && (fp = fopen(filename, "r")))
+        {
+            fread(ptr, 1, len, fp);
+            fclose(fp);
+        }
+
+        /* Broadcast the contents of the file. */
+
+        if ((err = MPI_Bcast(ptr, len, MPI_CHAR, 0, MPI_COMM_WORLD)))
+            mpi_error(err);
+
+        /* Generate and initialize a program object. */
+
+        glGenProgramsARB(1, &program);
+        glBindProgramARB(target, program);
+        glProgramStringARB(target, GL_PROGRAM_FORMAT_ASCII_ARB, len - 1, ptr);
+
+        /* If this host is root, report any error in the program text. */
+
+        if ((id == 0) && (glGetError() != GL_NO_ERROR))
+            fprintf(stderr, "%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+
+        free(ptr);
+    }
+    return program;
+}
+
+GLuint mpi_load_texture(int id, const char *filename)
+{
+    GLubyte *p = NULL;
+    int      w = 0;
+    int      h = 0;
+    int      b = 0;
+
+    GLuint texture = 0;
+    int err;
+
+    /* If this host is root, load the image file. */
+
+    if (id == 0) p = (GLubyte *) image_load_png(filename, &w, &h, &b);
+
+    /* Broadcast the image attributes. */
+
+    if ((err = MPI_Bcast(&w, 1, MPI_INT, 0, MPI_COMM_WORLD)) ||
+        (err = MPI_Bcast(&h, 1, MPI_INT, 0, MPI_COMM_WORLD)) ||
+        (err = MPI_Bcast(&b, 1, MPI_INT, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    /* If this host is not root, allocate a pixel buffer. */
+
+    if (id != 0) p = (GLubyte *) malloc(w * h * b);
+
+    /* Broadcast the pixel data. */
+
+    if ((err = MPI_Bcast(p, w * h * b, MPI_BYTE, 0, MPI_COMM_WORLD)))
+        mpi_error(err);
+
+    /* Create a texture object. */
+
+    texture = image_make_tex(p, w, h, b);
+
+    free(p);
+
+    return texture;
 }
 
 /*---------------------------------------------------------------------------*/

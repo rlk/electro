@@ -64,6 +64,8 @@ PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
+PFNGLBINDPROGRAMARBPROC              glBindProgramARB;
+PFNGLGENPROGRAMSARBPROC              glGenProgramsARB;
 
 GLboolean opengl_init(void)
 {
@@ -80,6 +82,10 @@ GLboolean opengl_init(void)
             opengl_proc("glVertexAttribPointerARB");
         glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
             opengl_proc("glProgramStringARB");
+        glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
+            opengl_proc("glBindProgramARB");
+        glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
+            opengl_proc("glGenProgramsARB");
     }
     else return GL_FALSE;
 

@@ -27,7 +27,7 @@ static GLubyte *image_punt(const char *message)
 
 /*---------------------------------------------------------------------------*/
 
-GLuint image_make_tex(const GLubyte *p, GLsizei w, GLsizei h, GLsizei b)
+GLuint image_make_tex(const GLubyte *p, int w, int h, int b)
 {
     GLenum f = GL_RGB;
     GLuint o;
@@ -62,9 +62,9 @@ GLuint image_make_tex(const GLubyte *p, GLsizei w, GLsizei h, GLsizei b)
 
 /*---------------------------------------------------------------------------*/
 
-GLubyte *image_load_png(const char *filename, GLsizei *width,
-                                              GLsizei *height,
-                                              GLsizei *bytes)
+GLubyte *image_load_png(const char *filename, int *width,
+                                              int *height,
+                                              int *bytes)
 {
     FILE   *fp = NULL;
     GLubyte *p = NULL;
