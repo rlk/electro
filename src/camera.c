@@ -20,6 +20,7 @@
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
+#include "utility.h"
 #include "camera.h"
 
 /*---------------------------------------------------------------------------*/
@@ -32,6 +33,11 @@ static int            C_max;
 static int camera_exists(int cd)
 {
     return (C && 0 <= cd && cd < C_max && C[cd].count);
+}
+
+static int alloc_camera(void)
+{
+    return balloc((void **) &C, &C_max, sizeof (struct camera), camera_exists);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -310,7 +316,7 @@ int send_create_camera(int type)
 {
     int cd;
 
-    if ((cd = buffer_unused(C_max, camera_exists)) >= 0)
+    if ((cd = alloc_camera()) >= 0)
     {
         pack_event(EVENT_CREATE_CAMERA);
         pack_index(cd);

@@ -24,6 +24,7 @@
 #include "light.h"
 #include "pivot.h"
 #include "event.h"
+#include "utility.h"
 #include "entity.h"
 
 /*---------------------------------------------------------------------------*/
@@ -37,6 +38,11 @@ static int            E_max;
 int entity_exists(int id)
 {
     return (E && 0 <= id && id < E_max && E[id].type);
+}
+
+static int alloc_entity(void)
+{
+    return balloc((void **) &E, &E_max, sizeof (struct entity), entity_exists);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -58,6 +64,18 @@ const char *get_entity_type_name(int id)
     return "UNKNOWN";
 }
 
+const char *get_entity_debug_id(int id)
+{
+    static char str[64];
+
+    sprintf(str, "%d %s[%d] (%d)", id, get_entity_type_name(id),
+            E[id].data, E[id].par);
+
+    return str;
+}
+
+/*---------------------------------------------------------------------------*/
+
 int entity_data(int id)
 {
     return entity_exists(id) ? E[id].data : -1;
@@ -69,7 +87,7 @@ int entity_type(int id)
 }
 
 /*---------------------------------------------------------------------------*/
-
+/*
 int buffer_unused(int max, int (*exists)(int))
 {
     int id;
@@ -80,7 +98,7 @@ int buffer_unused(int max, int (*exists)(int))
 
     return -1;
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 void transform_entity(int id, float frustum1[16], const float frustum0[16])
@@ -303,7 +321,7 @@ int send_create_entity(int type, int data)
 {
     int id;
 
-    if ((id = buffer_unused(E_max, entity_exists)) >= 0)
+    if ((id = alloc_entity()) >= 0)
     {
         pack_index(id);
         pack_index(type);
@@ -536,14 +554,16 @@ static void create_clone(int id, int jd)
 
 int send_create_clone(int id)
 {
-    int jd = buffer_unused(E_max, entity_exists);
+    int jd;
 
-    pack_event(EVENT_CREATE_CLONE);
-    pack_index(id);
-    pack_index(jd);
+    if ((jd = alloc_entity()) >= 0)
+    {
+        pack_event(EVENT_CREATE_CLONE);
+        pack_index(id);
+        pack_index(jd);
 
-    create_clone(id, jd);
-
+        create_clone(id, jd);
+    }
     return jd;
 }
 

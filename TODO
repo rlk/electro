@@ -1,6 +1,5 @@
-Better deep delete policy / vector grow
-    delete subtree on entity delete?
-garbage collection / child metatable
+fp/vp per entity (also fixes standard string length)
+
 Scale and billboard frustum (thorough test)
 Windows port
 Website

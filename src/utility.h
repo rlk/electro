@@ -35,6 +35,8 @@
 float htonf(float);
 float ntohf(float);
 
+int balloc(void **, int *, size_t, int (*)(int));
+
 /*---------------------------------------------------------------------------*/
 
 #endif

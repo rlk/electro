@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #include <math.h>
 #include <sys/stat.h>
 
@@ -21,6 +22,7 @@
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
+#include "utility.h"
 #include "galaxy.h"
 
 /*---------------------------------------------------------------------------*/
@@ -40,6 +42,11 @@ static GLuint star_vert;
 static int galaxy_exists(int gd)
 {
     return (G && 0 <= gd && gd < G_max && G[gd].count);
+}
+
+static int alloc_galaxy(void)
+{
+    return balloc((void **) &G, &G_max, sizeof (struct galaxy), galaxy_exists);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -235,8 +242,8 @@ static void fini_galaxy_prep(struct galaxy *g)
 
     /* Find the Outer Limits (please stand by). */
 
-    g->bound[0] = g->bound[1] = g->bound[2] =  HUGE_VAL;
-    g->bound[3] = g->bound[4] = g->bound[5] = -HUGE_VAL;
+    g->bound[0] = g->bound[1] = g->bound[2] =  FLT_MAX;
+    g->bound[3] = g->bound[4] = g->bound[5] =  FLT_MIN;
 
     for (i = 0; i < g->S_num; ++i)
     {
@@ -332,7 +339,7 @@ int send_create_galaxy(const char *filename)
 {
     int gd;
 
-    if ((gd = buffer_unused(G_max, galaxy_exists)) >= 0)
+    if ((gd = alloc_galaxy()) >= 0)
     {
         /* If the file exists and is successfully read... */
 
@@ -371,6 +378,8 @@ int send_create_galaxy(const char *filename)
 void recv_create_galaxy(void)
 {
     int gd = unpack_index();
+
+    G[gd].count = 1;
 
     /* Unpack the object header. */
 

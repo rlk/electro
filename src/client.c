@@ -85,6 +85,7 @@ static void client_recv(void)
         case EVENT_SET_CAMERA_ZOOM:      recv_set_camera_zoom();      break;
         case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
+        case EVENT_SET_BACKGROUND:       recv_set_background();       break;
         }
 }
 

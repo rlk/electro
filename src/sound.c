@@ -40,6 +40,11 @@ static int sound_exists(int sd)
     return (S && 0 <= sd && sd < S_max && S[sd].mode);
 }
 
+static int alloc_sound(void)
+{
+    return balloc((void **) &S, &S_max, sizeof (struct sound), sound_exists);
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
@@ -142,7 +147,7 @@ int create_sound(const char *filename)
     int   sd;
     FILE *fp;
 
-    if ((sd = buffer_unused(S_max, sound_exists)) >= 0)
+    if ((sd = alloc_sound()) >= 0)
     {
         if ((fp = fopen(filename, FMODE_RB)))
         {

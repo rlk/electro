@@ -18,6 +18,7 @@
 #include "entity.h"
 #include "image.h"
 #include "event.h"
+#include "utility.h"
 #include "sprite.h"
 
 /*---------------------------------------------------------------------------*/
@@ -31,6 +32,11 @@ static int            S_max;
 static int sprite_exists(int sd)
 {
     return (S && 0 <= sd && sd < S_max && S[sd].count);
+}
+
+static int alloc_sprite(void)
+{
+    return balloc((void **) &S, &S_max, sizeof (struct sprite), sprite_exists);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -90,7 +96,7 @@ int send_create_sprite(const char *filename)
 {
     int sd;
 
-    if ((sd = buffer_unused(S_max, sprite_exists)) >= 0)
+    if ((sd = alloc_sprite()) >= 0)
     {
         S[sd].image = send_create_image(filename);
         S[sd].count = 1;

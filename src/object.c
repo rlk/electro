@@ -19,6 +19,7 @@
 #include "entity.h"
 #include "image.h"
 #include "event.h"
+#include "utility.h"
 #include "object.h"
 
 #define MAXSTR 256
@@ -34,6 +35,11 @@ static int            O_max;
 static int object_exists(int od)
 {
     return (O && 0 <= od && od < O_max && O[od].count);
+}
+
+static int alloc_object(void)
+{
+    return balloc((void **) &O, &O_max, sizeof (struct object), object_exists);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -608,7 +614,7 @@ int send_create_object(const char *filename)
     int od;
     int si;
 
-    if ((od = buffer_unused(O_max, object_exists)) >= 0)
+    if ((od = alloc_object()) >= 0)
     {
         /* If the file exists and is successfully read... */
 

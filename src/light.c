@@ -17,6 +17,7 @@
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
+#include "utility.h"
 #include "light.h"
 
 /*---------------------------------------------------------------------------*/
@@ -30,6 +31,11 @@ static int           L_max;
 static int light_exists(int ld)
 {
     return (L && 0 <= ld && ld < L_max && L[ld].count);
+}
+
+static int alloc_light(void)
+{
+    return balloc((void **) &L, &L_max, sizeof (struct light), light_exists);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -86,7 +92,7 @@ int send_create_light(int type)
 {
     int ld;
 
-    if ((ld = buffer_unused(L_max, light_exists)) >= 0)
+    if ((ld = alloc_light()) >= 0)
     {
         pack_event(EVENT_CREATE_LIGHT);
         pack_index(ld);

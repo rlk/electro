@@ -1,5 +1,5 @@
 
-image_file = "venus.png"
+image_file = "venus.jpg"
 
 view_l = 0
 view_r = 0
@@ -12,9 +12,9 @@ camera  = nil
 numbers = { }
 sprites = { }
 
-curr_i = 4
-curr_j = 4
-time   = 0
+curr_i  = 4
+curr_j  = 4
+time    = 0
 
 -------------------------------------------------------------------------------
 
@@ -157,7 +157,7 @@ function do_timer(dt)
     if time > 0.25 then
         move_random()
         time = 0
-        return true
+      return true
     end
 
     return false

@@ -241,6 +241,11 @@ static int image_exists(int id)
     return (I && 0 <= id && id < I_max && I[id].filename);
 }
 
+static int alloc_image(void)
+{
+    return balloc((void **) &I, &I_max, sizeof (struct image), image_exists);
+}
+
 /*---------------------------------------------------------------------------*/
 
 int init_image(void)
@@ -272,9 +277,9 @@ void *load_image(const char *filename, int *width,
     const char *extension = filename + strlen(filename) - 4;
     
 
-    if      (strcasecmp(extension, ".png") == 0)
+    if      (strcmp(extension, ".png") == 0 || strcmp(extension, ".PNG") == 0)
         return load_png_image(filename, width, height, bytes);
-    else if (strcasecmp(extension, ".jpg") == 0)
+    else if (strcmp(extension, ".jpg") == 0 || strcmp(extension, ".JPG") == 0)
         return load_jpg_image(filename, width, height, bytes);
     else
         return punt_image("Unsupported image format");
@@ -294,7 +299,7 @@ int send_create_image(const char *filename)
 
     /* Didn't find it.  It's new. */
 
-    if ((id = buffer_unused(I_max, image_exists)) >= 0)
+    if ((id = alloc_image()) >= 0)
     {
         /* Note the file name. */
 

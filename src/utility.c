@@ -10,6 +10,9 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -47,3 +50,30 @@ float ntohf(float f)
 
 /*---------------------------------------------------------------------------*/
 
+int balloc(void **buf, int *len, size_t siz, int (*occupied)(int))
+{
+    void *ptr;
+    int   i;
+
+    /* Scan for an unused vector element. */
+
+    for (i = 0; i < *len; ++i)
+        if (!occupied(i))
+            return i;
+
+    /* The vector is full.  Reallocate it at double size. */
+
+    if ((ptr = realloc(*buf, *len * 2 * siz)))
+    {
+        i    = *len;
+        *len = *len * 2;
+        *buf =  ptr;
+
+        memset(((unsigned char *) (*buf)) + *len * siz, 0, *len * siz);
+    }
+    else i = -1;
+
+    return i;
+}
+
+/*---------------------------------------------------------------------------*/

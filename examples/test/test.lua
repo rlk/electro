@@ -10,9 +10,15 @@ tumble = false
 
 function dump(entity, depth)
     local i = 0
+    local s = ""
 
-    print(string.rep("   ", depth), entity, E.get_entity_parent(entity))
+    for i = 1, depth do
+        s = s.."   "
+    end
 
+    print(s .. E.get_entity_debug_id(entity))
+
+    i = 0
     while E.get_entity_child(entity, i) do
         dump(E.get_entity_child(entity, i), depth + 1)
         i = i + 1
@@ -39,7 +45,7 @@ function do_start()
 
     E.set_camera_distance(camera, 10)
 
-    dump(camera, 1)
+    dump(nil, 0)
 end
 
 function do_click(b, s)

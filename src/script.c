@@ -758,6 +758,16 @@ static int script_loop_sound(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+
+static int script_get_entity_debug_id(lua_State *L)
+{
+    int id = script_getentity("get_entity_debug_id", L, -1);
+
+    lua_pushstring(L, get_entity_debug_id(id));
+    return 1;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Script callback backcallers                                               */
 
 static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
@@ -962,6 +972,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_viewport",         script_get_viewport);
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);
+    lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
 
     /* Constants. */
 

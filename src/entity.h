@@ -51,6 +51,7 @@ int buffer_unused(int, int (*)(int));
 /*---------------------------------------------------------------------------*/
 
 const char *get_entity_type_name(int);
+const char *get_entity_debug_id(int);
 
 int  entity_exists(int);
 
