@@ -1,3 +1,5 @@
+fix OBJ reader
+svn revision number
 fix asteroids
 stereo
 camera offset per tile (for geowall and planar)
@@ -9,3 +11,4 @@ Improve assertions (delineate necessary thing_exists vs thing_assert)
 
 Particle system
 TTF support
+
