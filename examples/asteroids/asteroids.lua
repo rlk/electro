@@ -29,8 +29,10 @@ bullets    = { }
 shockwaves = { }
 explosions = { }
 asteroids  = { }
+initials   = { }
 
 space      = nil
+thrust     = nil
 scene_2d   = nil
 scene_3d   = nil
 
@@ -46,10 +48,32 @@ free_score = 0
 high_score = 0
 
 -------------------------------------------------------------------------------
+-- Miscellaneous handy utility functions...
 
 function hide(entity)
     E.set_entity_flag(entity, E.entity_flag_hidden, true)
+
     return entity
+end
+
+function next_letter(letter)
+    local byte = string.byte(letter)
+
+    if byte >= 90 then
+        return "A"
+    else
+        return string.char(byte + 1)
+    end
+end
+
+function prev_letter(letter)
+    local byte = string.byte(letter)
+
+    if byte <= 65 then
+        return "Z"
+    else
+        return string.char(byte - 1)
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -169,7 +193,7 @@ function init_overlay()
     for i = 1, 3 do
         overlay.high_inits[i] = create_overlay("alpha.png", 0.125, false)
 
-        E.set_entity_position(overlay.high_inits[i], viewport.L - 48 * i + 400,
+        E.set_entity_position(overlay.high_inits[i], viewport.L + 48 * i + 200,
                                                      viewport.T - 32, 0)
     end
 
@@ -399,9 +423,9 @@ function init_score()
 
     -- Set defaults in case the high score file does not exist.
 
-    local init1 = "A"
-    local init2 = "A"
-    local init3 = "A"
+    initials[1] = "A"
+    initials[2] = "A"
+    initials[3] = "A"
 
     high_score = 100
 
@@ -420,20 +444,29 @@ function init_score()
         end
 
         if name then
-            init1 = string.sub(name, 1, 1)
-            init2 = string.sub(name, 2, 2)
-            init3 = string.sub(name, 3, 3)
+            initials[1] = string.sub(name, 1, 1)
+            initials[2] = string.sub(name, 2, 2)
+            initials[3] = string.sub(name, 3, 3)
         end
     end
 
     -- Apply the current high score to the display.
 
-    set_overlay_alpha(overlay.high_inits[1], init1)
-    set_overlay_alpha(overlay.high_inits[2], init2)
-    set_overlay_alpha(overlay.high_inits[3], init3)
+    set_overlay_alpha(overlay.high_inits[1], initials[1])
+    set_overlay_alpha(overlay.high_inits[2], initials[2])
+    set_overlay_alpha(overlay.high_inits[3], initials[3])
 
     set_overlay_curr_score(curr_score)
     set_overlay_high_score(high_score)
+end
+
+function write_score()
+    local fout = io.open(high_score_file, "w")
+
+    if fout then
+        fout:write(high_score, initials[1], initials[2], initials[3])
+        fout:close()
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -678,7 +711,7 @@ end
 
 function frag_asteroid(id, asteroid)
 
-    local size   = asteroid.size
+    local size = asteroid.size
 
     -- Break a big asteroid into smaller asteroids.
 
@@ -761,13 +794,27 @@ function test_player(id, asteroid)
 end
 
 function init_player()
+    local s = 0.05
+
+    -- If the player has not yet been initialized, create its entities.
+
     if not player.entity then
         player.entity = create_ship(0, 0, 0)
+
+        thrust = E.create_sprite("thrust.png")
+        E.parent_entity(thrust, player.entity)
+        E.set_entity_scale(thrust, s, s, s)
+
+        E.set_entity_flag(thrust, E.entity_flag_unlit,  true)
+        E.set_entity_flag(thrust, E.entity_flag_hidden, true)
     end
+
+    -- If any ships remain, initialize one of them.
 
     if curr_ships > 0 then
         E.set_entity_position(player.entity, 0, 0, 0)
         E.set_entity_flag    (player.entity, E.entity_flag_hidden, false)
+        E.set_entity_flag    (thrust,        E.entity_flag_hidden, true)
 
         player.thrusting = false
         player.turning_L = false
@@ -842,6 +889,7 @@ function kill_player()
     player.dy        = 0
 
     E.set_entity_flag(player.entity, E.entity_flag_hidden, true)
+    E.set_entity_flag(thrust,        E.entity_flag_hidden, true)
 
     if sound_on then
         E.stop_sound(sound.thrust2)
@@ -903,6 +951,7 @@ end
 
 function state.title.timer(dt)
     step_scene(dt)
+    step_level(dt)
     return state.title
 end
 
@@ -925,8 +974,9 @@ function state.ready.enter()
 
     curr_level = curr_level + 1
 
-    init_player()
+    stop_level()
     init_level()
+    init_player()
 
     set_overlay_digit(overlay.level, curr_level)
 end
@@ -949,23 +999,12 @@ function state.ready.button_A(s)
     end
 end
 
-function state.ready.button_B(s)
-    return state.ready
-end
-
 -------------------------------------------------------------------------------
 -- The PLAY state handles normal gameplay.
 
 state.play = { }
 
-function state.play.enter()
-end
-
-function state.play.leave()
-end
-
 function state.play.timer(dt)
-
     if step_player(dt) then
         kill_player()
 
@@ -974,7 +1013,11 @@ function state.play.timer(dt)
         step_scene(dt)
         step_level(dt)
 
-        return state.play
+        if curr_count == 0 then
+            return state.clear
+        else
+            return state.play
+        end
     end
 end
 
@@ -987,6 +1030,9 @@ end
 
 function state.play.button_B(s)
     player.thrusting = s
+
+    E.set_entity_flag(thrust, E.entity_flag_hidden, not player.thrusting)
+
     return state.play
 end
 
@@ -995,13 +1041,9 @@ end
 
 state.dead = { }
 
-function state.dead.enter()
-end
-
-function state.dead.leave()
-end
-
 function state.dead.timer(dt)
+    step_scene(dt)
+    step_level(dt)
     return state.dead
 end
 
@@ -1010,7 +1052,11 @@ function state.dead.button_A(s)
         if init_player() then
             return state.play
         else
-            return state.over
+            if curr_score > high_score then
+                return state.high
+            else
+                return state.over
+            end
         end
     else
         return state.dead
@@ -1031,13 +1077,15 @@ function state.clear.leave()
 end
 
 function state.clear.timer(dt)
-    return state.clear
+    step_scene(dt)
+    return state.over
 end
 
 function state.clear.button_A(s)
     if s and time_state > 1 then
         curr_speed = curr_speed * 1.25
         curr_level = curr_level + 1
+
         return state.ready
     else
         return state.clear
@@ -1051,21 +1099,87 @@ state.high = { }
 
 function state.high.enter()
     E.set_entity_flag(overlay.high, E.entity_flag_hidden, false)
+
+    high_score = curr_score
+    init_ready = true
+    init_index = 1
+
+    set_overlay_high_score(high_score)
 end
 
 function state.high.leave()
+    local k = 0.125
+
+    write_score()
+
+    E.set_entity_scale(overlay.high_inits[1], k / 2, k, k)
+    E.set_entity_scale(overlay.high_inits[2], k / 2, k, k)
+    E.set_entity_scale(overlay.high_inits[3], k / 2, k, k)
+
     E.set_entity_flag(overlay.high, E.entity_flag_hidden, true)
 end
 
 function state.high.timer(dt)
+    local k    = 0.15625 + 0.03125 * math.sin(time_state * 10)
+    local x, y = E.get_joystick(0)
+
+    E.set_entity_scale(overlay.high_inits[init_index], k / 2, k, k)
+
+    if -0.5 < x and x < 0.5 then
+        init_ready = true
+    else
+        if init_ready then
+            if x < -0.5 then
+                initials[init_index] = prev_letter(initials[init_index])
+                set_overlay_alpha(overlay.high_inits[init_index],
+                                            initials[init_index])
+            end
+            if x >  0.5 then
+                initials[init_index] = next_letter(initials[init_index])
+                set_overlay_alpha(overlay.high_inits[init_index],
+                                            initials[init_index])
+            end
+        end
+
+        init_ready = false
+    end
+
+    step_scene(dt)
+
     return state.high
 end
 
 function state.high.button_A(s)
+    local k = 0.125
+
+    if s then
+        if init_index < 3 then
+            E.set_entity_scale(overlay.high_inits[1], k / 2, k, k)
+            E.set_entity_scale(overlay.high_inits[2], k / 2, k, k)
+            E.set_entity_scale(overlay.high_inits[3], k / 2, k, k)
+
+            init_index = init_index + 1
+        else
+            return state.title
+        end
+    end
+
     return state.high
 end
 
 function state.high.button_B(s)
+    local k = 0.125
+
+    if s then
+        if init_index > 1 then
+            E.set_entity_scale(overlay.high_inits[1], k / 2, k, k)
+            E.set_entity_scale(overlay.high_inits[2], k / 2, k, k)
+            E.set_entity_scale(overlay.high_inits[3], k / 2, k, k)
+
+            init_index = init_index - 1
+        end
+    end
+
     return state.high
 end
 
@@ -1083,6 +1197,8 @@ function state.over.leave()
 end
 
 function state.over.timer(dt)
+    step_scene(dt)
+    step_level(dt)
     return state.over
 end
 
@@ -1129,7 +1245,6 @@ function do_start()
     init_sound()
 
     curr_state = state.null
-    high_score = 100
 
     E.enable_timer(true)
 end
