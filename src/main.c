@@ -19,12 +19,10 @@
 #ifdef MPI
 #include <mpi.h>
 
-int main(int argc, char *argv[])
+int SDL_main(int argc, char *argv[])
 {
     if (MPI_Init(&argc, &argv) == MPI_SUCCESS)
     {
-/*      mpi_split(); */
-
         if (mpi_isroot())
             server(argc, argv);
         else
@@ -37,7 +35,7 @@ int main(int argc, char *argv[])
 
 #else  /* MPI */
 
-int main(int argc, char *argv[])
+int SDL_main(int argc, char *argv[])
 {
     server(argc, argv);
     return 0;

@@ -13,7 +13,7 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
-#include <netinet/in.h>
+#include <arpa/inet.h>
 
 /*---------------------------------------------------------------------------*/
 

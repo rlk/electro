@@ -16,7 +16,7 @@ endif
 
 OBJS=	src/opengl.o   \
 	src/matrix.o   \
-	src/utility.o \
+	src/utility.o  \
 	src/joystick.o \
 	src/viewport.o \
 	src/buffer.o   \
@@ -43,18 +43,19 @@ DEPS= $(OBJS:.o=.d)
 
 RM= rm -f
 
-SDL_LIBS= $(shell sdl-config --libs)
+SDL_LIBS= $(shell sdl-config --libs) -lSDLmain
 LUA_LIBS= -llua -llualib
 PNG_LIBS= -lpng -lz -lm
 
-INCDIR= -I$(HOME)/include -I/usr/include/lua
-LIBDIR= -L$(HOME)/lib
-
 ifeq ($(shell uname), Darwin)
-	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile
+    INCDIR= -I/sw/include -I/usr/include/lua
+    LIBDIR= -L/sw/lib
 else
-	LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lGL -lGLU
+    INCDIR= -I$(HOME)/include -I/usr/include/lua
+    LIBDIR= -L$(HOME)/lib
 endif
+
+LIBS= $(SDL_LIBS) $(LUA_LIBS) $(PNG_LIBS) -lvorbisfile -lm
 
 #------------------------------------------------------------------------------
 
