@@ -31,30 +31,6 @@ static void fps(void)
     else count++;
 }
 
-int supported(const char *extension)
-{
-    const GLubyte *string = glGetString(GL_EXTENSIONS);
-    const GLubyte *start  = string;
-
-    GLubyte *where;
-    GLubyte *space;
-
-    for (;;)
-    {
-        if ((where = strstr(start, extension)) == NULL)
-            return 0;
-
-        space = where + strlen(extension);
-
-        if (where == start || *(where - 1) == ' ')
-            if (*space == ' ' || *space == '\0')
-                return 1;
-
-        start = space;
-    }
-    return 0;
-}
-
 /*---------------------------------------------------------------------------*/
 
 static void init(void)

@@ -5,13 +5,6 @@
 
 #define RADIUS 15000.0f
 
-struct star
-{
-    float         position[3];
-    float         magnitude;
-    unsigned char color[3];
-};
-
 struct node
 {
     int seed;

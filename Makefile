@@ -1,7 +1,7 @@
 CC= cc
 RM= rm
 
-OBJS=   png.o galaxy.o viewer.o main.o
+OBJS=   opengl.o image.o star.o galaxy.o viewer.o main.o
 TARG=   vortex
 LIBS=   $(shell sdl-config --libs) -lpng -lz -lGL -lGLU -lm
 #LIBS=   $(shell sdl-config --libs) -lpng -lz -lm
@@ -25,7 +25,9 @@ depend :
 #------------------------------------------------------------------------------
 # DO NOT DELETE
 
-galaxy.o: opengl.h glext.h galaxy.h viewer.h png.h
+galaxy.o: opengl.h glext.h galaxy.h viewer.h star.h
+image.o: opengl.h glext.h image.h
 main.o: opengl.h glext.h viewer.h galaxy.h
-png.o: png.h opengl.h glext.h
+node.o: opengl.h glext.h
+star.o: opengl.h glext.h star.h
 viewer.o: opengl.h glext.h

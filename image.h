@@ -5,7 +5,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-GLuint png_load(const char *);
+GLuint   image_make_tex(const GLubyte *, GLsizei, GLsizei, GLsizei);
+GLubyte *image_load_png(const char *, GLsizei *, GLsizei *, GLsizei *);
 
 /*---------------------------------------------------------------------------*/
 
