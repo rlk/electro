@@ -42,6 +42,8 @@ extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
 
 #define PI 3.1415926535897932384626433832795
 
+#define PROGLEN 2048
+
 /*---------------------------------------------------------------------------*/
 
 void       *opengl_proc(const char *);

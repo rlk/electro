@@ -14,18 +14,48 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <mpi.h>
 
 #include "opengl.h"
 #include "galaxy.h"
+#include "shared.h"
 #include "star.h"
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_init(void)
+static void galaxy_init_prog(GLenum T, int id, const char *filename)
 {
-    const char *vert_program;
-    const char *frag_program;
+    int  len = PROGLEN;
+    int  err;
+    char buf[PROGLEN];
 
+    FILE  *fp;
+
+    memset(buf, 0, PROGLEN);
+
+    /* If this host is root, load the shader file. */
+
+    if ((id == 0) && (fp = fopen(filename, "r")))
+    {
+        len = (int) fread(buf, 1, PROGLEN, fp);
+        fclose(fp);
+    }
+
+    /* Make sure all hosts have the shader.  Load it. */
+
+    if ((err = MPI_Bcast(buf, len, MPI_BYTE, 0, MPI_COMM_WORLD)) !=MPI_SUCCESS)
+        mpi_error(err);
+    else
+    {
+        glProgramStringARB(T, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(buf), buf);
+
+        if (glGetError() != GL_NO_ERROR)
+            printf("%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    }
+}
+
+void galaxy_init(int id)
+{
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
     glEnable(GL_POINT_SPRITE_ARB);
@@ -35,28 +65,10 @@ void galaxy_init(void)
 
     glBlendFunc(GL_ONE, GL_ONE);
 
-    glPointSize(4);
-
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    /* Load vertex and fragment programs. */
-
-    vert_program = opengl_read("star.vp");
-    frag_program = opengl_read("star.fp");
-
-    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
-                       GL_PROGRAM_FORMAT_ASCII_ARB,
-                       strlen(vert_program), vert_program);
-
-    if (glGetError() != GL_NO_ERROR)
-        printf("vert_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-
-    glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
-                       GL_PROGRAM_FORMAT_ASCII_ARB,
-                       strlen(frag_program), frag_program);
-
-    if (glGetError() != GL_NO_ERROR)
-        printf("frag_program: %s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    galaxy_init_prog(GL_VERTEX_PROGRAM_ARB,   id, "star.vp");
+    galaxy_init_prog(GL_FRAGMENT_PROGRAM_ARB, id, "star.fp");
 }
 
 /*---------------------------------------------------------------------------*/

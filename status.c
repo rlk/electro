@@ -150,6 +150,8 @@ void status_set_camera_rot(float x, float y, float z)
     camera_rot[0] = x;
     camera_rot[1] = y;
     camera_rot[2] = z;
+
+    status_set_camera_pos();
 }
 
 void status_set_camera_dist(float d)

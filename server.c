@@ -97,7 +97,7 @@ static void server_init(void)
 {
     glViewport(0, 0, status_get_viewport_w(), status_get_viewport_h());
 
-    galaxy_init();
+    galaxy_init(0);
     star_init();
 
     server_send_draw();
