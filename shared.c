@@ -82,7 +82,7 @@ void viewport_tile(const char *name, float X, float Y,
     }
 }
 
-void viewport_sync(int i, int n)
+void viewport_sync(int n)
 {
     size_t sz = sizeof (struct viewport);
     int err;
@@ -109,7 +109,7 @@ void viewport_sync(int i, int n)
 
     /* If this is the root, assign viewports by matching host names. */
 
-    if (i == 0)
+    if (mpi_root())
     {
         int j;
         int k;
@@ -144,12 +144,12 @@ void viewport_sync(int i, int n)
 
     /* Apply this client's viewport. */
 
-    if (i) camera_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
+    if (!mpi_root()) camera_set_viewport(Vt.X, Vt.Y, Vt.x, Vt.y, Vt.w, Vt.h);
 }
 
 /*---------------------------------------------------------------------------*/
 
-GLuint shared_load_program(int id, const char *filename, GLenum target)
+GLuint shared_load_program(const char *filename, GLenum target)
 {
     struct stat buf;
 
@@ -161,7 +161,7 @@ GLuint shared_load_program(int id, const char *filename, GLenum target)
 
     /* If this host is root, determine the file size. */
 
-    if ((id == 0) && (stat(filename, &buf) == 0))
+    if (mpi_root() && (stat(filename, &buf) == 0))
         len = buf.st_size + 1;
         
     /* Broadcast the size and allocate that much memory. */
@@ -175,7 +175,7 @@ GLuint shared_load_program(int id, const char *filename, GLenum target)
 
         /* If this host is root, read the contents of the file. */
 
-        if ((id == 0) && (fp = fopen(filename, "r")))
+        if (mpi_root() && (fp = fopen(filename, "r")))
         {
             fread(ptr, 1, len, fp);
             fclose(fp);
@@ -194,7 +194,7 @@ GLuint shared_load_program(int id, const char *filename, GLenum target)
 
         /* If this host is root, report any error in the program text. */
 
-        if ((id == 0) && (glGetError() != GL_NO_ERROR))
+        if (mpi_root() && (glGetError() != GL_NO_ERROR))
             fprintf(stderr, "%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
 
         free(ptr);
@@ -202,7 +202,7 @@ GLuint shared_load_program(int id, const char *filename, GLenum target)
     return program;
 }
 
-GLuint shared_load_texture(int id, const char *filename)
+GLuint shared_load_texture(const char *filename, int *width, int *height)
 {
     GLubyte *p = NULL;
     int      w = 0;
@@ -214,7 +214,7 @@ GLuint shared_load_texture(int id, const char *filename)
 
     /* If this host is root, load the image file. */
 
-    if (id == 0) p = (GLubyte *) image_load_png(filename, &w, &h, &b);
+    if (mpi_root()) p = (GLubyte *) image_load_png(filename, &w, &h, &b);
 
     /* Broadcast the image attributes. */
 
@@ -225,7 +225,7 @@ GLuint shared_load_texture(int id, const char *filename)
 
     /* If this host is not root, allocate a pixel buffer. */
 
-    if (id != 0) p = (GLubyte *) malloc(w * h * b);
+    if (!mpi_root()) p = (GLubyte *) malloc(w * h * b);
 
     /* Broadcast the pixel data. */
 
@@ -235,6 +235,8 @@ GLuint shared_load_texture(int id, const char *filename)
     /* Create a texture object. */
 
     texture = image_make_tex(p, w, h, b);
+    *width  = w;
+    *height = h;
 
     free(p);
 

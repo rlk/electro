@@ -22,6 +22,8 @@ void camera_draw(void);
 
 void  camera_set_viewport(float, float, float, float, float, float);
 
+int   camera_get_viewport_x(void);
+int   camera_get_viewport_y(void);
 int   camera_get_viewport_w(void);
 int   camera_get_viewport_h(void);
 

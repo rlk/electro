@@ -315,7 +315,7 @@ int star_read_catalog_txt(const char *filename)
 
 /*---------------------------------------------------------------------------*/
 
-void star_init(int id)
+void star_init(void)
 {
     int err;
     int len;
@@ -329,7 +329,7 @@ void star_init(int id)
 
     /* If this host is not root, acquire storage for the catalog. */
 
-    if (id != 0)
+    if (!mpi_root())
         star_data = (struct star *) calloc(sizeof (struct star), star_count);
 
     /* Broadcast the star catalog data. */

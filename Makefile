@@ -5,6 +5,7 @@ OBJS=	opengl.o \
 	server.o \
 	client.o \
 	camera.o \
+	sprite.o \
 	script.o \
 	galaxy.o \
 	node.o   \

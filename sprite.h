@@ -20,6 +20,9 @@
 struct sprite
 {
     GLuint texture;
+    int    w;
+    int    h;
+
     float  pos[2];
     float  rot;
     float  size;
@@ -27,6 +30,9 @@ struct sprite
 };
 
 /*---------------------------------------------------------------------------*/
+
+int   sprite_init(void);
+void  sprite_draw(void);
 
 int   sprite_load(const char *);
 void  sprite_free(int);

@@ -11,6 +11,8 @@ dist   =    0.0
 magn   =  128.0
 
 btn    = { }
+foo    = -1
+foo_y  =  0
 
 -------------------------------------------------------------------------------
 
@@ -43,22 +45,31 @@ end
 
 function do_click(b, s)
 
-   if b == 4 then -- mouse wheel down
-      dist = dist + 16.0
-      camera_dist(dist)
-      return true
-   end
+   if s then
+      if b == 4 then -- mouse wheel down
+         dist = dist + 10.0
+         camera_dist(dist)
+         return true
+      end
 
-   if b == 5 then -- mouse wheel up
-      dist = dist - 16.0
-      camera_dist(dist)
-      return true
-   end
-   
-   if b == 2 then -- middle button click
-      dist = 0
-      camera_dist(dist)
-      return true
+      if b == 5 then -- mouse wheel up
+         dist = dist - 10.0
+         camera_dist(dist)
+         return true
+      end
+      
+      if b == 2 then -- middle button click
+         dist = 0
+         camera_dist(dist)
+         return true
+      end
+
+      if b == 3 then
+         foo = sprite_load("head.png")
+         sprite_size(foo, 0.5)
+         sprite_move(foo, -w + 64, -h / 2 + 64)
+         return true
+      end
    end
 
    btn[b] = s
@@ -84,11 +95,16 @@ end
 function do_timer(dt)
 
    rot_y = rot_y + dt * rot_dy
+   foo_y = foo_y + dt * rot_dy * 100
 
    if rot_y >  180 then rot_y = rot_y - 360 end
    if rot_y < -180 then rot_y = rot_y + 360 end
+   if foo_y >  180 then foo_y = foo_y - 360 end
+   if foo_y < -180 then foo_y = foo_y + 360 end
 
    camera_turn(rot_x, rot_y, 0)
+
+   sprite_turn(foo, foo_y)
 
    return true
 end

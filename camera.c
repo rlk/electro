@@ -126,6 +126,16 @@ void camera_set_viewport(float X, float Y, float x, float y, float w, float h)
     camera_set_window_pos((int) X, (int) Y);
 }
 
+int camera_get_viewport_x(void)
+{
+    return (int) viewport_x;
+}
+
+int camera_get_viewport_y(void)
+{
+    return (int) viewport_y;
+}
+
 int camera_get_viewport_w(void)
 {
     return (int) viewport_w;

@@ -23,7 +23,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-void galaxy_init(int id)
+void galaxy_init(void)
 {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
@@ -36,8 +36,8 @@ void galaxy_init(int id)
 
     glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
-    shared_load_program(id, "star.vp", GL_VERTEX_PROGRAM_ARB);
-    shared_load_program(id, "star.fp", GL_FRAGMENT_PROGRAM_ARB);
+    shared_load_program("star.vp", GL_VERTEX_PROGRAM_ARB);
+    shared_load_program("star.fp", GL_FRAGMENT_PROGRAM_ARB);
 }
 
 /*---------------------------------------------------------------------------*/

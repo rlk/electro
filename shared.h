@@ -59,12 +59,12 @@ struct viewport
 
 void viewport_init(int);
 void viewport_tile(const char *, float, float, float, float, float, float);
-void viewport_sync(int, int);
+void viewport_sync(int);
 
 /*---------------------------------------------------------------------------*/
 
-GLuint shared_load_program(int id, const char *, GLenum);
-GLuint shared_load_texture(int id, const char *);
+GLuint shared_load_program(const char *, GLenum);
+GLuint shared_load_texture(const char *, int *, int *);
 
 void   shared_set_camera_org(float, float, float);
 void   shared_set_camera_rot(float, float, float);

@@ -18,6 +18,7 @@
 #include "shared.h"
 #include "client.h"
 #include "camera.h"
+#include "sprite.h"
 #include "galaxy.h"
 #include "star.h"
 
@@ -60,6 +61,13 @@ static void client_recv(void)
         case EVENT_CAMERA_DIST: camera_set_dist(0);      break;
         case EVENT_CAMERA_MAGN: camera_set_magn(0);      break;
         case EVENT_CAMERA_ZOOM: camera_set_zoom(0);      break;
+
+        case EVENT_SPRITE_LOAD: sprite_load(NULL);       break;
+        case EVENT_SPRITE_FREE: sprite_free(0);          break;
+        case EVENT_SPRITE_MOVE: sprite_move(0, 0, 0);    break;
+        case EVENT_SPRITE_TURN: sprite_turn(0, 0);       break;
+        case EVENT_SPRITE_SIZE: sprite_size(0, 0);       break;
+        case EVENT_SPRITE_FADE: sprite_fade(0, 0);       break;
         }
     }
     else mpi_error(err);
@@ -67,12 +75,13 @@ static void client_recv(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void client_init(int id)
+static void client_init(void)
 {
     glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
 
-    galaxy_init(id);
-    star_init(id);
+    sprite_init();
+    galaxy_init();
+    star_init();
 }
 
 static void client_draw(void)
@@ -81,6 +90,7 @@ static void client_draw(void)
 
     camera_draw();
     galaxy_draw();
+    sprite_draw();
 
     MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
@@ -111,7 +121,7 @@ static int client_loop(void)
 void client(int np, int id)
 {
     camera_init();
-    viewport_sync(id, np);
+    viewport_sync(np);
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
@@ -126,7 +136,7 @@ void client(int np, int id)
 
         if (SDL_SetVideoMode(w, h, 0, m) && opengl_init())
         {
-            client_init(id);
+            client_init();
 
             /* Handle any SDL events. Block on server messages. */
 

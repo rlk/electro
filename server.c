@@ -20,6 +20,7 @@
 #include "server.h"
 #include "script.h"
 #include "camera.h"
+#include "sprite.h"
 #include "galaxy.h"
 #include "star.h"
 
@@ -70,8 +71,9 @@ static void server_init(void)
 {
     glViewport(0, 0, camera_get_viewport_w(), camera_get_viewport_h());
 
-    galaxy_init(0);
-    star_init(0);
+    sprite_init();
+    galaxy_init();
+    star_init();
 }
 
 static void server_draw(void)
@@ -80,6 +82,7 @@ static void server_draw(void)
 
     camera_draw();
     galaxy_draw();
+    sprite_draw();
 
     MPI_Barrier(MPI_COMM_WORLD);
     SDL_GL_SwapBuffers();
@@ -185,25 +188,27 @@ static void usage(const char *name)
     fprintf(stderr, "\t-h              Help\n");
 }
 
+static void parse(int argc, char *argv[])
+{
+    int i;
+
+    for (i = 1; i < argc; i++)
+        if      (!strcmp(argv[i], "-s")) script_file(argv[++i]);
+        else if (!strcmp(argv[i], "-f")) star_read_catalog_bin(argv[++i]);
+        else if (!strcmp(argv[i], "-t")) star_read_catalog_txt(argv[++i]);
+        else if (!strcmp(argv[i], "-o")) star_write_catalog(argv[++i]);
+        else usage(argv[0]);
+}
+
 void server(int np, int argc, char *argv[])
 {
     if (script_init())
     {
-        int i;
-
         viewport_init(np);
-
-        /* Parse command line options.  Load scripts and data files. */
-
-        for (i = 1; i < argc; i++)
-            if      (!strcmp(argv[i], "-s")) script_file(argv[++i]);
-            else if (!strcmp(argv[i], "-f")) star_read_catalog_bin(argv[++i]);
-            else if (!strcmp(argv[i], "-t")) star_read_catalog_txt(argv[++i]);
-            else if (!strcmp(argv[i], "-o")) star_write_catalog(argv[++i]);
-            else usage(argv[0]);
+        parse(argc, argv);
 
         camera_init();
-        viewport_sync(0, np);
+        viewport_sync(np);
 
         /* Initialize the main server window. */
 
