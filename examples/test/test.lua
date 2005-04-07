@@ -16,10 +16,10 @@ function do_start()
 
     ortho  = E.create_camera(E.camera_type_orthogonal)
     camera = E.create_camera(E.camera_type_perspective)
-    light  = E.create_light(E.light_type_positional)
+    light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
     pivot  = E.create_pivot()
-    thing  = E.create_object("box.obj")
+    thing  = E.create_object("cow.obj")
     floor  = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
@@ -36,16 +36,22 @@ function do_start()
 
     E.set_background(1, 1, 1, 0, 0.5, 1)
 
-    E.enable_timer(true)
+    if tracking then 
+        E.enable_timer(true)
+    end
 end
 
 function do_timer(dt)
+    if tracking then
         local x, y, z = E.get_tracking()
 
         E.set_entity_position(camera, x, y, z)
         E.set_camera_offset(camera, x, y, z)
         
         return true
+    else
+        return false
+    end
 end
 
 function do_click(b, s)
@@ -68,7 +74,7 @@ function do_point(dx, dy)
 
     if dolly then
         local x, y, z = E.get_entity_position(camera)
-        E.set_entity_position(camera, x, y, z + dy / 10)
+        E.set_entity_position(camera, x, y, z + dy / 2)
         return true
     end
 

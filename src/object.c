@@ -490,19 +490,6 @@ static void read_vertices(const char *line)
 
             /* Copy specified vector data from the cache. */
 
-            if (vi > 0)
-            {
-                vertv[j].v[0] = vv[(vi -  1) * 3 + 0];
-                vertv[j].v[1] = vv[(vi -  1) * 3 + 1];
-                vertv[j].v[2] = vv[(vi -  1) * 3 + 2];
-            }
-            if (vi < 0)
-            {
-                vertv[j].v[0] = vv[(vc - vi) * 3 + 0];
-                vertv[j].v[1] = vv[(vc - vi) * 3 + 1];
-                vertv[j].v[2] = vv[(vc - vi) * 3 + 2];
-            }
-
             if (ti > 0)
             {
                 vertv[j].t[0] = tv[(ti -  1) * 2 + 0];
@@ -516,15 +503,28 @@ static void read_vertices(const char *line)
 
             if (ni > 0)
             {
-                vertv[j].n[0] = nv[(vi -  1) * 3 + 0];
-                vertv[j].n[1] = nv[(vi -  1) * 3 + 1];
-                vertv[j].n[2] = nv[(vi -  1) * 3 + 2];
+                vertv[j].n[0] = nv[(ni -  1) * 3 + 0];
+                vertv[j].n[1] = nv[(ni -  1) * 3 + 1];
+                vertv[j].n[2] = nv[(ni -  1) * 3 + 2];
             }
             if (ni < 0)
             {
                 vertv[j].n[0] = nv[(nc - ni) * 3 + 0];
                 vertv[j].n[1] = nv[(nc - ni) * 3 + 1];
                 vertv[j].n[2] = nv[(nc - ni) * 3 + 2];
+            }
+
+            if (vi > 0)
+            {
+                vertv[j].v[0] = vv[(vi -  1) * 3 + 0];
+                vertv[j].v[1] = vv[(vi -  1) * 3 + 1];
+                vertv[j].v[2] = vv[(vi -  1) * 3 + 2];
+            }
+            if (vi < 0)
+            {
+                vertv[j].v[0] = vv[(vc - vi) * 3 + 0];
+                vertv[j].v[1] = vv[(vc - vi) * 3 + 1];
+                vertv[j].v[2] = vv[(vc - vi) * 3 + 2];
             }
 
             /* Associate the index set with the new vertex. */
@@ -620,16 +620,16 @@ static void read_mtllib(const char *line)
 
 static int read_usemtl(const char *line, int i)
 {
+    char name[MAXSTR];
+    int m = -1;
+
+    if (sscanf(line, "%s", name) == 1)
+        m = find_mtl(name);
+
     if (i >= 0)
-    {
-        char name[MAXSTR];
+        surfv[i].mi = m;
 
-        sscanf(line, "%s", name);
-        surfv[i].mi = find_mtl(name);
-
-        return surfv[i].mi;
-    }
-    return -1;
+    return m;
 }
 
 static void read_vt(const char *line)
@@ -774,6 +774,9 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
 
                 for (si = 0; si < O[od].sc; ++si)
                 {
+                    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                    float z[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
                     if (O[od].sv[si].mi >= 0)
                     {
                         struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
@@ -797,6 +800,20 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
                         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
                         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
                         glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
+                    }
+                    else
+                    {
+                        glBindTexture(GL_TEXTURE_2D, 0);
+
+                        d[3] = a * get_entity_alpha(id);
+
+                        glColor4fv(d);
+
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   d);
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   z);
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  z);
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  z);
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, d);
                     }
 
                     /* Draw everything. */
