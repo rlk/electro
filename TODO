@@ -1,6 +1,5 @@
+equatorial HIP
 fix OBJ reader
-svn revision number
-fix asteroids
 stereo
 camera offset per tile (for geowall and planar)
 

@@ -271,6 +271,8 @@ void draw_image(int id)
 {
     if (image_exists(id))
         glBindTexture(GL_TEXTURE_2D, I[id].texture);
+    else
+        glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void *load_image(const char *filename, int *width,

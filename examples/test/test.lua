@@ -9,6 +9,7 @@ thing   = nil
 floor   = nil
 
 tumble = false
+dolly  = false
 
 function do_start()
     local x, y, w, h = E.get_viewport()
@@ -29,26 +30,33 @@ function do_start()
 
     E.set_entity_position(light, 0,  2.0,  2.0)
     E.set_entity_position(scene, 0, -2.0, -2.0)
-    E.set_entity_position(pivot, 0,  3.0, -10.0)
-    E.set_entity_position(thing, 0,  1.0,  0.0)
+--  E.set_entity_position(pivot, 0,  3.0, -10.0)
+    E.set_entity_position(thing, 0,  0.0,  0.0)
+    E.set_entity_position(camera, 0, 0, 10.0)
 
     E.set_background(1, 1, 1, 0, 0.5, 1)
 
-    E.enable_timer(true)
+--  E.set_entity_flag(thing, E.entity_flag_unlit,     true);
+--  E.set_entity_flag(thing, E.entity_flag_wireframe, true);
+
+--  E.enable_timer(true)
 end
 
 function do_timer(dt)
-        local x, y, z = E.get_tracking()
+--      local x, y, z = E.get_tracking()
 
-        E.set_entity_position(camera, x, y, z)
-        E.set_camera_offset(camera, x, y, z)
+--      E.set_entity_position(camera, x, y, z)
+--      E.set_camera_offset(camera, x, y, z)
         
-        return true
+--      return true
 end
 
 function do_click(b, s)
     if b == 1 then
         tumble = s
+    end
+    if b == 3 then
+        dolly  = s
     end
 
     return true
@@ -59,9 +67,15 @@ function do_point(dx, dy)
         local x, y, z = E.get_entity_rotation(pivot)
         E.set_entity_rotation(pivot, x + dy, y + dx, z)
         return true
-    else
-        return false
     end
+
+    if dolly then
+        local x, y, z = E.get_entity_position(camera)
+        E.set_entity_position(camera, x, y, z + dy / 10)
+        return true
+    end
+
+    return false
 end
 
 function do_keyboard(k, s)

@@ -22,6 +22,7 @@
 
 struct object_mtrl
 {
+    const char *name;
     int image;
 
     float d[4];
