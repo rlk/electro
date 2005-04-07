@@ -102,9 +102,11 @@ void draw_galaxy(int id, int gd, const struct frustum *F0, float a)
     {
         glPushMatrix();
         {
+            const float d[3] = { 0.0f, 0.0f, 0.0f };
+
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, &F1, F0);
+            transform_entity(id, &F1, F0, d);
 
             glPushAttrib(GL_ENABLE_BIT  |
                          GL_TEXTURE_BIT |

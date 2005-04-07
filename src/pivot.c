@@ -25,7 +25,9 @@ void draw_pivot(int id, int pd, const struct frustum *F0, float a)
 
     glPushMatrix();
     {
-        transform_entity(id, &F1, F0);
+        const float d[3] = { 0.0f, 0.0f, 0.0f };
+
+        transform_entity(id, &F1, F0, d);
         draw_entity_list(id, &F1, a * get_entity_alpha(id));
     }
     glPopMatrix();

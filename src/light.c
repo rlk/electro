@@ -59,10 +59,12 @@ void draw_light(int id, int ld, const struct frustum *F0, float a)
         glPushAttrib(GL_ENABLE_BIT);
         glPushMatrix();
         {
+            const float d[3] = { 0.0f, 0.0f, 0.0f };
+
             GLenum light = GL_LIGHT0 + ld;
             GLfloat p[4];
 
-            transform_entity(id, &F1, F0);
+            transform_entity(id, &F1, F0, d);
 
             /* Determine the homogenous coordinate lightsource position. */
 

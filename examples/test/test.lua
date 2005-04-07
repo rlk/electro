@@ -1,5 +1,7 @@
 dofile("../keyboard.lua")
 
+tracking = true
+
 camera  = nil
 ortho   = nil
 sprite  = nil
@@ -32,7 +34,7 @@ function do_start()
     E.set_entity_position(scene,  0, -8.0,  -8.0)
     E.set_entity_position(pivot,  0,  3.0, -10.0)
     E.set_entity_position(thing,  0,  1.0,   0.0)
-    E.set_entity_position(camera, 0,  0.0,  10.0)
+    E.set_entity_position(camera, 0,  0.0,   0.0)
 
     E.set_background(1, 1, 1, 0, 0.5, 1)
 
@@ -45,7 +47,7 @@ function do_timer(dt)
     if tracking then
         local x, y, z = E.get_tracking()
 
-        E.set_entity_position(camera, x, y, z)
+--      E.set_entity_position(camera, x, y, z)
         E.set_camera_offset(camera, x, y, z)
         
         return true

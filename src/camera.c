@@ -71,27 +71,69 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
     struct frustum F1;
     struct frustum F2;
 
+    float d[3];
     float p[3];
     float r[3];
+    float X[3];
+    float Y[3];
+    float Z[3];
+    float T, P;
 
     get_entity_position(id, p + 0, p + 1, p + 2);
     get_entity_rotation(id, r + 0, r + 1, r + 2);
+
+    T = PI * r[1] / 180.0f;
+    P = PI * r[0] / 180.0f;
+
+    /* Find the view vector. */
+
+    Z[0] =  (float) (cos(P) * sin(T));
+    Z[1] = -(float) (sin(P));
+    Z[2] =  (float) (cos(P) * cos(T));
+
+    /* Find the view right vector. */
+
+    X[0] =  (float) cos(T);
+    X[1] =  0;
+    X[2] = -(float) sin(T);
+
+    /* Find the view up vector. */
+    
+    v_cross(Y, Z, X);
+
+    v_norm(X, X);
+    v_norm(Y, Y);
+    v_norm(Z, Z);
 
     if (camera_exists(cd))
     {
         int i = 0;
 
+        /* Find the transformed camera displacement. */
+
+        d[0] = (X[0] * C[cd].offset[0] +
+                Y[0] * C[cd].offset[1] +
+                Z[0] * C[cd].offset[2]);
+        d[1] = (X[1] * C[cd].offset[0] +
+                Y[1] * C[cd].offset[1] +
+                Z[1] * C[cd].offset[2]);
+        d[2] = (X[2] * C[cd].offset[0] +
+                Y[2] * C[cd].offset[1] +
+                Z[2] * C[cd].offset[2]);
+
         /* Supply the view position as a vertex program parameter. */
             
         if (GL_has_vertex_program)
-            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                       0, p[0], p[1], p[2], 1);
+            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
+                                       p[0] + d[0],
+                                       p[1] + d[1],
+                                       p[2] + d[2], 1);
 
         /* Load projection and modelview matrices for each tile. */
 
         while ((i = draw_tile(cd, &F1, i)))
         {
-            transform_entity(id, &F2, &F1);
+            transform_entity(id, &F2, &F1, d);
 
             /* Render all children using this camera. */
             

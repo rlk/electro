@@ -60,9 +60,11 @@ void draw_sprite(int id, int sd, const struct frustum *F0, float a)
         glPushAttrib(GL_DEPTH_BUFFER_BIT);
         glPushMatrix();
         {
+            const float d[3] = { 0.0f, 0.0f, 0.0f };
+
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, &F1, F0);
+            transform_entity(id, &F1, F0, d);
 
             glDepthMask(GL_FALSE);
             draw_image(S[sd].image);

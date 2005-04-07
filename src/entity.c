@@ -88,7 +88,8 @@ int entity_type(int id)
 
 /*---------------------------------------------------------------------------*/
 
-void transform_entity(int id, struct frustum *F1, const struct frustum *F0)
+void transform_entity(int id, struct frustum *F1,
+                        const struct frustum *F0, const float d[3])
 {
     float M[16];
     float I[16];
@@ -112,12 +113,12 @@ void transform_entity(int id, struct frustum *F1, const struct frustum *F0)
 
         /* Position. */
 
-        glTranslatef(-E[id].position[0],
-                     -E[id].position[1],
-                     -E[id].position[2]);
-        m_trns(M, I, E[id].position[0],
-                     E[id].position[1],
-                     E[id].position[2]);
+        glTranslatef(-E[id].position[0] - d[0],
+                     -E[id].position[1] - d[1],
+                     -E[id].position[2] - d[2]);
+        m_trns(M, I,  E[id].position[0] + d[0],
+                      E[id].position[1] + d[1],
+                      E[id].position[2] + d[2]);
     }
     else
     {

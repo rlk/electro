@@ -44,7 +44,7 @@ function position_camera()
     pos_y = -math.sin(P)               * dist
     pos_z =  math.cos(P) * math.cos(T) * dist
 
-    E.set_entity_position(camera, pos_x + x, pos_y + y, pos_z + z)
+    E.set_entity_position(camera, pos_x, pos_y, pos_z)
     E.set_camera_offset(camera, x, y, z)
 end
 
@@ -147,7 +147,7 @@ function do_point(dx, dy)
 
         dist = dist + dy * 0.1
 
-    else
+    elseif setrotn then
         local rot_x, rot_y, rot_z = E.get_entity_rotation(camera)
 
         rot_x = rot_x - dy * 0.05

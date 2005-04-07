@@ -65,8 +65,10 @@ int  entity_exists(int);
 int  entity_data(int);
 int  entity_type(int);
 
-void transform_entity(int, struct frustum *, const struct frustum *);
-void draw_entity_list(int,                   const struct frustum *, float);
+void transform_entity(int, struct frustum *,
+                     const struct frustum *, const float[3]);
+void draw_entity_list(int,
+                     const struct frustum *, float);
 
 /*---------------------------------------------------------------------------*/
 

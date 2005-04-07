@@ -297,4 +297,13 @@ void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
     p[3]  = (p[0] * a[0] + p[1] * a[1] + p[2] * a[2]);
 }
 
+void v_norm(float n[3], const float v[3])
+{
+    double k = 1.0 / sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+
+    n[0] = (float) (v[0] * k);
+    n[1] = (float) (v[1] * k);
+    n[2] = (float) (v[2] * k);
+}
+
 /*---------------------------------------------------------------------------*/

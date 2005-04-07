@@ -746,9 +746,11 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
     {
         glPushMatrix();
         {
+            const float d[3] = { 0.0f, 0.0f, 0.0f };
+
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, &F1, F0);
+            transform_entity(id, &F1, F0, d);
 
             /* Render this object. */
 
