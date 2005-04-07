@@ -90,6 +90,11 @@ end
 
 function do_keyboard(k, s)
 
+    if s and k == 32 then
+        x, y, z = E.get_entity_rotation(camera)
+        print(x, y)
+    end
+
     if s and k == 13 then
         dist = 0
         E.set_entity_rotation(camera, 0, 0, 0)

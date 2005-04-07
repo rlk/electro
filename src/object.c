@@ -527,7 +527,7 @@ static void read_vertices(const char *line)
 
             /* Associate the index set with the new vertex. */
 
-            iv[i + 4 + 3] = j;
+            iv[i * 4 + 3] = j;
         }
 
         c += dc;
