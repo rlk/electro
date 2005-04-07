@@ -444,7 +444,7 @@ static int read_indices(const char *line, int *vi, int *ti, int *ni)
 static void read_vertices(const char *line)
 {
     const char *c = line;
-    int dc, i, j, k;
+    int dc, i, j;
 
     int vi;
     int ti;
@@ -459,7 +459,7 @@ static void read_vertices(const char *line)
         iv[i * 4 + 2] = ni;
 
         /* If we've seen this index set before, note the associated vertex. */
-
+        /*
         for (k = 0; k < i; ++k)
             if (iv[i * 4 + 0] == iv[k * 4 + 0] &&
                 iv[i * 4 + 1] == iv[k * 4 + 1] &&
@@ -468,10 +468,12 @@ static void read_vertices(const char *line)
                 iv[i * 4 + 3]  = iv[k * 4 + 3];
                 break;
             }
+        */
+
 
         /* If we haven't seen this index set, create a new vertex. */
 
-        if (i == k && (j = push_vert()) >= 0)
+        if (/*i == k &&*/ (j = push_vert()) >= 0)
         {
             /* Initialize vector data defaults. */
 
@@ -553,7 +555,7 @@ static void read_f(const char *line)
         }
 }
 
-static void read_e(const char *line)
+static void read_l(const char *line)
 {
     int i, j, i0 = ic;
 
@@ -566,7 +568,6 @@ static void read_e(const char *line)
     for (i = i0; i < ic - 1; ++i)
         if ((j = push_edge()) >= 0)
         {
-            printf("%d %d\n", i, i + 1);
             edgev[j].vi[0] = iv[(i + 0) * 4 + 3];
             edgev[j].vi[1] = iv[(i + 1) * 4 + 3];
         }
@@ -574,7 +575,7 @@ static void read_e(const char *line)
 
 /*---------------------------------------------------------------------------*/
 
-static int read_g(int i)
+static int read_g(int i, int m)
 {
     int j;
 
@@ -600,7 +601,7 @@ static int read_g(int i)
     {
         /* Initialize a new empty surface. */
 
-        surfv[j].mi =    0;
+        surfv[j].mi =    m;
         surfv[j].fc =    0;
         surfv[j].ec =    0;
         surfv[j].fv = NULL;
@@ -617,7 +618,7 @@ static void read_mtllib(const char *line)
     read_mtl(file);
 }
 
-static void read_usemtl(const char *line, int i)
+static int read_usemtl(const char *line, int i)
 {
     if (i >= 0)
     {
@@ -625,7 +626,10 @@ static void read_usemtl(const char *line, int i)
 
         sscanf(line, "%s", name);
         surfv[i].mi = find_mtl(name);
+
+        return surfv[i].mi;
     }
+    return -1;
 }
 
 static void read_vt(const char *line)
@@ -680,17 +684,18 @@ static int read_obj(const char *filename, struct object *o)
     if ((fin = fopen(filename, "r")))
     {
         int i = -1;
+        int m = -1;
 
         /* Process each line, invoking the handler for each keyword. */
 
         while (fgets(line, MAXSTR, fin))
         {
-            if      (!strncmp(line, "mtllib", 6)) read_mtllib(line + 7);
-            else if (!strncmp(line, "usemtl", 6)) read_usemtl(line + 7, i);
+            if      (!strncmp(line, "mtllib", 6))     read_mtllib(line + 7);
+            else if (!strncmp(line, "usemtl", 6)) m = read_usemtl(line + 7, i);
 
-            else if (!strncmp(line, "g",  1)) i = read_g(i);
+            else if (!strncmp(line, "g",  1)) i = read_g(i, m);
             else if (!strncmp(line, "f",  1)) read_f (line + 2);
-            else if (!strncmp(line, "e",  1)) read_e (line + 2);
+            else if (!strncmp(line, "l",  1)) read_l (line + 2);
             else if (!strncmp(line, "vt", 2)) read_vt(line + 3);
             else if (!strncmp(line, "vn", 2)) read_vn(line + 3);
             else if (!strncmp(line, "v",  1)) read_v (line + 2);
@@ -698,7 +703,7 @@ static int read_obj(const char *filename, struct object *o)
 
         /* Close out the last group being read. */
 
-        i = read_g(i);
+        i = read_g(i, m);
 
         /* Close out the object by copying the element caches. */
 
@@ -769,11 +774,11 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
 
                 for (si = 0; si < O[od].sc; ++si)
                 {
-                    const struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
-                    float d[4];
-
-                    if (m)
+                    if (O[od].sv[si].mi >= 0)
                     {
+                        struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
+                        float d[4];
+
                         draw_image(m->image);
 
                         /* Modulate the diffuse color by the current alpha. */

@@ -120,20 +120,25 @@ The class hierarchy is as follows: </p>
 <dt><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>
 Load an OBJ format 3D object and return an Electro object entity.
 This is the normal means of importing 3D geometry into an Electro
-application.  It fully supports the OBJ file format, including
-material files and texture maps.  The OBJ export capabilities of Maya,
-Lightwave, Wings3D, and Milkshape are known to be compatible.
+application.  It supports polygonal geometry in OBJ file format,
+including material files and texture maps.  The OBJ export capabilities
+of Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.
 </p>
 
-<p class="note"> The Electro OBJ loader allows two non-standard
-extensions to the OBJ specification.  An OBJ file may include "e"
-specifiers which behave like "f" specifiers but define edges rather
-than faces.  An MTL file may include "Ke" specifiers which behave like
-"Kd", "Ka", and "Ks" specifiers but define an emissive material
-property rather than a diffuse, ambient, or specular property.
-Standard exporters do not produce these tags, and importers simply
-ignore them, so they do not get in the way of normal OBJ file
-usage.</p>
+<p class="note"> The Electro OBJ loader lacks support for freeform
+curve specification.  This is actually due to the fact that the
+Electro renderer lacks the abality to render freeform curves.  Any
+curve specifiers appearing in OBJ files will be silently ignored.
+If curves are required, tessalate them using your favorite 3D
+modeller. </p>
+
+<p class="note"> The Electro OBJ loader allows one non-standard
+extension to the OBJ specification.  An MTL file may include "Ke"
+specifiers which behave like "Kd", "Ka", and "Ks" specifiers but
+define an emissive material property rather than a diffuse, ambient,
+or specular property.  Standard exporters do not produce this tag,
+and importers simply ignore it, so it does not get in the way of
+normal OBJ file usage.</p>
 
 <dt><i>sprite</i> = <tt>create_sprite</tt>(<i>filename</i>)<dd><p>
 Load an image file and create a sprite entity.  A sprite consists of a
