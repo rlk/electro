@@ -7,7 +7,8 @@ ortho   = nil
 sprite  = nil
 light   = nil
 pivot   = nil
-thing   = nil
+thing1  = nil
+thing2  = nil
 floor   = nil
 
 tumble = false
@@ -21,22 +22,29 @@ function do_start()
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
     pivot  = E.create_pivot()
-    thing  = E.create_object("cow.obj")
+    thing1 = E.create_object("bone.obj")
+    thing2 = E.create_object("skin.obj")
     floor  = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
-    E.parent_entity(thing, pivot)
+    E.parent_entity(thing2, pivot)
+    E.parent_entity(thing1, pivot)
     E.parent_entity(floor, pivot)
 
     E.set_entity_position(light,  0,  8.0,   8.0)
     E.set_entity_position(scene,  0, -8.0,  -8.0)
-    E.set_entity_position(pivot,  0,  3.0, -10.0)
-    E.set_entity_position(thing,  0,  1.0,   0.0)
+    E.set_entity_position(pivot,  0,  0.0, -10.0)
+    E.set_entity_position(thing1, 0,  0.0,   0.0)
+    E.set_entity_position(thing2, 0,  0.0,   0.0)
     E.set_entity_position(camera, 0,  0.0,   0.0)
 
-    E.set_background(1, 1, 1, 0, 0.5, 1)
+    E.set_entity_scale(floor, 2, 2, 2)
+
+    E.set_entity_alpha(thing2, 0.5)
+
+    E.set_background(0, 0, 0, 0, 0.5, 1)
 
     if tracking then 
         E.enable_timer(true)
