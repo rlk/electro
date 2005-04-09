@@ -102,14 +102,11 @@ static void init_server(void)
 
 static void server_draw(void)
 {
-/*  const float gray[3] = { 0.2f, 0.2f, 0.2f }; */
-
     glViewport(0, 0, get_window_w(), get_window_h());
     glScissor (0, 0, get_window_w(), get_window_h());
 
     glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT |
-            GL_STENCIL_BUFFER_BIT);
+            GL_DEPTH_BUFFER_BIT);
 
     draw_background();
 
@@ -128,6 +125,11 @@ static void server_draw(void)
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
     SDL_GL_SwapBuffers();
+}
+
+static void server_step(void)
+{
+    step_entity();
 }
 
 static void server_perf(void)
@@ -250,6 +252,7 @@ static int server_loop(void)
         {
             server_draw();
             server_perf();
+            server_step();
 
             dirty = 0;
             count = count + 1;
@@ -299,7 +302,6 @@ void server(int argc, char *argv[])
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-            SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
             if (SDL_SetVideoMode(w, h, 0, m))

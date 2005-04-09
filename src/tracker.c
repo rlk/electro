@@ -20,43 +20,78 @@
 
 /*---------------------------------------------------------------------------*/
 
-static void *tracker = NULL;
+static void *tracker    = NULL;
+static void *controller = NULL;
 
 /*---------------------------------------------------------------------------*/
 
 void init_tracker(void)
 {
 #ifdef TRACKD
-    tracker = trackdInitTrackerReader(4126);
+    tracker    = trackdInitTrackerReader(TRACKER_KEY);
+    controller = trackdInitControllerReader(CONTROLLER_KEY);
 #else
-    tracker = NULL;
+    tracker    = NULL;
+    controller = NULL;
 #endif
 }
 
-void free_tracker(void)
-{
-}
+/*---------------------------------------------------------------------------*/
 
-void get_tracker_position(float *x, float *y, float *z)
+int get_tracker_rotation(int id, float e[3][3])
 {
+#ifdef TRACKD
     if (tracker)
     {
-#ifdef TRACKD
-        float p[3];
+        float M[4][4];
 
-        trackdGetPosition(tracker, 0, p);
+        trackdGetMatrix(tracker, id, M);
 
-        *x = p[0];
-        *y = p[1];
-        *z = p[2];
+        e[0][0] = M[0][0];
+        e[0][1] = M[0][1];
+        e[0][2] = M[0][2];
+
+        e[1][0] = M[1][0];
+        e[1][1] = M[1][1];
+        e[1][2] = M[1][2];
+
+        e[2][0] = M[2][0];
+        e[2][1] = M[2][1];
+        e[2][2] = M[2][2];
+
+        return 1;
+    }
 #endif
-    }
-    else
+
+    return 0;
+}
+
+int get_tracker_position(int id, float p[3])
+{
+#ifdef TRACKD
+    if (tracker)
     {
-        *x = 0;
-        *y = 0;
-        *z = 0;
+        trackdGetPosition(tracker, id, p);
+        return 1;
     }
+#endif
+
+    return 0;
+}
+
+int get_tracker_joystick(int id, float a[2])
+{
+#ifdef TRACKD
+    if (controller)
+    {
+        a[0] = trackdGetValuator(controller, id + 0);
+        a[1] = trackdGetValuator(controller, id + 1);
+
+        return 1;
+    }
+#endif
+
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/

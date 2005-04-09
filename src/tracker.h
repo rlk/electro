@@ -15,10 +15,16 @@
 
 /*---------------------------------------------------------------------------*/
 
-void init_tracker(void);
-void free_tracker(void);
+#define TRACKER_KEY    4126
+#define CONTROLLER_KEY 4127
 
-void get_tracker_position(float *, float *, float *);
+/*---------------------------------------------------------------------------*/
+
+void init_tracker(void);
+
+int  get_tracker_rotation(int, float[3][3]);
+int  get_tracker_position(int, float[3]);
+int  get_tracker_joystick(int, float[2]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -316,7 +316,8 @@ relative transformation functions is to violate the principle of
 orthogonality.  In this case, I just couldn't resist.  Inspiration for
 this feature is drawn from Blitz3D, which showed that relative
 transform is very beginner-friendly, leading to a very intuitive
-turtle-style system of entity control. </p>
+turtle-style system of entity control.  Unlike Blitz3D however,
+Electro's relative transform is not susceptible to gimble lock. </p>
 
 <dl>
 
@@ -377,8 +378,16 @@ and ARB_vp, such as Cg. </p>
 Return the position (<i>x, y, z</i>) of the entity in local coordinates.
 </p>
 
-<dt><i>x, y, z</i> = <tt>get_entity_rotation</tt>(<i>entity</i>)<dd><p>
-Return the rotation of the entity about the local X, Y, and Z axes.
+<dt><i>x, y, z</i> = <tt>get_entity_x_vector</tt>(<i>entity</i>)<dd><p>
+Return the vector pointing to the right from the entity in local coordinates.
+</p>
+
+<dt><i>x, y, z</i> = <tt>get_entity_y_vector</tt>(<i>entity</i>)<dd><p>
+Return the vector pointing up from the entity in local coordinates.
+</p>
+
+<dt><i>x, y, z</i> = <tt>get_entity_z_vector</tt>(<i>entity</i>)<dd><p>
+Return the vector pointing to the read of entity in local coordinates.
 </p>
 
 <dt><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>
@@ -442,6 +451,33 @@ drawn with all lighting disabled.  They will appear fully bright.
 This is especially useful for sprite and wireframe objects which do
 not have lightable surfaces.  The unlit flag affects all sub entities
 and cannot be reversed lower in the hierarchy.</p>
+
+<li><tt> entity_pos_tracked_0 </tt><p> Entities with the
+position-tracked flag have their positions updated each frame to match
+the position of tracker 0, if it is available.  This is useful for
+implementing head or wand tracking in an immersive VR environment.
+Camera objects with the position-tracked flag will apply the tracker
+position to the view point offset and reshape their view frusta
+accordingly.  If an application requires the position of the tracker
+without reference to any visible entity, the position-tracked flag
+should be set on a pivot entity and the pivot's position queried with
+<tt>get_entity_position</tt>.</p>
+
+<li><tt> entity_rot_tracked_0 </tt><p> Entities with the
+rotation-tracked flag have their orientations updated to match that of
+tracker 0, if it is available.  Again, this is useful in immersive VR
+applications.  However, in most VR configurations the camera in an
+immersive VR application should <i>not</i> be rotation-tracked.  The
+orientation of a tracker may be queried by setting the
+rotation-tracked flag on a pivot and calling
+<tt>get_entity_x_vector</tt>, etc. </p>
+
+<li><tt> entity_pos_tracked_1 </tt>
+<li><tt> entity_rot_tracked_1 </tt>
+
+<p> These flags behave as above, using tracker 1.  In many
+configurations, trackers 0 and 1 will be head and wand, or
+vice-versa. </p>
 
 </ul>
 </dl>

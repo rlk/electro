@@ -23,7 +23,6 @@
 #include <string.h>
 
 #include "joystick.h"
-#include "tracker.h"
 #include "display.h"
 #include "console.h"
 #include "server.h"
@@ -397,19 +396,6 @@ static int script_enable_timer(lua_State *L)
 {
     enable_timer(script_getboolean(L, -1));
     return 0;
-}
-
-static int script_get_tracking(lua_State *L)
-{
-    float x, y, z;
-
-    get_tracker_position(&x, &y, &z);
-
-    lua_pushnumber(L, (double) x);
-    lua_pushnumber(L, (double) y);
-    lua_pushnumber(L, (double) z);
-
-    return 3;
 }
 
 static int script_get_joystick(lua_State *L)
@@ -916,14 +902,6 @@ static int script_print_console(lua_State *L)
 
 /*---------------------------------------------------------------------------*/
 
-static int script_get_entity_debug_id(lua_State *L)
-{
-    int id = script_getentity(L, -1);
-
-    lua_pushstring(L, get_entity_debug_id(id));
-    return 1;
-}
-
 static int script_exit(lua_State *L)
 {
     SDL_Event e;
@@ -1187,30 +1165,32 @@ void luaopen_electro(lua_State *L)
     /* Misc. */
 
     lua_function(L, "enable_timer",         script_enable_timer);
-    lua_function(L, "get_tracking",         script_get_tracking);
     lua_function(L, "get_joystick",         script_get_joystick);
     lua_function(L, "get_modifier",         script_get_modifier);
     lua_function(L, "set_background",       script_set_background);
-    lua_function(L, "get_entity_debug_id",  script_get_entity_debug_id);
     lua_function(L, "exit",                 script_exit);
 
     /* Constants. */
 
-    lua_constant(L, "entity_flag_hidden",      FLAG_HIDDEN);
-    lua_constant(L, "entity_flag_wireframe",   FLAG_WIREFRAME);
-    lua_constant(L, "entity_flag_billboard",   FLAG_BILLBOARD);
-    lua_constant(L, "entity_flag_unlit",       FLAG_UNLIT);
-    lua_constant(L, "entity_flag_line_smooth", FLAG_LINE_SMOOTH);
+    lua_constant(L, "entity_flag_hidden",        FLAG_HIDDEN);
+    lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
+    lua_constant(L, "entity_flag_billboard",     FLAG_BILLBOARD);
+    lua_constant(L, "entity_flag_unlit",         FLAG_UNLIT);
+    lua_constant(L, "entity_flag_line_smooth",   FLAG_LINE_SMOOTH);
+    lua_constant(L, "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0);
+    lua_constant(L, "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0);
+    lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
+    lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
 
-    lua_constant(L, "camera_type_orthogonal",  CAMERA_ORTHO);
-    lua_constant(L, "camera_type_perspective", CAMERA_PERSP);
+    lua_constant(L, "camera_type_orthogonal",    CAMERA_ORTHO);
+    lua_constant(L, "camera_type_perspective",   CAMERA_PERSP);
 
-    lua_constant(L, "light_type_positional",   LIGHT_POSITIONAL);
-    lua_constant(L, "light_type_directional",  LIGHT_DIRECTIONAL);
+    lua_constant(L, "light_type_positional",     LIGHT_POSITIONAL);
+    lua_constant(L, "light_type_directional",    LIGHT_DIRECTIONAL);
 
-    lua_constant(L, "key_modifier_shift",      KMOD_SHIFT);
-    lua_constant(L, "key_modifier_control",    KMOD_CTRL);
-    lua_constant(L, "key_modifier_alt",        KMOD_ALT);
+    lua_constant(L, "key_modifier_shift",        KMOD_SHIFT);
+    lua_constant(L, "key_modifier_control",      KMOD_CTRL);
+    lua_constant(L, "key_modifier_alt",          KMOD_ALT);
 
     /* Register the "electro" environment table globally. */
 

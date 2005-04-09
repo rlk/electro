@@ -25,6 +25,7 @@
 #include "pivot.h"
 #include "event.h"
 #include "utility.h"
+#include "tracker.h"
 #include "entity.h"
 
 /*---------------------------------------------------------------------------*/
@@ -291,6 +292,32 @@ void draw_entity(void)
     memset(&F, 0, sizeof (struct frustum));
 
     if (E) draw_entity_list(0, &F, 1.0f);
+}
+
+void step_entity(void)
+{
+    float e[2][3][3];
+    float p[2][3];
+    int  id;
+
+    if (get_tracker_position(0, p[0]) &&
+        get_tracker_position(1, p[1]) &&
+        get_tracker_rotation(0, e[0]) &&
+        get_tracker_rotation(1, e[1]))
+
+        for (id = 0; id < E_max; ++id)
+            if (E[id].type)
+            {
+                if (E[id].flag & FLAG_POS_TRACKED_0)
+                    send_set_entity_position(id, p[0]);
+                if (E[id].flag & FLAG_POS_TRACKED_1)
+                    send_set_entity_position(id, p[1]);
+
+                if (E[id].flag & FLAG_ROT_TRACKED_0)
+                    send_set_entity_basis(id, e[0][0], e[0][1], e[0][2]);
+                if (E[id].flag & FLAG_ROT_TRACKED_1)
+                    send_set_entity_basis(id, e[1][1], e[1][1], e[1][2]);
+            }
 }
 
 /*---------------------------------------------------------------------------*/

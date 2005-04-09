@@ -12,6 +12,8 @@
 
 #include <SDL.h>
 
+#include "tracker.h"
+
 /*---------------------------------------------------------------------------*/
 
 #define MAXJOY 8
@@ -41,10 +43,13 @@ void free_joystick(void)
 
 void get_joystick(int i, float a[2])
 {
+    if (get_tracker_joystick(i, a))
+        return;
+
     if (SDL_JoystickOpened(i))
     {
-        a[0] = SDL_JoystickGetAxis(joy[i], 0) / 32768.0f;;
-        a[1] = SDL_JoystickGetAxis(joy[i], 1) / 32768.0f;;
+        a[0] = SDL_JoystickGetAxis(joy[i], 0) / 32768.0f;
+        a[1] = SDL_JoystickGetAxis(joy[i], 1) / 32768.0f;
     }
 }
 

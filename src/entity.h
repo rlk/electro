@@ -26,13 +26,15 @@
 #define TYPE_LIGHT  6
 #define TYPE_PIVOT  7
 
-#define FLAG_HIDDEN       1
-#define FLAG_WIREFRAME    2
-#define FLAG_BILLBOARD    4
-#define FLAG_TRACKED_0    8
-#define FLAG_TRACKED_1   16
-#define FLAG_UNLIT       32
-#define FLAG_LINE_SMOOTH 64
+#define FLAG_HIDDEN        0x0001
+#define FLAG_WIREFRAME     0x0002
+#define FLAG_BILLBOARD     0x0004
+#define FLAG_UNLIT         0x0008
+#define FLAG_LINE_SMOOTH   0x0010
+#define FLAG_POS_TRACKED_0 0x0020
+#define FLAG_ROT_TRACKED_0 0x0040
+#define FLAG_POS_TRACKED_1 0x0080
+#define FLAG_ROT_TRACKED_1 0x0100
 
 struct entity
 {
@@ -76,6 +78,7 @@ void draw_entity_list(int,
 
 int  init_entity(void);
 void draw_entity(void);
+void step_entity(void);
 
 /*---------------------------------------------------------------------------*/
 
