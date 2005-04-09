@@ -251,7 +251,7 @@ static void script_getvector(lua_State *L, int i, float *v, int n)
                 lua_gettable  (L, i - 1);
 
                 if (lua_isnumber(L, -1))
-                    v[j] = lua_tonumber(L, -1);
+                    v[j] = (float) lua_tonumber(L, -1);
                 else
                 {
                     script_type_error("number", L, -1);
@@ -358,10 +358,10 @@ static int script_getsound(lua_State *L, int i)
 static int script_add_host(lua_State *L)
 {
     add_host(script_getstring(L, -5),
-             script_getnumber(L, -4),
-             script_getnumber(L, -3),
-             script_getnumber(L, -2),
-             script_getnumber(L, -1));
+       (int) script_getnumber(L, -4),
+       (int) script_getnumber(L, -3),
+       (int) script_getnumber(L, -2),
+       (int) script_getnumber(L, -1));
 
     return 0;
 }

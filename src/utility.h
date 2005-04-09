@@ -52,7 +52,7 @@ const char *get_file_path(const char *);
 float htonf(float);
 float ntohf(float);
 
-int  balloc(void **, int *, size_t, int (*)(int));
+void *balloc(void *, int *, int *, size_t, int (*)(int));
 char *alloc_text(const char *);
 
 void *error(char *, ...);

@@ -114,30 +114,27 @@ float ntohf(float f)
 
 /*---------------------------------------------------------------------------*/
 
-int balloc(void **buf, int *len, size_t siz, int (*occupied)(int))
+void *balloc(void *buf, int *id, int *len, size_t siz, int (*occupied)(int))
 {
-    void *ptr;
-    int   i;
+    void *ptr = buf;
 
     /* Scan for an unused vector element. */
 
-    for (i = 0; i < *len; ++i)
-        if (!occupied(i))
-            return i;
+    for (*id = 0; *id < *len; (*id)++)
+        if (!occupied(*id))
+            return buf;
 
     /* The vector is full.  Reallocate it at double size. */
 
-    if ((ptr = realloc(*buf, *len * 2 * siz)))
+    if ((ptr = realloc(buf, (*len) * 2 * siz)))
     {
-        i    = *len;
+        *id  = *len;
         *len = *len * 2;
-        *buf =  ptr;
 
-        memset(((unsigned char *) (*buf)) + *len * siz, 0, *len * siz);
+        memset((unsigned char *) ptr + (*len) * siz, 0, (*len) * siz);
     }
-    else i = -1;
 
-    return i;
+    return ptr;
 }
 
 /*---------------------------------------------------------------------------*/

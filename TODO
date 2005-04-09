@@ -1,3 +1,11 @@
+get entity orientation vectors
+rotate about at axis
+    (bases and axis rotate replaces turn and move?)
+command line args
+obj viewer app
+bounding sphere
+tracker button/joystick/vectors
+    tracked flag  (then vectors become basis query) (akin to billboard)
 Equatarial HIP
 stereo
 camera offset per tile (for geowall and planar)

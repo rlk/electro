@@ -38,7 +38,11 @@ static int camera_exists(int cd)
 
 static int alloc_camera(void)
 {
-    return balloc((void **) &C, &C_max, sizeof (struct camera), camera_exists);
+    int cd = -1;
+
+    C = (struct camera *) balloc(C, &cd, &C_max,
+                                 sizeof (struct camera), camera_exists);
+    return cd;
 }
 
 /*---------------------------------------------------------------------------*/

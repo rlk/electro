@@ -341,8 +341,6 @@ void server(int argc, char *argv[])
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
     }
-
-    printf("Average FPS: %f\n", average_fps);
 }
 
 /*---------------------------------------------------------------------------*/

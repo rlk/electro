@@ -170,22 +170,22 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
         F1->V[0][0] =  0.0f;
         F1->V[0][1] =  1.0f;
         F1->V[0][2] =  0.0f;
-        F1->V[0][3] = -Host.tile[i].pix_y;
+        F1->V[0][3] = (float) (-Host.tile[i].pix_y);
 
         F1->V[1][0] = -1.0f;
         F1->V[1][1] =  0.0f;
         F1->V[1][2] =  0.0f;
-        F1->V[1][3] = -Host.tile[i].pix_x - Host.tile[i].pix_w;
+        F1->V[1][3] = (float) (-Host.tile[i].pix_x - Host.tile[i].pix_w);
 
         F1->V[2][0] =  0.0f;
         F1->V[2][1] = -1.0f;
         F1->V[2][2] =  0.0f;
-        F1->V[2][3] = -Host.tile[i].pix_y - Host.tile[i].pix_h;
+        F1->V[2][3] = (float) (-Host.tile[i].pix_y - Host.tile[i].pix_h);
 
         F1->V[3][0] =  1.0f;
         F1->V[3][1] =  0.0f;
         F1->V[3][2] =  0.0f;
-        F1->V[3][3] = -Host.tile[i].pix_x;
+        F1->V[3][3] = (float) (-Host.tile[i].pix_x);
 
         /* Configure the viewport. */
 

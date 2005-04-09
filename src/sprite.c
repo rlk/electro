@@ -36,7 +36,11 @@ static int sprite_exists(int sd)
 
 static int alloc_sprite(void)
 {
-    return balloc((void **) &S, &S_max, sizeof (struct sprite), sprite_exists);
+    int sd = -1;
+
+    S = (struct sprite *) balloc(S, &sd, &S_max,
+                                 sizeof (struct sprite), sprite_exists);
+    return sd;
 }
 
 /*---------------------------------------------------------------------------*/

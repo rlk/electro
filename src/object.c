@@ -37,7 +37,11 @@ static int object_exists(int od)
 
 static int alloc_object(void)
 {
-    return balloc((void **) &O, &O_max, sizeof (struct object), object_exists);
+    int od = -1;
+
+    O = (struct object *) balloc(O, &od, &O_max,
+                                 sizeof (struct object), object_exists);
+    return od;
 }
 
 /*---------------------------------------------------------------------------*/

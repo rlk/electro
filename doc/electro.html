@@ -102,7 +102,7 @@ The class hierarchy is as follows: </p>
 <ul>
 <li><a href="#object"> Object </a>
 <li><a href="#sprite"> Sprite </a>
-<li> Camera
+<li><a href="#camera"> Camera </a>
 <li><a href="#light">  Light  </a>
 <li><a href="#pivot">  Pivot  </a>
 <li><a href="#galaxy"> Galaxy </a>
@@ -470,6 +470,34 @@ textures are assigned an alpha value of 1.</p>
 <dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
 Return the size of the sprite in pixels.</p>
 
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="camera"><h3> Camera </h3>
+<dl>
+
+<dt><tt>set_camera_offset</tt>(<i>camera, x, y, z</i>)<dd><p> Set the
+offset of a camera.  The camera offset is an additional translation
+applied to a camera in two ways: First, it is a simple displacement of
+the camera within the scene applied in the camera's local coordinate
+system.  Second, it is the position of the viewpoint with respect to
+the position of the display in real-world coordinates. </p>
+
+<p> This is useful for implementing VR head tracking for immersive
+applications.  Assuming the tracking device is configured to provide
+position information in the same coordinate system in which the
+display is defined, then head tracking may be implemented as follows:
+</p>
+
+<pre>
+function do_timer(dt)
+    local x, y, z = E.get_tracking()
+
+    E.set_camera_offset(camera, x, y, z)
+    return true
+end
+</pre>
 </dl>
 
 <!---------------------------------------------------------------------------->

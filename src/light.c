@@ -35,7 +35,11 @@ static int light_exists(int ld)
 
 static int alloc_light(void)
 {
-    return balloc((void **) &L, &L_max, sizeof (struct light), light_exists);
+    int ld = -1;
+
+    L = (struct light *) balloc(L, &ld, &L_max,
+                                sizeof (struct light), light_exists);
+    return ld;
 }
 
 /*---------------------------------------------------------------------------*/

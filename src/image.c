@@ -246,7 +246,11 @@ static int image_exists(int id)
 
 static int alloc_image(void)
 {
-    return balloc((void **) &I, &I_max, sizeof (struct image), image_exists);
+    int id = -1;
+
+    I = (struct image *) balloc(I, &id, &I_max,
+                                 sizeof (struct image), image_exists);
+    return id;
 }
 
 /*---------------------------------------------------------------------------*/

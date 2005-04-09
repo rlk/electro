@@ -108,7 +108,15 @@ SOURCE=..\src\console.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\display.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\entity.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\frustum.c
 # End Source File
 # Begin Source File
 
@@ -176,11 +184,15 @@ SOURCE=..\src\star.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\tracker.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\utility.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\viewport.c
+SOURCE=..\src\version.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -204,11 +216,19 @@ SOURCE=..\src\console.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\display.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\entity.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\event.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\frustum.h
 # End Source File
 # Begin Source File
 
@@ -272,11 +292,15 @@ SOURCE=..\src\star.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\tracker.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\utility.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\viewport.h
+SOURCE=..\src\version.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

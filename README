@@ -31,11 +31,6 @@
 
         $ electro asteroids.lua
 
-    The standalone mode may take a cluster configuration and will run
-    locally in a simulator mode.
-
-        $ electro /usr/local/electro/config/nico.lua asteroids.lua
-
 
 * Usage
 

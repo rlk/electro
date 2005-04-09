@@ -42,7 +42,11 @@ static int sound_exists(int sd)
 
 static int alloc_sound(void)
 {
-    return balloc((void **) &S, &S_max, sizeof (struct sound), sound_exists);
+    int sd = -1;
+
+    S = (struct sound *) balloc(S, &sd, &S_max,
+                                sizeof (struct sound), sound_exists);
+    return sd;
 }
 
 /*---------------------------------------------------------------------------*/

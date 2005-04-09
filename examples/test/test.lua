@@ -22,27 +22,19 @@ function do_start()
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
     pivot  = E.create_pivot()
-    thing1 = E.create_object("bone.obj")
-    thing2 = E.create_object("skin.obj")
+    thing  = E.create_object("cow.obj")
     floor  = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
-    E.parent_entity(thing2, pivot)
-    E.parent_entity(thing1, pivot)
+    E.parent_entity(thing, pivot)
     E.parent_entity(floor, pivot)
 
-    E.set_entity_position(light,  0,  8.0,   8.0)
-    E.set_entity_position(scene,  0, -8.0,  -8.0)
-    E.set_entity_position(pivot,  0,  0.0, -10.0)
-    E.set_entity_position(thing1, 0,  0.0,   0.0)
-    E.set_entity_position(thing2, 0,  0.0,   0.0)
-    E.set_entity_position(camera, 0,  0.0,   0.0)
-
-    E.set_entity_scale(floor, 2, 2, 2)
-
-    E.set_entity_alpha(thing2, 0.5)
+    E.set_entity_position(light,  0.0,  8.0,   8.0)
+    E.set_entity_position(scene,  0.0, -8.0,  -8.0)
+    E.set_entity_position(pivot,  0.0,  0.0, -10.0)
+    E.set_entity_position(thing,  0.0,  3.5,   0.0)
 
     E.set_background(0, 0, 0, 0, 0.5, 1)
 
@@ -55,7 +47,6 @@ function do_timer(dt)
     if tracking then
         local x, y, z = E.get_tracking()
 
---      E.set_entity_position(camera, x, y, z)
         E.set_camera_offset(camera, x, y, z)
         
         return true

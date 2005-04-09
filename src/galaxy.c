@@ -43,7 +43,11 @@ static int galaxy_exists(int gd)
 
 static int alloc_galaxy(void)
 {
-    return balloc((void **) &G, &G_max, sizeof (struct galaxy), galaxy_exists);
+    int gd = -1;
+
+    G = (struct galaxy *) balloc(G, &gd, &G_max,
+                                 sizeof (struct galaxy), galaxy_exists);
+    return gd;
 }
 
 /*---------------------------------------------------------------------------*/

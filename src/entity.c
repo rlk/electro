@@ -42,7 +42,11 @@ int entity_exists(int id)
 
 static int alloc_entity(void)
 {
-    return balloc((void **) &E, &E_max, sizeof (struct entity), entity_exists);
+    int id = -1;
+
+    E = (struct entity *) balloc(E, &id, &E_max,
+                                 sizeof (struct entity), entity_exists);
+    return id;
 }
 
 /*---------------------------------------------------------------------------*/
