@@ -29,8 +29,10 @@
 #define FLAG_HIDDEN       1
 #define FLAG_WIREFRAME    2
 #define FLAG_BILLBOARD    4
-#define FLAG_UNLIT        8
-#define FLAG_LINE_SMOOTH 16
+#define FLAG_TRACKED_0    8
+#define FLAG_TRACKED_1   16
+#define FLAG_UNLIT       32
+#define FLAG_LINE_SMOOTH 64
 
 struct entity
 {
@@ -39,7 +41,7 @@ struct entity
     int flag;
 
     float position[3];
-    float rotation[3];
+    float basis[3][3];
     float scale[3];
     float alpha;
 
@@ -91,32 +93,38 @@ void recv_delete_entity(void);
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_entity_position (int, float, float, float);
-void send_set_entity_rotation (int, float, float, float);
-void send_set_entity_distance (int, float);
-void send_set_entity_scale    (int, float, float, float);
-void send_set_entity_alpha    (int, float);
-void send_set_entity_flag     (int, int, int);
-void send_set_entity_frag_prog(int, const char *);
-void send_set_entity_vert_prog(int, const char *);
+void  send_set_entity_position (int, const float[3]);
+void  send_set_entity_rotation (int, const float[3]);
+void  send_set_entity_scale    (int, const float[3]);
+void  send_set_entity_basis    (int, const float[3],
+                                     const float[3],
+                                     const float[3]);
 
-void send_move_entity(int, float, float, float);
-void send_turn_entity(int, float, float, float);
+void  send_set_entity_alpha    (int, float);
+void  send_set_entity_flag     (int, int, int);
+void  send_set_entity_frag_prog(int, const char *);
+void  send_set_entity_vert_prog(int, const char *);
 
-void recv_set_entity_position (void);
-void recv_set_entity_rotation (void);
-void recv_set_entity_distance (void);
-void recv_set_entity_scale    (void);
-void recv_set_entity_alpha    (void);
-void recv_set_entity_flag     (void);
-void recv_set_entity_frag_prog(void);
-void recv_set_entity_vert_prog(void);
+void  send_move_entity(int, const float[3]);
+void  send_turn_entity(int, const float[3]);
 
 /*---------------------------------------------------------------------------*/
 
-void  get_entity_position(int, float *, float *, float *);
-void  get_entity_rotation(int, float *, float *, float *);
-void  get_entity_scale   (int, float *, float *, float *);
+void  recv_set_entity_position (void);
+void  recv_set_entity_basis    (void);
+void  recv_set_entity_scale    (void);
+void  recv_set_entity_alpha    (void);
+void  recv_set_entity_flag     (void);
+void  recv_set_entity_frag_prog(void);
+void  recv_set_entity_vert_prog(void);
+
+/*---------------------------------------------------------------------------*/
+
+void  get_entity_position(int, float[3]);
+void  get_entity_x_vector(int, float[3]);
+void  get_entity_y_vector(int, float[3]);
+void  get_entity_z_vector(int, float[3]);
+void  get_entity_scale   (int, float[3]);
 float get_entity_alpha   (int);
 
 /*---------------------------------------------------------------------------*/

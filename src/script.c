@@ -516,28 +516,37 @@ static int script_get_entity_child(lua_State *L)
 
 static int script_set_entity_position(lua_State *L)
 {
-    send_set_entity_position(script_getentity(L, -4),
-                             script_getnumber(L, -3),
-                             script_getnumber(L, -2),
-                             script_getnumber(L, -1));
+    float p[3];
+
+    p[0] = script_getnumber(L, -3);
+    p[1] = script_getnumber(L, -2);
+    p[2] = script_getnumber(L, -1);
+
+    send_set_entity_position(script_getentity(L, -4), p);
     return 0;
 }
 
 static int script_set_entity_rotation(lua_State *L)
 {
-    send_set_entity_rotation(script_getentity(L, -4),
-                             script_getnumber(L, -3),
-                             script_getnumber(L, -2),
-                             script_getnumber(L, -1));
+    float r[3];
+
+    r[0] = script_getnumber(L, -3);
+    r[1] = script_getnumber(L, -2);
+    r[2] = script_getnumber(L, -1);
+
+    send_set_entity_rotation(script_getentity(L, -4), r);
     return 0;
 }
 
 static int script_set_entity_scale(lua_State *L)
 {
-    send_set_entity_scale(script_getentity(L, -4),
-                          script_getnumber(L, -3),
-                          script_getnumber(L, -2),
-                          script_getnumber(L, -1));
+    float s[3];
+
+    s[0] = script_getnumber(L, -3);
+    s[1] = script_getnumber(L, -2);
+    s[2] = script_getnumber(L, -1);
+
+    send_set_entity_scale(script_getentity(L, -4), s);
     return 0;
 }
 
@@ -586,19 +595,25 @@ static int script_set_entity_vert_prog(lua_State *L)
 
 static int script_move_entity(lua_State *L)
 {
-    send_move_entity(script_getentity(L, -4),
-                     script_getnumber(L, -3),
-                     script_getnumber(L, -2),
-                     script_getnumber(L, -1));
+    float v[3];
+
+    v[0] = script_getnumber(L, -3);
+    v[1] = script_getnumber(L, -2);
+    v[2] = script_getnumber(L, -1);
+
+    send_move_entity(script_getentity(L, -4), v);
     return 0;
 }
 
 static int script_turn_entity(lua_State *L)
 {
-    send_turn_entity(script_getentity(L, -4),
-                     script_getnumber(L, -3),
-                     script_getnumber(L, -2),
-                     script_getnumber(L, -1));
+    float r[3];
+
+    r[0] = script_getnumber(L, -3);
+    r[1] = script_getnumber(L, -2);
+    r[2] = script_getnumber(L, -1);
+
+    send_turn_entity(script_getentity(L, -4), r);
     return 0;
 }
 
@@ -607,27 +622,55 @@ static int script_turn_entity(lua_State *L)
 static int script_get_entity_position(lua_State *L)
 {
     int id = script_getentity(L, -1);
-    float x, y, z;
+    float p[3];
 
-    get_entity_position(id, &x, &y, &z);
+    get_entity_position(id, p);
 
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, y);
-    lua_pushnumber(L, z);
+    lua_pushnumber(L, p[0]);
+    lua_pushnumber(L, p[1]);
+    lua_pushnumber(L, p[2]);
 
     return 3;
 }
 
-static int script_get_entity_rotation(lua_State *L)
+static int script_get_entity_x_vector(lua_State *L)
 {
     int id = script_getentity(L, -1);
-    float x, y, z;
+    float v[3];
 
-    get_entity_rotation(id, &x, &y, &z);
+    get_entity_x_vector(id, v);
 
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, y);
-    lua_pushnumber(L, z);
+    lua_pushnumber(L, v[0]);
+    lua_pushnumber(L, v[1]);
+    lua_pushnumber(L, v[2]);
+
+    return 3;
+}
+
+static int script_get_entity_y_vector(lua_State *L)
+{
+    int id = script_getentity(L, -1);
+    float v[3];
+
+    get_entity_y_vector(id, v);
+
+    lua_pushnumber(L, v[0]);
+    lua_pushnumber(L, v[1]);
+    lua_pushnumber(L, v[2]);
+
+    return 3;
+}
+
+static int script_get_entity_z_vector(lua_State *L)
+{
+    int id = script_getentity(L, -1);
+    float v[3];
+
+    get_entity_z_vector(id, v);
+
+    lua_pushnumber(L, v[0]);
+    lua_pushnumber(L, v[1]);
+    lua_pushnumber(L, v[2]);
 
     return 3;
 }
@@ -635,13 +678,13 @@ static int script_get_entity_rotation(lua_State *L)
 static int script_get_entity_scale(lua_State *L)
 {
     int id = script_getentity(L, -1);
-    float x, y, z;
+    float s[3];
 
-    get_entity_scale(id, &x, &y, &z);
+    get_entity_scale(id, s);
 
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, y);
-    lua_pushnumber(L, z);
+    lua_pushnumber(L, s[0]);
+    lua_pushnumber(L, s[1]);
+    lua_pushnumber(L, s[2]);
 
     return 3;
 }
@@ -724,12 +767,15 @@ static int script_get_star_index(lua_State *L)
     int id = script_getentity(L, -2);
     int gd = script_getgalaxy(L, -2);
     int jd = script_getentity(L, -1);
-    int cd = script_getcamera(L, -1);
 
     float p[3];
     float v[3];
 
-    get_camera_direction(jd, cd, p, v);
+    get_entity_z_vector(jd, v);
+
+    v[0] = -v[0];
+    v[1] = -v[1];
+    v[2] = -v[2];
 
     lua_pushnumber(L, pick_galaxy(id, gd, p, v));
     return 1;
@@ -1089,7 +1135,9 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_vert_prog", script_set_entity_vert_prog);
 
     lua_function(L, "get_entity_position",  script_get_entity_position);
-    lua_function(L, "get_entity_rotation",  script_get_entity_rotation);
+    lua_function(L, "get_entity_x_vector",  script_get_entity_x_vector);
+    lua_function(L, "get_entity_y_vector",  script_get_entity_y_vector);
+    lua_function(L, "get_entity_z_vector",  script_get_entity_z_vector);
     lua_function(L, "get_entity_scale",     script_get_entity_scale);
     lua_function(L, "get_entity_alpha",     script_get_entity_alpha);
 

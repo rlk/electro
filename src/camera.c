@@ -77,37 +77,14 @@ void draw_camera(int id, int cd, const struct frustum *F0, float a)
 
     float d[3];
     float p[3];
-    float r[3];
     float X[3];
     float Y[3];
     float Z[3];
-    float T, P;
 
-    get_entity_position(id, p + 0, p + 1, p + 2);
-    get_entity_rotation(id, r + 0, r + 1, r + 2);
-
-    T = PI * r[1] / 180.0f;
-    P = PI * r[0] / 180.0f;
-
-    /* Find the view vector. */
-
-    Z[0] =  (float) (cos(P) * sin(T));
-    Z[1] = -(float) (sin(P));
-    Z[2] =  (float) (cos(P) * cos(T));
-
-    /* Find the view right vector. */
-
-    X[0] =  (float) cos(T);
-    X[1] =  0;
-    X[2] = -(float) sin(T);
-
-    /* Find the view up vector. */
-    
-    v_cross(Y, Z, X);
-
-    v_norm(X, X);
-    v_norm(Y, Y);
-    v_norm(Z, Z);
+    get_entity_position(id, p);
+    get_entity_x_vector(id, X);
+    get_entity_y_vector(id, Y);
+    get_entity_z_vector(id, Z);
 
     if (camera_exists(cd))
     {
@@ -216,23 +193,6 @@ void delete_camera(int cd)
         if (C[cd].count == 0)
             memset(C + cd, 0, sizeof (struct camera));
     }
-}
-
-/*---------------------------------------------------------------------------*/
-
-void get_camera_direction(int id, int cd, float p[3], float v[3])
-{
-    float T, P, r[3];
-
-    get_entity_position(id, p + 0, p + 1, p + 2);
-    get_entity_rotation(id, r + 0, r + 1, r + 2);
-
-    T = PI * r[1] / 180.0f;
-    P = PI * r[0] / 180.0f;
-
-    v[0] = -(float) (cos(P) * sin(T));
-    v[1] =  (float) (sin(P));
-    v[2] = -(float) (cos(P) * cos(T));
 }
 
 /*---------------------------------------------------------------------------*/

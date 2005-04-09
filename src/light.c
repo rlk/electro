@@ -72,7 +72,7 @@ void draw_light(int id, int ld, const struct frustum *F0, float a)
 
             /* Determine the homogenous coordinate lightsource position. */
 
-            get_entity_position(id, p + 0, p + 1, p + 2);
+            get_entity_position(id, p);
 
             if (L[ld].type == LIGHT_POSITIONAL)  p[3] = 1.0f;
             if (L[ld].type == LIGHT_DIRECTIONAL) p[3] = 0.0f;

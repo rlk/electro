@@ -127,6 +127,11 @@ function do_frame()
     dz = 20 * dz / k
 
     E.set_entity_position(hilite, pos_x + dx, pos_y + dy, pos_z + dz)
+
+    print(E.get_entity_vector_x(camera))
+    print(E.get_entity_vector_y(camera))
+    print(E.get_entity_vector_z(camera))
+
 end
 
 function do_point(dx, dy)
@@ -147,7 +152,7 @@ function do_point(dx, dy)
 
         dist = dist + dy * 0.1
 
-    elseif setrotn then
+    else
         local rot_x, rot_y, rot_z = E.get_entity_rotation(camera)
 
         rot_x = rot_x - dy * 0.05

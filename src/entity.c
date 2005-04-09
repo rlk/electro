@@ -92,58 +92,81 @@ int entity_type(int id)
 
 /*---------------------------------------------------------------------------*/
 
+static void basis_mult(float e[3][3])
+{
+    float M[16];
+
+    M[0] = e[0][0]; M[4] = e[1][0]; M[8]  = e[2][0]; M[12] = 0.0f;
+    M[1] = e[0][1]; M[5] = e[1][1]; M[9]  = e[2][1]; M[13] = 0.0f;
+    M[2] = e[0][2]; M[6] = e[1][2]; M[10] = e[2][2]; M[14] = 0.0f;
+    M[3] =    0.0f; M[7] =    0.0f; M[11] =    0.0f; M[15] = 1.0f;
+
+    glMultMatrixf(M);
+}
+
+static void basis_invt(float e[3][3])
+{
+    float M[16];
+
+    M[0] = e[0][0]; M[4] = e[0][1]; M[8]  = e[0][2]; M[12] = 0.0f;
+    M[1] = e[1][0]; M[5] = e[1][1]; M[9]  = e[1][2]; M[13] = 0.0f;
+    M[2] = e[2][0]; M[6] = e[2][1]; M[10] = e[2][2]; M[14] = 0.0f;
+    M[3] =    0.0f; M[7] =    0.0f; M[11] =    0.0f; M[15] = 1.0f;
+
+    glMultMatrixf(M);
+}
+
+/*---------------------------------------------------------------------------*/
+
 void transform_entity(int id, struct frustum *F1,
                         const struct frustum *F0, const float d[3])
 {
     float M[16];
     float I[16];
+    float v[3];
 
     m_init(M);
     m_init(I);
 
-    /* Translation-rotation is reversed for cameras. */
+    v[0] = E[id].position[0];
+    v[1] = E[id].position[1];
+    v[2] = E[id].position[2];
 
     if (E[id].type == TYPE_CAMERA)
     {
-        /* Rotation. */
+        v[0] += d[0];
+        v[1] += d[1];
+        v[2] += d[2];
 
-        glRotatef(-E[id].rotation[0], 1.0f, 0.0f, 0.0f);
-        glRotatef(-E[id].rotation[1], 0.0f, 1.0f, 0.0f);
-        glRotatef(-E[id].rotation[2], 0.0f, 0.0f, 1.0f);
+        /* Camera rotation. */
 
-        m_xrot(M, I, -E[id].rotation[0]);
-        m_yrot(M, I, -E[id].rotation[1]);
-        m_zrot(M, I, -E[id].rotation[2]);
+        basis_invt(E[id].basis);
+        m_basis(I, M, E[id].basis[0],
+                      E[id].basis[1],
+                      E[id].basis[2]);
 
-        /* Position. */
+        /* Camera position. */
 
         glTranslatef(-E[id].position[0] - d[0],
                      -E[id].position[1] - d[1],
                      -E[id].position[2] - d[2]);
-        m_trns(M, I,  E[id].position[0] + d[0],
-                      E[id].position[1] + d[1],
-                      E[id].position[2] + d[2]);
+        m_trans(M, I, v);
     }
     else
     {
-        /* Position. */
+        /* Entity position. */
 
         glTranslatef(E[id].position[0],
                      E[id].position[1],
                      E[id].position[2]);
-        m_trns(M, I, E[id].position[0],
-                     E[id].position[1],
-                     E[id].position[2]);
+        m_trans(M, I, E[id].position);
 
-        /* Rotation. */
+        /* Entity rotation. */
 
-        glRotatef(E[id].rotation[0], 1.0f, 0.0f, 0.0f);
-        glRotatef(E[id].rotation[1], 0.0f, 1.0f, 0.0f);
-        glRotatef(E[id].rotation[2], 0.0f, 0.0f, 1.0f);
-
-        m_xrot(M, I, E[id].rotation[0]);
-        m_yrot(M, I, E[id].rotation[1]);
-        m_zrot(M, I, E[id].rotation[2]);
+        basis_mult(E[id].basis);
+        m_basis(M, I, E[id].basis[0],
+                      E[id].basis[1],
+                      E[id].basis[2]);
     }
 
     /* Billboard. */
@@ -171,9 +194,7 @@ void transform_entity(int id, struct frustum *F1,
     glScalef(E[id].scale[0],
              E[id].scale[1],
              E[id].scale[2]);
-    m_scal(M, I, E[id].scale[0],
-                 E[id].scale[1],
-                 E[id].scale[2]);
+    m_scale(M, I, E[id].scale);
 
     /* Transform the view frustum. */
 
@@ -319,10 +340,14 @@ static void create_entity(int id, int type, int data)
     E[id].data = data;
     E[id].flag = 0;
 
-    E[id].scale[0] = 1.0f;
-    E[id].scale[1] = 1.0f;
-    E[id].scale[2] = 1.0f;
-    E[id].alpha    = 1.0f;
+    E[id].basis[0][0] = 1.0f;
+    E[id].basis[1][1] = 1.0f;
+    E[id].basis[2][2] = 1.0f;
+    E[id].scale[0]    = 1.0f;
+    E[id].scale[1]    = 1.0f;
+    E[id].scale[2]    = 1.0f;
+
+    E[id].alpha       = 1.0f;
 
     attach_entity(id, 0);
 }
@@ -408,34 +433,75 @@ static void set_entity_vert_prog(int id, const char *txt)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_entity_position(int id, float x, float y, float z)
+void send_set_entity_rotation(int id, const float r[3])
+{
+    float M[16], I[16], e[3][3];
+
+    float f[3][3] = {
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
+
+    if (entity_exists(id))
+    {
+        /* Compose a transformation matrix. */
+
+        m_init(M);
+        m_init(I);
+
+        m_xrot(M, I, r[0]);
+        m_yrot(M, I, r[1]);
+        m_zrot(M, I, r[2]);
+
+        /* Transform the basis. */
+
+        m_xfrm(e[0], M, f[0]);
+        m_xfrm(e[1], M, f[1]);
+        m_xfrm(e[2], M, f[2]);
+
+        send_set_entity_basis(id, e[0], e[1], e[2]);
+    }
+}
+
+void send_set_entity_position(int id, const float p[3])
 {
     pack_event(EVENT_SET_ENTITY_POSITION);
     pack_index(id);
 
-    pack_float((E[id].position[0] = x));
-    pack_float((E[id].position[1] = y));
-    pack_float((E[id].position[2] = z));
+    pack_float((E[id].position[0] = p[0]));
+    pack_float((E[id].position[1] = p[1]));
+    pack_float((E[id].position[2] = p[2]));
 }
 
-void send_set_entity_rotation(int id, float x, float y, float z)
+void send_set_entity_basis(int id, const float e0[3],
+                                   const float e1[3],
+                                   const float e2[3])
 {
-    pack_event(EVENT_SET_ENTITY_ROTATION);
+    pack_event(EVENT_SET_ENTITY_BASIS);
     pack_index(id);
 
-    pack_float((E[id].rotation[0] = x));
-    pack_float((E[id].rotation[1] = y));
-    pack_float((E[id].rotation[2] = z));
+    pack_float((E[id].basis[0][0] = e0[0]));
+    pack_float((E[id].basis[0][1] = e0[1]));
+    pack_float((E[id].basis[0][2] = e0[2]));
+
+    pack_float((E[id].basis[1][0] = e1[0]));
+    pack_float((E[id].basis[1][1] = e1[1]));
+    pack_float((E[id].basis[1][2] = e1[2]));
+
+    pack_float((E[id].basis[2][0] = e2[0]));
+    pack_float((E[id].basis[2][1] = e2[1]));
+    pack_float((E[id].basis[2][2] = e2[2]));
 }
 
-void send_set_entity_scale(int id, float x, float y, float z)
+void send_set_entity_scale(int id, const float v[3])
 {
     pack_event(EVENT_SET_ENTITY_SCALE);
     pack_index(id);
 
-    pack_float((E[id].scale[0] = x));
-    pack_float((E[id].scale[1] = y));
-    pack_float((E[id].scale[2] = z));
+    pack_float((E[id].scale[0] = v[0]));
+    pack_float((E[id].scale[1] = v[1]));
+    pack_float((E[id].scale[2] = v[2]));
 }
 
 void send_set_entity_alpha(int id, float a)
@@ -485,31 +551,61 @@ void send_set_entity_vert_prog(int id, const char *txt)
 
 /*---------------------------------------------------------------------------*/
 
-void send_move_entity(int id, float x, float y, float z)
+void send_move_entity(int id, const float v[3])
 {
-    float M[16], I[16], v[3];
+    float p[3];
 
-    m_init(M);
-    m_init(I);
+    if (entity_exists(id))
+    {
+        p[0] = E[id].position[0] + (E[id].basis[0][0] * v[0] +
+                                    E[id].basis[1][0] * v[1] +
+                                    E[id].basis[2][0] * v[2]);
+        p[1] = E[id].position[1] + (E[id].basis[0][1] * v[0] +
+                                    E[id].basis[1][1] * v[1] +
+                                    E[id].basis[2][1] * v[2]);
+        p[2] = E[id].position[2] + (E[id].basis[0][2] * v[0] +
+                                    E[id].basis[1][2] * v[1] +
+                                    E[id].basis[2][2] * v[2]);
 
-    m_xrot(M, I, E[id].rotation[0]);
-    m_yrot(M, I, E[id].rotation[1]);
-    m_zrot(M, I, E[id].rotation[2]);
-
-    v[0] = M[0] * x + M[4] * y + M[8]  * z;
-    v[1] = M[1] * x + M[5] * y + M[9]  * z;
-    v[2] = M[2] * x + M[6] * y + M[10] * z;
-
-    send_set_entity_position(id, E[id].position[0] + v[0],
-                                 E[id].position[1] + v[1],
-                                 E[id].position[2] + v[2]);
+        send_set_entity_position(id, p);
+    }
 }
 
-void send_turn_entity(int id, float x, float y, float z)
+void send_turn_entity(int id, const float r[3])
 {
-    send_set_entity_rotation(id, E[id].rotation[0] + x,
-                                 E[id].rotation[1] + y,
-                                 E[id].rotation[2] + z);
+    float M[16], I[16], e[3][3];
+
+    if (entity_exists(id))
+    {
+        /* Compose a transformation matrix. */
+
+        m_init(M);
+        m_init(I);
+
+        m_rotat(M, I, E[id].basis[0], r[0]);
+        m_rotat(M, I, E[id].basis[1], r[1]);
+        m_rotat(M, I, E[id].basis[2], r[2]);
+
+        /* Transform the basis. */
+
+        m_xfrm(e[0], M, E[id].basis[0]);
+        m_xfrm(e[1], M, E[id].basis[1]);
+        m_xfrm(e[2], M, E[id].basis[2]);
+
+        /* Re-orthogonalize the basis. */
+
+        v_cross(e[2], e[0], e[1]);
+        v_cross(e[1], e[2], e[0]);
+        v_cross(e[0], e[1], e[2]);
+
+        /* Re-normalize the basis. */
+
+        v_normal(e[0], e[0]);
+        v_normal(e[1], e[1]);
+        v_normal(e[2], e[2]);
+
+        send_set_entity_basis(id, e[0], e[1], e[2]);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -523,13 +619,21 @@ void recv_set_entity_position(void)
     E[id].position[2] = unpack_float();
 }
 
-void recv_set_entity_rotation(void)
+void recv_set_entity_basis(void)
 {
     int id = unpack_index();
 
-    E[id].rotation[0] = unpack_float();
-    E[id].rotation[1] = unpack_float();
-    E[id].rotation[2] = unpack_float();
+    E[id].basis[0][0] = unpack_float();
+    E[id].basis[0][1] = unpack_float();
+    E[id].basis[0][2] = unpack_float();
+
+    E[id].basis[1][0] = unpack_float();
+    E[id].basis[1][1] = unpack_float();
+    E[id].basis[1][2] = unpack_float();
+
+    E[id].basis[2][0] = unpack_float();
+    E[id].basis[2][1] = unpack_float();
+    E[id].basis[2][2] = unpack_float();
 }
 
 void recv_set_entity_scale(void)
@@ -580,33 +684,53 @@ void recv_set_entity_vert_prog(void)
 
 /*---------------------------------------------------------------------------*/
 
-void get_entity_position(int id, float *x, float *y, float *z)
+void get_entity_position(int id, float p[3])
 {
     if (entity_exists(id))
     {
-        if (x) *x = E[id].position[0];
-        if (y) *y = E[id].position[1];
-        if (z) *z = E[id].position[2];
+        p[0] = E[id].position[0];
+        p[1] = E[id].position[1];
+        p[2] = E[id].position[2];
     }
 }
 
-void get_entity_rotation(int id, float *x, float *y, float *z)
+void get_entity_x_vector(int id, float v[3])
 {
     if (entity_exists(id))
     {
-        if (x) *x = E[id].rotation[0];
-        if (y) *y = E[id].rotation[1];
-        if (z) *z = E[id].rotation[2];
+        v[0] = E[id].basis[0][0];
+        v[1] = E[id].basis[0][1];
+        v[2] = E[id].basis[0][2];
     }
 }
 
-void get_entity_scale(int id, float *x, float *y, float *z)
+void get_entity_y_vector(int id, float v[3])
 {
     if (entity_exists(id))
     {
-        if (x) *x = E[id].scale[0];
-        if (y) *y = E[id].scale[1];
-        if (z) *z = E[id].scale[2];
+        v[0] = E[id].basis[1][0];
+        v[1] = E[id].basis[1][1];
+        v[2] = E[id].basis[1][2];
+    }
+}
+
+void get_entity_z_vector(int id, float v[3])
+{
+    if (entity_exists(id))
+    {
+        v[0] = E[id].basis[2][0];
+        v[1] = E[id].basis[2][1];
+        v[2] = E[id].basis[2][2];
+    }
+}
+
+void get_entity_scale(int id, float v[3])
+{
+    if (entity_exists(id))
+    {
+        v[0] = E[id].scale[0];
+        v[1] = E[id].scale[1];
+        v[2] = E[id].scale[2];
     }
 }
 
@@ -619,7 +743,6 @@ float get_entity_alpha(int id)
 }
 
 /*---------------------------------------------------------------------------*/
-
 
 static void create_clone(int id, int jd)
 {

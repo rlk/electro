@@ -14,6 +14,9 @@ floor   = nil
 tumble = false
 dolly  = false
 
+rot_x = 0
+rot_y = 0
+
 function do_start()
     local x, y, w, h = E.get_viewport()
 
@@ -68,14 +71,15 @@ end
 
 function do_point(dx, dy)
     if tumble then
-        local x, y, z = E.get_entity_rotation(pivot)
-        E.set_entity_rotation(pivot, x + dy, y + dx, z)
+        rot_x = rot_x + dy
+        rot_y = rot_y + dx
+        E.set_entity_rotation(pivot, rot_x, rot_y, 0)
         return true
     end
 
     if dolly then
         local x, y, z = E.get_entity_position(camera)
-        E.set_entity_position(camera, x, y, z + dy / 2)
+        E.set_entity_position(camera, x, y, z - dy / 2)
         return true
     end
 
