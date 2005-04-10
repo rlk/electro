@@ -36,7 +36,8 @@ struct galaxy
 /*---------------------------------------------------------------------------*/
 
 int  init_galaxy(void);
-void draw_galaxy(int, int, const struct frustum *, float);
+void draw_galaxy(int, int, const float[16], 
+                           const float[16], const struct frustum *, float);
 int  pick_galaxy(int, int, const float[3], const float[3]);
 
 void prep_galaxy(void);

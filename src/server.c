@@ -100,31 +100,25 @@ static void init_server(void)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
-static void server_draw(void)
+static void server_swap(void)
 {
-    glViewport(0, 0, get_window_w(), get_window_h());
-    glScissor (0, 0, get_window_w(), get_window_h());
-
-    glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT);
-
-    draw_background();
-
-    if (server_mirror)
-        draw_entity();
-
-    glViewport(0, 0, get_window_w(), get_window_h());
-    glScissor (0, 0, get_window_w(), get_window_h());
-
-    draw_console();
-
-    /* Sync and swap. */
-
 #ifdef MPI
     glFinish();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
     SDL_GL_SwapBuffers();
+}
+
+static void server_draw(void)
+{
+    draw_background();
+
+    if (server_mirror)
+        draw_entity();
+
+    draw_console();
+
+    server_swap();
 }
 
 static void server_step(void)

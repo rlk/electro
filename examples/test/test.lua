@@ -1,9 +1,7 @@
 dofile("../keyboard.lua")
 
-tracking = true
-
+view    = nil
 camera  = nil
-ortho   = nil
 sprite  = nil
 light   = nil
 pivot   = nil
@@ -20,7 +18,7 @@ rot_y = 0
 function do_start()
     local x, y, w, h = E.get_viewport()
 
-    ortho  = E.create_camera(E.camera_type_orthogonal)
+    view   = E.create_pivot()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
@@ -28,6 +26,7 @@ function do_start()
     thing  = E.create_object("cow.obj")
     floor  = E.create_object("checker.obj")
 
+    E.parent_entity(camera, view)
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
@@ -39,23 +38,10 @@ function do_start()
     E.set_entity_position(pivot,  0.0,  0.0, -10.0)
     E.set_entity_position(thing,  0.0,  3.5,   0.0)
 
+    E.set_camera_offset(camera, 0.01, 0, 0)
+    E.set_camera_stereo(camera, E.camera_stereo_red_blue)
+
     E.set_background(0, 0, 0, 0, 0.5, 1)
-
-    if tracking then 
-        E.enable_timer(true)
-    end
-end
-
-function do_timer(dt)
-    if tracking then
-        local x, y, z = E.get_tracking()
-
-        E.set_camera_offset(camera, x, y, z)
-        
-        return true
-    else
-        return false
-    end
 end
 
 function do_click(b, s)
@@ -78,8 +64,8 @@ function do_point(dx, dy)
     end
 
     if dolly then
-        local x, y, z = E.get_entity_position(camera)
-        E.set_entity_position(camera, x, y, z - dy / 2)
+        local x, y, z = E.get_entity_position(view)
+        E.set_entity_position(view, x, y, z - dy / 2)
         return true
     end
 

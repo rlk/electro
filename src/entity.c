@@ -119,39 +119,34 @@ static void basis_invt(float e[3][3])
 
 /*---------------------------------------------------------------------------*/
 
-void transform_entity(int id, struct frustum *F1,
-                        const struct frustum *F0, const float d[3])
+void transform_entity(int id, float N[16], const float M[16],
+                              float J[16], const float I[16])
 {
-    float M[16];
-    float I[16];
-    float v[3];
+    float A[16];
+    float B[16];
 
-    m_init(M);
-    m_init(I);
-
-    v[0] = E[id].position[0];
-    v[1] = E[id].position[1];
-    v[2] = E[id].position[2];
+    m_copy(N, M);
+    m_copy(J, I);
 
     if (E[id].type == TYPE_CAMERA)
     {
-        v[0] += d[0];
-        v[1] += d[1];
-        v[2] += d[2];
-
         /* Camera rotation. */
 
         basis_invt(E[id].basis);
-        m_basis(I, M, E[id].basis[0],
+        m_basis(B, A, E[id].basis[0],
                       E[id].basis[1],
                       E[id].basis[2]);
+        m_mult(N, N, A);
+        m_mult(J, B, J);
 
         /* Camera position. */
 
-        glTranslatef(-E[id].position[0] - d[0],
-                     -E[id].position[1] - d[1],
-                     -E[id].position[2] - d[2]);
-        m_trans(M, I, v);
+        glTranslatef(-E[id].position[0],
+                     -E[id].position[1],
+                     -E[id].position[2]);
+        m_trans(A, B, E[id].position);
+        m_mult(N, N, A);
+        m_mult(J, B, J);
     }
     else
     {
@@ -160,23 +155,24 @@ void transform_entity(int id, struct frustum *F1,
         glTranslatef(E[id].position[0],
                      E[id].position[1],
                      E[id].position[2]);
-        m_trans(M, I, E[id].position);
+        m_trans(N, J, E[id].position);
+        m_mult(N, N, A);
+        m_mult(J, B, J);
 
         /* Entity rotation. */
 
         basis_mult(E[id].basis);
-        m_basis(M, I, E[id].basis[0],
+        m_basis(A, B, E[id].basis[0],
                       E[id].basis[1],
                       E[id].basis[2]);
+        m_mult(N, N, A);
+        m_mult(J, B, J);
     }
 
     /* Billboard. */
 
     if (E[id].flag & FLAG_BILLBOARD)
     {
-        float A[16];
-        float B[16];
-
         glGetFloatv(GL_MODELVIEW_MATRIX, A);
 
         A[0] = 1.f;  A[4] = 0.f;  A[8]  = 0.f;
@@ -186,8 +182,8 @@ void transform_entity(int id, struct frustum *F1,
         glLoadMatrixf(A);
 
         m_xpos(B, A);
-        m_mult(M, M, A);
-        m_mult(I, B, I);
+        m_mult(N, N, A);
+        m_mult(J, B, J);
     }
 
     /* Scale. */
@@ -195,17 +191,14 @@ void transform_entity(int id, struct frustum *F1,
     glScalef(E[id].scale[0],
              E[id].scale[1],
              E[id].scale[2]);
-    m_scale(M, I, E[id].scale);
-
-    /* Transform the view frustum. */
-
-    m_pfrm(F1->V[0], M, F0->V[0]);
-    m_pfrm(F1->V[1], M, F0->V[1]);
-    m_pfrm(F1->V[2], M, F0->V[2]);
-    m_pfrm(F1->V[3], M, F0->V[3]);
+    m_scale(A, B, E[id].scale);
+    m_mult(N, N, A);
+    m_mult(J, B, J);
 }
 
-void draw_entity_list(int id, const struct frustum *F0, float a)
+void draw_entity_list(int id, const float M[16],
+                              const float I[16],
+                              const struct frustum *F, float a)
 {
     int jd;
 
@@ -216,6 +209,8 @@ void draw_entity_list(int id, const struct frustum *F0, float a)
         {
             glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
             {
+                int kd = E[jd].data;
+
                 /* Enable wireframe if specified. */
 
                 if (E[jd].flag & FLAG_WIREFRAME)
@@ -249,12 +244,12 @@ void draw_entity_list(int id, const struct frustum *F0, float a)
 
                 switch (E[jd].type)
                 {
-                case TYPE_CAMERA: draw_camera(jd, E[jd].data, F0, a); break;
-                case TYPE_SPRITE: draw_sprite(jd, E[jd].data, F0, a); break;
-                case TYPE_OBJECT: draw_object(jd, E[jd].data, F0, a); break;
-                case TYPE_GALAXY: draw_galaxy(jd, E[jd].data, F0, a); break;
-                case TYPE_LIGHT:  draw_light (jd, E[jd].data, F0, a); break;
-                case TYPE_PIVOT:  draw_pivot (jd, E[jd].data, F0, a); break;
+                case TYPE_CAMERA: draw_camera(jd, kd, M, I, F, a); break;
+                case TYPE_SPRITE: draw_sprite(jd, kd, M, I, F, a); break;
+                case TYPE_OBJECT: draw_object(jd, kd, M, I, F, a); break;
+                case TYPE_GALAXY: draw_galaxy(jd, kd, M, I, F, a); break;
+                case TYPE_LIGHT:  draw_light (jd, kd, M, I, F, a); break;
+                case TYPE_PIVOT:  draw_pivot (jd, kd, M, I, F, a); break;
                 }
             }
             glPopAttrib();
@@ -288,22 +283,37 @@ int init_entity(void)
 void draw_entity(void)
 {
     struct frustum F;
+    float M[16];
+    float I[16];
+
+    /* Initialize the view frustum and transform matrices. */
 
     memset(&F, 0, sizeof (struct frustum));
+    m_init(M);
+    m_init(I);
 
-    if (E) draw_entity_list(0, &F, 1.0f);
+    glLoadIdentity();
+
+    /* Begin traversing the scene graph at the root. */
+
+    glPushAttrib(GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
+    {
+        if (E) draw_entity_list(0, M, I, &F, 1.0f);
+    }
+    glPopAttrib();
 }
 
 void step_entity(void)
 {
     float e[2][3][3];
     float p[2][3];
-    int  id;
 
     if (get_tracker_position(0, p[0]) &&
         get_tracker_position(1, p[1]) &&
         get_tracker_rotation(0, e[0]) &&
         get_tracker_rotation(1, e[1]))
+    {
+        int id;
 
         for (id = 0; id < E_max; ++id)
             if (E[id].type)
@@ -318,6 +328,7 @@ void step_entity(void)
                 if (E[id].flag & FLAG_ROT_TRACKED_1)
                     send_set_entity_basis(id, e[1][1], e[1][1], e[1][2]);
             }
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -462,7 +473,7 @@ static void set_entity_vert_prog(int id, const char *txt)
 
 void send_set_entity_rotation(int id, const float r[3])
 {
-    float M[16], I[16], e[3][3];
+    float M[16], A[16], B[16], e[3][3];
 
     float f[3][3] = {
         { 1.0f, 0.0f, 0.0f },
@@ -475,11 +486,15 @@ void send_set_entity_rotation(int id, const float r[3])
         /* Compose a transformation matrix. */
 
         m_init(M);
-        m_init(I);
 
-        m_xrot(M, I, r[0]);
-        m_yrot(M, I, r[1]);
-        m_zrot(M, I, r[2]);
+        m_xrot(A, B, r[0]);
+        m_mult(M, M, A);
+
+        m_yrot(A, B, r[1]);
+        m_mult(M, M, A);
+
+        m_zrot(A, B, r[2]);
+        m_mult(M, M, A);
 
         /* Transform the basis. */
 
@@ -600,18 +615,22 @@ void send_move_entity(int id, const float v[3])
 
 void send_turn_entity(int id, const float r[3])
 {
-    float M[16], I[16], e[3][3];
+    float M[16], A[16], B[16], e[3][3];
 
     if (entity_exists(id))
     {
         /* Compose a transformation matrix. */
 
         m_init(M);
-        m_init(I);
 
-        m_rotat(M, I, E[id].basis[0], r[0]);
-        m_rotat(M, I, E[id].basis[1], r[1]);
-        m_rotat(M, I, E[id].basis[2], r[2]);
+        m_rotat(A, B, E[id].basis[0], r[0]);
+        m_mult(M, M, A);
+
+        m_rotat(A, B, E[id].basis[1], r[1]);
+        m_mult(M, M, A);
+
+        m_rotat(A, B, E[id].basis[2], r[2]);
+        m_mult(M, M, A);
 
         /* Transform the basis. */
 

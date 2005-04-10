@@ -1,6 +1,9 @@
 
 -------------------------------------------------------------------------------
 
+rot_x = 0
+rot_y = 0
+
 camera = nil
 galaxy = nil
 hilite = nil
@@ -34,9 +37,6 @@ function add_constellation(name)
 end
 
 function position_camera()
-    local rot_x, rot_y, rot_z = E.get_entity_rotation(camera)
-    local x, y, z = E.get_tracking()
-
     local T = math.pi * rot_y / 180
     local P = math.pi * rot_x / 180
 
@@ -45,7 +45,7 @@ function position_camera()
     pos_z =  math.cos(P) * math.cos(T) * dist
 
     E.set_entity_position(camera, pos_x, pos_y, pos_z)
-    E.set_camera_offset(camera, x, y, z)
+    E.set_entity_rotation(camera, rot_x, rot_y, 0)
 end
 
 -------------------------------------------------------------------------------
@@ -81,22 +81,17 @@ function do_start()
 end
 
 function do_timer(dt)
-    local x, y, z = E.get_entity_rotation(camera)
-
-    E.set_entity_rotation(camera, x, y + dt * spin, z)
+    rot_y = rot_y + dt * spin
     position_camera()
     return true
 end
 
 function do_keyboard(k, s)
 
-    if s and k == 32 then
-        x, y, z = E.get_entity_rotation(camera)
-        print(x, y)
-    end
-
     if s and k == 13 then
-        dist = 0
+        dist  = 0
+        rot_x = 0
+        rot_y = 0
         E.set_entity_rotation(camera, 0, 0, 0)
         position_camera()
     end
@@ -127,11 +122,6 @@ function do_frame()
     dz = 20 * dz / k
 
     E.set_entity_position(hilite, pos_x + dx, pos_y + dy, pos_z + dz)
-
-    print(E.get_entity_vector_x(camera))
-    print(E.get_entity_vector_y(camera))
-    print(E.get_entity_vector_z(camera))
-
 end
 
 function do_point(dx, dy)
@@ -153,8 +143,6 @@ function do_point(dx, dy)
         dist = dist + dy * 0.1
 
     else
-        local rot_x, rot_y, rot_z = E.get_entity_rotation(camera)
-
         rot_x = rot_x - dy * 0.05
         rot_y = rot_y - dx * 0.05
 
@@ -163,8 +151,6 @@ function do_point(dx, dy)
 
         if rot_y < -180 then rot_y = rot_y + 360 end
         if rot_y >  180 then rot_y = rot_y - 360 end
-
-        E.set_entity_rotation(camera, rot_x, rot_y, rot_z)
     end
 
     position_camera()

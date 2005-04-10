@@ -55,20 +55,21 @@ int init_sprite(void)
     return 0;
 }
 
-void draw_sprite(int id, int sd, const struct frustum *F0, float a)
+void draw_sprite(int id, int sd, const float M[16],
+                                 const float I[16],
+                                 const struct frustum *F, float a)
 {
-    struct frustum F1;
-
     if (sprite_exists(sd))
     {
         glPushAttrib(GL_DEPTH_BUFFER_BIT);
         glPushMatrix();
         {
-            const float d[3] = { 0.0f, 0.0f, 0.0f };
+            float N[16];
+            float J[16];
 
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, &F1, F0, d);
+            transform_entity(id, N, M, J, I);
 
             glDepthMask(GL_FALSE);
             draw_image(S[sd].image);
@@ -89,7 +90,7 @@ void draw_sprite(int id, int sd, const struct frustum *F0, float a)
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, &F1, a * get_entity_alpha(id));
+            draw_entity_list(id, N, J, F, a * get_entity_alpha(id));
         }
         glPopMatrix();
         glPopAttrib();

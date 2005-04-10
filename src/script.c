@@ -786,10 +786,20 @@ static int script_get_star_position(lua_State *L)
 
 static int script_set_camera_offset(lua_State *L)
 {
-    send_set_camera_offset(script_getcamera(L, -4),
-                           script_getnumber(L, -3),
-                           script_getnumber(L, -2),
-                           script_getnumber(L, -1));
+    float v[3];
+
+    v[0] = script_getnumber(L, -3);
+    v[1] = script_getnumber(L, -2);
+    v[2] = script_getnumber(L, -1);
+
+    send_set_camera_offset(script_getcamera(L, -4), v);
+    return 0;
+}
+
+static int script_set_camera_stereo(lua_State *L)
+{
+    send_set_camera_stereo(script_getcamera(L, -2),
+                     (int) script_getnumber(L, -1));
     return 0;
 }
 
@@ -1131,6 +1141,7 @@ void luaopen_electro(lua_State *L)
     /* Camera control. */
 
     lua_function(L, "set_camera_offset",    script_set_camera_offset);
+    lua_function(L, "set_camera_stereo",    script_set_camera_stereo);
 
     /* Light control. */
 
@@ -1184,6 +1195,11 @@ void luaopen_electro(lua_State *L)
 
     lua_constant(L, "camera_type_orthogonal",    CAMERA_ORTHO);
     lua_constant(L, "camera_type_perspective",   CAMERA_PERSP);
+
+    lua_constant(L, "camera_stereo_none",        CAMERA_STEREO_NONE);
+    lua_constant(L, "camera_stereo_quad",        CAMERA_STEREO_QUAD);
+    lua_constant(L, "camera_stereo_red_blue",    CAMERA_STEREO_RED_BLUE);
+    lua_constant(L, "camera_stereo_varrier",     CAMERA_STEREO_VARRIER);
 
     lua_constant(L, "light_type_positional",     LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",    LIGHT_DIRECTIONAL);

@@ -206,8 +206,6 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
         }
         glMatrixMode(GL_MODELVIEW);
 
-        glLoadIdentity();
-
         return i + 1;
     }
     return 0;
@@ -328,7 +326,6 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 
         m_invt(I, M);
 
-        glLoadIdentity();
         glMultMatrixf(I);
 
         return i + 1;
@@ -479,33 +476,46 @@ void draw_background(void)
 {
     int i;
 
+    /* Compute the pixel bounds of the entire display. */
+
+    int hL = Host.pix_x;
+    int hR = Host.pix_x + Host.pix_w;
+    int hB = Host.pix_y;
+    int hT = Host.pix_y + Host.pix_h;
+
+    glClear(GL_COLOR_BUFFER_BIT |
+            GL_DEPTH_BUFFER_BIT);
+
     glPushAttrib(GL_ENABLE_BIT   | 
                  GL_SCISSOR_BIT  |
                  GL_VIEWPORT_BIT |
                  GL_DEPTH_BUFFER_BIT);
     {
-        int hL = Host.pix_x;
-        int hR = Host.pix_x + Host.pix_w;
-        int hB = Host.pix_y;
-        int hT = Host.pix_y + Host.pix_h;
-
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
 
         glDepthMask(GL_FALSE);
 
+        /* Iterate over all tiles of this host. */
+
         for (i = 0; i < Host.n; ++i)
         {
+            /* Compute the pixel bounds of this tile. */
+
             int tL = Host.tile[i].pix_x;
             int tR = Host.tile[i].pix_x + Host.tile[i].pix_w;
             int tB = Host.tile[i].pix_y;
             int tT = Host.tile[i].pix_y + Host.tile[i].pix_h;
 
+            /* Confine rendering to only this tile. */
+
             glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
                        Host.tile[i].win_w, Host.tile[i].win_h);
             glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
                        Host.tile[i].win_w, Host.tile[i].win_h);
+
+            /* Apply a projection that covers this tile. */
 
             glMatrixMode(GL_PROJECTION);
             {
@@ -519,6 +529,8 @@ void draw_background(void)
                 glLoadIdentity();
             }
 
+            /* Render a background quad over the entire display. */
+
             glBegin(GL_QUADS);
             {
                 glColor3fv(color0);
@@ -530,6 +542,8 @@ void draw_background(void)
                 glVertex2i(hL, hT);
             }
             glEnd();
+
+            /* Revert the original projection. */
 
             glMatrixMode(GL_PROJECTION);
             {

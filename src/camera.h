@@ -23,23 +23,33 @@
 #define CAMERA_ORTHO 1
 #define CAMERA_PERSP 2
 
+#define CAMERA_STEREO_NONE     0
+#define CAMERA_STEREO_QUAD     1
+#define CAMERA_STEREO_RED_BLUE 2
+#define CAMERA_STEREO_VARRIER  3
+
 struct camera
 {
-    float offset[3];
     int   count;
     int   type;
+    int   mode;
+    float offset[4];
 };
 
 /*---------------------------------------------------------------------------*/
 
 int  init_camera(void);
-void draw_camera(int, int, const struct frustum *, float);
+void draw_camera(int, int, const float[16],
+                           const float[16], const struct frustum *, float);
 
 int  send_create_camera(int);
 void recv_create_camera(void);
 
-void send_set_camera_offset(int, float, float, float);
+void send_set_camera_offset(int, const float[3]);
 void recv_set_camera_offset(void);
+
+void send_set_camera_stereo(int, int);
+void recv_set_camera_stereo(void);
 
 void clone_camera(int);
 void delete_camera(int);

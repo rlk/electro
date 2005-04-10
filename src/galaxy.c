@@ -17,7 +17,7 @@
 #include <sys/stat.h>
 
 #include "opengl.h"
-#include "utility.h"
+#include "matrix.h"
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
@@ -98,19 +98,27 @@ static void draw_galaxy_arrays(int gd)
     }
 }
 
-void draw_galaxy(int id, int gd, const struct frustum *F0, float a)
+void draw_galaxy(int id, int gd, const float M[16],
+                                 const float I[16],
+                                 const struct frustum *F, float a)
 {
-    struct frustum F1;
-
     if (galaxy_exists(gd))
     {
         glPushMatrix();
         {
-            const float d[3] = { 0.0f, 0.0f, 0.0f };
+            float N[16];
+            float J[16];
+
+            struct frustum E;
 
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, &F1, F0, d);
+            transform_entity(id, N, M, J, I);
+
+            m_pfrm(E.V[0], N, F->V[0]);
+            m_pfrm(E.V[1], N, F->V[1]);
+            m_pfrm(E.V[2], N, F->V[2]);
+            m_pfrm(E.V[3], N, F->V[3]);
 
             glPushAttrib(GL_ENABLE_BIT  |
                          GL_TEXTURE_BIT |
@@ -139,14 +147,14 @@ void draw_galaxy(int id, int gd, const struct frustum *F0, float a)
 
                 /* Render all stars. */
 
-                (void) node_draw(G[gd].N, 0, 0, &F1);
+                node_draw(G[gd].N, 0, 0, &E);
             }
             glPopClientAttrib();
             glPopAttrib();
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, &F1, a * get_entity_alpha(id));
+            draw_entity_list(id, N, J, F, a * get_entity_alpha(id));
         }
         glPopMatrix();
     }

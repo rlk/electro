@@ -41,9 +41,10 @@
 
 #define EVENT_SET_GALAXY_MAGNITUDE 20
 #define EVENT_SET_CAMERA_OFFSET    21
-#define EVENT_SET_SPRITE_BOUNDS    22
-#define EVENT_SET_LIGHT_COLOR      23
-#define EVENT_SET_BACKGROUND       24
+#define EVENT_SET_CAMERA_STEREO    22
+#define EVENT_SET_SPRITE_BOUNDS    23
+#define EVENT_SET_LIGHT_COLOR      24
+#define EVENT_SET_BACKGROUND       25
 
 /*---------------------------------------------------------------------------*/
 

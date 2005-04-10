@@ -30,7 +30,8 @@ struct light
 /*---------------------------------------------------------------------------*/
 
 int  init_light(void);
-void draw_light(int, int, const struct frustum *, float);
+void draw_light(int, int, const float[16],
+                          const float[16], const struct frustum *, float);
 
 int  send_create_light(int);
 void recv_create_light(void);

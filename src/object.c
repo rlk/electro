@@ -741,20 +741,22 @@ int init_object(void)
     return 1;
 }
 
-void draw_object(int id, int od, const struct frustum *F0, float a)
+void draw_object(int id, int od, const float M[16],
+                                 const float I[16],
+                                 const struct frustum *F, float a)
 {
     GLsizei stride = sizeof (struct object_vert);
-    struct frustum F1;
 
     if (object_exists(od))
     {
         glPushMatrix();
         {
-            const float d[3] = { 0.0f, 0.0f, 0.0f };
+            float N[16];
+            float J[16];
 
             /* Apply the local coordinate system transformation. */
 
-            transform_entity(id, &F1, F0, d);
+            transform_entity(id, N, M, J, I);
 
             /* Render this object. */
 
@@ -786,7 +788,6 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
                     if (O[od].sv[si].mi >= 0)
                     {
                         struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
-                        float d[4];
 
                         draw_image(m->image);
 
@@ -837,7 +838,7 @@ void draw_object(int id, int od, const struct frustum *F0, float a)
 
             /* Render all child entities in this coordinate system. */
 
-            draw_entity_list(id, &F1, a * get_entity_alpha(id));
+            draw_entity_list(id, N, J, F, a * get_entity_alpha(id));
         }
         glPopMatrix();
     }

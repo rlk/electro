@@ -84,6 +84,7 @@ static void client_recv(void)
 
         case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
+        case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
         case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
@@ -112,19 +113,21 @@ static void init_client(void)
     glLineWidth(2.0);
 }
 
-static void client_draw(void)
+static void client_swap(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT);
-
-    draw_background();
-    draw_entity();
-
 #ifdef MPI
     glFinish();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
     SDL_GL_SwapBuffers();
+}
+
+static void client_draw(void)
+{
+    draw_background();
+    draw_entity();
+
+    client_swap();
 }
 
 static int client_loop(void)

@@ -17,7 +17,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-void draw_pivot(int, int, const struct frustum *, float);
+void draw_pivot(int, int, const float[16],
+                          const float[16], const struct frustum *, float);
 
 int  send_create_pivot(void);
 void recv_create_pivot(void);
