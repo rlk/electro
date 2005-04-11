@@ -44,6 +44,8 @@ static void default_host(struct host *H)
 
     /* Set a default configuration to be used in case of config failure. */
 
+    H->win_x = DEFAULT_X;
+    H->win_y = DEFAULT_Y;
     H->win_w = DEFAULT_W;
     H->win_h = DEFAULT_H;
     H->pix_w = DEFAULT_W;
@@ -206,6 +208,8 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
                     Host.tile[i].pix_y + Host.tile[i].pix_h, N, F);
         }
         glMatrixMode(GL_MODELVIEW);
+
+        glLoadIdentity();
 
         return i + 1;
     }

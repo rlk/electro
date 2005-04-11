@@ -118,7 +118,7 @@ static void disable_camera_stereo(int mode)
 static int draw_tile(int cd, const float d[3], struct frustum *F, int i)
 {
     if (C[cd].type == CAMERA_PERSP)
-        return draw_persp(F, d, 0.1f, 100.f, i);
+        return draw_persp(F, d, 0.1f, 10000.f, i);
 
     if (C[cd].type == CAMERA_ORTHO)
         return draw_ortho(F, -1000.f, 1000.f, i);
@@ -134,30 +134,28 @@ void draw_camera_eye(int id, int cd, const float M[16],
 
     float N[16];
     float J[16];
-    float p[3];
+    float d[3];
 
     int i = 0;
 
-    p[0] = (C[cd].eye_offset[0] * C[cd].view_basis[0][0] * e +
+    d[0] = (C[cd].eye_offset[0] * C[cd].view_basis[0][0] * e +
             C[cd].eye_offset[1] * C[cd].view_basis[1][0]     +
             C[cd].eye_offset[2] * C[cd].view_basis[2][0]) +C[cd].pos_offset[0];
-    p[1] = (C[cd].eye_offset[0] * C[cd].view_basis[0][1] * e +
+    d[1] = (C[cd].eye_offset[0] * C[cd].view_basis[0][1] * e +
             C[cd].eye_offset[1] * C[cd].view_basis[1][1]     +
             C[cd].eye_offset[2] * C[cd].view_basis[2][1]) +C[cd].pos_offset[1];
-    p[2] = (C[cd].eye_offset[0] * C[cd].view_basis[0][2] * e +
+    d[2] = (C[cd].eye_offset[0] * C[cd].view_basis[0][2] * e +
             C[cd].eye_offset[1] * C[cd].view_basis[1][2]     +
             C[cd].eye_offset[2] * C[cd].view_basis[2][2]) +C[cd].pos_offset[2];
 
-    while ((i = draw_tile(cd, p, &G, i)))
+    while ((i = draw_tile(cd, d, &G, i)))
     {
-        /* Supply the view position as a vertex program parameter. */
-        /*
-        if (GL_has_vertex_program)
-            glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                       0, Q[0], Q[1], Q[2], 1);
-        */
+        G.p[0] = 0.0f;
+        G.p[1] = 0.0f;
+        G.p[2] = 0.0f;
+        G.p[3] = 1.0f;
 
-        transform_camera(id, N, M, J, I, p);
+        transform_camera(id, N, M, J, I, d);
 
         /* Render all children using this camera. */
 

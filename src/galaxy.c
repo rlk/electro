@@ -119,6 +119,13 @@ void draw_galaxy(int id, int gd, const float M[16],
             m_pfrm(E.V[1], N, F->V[1]);
             m_pfrm(E.V[2], N, F->V[2]);
             m_pfrm(E.V[3], N, F->V[3]);
+            m_xfrm(E.p,    J, F->p);
+
+            /* Supply the view position as a vertex program parameter. */
+
+            if (GL_has_vertex_program)
+                glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
+                                           -E.p[0], -E.p[1], -E.p[2], -E.p[3]);
 
             glPushAttrib(GL_ENABLE_BIT  |
                          GL_TEXTURE_BIT |

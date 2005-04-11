@@ -31,7 +31,6 @@ explosions = { }
 asteroids  = { }
 initials   = { }
 
-space      = nil
 thrust     = nil
 scene_2d   = nil
 scene_3d   = nil
@@ -46,6 +45,10 @@ curr_score = 0
 curr_count = 0
 free_score = 0
 high_score = 0
+
+space      = nil
+space_y    = 0
+space_z    = 0
 
 -------------------------------------------------------------------------------
 -- Miscellaneous handy utility functions...
@@ -141,16 +144,13 @@ function init_scene()
 end
 
 function step_scene(dt)
-    
-    local x, y, z = 0, 0, 0
+    space_y = space_y + dt
+    space_z = space_z + dt * 2
 
-    y = y + dt
-    z = z + dt * 2
+    if space_y > 180 then space_y = space_y - 360 end
+    if space_z > 180 then space_z = space_z - 360 end
 
-    if y > 180 then y = y - 360 end
-    if z > 180 then z = z - 360 end
-
-    E.set_entity_rotation(space, 0, y, z)
+    E.set_entity_rotation(space, 0, space_y, space_z)
 end
 
 -------------------------------------------------------------------------------
@@ -858,8 +858,8 @@ function step_player(dt)
     -- Handle thrust.
 
     if player.thrusting then
-        player.dx = player.dx - math.sin(math.rad(rot_z)) * dt * 200
-        player.dy = player.dy + math.cos(math.rad(rot_z)) * dt * 200
+        player.dx = player.dx - math.sin(math.rad(player.rot)) * dt * 200
+        player.dy = player.dy + math.cos(math.rad(player.rot)) * dt * 200
     end
 
     -- Handle position change.

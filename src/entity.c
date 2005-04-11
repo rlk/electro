@@ -124,16 +124,19 @@ void transform_camera(int id, float N[16], const float M[16],
 {
     float A[16];
     float B[16];
+    float q[3];
 
     m_copy(N, M);
     m_copy(J, I);
 
     /* Camera tracking */
 
-    glTranslatef(-p[0],
-                 -p[1],
-                 -p[2]);
-    m_trans(A, B, p);
+    q[0] = -p[0];
+    q[1] = -p[1];
+    q[2] = -p[2];
+
+    glTranslatef(q[0], q[1], q[2]);
+    m_trans(A, B, q);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
@@ -148,9 +151,11 @@ void transform_camera(int id, float N[16], const float M[16],
 
     /* Camera position. */
 
-    glTranslatef(-E[id].position[0],
-                 -E[id].position[1],
-                 -E[id].position[2]);
+    q[0] = -E[id].position[0];
+    q[1] = -E[id].position[1];
+    q[2] = -E[id].position[2];
+
+    glTranslatef(q[0], q[1], q[2]);
     m_trans(A, B, E[id].position);
     m_mult(N, N, A);
     m_mult(J, B, J);
@@ -170,16 +175,18 @@ void transform_entity(int id, float N[16], const float M[16],
     glTranslatef(E[id].position[0],
                  E[id].position[1],
                  E[id].position[2]);
-    m_trans(N, J, E[id].position);
+
+    m_trans(A, B, E[id].position);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
     /* Entity rotation. */
 
     basis_mult(E[id].basis);
+
     m_basis(A, B, E[id].basis[0],
-            E[id].basis[1],
-            E[id].basis[2]);
+                  E[id].basis[1],
+                  E[id].basis[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
@@ -205,6 +212,7 @@ void transform_entity(int id, float N[16], const float M[16],
     glScalef(E[id].scale[0],
              E[id].scale[1],
              E[id].scale[2]);
+
     m_scale(A, B, E[id].scale);
     m_mult(N, N, A);
     m_mult(J, B, J);
@@ -495,35 +503,11 @@ static void set_entity_vert_prog(int id, const char *txt)
 
 void send_set_entity_rotation(int id, const float r[3])
 {
-    float M[16], A[16], B[16], e[3][3];
-
-    float f[3][3] = {
-        { 1.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f }
-    };
+    float e[3][3];
 
     if (entity_exists(id))
     {
-        /* Compose a transformation matrix. */
-
-        m_init(M);
-
-        m_xrot(A, B, r[0]);
-        m_mult(M, M, A);
-
-        m_yrot(A, B, r[1]);
-        m_mult(M, M, A);
-
-        m_zrot(A, B, r[2]);
-        m_mult(M, M, A);
-
-        /* Transform the basis. */
-
-        m_xfrm(e[0], M, f[0]);
-        m_xfrm(e[1], M, f[1]);
-        m_xfrm(e[2], M, f[2]);
-
+        v_basis(e, r);
         send_set_entity_basis(id, e[0], e[1], e[2]);
     }
 }

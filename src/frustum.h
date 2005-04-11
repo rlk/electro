@@ -17,12 +17,8 @@
 
 struct frustum
 {
-    float p[3];       /* View position   (in world coordinates)              */
-    float c[3];       /* Viewport center (in world coordinates)              */
-    float r[3];       /* Right vector (from center to viewport right extent) */
-    float u[3];       /* Up vector    (from center to viewport upper extent) */
-
-    float V[4][4];    /* View volume                                         */
+    float p[4];       /* View position */
+    float V[4][4];    /* View volume   */
 };
 
 /*---------------------------------------------------------------------------*/

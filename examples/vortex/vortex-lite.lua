@@ -40,9 +40,9 @@ function position_camera()
     local T = math.pi * rot_y / 180
     local P = math.pi * rot_x / 180
 
-    pos_x =  math.cos(P) * math.sin(T) * dist
-    pos_y = -math.sin(P)               * dist
-    pos_z =  math.cos(P) * math.cos(T) * dist
+    local pos_x =  math.cos(P) * math.sin(T) * dist
+    local pos_y = -math.sin(P)               * dist
+    local pos_z =  math.cos(P) * math.cos(T) * dist
 
     E.set_entity_position(camera, pos_x, pos_y, pos_z)
     E.set_entity_rotation(camera, rot_x, rot_y, 0)
@@ -137,12 +137,13 @@ function do_point(dx, dy)
         end
 
         E.set_galaxy_magnitude(galaxy, magn)
+    end
 
-    elseif setdist then  -- Set the camera distance from the center.
-
+    if setdist then  -- Set the camera distance from the center.
         dist = dist + dy * 0.1
-
-    else
+    end
+    
+    if setrotn then
         rot_x = rot_x - dy * 0.05
         rot_y = rot_y - dx * 0.05
 
@@ -159,6 +160,7 @@ function do_point(dx, dy)
 end
 
 function do_click(b, s)
+--[[
     if b == 1 then
         if s then
             local x, y, z = E.get_star_position(galaxy, vert_point)
@@ -171,7 +173,9 @@ function do_click(b, s)
             vert_count = vert_count + 2
         end
     end
+]]--
 
+    if b == 1 then setrotn = s end
     if b == 2 then setmagn = s end
     if b == 3 then setdist = s end
     return true
