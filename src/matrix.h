@@ -52,6 +52,7 @@ void v_normal(float[3], const float[3]);
 
 void v_cross(float[3], const float[3], const float[3]);
 void v_plane(float[4], const float[3], const float[3], const float[3]);
+void v_basis(float[3][3], const float[3]);
 
 /*---------------------------------------------------------------------------*/
 

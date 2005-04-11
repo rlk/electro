@@ -787,19 +787,30 @@ static int script_get_star_position(lua_State *L)
 static int script_set_camera_offset(lua_State *L)
 {
     float v[3];
+    float e[3][3] = {
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
 
     v[0] = script_getnumber(L, -3);
     v[1] = script_getnumber(L, -2);
     v[2] = script_getnumber(L, -1);
 
-    send_set_camera_offset(script_getcamera(L, -4), v);
+    send_set_camera_offset(script_getcamera(L, -4), v, e);
     return 0;
 }
 
 static int script_set_camera_stereo(lua_State *L)
 {
-    send_set_camera_stereo(script_getcamera(L, -2),
-                     (int) script_getnumber(L, -1));
+    float v[3];
+
+    v[0] = script_getnumber(L, -3);
+    v[1] = script_getnumber(L, -2);
+    v[2] = script_getnumber(L, -1);
+
+    send_set_camera_stereo(script_getcamera(L, -5), v,
+                     (int) script_getnumber(L, -4));
     return 0;
 }
 

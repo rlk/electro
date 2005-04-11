@@ -38,32 +38,22 @@ void init_tracker(void)
 
 /*---------------------------------------------------------------------------*/
 
-int get_tracker_rotation(int id, float e[3][3])
+int get_tracker_rotation(int id, float r[3])
 {
 #ifdef TRACKD
     if (tracker)
     {
-        float M[4][4];
-
-        trackdGetMatrix(tracker, id, M);
-
-        e[0][0] = M[0][0];
-        e[0][1] = M[0][1];
-        e[0][2] = M[0][2];
-
-        e[1][0] = M[1][0];
-        e[1][1] = M[1][1];
-        e[1][2] = M[1][2];
-
-        e[2][0] = M[2][0];
-        e[2][1] = M[2][1];
-        e[2][2] = M[2][2];
-
+        trackdGetEulerAngles(tracker, id, r);
         return 1;
     }
+    else
 #endif
-
-    return 0;
+    {
+        r[0] = 0.0f;
+        r[1] = 0.0f;
+        r[2] = 0.0f;
+        return 0;
+    }
 }
 
 int get_tracker_position(int id, float p[3])
@@ -74,9 +64,14 @@ int get_tracker_position(int id, float p[3])
         trackdGetPosition(tracker, id, p);
         return 1;
     }
+    else
 #endif
-
-    return 0;
+    {
+        p[0] = 0.0f;
+        p[1] = 0.0f;
+        p[2] = 0.0f;
+        return 0;
+    }
 }
 
 int get_tracker_joystick(int id, float a[2])
@@ -86,12 +81,15 @@ int get_tracker_joystick(int id, float a[2])
     {
         a[0] = trackdGetValuator(controller, id + 0);
         a[1] = trackdGetValuator(controller, id + 1);
-
         return 1;
     }
+    else
 #endif
-
-    return 0;
+    {
+        a[0] = 0.0f;
+        a[1] = 0.0f;
+        return 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/

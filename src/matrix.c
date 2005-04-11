@@ -329,4 +329,35 @@ void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
     p[3]  = (p[0] * a[0] + p[1] * a[1] + p[2] * a[2]);
 }
 
+void v_basis(float e[3][3], const float r[3])
+{
+    float M[16], A[16], B[16];
+
+    float f[3][3] = {
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
+
+    /* Compose a transformation matrix. */
+
+    m_init(M);
+
+    m_xrot(A, B, r[0]);
+    m_mult(M, M, A);
+
+    m_yrot(A, B, r[1]);
+    m_mult(M, M, A);
+
+    m_zrot(A, B, r[2]);
+    m_mult(M, M, A);
+
+    /* Transform the basis. */
+
+    m_xfrm(e[0], M, f[0]);
+    m_xfrm(e[1], M, f[1]);
+    m_xfrm(e[2], M, f[2]);
+}
+
 /*---------------------------------------------------------------------------*/
+

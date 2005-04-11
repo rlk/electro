@@ -17,6 +17,7 @@
 
 #include "opengl.h"
 #include "utility.h"
+#include "tracker.h"
 #include "display.h"
 #include "matrix.h"
 #include "buffer.h"
@@ -326,6 +327,7 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 
         m_invt(I, M);
 
+        glLoadIdentity();
         glMultMatrixf(I);
 
         return i + 1;

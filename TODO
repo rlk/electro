@@ -1,3 +1,5 @@
+the eye position program parameter must be transformed into object space
+
 command line args
 obj viewer app
 bounding sphere

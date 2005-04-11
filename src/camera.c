@@ -115,13 +115,13 @@ static void disable_camera_stereo(int mode)
 
 /*---------------------------------------------------------------------------*/
 
-static int draw_tile(int cd, const float p[3], struct frustum *F, int i)
+static int draw_tile(int cd, const float d[3], struct frustum *F, int i)
 {
     if (C[cd].type == CAMERA_PERSP)
-        return draw_persp(F, p, 1.0f, 10000.f, i);
+        return draw_persp(F, d, 0.1f, 100.f, i);
 
     if (C[cd].type == CAMERA_ORTHO)
-        return draw_ortho(F, -1000.f,  1000.f, i);
+        return draw_ortho(F, -1000.f, 1000.f, i);
 
     return 0;
 }
@@ -134,42 +134,30 @@ void draw_camera_eye(int id, int cd, const float M[16],
 
     float N[16];
     float J[16];
-
-    float p[3], P[3];
-    float d[3], D[3];
-    float q[3], Q[3];
+    float p[3];
 
     int i = 0;
 
-    /* Find the world-space camera position. */
+    p[0] = (C[cd].eye_offset[0] * C[cd].view_basis[0][0] * e +
+            C[cd].eye_offset[1] * C[cd].view_basis[1][0]     +
+            C[cd].eye_offset[2] * C[cd].view_basis[2][0]) +C[cd].pos_offset[0];
+    p[1] = (C[cd].eye_offset[0] * C[cd].view_basis[0][1] * e +
+            C[cd].eye_offset[1] * C[cd].view_basis[1][1]     +
+            C[cd].eye_offset[2] * C[cd].view_basis[2][1]) +C[cd].pos_offset[1];
+    p[2] = (C[cd].eye_offset[0] * C[cd].view_basis[0][2] * e +
+            C[cd].eye_offset[1] * C[cd].view_basis[1][2]     +
+            C[cd].eye_offset[2] * C[cd].view_basis[2][2]) +C[cd].pos_offset[2];
 
-    get_entity_position(id, p);
-
-    d[0] = C[cd].offset[0] * e;
-    d[1] = C[cd].offset[1];
-    d[2] = C[cd].offset[2];
-    d[3] = C[cd].offset[3];
-
-    m_xfrm(P, M, p);
-    m_pfrm(D, M, d);
-
-    q[0] = p[0] + d[0];
-    q[1] = p[1] + d[1];
-    q[2] = p[2] + d[2];
-
-    Q[0] = P[0] + D[0];
-    Q[1] = P[1] + D[1];
-    Q[2] = P[2] + D[2];
-
-    while ((i = draw_tile(cd, q, &G, i)))
+    while ((i = draw_tile(cd, p, &G, i)))
     {
         /* Supply the view position as a vertex program parameter. */
-
+        /*
         if (GL_has_vertex_program)
             glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
                                        0, Q[0], Q[1], Q[2], 1);
+        */
 
-        transform_entity(id, N, M, J, I);
+        transform_camera(id, N, M, J, I, p);
 
         /* Render all children using this camera. */
 
@@ -232,38 +220,70 @@ void recv_create_camera(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_camera_offset(int cd, const float v[3])
+void send_set_camera_offset(int cd, const float p[3], float e[3][3])
 {
     pack_event(EVENT_SET_CAMERA_OFFSET);
     pack_index(cd);
 
-    pack_float((C[cd].offset[0] = v[0]));
-    pack_float((C[cd].offset[1] = v[1]));
-    pack_float((C[cd].offset[2] = v[2]));
+    pack_float((C[cd].pos_offset[0]    = p[0]));
+    pack_float((C[cd].pos_offset[1]    = p[1]));
+    pack_float((C[cd].pos_offset[2]    = p[2]));
+
+    pack_float((C[cd].view_basis[0][0] = e[0][0]));
+    pack_float((C[cd].view_basis[0][1] = e[0][1]));
+    pack_float((C[cd].view_basis[0][2] = e[0][2]));
+
+    pack_float((C[cd].view_basis[1][0] = e[1][0]));
+    pack_float((C[cd].view_basis[1][1] = e[1][1]));
+    pack_float((C[cd].view_basis[1][2] = e[1][2]));
+
+    pack_float((C[cd].view_basis[2][0] = e[2][0]));
+    pack_float((C[cd].view_basis[2][1] = e[2][1]));
+    pack_float((C[cd].view_basis[2][2] = e[2][2]));
 }
 
 void recv_set_camera_offset(void)
 {
     int cd = unpack_index();
 
-    C[cd].offset[0] = unpack_float();
-    C[cd].offset[1] = unpack_float();
-    C[cd].offset[2] = unpack_float();
-}
+    C[cd].pos_offset[0]    = unpack_float();
+    C[cd].pos_offset[1]    = unpack_float();
+    C[cd].pos_offset[2]    = unpack_float();
+
+    C[cd].view_basis[0][0] = unpack_float();
+    C[cd].view_basis[0][1] = unpack_float();
+    C[cd].view_basis[0][2] = unpack_float();
+
+    C[cd].view_basis[1][0] = unpack_float();
+    C[cd].view_basis[1][1] = unpack_float();
+    C[cd].view_basis[1][2] = unpack_float();
+
+    C[cd].view_basis[2][0] = unpack_float();
+    C[cd].view_basis[2][1] = unpack_float();
+    C[cd].view_basis[2][2] = unpack_float();
+ }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_camera_stereo(int cd, int mode)
+void send_set_camera_stereo(int cd, const float v[3], int mode)
 {
     pack_event(EVENT_SET_CAMERA_STEREO);
     pack_index(cd);
-    pack_index((C[cd].mode = mode));
+
+    pack_index((C[cd].mode          = mode));
+    pack_float((C[cd].eye_offset[0] = v[0]));
+    pack_float((C[cd].eye_offset[1] = v[1]));
+    pack_float((C[cd].eye_offset[2] = v[2]));
 }
 
 void recv_set_camera_stereo(void)
 {
-    int cd     = unpack_index();
-    C[cd].mode = unpack_index();
+    int cd = unpack_index();
+
+    C[cd].mode          = unpack_index();
+    C[cd].eye_offset[0] = unpack_float();
+    C[cd].eye_offset[1] = unpack_float();
+    C[cd].eye_offset[2] = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/

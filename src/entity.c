@@ -119,6 +119,43 @@ static void basis_invt(float e[3][3])
 
 /*---------------------------------------------------------------------------*/
 
+void transform_camera(int id, float N[16], const float M[16],
+                              float J[16], const float I[16], const float p[3])
+{
+    float A[16];
+    float B[16];
+
+    m_copy(N, M);
+    m_copy(J, I);
+
+    /* Camera tracking */
+
+    glTranslatef(-p[0],
+                 -p[1],
+                 -p[2]);
+    m_trans(A, B, p);
+    m_mult(N, N, A);
+    m_mult(J, B, J);
+
+    /* Camera rotation. */
+
+    basis_invt(E[id].basis);
+    m_basis(B, A, E[id].basis[0],
+                  E[id].basis[1],
+                  E[id].basis[2]);
+    m_mult(N, N, A);
+    m_mult(J, B, J);
+
+    /* Camera position. */
+
+    glTranslatef(-E[id].position[0],
+                 -E[id].position[1],
+                 -E[id].position[2]);
+    m_trans(A, B, E[id].position);
+    m_mult(N, N, A);
+    m_mult(J, B, J);
+}
+
 void transform_entity(int id, float N[16], const float M[16],
                               float J[16], const float I[16])
 {
@@ -128,46 +165,23 @@ void transform_entity(int id, float N[16], const float M[16],
     m_copy(N, M);
     m_copy(J, I);
 
-    if (E[id].type == TYPE_CAMERA)
-    {
-        /* Camera rotation. */
+    /* Entity position. */
 
-        basis_invt(E[id].basis);
-        m_basis(B, A, E[id].basis[0],
-                      E[id].basis[1],
-                      E[id].basis[2]);
-        m_mult(N, N, A);
-        m_mult(J, B, J);
+    glTranslatef(E[id].position[0],
+                 E[id].position[1],
+                 E[id].position[2]);
+    m_trans(N, J, E[id].position);
+    m_mult(N, N, A);
+    m_mult(J, B, J);
 
-        /* Camera position. */
+    /* Entity rotation. */
 
-        glTranslatef(-E[id].position[0],
-                     -E[id].position[1],
-                     -E[id].position[2]);
-        m_trans(A, B, E[id].position);
-        m_mult(N, N, A);
-        m_mult(J, B, J);
-    }
-    else
-    {
-        /* Entity position. */
-
-        glTranslatef(E[id].position[0],
-                     E[id].position[1],
-                     E[id].position[2]);
-        m_trans(N, J, E[id].position);
-        m_mult(N, N, A);
-        m_mult(J, B, J);
-
-        /* Entity rotation. */
-
-        basis_mult(E[id].basis);
-        m_basis(A, B, E[id].basis[0],
-                      E[id].basis[1],
-                      E[id].basis[2]);
-        m_mult(N, N, A);
-        m_mult(J, B, J);
-    }
+    basis_mult(E[id].basis);
+    m_basis(A, B, E[id].basis[0],
+            E[id].basis[1],
+            E[id].basis[2]);
+    m_mult(N, N, A);
+    m_mult(J, B, J);
 
     /* Billboard. */
 
@@ -305,18 +319,25 @@ void draw_entity(void)
 
 void step_entity(void)
 {
-    float e[2][3][3];
+    float r[2][3];
     float p[2][3];
+    float e[3][3];
+
+    int id;
 
     if (get_tracker_position(0, p[0]) &&
         get_tracker_position(1, p[1]) &&
-        get_tracker_rotation(0, e[0]) &&
-        get_tracker_rotation(1, e[1]))
+        get_tracker_rotation(0, r[0]) &&
+        get_tracker_rotation(1, r[1]))
     {
-        int id;
+        v_basis(e, r[0]);
 
         for (id = 0; id < E_max; ++id)
-            if (E[id].type)
+        {
+            if (E[id].type == TYPE_CAMERA)
+                send_set_camera_offset(E[id].data, p[0], e);
+
+            else if (E[id].type)
             {
                 if (E[id].flag & FLAG_POS_TRACKED_0)
                     send_set_entity_position(id, p[0]);
@@ -324,10 +345,11 @@ void step_entity(void)
                     send_set_entity_position(id, p[1]);
 
                 if (E[id].flag & FLAG_ROT_TRACKED_0)
-                    send_set_entity_basis(id, e[0][0], e[0][1], e[0][2]);
+                    send_set_entity_rotation(id, r[0]);
                 if (E[id].flag & FLAG_ROT_TRACKED_1)
-                    send_set_entity_basis(id, e[1][1], e[1][1], e[1][2]);
+                    send_set_entity_rotation(id, r[1]);
             }
+        }
     }
 }
 

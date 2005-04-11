@@ -33,7 +33,10 @@ struct camera
     int   count;
     int   type;
     int   mode;
-    float offset[4];
+    
+    float eye_offset[3];
+    float pos_offset[3];
+    float view_basis[3][3];
 };
 
 /*---------------------------------------------------------------------------*/
@@ -45,10 +48,10 @@ void draw_camera(int, int, const float[16],
 int  send_create_camera(int);
 void recv_create_camera(void);
 
-void send_set_camera_offset(int, const float[3]);
+void send_set_camera_offset(int, const float[3], float[3][3]);
 void recv_set_camera_offset(void);
 
-void send_set_camera_stereo(int, int);
+void send_set_camera_stereo(int, const float[3], int);
 void recv_set_camera_stereo(void);
 
 void clone_camera(int);
