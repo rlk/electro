@@ -489,14 +489,19 @@ void draw_background(void)
     int hB = Host.pix_y;
     int hT = Host.pix_y + Host.pix_h;
 
-    glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT);
-
     glPushAttrib(GL_ENABLE_BIT   | 
                  GL_SCISSOR_BIT  |
                  GL_VIEWPORT_BIT |
                  GL_DEPTH_BUFFER_BIT);
     {
+        /* Clear this entire host's framebuffer. */
+
+        glScissor(Host.win_x, Host.win_y,
+                  Host.win_w, Host.win_h);
+
+        glClear(GL_COLOR_BUFFER_BIT |
+                GL_DEPTH_BUFFER_BIT);
+
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);

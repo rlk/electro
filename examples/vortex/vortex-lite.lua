@@ -169,7 +169,7 @@ function do_click(b, s)
             local x, y, z = E.get_star_position(galaxy, vert_point)
             print(string.format("v %f %f %f", x, y, z))
 
-            print(string.format("e %d// %d//", vert_count, vert_count + 1))
+            print(string.format("l %d// %d//", vert_count, vert_count + 1))
             vert_count = vert_count + 2
         end
     end
