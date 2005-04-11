@@ -141,7 +141,8 @@ function init_scene()
 end
 
 function step_scene(dt)
-    local x, y, z = E.get_entity_rotation(space)
+    
+    local x, y, z = 0, 0, 0
 
     y = y + dt
     z = z + dt * 2
@@ -489,9 +490,8 @@ function add_bullet()
     -- Compute the bullet's position and velocity from the ship's location.
 
     local pos_x, pos_y, pos_z = E.get_entity_position(player.entity)
-    local rot_x, rot_y, rot_z = E.get_entity_rotation(player.entity)
 
-    local a  = -math.rad(rot_z)
+    local a  = -math.rad(player.rot)
     local dx =  math.sin(a)
     local dy =  math.cos(a)
 
@@ -698,6 +698,8 @@ function add_asteroid(entity, size)
     asteroid.dy     = dy * curr_speed
     asteroid.wx     = math.random(-90, 90)
     asteroid.wy     = math.random(-90, 90)
+    asteroid.rot_x  = 0
+    asteroid.rot_y  = 0
 
     table.insert(asteroids, asteroid)
 
@@ -756,7 +758,7 @@ function step_asteroid(dt, id, asteroid)
     -- Find the asteroid's new position and orientation.
     
     local pos_x, pos_y, pos_z = E.get_entity_position(asteroid.entity)
-    local rot_x, rot_y, rot_z = E.get_entity_rotation(asteroid.entity)
+    local rot_x, rot_y = asteroid.rot_x, asteroid.rot_y
 
     pos_x = pos_x + dx * dt
     pos_y = pos_y + dy * dt
@@ -779,8 +781,11 @@ function step_asteroid(dt, id, asteroid)
 
     -- Apply the new position and orientation.
 
+    asteroid.rot_x = rot_x
+    asteroid.rot_y = rot_y
+
     E.set_entity_position(asteroid.entity, pos_x, pos_y, pos_z)
-    E.set_entity_rotation(asteroid.entity, rot_x, rot_y, rot_z)
+    E.set_entity_rotation(asteroid.entity, rot_x, rot_y, 0)
 
     -- Check this asteroid against all bullets.
 
@@ -834,6 +839,7 @@ function init_player()
         player.thrusting = false
         player.turning_L = false
         player.turning_R = false
+        player.rot       = 0
         player.dx        = 0
         player.dy        = 0
 
@@ -847,7 +853,6 @@ end
 
 function step_player(dt)
     local pos_x, pos_y, pos_z = E.get_entity_position(player.entity)
-    local rot_x, rot_y, rot_z = E.get_entity_rotation(player.entity)
     local joy_x, joy_y        = E.get_joystick(0)
 
     -- Handle thrust.
@@ -871,20 +876,22 @@ function step_player(dt)
 
     -- Handle rotation change.
 
-    if joy_x < -0.5 or player.turning_L then rot_z = rot_z + dt * 180 end
-    if joy_x >  0.5 or player.turning_R then rot_z = rot_z - dt * 180 end
+    if joy_x < -0.5 or player.turning_L then
+        player.rot = player.rot + dt * 180
+    end
+    if joy_x >  0.5 or player.turning_R then
+        player.rot = player.rot - dt * 180
+    end
 
     -- Wrap the orientation to (-180, 180).
 
-    if     rot_x < -180 then rot_x = rot_x + 360
-    elseif rot_x >  180 then rot_x = rot_x - 360 end
-    if     rot_y < -180 then rot_y = rot_y + 360
-    elseif rot_y >  180 then rot_y = rot_y - 360 end
+    if     player.rot < -180 then player.rot = player.rot + 360
+    elseif player.rot >  180 then player.rot = player.rot - 360 end
 
     -- Apply the new position and rotation.
 
     E.set_entity_position(player.entity, pos_x, pos_y, pos_z)
-    E.set_entity_rotation(player.entity, rot_x, rot_y, rot_z)
+    E.set_entity_rotation(player.entity, 0, 0, player.rot)
 
     -- Check the player against all asteroids.
 
