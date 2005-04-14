@@ -70,6 +70,9 @@ function do_start()
     
     E.set_galaxy_magnitude(galaxy, magn)
 
+    E.set_camera_stereo(camera, E.camera_stereo_red_blue, 0.125, -0.125, 0.125)
+
+
     E.set_entity_flag(hilite, E.entity_flag_billboard, true)
     E.set_entity_flag(marker, E.entity_flag_billboard, true)
     E.set_entity_scale(hilite, 1 / 256, 1 / 256, 1 / 256)

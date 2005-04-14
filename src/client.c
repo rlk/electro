@@ -110,7 +110,7 @@ static void init_client(void)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glLineWidth(2.0);
+    glLineWidth(4.0);
 }
 
 static void client_swap(void)

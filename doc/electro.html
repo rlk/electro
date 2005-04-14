@@ -133,9 +133,9 @@ If curves are required, tessalate them using your favorite 3D
 modeller. </p>
 
 <p class="note"> The Electro OBJ loader allows one non-standard
-extension to the OBJ specification.  An MTL file may include "Ke"
-specifiers which behave like "Kd", "Ka", and "Ks" specifiers but
-define an emissive material property rather than a diffuse, ambient,
+extension to the OBJ specification.  An MTL file may include a "Ke"
+specifier which behaves like a "Kd", "Ka", or "Ks" specifier but
+defines an emissive material property rather than a diffuse, ambient,
 or specular property.  Standard exporters do not produce this tag,
 and importers simply ignore it, so it does not get in the way of
 normal OBJ file usage.</p>
@@ -234,9 +234,9 @@ particle system.  </p>
 
 <dt><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>
 Duplicate the given entity.  Cloning allows entities to be instanced
-within a scene graph.  Cloning an object is more efficient than
-recreating an object from scrach, so cloning is often useful in
-circumstances where large numbers of similar objects are frequently
+within a scene graph.  Cloning an entity is more efficient than
+recreating an entity from scratch, so cloning is often useful in
+circumstances where large numbers of similar entities are frequently
 created and destroyed.</p>
 
 <p> Note, however, that a clone is a <i>shallow</i> copy of the
@@ -387,7 +387,7 @@ Return the vector pointing up from the entity in local coordinates.
 </p>
 
 <dt><i>x, y, z</i> = <tt>get_entity_z_vector</tt>(<i>entity</i>)<dd><p>
-Return the vector pointing to the read of entity in local coordinates.
+Return the vector pointing to the rear of entity in local coordinates.
 </p>
 
 <dt><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>
@@ -405,8 +405,8 @@ the transparency value of the entity.
 <h4> Flags </h4>
 <dl>
 
-<dt><tt>set_entity_flag</tt>(<i>entity, flag, value</i>) <dd><p> Set
-or clear a flag on the given entity.  Entity flags enable and disable
+<dt><tt>set_entity_flag</tt>(<i>entity, flags, value</i>) <dd><p> Set
+or clear flags on the given entity.  Entity flags enable and disable
 extra features in the entity hierarchy.  These flags act not only on
 the entity that carries them, but also on the children of that entity.
 The <i>flag</i> parameter gives the set of flags to be modified, and
@@ -415,8 +415,6 @@ boolean giving the desired state.  A value of <tt>true</tt> will set
 the given flags, and <tt>false</tt> will clear them. </p>
 
 <ul>
-
-<li>
 
 <li><tt> entity_flag_wireframe </tt><p> The wireframe flag causes
 an entity and its descendants to be rendered in wireframe.  An entire
@@ -427,7 +425,7 @@ a lower point.  Entities will appear as expected. </p>
 
 <li><tt> entity_flag_hidden </tt><p> The hidden flag causes an
 entity and its descendants to be omitted from rendering.  Unlike the
-wireframe flag, the hidden flag <i>cannot</i> be reversed lower in the
+wireframe flag, the hidden state <i>cannot</i> be reversed lower in the
 hierarchy, as it actually causes traversal of the hierarchy to be
 pruned. </p>
 
@@ -452,25 +450,19 @@ This is especially useful for sprite and wireframe objects which do
 not have lightable surfaces.  The unlit flag affects all sub entities
 and cannot be reversed lower in the hierarchy.</p>
 
-<li><tt> entity_pos_tracked_0 </tt><p> Entities with the
-position-tracked flag have their positions updated each frame to match
-the position of tracker 0, if it is available.  This is useful for
-implementing head or wand tracking in an immersive VR environment.
-Camera objects with the position-tracked flag will apply the tracker
-position to the view point offset and reshape their view frusta
-accordingly.  If an application requires the position of the tracker
-without reference to any visible entity, the position-tracked flag
-should be set on a pivot entity and the pivot's position queried with
-<tt>get_entity_position</tt>.</p>
+<li><tt> entity_pos_tracked_0 </tt><p> Entities with the position-tracked
+flag have their positions updated each frame to match the position of
+tracker 0, if it is available.  This is useful for implementing head
+or wand tracking in an immersive VR environment.  If an application
+requires the position of the tracker without reference to any visible
+entity, the position-tracked flag should be set on a pivot entity and
+the pivot's position queried with <tt>get_entity_position</tt>.</p>
 
-<li><tt> entity_rot_tracked_0 </tt><p> Entities with the
-rotation-tracked flag have their orientations updated to match that of
-tracker 0, if it is available.  Again, this is useful in immersive VR
-applications.  However, in most VR configurations the camera in an
-immersive VR application should <i>not</i> be rotation-tracked.  The
-orientation of a tracker may be queried by setting the
-rotation-tracked flag on a pivot and calling
-<tt>get_entity_x_vector</tt>, etc. </p>
+<li><tt> entity_rot_tracked_0 </tt><p> Entities with the rotation-tracked
+flag have their orientations updated to match that of tracker 0, if it
+is available.  Again, this is useful in immersive VR applications.  The
+orientation of a tracker may be queried by setting the rotation-tracked
+flag on a pivot and calling <tt>get_entity_x_vector</tt>, etc. </p>
 
 <li><tt> entity_pos_tracked_1 </tt>
 <li><tt> entity_rot_tracked_1 </tt>
@@ -512,7 +504,60 @@ Return the size of the sprite in pixels.</p>
 
 <a name="camera"><h3> Camera </h3>
 <dl>
+<dt><tt>set_camera_stereo</tt>(<i>mode, x, y, z</i>)<dd><p> Set stereo
+options on the given camera.  The <i>mode</i> argument gives the stereo
+method, as described below.  The <i>x, y, z</i> arguments give the offset
+from the camera to the user's right eye.  The user's left eye is assumed
+to be at <i>(-x, y, z)</i>.  In the event that the eye order is incorrect
+and the fields must be swapped, simply specify <i>-x</i> directly.</p>
+
+<p> The available stereo modes are as follows: </p>
+
+<ul>
+<li><tt>stereo_mode_none</tt>
+
+<p> This mode disables stereo rendering.  It is the default. </p>
+
+<li><tt>stereo_mode_quad</tt>
+
+<p> This mode enables quad-buffered stereo viewing on hardware capable
+of supporting it.  This is appropriate for active stereo viewing using
+LCD flicker glasses, or passive stereo viewing using dual-output video
+hardware in "clone" mode. </p>
+
+<li><tt>stereo_mode_red_blue</tt>
+
+<p> This mode enables red-blue anaglyphic stereo. </p>
+
+<li><tt>stereo_mode_varrier_11</tt>
+
+<p> This mode enables
+<a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
+stereo viewing using the 1-line-pass/1-scene-pass Varrier algorithm. </p>
+
+<li><tt>stereo_mode_varrier_33</tt>
+
+<p> This mode enables
+<a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
+stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering
+algorithm. </p>
+
+<li><tt>stereo_mode_varrier_41</tt>
+
+<p> This mode enables
+<a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
+stereo viewing using the 4-line-pass/1-scene-pass Varrier sub-pixel rendering
+algorithm. </p>
+
+</ul>
 </dl>
+
+<p> Technically speaking, it is possible to include multiple cameras
+in a scene, each with a different stereo mode.  This can be used to
+insert mono elements into a stereo scene, and can even be used to compare
+stereo modes side-by-side.  Some stereo modes conflict with others,
+and render order may be significant.  In general, multiple simultaneous
+stereo modes should be avoided. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -537,20 +582,21 @@ linear scale of apparent star size.  For example, a magnitude value of
 100 will result in the very largest of stars being rendered
 approximately 100 pixels across.  </p>
 
-<p> Note that this is completely distinct from camera zoom.
+<!-- <p> Note that this is completely distinct from camera zoom.
 Tightening the view of a camera will not result in apparently brighter
 stars.  Commonly, any linear change applied to camera zoom should also
 be applied to galaxy magnitude in order to provide the illusion of
-increased magnification. </p>
+increased magnification. </p> -->
 
-<dt><i>index</i> = <tt>get_star_index</tt>(<i>galaxy,
-camera</i>)<dd><p> Return the index of the star closest to the center
-of the given <i>camera</i>.  This is useful for star selection and
-galaxy navigation. </p>
+<dt><i>index</i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>
+Return the star "being pointed at" by the given entity.  That is, return
+the index of the closest to the forward vector of the entity.  This is
+useful for star selection and galaxy navigation, and is particularly
+well applied to cameras and tracked entities. </p>
 
 <dt><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy,
-index</i>)<dd><p> Return the position of the star at <i>index</i> of
-<i>galaxy</i>.
+index</i>)<dd><p> Return the 3D position of the star at <i>index</i>
+of <i>galaxy</i>.
 
 </dl>
 
@@ -644,7 +690,7 @@ defined tile.  The <i>wx, wy, wh, ww</i> arguments give the position,
 width, and height of the area of the host's render area to be used for
 this tile.  The <i>px, py, pw, ph</i> arguments give the pixel
 position and width in the global array of pixels displayed by the tile
-display.  The <i>origin, right, up</i> arguments give the vectors
+array.  The <i>origin, right, up</i> arguments give the vectors
 defining the position of the actual screen in real-space
 coordinates. </p>
 
@@ -653,25 +699,18 @@ py, pw, ph</i> define the parameters of the orthogonal camera.
 <i>origin, right, up</i> define the parameters of the perspective
 camera.  In many cases the <i>w</i>-arguments and <i>p</i>-arguments
 will be the same, but a display configuration is free to draw a
-distinction between real pixel and virtual pixels.  Likewise, the tile
+distinction between real pixels and virtual pixels.  Likewise, the tile
 position vectors will be largely similar to the pixel definitions,
 though a display configuration is free to define a non-planar
 display.</p>
 
-<p class="note"> There are currently some limitations on the
-<i>origin, right</i> and <i>up</i> vectors.  The <i>right</i> vector
-must lie in the XZ plane.  The <i>up</i> vector must lie in the YZ
-plane.  The <i>origin</i> must have <i>z < 0</i>.  This rules out
-CAVEs for the moment, but not a lot else.  Someday the intrepid author
-will work out the math to remove this limitation in a non-hacky
-fashion. </p>
-
-<dt><i>x, y, w, h</i> = <tt>get_viewport</tt>()<dd><p> Return the
-total size of the display.  The return values <i>x, y, w, h</i> give
-the X position, Y position, width, and height of the rectangular union
-of all tiles, in pixels.  This information is often useful when
-positioning entities before an orthogonal camera, or configuring a
-scene to match the aspect ratio of a display. </p>
+<dt><i>x, y, w, h</i> = <tt>get_viewport</tt>()<dd><p> Return the total
+size of the display.  The return values <i>x, y, w, h</i> give the X
+position, Y position, width, and height of the rectangle of available
+pixels.  This is the union of <i>p</i>-parameters of all tile definitions.
+This information is often useful when positioning entities before an
+orthogonal camera, or configuring a scene to match the aspect ratio of
+a display. </p>
 
 </dl>
 

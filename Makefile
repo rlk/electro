@@ -7,7 +7,7 @@ PREFIX = /usr/local/Electro
 ifdef MPI
 	CC     = mpicc
 	TARG   = electro-mpi
-	CFLAGS =  -g -Wall -DMPI -DNDEBUG
+	CFLAGS = -O2 -Wall -DMPI -DNDEBUG
 else
 	CC     = cc
 	TARG   = electro
