@@ -164,6 +164,13 @@ void m_pfrm(float v[4], const float A[16], const float u[4])
     v[3] = A[12] * u[0] + A[13] * u[1] + A[14] * u[2] + A[15] * u[3];
 }
 
+void m_vfrm(float v[3], const float A[16], const float u[3])
+{
+    v[0] = A[0] * u[0] + A[4] * u[1] + A[8]  * u[2] + A[12];
+    v[1] = A[1] * u[0] + A[5] * u[1] + A[9]  * u[2] + A[13];
+    v[2] = A[2] * u[0] + A[6] * u[1] + A[10] * u[2] + A[14];
+}
+
 /*---------------------------------------------------------------------------*/
 /* Matrix constructors                                                       */
 
@@ -354,9 +361,9 @@ void v_basis(float e[3][3], const float r[3])
 
     /* Transform the basis. */
 
-    m_xfrm(e[0], M, f[0]);
-    m_xfrm(e[1], M, f[1]);
-    m_xfrm(e[2], M, f[2]);
+    m_vfrm(e[0], M, f[0]);
+    m_vfrm(e[1], M, f[1]);
+    m_vfrm(e[2], M, f[2]);
 }
 
 /*---------------------------------------------------------------------------*/

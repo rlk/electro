@@ -757,6 +757,7 @@ static int script_get_star_index(lua_State *L)
     float p[3];
     float v[3];
 
+    get_entity_position(jd, p);
     get_entity_z_vector(jd, v);
 
     v[0] = -v[0];

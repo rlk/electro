@@ -10,7 +10,7 @@
 --    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
 --    General Public License for more details.
 
-sound_on = false
+sound_on = true
 music_on = false
 
 -------------------------------------------------------------------------------
@@ -800,6 +800,20 @@ end
 
 -------------------------------------------------------------------------------
 
+function set_thrust(b)
+    player.thrusting = b
+
+    E.set_entity_flag(thrust, E.entity_flag_hidden, not b)
+
+    if b then
+        E.play_sound(sound.thrust1)
+        E.loop_sound(sound.thrust2)
+    else
+        E.stop_sound(sound.thrust2)
+        E.play_sound(sound.thrust3)
+    end
+end
+
 function test_player(id, asteroid)
     local size = asteroid.size
 
@@ -836,7 +850,8 @@ function init_player()
         E.set_entity_flag    (player.entity, E.entity_flag_hidden, false)
         E.set_entity_flag    (thrust,        E.entity_flag_hidden, true)
 
-        player.thrusting = false
+        set_thrust(false)
+
         player.turning_L = false
         player.turning_R = false
         player.rot       = 0
@@ -902,14 +917,14 @@ function kill_player()
     add_explosion(player.entity, entity.ship_explosion, 5)
     add_shockwave(player.entity, entity.ship_shockwave, 5)
     
-    player.thrusting = false
+    set_thrust(false)
+
     player.turning_L = false
     player.turning_r = false
     player.dx        = 0
     player.dy        = 0
 
     E.set_entity_flag(player.entity, E.entity_flag_hidden, true)
-    E.set_entity_flag(thrust,        E.entity_flag_hidden, true)
 
     if sound_on then
         E.stop_sound(sound.thrust2)
@@ -1048,10 +1063,7 @@ function state.play.button_A(s)
 end
 
 function state.play.button_B(s)
-    player.thrusting = s
-
-    E.set_entity_flag(thrust, E.entity_flag_hidden, not player.thrusting)
-
+    set_thrust(s)
     return state.play
 end
 

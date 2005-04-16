@@ -32,6 +32,7 @@ void m_mult(float[16], const float[16], const float[16]);
 
 void m_xfrm(float[4], const float[16], const float[4]);
 void m_pfrm(float[4], const float[16], const float[4]);
+void m_vfrm(float[3], const float[16], const float[3]);
 
 /*---------------------------------------------------------------------------*/
 

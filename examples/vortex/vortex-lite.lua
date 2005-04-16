@@ -4,17 +4,20 @@
 rot_x = 0
 rot_y = 0
 
-camera = nil
-galaxy = nil
-hilite = nil
-marker = nil
+camera   = nil
+galaxy   = nil
+hilite   = nil
+marker   = nil
+asterism = nil
 
 magn = 100.0
 dist =   0.0
 spin =   0.0
 
+setrotn = true
 setmagn = false
 setdist = false
+drawing = false
 
 vert_point = 0
 vert_count = 1
@@ -70,15 +73,17 @@ function do_start()
     
     E.set_galaxy_magnitude(galaxy, magn)
 
-    E.set_camera_stereo(camera, E.camera_stereo_red_blue, 0.125, -0.125, 0.125)
-
-
     E.set_entity_flag(hilite, E.entity_flag_billboard, true)
     E.set_entity_flag(marker, E.entity_flag_billboard, true)
     E.set_entity_scale(hilite, 1 / 256, 1 / 256, 1 / 256)
     E.set_entity_scale(marker, 1 / 128, 1 / 128, 1 / 128)
 
     E.enable_timer(true)        
+
+    io.output("constellation.obj")
+    io.write("mtllib constellation.mtl\n")
+    io.write("g constellation\n")
+    io.write("usemtl blue\n")
 
     return true
 end
@@ -118,7 +123,7 @@ function do_frame()
     local dx = pnt_x - pos_x
     local dy = pnt_y - pos_y
     local dz = pnt_z - pos_z
-    local k = math.sqrt(dx * dx + dy * dy + dz * dz)
+    local k  = math.sqrt(dx * dx + dy * dy + dz * dz)
 
     dx = 20 * dx / k
     dy = 20 * dy / k
@@ -163,24 +168,41 @@ function do_point(dx, dy)
 end
 
 function do_click(b, s)
---[[
     if b == 1 then
         if s then
             local x, y, z = E.get_star_position(galaxy, vert_point)
-            print(string.format("v %f %f %f", x, y, z))
-        else
-            local x, y, z = E.get_star_position(galaxy, vert_point)
-            print(string.format("v %f %f %f", x, y, z))
+            io.write(string.format("v %f %f %f\n", x, y, z))
 
-            print(string.format("l %d// %d//", vert_count, vert_count + 1))
+            drawing = true
+        end
+
+        if not s and drawing then
+            local x, y, z = E.get_star_position(galaxy, vert_point)
+            io.write(string.format("v %f %f %f\n", x, y, z))
+
+            io.write(string.format("l %d// %d//\n", vert_count, vert_count+1))
             vert_count = vert_count + 2
+
+            if asterism then
+                E.delete_entity(asterism)
+            end
+
+            io.flush()
+            asterism = E.create_object("constellation.obj")
+
+            E.parent_entity(asterism, camera)
+            drawing = false
         end
     end
-]]--
 
-    if b == 1 then setrotn = s end
-    if b == 2 then setmagn = s end
-    if b == 3 then setdist = s end
+    if b == 2 then
+        setmagn = s
+        setrotn = not s
+    end
+    if b == 3 then
+        setdist = s
+        setrotn = not s
+    end
     return true
 end
 
