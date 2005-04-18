@@ -170,15 +170,18 @@ GLfloat opengl_perf(GLfloat *all)
 
     GLint now = (GLint) SDL_GetTicks();
 
+    count++;
+
     /* Compute the average FPS over 250 milliseconds. */
 
-    if (now - then > 250)
+    if (now - then > 1000)
     {
         fps   = 1000.0f * count / (now - then);
         then  = now;
         count = 0;
+
+        printf("%5.1f fps\n", fps);
     }
-    else count++;
 
     /* Compute the total average FPS. */
 
