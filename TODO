@@ -1,11 +1,10 @@
-command line args
-obj viewer app
+resizable server window? (fullscreen?)
 bounding sphere
 tracker button
 Equatarial HIP
 object geometry create
 text render of some sort
-networkHC
+network
 camera offset per tile (for geowall and planar)
 
 Scale and billboard frustum (thorough test)

@@ -651,9 +651,9 @@ For example, debugging information may be sent there. </p>
 
 <dl>
 
-<dt><tt>print_console</tt>(<i>string</i>)<dd></p> Print <i>string</i> to the
-console.  To print formatted output or non-string objects, use string
-concatenation or Lua <tt>string.format</tt> function. </p>
+<dt><tt>print_console</tt>(<i>...</i>)<dd></p> Print all string and
+number arguments to the console.  To print formatted output, pass
+arguments via Lua's <tt>string.format</tt> function. </p>
 
 <dt><tt>clear_console</tt>()<dd><p> Clear the console to blank. </p>
 

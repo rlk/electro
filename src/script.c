@@ -27,6 +27,7 @@
 #include "console.h"
 #include "server.h"
 #include "camera.h"
+#include "stereo.h"
 #include "sprite.h"
 #include "object.h"
 #include "galaxy.h"
@@ -918,7 +919,13 @@ static int script_color_console(lua_State *L)
 
 static int script_print_console(lua_State *L)
 {
-    print_console(script_getstring(L, -1));
+    int i, n = lua_gettop(L);
+    const char *str;
+
+    for (i = n; i > 0; --i)
+        if ((str = script_getstring(L, -i)))
+            print_console(str);
+
     return 1;
 }
 
@@ -1221,10 +1228,10 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "camera_type_orthogonal",    CAMERA_ORTHO);
     lua_constant(L, "camera_type_perspective",   CAMERA_PERSP);
 
-    lua_constant(L, "camera_stereo_none",        CAMERA_STEREO_NONE);
-    lua_constant(L, "camera_stereo_quad",        CAMERA_STEREO_QUAD);
-    lua_constant(L, "camera_stereo_red_blue",    CAMERA_STEREO_RED_BLUE);
-    lua_constant(L, "camera_stereo_varrier",     CAMERA_STEREO_VARRIER);
+    lua_constant(L, "stereo_mode_none",          STEREO_NONE);
+    lua_constant(L, "stereo_mode_quad",          STEREO_QUAD);
+    lua_constant(L, "stereo_mode_red_blue",      STEREO_RED_BLUE);
+    lua_constant(L, "stereo_mode_varrier",       STEREO_VARRIER);
 
     lua_constant(L, "light_type_positional",     LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",    LIGHT_DIRECTIONAL);

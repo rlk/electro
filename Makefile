@@ -75,6 +75,7 @@ OBJS =	src/version.o  \
 	src/client.o   \
 	src/entity.o   \
 	src/camera.o   \
+	src/stereo.o   \
 	src/galaxy.o   \
 	src/sprite.o   \
 	src/object.o   \

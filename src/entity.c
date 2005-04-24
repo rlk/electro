@@ -333,30 +333,29 @@ void step_entity(void)
 
     int id;
 
-    if (get_tracker_position(0, p[0]) &&
-        get_tracker_position(1, p[1]) &&
-        get_tracker_rotation(0, r[0]) &&
-        get_tracker_rotation(1, r[1]))
+    get_tracker_position(0, p[0]);
+    get_tracker_position(1, p[1]);
+    get_tracker_rotation(0, r[0]);
+    get_tracker_rotation(1, r[1]);
+
+    v_basis(e, r[0]);
+
+    for (id = 0; id < E_max; ++id)
     {
-        v_basis(e, r[0]);
+        if (E[id].type == TYPE_CAMERA)
+            send_set_camera_offset(E[id].data, p[0], e);
 
-        for (id = 0; id < E_max; ++id)
+        else if (E[id].type)
         {
-            if (E[id].type == TYPE_CAMERA)
-                send_set_camera_offset(E[id].data, p[0], e);
+            if (E[id].flag & FLAG_POS_TRACKED_0)
+                send_set_entity_position(id, p[0]);
+            if (E[id].flag & FLAG_POS_TRACKED_1)
+                send_set_entity_position(id, p[1]);
 
-            else if (E[id].type)
-            {
-                if (E[id].flag & FLAG_POS_TRACKED_0)
-                    send_set_entity_position(id, p[0]);
-                if (E[id].flag & FLAG_POS_TRACKED_1)
-                    send_set_entity_position(id, p[1]);
-
-                if (E[id].flag & FLAG_ROT_TRACKED_0)
-                    send_set_entity_rotation(id, r[0]);
-                if (E[id].flag & FLAG_ROT_TRACKED_1)
-                    send_set_entity_rotation(id, r[1]);
-            }
+            if (E[id].flag & FLAG_ROT_TRACKED_0)
+                send_set_entity_rotation(id, r[0]);
+            if (E[id].flag & FLAG_ROT_TRACKED_1)
+                send_set_entity_rotation(id, r[1]);
         }
     }
 }

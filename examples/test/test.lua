@@ -5,16 +5,21 @@ camera  = nil
 sprite  = nil
 light   = nil
 pivot   = nil
-thing1  = nil
-thing2  = nil
 floor   = nil
 
+stereo = false
 tumble = false
 scale  = false
 
 zoom  = 1
 rot_x = 0
 rot_y = 0
+
+function add_object(i, s)
+    local object = E.create_object(s)
+
+    E.parent_entity(object, pivot)
+end
 
 function do_start(arg)
     local x, y, w, h = E.get_viewport()
@@ -24,35 +29,23 @@ function do_start(arg)
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
     pivot  = E.create_pivot()
-    thing  = E.create_object("box.obj")
-    floor  = E.create_object("checker.obj")
     hand   = E.create_object("box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
-    E.parent_entity(thing, pivot)
-    E.parent_entity(floor, pivot)
     E.parent_entity(hand,  nearby)
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0,  -8.0)
     E.set_entity_position(pivot,  0.0,  0.0, -10.0)
-    E.set_entity_position(thing,  0.0,  0.0,   0.0)
 
-    E.set_entity_scale(floor, 2, 2, 2)
     E.set_entity_scale(hand, 0.25, 0.25, 0.25)
 
-    E.set_entity_flag(floor, E.entity_flag_hidden, true)
     E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
     E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
 
---  E.set_camera_stereo(camera, E.camera_stereo_red_blue, 0.125, -0.125, 0.125)
---  E.set_camera_stereo(nearby, E.camera_stereo_red_blue, 0.125, -0.125, 0.125)
-
---  E.set_background(0, 0, 0)
-
-    table.foreach(arg, function (i, s) print(i, s) end)
+    table.foreach(arg, add_object)
 
     E.enable_timer(true)
 end
@@ -108,32 +101,20 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    local shift   = E.get_modifier(1)
-    local control = E.get_modifier(64)
+    local d = 0.0125
+    
+    if s and k == 284 then
+        stereo = not stereo
 
-    if s then
-
-        if k == keycode.up        then E.move_entity(thing,  0, 0, -1) end
-        if k == keycode.down      then E.move_entity(thing,  0, 0,  1) end
-        if k == keycode.right     then E.move_entity(thing,  1, 0,  0) end
-        if k == keycode.left      then E.move_entity(thing, -1, 0,  0) end
-
-        if shift then
-            if k == keycode.page_up   then E.turn_entity(thing, -10, 0, 0) end
-        elseif control then
-            if k == keycode.page_up   then E.turn_entity(thing, 0, -10, 0) end
+        if stereo then
+            E.set_camera_stereo(camera, E.stereo_mode_red_blue, d, -d, d)
+            E.set_camera_stereo(nearby, E.stereo_mode_red_blue, d, -d, d)
+            E.set_background(0.0, 0.0, 0.0)
         else
-            if k == keycode.page_up   then E.turn_entity(thing, 0, 0, -10) end
+            E.set_camera_stereo(camera, E.stereo_mode_none, 0, 0, 0)
+            E.set_camera_stereo(nearby, E.stereo_mode_none, 0, 0, 0)
+            E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
         end
-
-        if shift then
-            if k == keycode.page_down then E.turn_entity(thing,  10, 0, 0) end
-        elseif control then
-            if k == keycode.page_down then E.turn_entity(thing, 0,  10, 0) end
-        else
-            if k == keycode.page_down then E.turn_entity(thing, 0, 0,  10) end
-        end
-
         return true
     else
         return false

@@ -18,6 +18,7 @@
 #include "matrix.h"
 #include "buffer.h"
 #include "entity.h"
+#include "stereo.h"
 #include "event.h"
 #include "display.h"
 #include "tracker.h"
@@ -55,62 +56,6 @@ int init_camera(void)
         return 1;
     }
     return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void enable_stereo_quad(int eye)
-{
-    if (eye < 0)
-        glDrawBuffer(GL_BACK_LEFT);
-    else
-        glDrawBuffer(GL_BACK_RIGHT);
-}
-
-static void disable_stereo_quad(void)
-{
-    glDrawBuffer(GL_BACK);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void enable_stereo_red_blue(int eye)
-{
-    if (eye < 0)
-    {
-        glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-        glClear(GL_DEPTH_BUFFER_BIT);
-    }
-    else
-    {
-        glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
-        glClear(GL_DEPTH_BUFFER_BIT);
-    }
-}
-
-static void disable_stereo_red_blue(void)
-{
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void enable_camera_stereo(int mode, int eye)
-{
-    switch (mode)
-    {
-    case CAMERA_STEREO_QUAD:     enable_stereo_quad(eye);     break;
-    case CAMERA_STEREO_RED_BLUE: enable_stereo_red_blue(eye); break;
-    }
-}
-
-static void disable_camera_stereo(int mode)
-{
-    switch (mode)
-    {
-    case CAMERA_STEREO_QUAD:     disable_stereo_quad();     break;
-    case CAMERA_STEREO_RED_BLUE: disable_stereo_red_blue(); break;
-    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -159,11 +104,11 @@ void draw_camera_eye(int id, int cd, const float M[16],
 
         /* Render all children using this camera. */
 
-        enable_camera_stereo(C[cd].mode, e);
+        enable_stereo(C[cd].mode, e);
         {
             draw_entity_list(id, N, J, &G, a * get_entity_alpha(id));
         }
-        disable_camera_stereo(C[cd].mode);
+        disable_stereo(C[cd].mode);
     }
 }
 
