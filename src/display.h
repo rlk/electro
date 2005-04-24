@@ -20,14 +20,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef _WIN32
-#define DEFAULT_X  100
-#define DEFAULT_Y  100
-#else
 #define DEFAULT_X    0
 #define DEFAULT_Y    0
-#endif
-
 #define DEFAULT_W  800
 #define DEFAULT_H  600
 

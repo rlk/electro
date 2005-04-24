@@ -159,7 +159,7 @@ void sync_display(void)
     if (rank == 0 && H_num > 0)
         memcpy(&Host, Hi, sizeof (struct host));
 
-    set_window_pos(Host.win_x, Host.win_y);
+    if (rank) set_window_pos(Host.win_x, Host.win_y);
 }
 
 /*---------------------------------------------------------------------------*/

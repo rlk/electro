@@ -301,7 +301,7 @@ static int read_newmtl(const char *name)
         mtrlv[i].d[0] = 0.8f;
         mtrlv[i].d[1] = 0.8f;
         mtrlv[i].d[2] = 0.8f;
-        mtrlv[i].d[3] = 0.8f;
+        mtrlv[i].d[3] = 1.0f;
 
         /* Default ambient */
 
@@ -583,10 +583,13 @@ static int read_g(int i, int m)
 {
     int j;
 
-    if (i >= 0)
+    /* Make sure we have an initial surface. */
+
+    if (i >= 0 || (i = push_surf()) >= 0)
     {
         /* Close the existing surface by copying the face and edge cache. */
 
+        surfv[i].mi = m;
         surfv[i].fc = facec;
         surfv[i].ec = edgec;
 
@@ -601,13 +604,13 @@ static int read_g(int i, int m)
         edgec = 0;
     }
 
+    /* Initialize a new empty surface. */
+
     if ((j = push_surf()) >= 0)
     {
-        /* Initialize a new empty surface. */
-
-        surfv[j].mi =    m;
-        surfv[j].fc =    0;
-        surfv[j].ec =    0;
+        surfv[j].mi = m;
+        surfv[j].fc = 0;
+        surfv[j].ec = 0;
         surfv[j].fv = NULL;
     }
 
@@ -622,16 +625,13 @@ static void read_mtllib(const char *line)
     read_mtl(file);
 }
 
-static int read_usemtl(const char *line, int i)
+static int read_usemtl(const char *line)
 {
     char name[MAXSTR];
     int m = -1;
 
     if (sscanf(line, "%s", name) == 1)
         m = find_mtl(name);
-
-    if (i >= 0)
-        surfv[i].mi = m;
 
     return m;
 }
@@ -687,7 +687,7 @@ static int read_obj(const char *filename, struct object *o)
 
     if ((fin = fopen(filename, "r")))
     {
-        int i = -1;
+        int s = -1;
         int m = -1;
 
         /* Process each line, invoking the handler for each keyword. */
@@ -695,9 +695,9 @@ static int read_obj(const char *filename, struct object *o)
         while (fgets(line, MAXSTR, fin))
         {
             if      (!strncmp(line, "mtllib", 6))     read_mtllib(line + 7);
-            else if (!strncmp(line, "usemtl", 6)) m = read_usemtl(line + 7, i);
+            else if (!strncmp(line, "usemtl", 6)) m = read_usemtl(line + 7);
 
-            else if (!strncmp(line, "g",  1)) i = read_g(i, m);
+            else if (!strncmp(line, "g",  1)) s = read_g(s, m);
             else if (!strncmp(line, "f",  1)) read_f (line + 2);
             else if (!strncmp(line, "l",  1)) read_l (line + 2);
             else if (!strncmp(line, "vt", 2)) read_vt(line + 3);
@@ -707,7 +707,7 @@ static int read_obj(const char *filename, struct object *o)
 
         /* Close out the last group being read. */
 
-        i = read_g(i, m);
+        s = read_g(s, m);
 
         /* Close out the object by copying the element caches. */
 
@@ -720,7 +720,7 @@ static int read_obj(const char *filename, struct object *o)
 
         o->vc = vertc;
         o->mc = mtrlc;
-        o->sc = i;
+        o->sc = s;
 
         fclose(fin);
 

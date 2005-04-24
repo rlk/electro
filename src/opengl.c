@@ -174,13 +174,13 @@ GLfloat opengl_perf(GLfloat *all)
 
     /* Compute the average FPS over 250 milliseconds. */
 
+    count++;
+
     if (now - then > 1000)
     {
         fps   = 1000.0f * count / (now - then);
         then  = now;
         count = 0;
-
-        printf("%5.1f fps\n", fps);
     }
 
     /* Compute the total average FPS. */

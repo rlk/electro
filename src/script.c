@@ -951,14 +951,27 @@ static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
     return r;
 }
 
-int do_start_script(void)
+int do_start_script(int i, int c, char *v[])
 {
     const char *name = "do_start";
 
     lua_getglobal(L, name);
 
     if (lua_isfunction(L, -1))
-        return lua_callassert(L, 0, 1, name);
+    {
+        int j;
+
+        lua_newtable(L);
+
+        for (j = i; j < c; j++)
+        {
+            lua_pushnumber(L, j - i + 1);
+            lua_pushstring(L, v[j]);
+            lua_settable(L, -3);
+        }
+
+        return lua_callassert(L, 1, 1, name);
+    }
     else
         lua_pop(L, 1);
 

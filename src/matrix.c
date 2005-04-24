@@ -350,13 +350,13 @@ void v_basis(float e[3][3], const float r[3])
 
     m_init(M);
 
-    m_zrot(A, B, r[2]);
+    m_xrot(A, B, r[0]);
     m_mult(M, M, A);
 
     m_yrot(A, B, r[1]);
     m_mult(M, M, A);
 
-    m_xrot(A, B, r[0]);
+    m_zrot(A, B, r[2]);
     m_mult(M, M, A);
 
     /* Transform the basis. */

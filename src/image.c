@@ -26,16 +26,6 @@
 
 static int power_of_two(int n)
 {
-    /*
-    int x;
-
-    x |= (x >> 1);
-    x |= (x >> 2);
-    x |= (x >> 4);
-    x |= (x >> 8);
-    x |= (x >> 16);
-    x++;
-    */
     int i = 1;
 
     while (i < n)

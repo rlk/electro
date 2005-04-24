@@ -1,12 +1,11 @@
-the eye position program parameter must be transformed into object space
-
 command line args
 obj viewer app
 bounding sphere
 tracker button
 Equatarial HIP
-stereo
 object geometry create
+text render of some sort
+networkHC
 camera offset per tile (for geowall and planar)
 
 Scale and billboard frustum (thorough test)

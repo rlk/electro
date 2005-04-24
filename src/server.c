@@ -11,6 +11,7 @@
 /*    General Public License for more details.                               */
 
 #include <SDL.h>
+#include <string.h>
 
 #include "opengl.h"
 #include "version.h"
@@ -53,6 +54,7 @@ void grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
+
     server_grab = b;
 }
 
@@ -262,6 +264,7 @@ static int server_loop(void)
 
 void server(int argc, char *argv[])
 {
+    int done = 0;
     int argi;
 
 #ifdef PREP_GALAXY
@@ -276,8 +279,8 @@ void server(int argc, char *argv[])
 
         /* Read and execute all scripts given on the command line. */
 
-        for (argi = 1; argi < argc; argi++)
-            load_script(argv[argi], argi < argc - 1);
+        for (argi = 1; argi < argc && strcmp(argv[argi], "--"); argi++)
+            load_script(argv[argi], strcmp(argv[argi+1], "--"));
 
         sync_display();
 
@@ -313,7 +316,7 @@ void server(int argc, char *argv[])
                 init_server();
                 init_entity();
 
-                do_start_script();
+                do_start_script(argi + 1, argc, argv);
 
                 /* Block on SDL events.  Service them as they arrive. */
 

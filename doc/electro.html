@@ -771,13 +771,15 @@ to occur at the next opportunity. </p>
 
 <dl>
 
-<dt><tt> do_start() </tt> <dd><p> This callback is invoked precisely
-once at the beginning of a run.  It occurs after all of the scripts
-named on the command line have finished executing, but before any
-event processing begins.  Applications are free to perform Lua state
-initialization upon initial execution, but Electro object
+<dt><tt> do_start(arg) </tt> <dd><p> This callback is invoked
+precisely once at the beginning of a run.  It occurs after all of the
+scripts named on the command line have finished executing, but before
+any event processing begins.  Applications are free to perform Lua
+state initialization upon initial execution, but Electro object
 initialization <i>must</i> be performed in the <tt>do_start</tt>
-function.</p>
+function.  The <tt>arg</tt> argument gives a table of command line
+arguments passed to electro.  This table maps indices onto strings,
+with the first argument at index 1.</p>
 
 <p class="note"> This callback is a bit of a hack.  It is necessary
 because Electro objects cannot be initialized until the OpenGL context
