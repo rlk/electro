@@ -373,9 +373,9 @@ void init_entity_gl(void)
     for (id = 0; id < E_max; ++id)
         switch (E[id].type)
         {
-        case TYPE_SPRITE: init_sprite_gl(id); break;
-        case TYPE_OBJECT: init_object_gl(id); break;
-        case TYPE_GALAXY: init_galaxy_gl(id); break;
+        case TYPE_SPRITE: init_sprite_gl(E[id].data); break;
+        case TYPE_OBJECT: init_object_gl(E[id].data); break;
+        case TYPE_GALAXY: init_galaxy_gl(E[id].data); break;
         }
 }
 
@@ -388,9 +388,9 @@ void free_entity_gl(void)
     for (id = 0; id < E_max; ++id)
         switch (E[id].type)
         {
-        case TYPE_SPRITE: free_sprite_gl(id); break;
-        case TYPE_OBJECT: free_object_gl(id); break;
-        case TYPE_GALAXY: free_galaxy_gl(id); break;
+        case TYPE_SPRITE: free_sprite_gl(E[id].data); break;
+        case TYPE_OBJECT: free_object_gl(E[id].data); break;
+        case TYPE_GALAXY: free_galaxy_gl(E[id].data); break;
         }
 }
 

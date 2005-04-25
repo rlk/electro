@@ -108,6 +108,9 @@ static int init_video(int w, int h)
 
     free_entity_gl();
 
+    set_window_w(w);
+    set_window_h(h);
+
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);

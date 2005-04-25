@@ -424,12 +424,12 @@ void add_tile(const char *name, int x, int y, int w, int h,
 
 void set_window_w(int w)
 {
-    Host.win_w = w;
+    Host.win_w = Host.tile[0].win_w = w;
 }
 
-void set_window_h(int w)
+void set_window_h(int h)
 {
-    Host.win_h = h;
+    Host.win_h = Host.tile[0].win_h = h;
 }
 
 int get_window_w(void)
