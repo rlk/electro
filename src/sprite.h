@@ -20,6 +20,7 @@
 struct sprite
 {
     int   count;
+    int   state;
     int   image;
     float s0;
     float s1;
@@ -32,6 +33,9 @@ struct sprite
 int  init_sprite(void);
 void draw_sprite(int, int, const float[16],
                            const float[16], const struct frustum *, float);
+
+void init_sprite_gl(int);
+void free_sprite_gl(int);
 
 int  send_create_sprite(const char *);
 void recv_create_sprite(void);

@@ -71,6 +71,10 @@ void *opengl_proc(const char *name)
 
 void init_opengl(void)
 {
+    GL_has_fragment_program     = opengl_need("GL_ARB_fragment_program");
+    GL_has_vertex_program       = opengl_need("GL_ARB_vertex_program");
+    GL_has_vertex_buffer_object = opengl_need("GL_ARB_vertex_buffer_object");
+    GL_has_point_sprite         = opengl_need("GL_ARB_point_sprite");
 }
 
 #else
@@ -92,7 +96,7 @@ PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 
 void init_opengl(void)
 {
-    glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
+   glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
         opengl_proc("glProgramStringARB");
     glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
         opengl_proc("glBindProgramARB");

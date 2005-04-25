@@ -82,6 +82,9 @@ int  init_entity(void);
 void draw_entity(void);
 void step_entity(void);
 
+void init_entity_gl(void);
+void free_entity_gl(void);
+
 /*---------------------------------------------------------------------------*/
 
 int  send_create_entity(int, int);

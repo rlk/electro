@@ -749,6 +749,8 @@ void draw_object(int id, int od, const float M[16],
 
     if (object_exists(od))
     {
+        init_object_gl(od);
+
         glPushMatrix();
         {
             float N[16];
@@ -846,18 +848,58 @@ void draw_object(int id, int od, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-static void create_object(int od)
+void init_object_gl(int od)
 {
-    if (GL_has_vertex_buffer_object)
-    {
-        glGenBuffersARB(1, &O[od].buffer);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, O[od].buffer);
+    int i;
 
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                        O[od].vc * sizeof (struct object_vert),
-                        O[od].vv, GL_STATIC_DRAW_ARB);
+    if (O[od].state == 0)
+    {
+        /* Initialize all referenced textures. */
+
+        for (i = 0; i < O[od].mc; ++i)
+            init_image_gl(O[od].mv[i].image);
+
+        /* Initialize the buffer object. */
+    
+        if (GL_has_vertex_buffer_object)
+        {
+            glGenBuffersARB(1, &O[od].buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O[od].buffer);
+
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                            O[od].vc * sizeof (struct object_vert),
+                            O[od].vv,  GL_STATIC_DRAW_ARB);
+        }
+
+        O[od].state = 1;
     }
 }
+
+void free_object_gl(int od)
+{
+    int i;
+
+    if (O[od].state == 1)
+    {
+        /* Free the vertex buffer object. */
+
+        if (GL_has_vertex_buffer_object)
+        {
+            if (glIsBufferARB(O[od].buffer))
+                glDeleteBuffersARB(1, &O[od].buffer);
+        }
+
+        /* Free all referenced textures. */
+
+        for (i = 0; i < O[od].mc; ++i)
+            free_image_gl(O[od].mv[i].image);
+
+        O[od].buffer = 0;
+        O[od].state  = 0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
 
 int send_create_object(const char *filename)
 {
@@ -871,6 +913,7 @@ int send_create_object(const char *filename)
         if ((read_obj(filename, O + od)))
         {
             O[od].count = 1;
+            O[od].state = 0;
 
             /* Pack the object header. */
 
@@ -898,8 +941,6 @@ int send_create_object(const char *filename)
                 pack_alloc(s->ec * sizeof (struct object_edge), s->ev);
             }
 
-            create_object(od);
-
             /* Encapsulate this object in an entity. */
 
             return send_create_entity(TYPE_OBJECT, od);
@@ -914,6 +955,7 @@ void recv_create_object(void)
     int si;
 
     O[od].count = 1;
+    O[od].state = 0;
 
     /* Unpack the object header. */
 
@@ -942,8 +984,6 @@ void recv_create_object(void)
         s->ev = unpack_alloc(s->ec * sizeof (struct object_edge));
     }
 
-    create_object(od);
-
     /* Encapsulate this object in an entity. */
 
     recv_create_entity();
@@ -968,8 +1008,7 @@ void delete_object(int od)
         {
             int si;
 
-            if (glIsBufferARB(O[od].buffer))
-                glDeleteBuffersARB(1, &O[od].buffer);
+            free_object_gl(od);
 
             for (si = 0; si < O[od].sc; ++si)
                 if (O[od].sv[si].fv) free(O[od].sv[si].fv);

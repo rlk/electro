@@ -264,7 +264,10 @@ int init_image(void)
 void draw_image(int id)
 {
     if (image_exists(id))
+    {
+        init_image_gl(id);
         glBindTexture(GL_TEXTURE_2D, I[id].texture);
+    }
     else
         glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -282,6 +285,29 @@ void *load_image(const char *filename, int *width,
         return load_jpg_image(filename, width, height, bytes);
     else
         return error("Unsupported image format for '%s'", filename);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void init_image_gl(int id)
+{
+    if (id && I[id].state == 0)
+    {
+        I[id].texture = make_texture(I[id].p, I[id].w, I[id].h, I[id].b);
+        I[id].state   = 1;
+    }
+}
+
+void free_image_gl(int id)
+{
+    if (id && I[id].state == 1)
+    {
+        if (glIsTexture(I[id].texture))
+            glDeleteTextures(1, &I[id].texture);
+        
+        I[id].texture = 0;
+        I[id].state   = 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -316,8 +342,6 @@ int send_create_image(const char *filename)
             pack_index(I[id].b);
             pack_alloc(I[id].w * I[id].h * I[id].b, I[id].p);
 
-            I[id].texture = make_texture(I[id].p, I[id].w, I[id].h, I[id].b);
-
             return id;
         }
     }
@@ -333,7 +357,6 @@ void recv_create_image(void)
     I[id].b = unpack_index();
     I[id].p = unpack_alloc(I[id].w * I[id].h * I[id].b);
 
-    I[id].texture  = make_texture(I[id].p, I[id].w, I[id].h, I[id].b);
     I[id].filename = "exists";
 }
 
@@ -343,11 +366,10 @@ void delete_image(int id)
 {
     if (image_exists(id))
     {
+        free_image_gl(id);
+
         if (I[id].filename) free(I[id].filename);
         if (I[id].p)        free(I[id].p);
-
-        if (glIsTexture(I[id].texture))
-            glDeleteTextures(1, &I[id].texture);
 
         memset(I + id, 0, sizeof (struct image));
     }

@@ -61,6 +61,8 @@ void draw_sprite(int id, int sd, const float M[16],
 {
     if (sprite_exists(sd))
     {
+        init_sprite_gl(sd);
+
         glPushAttrib(GL_DEPTH_BUFFER_BIT);
         glPushMatrix();
         {
@@ -99,6 +101,26 @@ void draw_sprite(int id, int sd, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
+void init_sprite_gl(int sd)
+{
+    if (S[sd].state == 0)
+    {
+        init_image_gl(S[sd].image);
+        S[sd].state  = 1;
+    }
+}
+
+void free_sprite_gl(int sd)
+{
+    if (S[sd].state == 1)
+    {
+        free_image_gl(S[sd].image);
+        S[sd].state  = 0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 int send_create_sprite(const char *filename)
 {
     int sd;
@@ -107,6 +129,7 @@ int send_create_sprite(const char *filename)
     {
         S[sd].image = send_create_image(filename);
         S[sd].count = 1;
+        S[sd].state = 0;
 
         pack_event(EVENT_CREATE_SPRITE);
         pack_index(sd);
@@ -126,6 +149,7 @@ void recv_create_sprite(void)
 
     S[sd].image = unpack_index();
     S[sd].count = 1;
+    S[sd].count = 0;
 
     S[sd].s0 = S[sd].t0 = 0.0f;
     S[sd].s1 = S[sd].t1 = 1.0f;
@@ -192,7 +216,10 @@ void delete_sprite(int sd)
         S[sd].count--;
 
         if (S[sd].count == 0)
+        {
+            free_sprite_gl(sd);
             memset(S + sd, 0, sizeof (struct sprite));
+        }
     }
 }
 

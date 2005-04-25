@@ -333,6 +333,8 @@ void step_entity(void)
 
     int id;
 
+    /* Acquire tracking info. */
+
     get_tracker_position(0, p[0]);
     get_tracker_position(1, p[1]);
     get_tracker_rotation(0, r[0]);
@@ -340,8 +342,9 @@ void step_entity(void)
 
     v_basis(e, r[0]);
 
+    /* Distribute it to all cameras and tracked entities. */
+
     for (id = 0; id < E_max; ++id)
-    {
         if (E[id].type == TYPE_CAMERA)
             send_set_camera_offset(E[id].data, p[0], e);
 
@@ -357,7 +360,38 @@ void step_entity(void)
             if (E[id].flag & FLAG_ROT_TRACKED_1)
                 send_set_entity_rotation(id, r[1]);
         }
-    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void init_entity_gl(void)
+{
+    int id;
+
+    /* Ask all entities with GL state to initialize themselves. */
+
+    for (id = 0; id < E_max; ++id)
+        switch (E[id].type)
+        {
+        case TYPE_SPRITE: init_sprite_gl(id); break;
+        case TYPE_OBJECT: init_object_gl(id); break;
+        case TYPE_GALAXY: init_galaxy_gl(id); break;
+        }
+}
+
+void free_entity_gl(void)
+{
+    int id;
+
+    /* Ask all entities with GL state to finalize themselves. */
+
+    for (id = 0; id < E_max; ++id)
+        switch (E[id].type)
+        {
+        case TYPE_SPRITE: free_sprite_gl(id); break;
+        case TYPE_OBJECT: free_object_gl(id); break;
+        case TYPE_GALAXY: free_galaxy_gl(id); break;
+        }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -479,6 +513,10 @@ static void set_entity_frag_prog(int id, const char *txt)
 
         glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
                            GL_PROGRAM_FORMAT_ASCII_ARB, len, txt);
+
+        if (glGetError() == GL_INVALID_OPERATION)
+            print("Fragment program: %s\n",
+                glGetString(GL_PROGRAM_ERROR_STRING_ARB));
     }
     else E[id].frag_prog = 0;
 }
@@ -494,6 +532,10 @@ static void set_entity_vert_prog(int id, const char *txt)
 
         glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
                            GL_PROGRAM_FORMAT_ASCII_ARB, len, txt);
+
+        if (glGetError() == GL_INVALID_OPERATION)
+            print("Vertex program: %s\n",
+                glGetString(GL_PROGRAM_ERROR_STRING_ARB));
     }
     else E[id].vert_prog = 0;
 }

@@ -102,6 +102,31 @@ static void init_server(void)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
+static int init_video(int w, int h)
+{
+    int m = SDL_OPENGL | SDL_RESIZABLE;
+
+    free_entity_gl();
+
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    if (SDL_SetVideoMode(w, h, 0, m))
+    {
+        init_opengl();
+        init_server();
+        init_entity_gl();
+
+        return 1;
+    }
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
 static void server_swap(void)
 {
 #ifdef MPI
@@ -192,6 +217,9 @@ static int server_loop(void)
         if (server_grab)
             switch (e.type)
             {
+            case SDL_VIDEORESIZE:
+                dirty |= init_video(e.resize.w, e.resize.h);
+                break;
             case SDL_MOUSEMOTION:
                 dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
                 break;
@@ -274,13 +302,24 @@ void server(int argc, char *argv[])
 
     if (init_script())
     {
+        /* Initialize all subsystems. */
+	
         init_console(CONSOLE_COLS, CONSOLE_ROWS);
         init_display();
+        init_tracker();
+        init_joystick();
+        init_buffer();
+        init_sound();
+        init_image();
+        init_entity();
 
         /* Read and execute all scripts given on the command line. */
 
-        for (argi = 1; argi < argc && strcmp(argv[argi], "--"); argi++)
-            load_script(argv[argi], strcmp(argv[argi+1], "--"));
+        for (argi = 1; argi < argc && !done; argi++)
+        {
+            done = (argi + 1 == argc) || (strcmp(argv[argi + 1], "--") == 0);
+            load_script(argv[argi], !done);
+        }
 
         sync_display();
 
@@ -291,32 +330,12 @@ void server(int argc, char *argv[])
         {
             int w = get_window_w();
             int h = get_window_h();
-            int m = SDL_OPENGL;
 
-            /* Set some OpenGL framebuffer attributes. */
-
-            SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-            SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-            SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-            if (SDL_SetVideoMode(w, h, 0, m))
+            if (init_video(w, h))
             {
                 SDL_EnableUNICODE(1);
 
-                /* Initialize all subsystems. */
-	
-                init_opengl();
-                init_tracker();
-                init_joystick();
-                init_buffer();
-                init_sound();
-                init_image();
-                init_server();
-                init_entity();
-
-                do_start_script(argi + 1, argc, argv);
+/*              do_start_script(argi + 1, argc, argv); */
 
                 /* Block on SDL events.  Service them as they arrive. */
 

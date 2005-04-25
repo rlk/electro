@@ -57,9 +57,6 @@ int init_galaxy(void)
     if ((G = (struct galaxy *) calloc(GMAXINIT, sizeof (struct galaxy))))
     {
         G_max = GMAXINIT;
-
-        star_texture = star_make_texture();
-
         return 1;
     }
     return 0;
@@ -104,6 +101,8 @@ void draw_galaxy(int id, int gd, const float M[16],
 {
     if (galaxy_exists(gd))
     {
+        init_galaxy_gl(gd);
+
         glPushMatrix();
         {
             float N[16];
@@ -172,6 +171,53 @@ int pick_galaxy(int id, int gd, const float p[3], const float v[3])
     float d = 0;
 
     return node_pick(G[gd].N, 0, G[gd].S, 0, p, v, &d);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void init_galaxy_gl(int gd)
+{
+    if (G[gd].state == 0)
+    {
+        /* Initialize the vertex buffer object. */
+
+        if (GL_has_vertex_buffer_object)
+        {
+            glGenBuffersARB(1, &G[gd].buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
+
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                            G[gd].S_num * sizeof (struct star),
+                            G[gd].S,  GL_STATIC_DRAW_ARB);
+        }
+
+        /* Initialize the star texture. */
+
+        G[gd].texture = star_make_texture();
+        G[gd].state   = 1;
+    }
+}
+
+void free_galaxy_gl(int gd)
+{
+    if (G[gd].state == 1)
+    {
+        /* Free the star texture. */
+
+        if (glIsTexture(G[gd].texture))
+            glDeleteTextures(1, &G[gd].texture);
+
+        /* Free the vertex buffer object. */
+
+        if (GL_has_vertex_buffer_object)
+        {
+            if (glIsBufferARB(G[gd].buffer))
+                glDeleteBuffersARB(1, &G[gd].buffer);
+        }
+
+        G[gd].buffer = 0;
+        G[gd].state  = 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -350,19 +396,6 @@ void prep_hip_galaxy(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void create_galaxy(int gd)
-{
-    if (GL_has_vertex_buffer_object)
-    {
-        glGenBuffersARB(1, &G[gd].buffer);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, G[gd].buffer);
-
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                        G[gd].S_num * sizeof (struct star),
-                        G[gd].S, GL_STATIC_DRAW_ARB);
-    }
-}
-
 int send_create_galaxy(const char *filename)
 {
     int gd;
@@ -374,6 +407,7 @@ int send_create_galaxy(const char *filename)
         if ((parse_galaxy(filename, G + gd)))
         {
             G[gd].count = 1;
+            G[gd].state = 0;
 
             /* Pack the object header. */
 
@@ -388,8 +422,6 @@ int send_create_galaxy(const char *filename)
             pack_alloc(G[gd].S_num * sizeof (struct star), G[gd].S);
             pack_alloc(G[gd].N_num * sizeof (struct node), G[gd].N);
 
-            create_galaxy(gd);
-
             /* Encapsulate this object in an entity. */
 
             return send_create_entity(TYPE_GALAXY, gd);
@@ -403,6 +435,7 @@ void recv_create_galaxy(void)
     int gd = unpack_index();
 
     G[gd].count = 1;
+    G[gd].state = 0;
 
     /* Unpack the object header. */
 
@@ -414,8 +447,6 @@ void recv_create_galaxy(void)
     G[gd].S = unpack_alloc(G[gd].S_num * sizeof (struct star));
     G[gd].N = unpack_alloc(G[gd].N_num * sizeof (struct node));
     
-    create_galaxy(gd);
-
     /* Encapsulate this object in an entity. */
 
     recv_create_entity();
@@ -457,8 +488,7 @@ void delete_galaxy(int gd)
 
         if (G[gd].count == 0)
         {
-            if (glIsBufferARB(G[gd].buffer))
-                glDeleteBuffersARB(1, &G[gd].buffer);
+            free_galaxy_gl(gd);
 
             if (G[gd].S) free(G[gd].S);
             if (G[gd].N) free(G[gd].N);

@@ -120,3 +120,7 @@ function do_keyboard(k, s)
         return false
     end
 end
+
+arg = { "box.obj" }
+
+do_start(arg)

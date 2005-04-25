@@ -19,12 +19,13 @@
 
 struct image
 {
+    int    state;
     GLuint texture;
-    char *filename;
-    void *p;
-    int   w;
-    int   h;
-    int   b;
+    char  *filename;
+    void  *p;
+    int    w;
+    int    h;
+    int    b;
 };
 
 /*---------------------------------------------------------------------------*/
@@ -36,6 +37,9 @@ void  *load_image  (const char *, int *, int *, int *);
 
 int  init_image(void);
 void draw_image(int);
+
+void init_image_gl(int);
+void free_image_gl(int);
 
 int  send_create_image(const char *);
 void recv_create_image(void);

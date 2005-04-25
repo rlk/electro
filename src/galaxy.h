@@ -22,6 +22,8 @@
 struct galaxy
 {
     int    count;
+    int    state;
+    GLuint texture;
     int    S_num;
     int    N_num;
 
@@ -41,6 +43,9 @@ void draw_galaxy(int, int, const float[16],
 int  pick_galaxy(int, int, const float[3], const float[3]);
 
 void prep_galaxy(void);
+
+void init_galaxy_gl(int);
+void free_galaxy_gl(int);
 
 /*---------------------------------------------------------------------------*/
 

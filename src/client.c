@@ -113,6 +113,29 @@ static void init_client(void)
     glLineWidth(4.0);
 }
 
+static int init_video(int w, int h, int m)
+{
+    free_entity_gl();
+
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    if (SDL_SetVideoMode(w, h, 0, m))
+    {
+        init_opengl();
+        init_client();
+        init_entity_gl();
+
+        return 1;
+    }
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
 static void client_swap(void)
 {
 #ifdef MPI
@@ -152,8 +175,13 @@ static int client_loop(void)
     return 1;
 }
 
+/*---------------------------------------------------------------------------*/
+
 void client(void)
 {
+    init_buffer();
+    init_image();
+    init_entity();
     sync_display();
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
@@ -162,22 +190,10 @@ void client(void)
         int h = get_window_h();
         int m = SDL_OPENGL | SDL_NOFRAME;
 
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
         SDL_ShowCursor(0);
 
-        if (SDL_SetVideoMode(w, h, 0, m))
+        if (init_video(w, h, m))
         {
-            init_opengl();
-            init_buffer();
-            init_image();
-            init_client();
-            init_entity();
-
             /* Handle any SDL events. Block on server messages. */
 
             while (client_loop())
