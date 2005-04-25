@@ -422,6 +422,16 @@ void add_tile(const char *name, int x, int y, int w, int h,
 
 /*---------------------------------------------------------------------------*/
 
+void set_window_w(int w)
+{
+    Host.win_w = w;
+}
+
+void set_window_h(int w)
+{
+    Host.win_h = h;
+}
+
 int get_window_w(void)
 {
     return Host.win_w;
@@ -431,6 +441,8 @@ int get_window_h(void)
 {
     return Host.win_h;
 }
+
+/*---------------------------------------------------------------------------*/
 
 int get_viewport_x(void)
 {

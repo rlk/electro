@@ -76,13 +76,15 @@ void add_tile(const char *, int, int, int, int,
 
 /*---------------------------------------------------------------------------*/
 
-int get_window_w(void);
-int get_window_h(void);
+void set_window_w(int);
+void set_window_h(int);
+int  get_window_w(void);
+int  get_window_h(void);
 
-int get_viewport_x(void);
-int get_viewport_y(void);
-int get_viewport_w(void);
-int get_viewport_h(void);
+int  get_viewport_x(void);
+int  get_viewport_y(void);
+int  get_viewport_w(void);
+int  get_viewport_h(void);
 
 /*---------------------------------------------------------------------------*/
 
