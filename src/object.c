@@ -88,18 +88,6 @@ static int                 surfm = 0;
 
 /*---------------------------------------------------------------------------*/
 
-static void *memdup(void *src, size_t num, size_t len)
-{
-    void *dst = NULL;
-
-    if ((num * len > 0) && (dst = malloc(num * len)))
-        memcpy(dst, src, num * len);
-
-    return dst;
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int push_t(void)
 {
     if (tc < tm)

@@ -28,6 +28,8 @@
 #include "event.h"
 #include "server.h"
 
+#define GRAB 1
+
 /*---------------------------------------------------------------------------*/
 
 static void server_draw(void);
@@ -44,6 +46,7 @@ static float average_fps = 0.0f;
 
 void grab(int b)
 {
+#if GRAB
     if (b && !server_grab)
     {
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -54,6 +57,7 @@ void grab(int b)
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         SDL_ShowCursor(1);
     }
+#endif
 
     server_grab = b;
 }

@@ -47,6 +47,8 @@ struct entity
     float scale[3];
     float alpha;
 
+    char  *frag_text;
+    char  *vert_text;
     GLuint frag_prog;
     GLuint vert_prog;
 

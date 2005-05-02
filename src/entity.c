@@ -255,6 +255,7 @@ void draw_entity_list(int id, const float M[16],
                     glEnable(GL_FRAGMENT_PROGRAM_ARB);
                     glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, E[jd].frag_prog);
                 }
+
                 if (E[jd].vert_prog && GL_has_vertex_program)
                 {
                     glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -371,12 +372,49 @@ void init_entity_gl(void)
     /* Ask all entities with GL state to initialize themselves. */
 
     for (id = 0; id < E_max; ++id)
+    {
+        size_t frag_len = E[id].frag_text ? strlen(E[id].frag_text) : 0;
+        size_t vert_len = E[id].vert_text ? strlen(E[id].vert_text) : 0;
+
         switch (E[id].type)
         {
         case TYPE_SPRITE: init_sprite_gl(E[id].data); break;
         case TYPE_OBJECT: init_object_gl(E[id].data); break;
         case TYPE_GALAXY: init_galaxy_gl(E[id].data); break;
         }
+
+        /* Initialize any vertex program. */
+
+        if (GL_has_vertex_program && vert_len)
+        {
+            glGenProgramsARB(1, &E[id].vert_prog);
+            glBindProgramARB(GL_VERTEX_PROGRAM_ARB, E[id].vert_prog);
+
+            glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                               GL_PROGRAM_FORMAT_ASCII_ARB,
+                               vert_len, E[id].vert_text);
+
+            if (glGetError() == GL_INVALID_OPERATION)
+                print("Vertex program: %s\n",
+                      glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+        }
+
+        /* Initialize any fragment program. */
+
+        if (GL_has_fragment_program && frag_len)
+        {
+            glGenProgramsARB(1, &E[id].frag_prog);
+            glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, E[id].frag_prog);
+
+            glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                               GL_PROGRAM_FORMAT_ASCII_ARB,
+                               frag_len, E[id].frag_text);
+
+            if (glGetError() == GL_INVALID_OPERATION)
+                print("Fragment program: %s\n",
+                      glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+        }
+    }
 }
 
 void free_entity_gl(void)
@@ -386,12 +424,27 @@ void free_entity_gl(void)
     /* Ask all entities with GL state to finalize themselves. */
 
     for (id = 0; id < E_max; ++id)
+    {
         switch (E[id].type)
         {
         case TYPE_SPRITE: free_sprite_gl(E[id].data); break;
         case TYPE_OBJECT: free_object_gl(E[id].data); break;
         case TYPE_GALAXY: free_galaxy_gl(E[id].data); break;
         }
+
+        /* Finalize any vertex and fragment programs. */
+
+        if (GL_has_vertex_program)
+            if (glIsProgramARB(E[id].vert_prog))
+                glDeleteProgramsARB(1, &E[id].vert_prog);
+
+        if (GL_has_fragment_program)
+            if (glIsProgramARB(E[id].frag_prog))
+                glDeleteProgramsARB(1, &E[id].frag_prog);
+                
+        E[id].vert_prog = 0;
+        E[id].frag_prog = 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -502,46 +555,6 @@ void recv_parent_entity(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void set_entity_frag_prog(int id, const char *txt)
-{
-    if (GL_has_fragment_program)
-    {
-        int len = strlen(txt);
-
-        glGenProgramsARB(1, &E[id].frag_prog);
-        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, E[id].frag_prog);
-
-        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
-                           GL_PROGRAM_FORMAT_ASCII_ARB, len, txt);
-
-        if (glGetError() == GL_INVALID_OPERATION)
-            print("Fragment program: %s\n",
-                glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-    }
-    else E[id].frag_prog = 0;
-}
-
-static void set_entity_vert_prog(int id, const char *txt)
-{
-    if (GL_has_vertex_program)
-    {
-        int len = strlen(txt);
-
-        glGenProgramsARB(1, &E[id].vert_prog);
-        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, E[id].vert_prog);
-
-        glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
-                           GL_PROGRAM_FORMAT_ASCII_ARB, len, txt);
-
-        if (glGetError() == GL_INVALID_OPERATION)
-            print("Vertex program: %s\n",
-                glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-    }
-    else E[id].vert_prog = 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
 void send_set_entity_rotation(int id, const float r[3])
 {
     float e[3][3];
@@ -623,7 +636,7 @@ void send_set_entity_frag_prog(int id, const char *txt)
     pack_index(len);
     pack_alloc(len, txt);
 
-    set_entity_frag_prog(id, txt);
+    E[id].frag_text = memdup(txt, strlen(txt) + 1, 1);
 }
 
 void send_set_entity_vert_prog(int id, const char *txt)
@@ -635,7 +648,7 @@ void send_set_entity_vert_prog(int id, const char *txt)
     pack_index(len);
     pack_alloc(len, txt);
 
-    set_entity_vert_prog(id, txt);
+    E[id].vert_text = memdup(txt, strlen(txt) + 1, 1);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -763,7 +776,7 @@ void recv_set_entity_frag_prog(void)
     int         len = unpack_index();
     const char *txt = unpack_alloc(len);
 
-    set_entity_frag_prog(id, txt);
+    E[id].frag_text = memdup(txt, strlen(txt) + 1, 1);
 }
 
 void recv_set_entity_vert_prog(void)
@@ -772,7 +785,7 @@ void recv_set_entity_vert_prog(void)
     int         len = unpack_index();
     const char *txt = unpack_alloc(len);
 
-    set_entity_vert_prog(id, txt);
+    E[id].vert_text = memdup(txt, strlen(txt) + 1, 1);
 }
 
 /*---------------------------------------------------------------------------*/

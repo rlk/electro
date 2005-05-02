@@ -44,6 +44,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+void *memdup(const void *, size_t, size_t);
+
 const char *system_error(void);
 
 const char *get_file_name(const char *);

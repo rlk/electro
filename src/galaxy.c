@@ -34,8 +34,6 @@
 static struct galaxy *G;
 static int            G_max;
 
-static GLuint star_texture = 0;
-
 static int galaxy_exists(int gd)
 {
     return (G && 0 <= gd && gd < G_max && G[gd].count);
@@ -133,7 +131,7 @@ void draw_galaxy(int id, int gd, const float M[16],
             {
                 /* Set up the GL state for star rendering. */
 
-                glBindTexture(GL_TEXTURE_2D, star_texture);
+                glBindTexture(GL_TEXTURE_2D, G[gd].texture);
 
                 glDisable(GL_TEXTURE_2D);
                 glDisable(GL_LIGHTING);

@@ -100,13 +100,13 @@ void init_display(void)
     Ho = (struct host *) calloc(H_max, sizeof (struct host));
 
     H_num = 0;
+
+    default_host(&Host);
 }
 
 void sync_display(void)
 {
     int i, j, rank = 0;
-
-    default_host(&Host);
 
     /* Find the union of all host exents.  Copy to all hosts. */
 

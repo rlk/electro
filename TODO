@@ -1,9 +1,9 @@
+object geometry create
 remove do_start refs
 resizable server window? (fullscreen?)
 bounding sphere
 tracker button
 Equatarial HIP
-object geometry create
 text render of some sort
 network
 camera offset per tile (for geowall and planar)
