@@ -76,6 +76,9 @@ void add_tile(const char *, int, int, int, int,
 
 /*---------------------------------------------------------------------------*/
 
+void inc_window(void);
+void dec_window(void);
+
 void set_window_w(int);
 void set_window_h(int);
 int  get_window_w(void);

@@ -34,6 +34,7 @@
 
 static void server_draw(void);
 
+static int server_full   = 0;
 static int server_grab   = 0;
 static int server_time   = 0;
 static int server_mirror = 1;
@@ -106,10 +107,8 @@ static void init_server(void)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
-static int init_video(int w, int h)
+static int init_video(int w, int h, int m)
 {
-    int m = SDL_OPENGL | SDL_RESIZABLE;
-
     free_entity_gl();
 
     set_window_w(w);
@@ -121,7 +120,7 @@ static int init_video(int w, int h)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    if (SDL_SetVideoMode(w, h, 0, m))
+    if (SDL_SetVideoMode(w, h, 0, m | SDL_OPENGL | SDL_RESIZABLE))
     {
         init_opengl();
         init_server();
@@ -212,12 +211,35 @@ static int server_loop(void)
         if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) grab(0);
         if (e.type == SDL_MOUSEBUTTONDOWN)                 grab(1);
 
-        /* Handle console and server mirror toggle. */
+        /* Handle global server control keys. */
 
-        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F1)
-            dirty = set_console_enable(!console_is_enabled());
-        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F2)
-            server_mirror = 1 - server_mirror;
+        if (e.type == SDL_KEYDOWN)
+            switch (e.key.keysym.sym)
+            {
+            case SDLK_F1:
+                dirty |= set_console_enable(!console_is_enabled());
+                break;
+            case SDLK_F2:
+                server_mirror = 1 - server_mirror;
+                break;
+            case SDLK_F3:
+                dec_window();
+                dirty |= init_video(get_window_w(),
+                                    get_window_h(), server_full);
+                break;
+            case SDLK_F4:
+                inc_window();
+                dirty |= init_video(get_window_w(),
+                                    get_window_h(), server_full);
+                break;
+            case SDLK_F5:
+                server_full = SDL_FULLSCREEN - server_full;
+                dirty |= init_video(get_window_w(),
+                                    get_window_h(), server_full);
+                break;
+            default:
+                break;
+            }
 
         /* Dispatch the event to the scripting system. */
 
@@ -225,7 +247,7 @@ static int server_loop(void)
             switch (e.type)
             {
             case SDL_VIDEORESIZE:
-                dirty |= init_video(e.resize.w, e.resize.h);
+                dirty |= init_video(e.resize.w, e.resize.h, server_full);
                 break;
             case SDL_MOUSEMOTION:
                 dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
@@ -252,6 +274,8 @@ static int server_loop(void)
                 break;
             case SDL_USEREVENT:
                 dirty |= do_timer_script(e.user.code);
+                break;
+            default:
                 break;
             }
 
@@ -338,7 +362,7 @@ void server(int argc, char *argv[])
             int w = get_window_w();
             int h = get_window_h();
 
-            if (init_video(w, h))
+            if (init_video(w, h, server_full))
             {
                 SDL_EnableUNICODE(1);
 

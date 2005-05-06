@@ -422,6 +422,62 @@ void add_tile(const char *name, int x, int y, int w, int h,
 
 /*---------------------------------------------------------------------------*/
 
+void inc_window(void)
+{
+    switch (Host.win_w)
+    {
+    case 640:
+        set_window_w(800);
+        set_window_h(600);
+        break;
+    case 800:
+        set_window_w(1024);
+        set_window_h(768);
+        break;
+    case 1024:
+        set_window_w(1280);
+        set_window_h(1024);
+        break;
+    case 1280:
+    case 1600:
+        set_window_w(1600);
+        set_window_h(1200);
+        break;
+    default:
+        set_window_w(DEFAULT_W);
+        set_window_h(DEFAULT_H);
+    }
+}
+
+void dec_window(void)
+{
+    switch (Host.win_w)
+    {
+    case 640:
+    case 800:
+        set_window_w(640);
+        set_window_h(480);
+        break;
+    case 1024:
+        set_window_w(800);
+        set_window_h(600);
+        break;
+    case 1280:
+        set_window_w(1024);
+        set_window_h(768);
+        break;
+    case 1600:
+        set_window_w(1280);
+        set_window_h(1024);
+        break;
+    default:
+        set_window_w(DEFAULT_W);
+        set_window_h(DEFAULT_H);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 void set_window_w(int w)
 {
     Host.win_w = Host.tile[0].win_w = w;

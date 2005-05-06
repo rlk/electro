@@ -184,6 +184,10 @@ SOURCE=..\src\star.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\stereo.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\tracker.c
 # End Source File
 # Begin Source File
@@ -289,6 +293,10 @@ SOURCE=..\src\sprite.h
 # Begin Source File
 
 SOURCE=..\src\star.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\stereo.h
 # End Source File
 # Begin Source File
 
