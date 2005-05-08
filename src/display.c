@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef __WIN32
+#include <unistd.h>
+#endif
+
 #include "opengl.h"
 #include "utility.h"
 #include "tracker.h"
@@ -66,7 +70,9 @@ static void default_host(struct host *H)
 
 /*---------------------------------------------------------------------------*/
 
-static void set_window_pos(int x, int y)
+#ifdef SNIP
+
+void set_window_pos(int x, int y)
 {
     char buf[32];
 
@@ -79,6 +85,29 @@ static void set_window_pos(int x, int y)
     sprintf(buf, "%d,%d", x, y);
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
 #endif
+}
+
+#endif
+
+void set_window_siz(int d)
+{
+    static int siz[5][2] = {
+        {  640,  480 },
+        {  800,  600 },
+        { 1024,  768 },
+        { 1280, 1024 },
+        { 1600, 1200 }
+    };
+
+    static int curr = 1;
+
+    if (0 <= curr + d && curr + d < 5)
+    {
+        curr += d;
+
+        set_window_w(siz[curr][0]);
+        set_window_h(siz[curr][1]);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -110,17 +139,26 @@ void sync_display(void)
 
     /* Find the union of all host exents.  Copy to all hosts. */
 
-    for (i = 0; i < H_num - 1; i++)
-        for (j = i + 1; j < H_num; j++)
-        {
-            int r = Hi[j].pix_x + Hi[j].pix_w;
-            int t = Hi[j].pix_y + Hi[j].pix_h;
+    int L = INT_MAX;
+    int R = INT_MIN;
+    int B = INT_MAX;
+    int T = INT_MIN;
 
-            Hi[i].pix_x = Hi[j].pix_x = MIN(Hi[i].pix_x,     Hi[j].pix_x);
-            Hi[i].pix_y = Hi[j].pix_y = MIN(Hi[i].pix_y,     Hi[j].pix_y);
-            Hi[i].pix_w = Hi[j].pix_w = MAX(Hi[i].pix_w, r - Hi[i].pix_x);
-            Hi[i].pix_h = Hi[j].pix_h = MAX(Hi[i].pix_h, t - Hi[i].pix_y);
-        }
+    for (i = 0; i < H_num; i++)
+    {
+        L = MIN(L, Hi[i].pix_x);
+        R = MAX(R, Hi[i].pix_x + Hi[i].pix_w);
+        B = MIN(L, Hi[i].pix_y);
+        T = MAX(R, Hi[i].pix_y + Hi[i].pix_h);
+    }
+
+    for (i = 0; i < H_num; i++)
+    {
+        Hi[i].pix_x =     L;
+        Hi[i].pix_w = R - L;
+        Hi[i].pix_y =     B;
+        Hi[i].pix_h = T - B;
+    }
 
 #ifdef MPI
     if (gethostname(Host.name, MAXNAME) == 0)
@@ -159,7 +197,7 @@ void sync_display(void)
     if (rank == 0 && H_num > 0)
         memcpy(&Host, Hi, sizeof (struct host));
 
-    if (rank) set_window_pos(Host.win_x, Host.win_y);
+/*  if (rank) set_window_pos(Host.win_x, Host.win_y); */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -417,62 +455,6 @@ void add_tile(const char *name, int x, int y, int w, int h,
             Hi[i].pix_w = MAX(Hi[i].pix_w, X + W - Hi[i].pix_x);
             Hi[i].pix_h = MAX(Hi[i].pix_h, Y + H - Hi[i].pix_y);
         }
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-
-void inc_window(void)
-{
-    switch (Host.win_w)
-    {
-    case 640:
-        set_window_w(800);
-        set_window_h(600);
-        break;
-    case 800:
-        set_window_w(1024);
-        set_window_h(768);
-        break;
-    case 1024:
-        set_window_w(1280);
-        set_window_h(1024);
-        break;
-    case 1280:
-    case 1600:
-        set_window_w(1600);
-        set_window_h(1200);
-        break;
-    default:
-        set_window_w(DEFAULT_W);
-        set_window_h(DEFAULT_H);
-    }
-}
-
-void dec_window(void)
-{
-    switch (Host.win_w)
-    {
-    case 640:
-    case 800:
-        set_window_w(640);
-        set_window_h(480);
-        break;
-    case 1024:
-        set_window_w(800);
-        set_window_h(600);
-        break;
-    case 1280:
-        set_window_w(1024);
-        set_window_h(768);
-        break;
-    case 1600:
-        set_window_w(1280);
-        set_window_h(1024);
-        break;
-    default:
-        set_window_w(DEFAULT_W);
-        set_window_h(DEFAULT_H);
     }
 }
 

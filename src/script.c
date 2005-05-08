@@ -958,33 +958,6 @@ static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
     return r;
 }
 
-int do_start_script(int i, int c, char *v[])
-{
-    const char *name = "do_start";
-
-    lua_getglobal(L, name);
-
-    if (lua_isfunction(L, -1))
-    {
-        int j;
-
-        lua_newtable(L);
-
-        for (j = i; j < c; j++)
-        {
-            lua_pushnumber(L, j - i + 1);
-            lua_pushstring(L, v[j]);
-            lua_settable(L, -3);
-        }
-
-        return lua_callassert(L, 1, 1, name);
-    }
-    else
-        lua_pop(L, 1);
-
-    return 0;
-}
-
 int do_point_script(int x, int y)
 {
     const char *name = "do_point";
@@ -1108,6 +1081,33 @@ void do_command(const char *command)
 
     while (lua_gettop(L) > top)
         lua_pop(L, 1);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void load_args(int c, char *v[])
+{
+    int j;
+
+    lua_getglobal(L, "E");
+
+    if (lua_istable(L, -1))
+    {
+        lua_pushstring(L, "argument");
+        lua_gettable(L, -2);
+
+        if (lua_istable(L, -1))
+        {
+            for (j = 0; j < c; j++)
+            {
+                lua_pushnumber(L, j + 1);
+                lua_pushstring(L, v[j]);
+                lua_settable(L, -3);
+            }
+        }
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1239,6 +1239,12 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "key_modifier_shift",        KMOD_SHIFT);
     lua_constant(L, "key_modifier_control",      KMOD_CTRL);
     lua_constant(L, "key_modifier_alt",          KMOD_ALT);
+
+    /* Add an empty table to hold command line arguments. */
+
+    lua_pushstring(L, "argument");
+    lua_newtable(L);
+    lua_settable(L, -3);
 
     /* Register the "electro" environment table globally. */
 

@@ -223,12 +223,12 @@ static int server_loop(void)
                 server_mirror = 1 - server_mirror;
                 break;
             case SDLK_F3:
-                dec_window();
+                set_window_siz(-1);
                 dirty |= init_video(get_window_w(),
                                     get_window_h(), server_full);
                 break;
             case SDLK_F4:
-                inc_window();
+                set_window_siz(+1);
                 dirty |= init_video(get_window_w(),
                                     get_window_h(), server_full);
                 break;
@@ -323,8 +323,8 @@ static int server_loop(void)
 
 void server(int argc, char *argv[])
 {
-    int done = 0;
     int argi;
+    int argj;
 
 #ifdef PREP_GALAXY
     prep_tyc_galaxy();
@@ -333,40 +333,40 @@ void server(int argc, char *argv[])
 
     if (init_script())
     {
-        /* Initialize all subsystems. */
-	
-        init_console(CONSOLE_COLS, CONSOLE_ROWS);
-        init_display();
-        init_tracker();
-        init_joystick();
-        init_buffer();
-        init_sound();
-        init_image();
-        init_entity();
-
-        /* Read and execute all scripts given on the command line. */
-
-        for (argi = 1; argi < argc && !done; argi++)
-        {
-            done = (argi + 1 == argc) || (strcmp(argv[argi + 1], "--") == 0);
-            load_script(argv[argi], !done);
-        }
-
-        sync_display();
-
-        /* Initialize the main server window. */
-
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK |
                      SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
         {
-            int w = get_window_w();
-            int h = get_window_h();
+            /* Initialize all subsystems. */
+        
+            init_console(CONSOLE_COLS, CONSOLE_ROWS);
+            init_display();
+            init_tracker();
+            init_joystick();
+            init_buffer();
+            init_sound();
+            init_image();
+            init_entity();
 
-            if (init_video(w, h, server_full))
+            /* Handle all command line parameters. */
+
+            for (argj = 1; argj < argc; argj++)
+                if (strcmp(argv[argj], "--") == 0)
+                {
+                    load_args(argc - argj - 1, argv + argj + 1);
+                    break;
+                }
+
+            for (argi = 1; argi < argj; argi++)
+                load_script(argv[argi], (argi + 1 < argj));
+
+            /* Initialize the main server window. */
+
+            sync_display();
+
+            if (init_video(get_window_w(),
+                           get_window_h(), server_full))
             {
                 SDL_EnableUNICODE(1);
-
-/*              do_start_script(argi + 1, argc, argv); */
 
                 /* Block on SDL events.  Service them as they arrive. */
 
@@ -377,15 +377,14 @@ void server(int argc, char *argv[])
                 while (SDL_WaitEvent(NULL))
                     if (server_loop() == 0)
                         break;
-
-                /* Ensure everyone finishes all events before exiting. */
-
-#ifdef MPI
-                assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
-#endif
             }
             else fprintf(stderr, "%s\n", SDL_GetError());
 
+            /* Ensure everyone finishes all events before exiting. */
+
+#ifdef MPI
+            assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
+#endif
             SDL_Quit();
         }
         else fprintf(stderr, "%s\n", SDL_GetError());

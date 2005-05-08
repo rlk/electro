@@ -11,7 +11,7 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -g -Wall -ansi -pedantic
+	CFLAGS = -g -Wall
 endif
 
 # To build with trackdAPI: "make TRACKD=1"

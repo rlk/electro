@@ -759,6 +759,25 @@ Start on each.</p>
 
 <!---------------------------------------------------------------------------->
 
+<h2> Command Line Arguments </h2>
+
+<p> The Electro application takes two sets of command line arguments.
+The first are those directed to Electro itself.  They include the names
+of configuration and application scripts to be executed by Electro on
+start-up.  Following this is an optional argument list splitter "--".
+All subsequent arguments are made available to Lua scripts via the Lua
+environment... </p>
+
+<dl>
+<dt><tt> argument </tt><dd><p> The <tt>argument</tt> table gives all
+script-specific command line arguments, indexed in order beginning with
+1. </p>
+
+</dl>
+
+
+<!---------------------------------------------------------------------------->
+
 <h1> Callbacks </h1>
 
 <p> Callback functions are the mechanism by which Electro Lua
@@ -770,23 +789,6 @@ in a dirty screen.  Returning <tt>true</tt> schedules a screen update
 to occur at the next opportunity. </p>
 
 <dl>
-
-<dt><tt> do_start(arg) </tt> <dd><p> This callback is invoked
-precisely once at the beginning of a run.  It occurs after all of the
-scripts named on the command line have finished executing, but before
-any event processing begins.  Applications are free to perform Lua
-state initialization upon initial execution, but Electro object
-initialization <i>must</i> be performed in the <tt>do_start</tt>
-function.  The <tt>arg</tt> argument gives a table of command line
-arguments passed to electro.  This table maps indices onto strings,
-with the first argument at index 1.</p>
-
-<p class="note"> This callback is a bit of a hack.  It is necessary
-because Electro objects cannot be initialized until the OpenGL context
-exists.  However, the OpenGL context cannot be created until the
-viewport configuration is known.  So, startup must proceed in two
-distinct phases, one before context creation, and one after.  The
-<tt>do_start</tt> callback is this second phase. </p>
 
 <dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
 whenever the mouse pointer moves within the Electro main window.
@@ -1121,19 +1123,15 @@ function do_start()
 end
 </pre>
 
-<p> Finally, here is the <tt>do_start</tt> callback.  This function is
-called immediately after Electro starts.  It is responsible for doing
-any and all initialization necessary to get the application off the
-ground. </p>
-
-<p> For the fifteen puzzle, we begin by creating an orthogonal camera,
-which will be the root of our hierarchy.  We want all of our puzzle
-pieces to be rendered at full brightness, so we disable lighting on
-the entire scene by setting the <tt>unlit</tt> flag at this root.  We
-then create 16 child sprite objects to represent the puzzle tiles.
-Together, these 16 sprites should fill the display, so we must
-determine both the size of the display and the size of the sprite in
-order to scale each sprite to 1/16th of the area of the display.</p>
+<p> Finally, here is the <tt>do_start</tt> function.  For the fifteen
+puzzle, we begin by creating an orthogonal camera, which will be the root
+of our hierarchy.  We want all of our puzzle pieces to be rendered at
+full brightness, so we disable lighting on the entire scene by setting
+the <tt>unlit</tt> flag at this root.  We then create 16 child sprite
+objects to represent the puzzle tiles.  Together, these 16 sprites should
+fill the display, so we must determine both the size of the display and
+the size of the sprite in order to scale each sprite to 1/16th of the
+area of the display.</p>
 
 <p> Then, we create the <tt>numbers</tt> table.  It is simply a 4x4
 table of tables initialized to a solved configuration.  We use the row
@@ -1190,8 +1188,8 @@ function move_piece(di, dj)
 
     -- Confirm that the move is valid.
 
-    if 1 <= next_i and next_i <= 4 and
-       1 <= next_j and next_j <= 4 then
+    if 1 &lt;= next_i and next_i &lt;= 4 and
+       1 &lt;= next_j and next_j &lt;= 4 then
 
         -- Swap the moving piece with the blank piece.
 
@@ -1231,6 +1229,35 @@ function move_random()
             end
         end
     end
+end
+
+function do_keyboard(k, s)
+    if s then
+        -- If an arrow key has been pressed, move a puzzle piece.
+
+        if k == 276 then move_piece( 0,  1) end
+        if k == 275 then move_piece( 0, -1) end
+        if k == 273 then move_piece( 1,  0) end
+        if k == 274 then move_piece(-1,  0) end
+
+        -- If autoplay has been switched, toggle the idle function.
+
+        if k == 283 then E.enable_timer(true)  end
+        if k == 284 then E.enable_timer(false) end
+    end
+    return true
+end
+
+function do_timer(dt)
+    time = time + dt
+
+    if time &gt; 0.25 then
+        move_random()
+        time = 0
+      return true
+    end
+
+    return false
 end
 
 function do_start()
@@ -1276,34 +1303,7 @@ function do_start()
     return true
 end
 
-function do_keyboard(k, s)
-    if s then
-        -- If an arrow key has been pressed, move a puzzle piece.
-
-        if k == 276 then move_piece( 0,  1) end
-        if k == 275 then move_piece( 0, -1) end
-        if k == 273 then move_piece( 1,  0) end
-        if k == 274 then move_piece(-1,  0) end
-
-        -- If autoplay has been switched, toggle the idle function.
-
-        if k == 283 then E.enable_timer(true)  end
-        if k == 284 then E.enable_timer(false) end
-    end
-    return true
-end
-
-function do_timer(dt)
-    time = time + dt
-
-    if time > 0.25 then
-        move_random()
-        time = 0
-      return true
-    end
-
-    return false
-end
+do_start();
 </pre>
 
 <!---------------------------------------------------------------------------->

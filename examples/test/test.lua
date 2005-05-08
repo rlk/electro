@@ -47,12 +47,13 @@ function do_start(arg)
 
     table.foreach(arg, add_object)
 
+    E.set_background(1.0, 1.0, 1.0, 0.0, 0.5, 1.0)
+
     E.enable_timer(true)
 end
 
 function do_timer(dt)
-    local joy_x, joy_y = E.get_joystick(0)
-
+    local joy_x, joy_y        = E.get_joystick(0)
     local mov_x, mov_y, mov_z = E.get_entity_z_vector(hand)
 
     if joy_x < -0.1 or 0.1 < joy_x then
@@ -100,27 +101,4 @@ function do_point(dx, dy)
     return false
 end
 
-function do_keyboard(k, s)
-    local d = 0.0125
-    
-    if s and k == 284 then
-        stereo = not stereo
-
-        if stereo then
-            E.set_camera_stereo(camera, E.stereo_mode_red_blue, d, -d, d)
-            E.set_camera_stereo(nearby, E.stereo_mode_red_blue, d, -d, d)
-            E.set_background(0.0, 0.0, 0.0)
-        else
-            E.set_camera_stereo(camera, E.stereo_mode_none, 0, 0, 0)
-            E.set_camera_stereo(nearby, E.stereo_mode_none, 0, 0, 0)
-            E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
-        end
-        return true
-    else
-        return false
-    end
-end
-
-arg = { "box.obj" }
-
-do_start(arg)
+do_start(E.argument)

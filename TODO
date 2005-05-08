@@ -1,10 +1,9 @@
+stereo visual
+obj reader fix
 object geometry create
-remove do_start refs
-resizable server window? (fullscreen?)
 bounding sphere
 tracker button
-Equatarial HIP
-text render of some sort
+text render of some sort / TTF
 network
 camera offset per tile (for geowall and planar)
 
@@ -14,5 +13,3 @@ camera near/far (automatic using entity bounding sphere?))
 Improve assertions (delineate necessary thing_exists vs thing_assert)
 
 Particle system
-TTF support
-

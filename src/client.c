@@ -179,34 +179,31 @@ static int client_loop(void)
 
 void client(void)
 {
-    init_buffer();
-    init_image();
-    init_entity();
-    sync_display();
-
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
-        int w = get_window_w();
-        int h = get_window_h();
-        int m = SDL_OPENGL | SDL_NOFRAME;
-
         SDL_ShowCursor(0);
 
-        if (init_video(w, h, m))
+        init_buffer();
+        init_image();
+        init_entity();
+
+        sync_display();
+
+        if (init_video(get_window_w(),
+                       get_window_h(), SDL_OPENGL | SDL_NOFRAME))
         {
             /* Handle any SDL events. Block on server messages. */
 
             while (client_loop())
                 client_recv();
-
-            /* Ensure everyone finishes all events before exiting. */
-
-#ifdef MPI
-            assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
-#endif
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
 
+        /* Ensure everyone finishes all events before exiting. */
+
+#ifdef MPI
+        assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
+#endif
         SDL_Quit();
     }
     else fprintf(stderr, "%s\n", SDL_GetError());
