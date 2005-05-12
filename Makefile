@@ -64,6 +64,7 @@ OBJS =	src/version.o  \
 	src/opengl.o   \
 	src/glyph.o    \
 	src/matrix.o   \
+	src/vector.o   \
 	src/utility.o  \
 	src/tracker.o  \
 	src/joystick.o \
