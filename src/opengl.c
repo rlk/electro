@@ -28,6 +28,9 @@ GLboolean GL_has_point_sprite         = 0;
 
 /*---------------------------------------------------------------------------*/
 
+/* Confirm that the named OpenGL extension is supported by the current       */
+/* implementation.  Print an error if not.                                   */
+
 GLboolean opengl_need(const char *extension)
 {
     const char *string = (const char *) glGetString(GL_EXTENSIONS);
@@ -54,6 +57,9 @@ GLboolean opengl_need(const char *extension)
 
     return GL_FALSE;
 }
+
+/* Acquire a pointer to the named OpenGL function.  Print an error if this   */
+/* function is not supported by the current implementation.                  */
 
 void *opengl_proc(const char *name)
 {
@@ -197,6 +203,74 @@ GLfloat opengl_perf(GLfloat *all)
     if (all) *all = 1000.0f * total / (now - start);
 
     return fps;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void opengl_basis_mult(float e[3][3])
+{
+    float M[16];
+
+    M[0] = e[0][0]; M[4] = e[1][0]; M[8]  = e[2][0]; M[12] = 0.0f;
+    M[1] = e[0][1]; M[5] = e[1][1]; M[9]  = e[2][1]; M[13] = 0.0f;
+    M[2] = e[0][2]; M[6] = e[1][2]; M[10] = e[2][2]; M[14] = 0.0f;
+    M[3] =    0.0f; M[7] =    0.0f; M[11] =    0.0f; M[15] = 1.0f;
+
+    glMultMatrixf(M);
+}
+
+void opengl_basis_invt(float e[3][3])
+{
+    float M[16];
+
+    M[0] = e[0][0]; M[4] = e[0][1]; M[8]  = e[0][2]; M[12] = 0.0f;
+    M[1] = e[1][0]; M[5] = e[1][1]; M[9]  = e[1][2]; M[13] = 0.0f;
+    M[2] = e[2][0]; M[6] = e[2][1]; M[10] = e[2][2]; M[14] = 0.0f;
+    M[3] =    0.0f; M[7] =    0.0f; M[11] =    0.0f; M[15] = 1.0f;
+
+    glMultMatrixf(M);
+}
+
+/*---------------------------------------------------------------------------*/
+
+/* Generate and return a new vertex program object.  Bind the given program  */
+/* text to it.  Print any program error message to the console.              */
+
+GLuint opengl_vert_prog(const char *text)
+{
+    GLuint o;
+
+    glGenProgramsARB(1, &o);
+    glBindProgramARB(GL_VERTEX_PROGRAM_ARB, o);
+
+    glProgramStringARB(GL_VERTEX_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(text), text);
+
+    if (glGetError() == GL_INVALID_OPERATION)
+        error("Vertex program: %s\n",
+              glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+
+    return o;
+}
+
+/* Generate and return a new fragment program object.  Bind the given        */
+/* program text to it.  Print any program error message to the console.      */
+
+GLuint opengl_frag_prog(const char *text)
+{
+    GLuint o;
+
+    glGenProgramsARB(1, &o);
+    glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, o);
+
+    glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                       GL_PROGRAM_FORMAT_ASCII_ARB, strlen(text), text);
+
+    if (glGetError() == GL_INVALID_OPERATION)
+        error("Fragment program: %s\n",
+              glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+
+    return o;
 }
 
 /*---------------------------------------------------------------------------*/

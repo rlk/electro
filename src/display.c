@@ -70,8 +70,6 @@ static void default_host(struct host *H)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef SNIP
-
 void set_window_pos(int x, int y)
 {
     char buf[32];
@@ -86,8 +84,6 @@ void set_window_pos(int x, int y)
     setenv("SDL_VIDEO_WINDOW_POS", buf, 1);
 #endif
 }
-
-#endif
 
 void set_window_siz(int d)
 {
@@ -135,7 +131,7 @@ void init_display(void)
 
 void sync_display(void)
 {
-    int i, j, rank = 0;
+    int i, rank = 0;
 
     /* Find the union of all host exents.  Copy to all hosts. */
 
@@ -164,7 +160,7 @@ void sync_display(void)
     if (gethostname(Host.name, MAXNAME) == 0)
     {
         size_t sz = sizeof (struct host);
-        int size;
+        int j, size;
 
         assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
         assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
@@ -197,7 +193,7 @@ void sync_display(void)
     if (rank == 0 && H_num > 0)
         memcpy(&Host, Hi, sizeof (struct host));
 
-/*  if (rank) set_window_pos(Host.win_x, Host.win_y); */
+    if (rank) set_window_pos(Host.win_x, Host.win_y);
 }
 
 /*---------------------------------------------------------------------------*/

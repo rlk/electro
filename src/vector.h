@@ -15,6 +15,14 @@
 
 /*---------------------------------------------------------------------------*/
 
+struct vector
+{
+    int   num;
+    int   max;
+    int   siz;
+    void *buf;
+};
+
 typedef struct vector *vector_t;
 
 /*---------------------------------------------------------------------------*/
@@ -23,7 +31,8 @@ vector_t vecnew(int, int);
 void     vecdel(vector_t);
 int      vecnum(vector_t);
 int      vecadd(vector_t);
-void    *vecget(vector_t, int);
+
+#define  vecget(V, i) (((char *) V->buf) + (V->siz * i))
 
 /*---------------------------------------------------------------------------*/
 

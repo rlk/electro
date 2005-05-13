@@ -65,11 +65,16 @@ extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 
 /*---------------------------------------------------------------------------*/
 
-void       *opengl_proc(const char *);
-GLboolean   opengl_need(const char *);
-GLfloat     opengl_perf(GLfloat *);
+void      init_opengl(void);
 
-void        init_opengl(void);
+void     *opengl_proc(const char *);
+GLboolean opengl_need(const char *);
+GLfloat   opengl_perf(GLfloat *);
+
+void      opengl_basis_mult(float[3][3]); 
+void      opengl_basis_invt(float[3][3]); 
+GLuint    opengl_frag_prog(const char *);
+GLuint    opengl_vert_prog(const char *);
 
 /*---------------------------------------------------------------------------*/
 

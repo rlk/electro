@@ -148,10 +148,10 @@ static void lua_pushsound(lua_State *L, int id)
 static void script_type_error(const char *type, lua_State *L, int i)
 {
     const char *name = lua_tostring(L, lua_upvalueindex(1));
-    const char *got  = "unknown";
+    const char *got;
 
     if (lua_isuserdata(L, i))
-        got = get_entity_type_name(lua_toentity(L, i));
+        got = entity_name(lua_toentity(L, i));
     else
         got = lua_typename(L, lua_type(L, i));
 

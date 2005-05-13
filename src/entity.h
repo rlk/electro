@@ -38,8 +38,11 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  entity_data(int);
-int  entity_type(int);
+int         entity_data(int);
+int         entity_type(int);
+const char *entity_name(int);
+
+/*---------------------------------------------------------------------------*/
 
 void transform_camera(int, float[16], const float[16],
                            float[16], const float[16], const float[3]);

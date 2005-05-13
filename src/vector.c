@@ -18,16 +18,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-struct vector
-{
-    int   num;
-    int   max;
-    int   siz;
-    void *buf;
-};
-
-/*---------------------------------------------------------------------------*/
-
 vector_t vecnew(int max, int siz)
 {
     vector_t V;
@@ -83,14 +73,6 @@ int vecadd(vector_t V)
         else return -1;
     }
     return V->num++;
-}
-
-void *vecget(vector_t V, int i)
-{
-    assert(V);
-    assert(0 <= i && i < V->max);
-
-    return ((char *) V->buf) + (V->siz * i);
 }
 
 /*---------------------------------------------------------------------------*/
