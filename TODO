@@ -1,3 +1,6 @@
+Ugly code in
+    entity transform
+
 gl state init
 stereo visual
 obj reader fix
@@ -8,6 +11,7 @@ text render of some sort / TTF
 network
 camera offset per tile (for geowall and planar)
 
+Test whether tracking data optimization will pay off.
 Scale and billboard frustum (thorough test)
 camera near/far (automatic using entity bounding sphere?))
 

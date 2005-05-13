@@ -17,19 +17,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-struct sprite
-{
-    int   count;
-    int   state;
-    int   image;
-    float s0;
-    float s1;
-    float t0;
-    float t1;
-};
-
-/*---------------------------------------------------------------------------*/
-
 int  init_sprite(void);
 void draw_sprite(int, int, const float[16],
                            const float[16], const struct frustum *, float);

@@ -23,6 +23,19 @@
 
 /*---------------------------------------------------------------------------*/
 
+struct sprite
+{
+    int   count;
+    int   state;
+    int   image;
+    float s0;
+    float s1;
+    float t0;
+    float t1;
+};
+
+/*---------------------------------------------------------------------------*/
+
 static vector_t S;
 
 #define get_sprite(i) ((struct sprite *) vecget(S, i))

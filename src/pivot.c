@@ -19,17 +19,17 @@
 
 /*---------------------------------------------------------------------------*/
 
-void draw_pivot(int id, int pd, const float M[16],
-                                const float I[16],
-                                const struct frustum *F, float a)
+void draw_pivot(int j, int i, const float M[16],
+                              const float I[16],
+                              const struct frustum *F, float a)
 {
     float N[16];
     float J[16];
 
     glPushMatrix();
     {
-        transform_entity(id, N, M, J, I);
-        draw_entity_list(id, N, J, F, a * get_entity_alpha(id));
+        transform_entity(j, N, M, J, I);
+        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }

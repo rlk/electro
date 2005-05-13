@@ -36,37 +36,7 @@
 #define FLAG_POS_TRACKED_1 0x0080
 #define FLAG_ROT_TRACKED_1 0x0100
 
-struct entity
-{
-    int type;
-    int data;
-    int flag;
-
-    float position[3];
-    float basis[3][3];
-    float scale[3];
-    float alpha;
-
-    char  *frag_text;
-    char  *vert_text;
-    GLuint frag_prog;
-    GLuint vert_prog;
-
-    int car;
-    int cdr;
-    int par;
-};
-
 /*---------------------------------------------------------------------------*/
-
-int buffer_unused(int, int (*)(int));
-
-/*---------------------------------------------------------------------------*/
-
-const char *get_entity_type_name(int);
-const char *get_entity_debug_id(int);
-
-int  entity_exists(int);
 
 int  entity_data(int);
 int  entity_type(int);
