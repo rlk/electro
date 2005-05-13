@@ -36,27 +36,26 @@ struct sprite
 
 /*---------------------------------------------------------------------------*/
 
-static vector_t S;
+static vector_t sprite;
 
-#define get_sprite(i) ((struct sprite *) vecget(S, i))
+#define S(i) ((struct sprite *) vecget(sprite, i))
 
 static int new_sprite(void)
 {
-    int n = vecnum(S);
-    int i;
+    int i, n = vecnum(sprite);
 
     for (i = 0; i < n; ++i)
-        if (get_sprite(i)->count == 0)
+        if (S(i)->count == 0)
             return i;
 
-    return vecadd(S);
+    return vecadd(sprite);
 }
 
 /*---------------------------------------------------------------------------*/
 
 int init_sprite(void)
 {
-    if ((S = vecnew(256, sizeof (struct sprite))))
+    if ((sprite = vecnew(256, sizeof (struct sprite))))
         return 1;
     else
         return 0;
@@ -66,8 +65,6 @@ void draw_sprite(int j, int i, const float M[16],
                                const float I[16],
                                const struct frustum *F, float a)
 {
-    struct sprite *s = get_sprite(i);
-
     init_sprite_gl(i);
 
     glPushAttrib(GL_DEPTH_BUFFER_BIT);
@@ -83,19 +80,19 @@ void draw_sprite(int j, int i, const float M[16],
         /* Draw the image to the color buffer. */
 
         glDepthMask(GL_FALSE);
-        draw_image(s->image);
+        draw_image(S(i)->image);
 
         glColor4f(1.0f, 1.0f, 1.0f, a * get_entity_alpha(j));
 
         glBegin(GL_QUADS);
         {
-            int dx = get_image_w(s->image) / 2;
-            int dy = get_image_h(s->image) / 2;
+            int dx = get_image_w(S(i)->image) / 2;
+            int dy = get_image_h(S(i)->image) / 2;
 
-            glTexCoord2f(s->s0, s->t0); glVertex2i(-dx, -dy);
-            glTexCoord2f(s->s1, s->t0); glVertex2i(+dx, -dy);
-            glTexCoord2f(s->s1, s->t1); glVertex2i(+dx, +dy);
-            glTexCoord2f(s->s0, s->t1); glVertex2i(-dx, +dy);
+            glTexCoord2f(S(i)->s0, S(i)->t0); glVertex2i(-dx, -dy);
+            glTexCoord2f(S(i)->s1, S(i)->t0); glVertex2i(+dx, -dy);
+            glTexCoord2f(S(i)->s1, S(i)->t1); glVertex2i(+dx, +dy);
+            glTexCoord2f(S(i)->s0, S(i)->t1); glVertex2i(-dx, +dy);
         }
         glEnd();
 
@@ -111,23 +108,19 @@ void draw_sprite(int j, int i, const float M[16],
 
 void init_sprite_gl(int i)
 {
-    struct sprite *s = get_sprite(i);
-
-    if (s->state == 0)
+    if (S(i)->state == 0)
     {
-        init_image_gl(s->image);
-        s->state  = 1;
+        init_image_gl(S(i)->image);
+        S(i)->state  = 1;
     }
 }
 
 void free_sprite_gl(int i)
 {
-    struct sprite *s = get_sprite(i);
-
-    if (s->state == 1)
+    if (S(i)->state == 1)
     {
-        free_image_gl(s->image);
-        s->state  = 0;
+        free_image_gl(S(i)->image);
+        S(i)->state  = 0;
     }
 }
 
@@ -139,19 +132,17 @@ int send_create_sprite(const char *filename)
 
     if ((i = new_sprite()) >= 0)
     {
-        struct sprite *s = get_sprite(i);
-
-        s->image = send_create_image(filename);
-        s->count = 1;
-        s->state = 0;
-        s->s0 = 0.0f;
-        s->t0 = 0.0f;
-        s->s1 = 1.0f;
-        s->t1 = 1.0f;
+        S(i)->image = send_create_image(filename);
+        S(i)->count = 1;
+        S(i)->state = 0;
+        S(i)->s0 = 0.0f;
+        S(i)->t0 = 0.0f;
+        S(i)->s1 = 1.0f;
+        S(i)->t1 = 1.0f;
 
         pack_event(EVENT_CREATE_SPRITE);
         pack_index(i);
-        pack_index(s->image);
+        pack_index(S(i)->image);
 
         return send_create_entity(TYPE_SPRITE, i);
     }
@@ -160,15 +151,15 @@ int send_create_sprite(const char *filename)
 
 void recv_create_sprite(void)
 {
-    struct sprite *s = get_sprite(unpack_index());
+    int i = unpack_index();
 
-    s->image = unpack_index();
-    s->count = 1;
-    s->state = 0;
-    s->s0 = 0.0f;
-    s->t0 = 0.0f;
-    s->s1 = 1.0f;
-    s->t1 = 1.0f;
+    S(i)->image = unpack_index();
+    S(i)->count = 1;
+    S(i)->state = 0;
+    S(i)->s0 = 0.0f;
+    S(i)->t0 = 0.0f;
+    S(i)->s1 = 1.0f;
+    S(i)->t1 = 1.0f;
 
     recv_create_entity();
 }
@@ -177,41 +168,39 @@ void recv_create_sprite(void)
 
 void send_set_sprite_bounds(int i, float s0, float s1, float t0, float t1)
 {
-    struct sprite *s = get_sprite(i);
-
     pack_event(EVENT_SET_SPRITE_BOUNDS);
     pack_index(i);
-    pack_float((s->s0 = s0));
-    pack_float((s->s1 = s1));
-    pack_float((s->t0 = t0));
-    pack_float((s->t1 = t1));
+    pack_float((S(i)->s0 = s0));
+    pack_float((S(i)->s1 = s1));
+    pack_float((S(i)->t0 = t0));
+    pack_float((S(i)->t1 = t1));
 }
 
 void recv_set_sprite_bounds(void)
 {
-    struct sprite *s = get_sprite(unpack_index());
+    int i = unpack_index();
 
-    s->s0 = unpack_float();
-    s->s1 = unpack_float();
-    s->t0 = unpack_float();
-    s->t1 = unpack_float();
+    S(i)->s0 = unpack_float();
+    S(i)->s1 = unpack_float();
+    S(i)->t0 = unpack_float();
+    S(i)->t1 = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/
 
 void get_sprite_p(int i, int x, int y, unsigned char p[4])
 {
-    get_image_p(get_sprite(i)->image, x, y, p);
+    get_image_p(S(i)->image, x, y, p);
 }
 
 int get_sprite_w(int i)
 {
-    return get_image_w(get_sprite(i)->image);
+    return get_image_w(S(i)->image);
 }
 
 int get_sprite_h(int i)
 {
-    return get_image_h(get_sprite(i)->image);
+    return get_image_h(S(i)->image);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -219,12 +208,12 @@ int get_sprite_h(int i)
 
 void clone_sprite(int i)
 {
-    get_sprite(i)->count++;
+    S(i)->count++;
 }
 
 void delete_sprite(int i)
 {
-    if (--get_sprite(i)->count == 0)
+    if (--S(i)->count == 0)
         free_sprite_gl(i);
 }
 

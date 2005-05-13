@@ -66,8 +66,7 @@ static vector_t entity;
 
 static int new_entity(void)
 {
-    int n = vecnum(entity);
-    int i;
+    int i, n = vecnum(entity);
 
     for (i = 0; i < n; ++i)
         if (E(i)->type == 0)
