@@ -17,19 +17,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-struct image
-{
-    int    state;
-    GLuint texture;
-    char  *filename;
-    void  *p;
-    int    w;
-    int    h;
-    int    b;
-};
-
-/*---------------------------------------------------------------------------*/
-
 GLuint make_texture(const void *, int,   int,   int);
 void  *load_image  (const char *, int *, int *, int *);
 

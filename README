@@ -25,11 +25,11 @@
     To run Asteroids on nico:
 
         $ cd /usr/local/Electro/examples/asteroids
-        $ electro-nico asteroids.lua
+        $ electro-nico -f asteroids.lua
 
     Applications may be run in standalone mode in the same fashion:
 
-        $ electro asteroids.lua
+        $ electro -f asteroids.lua
 
 
 * Usage

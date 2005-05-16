@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "vector.h"
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
@@ -21,155 +22,148 @@
 #include "light.h"
 
 /*---------------------------------------------------------------------------*/
-/* Light entity storage                                                     */
 
-#define LMAXINIT 8
-
-static struct light *L;
-static int           L_max;
-
-static int light_exists(int ld)
+struct light
 {
-    return (L && 0 <= ld && ld < L_max && L[ld].count);
-}
+    int   count;
+    int   type;
+    float d[4];
+};
 
-static int alloc_light(void)
+static vector_t light;
+
+/*---------------------------------------------------------------------------*/
+
+#define L(i) ((struct light *) vecget(light, i))
+
+static int new_light(void)
 {
-    int ld = -1;
+    int i, n = vecnum(light);
 
-    L = (struct light *) balloc(L, &ld, &L_max,
-                                sizeof (struct light), light_exists);
-    return ld;
+    for (i = 0; i < n; ++i)
+        if (L(i)->count == 0)
+            return i;
+
+    return vecadd(light);
 }
 
 /*---------------------------------------------------------------------------*/
 
 int init_light(void)
 {
-    if ((L = (struct light *) calloc(8, sizeof (struct light))))
-    {
-        L_max = 8;
+    if ((light = vecnew(8, sizeof (struct light))))
         return 1;
-    }
-    return 0;
+    else
+        return 0;
 }
 
-void draw_light(int id, int ld, const float M[16],
-                                const float I[16],
-                                const struct frustum *F, float a)
+void draw_light(int j, int i, const float M[16],
+                              const float I[16],
+                              const struct frustum *F, float a)
 {
-    if (light_exists(ld))
+    glPushAttrib(GL_ENABLE_BIT);
+    glPushMatrix();
     {
-        glPushAttrib(GL_ENABLE_BIT);
-        glPushMatrix();
-        {
-            float N[16];
-            float J[16];
+        float N[16];
+        float J[16];
+        float p[4];
 
-            GLenum light = GL_LIGHT0 + ld;
-            GLfloat p[4];
+        GLenum o = GL_LIGHT0 + i;
 
-            transform_entity(id, N, M, J, I);
+        transform_entity(j, N, M, J, I);
 
-            /* Determine the homogenous coordinate lightsource position. */
+        /* Determine the homogenous coordinate lightsource position. */
 
-            get_entity_position(id, p);
+        get_entity_position(j, p);
 
-            if (L[ld].type == LIGHT_POSITIONAL)  p[3] = 1.0f;
-            if (L[ld].type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
+        if (L(i)->type == LIGHT_POSITIONAL)  p[3] = 1.0f;
+        if (L(i)->type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
 
-            /* Enable this light and render all child entities. */
+        /* Enable this light and render all child entities. */
 
-            glEnable(GL_LIGHTING);
-            glEnable(light);
+        glEnable(GL_LIGHTING);
+        glEnable(o);
         
-            glLightfv(light, GL_DIFFUSE, L[ld].d);
-            glLightfv(light, GL_POSITION, p);
+        glLightfv(o, GL_DIFFUSE,  L(i)->d);
+        glLightfv(o, GL_POSITION, p);
 
-            draw_entity_list(id, N, J, F, a * get_entity_alpha(id));
-        }
-        glPopMatrix();
-        glPopAttrib();
+        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
     }
+    glPopMatrix();
+    glPopAttrib();
 }
 
 /*---------------------------------------------------------------------------*/
 
 int send_create_light(int type)
 {
-    int ld;
+    int i;
 
-    if (L && (ld = alloc_light()) >= 0)
+    if ((i = new_light()) >= 0)
     {
         pack_event(EVENT_CREATE_LIGHT);
-        pack_index(ld);
+        pack_index(i);
         pack_index(type);
 
-        L[ld].count = 1;
-        L[ld].type  = type;
-        L[ld].d[0]  = 1.0f;
-        L[ld].d[1]  = 1.0f;
-        L[ld].d[2]  = 1.0f;
-        L[ld].d[3]  = 1.0f;
+        L(i)->count = 1;
+        L(i)->type  = type;
+        L(i)->d[0]  = 1.0f;
+        L(i)->d[1]  = 1.0f;
+        L(i)->d[2]  = 1.0f;
+        L(i)->d[3]  = 1.0f;
 
-        return send_create_entity(TYPE_LIGHT, ld);
+        return send_create_entity(TYPE_LIGHT, i);
     }
     return -1;
 }
 
 void recv_create_light(void)
 {
-    int ld = unpack_index();
+    int i = unpack_index();
 
-    L[ld].count = 1;
-    L[ld].type  = unpack_index();
-    L[ld].d[0]  = 1.0f;
-    L[ld].d[1]  = 1.0f;
-    L[ld].d[2]  = 1.0f;
-    L[ld].d[3]  = 1.0f;
+    L(i)->count = 1;
+    L(i)->type  = unpack_index();
+    L(i)->d[0]  = 1.0f;
+    L(i)->d[1]  = 1.0f;
+    L(i)->d[2]  = 1.0f;
+    L(i)->d[3]  = 1.0f;
 
     recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_light_color(int ld, float r, float g, float b)
+void send_set_light_color(int i, float r, float g, float b)
 {
     pack_event(EVENT_SET_LIGHT_COLOR);
-    pack_index(ld);
+    pack_index(i);
 
-    pack_float((L[ld].d[0] = r));
-    pack_float((L[ld].d[1] = g));
-    pack_float((L[ld].d[2] = b));
+    pack_float((L(i)->d[0] = r));
+    pack_float((L(i)->d[1] = g));
+    pack_float((L(i)->d[2] = b));
 }
 
 void recv_set_light_color(void)
 {
-    int ld = unpack_index();
+    int i = unpack_index();
 
-    L[ld].d[0] = unpack_float();
-    L[ld].d[1] = unpack_float();
-    L[ld].d[2] = unpack_float();
+    L(i)->d[0] = unpack_float();
+    L(i)->d[1] = unpack_float();
+    L(i)->d[2] = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/
 /* These may only be called by create_clone and delete_entity, respectively. */
 
-void clone_light(int ld)
+void clone_light(int i)
 {
-    if (light_exists(ld))
-        L[ld].count++;
+    L(i)->count++;
 }
 
-void delete_light(int ld)
+void delete_light(int i)
 {
-    if (light_exists(ld))
-    {
-        L[ld].count--;
-
-        if (L[ld].count == 0)
-            memset(L + ld, 0, sizeof (struct light));
-    }
+    if (--L(i)->count == 0)
+        memset(L(i), 0, sizeof (struct light));
 }
 
 /*---------------------------------------------------------------------------*/

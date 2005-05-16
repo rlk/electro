@@ -48,14 +48,14 @@ void vecdel(vector_t V)
     free(V);
 }
 
-/*---------------------------------------------------------------------------*/
-
-int vecnum(vector_t V)
+void vecclr(vector_t V)
 {
     assert(V);
 
-    return V->num;
+    V->num = 0;
 }
+
+/*---------------------------------------------------------------------------*/
 
 int vecadd(vector_t V)
 {

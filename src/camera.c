@@ -15,6 +15,7 @@
 #include <math.h>
 
 #include "opengl.h"
+#include "vector.h"
 #include "matrix.h"
 #include "buffer.h"
 #include "entity.h"
@@ -27,53 +28,63 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define CMAXINIT 8
-
-static struct camera *C;
-static int            C_max;
-
-static int camera_exists(int cd)
+struct camera
 {
-    return (C && 0 <= cd && cd < C_max && C[cd].count);
-}
+    int   count;
+    int   type;
+    int   mode;
+    
+    float eye_offset[3];
+    float pos_offset[3];
+    float view_basis[3][3];
 
-static int alloc_camera(void)
+    float near;
+    float far;
+};
+
+static vector_t camera;
+
+/*---------------------------------------------------------------------------*/
+
+#define C(i) ((struct camera *) vecget(camera, i))
+
+static int new_camera(void)
 {
-    int cd = -1;
+    int i, n = vecnum(camera);
 
-    C = (struct camera *) balloc(C, &cd, &C_max,
-                                 sizeof (struct camera), camera_exists);
-    return cd;
+    for (i = 0; i < n; ++i)
+        if (C(i)->count == 0)
+            return i;
+
+    return vecadd(camera);
 }
 
 /*---------------------------------------------------------------------------*/
 
 int init_camera(void)
 {
-    if ((C = (struct camera *) calloc(CMAXINIT, sizeof (struct camera))))
-    {
-        C_max = CMAXINIT;
+    if ((camera = vecnew(4, sizeof (struct camera))))
         return 1;
-    }
-    return 0;
+    else
+        return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int draw_tile(int cd, const float d[3], struct frustum *F, int i)
+static int draw_tile(int i, const float d[3], struct frustum *F, int k)
 {
-    if (C[cd].type == CAMERA_PERSP)
-        return draw_persp(F, d, 0.1f, 10000.f, i);
+    if (C(i)->type == CAMERA_PERSP)
+        return draw_persp(F, d, C(i)->near, C(i)->far, k);
 
-    if (C[cd].type == CAMERA_ORTHO)
-        return draw_ortho(F, -1000.f, 1000.f, i);
+    if (C(i)->type == CAMERA_ORTHO)
+        return draw_ortho(F,    C(i)->near, C(i)->far, k);
 
     return 0;
 }
 
-void draw_camera_eye(int id, int cd, const float M[16],
-                                     const float I[16],
-                                     const struct frustum *F, float a, int e)
+void draw_camera_eye(int j, int i, const float M[16],
+                                   const float I[16],
+                                   const struct frustum *F, float a, int e)
 {
     struct frustum G;
 
@@ -81,172 +92,167 @@ void draw_camera_eye(int id, int cd, const float M[16],
     float J[16];
     float d[3];
 
-    int i = 0;
+    int k = 0;
 
-    d[0] = (C[cd].eye_offset[0] * C[cd].view_basis[0][0] * e +
-            C[cd].eye_offset[1] * C[cd].view_basis[1][0]     +
-            C[cd].eye_offset[2] * C[cd].view_basis[2][0]) +C[cd].pos_offset[0];
-    d[1] = (C[cd].eye_offset[0] * C[cd].view_basis[0][1] * e +
-            C[cd].eye_offset[1] * C[cd].view_basis[1][1]     +
-            C[cd].eye_offset[2] * C[cd].view_basis[2][1]) +C[cd].pos_offset[1];
-    d[2] = (C[cd].eye_offset[0] * C[cd].view_basis[0][2] * e +
-            C[cd].eye_offset[1] * C[cd].view_basis[1][2]     +
-            C[cd].eye_offset[2] * C[cd].view_basis[2][2]) +C[cd].pos_offset[2];
+    d[0] = (C(i)->eye_offset[0] * C(i)->view_basis[0][0] * e +
+            C(i)->eye_offset[1] * C(i)->view_basis[1][0]     +
+            C(i)->eye_offset[2] * C(i)->view_basis[2][0]) +C(i)->pos_offset[0];
+    d[1] = (C(i)->eye_offset[0] * C(i)->view_basis[0][1] * e +
+            C(i)->eye_offset[1] * C(i)->view_basis[1][1]     +
+            C(i)->eye_offset[2] * C(i)->view_basis[2][1]) +C(i)->pos_offset[1];
+    d[2] = (C(i)->eye_offset[0] * C(i)->view_basis[0][2] * e +
+            C(i)->eye_offset[1] * C(i)->view_basis[1][2]     +
+            C(i)->eye_offset[2] * C(i)->view_basis[2][2]) +C(i)->pos_offset[2];
 
-    while ((i = draw_tile(cd, d, &G, i)))
+    while ((k = draw_tile(i, d, &G, k)))
     {
         G.p[0] = 0.0f;
         G.p[1] = 0.0f;
         G.p[2] = 0.0f;
         G.p[3] = 1.0f;
 
-        transform_camera(id, N, M, J, I, d);
+        transform_camera(j, N, M, J, I, d);
 
         /* Render all children using this camera. */
 
-        enable_stereo(C[cd].mode, e);
+        enable_stereo(C(i)->mode, e);
         {
-            draw_entity_list(id, N, J, &G, a * get_entity_alpha(id));
+            draw_entity_list(j, N, J, &G, a * get_entity_alpha(j));
         }
-        disable_stereo(C[cd].mode);
+        disable_stereo(C(i)->mode);
     }
 }
 
-void draw_camera(int id, int cd, const float M[16],
-                                 const float I[16],
-                                 const struct frustum *F, float a)
+void draw_camera(int j, int i, const float M[16],
+                               const float I[16],
+                               const struct frustum *F, float a)
 {
-    if (camera_exists(cd))
-    {
-        /* If drawing in stereo, render each eye separately. */
+    /* If drawing in stereo, render each eye separately. */
 
-        if (C[cd].mode)
-        {
-            draw_camera_eye(id, cd, M, I, F, a, -1);
-            draw_camera_eye(id, cd, M, I, F, a, +1);
-        }
-        else
-            draw_camera_eye(id, cd, M, I, F, a,  0);
+    if (C(i)->mode)
+    {
+        draw_camera_eye(j, i, M, I, F, a, -1);
+        draw_camera_eye(j, i, M, I, F, a, +1);
     }
+    else
+        draw_camera_eye(j, i, M, I, F, a,  0);
 }
 
 /*---------------------------------------------------------------------------*/
 
 int send_create_camera(int t)
 {
-    int cd;
+    int i;
 
-    if (C && (cd = alloc_camera()) >= 0)
+    if ((i = new_camera()) >= 0)
     {
         pack_event(EVENT_CREATE_CAMERA);
-        pack_index(cd);
+        pack_index(i);
         pack_index(t);
 
-        C[cd].count = 1;
-        C[cd].type  = t;
+        C(i)->count = 1;
+        C(i)->type  = t;
+        C(i)->near  = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
+        C(i)->far   = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
 
-        return send_create_entity(TYPE_CAMERA, cd);
+        return send_create_entity(TYPE_CAMERA, i);
     }
     return -1;
 }
 
 void recv_create_camera(void)
 {
-    int cd = unpack_index();
-    int t  = unpack_index();
+    int i = unpack_index();
+    int t = unpack_index();
 
-    C[cd].count = 1;
-    C[cd].type  = t;
+    C(i)->count = 1;
+    C(i)->type  = t;
+    C(i)->near  = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
+    C(i)->far   = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
 
     recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_camera_offset(int cd, const float p[3], float e[3][3])
+void send_set_camera_offset(int i, const float p[3], float e[3][3])
 {
     pack_event(EVENT_SET_CAMERA_OFFSET);
-    pack_index(cd);
+    pack_index(i);
 
-    pack_float((C[cd].pos_offset[0]    = p[0]));
-    pack_float((C[cd].pos_offset[1]    = p[1]));
-    pack_float((C[cd].pos_offset[2]    = p[2]));
+    pack_float((C(i)->pos_offset[0]    = p[0]));
+    pack_float((C(i)->pos_offset[1]    = p[1]));
+    pack_float((C(i)->pos_offset[2]    = p[2]));
 
-    pack_float((C[cd].view_basis[0][0] = e[0][0]));
-    pack_float((C[cd].view_basis[0][1] = e[0][1]));
-    pack_float((C[cd].view_basis[0][2] = e[0][2]));
+    pack_float((C(i)->view_basis[0][0] = e[0][0]));
+    pack_float((C(i)->view_basis[0][1] = e[0][1]));
+    pack_float((C(i)->view_basis[0][2] = e[0][2]));
 
-    pack_float((C[cd].view_basis[1][0] = e[1][0]));
-    pack_float((C[cd].view_basis[1][1] = e[1][1]));
-    pack_float((C[cd].view_basis[1][2] = e[1][2]));
+    pack_float((C(i)->view_basis[1][0] = e[1][0]));
+    pack_float((C(i)->view_basis[1][1] = e[1][1]));
+    pack_float((C(i)->view_basis[1][2] = e[1][2]));
 
-    pack_float((C[cd].view_basis[2][0] = e[2][0]));
-    pack_float((C[cd].view_basis[2][1] = e[2][1]));
-    pack_float((C[cd].view_basis[2][2] = e[2][2]));
+    pack_float((C(i)->view_basis[2][0] = e[2][0]));
+    pack_float((C(i)->view_basis[2][1] = e[2][1]));
+    pack_float((C(i)->view_basis[2][2] = e[2][2]));
 }
 
 void recv_set_camera_offset(void)
 {
-    int cd = unpack_index();
+    int i = unpack_index();
 
-    C[cd].pos_offset[0]    = unpack_float();
-    C[cd].pos_offset[1]    = unpack_float();
-    C[cd].pos_offset[2]    = unpack_float();
+    C(i)->pos_offset[0]    = unpack_float();
+    C(i)->pos_offset[1]    = unpack_float();
+    C(i)->pos_offset[2]    = unpack_float();
 
-    C[cd].view_basis[0][0] = unpack_float();
-    C[cd].view_basis[0][1] = unpack_float();
-    C[cd].view_basis[0][2] = unpack_float();
+    C(i)->view_basis[0][0] = unpack_float();
+    C(i)->view_basis[0][1] = unpack_float();
+    C(i)->view_basis[0][2] = unpack_float();
 
-    C[cd].view_basis[1][0] = unpack_float();
-    C[cd].view_basis[1][1] = unpack_float();
-    C[cd].view_basis[1][2] = unpack_float();
+    C(i)->view_basis[1][0] = unpack_float();
+    C(i)->view_basis[1][1] = unpack_float();
+    C(i)->view_basis[1][2] = unpack_float();
 
-    C[cd].view_basis[2][0] = unpack_float();
-    C[cd].view_basis[2][1] = unpack_float();
-    C[cd].view_basis[2][2] = unpack_float();
+    C(i)->view_basis[2][0] = unpack_float();
+    C(i)->view_basis[2][1] = unpack_float();
+    C(i)->view_basis[2][2] = unpack_float();
  }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_camera_stereo(int cd, const float v[3], int mode)
+void send_set_camera_stereo(int i, const float v[3], int mode)
 {
     pack_event(EVENT_SET_CAMERA_STEREO);
-    pack_index(cd);
+    pack_index(i);
 
-    pack_index((C[cd].mode          = mode));
-    pack_float((C[cd].eye_offset[0] = v[0]));
-    pack_float((C[cd].eye_offset[1] = v[1]));
-    pack_float((C[cd].eye_offset[2] = v[2]));
+    pack_index((C(i)->mode          = mode));
+    pack_float((C(i)->eye_offset[0] = v[0]));
+    pack_float((C(i)->eye_offset[1] = v[1]));
+    pack_float((C(i)->eye_offset[2] = v[2]));
 }
 
 void recv_set_camera_stereo(void)
 {
-    int cd = unpack_index();
+    int i = unpack_index();
 
-    C[cd].mode          = unpack_index();
-    C[cd].eye_offset[0] = unpack_float();
-    C[cd].eye_offset[1] = unpack_float();
-    C[cd].eye_offset[2] = unpack_float();
+    C(i)->mode          = unpack_index();
+    C(i)->eye_offset[0] = unpack_float();
+    C(i)->eye_offset[1] = unpack_float();
+    C(i)->eye_offset[2] = unpack_float();
 }
 
 /*---------------------------------------------------------------------------*/
 /* These may only be called by create_clone and delete_entity, respectively. */
 
-void clone_camera(int cd)
+void clone_camera(int i)
 {
-    if (camera_exists(cd))
-        C[cd].count++;
+    C(i)->count++;
 }
 
-void delete_camera(int cd)
+void delete_camera(int i)
 {
-    if (camera_exists(cd))
-    {
-        C[cd].count--;
-
-        if (C[cd].count == 0)
-            memset(C + cd, 0, sizeof (struct camera));
-    }
+    if (--C(i)->count == 0)
+        memset(C(i), 0, sizeof (struct camera));
 }
 
 /*---------------------------------------------------------------------------*/

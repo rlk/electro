@@ -20,13 +20,6 @@
 #define LIGHT_POSITIONAL  1
 #define LIGHT_DIRECTIONAL 2
 
-struct light
-{
-    int   count;
-    int   type;
-    float d[4];
-};
-
 /*---------------------------------------------------------------------------*/
 
 int  init_light(void);

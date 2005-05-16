@@ -13,23 +13,12 @@
 #ifndef SOUND_H
 #define SOUND_H
 
-#include <vorbis/codec.h>
-#include <vorbis/vorbisfile.h>
-
 /*---------------------------------------------------------------------------*/
 
 #define SOUND_NULL 0
 #define SOUND_STOP 1
 #define SOUND_PLAY 2
 #define SOUND_LOOP 3
-
-struct sound
-{
-    int   mode;
-    int   chan;
-
-    OggVorbis_File file;
-};
 
 /*---------------------------------------------------------------------------*/
 

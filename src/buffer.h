@@ -13,6 +13,8 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include "vector.h"
+
 /*---------------------------------------------------------------------------*/
 
 void  init_buffer(void);
@@ -21,7 +23,16 @@ void  sync_buffer(void);
 
 /*---------------------------------------------------------------------------*/
 
-void  pack_alloc(int, const void *);
+void *unpack_alloc(int);
+void    pack_alloc(int, const void *);
+
+/*---------------------------------------------------------------------------*/
+
+vector_t unpack_vector(void);
+void       pack_vector(vector_t);
+
+/*---------------------------------------------------------------------------*/
+
 void  pack_index(int);
 void  pack_event(char);
 void  pack_float(float);
@@ -30,10 +41,9 @@ void  pack_float(float);
 
 int   unpack_count(void);
 
-void *unpack_alloc(int);
-int   unpack_index(void);
-char  unpack_event(void);
-float unpack_float(void);
+int      unpack_index(void);
+char     unpack_event(void);
+float    unpack_float(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -10,11 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
-#include <sys/stat.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -50,8 +46,10 @@ void *memdup(const void *src, size_t num, size_t len)
 /* File path parsing                                                         */
 
 #ifdef _WIN32
+#define FILESEP "\\"
 #define is_sep(c) ((c) == '/' || (c) == '\\')
 #else
+#define FILESEP "/"
 #define is_sep(c) ((c) == '/')
 #endif
 
@@ -96,6 +94,63 @@ const char *get_file_name(const char *file)
 }
 
 /*---------------------------------------------------------------------------*/
+
+static char filepath[MAXSTR];
+
+void open_path(const char *path)
+{
+    strncpy(filepath, path, MAXSTR);
+}
+
+int stat_file(const char *filename, struct stat *buf)
+{
+    char pathname[MAXSTR];
+    int r;
+
+    /* Search for the file in the current working directory. */
+
+    if ((r = stat(filename, buf)) == 0)
+        return 0;
+
+    /* Search for the file at the current default path. */
+
+    strncpy(pathname, filepath, MAXSTR);
+    strncat(pathname, FILESEP,  MAXSTR);
+    strncat(pathname, filename, MAXSTR);
+
+    if ((r = stat(pathname, buf)) == 0)
+        return 0;
+
+    /* Can't find it.  Punt. */
+
+    return r;
+}
+
+FILE *open_file(const char *filename, const char *mode)
+{
+    char pathname[MAXSTR];
+    FILE *fp;
+
+    /* Search for the file in the current working directory. */
+
+    if ((fp = fopen(filename, mode)))
+        return fp;
+
+    /* Search for the file at the current default path. */
+
+    strncpy(pathname, filepath, MAXSTR);
+    strncat(pathname, FILESEP,  MAXSTR);
+    strncat(pathname, filename, MAXSTR);
+
+    if ((fp = fopen(pathname, mode)))
+        return fp;
+
+    /* Can't find it.  Punt. */
+
+    return NULL;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Byte order float handlers                                                 */
 
 union swapper
@@ -122,31 +177,6 @@ float ntohf(float f)
     s.l = ntohl(s.l);
 
     return s.f;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void *balloc(void *buf, int *id, int *len, size_t siz, int (*occupied)(int))
-{
-    void *ptr = buf;
-
-    /* Scan for an unused vector element. */
-
-    for (*id = 0; *id < *len; (*id)++)
-        if (!occupied(*id))
-            return buf;
-
-    /* The vector is full.  Reallocate it at double size. */
-
-    if ((ptr = realloc(buf, (*len) * 2 * siz)))
-    {
-        *id  = *len;
-        *len = *len * 2;
-
-        memset((unsigned char *) ptr + (*len) * siz, 0, (*len) * siz);
-    }
-
-    return ptr;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -187,9 +217,9 @@ char *alloc_text(const char *filename)
     char *txt = NULL;
     FILE *fp  = NULL;
 
-    if (stat(filename, &buf) == 0)
+    if (stat_file(filename, &buf) == 0)
     {
-        if ((fp = fopen(filename, "r")))
+        if ((fp = open_file(filename, "r")))
         {
             if ((txt = (char *) calloc(buf.st_size + 1, 1)))
                 fread(txt, 1, buf.st_size + 1, fp);

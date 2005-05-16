@@ -22,6 +22,7 @@
 #include "buffer.h"
 #include "script.h"
 #include "entity.h"
+#include "galaxy.h"
 #include "utility.h"
 #include "sound.h"
 #include "image.h"
@@ -97,6 +98,9 @@ static void init_server(void)
     glEnable(GL_NORMALIZE);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
+
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
+                  GL_SEPARATE_SPECULAR_COLOR);
 
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -321,16 +325,46 @@ static int server_loop(void)
 
 /*---------------------------------------------------------------------------*/
 
+void parse_args(int argc, char *argv[])
+{
+    int i, c = 1;
+
+    /* Scan the list for Lua script arguments. */
+
+    for (i = 1; i < argc; ++i)
+        if      (strcmp(argv[i], "-f") == 0) i += 1;
+        else if (strcmp(argv[i], "-H") == 0) i += 2;
+        else if (strcmp(argv[i], "-T") == 0) i += 2;
+        else
+            add_argument(c++, argv[i]);
+
+    /* Scan the list for Electro arguments. */
+
+    for (i = 1; i < argc; ++i)
+        if      (strcmp(argv[i], "-f") == 0)
+        {
+            load_script(argv[++i]);
+        }
+
+        else if (strcmp(argv[i], "-T") == 0)
+        {
+            const char *dat = argv[++i];
+            const char *gal = argv[++i];
+
+            prep_tyc_galaxy(dat, gal);
+        }
+
+        else if (strcmp(argv[i], "-H") == 0)
+        {
+            const char *dat = argv[++i];
+            const char *gal = argv[++i];
+
+            prep_hip_galaxy(dat, gal);
+        }
+}
+
 void server(int argc, char *argv[])
 {
-    int argi;
-    int argj;
-
-#ifdef PREP_GALAXY
-    prep_tyc_galaxy();
-    prep_hip_galaxy();
-#endif
-
     if (init_script())
     {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK |
@@ -341,38 +375,24 @@ void server(int argc, char *argv[])
             init_console(CONSOLE_COLS, CONSOLE_ROWS);
             init_display();
             init_tracker();
-            init_joystick();
             init_buffer();
             init_sound();
             init_image();
             init_entity();
+            init_joystick();
 
-            /* Handle all command line parameters. */
-
-            for (argj = 1; argj < argc; argj++)
-                if (strcmp(argv[argj], "--") == 0)
-                {
-                    load_args(argc - argj - 1, argv + argj + 1);
-                    break;
-                }
-
-            for (argi = 1; argi < argj; argi++)
-                load_script(argv[argi], (argi + 1 < argj));
-
-            /* Initialize the main server window. */
-
+            parse_args(argc, argv);
             sync_display();
 
             if (init_video(get_window_w(),
                            get_window_h(), server_full))
             {
                 SDL_EnableUNICODE(1);
-
-                /* Block on SDL events.  Service them as they arrive. */
-
                 SDL_PauseAudio(0);
 
                 grab(1);
+
+                /* Block on SDL events.  Service them as they arrive. */
 
                 while (SDL_WaitEvent(NULL))
                     if (server_loop() == 0)

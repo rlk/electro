@@ -15,6 +15,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "vector.h"
+#include "buffer.h"
 #include "utility.h"
 
 /*---------------------------------------------------------------------------*/
@@ -67,6 +69,38 @@ void sync_buffer(void)
 #endif
 
     pos = 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void pack_vector(vector_t V)
+{
+    int num = vecnum(V);
+    int siz = vecsiz(V);
+
+    pack_index(num);
+    pack_index(siz);
+
+    memcpy(buf + pos, vecget(V, 0), num * siz);
+    pos += (num * siz);
+
+    assert(pos < max);
+}
+
+vector_t unpack_vector(void)
+{
+    vector_t V;
+
+    int num = unpack_index();
+    int siz = unpack_index();
+
+    if ((V = vecnew(num, siz)))
+    {
+         memcpy(vecget(V, 0), buf + pos, num * siz);
+         pos += siz;
+    }
+
+    return V;
 }
 
 /*---------------------------------------------------------------------------*/

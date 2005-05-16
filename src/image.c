@@ -12,15 +12,46 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <png.h>
 #include <jpeglib.h>
+#include <png.h>
 
-#include "utility.h"
 #include "opengl.h"
+#include "vector.h"
 #include "buffer.h"
+#include "utility.h"
 #include "entity.h"
 #include "event.h"
 #include "image.h"
+
+/*---------------------------------------------------------------------------*/
+
+struct image
+{
+    int    state;
+    GLuint texture;
+    char  *filename;
+    void  *p;
+    int    w;
+    int    h;
+    int    b;
+};
+
+static vector_t image;
+
+/*---------------------------------------------------------------------------*/
+
+#define I(i) ((struct image *) vecget(image, i))
+
+static int new_image(void)
+{
+    int i, n = vecnum(image);
+
+    for (i = 0; i < n; ++i)
+        if (I(i)->filename == 0)
+            return i;
+
+    return vecadd(image);
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -33,8 +64,6 @@ static int power_of_two(int n)
 
     return i;
 }
-
-/*---------------------------------------------------------------------------*/
 
 GLuint make_texture(const void *p, int w, int h, int b)
 {
@@ -103,7 +132,7 @@ void *load_png_image(const char *filename, int *width,
 
     /* Initialize all PNG import data structures. */
 
-    if (!(fp = fopen(filename, FMODE_RB)))
+    if (!(fp = open_file(filename, FMODE_RB)))
         return error("PNG file '%s': %s", filename, system_error());
 
     if (!(readp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
@@ -176,7 +205,7 @@ void *load_jpg_image(const char *filename, int *width,
     GLubyte *p = NULL;
     FILE   *fp;
 
-    if ((fp = fopen(filename, FMODE_RB)))
+    if ((fp = open_file(filename, FMODE_RB)))
     {
         struct jpeg_decompress_struct cinfo;
         struct jpeg_error_mgr         jerr;
@@ -224,52 +253,32 @@ void *load_jpg_image(const char *filename, int *width,
 
 /*---------------------------------------------------------------------------*/
 
-#define IMAXINIT 256
-
-static struct image *I;
-static int           I_max;
-
-static int image_exists(int id)
-{
-    return (I && 0 <= id && id < I_max && I[id].filename);
-}
-
-static int alloc_image(void)
-{
-    int id = -1;
-
-    I = (struct image *) balloc(I, &id, &I_max,
-                                 sizeof (struct image), image_exists);
-    return id;
-}
-
-/*---------------------------------------------------------------------------*/
-
 int init_image(void)
 {
-    if ((I = (struct image *) calloc(IMAXINIT, sizeof (struct image))))
-    {
-        I[0].filename = "default";
-        I[0].texture  =   0;
-        I[0].w        = 128;
-        I[0].h        = 128;
-        I[0].b        =   3;
+    int i;
 
-        I_max = IMAXINIT;
+    if ((image = vecnew(256, sizeof (struct image))))
+    {
+        if ((i = new_image()) >= 0)
+        {
+            I(i)->filename = "null";
+            I(i)->texture  =      0;
+            I(i)->state    =      1;
+            I(i)->p        =   NULL;
+            I(i)->w        =    128;
+            I(i)->h        =    128;
+            I(i)->b        =      3;
+        }
         return 1;
     }
-    return 0;
+    else
+        return 0;
 }
 
-void draw_image(int id)
+void draw_image(int i)
 {
-    if (image_exists(id))
-    {
-        init_image_gl(id);
-        glBindTexture(GL_TEXTURE_2D, I[id].texture);
-    }
-    else
-        glBindTexture(GL_TEXTURE_2D, 0);
+    init_image_gl(i);
+    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
 }
 
 void *load_image(const char *filename, int *width,
@@ -289,24 +298,24 @@ void *load_image(const char *filename, int *width,
 
 /*---------------------------------------------------------------------------*/
 
-void init_image_gl(int id)
+void init_image_gl(int i)
 {
-    if (id && I[id].state == 0)
+    if (i && I(i)->state == 0)
     {
-        I[id].texture = make_texture(I[id].p, I[id].w, I[id].h, I[id].b);
-        I[id].state   = 1;
+        I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
+        I(i)->state   = 1;
     }
 }
 
-void free_image_gl(int id)
+void free_image_gl(int i)
 {
-    if (id && I[id].state == 1)
+    if (i && I(i)->state == 1)
     {
-        if (glIsTexture(I[id].texture))
-            glDeleteTextures(1, &I[id].texture);
+        if (glIsTexture(I(i)->texture))
+            glDeleteTextures(1, &I(i)->texture);
         
-        I[id].texture = 0;
-        I[id].state   = 0;
+        I(i)->texture = 0;
+        I(i)->state   = 0;
     }
 }
 
@@ -314,35 +323,34 @@ void free_image_gl(int id)
 
 int send_create_image(const char *filename)
 {
-    int id;
+    int i, n = vecnum(image);
 
     /* Scan the current images for an existing instance of the named file. */
 
-    for (id = 0; id < IMAXINIT; ++id)
-        if (I[id].filename && strcmp(I[id].filename, filename) == 0)
-            return id;
+    for (i = 0; i < n; ++i)
+        if (I(i)->filename && strcmp(I(i)->filename, filename) == 0)
+            return i;
 
     /* Didn't find it.  It's new. */
 
-    if (I && (id = alloc_image()) >= 0)
+    if ((i = new_image()) >= 0)
     {
         /* Note the file name. */
 
-        if ((I[id].filename = (char *) calloc(strlen(filename) + 1, 1)))
-            strcpy(I[id].filename, filename);
+        I(i)->filename = memdup(filename, 1, strlen(filename) + 1);
 
         /* Load and pack the image. */
 
-        if ((I[id].p = load_image(filename, &I[id].w, &I[id].h, &I[id].b)))
+        if ((I(i)->p = load_image(filename, &I(i)->w, &I(i)->h, &I(i)->b)))
         {
             pack_event(EVENT_CREATE_IMAGE);
-            pack_index(id);
-            pack_index(I[id].w);
-            pack_index(I[id].h);
-            pack_index(I[id].b);
-            pack_alloc(I[id].w * I[id].h * I[id].b, I[id].p);
+            pack_index(i);
+            pack_index(I(i)->w);
+            pack_index(I(i)->h);
+            pack_index(I(i)->b);
+            pack_alloc(I(i)->w * I(i)->h * I(i)->b, I(i)->p);
 
-            return id;
+            return i;
         }
     }
     return -1;
@@ -350,79 +358,77 @@ int send_create_image(const char *filename)
 
 void recv_create_image(void)
 {
-    int  id = unpack_index();
+    int i = unpack_index();
 
-    I[id].w = unpack_index();
-    I[id].h = unpack_index();
-    I[id].b = unpack_index();
-    I[id].p = unpack_alloc(I[id].w * I[id].h * I[id].b);
+    I(i)->w = unpack_index();
+    I(i)->h = unpack_index();
+    I(i)->b = unpack_index();
+    I(i)->p = unpack_alloc(I(i)->w * I(i)->h * I(i)->b);
 
-    I[id].filename = "exists";
+    I(i)->filename = "unknown";
 }
 
 /*---------------------------------------------------------------------------*/
 
-void delete_image(int id)
+void delete_image(int i)
 {
-    if (image_exists(id))
-    {
-        free_image_gl(id);
+    free_image_gl(i);
 
-        if (I[id].filename) free(I[id].filename);
-        if (I[id].p)        free(I[id].p);
+    if (I(i)->filename) free(I(i)->filename);
+    if (I(i)->p)        free(I(i)->p);
 
-        memset(I + id, 0, sizeof (struct image));
-    }
+    memset(I(i), 0, sizeof (struct image));
 }
 
 /*---------------------------------------------------------------------------*/
 
-void get_image_p(int id, int x, int y, unsigned char p[4])
+void get_image_p(int i, int x, int y, unsigned char p[4])
 {
-    if (image_exists(id))
-    {
-        unsigned char *pixels = (unsigned char *) I[id].p;
+    unsigned char *pixels = (unsigned char *) I(i)->p;
+    int w = I(i)->w;
 
-        /* Return a pixel in any format as RGBA format. */
+    /* Return a pixel in any format as RGBA format. */
 
-        switch (I[id].b)
+    if (pixels)
+        switch (I(i)->b)
         {
         case 1:
-            p[0] = pixels[I[id].w * y + x];
-            p[1] = pixels[I[id].w * y + x];
-            p[2] = pixels[I[id].w * y + x];
+            p[0] = pixels[w * y + x];
+            p[1] = pixels[w * y + x];
+            p[2] = pixels[w * y + x];
             p[3] = 0xff;
             break;
         case 2:
-            p[0] = pixels[(I[id].w * y + x) * 2 + 0];
-            p[1] = pixels[(I[id].w * y + x) * 2 + 0];
-            p[2] = pixels[(I[id].w * y + x) * 2 + 0];
-            p[3] = pixels[(I[id].w * y + x) * 2 + 1];
+            p[0] = pixels[(w * y + x) * 2 + 0];
+            p[1] = pixels[(w * y + x) * 2 + 0];
+            p[2] = pixels[(w * y + x) * 2 + 0];
+            p[3] = pixels[(w * y + x) * 2 + 1];
             break;
         case 3:
-            p[0] = pixels[(I[id].w * y + x) * 3 + 0];
-            p[1] = pixels[(I[id].w * y + x) * 3 + 1];
-            p[2] = pixels[(I[id].w * y + x) * 3 + 2];
+            p[0] = pixels[(w * y + x) * 3 + 0];
+            p[1] = pixels[(w * y + x) * 3 + 1];
+            p[2] = pixels[(w * y + x) * 3 + 2];
             p[3] = 0xff;
             break;
         case 4:
-            p[0] = pixels[(I[id].w * y + x) * 3 + 0];
-            p[1] = pixels[(I[id].w * y + x) * 3 + 1];
-            p[2] = pixels[(I[id].w * y + x) * 3 + 2];
-            p[3] = pixels[(I[id].w * y + x) * 3 + 3];
+            p[0] = pixels[(w * y + x) * 3 + 0];
+            p[1] = pixels[(w * y + x) * 3 + 1];
+            p[2] = pixels[(w * y + x) * 3 + 2];
+            p[3] = pixels[(w * y + x) * 3 + 3];
             break;
         }
-    }
+    else
+        p[0] = p[1] = p[2] = p[3] = 0xFF;
 }
 
-int get_image_w(int id)
+int get_image_w(int i)
 {
-    return image_exists(id) ? I[id].w : 128;
+    return I(i)->w;
 }
 
-int get_image_h(int id)
+int get_image_h(int i)
 {
-    return image_exists(id) ? I[id].h : 128;
+    return I(i)->h;
 }
 
 /*---------------------------------------------------------------------------*/

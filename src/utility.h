@@ -13,7 +13,11 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #ifdef MPI
 #include <mpi.h>
@@ -51,15 +55,25 @@ const char *system_error(void);
 const char *get_file_name(const char *);
 const char *get_file_path(const char *);
 
+void  open_path(const char *);
+int   stat_file(const char *, struct stat *);
+FILE *open_file(const char *, const char *);
+
+/*---------------------------------------------------------------------------*/
+
 float htonf(float);
 float ntohf(float);
 
-void *balloc(void *, int *, int *, size_t, int (*)(int));
+/*---------------------------------------------------------------------------*/
+
 char *alloc_text(const char *);
+
+/*---------------------------------------------------------------------------*/
 
 void *error(char *, ...);
 void *print(char *, ...);
 
+/*---------------------------------------------------------------------------*/
 
 void assert_mpi(int);
 

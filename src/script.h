@@ -17,9 +17,9 @@
 
 int  init_script(void);
 void free_script(void);
-void load_script(const char *, int);
+void load_script(const char *);
 
-void load_args(int, char **);
+void add_argument(int, const char *);
 
 int  do_click_script(int, int);
 int  do_point_script(int, int);

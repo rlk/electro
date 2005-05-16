@@ -559,7 +559,7 @@ static int script_set_entity_frag_prog(lua_State *L)
 
     char *text = alloc_text(file);
 
-    send_set_entity_frag_prog(id, text);
+    if (text) send_set_entity_frag_prog(id, text);
 
     free(text);
     return 0;
@@ -572,7 +572,7 @@ static int script_set_entity_vert_prog(lua_State *L)
 
     char *text = alloc_text(file);
 
-    send_set_entity_vert_prog(id, text);
+    if (text) send_set_entity_vert_prog(id, text);
 
     free(text);
     return 0;
@@ -751,21 +751,20 @@ static int script_set_galaxy_magnitude(lua_State *L)
 
 static int script_get_star_index(lua_State *L)
 {
-    int id = script_getentity(L, -2);
     int gd = script_getgalaxy(L, -2);
-    int jd = script_getentity(L, -1);
+    int id = script_getentity(L, -1);
 
     float p[3];
     float v[3];
 
-    get_entity_position(jd, p);
-    get_entity_z_vector(jd, v);
+    get_entity_position(id, p);
+    get_entity_z_vector(id, v);
 
     v[0] = -v[0];
     v[1] = -v[1];
     v[2] = -v[2];
 
-    lua_pushnumber(L, pick_galaxy(id, gd, p, v));
+    lua_pushnumber(L, pick_galaxy(gd, p, v));
     return 1;
 }
 
@@ -1085,10 +1084,8 @@ void do_command(const char *command)
 
 /*---------------------------------------------------------------------------*/
 
-void load_args(int c, char *v[])
+void add_argument(int i, const char *arg)
 {
-    int j;
-
     lua_getglobal(L, "E");
 
     if (lua_istable(L, -1))
@@ -1098,12 +1095,8 @@ void load_args(int c, char *v[])
 
         if (lua_istable(L, -1))
         {
-            for (j = 0; j < c; j++)
-            {
-                lua_pushnumber(L, j + 1);
-                lua_pushstring(L, v[j]);
-                lua_settable(L, -3);
-            }
+            lua_pushstring(L, arg);
+            lua_rawseti(L, -2, i);
         }
         lua_pop(L, 1);
     }
@@ -1273,24 +1266,19 @@ void free_script(void)
     lua_close(L);
 }
 
-void load_script(const char *file, int push)
+void load_script(const char *file)
 {
-    char cwd[MAXSTR];
     int  err;
     FILE *fp;
-
-    /* Change the CWD to the directory of the named script. */
 
     const char *path = get_file_path(file);
     const char *name = get_file_name(file);
 
-    if (push) getcwd(cwd, MAXSTR);
-
-    chdir(path);
+    open_path(path);
 
     /* Load and execute the script. */
 
-    if ((fp = fopen(name, "r")))
+    if ((fp = open_file(name, "r")))
     {
         int top = lua_gettop(L);
 
@@ -1307,8 +1295,7 @@ void load_script(const char *file, int push)
 
         fclose(fp);
     }
-
-    if (push) chdir(cwd);
+    else error("Script not found: %s", file);
 }
 
 /*---------------------------------------------------------------------------*/

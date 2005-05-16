@@ -31,7 +31,6 @@ explosions = { }
 asteroids  = { }
 initials   = { }
 
-thrust     = nil
 scene_2d   = nil
 scene_3d   = nil
 
@@ -315,6 +314,7 @@ end
 function init_entity()
     entity.ship           = hide(E.create_object("ship.obj"))
     entity.rock           = hide(E.create_object("rock.obj"))
+    entity.thrust         = hide(E.create_sprite("thrust.png"))
     entity.bullet         = hide(E.create_sprite("bullet.png"))
     entity.score05        = hide(E.create_sprite("score05.png"))
     entity.score10        = hide(E.create_sprite("score10.png"))
@@ -803,7 +803,7 @@ end
 function set_thrust(b)
     player.thrusting = b
 
-    E.set_entity_flag(thrust, E.entity_flag_hidden, not b)
+    E.set_entity_flag(entity.thrust, E.entity_flag_hidden, not b)
 
     if b then
         E.play_sound(sound.thrust1)
@@ -832,12 +832,11 @@ function init_player()
     if not player.entity then
         player.entity = create_ship(0, 0, 0)
 
-        thrust = E.create_sprite("thrust.png")
-        E.parent_entity(thrust, player.entity)
-        E.set_entity_scale(thrust, s, s, s)
+        E.parent_entity(entity.thrust, player.entity)
+        E.set_entity_scale(entity.thrust, s, s, s)
 
-        E.set_entity_flag(thrust, E.entity_flag_unlit,  true)
-        E.set_entity_flag(thrust, E.entity_flag_hidden, true)
+        E.set_entity_flag(entity.thrust, E.entity_flag_unlit,  true)
+        E.set_entity_flag(entity.thrust, E.entity_flag_hidden, true)
     end
 
     -- If any ships remain, initialize one of them.
@@ -848,7 +847,7 @@ function init_player()
         E.set_entity_position(player.entity, 0, 0, 0)
         E.set_entity_rotation(player.entity, 0, 0, 0)
         E.set_entity_flag    (player.entity, E.entity_flag_hidden, false)
-        E.set_entity_flag    (thrust,        E.entity_flag_hidden, true)
+        E.set_entity_flag    (entity.thrust, E.entity_flag_hidden, true)
 
         set_thrust(false)
 

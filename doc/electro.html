@@ -24,11 +24,12 @@
 </pre>
 
 <p> Electro is an application development environment designed for use
-on cluster-driven tiled displays.  Electro is based upon the MPI
-process model and is bound to the Lua programming language.  With
-support for 3D graphics, 2D graphics, audio, and input handling,
-Electro provides an easy-to-use scripting system for interactive
-applications spanning multiple processors and displays. </p>
+on both cluster-driven tiled displays and desktop systems.  Electro is
+based on the MPI process model and is bound to the Lua programming
+language.  With support for 3D graphics, 2D graphics, audio, and input
+handling, Electro provides an easy-to-use scripting system for
+interactive applications spanning multiple processors and
+displays. </p>
 
 <h1> This Document </h1>
 
@@ -60,6 +61,24 @@ paragraphs are distinguished from the main text as follows: </p>
 <p class="note"> The implementation of Electro adheres to a number
 of closely-held design principles: simplicity, orthogonality, and
 efficiency.</p>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Command Line Arguments </h1>
+
+<p> Electro accepts the following command line arguments.  All unrecognized arguments are copied to a table in the Electro Lua environment called <tt>E.arguments</tt>, and scripts are free to access them there. </p>
+
+<dl>
+<dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>
+Execute the named Lua script. </p>
+
+<dt><tt>-H</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p> 
+Process the given Hipparcos stellar catalog into an Electro galaxy file. </p>
+
+<dt><tt>-T</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p> 
+Process the given Tycho stellar catalog into an Electro galaxy file. </p>
+
+</dl>
 
 <!---------------------------------------------------------------------------->
 
@@ -759,25 +778,6 @@ Start on each.</p>
 
 <!---------------------------------------------------------------------------->
 
-<h2> Command Line Arguments </h2>
-
-<p> The Electro application takes two sets of command line arguments.
-The first are those directed to Electro itself.  They include the names
-of configuration and application scripts to be executed by Electro on
-start-up.  Following this is an optional argument list splitter "--".
-All subsequent arguments are made available to Lua scripts via the Lua
-environment... </p>
-
-<dl>
-<dt><tt> argument </tt><dd><p> The <tt>argument</tt> table gives all
-script-specific command line arguments, indexed in order beginning with
-1. </p>
-
-</dl>
-
-
-<!---------------------------------------------------------------------------->
-
 <h1> Callbacks </h1>
 
 <p> Callback functions are the mechanism by which Electro Lua
@@ -1303,7 +1303,7 @@ function do_start()
     return true
 end
 
-do_start();
+do_start()
 </pre>
 
 <!---------------------------------------------------------------------------->

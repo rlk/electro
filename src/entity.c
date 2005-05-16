@@ -39,8 +39,8 @@ struct entity
 
     /* Entity transformation. */
 
+    float rotation[16];
     float position[3];
-    float basis[3][3];
     float scale[3];
     float alpha;
 
@@ -58,9 +58,9 @@ struct entity
     int par;
 };
 
-/*---------------------------------------------------------------------------*/
-
 static vector_t entity;
+
+/*---------------------------------------------------------------------------*/
 
 #define E(i) ((struct entity *) vecget(entity, i))
 
@@ -99,8 +99,63 @@ const char *entity_name(int i)
     case TYPE_LIGHT:  return "light";
     case TYPE_PIVOT:  return "pivot";
     }
-
     return "unknown";
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void transform_camera_gl(int i, const float p[3])
+{
+    GLfloat A[16];
+
+    /* Camera tracking. */
+
+    glTranslatef(-p[0], -p[1], -p[2]);
+
+    /* Camera rotation. */
+
+    m_xpos(A, E(i)->rotation);
+    glMultMatrixf(A);
+
+    /* Camera position. */
+
+    glTranslatef(-E(i)->position[0],
+                 -E(i)->position[1],
+                 -E(i)->position[2]);
+}
+
+static void transform_entity_gl(int i)
+{
+    GLfloat A[16];
+
+    /* Entity position. */
+
+    glTranslatef (E(i)->position[0],
+                  E(i)->position[1],
+                  E(i)->position[2]);
+
+    /* Entity rotation. */
+
+    glMultMatrixf(E(i)->rotation);
+
+    /* Entity billboard. */
+
+    if (E(i)->flag & FLAG_BILLBOARD)
+    {
+        glGetFloatv(GL_MODELVIEW_MATRIX, A);
+
+        A[0] = 1.f; A[4] = 0.f; A[8]  = 0.f;
+        A[1] = 0.f; A[5] = 1.f; A[9]  = 0.f;
+        A[2] = 0.f; A[6] = 0.f; A[10] = 1.f;
+
+        glLoadMatrixf(A);
+    }
+
+    /* Entity scale. */
+
+    glScalef(E(i)->scale[0],
+             E(i)->scale[1],
+             E(i)->scale[2]);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -110,37 +165,30 @@ void transform_camera(int i, float N[16], const float M[16],
 {
     float A[16];
     float B[16];
-    float q[3];
+
+    transform_camera_gl(i, p);
 
     m_copy(N, M);
     m_copy(J, I);
 
     /* Camera tracking */
 
-    q[0] = -p[0];
-    q[1] = -p[1];
-    q[2] = -p[2];
-
-    glTranslatef(q[0], q[1], q[2]);
-    m_trans(A, B, q);
+    m_trans(A, B, -p[0], -p[1], -p[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
     /* Camera rotation. */
 
-    opengl_basis_invt(E(i)->basis);
-    m_basis(B, A, E(i)->basis[0], E(i)->basis[1], E(i)->basis[2]);
+    m_xpos(A, E(i)->rotation);
+    m_copy(B, E(i)->rotation);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
     /* Camera position. */
 
-    q[0] = -E(i)->position[0];
-    q[1] = -E(i)->position[1];
-    q[2] = -E(i)->position[2];
-
-    glTranslatef(q[0], q[1], q[2]);
-    m_trans(A, B, E(i)->position);
+    m_trans(A, B, E(i)->position[0],
+                  E(i)->position[1],
+                  E(i)->position[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
 }
@@ -151,26 +199,23 @@ void transform_entity(int i, float N[16], const float M[16],
     float A[16];
     float B[16];
 
+    transform_entity_gl(i);
+
     m_copy(N, M);
     m_copy(J, I);
 
     /* Entity position. */
 
-    glTranslatef(E(i)->position[0],
-                 E(i)->position[1],
-                 E(i)->position[2]);
-
-    m_trans(A, B, E(i)->position);
+    m_trans(A, B, E(i)->position[0],
+                  E(i)->position[1],
+                  E(i)->position[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
     /* Entity rotation. */
 
-    opengl_basis_mult(E(i)->basis);
-
-    m_basis(A, B, E(i)->basis[0],
-                  E(i)->basis[1],
-                  E(i)->basis[2]);
+    m_copy(A, E(i)->rotation);
+    m_xpos(B, E(i)->rotation);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
@@ -180,27 +225,25 @@ void transform_entity(int i, float N[16], const float M[16],
     {
         glGetFloatv(GL_MODELVIEW_MATRIX, A);
 
-        A[0] = 1.f;  A[4] = 0.f;  A[8]  = 0.f;
-        A[1] = 0.f;  A[5] = 1.f;  A[9]  = 0.f;
-        A[2] = 0.f;  A[6] = 0.f;  A[10] = 1.f;
-
-        glLoadMatrixf(A);
+        A[0] = 1.f; A[4] = 0.f; A[8]  = 0.f;
+        A[1] = 0.f; A[5] = 1.f; A[9]  = 0.f;
+        A[2] = 0.f; A[6] = 0.f; A[10] = 1.f;
 
         m_xpos(B, A);
-        m_mult(N, N, A);
+        m_mult(N, N, A);  /* TODO: copy instead of mult? */
         m_mult(J, B, J);
     }
 
     /* Scale. */
 
-    glScalef(E(i)->scale[0],
-             E(i)->scale[1],
-             E(i)->scale[2]);
-
-    m_scale(A, B, E(i)->scale);
+    m_scale(A, B, E(i)->scale[0],
+                  E(i)->scale[1],
+                  E(i)->scale[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
 }
+
+/*---------------------------------------------------------------------------*/
 
 void draw_entity_list(int i, const float M[16],
                              const float I[16],
@@ -315,7 +358,7 @@ void step_entity(void)
     get_tracker_rotation(0, r[0]);
     get_tracker_rotation(1, r[1]);
 
-    v_basis(e, r[0]);
+    v_basis(e, r[0], 0);
 
     /* Distribute it to all cameras and tracked entities. */
 
@@ -435,17 +478,15 @@ static void attach_entity(int i, int j)
 
 static void create_entity(int i, int type, int data)
 {
-    E(i)->type = type;
-    E(i)->data = data;
-    E(i)->flag = 0;
+    m_init(E(i)->rotation);
 
-    E(i)->basis[0][0] = 1.0f;
-    E(i)->basis[1][1] = 1.0f;
-    E(i)->basis[2][2] = 1.0f;
-    E(i)->scale[0]    = 1.0f;
-    E(i)->scale[1]    = 1.0f;
-    E(i)->scale[2]    = 1.0f;
-    E(i)->alpha       = 1.0f;
+    E(i)->type     = type;
+    E(i)->data     = data;
+    E(i)->flag     =    0;
+    E(i)->scale[0] = 1.0f;
+    E(i)->scale[1] = 1.0f;
+    E(i)->scale[2] = 1.0f;
+    E(i)->alpha    = 1.0f;
 
     attach_entity(i, 0);
 }
@@ -503,7 +544,11 @@ void send_set_entity_rotation(int i, const float r[3])
 {
     float e[3][3];
 
-    v_basis(e, r);
+    if (E(i)->type == TYPE_CAMERA)
+        v_basis(e, r, 1);
+    else
+        v_basis(e, r, 0);
+
     send_set_entity_basis(i, e[0], e[1], e[2]);
 }
 
@@ -524,17 +569,17 @@ void send_set_entity_basis(int i, const float e0[3],
     pack_event(EVENT_SET_ENTITY_BASIS);
     pack_index(i);
 
-    pack_float((E(i)->basis[0][0] = e0[0]));
-    pack_float((E(i)->basis[0][1] = e0[1]));
-    pack_float((E(i)->basis[0][2] = e0[2]));
+    pack_float((E(i)->rotation[0]  = e0[0]));
+    pack_float((E(i)->rotation[1]  = e0[1]));
+    pack_float((E(i)->rotation[2]  = e0[2]));
 
-    pack_float((E(i)->basis[1][0] = e1[0]));
-    pack_float((E(i)->basis[1][1] = e1[1]));
-    pack_float((E(i)->basis[1][2] = e1[2]));
+    pack_float((E(i)->rotation[4]  = e1[0]));
+    pack_float((E(i)->rotation[5]  = e1[1]));
+    pack_float((E(i)->rotation[6]  = e1[2]));
 
-    pack_float((E(i)->basis[2][0] = e2[0]));
-    pack_float((E(i)->basis[2][1] = e2[1]));
-    pack_float((E(i)->basis[2][2] = e2[2]));
+    pack_float((E(i)->rotation[8]  = e2[0]));
+    pack_float((E(i)->rotation[9]  = e2[1]));
+    pack_float((E(i)->rotation[10] = e2[2]));
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -598,16 +643,16 @@ void send_move_entity(int i, const float v[3])
 {
     float p[3];
 
-    p[0] = E(i)->position[0] + (E(i)->basis[0][0] * v[0] +
-                                E(i)->basis[1][0] * v[1] +
-                                E(i)->basis[2][0] * v[2]);
-    p[1] = E(i)->position[1] + (E(i)->basis[0][1] * v[0] +
-                                E(i)->basis[1][1] * v[1] +
-                                E(i)->basis[2][1] * v[2]);
-    p[2] = E(i)->position[2] + (E(i)->basis[0][2] * v[0] +
-                                E(i)->basis[1][2] * v[1] +
-                                E(i)->basis[2][2] * v[2]);
-    
+    p[0] = E(i)->position[0] + (E(i)->rotation[0]  * v[0] +
+                                E(i)->rotation[4]  * v[1] +
+                                E(i)->rotation[8]  * v[2]);
+    p[1] = E(i)->position[1] + (E(i)->rotation[1]  * v[0] +
+                                E(i)->rotation[5]  * v[1] +
+                                E(i)->rotation[9]  * v[2]);
+    p[2] = E(i)->position[2] + (E(i)->rotation[2]  * v[0] +
+                                E(i)->rotation[6]  * v[1] +
+                                E(i)->rotation[10] * v[2]);
+
     send_set_entity_position(i, p);
 }
 
@@ -619,20 +664,26 @@ void send_turn_entity(int i, const float r[3])
 
     m_init(M);
 
-    m_rotat(A, B, E(i)->basis[0], r[0]);
+    m_rotat(A, B, E(i)->rotation[0],
+                  E(i)->rotation[1],
+                  E(i)->rotation[2], r[0]);
     m_mult(M, M, A);
 
-    m_rotat(A, B, E(i)->basis[1], r[1]);
+    m_rotat(A, B, E(i)->rotation[4],
+                  E(i)->rotation[5],
+                  E(i)->rotation[6], r[1]);
     m_mult(M, M, A);
 
-    m_rotat(A, B, E(i)->basis[2], r[2]);
+    m_rotat(A, B, E(i)->rotation[8],
+                  E(i)->rotation[9],
+                  E(i)->rotation[10], r[2]);
     m_mult(M, M, A);
 
-    /* Transform the basis. */
+    /* Transform the entity's basis. */
 
-    m_xfrm(e[0], M, E(i)->basis[0]);
-    m_xfrm(e[1], M, E(i)->basis[1]);
-    m_xfrm(e[2], M, E(i)->basis[2]);
+    m_xfrm(e[0], M, E(i)->rotation);
+    m_xfrm(e[1], M, E(i)->rotation + 4);
+    m_xfrm(e[2], M, E(i)->rotation + 8);
 
     /* Re-orthogonalize the basis. */
 
@@ -664,17 +715,19 @@ void recv_set_entity_basis(void)
 {
     int i = unpack_index();
 
-    E(i)->basis[0][0] = unpack_float();
-    E(i)->basis[0][1] = unpack_float();
-    E(i)->basis[0][2] = unpack_float();
+    m_init(E(i)->rotation);
 
-    E(i)->basis[1][0] = unpack_float();
-    E(i)->basis[1][1] = unpack_float();
-    E(i)->basis[1][2] = unpack_float();
+    E(i)->rotation[0]  = unpack_float();
+    E(i)->rotation[1]  = unpack_float();
+    E(i)->rotation[2]  = unpack_float();
 
-    E(i)->basis[2][0] = unpack_float();
-    E(i)->basis[2][1] = unpack_float();
-    E(i)->basis[2][2] = unpack_float();
+    E(i)->rotation[4]  = unpack_float();
+    E(i)->rotation[5]  = unpack_float();
+    E(i)->rotation[6]  = unpack_float();
+
+    E(i)->rotation[8]  = unpack_float();
+    E(i)->rotation[9]  = unpack_float();
+    E(i)->rotation[10] = unpack_float();
 }
 
 void recv_set_entity_scale(void)
@@ -734,23 +787,23 @@ void get_entity_position(int i, float p[3])
 
 void get_entity_x_vector(int i, float v[3])
 {
-    v[0] = E(i)->basis[0][0];
-    v[1] = E(i)->basis[0][1];
-    v[2] = E(i)->basis[0][2];
+    v[0] = E(i)->rotation[0];
+    v[1] = E(i)->rotation[1];
+    v[2] = E(i)->rotation[2];
 }
 
 void get_entity_y_vector(int i, float v[3])
 {
-    v[0] = E(i)->basis[1][0];
-    v[1] = E(i)->basis[1][1];
-    v[2] = E(i)->basis[1][2];
+    v[0] = E(i)->rotation[4];
+    v[1] = E(i)->rotation[5];
+    v[2] = E(i)->rotation[6];
 }
 
 void get_entity_z_vector(int i, float v[3])
 {
-    v[0] = E(i)->basis[2][0];
-    v[1] = E(i)->basis[2][1];
-    v[2] = E(i)->basis[2][2];
+    v[0] = E(i)->rotation[8];
+    v[1] = E(i)->rotation[9];
+    v[2] = E(i)->rotation[10];
 }
 
 void get_entity_scale(int i, float v[3])

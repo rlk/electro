@@ -103,6 +103,9 @@ static void init_client(void)
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
 
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
+                  GL_SEPARATE_SPECULAR_COLOR);
+
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

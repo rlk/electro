@@ -24,18 +24,12 @@
 </pre>
 
 <p> Electro is an application development environment designed for use
-on cluster-driven tiled displays.  Electro is based upon the MPI
-process model and is bound to the Lua programming language.  With
-support for 3D graphics, 2D graphics, audio, and input handling,
-Electro provides an easy-to-use scripting system for interactive
-applications spanning multiple processors and displays. </p>
-
-<p> In addition to the MPI-based cluster mode, Electro may be built
-in a stand-alone mode under Linux, Windows 2K/XP, and Mac OS X.
-This stand-alone mode accepts the same cluster configuration input
-as the cluster mode, and will display a simulated tiling that may
-be used to test applications for compatibility with various tiled
-displays.  </p>
+on both cluster-driven tiled displays and desktop systems.  Electro is
+based on the MPI process model and is bound to the Lua programming
+language.  With support for 3D graphics, 2D graphics, audio, and input
+handling, Electro provides an easy-to-use scripting system for
+interactive applications spanning multiple processors and displays.
+Electro supports Linux, Windows 2K/XP, and Mac OS X. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -43,14 +37,14 @@ displays.  </p>
 
 <p> Source code is made available under the terms of the <a
 href="http://www.gnu.org/licenses/gpl.html"> GNU General Public
-License </a>.  Building this source requires the libraries and
+License</a>.  Building this source requires the libraries and
 header files for
 
 <a href="http://www.libsdl.org">SDL</a>,
 <a href="http://www.libpng.org">PNG</a>,
 <a href="http://www.ijg.org">JPEG</a>,
 <a href="http://www.lua.org">Lua</a>, and
-<a href="http://www.vorbis.com">Ogg Vorbis.</a>
+<a href="http://www.vorbis.com">Ogg Vorbis</a>.
 
 A makefile is included for Linux and OS X.  A Visual Studio 6 project
 file is included for Windows.</p>
@@ -94,7 +88,7 @@ packages: Asteroids, Vortex, and Fifteen. </p>
 
 <h1> Running </h1>
 
-<p> Electro takes a list of Lua scripts on the command line.  Each
+<p> Electro takes a list of  Lua scripts on the command line.  Each
 script is executed in turn.  Electro infers the current working
 directory from the path name of each script. </p>
 
@@ -107,15 +101,15 @@ pause the application. </p>
 Under Unix: </p>
 
 <pre>
-$ ./electro examples/asteroids/asteroids.lua
+$ ./electro -f examples/asteroids/asteroids.lua
 </pre>
 
-<p>Under Windows, Lua scripts may be dragged-and-dropped on the
-Electro application, or Electro may be run from the command line:
+<p>Under Windows, Lua scripts may be dragged-and-dropped onto
+<tt>electro.bat</tt>, or <tt>electro.exe</tt> may be run from the
+command line:
 
 <pre>
-C:\&gt; cd examples\asteroids
-C:\&gt; electro examples\asteroids\asteroids.lua
+C:\&gt; electro.exe -f examples\asteroids\asteroids.lua
 </pre>
 
 <h3> Cluster mode </h3>

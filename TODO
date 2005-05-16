@@ -1,9 +1,10 @@
-Ugly code in
-    entity transform
+grab command line flag
+Galaxy file byte order?
+Windows DND batch
+function pointers?
 
 gl state init
 stereo visual
-obj reader fix
 object geometry create
 bounding sphere
 tracker button
@@ -14,7 +15,5 @@ camera offset per tile (for geowall and planar)
 Test whether tracking data optimization will pay off.
 Scale and billboard frustum (thorough test)
 camera near/far (automatic using entity bounding sphere?))
-
-Improve assertions (delineate necessary thing_exists vs thing_assert)
 
 Particle system

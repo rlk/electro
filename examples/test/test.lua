@@ -1,5 +1,3 @@
-dofile("../keyboard.lua")
-
 view    = nil
 camera  = nil
 sprite  = nil
@@ -21,7 +19,7 @@ function add_object(i, s)
     E.parent_entity(object, pivot)
 end
 
-function do_start(arg)
+function do_start()
     local x, y, w, h = E.get_viewport()
 
     nearby = E.create_camera(E.camera_type_perspective)
@@ -29,12 +27,12 @@ function do_start(arg)
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
     pivot  = E.create_pivot()
-    hand   = E.create_object("box.obj")
+--  hand   = E.create_object("box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
-    E.parent_entity(hand,  nearby)
+--  E.parent_entity(hand,  nearby)
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0,  -8.0)
@@ -42,10 +40,10 @@ function do_start(arg)
 
     E.set_entity_scale(hand, 0.25, 0.25, 0.25)
 
-    E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
-    E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
+--  E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
+--  E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
 
-    table.foreach(arg, add_object)
+    table.foreach(E.argument, add_object)
 
     E.set_background(1.0, 1.0, 1.0, 0.0, 0.5, 1.0)
 
@@ -101,4 +99,4 @@ function do_point(dx, dy)
     return false
 end
 
-do_start(E.argument)
+do_start()

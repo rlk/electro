@@ -90,7 +90,7 @@ end
 function do_start()
 
     view_x, view_y, view_w, view_h = E.get_viewport()
-    print(view_x, view_y, view_w, view_h)
+
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);
 

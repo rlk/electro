@@ -17,22 +17,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define CAMERA_NEAR  1.0f
-#define CAMERA_FAR 100.0f
-
 #define CAMERA_ORTHO 1
 #define CAMERA_PERSP 2
-
-struct camera
-{
-    int   count;
-    int   type;
-    int   mode;
-    
-    float eye_offset[3];
-    float pos_offset[3];
-    float view_basis[3][3];
-};
 
 /*---------------------------------------------------------------------------*/
 

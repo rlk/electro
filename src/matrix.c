@@ -215,16 +215,21 @@ void m_zrot(float M[16], float I[16], float a)
 
 /*---------------------------------------------------------------------------*/
 
-void m_rotat(float M[16], float I[16], const float v[3], float a)
+void m_rotat(float M[16], float I[16], float x, float y, float z, float a)
 {
     float U[16];
     float S[16];
     float u[3];
+    float k;
 
     const float s = (float) sin((double) M_RAD(a));
     const float c = (float) cos((double) M_RAD(a));
 
-    v_normal(u, v);
+    k = (float) sqrt(x * x + y * y + z * z);
+
+    u[0] = x / k;
+    u[1] = y / k;
+    u[2] = z / k;
 
     U[0] = u[0] * u[0]; U[4] = u[0] * u[1]; U[8]  = u[0] * u[2]; 
     U[1] = u[1] * u[0]; U[5] = u[1] * u[1]; U[9]  = u[1] * u[2]; 
@@ -252,30 +257,30 @@ void m_rotat(float M[16], float I[16], const float v[3], float a)
     M[15] = I[15] = 1.0f;
 }
 
-void m_trans(float M[16], float I[16], const float v[3])
+void m_trans(float M[16], float I[16], float x, float y, float z)
 {
-    M[0] = 1.0f; M[4] = 0.0f; M[8]  = 0.0f; M[12] =  v[0];
-    M[1] = 0.0f; M[5] = 1.0f; M[9]  = 0.0f; M[13] =  v[1];
-    M[2] = 0.0f; M[6] = 0.0f; M[10] = 1.0f; M[14] =  v[2];
+    M[0] = 1.0f; M[4] = 0.0f; M[8]  = 0.0f; M[12] =     x;
+    M[1] = 0.0f; M[5] = 1.0f; M[9]  = 0.0f; M[13] =     y;
+    M[2] = 0.0f; M[6] = 0.0f; M[10] = 1.0f; M[14] =     z;
     M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] =  1.0f;
 
-    I[0] = 1.0f; I[4] = 0.0f; I[8]  = 0.0f; I[12] = -v[0];
-    I[1] = 0.0f; I[5] = 1.0f; I[9]  = 0.0f; I[13] = -v[1];
-    I[2] = 0.0f; I[6] = 0.0f; I[10] = 1.0f; I[14] = -v[2];
+    I[0] = 1.0f; I[4] = 0.0f; I[8]  = 0.0f; I[12] =    -x;
+    I[1] = 0.0f; I[5] = 1.0f; I[9]  = 0.0f; I[13] =    -y;
+    I[2] = 0.0f; I[6] = 0.0f; I[10] = 1.0f; I[14] =    -z;
     I[3] = 0.0f; I[7] = 0.0f; I[11] = 0.0f; I[15] =  1.0f;
 }
 
-void m_scale(float M[16], float I[16], const float v[3])
+void m_scale(float M[16], float I[16], float x, float y, float z)
 {
-    M[0] =  v[0]; M[4] =  0.0f; M[8]  =  0.0f; M[12] = 0.0f;
-    M[1] =  0.0f; M[5] =  v[1]; M[9]  =  0.0f; M[13] = 0.0f;
-    M[2] =  0.0f; M[6] =  0.0f; M[10] =  v[2]; M[14] = 0.0f;
-    M[3] =  0.0f; M[7] =  0.0f; M[11] =  0.0f; M[15] = 1.0f;
+    M[0] =    x; M[4] = 0.0f; M[8]  = 0.0f; M[12] = 0.0f;
+    M[1] = 0.0f; M[5] =    y; M[9]  = 0.0f; M[13] = 0.0f;
+    M[2] = 0.0f; M[6] = 0.0f; M[10] =    z; M[14] = 0.0f;
+    M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
 
-    I[0] = 1.0f/v[0]; I[4] =       0.0f; I[8]  =       0.0f; I[12] = 0.0f;
-    I[1] =      0.0f; I[5] =  1.0f/v[1]; I[9]  =       0.0f; I[13] = 0.0f;
-    I[2] =      0.0f; I[6] =       0.0f; I[10] =  1.0f/v[2]; I[14] = 0.0f;
-    I[3] =      0.0f; I[7] =       0.0f; I[11] =       0.0f; I[15] = 1.0f;
+    I[0] = 1.0f / x; I[4] =      0.0f; I[8]  =      0.0f; I[12] = 0.0f;
+    I[1] =     0.0f; I[5] =  1.0f / y; I[9]  =      0.0f; I[13] = 0.0f;
+    I[2] =     0.0f; I[6] =      0.0f; I[10] =  1.0f / z; I[14] = 0.0f;
+    I[3] =     0.0f; I[7] =      0.0f; I[11] =      0.0f; I[15] = 1.0f;
 }
 
 void m_basis(float M[16], float I[16], const float e0[3],
@@ -336,7 +341,7 @@ void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
     p[3]  = (p[0] * a[0] + p[1] * a[1] + p[2] * a[2]);
 }
 
-void v_basis(float e[3][3], const float r[3])
+void v_basis(float e[3][3], const float r[3], int b)
 {
     float M[16], A[16], B[16];
 
@@ -350,14 +355,28 @@ void v_basis(float e[3][3], const float r[3])
 
     m_init(M);
 
-    m_xrot(A, B, r[0]);
-    m_mult(M, M, A);
+    if (b)
+    {
+        m_zrot(A, B, r[2]);
+        m_mult(M, M, A);
 
-    m_yrot(A, B, r[1]);
-    m_mult(M, M, A);
+        m_yrot(A, B, r[1]);
+        m_mult(M, M, A);
 
-    m_zrot(A, B, r[2]);
-    m_mult(M, M, A);
+        m_xrot(A, B, r[0]);
+        m_mult(M, M, A);
+    }
+    else
+    {
+        m_xrot(A, B, r[0]);
+        m_mult(M, M, A);
+
+        m_yrot(A, B, r[1]);
+        m_mult(M, M, A);
+
+        m_zrot(A, B, r[2]);
+        m_mult(M, M, A);
+    }
 
     /* Transform the basis. */
 

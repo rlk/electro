@@ -40,9 +40,9 @@ void m_xrot(float[16], float[16], float);
 void m_yrot(float[16], float[16], float);
 void m_zrot(float[16], float[16], float);
 
-void m_rotat(float[16], float[16], const float[3], float);
-void m_trans(float[16], float[16], const float[3]);
-void m_scale(float[16], float[16], const float[3]);
+void m_rotat(float[16], float[16], float, float, float, float);
+void m_trans(float[16], float[16], float, float, float);
+void m_scale(float[16], float[16], float, float, float);
 void m_basis(float[16], float[16], const float[3],
                                    const float[3],
                                    const float[3]);
@@ -53,7 +53,7 @@ void v_normal(float[3], const float[3]);
 
 void v_cross(float[3], const float[3], const float[3]);
 void v_plane(float[4], const float[3], const float[3], const float[3]);
-void v_basis(float[3][3], const float[3]);
+void v_basis(float[3][3], const float[3], int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -13,8 +13,11 @@
 #include <SDL.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vorbis/codec.h>
+#include <vorbis/vorbisfile.h>
 
 #include "utility.h"
+#include "vector.h"
 #include "entity.h"
 #include "sound.h"
 
@@ -30,32 +33,38 @@ static float        *buff;
 
 /*---------------------------------------------------------------------------*/
 
-#define SMAXINIT 128
-
-static struct sound *S;
-static int           S_max;
-
-static int sound_exists(int sd)
+struct sound
 {
-    return (S && 0 <= sd && sd < S_max && S[sd].mode);
-}
+    int mode;
+    int chan;
 
-static int alloc_sound(void)
+    OggVorbis_File file;
+};
+
+static vector_t sound;
+
+/*---------------------------------------------------------------------------*/
+
+#define S(i) ((struct sound *) vecget(sound, i))
+
+static int new_sound(void)
 {
-    int sd = -1;
+    int i, n = vecnum(sound);
 
-    S = (struct sound *) balloc(S, &sd, &S_max,
-                                sizeof (struct sound), sound_exists);
-    return sd;
+    for (i = 0; i < n; ++i)
+        if (S(i)->chan == 0)
+            return i;
+
+    return vecadd(sound);
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
+static int mix_sound(int i, float *fbuf, short *sbuf, int max)
 {
     char *buf = (char *) sbuf;
 
-    int i, j, d = (S[sd].chan == 2) ? 1 : 2;
+    int j, k, d = (S(i)->chan == 2) ? 1 : 2;
 
     int siz = max / d;
     int tot = 0;
@@ -65,7 +74,7 @@ static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
     /* Try to fill the short buffer with Ogg.  Rewind loops as necessary. */
 
     while (siz > 0)
-        if ((len = ov_read(&S[sd].file, buf, siz, 0, 2, 1, &bit)) > 0)
+        if ((len = ov_read(&S(i)->file, buf, siz, 0, 2, 1, &bit)) > 0)
         {
             tot += len;
             buf += len;
@@ -73,8 +82,8 @@ static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
         }
         else
         {
-            if (S[sd].mode == SOUND_LOOP)
-                ov_pcm_seek(&S[sd].file, 0);
+            if (S(i)->mode == SOUND_LOOP)
+                ov_pcm_seek(&S(i)->file, 0);
             else
                 break;
         }
@@ -83,9 +92,9 @@ static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
 
     tot = tot / sizeof (short);
 
-    for (i = 0; i < tot; ++i)
-        for (j = 0; j < d; ++j)
-            fbuf[i * d + j] += (float) sbuf[i];
+    for (j = 0; j < tot; ++j)
+        for (k = 0; k < d; ++k)
+            fbuf[j * d + k] += (float) sbuf[j];
 
     /* Signal EOF. */
 
@@ -95,7 +104,7 @@ static int mix_sound(int sd, float *fbuf, short *sbuf, int max)
 static void step_sound(void *data, Uint8 *stream, int length)
 {
     short *output = (short *) stream;
-    int i, sd;
+    int i, n = vecnum(sound);
 
     /* Zero the mix buffer. */
 
@@ -103,12 +112,12 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
     /* Sum the playing sounds (using the output buffer as temp space). */
 
-    for (sd = 0; sd < S_max; ++sd)
-        if (S[sd].mode == SOUND_PLAY ||
-            S[sd].mode == SOUND_LOOP)
+    for (i = 0; i < n; ++i)
+        if (S(i)->mode == SOUND_PLAY ||
+            S(i)->mode == SOUND_LOOP)
         {
-            if (mix_sound(sd, buff, output, length))
-                S[sd].mode = SOUND_STOP;
+            if (mix_sound(i, buff, output, length))
+                S(i)->mode = SOUND_STOP;
         }
 
     /* Copy the mix buffer to the output buffer, clamping as necessary. */
@@ -133,11 +142,8 @@ int init_sound(void)
     {
         buff = (float *) malloc(spec.samples * spec.channels * sizeof (float));
 
-        if ((S = (struct sound *) calloc(SMAXINIT, sizeof (struct sound))))
-        {
-            S_max = SMAXINIT;
+        if ((sound = vecnew(32, sizeof (struct sound))))
             return 1;
-        }
     }
     else fprintf(stderr, "%s\n", SDL_GetError());
 
@@ -148,21 +154,21 @@ int init_sound(void)
 
 int create_sound(const char *filename)
 {
-    int   sd;
+    int   i;
     FILE *fp;
 
-    if (S && (sd = alloc_sound()) >= 0)
+    if ((i = new_sound()) >= 0)
     {
-        if ((fp = fopen(filename, FMODE_RB)))
+        if ((fp = open_file(filename, FMODE_RB)))
         {
-            if (ov_open(fp, &S[sd].file, NULL, 0) == 0)
+            if (ov_open(fp, &S(i)->file, NULL, 0) == 0)
             {
-                struct vorbis_info *I = ov_info(&S[sd].file, -1);
+                struct vorbis_info *I = ov_info(&S(i)->file, -1);
 
-                S[sd].mode = SOUND_STOP;
-                S[sd].chan = I->channels;
+                S(i)->mode = SOUND_STOP;
+                S(i)->chan = I->channels;
 
-                return sd;
+                return i;
             }
             fclose(fp);
         }
@@ -171,44 +177,37 @@ int create_sound(const char *filename)
     return -1;
 }
 
-void delete_sound(int sd)
+void delete_sound(int i)
 {
-    if (sound_exists(sd))
-    {
-        ov_clear(&S[sd].file);
-
-        memset(S + sd, 0, sizeof (struct sound));
-    }
+    ov_clear(&S(i)->file);
+    memset(S(i), 0, sizeof (struct sound));
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void set_sound_mode(int sd, int mode)
+static void set_sound_mode(int i, int mode)
 {
-    if (sound_exists(sd))
+    SDL_LockAudio();
     {
-        SDL_LockAudio();
-        {
-            ov_pcm_seek(&S[sd].file, 0);
-            S[sd].mode = mode;
-        }
-        SDL_UnlockAudio();
+        ov_pcm_seek(&S(i)->file, 0);
+        S(i)->mode = mode;
     }
+    SDL_UnlockAudio();
 }
 
-void stop_sound(int sd)
+void stop_sound(int i)
 {
-    set_sound_mode(sd, SOUND_STOP);
+    set_sound_mode(i, SOUND_STOP);
 }
 
-void play_sound(int sd)
+void play_sound(int i)
 {
-    set_sound_mode(sd, SOUND_PLAY);
+    set_sound_mode(i, SOUND_PLAY);
 }
 
-void loop_sound(int sd)
+void loop_sound(int i)
 {
-    set_sound_mode(sd, SOUND_LOOP);
+    set_sound_mode(i, SOUND_LOOP);
 }
 
 /*---------------------------------------------------------------------------*/

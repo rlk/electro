@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "vector.h"
 #include "buffer.h"
 #include "entity.h"
 #include "image.h"
@@ -23,388 +24,245 @@
 #include "object.h"
 
 /*---------------------------------------------------------------------------*/
-/* Object entity storage                                                     */
 
-#define OMAXINIT 128
-
-static struct object *O;
-static int            O_max;
-
-static int object_exists(int od)
+struct vec2
 {
-    return (O && 0 <= od && od < O_max && O[od].count);
-}
+    float u;
+    float v;
+};
 
-static int alloc_object(void)
+struct vec3
 {
-    int od = -1;
-
-    O = (struct object *) balloc(O, &od, &O_max,
-                                 sizeof (struct object), object_exists);
-    return od;
-}
-
-/*---------------------------------------------------------------------------*/
-/* Vector loader caches                                                      */
-
-static float *tv = NULL;
-static int    tc = 0;
-static int    tm = 0;
-
-static float *nv = NULL;
-static int    nc = 0;
-static int    nm = 0;
-
-static float *vv = NULL;
-static int    vc = 0;
-static int    vm = 0;
-
-static int   *iv = NULL;
-static int    ic = 0;
-static int    im = 0;
-
-/*---------------------------------------------------------------------------*/
-/* Object element loader caches                                              */
-
-static struct object_mtrl *mtrlv = NULL;
-static int                 mtrlc = 0;
-static int                 mtrlm = 0;
-
-static struct object_vert *vertv = NULL;
-static int                 vertc = 0;
-static int                 vertm = 0;
-
-static struct object_face *facev = NULL;
-static int                 facec = 0;
-static int                 facem = 0;
-
-static struct object_edge *edgev = NULL;
-static int                 edgec = 0;
-static int                 edgem = 0;
-
-static struct object_surf *surfv = NULL;
-static int                 surfc = 0;
-static int                 surfm = 0;
+    float x;
+    float y;
+    float z;
+};
 
 /*---------------------------------------------------------------------------*/
 
-static int push_t(void)
+struct object_mtrl
 {
-    if (tc < tm)
-        return tc++;
-    else
-    {
-        size_t s = MAX(2 * tm, 256) * (sizeof (float) * 2);
-        float *v;
+    const char *name;
+    int image;
 
-        if ((v = (float *) realloc(tv, s)))
-        {
-            tv = v;
-            tm = s / (sizeof (float) * 2);
+    float d[4];
+    float a[4];
+    float s[4];
+    float e[4];
+    float x[1];
+};
 
-            return tc++;
-        }
-    }
-    return -1;
-}
-
-static int push_n(void)
+struct object_vert
 {
-    if (nc < nm)
-        return nc++;
-    else
-    {
-        size_t s = MAX(2 * nm, 256) * (sizeof (float) * 3);
-        float *v;
+    float t[2];
+    float n[3];
+    float v[3];
+};
 
-        if ((v = (float *) realloc(nv, s)))
-        {
-            nv = v;
-            nm = s / (sizeof (float) * 3);
-
-            return nc++;
-        }
-    }
-    return -1;
-}
-
-static int push_v(void)
+struct object_face
 {
-    if (vc < vm)
-        return vc++;
-    else
-    {
-        size_t s = MAX(2 * vm, 256) * (sizeof (float) * 3);
-        float *v;
+    int vi[3];
+};
 
-        if ((v = (float *) realloc(vv, s)))
-        {
-            vv = v;
-            vm = s / (sizeof (float) * 3);
-
-            return vc++;
-        }
-    }
-    return -1;
-}
-
-static int push_i(void)
+struct object_edge
 {
-    if (ic < im)
-        return ic++;
-    else
-    {
-        size_t s = MAX(2 * im, 256) * (sizeof (int) * 4);
-        int *v;
+    int vi[2];
+};
 
-        if ((v = (int *) realloc(iv, s)))
-        {
-            iv = v;
-            im = s / (sizeof (int) * 4);
+struct object_surf
+{
+    int      mi;
+    vector_t fv;
+    vector_t ev;
+};
 
-            return ic++;
-        }
-    }
-    return -1;
-}
+struct object
+{
+    int count;
+    int state;
+
+    GLuint buffer;
+
+    vector_t mv;
+    vector_t vv;
+    vector_t sv;
+};
+
+static vector_t object;
 
 /*---------------------------------------------------------------------------*/
 
-static int push_mtrl(void)
+#define O(i) ((struct object *) vecget(object, i))
+
+static int new_object(void)
 {
-    if (mtrlc < mtrlm)
-        return mtrlc++;
-    else
-    {
-        size_t s = MAX(2 * mtrlm, 4) * sizeof (struct object_mtrl);
-        struct object_mtrl *v;
+    int i, n = vecnum(object);
 
-        if ((v = (struct object_mtrl *) realloc(mtrlv, s)))
-        {
-            mtrlv = v;
-            mtrlm = s / sizeof (struct object_mtrl);
+    for (i = 0; i < n; ++i)
+        if (O(i)->count == 0)
+            return i;
 
-            return mtrlc++;
-        }
-    }
-    return -1;
-}
-
-static int push_vert(void)
-{
-    if (vertc < vertm)
-        return vertc++;
-    else
-    {
-        size_t s = MAX(2 * vertm, 256) * sizeof (struct object_vert);
-        struct object_vert *v;
-
-        if ((v = (struct object_vert *) realloc(vertv, s)))
-        {
-            vertv = v;
-            vertm = s / sizeof (struct object_vert);
-
-            return vertc++;
-        }
-    }
-    return -1;
-}
-
-static int push_face(void)
-{
-    if (facec < facem)
-        return facec++;
-    else
-    {
-        size_t s = MAX(2 * facem, 256) * sizeof (struct object_face);
-        struct object_face *v;
-
-        if ((v = (struct object_face *) realloc(facev, s)))
-        {
-            facev = v;
-            facem = s / sizeof (struct object_face);
-
-            return facec++;
-        }
-    }
-    return -1;
-}
-
-static int push_edge(void)
-{
-    if (edgec < edgem)
-        return edgec++;
-    else
-    {
-        size_t s = MAX(2 * edgem, 256) * sizeof (struct object_edge);
-        struct object_edge *v;
-
-        if ((v = (struct object_edge *) realloc(edgev, s)))
-        {
-            edgev = v;
-            edgem = s / sizeof (struct object_edge);
-
-            return edgec++;
-        }
-    }
-    return -1;
-}
-
-static int push_surf(void)
-{
-    if (surfc < surfm)
-        return surfc++;
-    else
-    {
-        size_t s = MAX(2 * surfm, 256) * sizeof (struct object_surf);
-        struct object_surf *v;
-
-        if ((v = (struct object_surf *) realloc(surfv, s)))
-        {
-            surfv = v;
-            surfm = s / sizeof (struct object_surf);
-
-            return surfc++;
-        }
-    }
-    return -1;
+    return vecadd(object);
 }
 
 /*---------------------------------------------------------------------------*/
+/* OBJ loader caches                                                         */
 
-static int read_newmtl(const char *name)
+static vector_t _tv;
+static vector_t _nv;
+static vector_t _vv;
+
+/*---------------------------------------------------------------------------*/
+
+static int new_mtrl(vector_t mv, const char *name)
 {
-    char str[MAXSTR];
-    int  i;
+    int i;
 
-    if ((i = push_mtrl()) >= 0)
+    if ((i = vecadd(mv)) >= 0)
     {
-        sscanf(name, "%s", str);
+        struct object_mtrl *m = (struct object_mtrl *) vecget(mv, i);
 
-        mtrlv[i].name  = memdup(str, 1, strlen(str) + 1);
-        mtrlv[i].image = 0;
+        m->name  = name ? memdup(name, 1, strlen(name) + 1) : NULL;
+        m->image = 0;
 
         /* Default diffuse */
 
-        mtrlv[i].d[0] = 0.8f;
-        mtrlv[i].d[1] = 0.8f;
-        mtrlv[i].d[2] = 0.8f;
-        mtrlv[i].d[3] = 1.0f;
+        m->d[0] = 0.8f;
+        m->d[1] = 0.8f;
+        m->d[2] = 0.8f;
+        m->d[3] = 1.0f;
 
         /* Default ambient */
 
-        mtrlv[i].a[0] = 0.2f;
-        mtrlv[i].a[1] = 0.2f;
-        mtrlv[i].a[2] = 0.2f;
-        mtrlv[i].a[3] = 1.0f;
+        m->a[0] = 0.2f;
+        m->a[1] = 0.2f;
+        m->a[2] = 0.2f;
+        m->a[3] = 1.0f;
 
         /* Default specular */
 
-        mtrlv[i].s[0] = 0.0f;
-        mtrlv[i].s[1] = 0.0f;
-        mtrlv[i].s[2] = 0.0f;
-        mtrlv[i].s[3] = 1.0f;
+        m->s[0] = 0.0f;
+        m->s[1] = 0.0f;
+        m->s[2] = 0.0f;
+        m->s[3] = 1.0f;
 
         /* Default emmisive */
 
-        mtrlv[i].e[0] = 0.0f;
-        mtrlv[i].e[1] = 0.0f;
-        mtrlv[i].e[2] = 0.0f;
-        mtrlv[i].e[3] = 1.0f;
+        m->e[0] = 0.0f;
+        m->e[1] = 0.0f;
+        m->e[2] = 0.0f;
+        m->e[3] = 1.0f;
 
         /* Default shininess */
 
-        mtrlv[i].x[0] = 0.0f;
-    }
+        m->x[0] = 0.0f;
 
-    return i;
+        return i;
+    }
+    return 0;
 }
 
-static void read_map_Kd(const char *line, int i)
+static struct object_mtrl *read_newmtl(vector_t mv, const char *line)
 {
-    if (mtrlv)
+    char  name[MAXSTR];
+    char *last;
+
+    if ((last = strrchr(line, ' ')))
     {
-        char name[MAXSTR];
-
-        if (sscanf(line, "%s", name) == 1)
-            mtrlv[i].image = send_create_image(name);
+        sscanf(last, "%s", name);
+        return (struct object_mtrl *) vecget(mv, new_mtrl(mv, name));
     }
+    else
+        return (struct object_mtrl *) vecget(mv, 0);
 }
 
-static void read_Kd(const char *line, int i)
+static void read_map_Kd(struct object_mtrl *m, const char *line)
 {
-    if (mtrlv) sscanf(line, "%f %f %f", mtrlv[i].d + 0,
-                                        mtrlv[i].d + 1,
-                                        mtrlv[i].d + 2);
+    char  name[MAXSTR];
+    char *last;
+
+    if ((last = strrchr(line, ' ')))
+    {
+        sscanf(last, "%s", name);
+        m->image = send_create_image(name);
+    }
+    else
+        m->image = 0;
 }
 
-static void read_Ka(const char *line, int i)
+static void read_Kd(struct object_mtrl *m, const char *line)
 {
-    if (mtrlv) sscanf(line, "%f %f %f", mtrlv[i].a + 0,
-                                        mtrlv[i].a + 1,
-                                        mtrlv[i].a + 2);
+    sscanf(line, "%f %f %f", m->d, m->d + 1, m->d + 2);
 }
 
-static void read_Ks(const char *line, int i)
+static void read_Ka(struct object_mtrl *m, const char *line)
 {
-    if (mtrlv) sscanf(line, "%f %f %f", mtrlv[i].s + 0,
-                                        mtrlv[i].s + 1,
-                                        mtrlv[i].s + 2);
+    sscanf(line, "%f %f %f", m->a, m->a + 1, m->a + 2);
 }
 
-static void read_Ke(const char *line, int i)
+static void read_Ks(struct object_mtrl *m, const char *line)
 {
-    if (mtrlv) sscanf(line, "%f %f %f", mtrlv[i].e + 0,
-                                        mtrlv[i].e + 1,
-                                        mtrlv[i].e + 2);
+    sscanf(line, "%f %f %f", m->s, m->s + 1, m->s + 2);
 }
 
-static void read_Ns(const char *line, int i)
+static void read_Ke(struct object_mtrl *m, const char *line)
 {
-    if (mtrlv) sscanf(line, "%f", mtrlv[i].x + 0);
+    sscanf(line, "%f %f %f", m->e, m->e + 1, m->e + 2);
 }
 
-static void read_d(const char *line, int i)
+static void read_Ns(struct object_mtrl *m, const char *line)
 {
-    if (mtrlv) sscanf(line, "%f", mtrlv[i].d + 3);
+    sscanf(line, "%f", m->x);
 }
 
-static void read_mtl(const char *filename)
+static void read_d(struct object_mtrl *m, const char *line)
 {
-    char line[MAXSTR];
+    sscanf(line, "%f", m->d + 3);
+}
+
+static void read_mtl(vector_t mv, const char *filename)
+{
+    char L[MAXSTR];
+    char W[MAXSTR];
     FILE *fin;
+    int n = 0;
 
-    if ((fin = fopen(filename, "r")))
+    if ((fin = open_file(filename, "r")))
     {
-        int i = -1;
+        struct object_mtrl *m = NULL;
 
         /* Process each line, invoking the handler for each keyword. */
 
-        while (fgets(line, MAXSTR, fin))
-        {
-            if      (!strncmp(line, "newmtl", 6)) i = read_newmtl(line + 7);
-            else if (!strncmp(line, "map_Kd", 6))     read_map_Kd(line + 7, i);
+        while (fgets(L, MAXSTR, fin))
+            if (sscanf(L, "%s%n", W, &n) >= 1)
+            {
+                if      (!strcmp(W, "newmtl")) m = read_newmtl(mv, L + n);
+                else if (!strcmp(W, "map_Kd"))     read_map_Kd(m,  L + n);
 
-            else if (!strncmp(line, "Kd", 2)) read_Kd(line + 3, i);
-            else if (!strncmp(line, "Ka", 2)) read_Ka(line + 3, i);
-            else if (!strncmp(line, "Ks", 2)) read_Ks(line + 3, i);
-            else if (!strncmp(line, "Ke", 2)) read_Ke(line + 3, i);
-            else if (!strncmp(line, "Ns", 2)) read_Ns(line + 3, i);
-            else if (!strncmp(line, "d",  1)) read_d (line + 2, i);
-        }
+                else if (!strcmp(W, "Kd")) read_Kd(m, L + n);
+                else if (!strcmp(W, "Ka")) read_Ka(m, L + n);
+                else if (!strcmp(W, "Ks")) read_Ks(m, L + n);
+                else if (!strcmp(W, "Ke")) read_Ke(m, L + n);
+                else if (!strcmp(W, "Ns")) read_Ns(m, L + n);
+                else if (!strcmp(W, "d"))  read_d (m, L + n);
+            }
 
         fclose(fin);
     }
     else error("MTL file '%s': %s", filename, system_error());
 }
 
-static int find_mtl(const char *name)
+static int find_mtl(vector_t mv, const char *name)
 {
-    int i;
+    int i, n = vecnum(mv);
 
-    for (i = 0; i < mtrlc; ++i)
-        if (strncmp(mtrlv[i].name, name, MAXSTR) == 0)
+    for (i = 0; i < n; ++i)
+    {
+        struct object_mtrl *m = (struct object_mtrl *) vecget(mv, i);
+
+        if (m->name && strncmp(m->name, name, MAXSTR) == 0)
             return i;
+    }
 
     error("MTL: Unknown material '%s'", name);
     return 0;
@@ -412,10 +270,10 @@ static int find_mtl(const char *name)
 
 /*---------------------------------------------------------------------------*/
 
-static int read_indices(const char *line, int *vi, int *ti, int *ni)
+static int read_face_indices(const char *line, int *vi, int *ti, int *ni)
 {
-    char vert[MAXSTR];
-    int n = 0;
+    static char vert[MAXSTR];
+    int n;
 
     *vi = 0;
     *ti = 0;
@@ -423,467 +281,425 @@ static int read_indices(const char *line, int *vi, int *ti, int *ni)
 
     if (sscanf(line, "%s%n", vert, &n) >= 1)
     {
-        char *texc = strstr(vert, "/") + 1;
-        char *norm = strstr(texc, "/") + 1;
-
-        *vi = atoi(vert);
-        *ti = atoi(texc);
-        *ni = atoi(norm);
+        if (sscanf(vert, "%d/%d/%d", vi, ti, ni) == 3) return n;
+        if (sscanf(vert, "%d/%d",    vi, ti    ) == 2) return n;
+        if (sscanf(vert, "%d//%d",   vi,     ni) == 2) return n;
+        if (sscanf(vert, "%d",       vi        ) == 1) return n;
     }
-    return n;
+    return 0;
 }
 
-static void read_vertices(const char *line)
+static void read_face_vertices(vector_t vv, const char *line)
 {
     const char *c = line;
-    int dc, i, j;
-
+    int dc;
     int vi;
     int ti;
     int ni;
 
     /* Scan down the face string recording index set specifications. */
 
-    while ((dc = read_indices(c, &vi, &ti, &ni)) && ((i = push_i()) >= 0))
+    while ((dc = read_face_indices(c, &vi, &ti, &ni)))
     {
-        iv[i * 4 + 0] = vi;
-        iv[i * 4 + 1] = ti;
-        iv[i * 4 + 2] = ni;
+        struct object_vert *v = (struct object_vert *) vecget(vv, vecadd(vv));
 
-        /* If we've seen this index set before, note the associated vertex. */
-        /*
-        for (k = 0; k < i; ++k)
-            if (iv[i * 4 + 0] == iv[k * 4 + 0] &&
-                iv[i * 4 + 1] == iv[k * 4 + 1] &&
-                iv[i * 4 + 2] == iv[k * 4 + 2])
-            {
-                iv[i * 4 + 3]  = iv[k * 4 + 3];
-                break;
-            }
-        */
+        struct vec2 *tp = NULL;
+        struct vec3 *np = NULL;
+        struct vec3 *vp = NULL;
 
+        /* Locate the indexed value in the vector caches. */
 
-        /* If we haven't seen this index set, create a new vertex. */
+        if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
+        else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv) + ti);
+        if      (ni > 0) np = (struct vec3 *) vecget(_nv, ni - 1);
+        else if (ni < 0) np = (struct vec3 *) vecget(_nv, vecnum(_nv) + ni);
+        if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
+        else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv) + vi);
 
-        if (/*i == k &&*/ (j = push_vert()) >= 0)
-        {
-            /* Initialize vector data defaults. */
+        /* Initialize the new vertex. */
 
-            vertv[j].v[0] = 0.0f;
-            vertv[j].v[1] = 0.0f;
-            vertv[j].v[2] = 0.0f;
+        v->t[0] = tp ? tp->u : 0.0f;
+        v->t[1] = tp ? tp->v : 0.0f;
 
-            vertv[j].t[0] = 0.0f;
-            vertv[j].t[1] = 0.0f;
+        v->n[0] = np ? np->x : 0.0f;
+        v->n[1] = np ? np->y : 0.0f;
+        v->n[2] = np ? np->z : 1.0f;
 
-            vertv[j].n[0] = 0.0f;
-            vertv[j].n[1] = 0.0f;
-            vertv[j].n[2] = 1.0f;
-
-            /* Copy specified vector data from the cache. */
-
-            if (ti > 0)
-            {
-                vertv[j].t[0] = tv[(ti -  1) * 2 + 0];
-                vertv[j].t[1] = tv[(ti -  1) * 2 + 1];
-            }
-            if (ti < 0)
-            {
-                vertv[j].t[0] = tv[(tc - ti) * 2 + 0];
-                vertv[j].t[1] = tv[(tc - ti) * 2 + 1];
-            }
-
-            if (ni > 0)
-            {
-                vertv[j].n[0] = nv[(ni -  1) * 3 + 0];
-                vertv[j].n[1] = nv[(ni -  1) * 3 + 1];
-                vertv[j].n[2] = nv[(ni -  1) * 3 + 2];
-            }
-            if (ni < 0)
-            {
-                vertv[j].n[0] = nv[(nc - ni) * 3 + 0];
-                vertv[j].n[1] = nv[(nc - ni) * 3 + 1];
-                vertv[j].n[2] = nv[(nc - ni) * 3 + 2];
-            }
-
-            if (vi > 0)
-            {
-                vertv[j].v[0] = vv[(vi -  1) * 3 + 0];
-                vertv[j].v[1] = vv[(vi -  1) * 3 + 1];
-                vertv[j].v[2] = vv[(vi -  1) * 3 + 2];
-            }
-            if (vi < 0)
-            {
-                vertv[j].v[0] = vv[(vc - vi) * 3 + 0];
-                vertv[j].v[1] = vv[(vc - vi) * 3 + 1];
-                vertv[j].v[2] = vv[(vc - vi) * 3 + 2];
-            }
-
-            /* Associate the index set with the new vertex. */
-
-            iv[i * 4 + 3] = j;
-        }
+        v->v[0] = vp ? vp->x : 0.0f;
+        v->v[1] = vp ? vp->y : 0.0f;
+        v->v[2] = vp ? vp->z : 0.0f;
 
         c += dc;
     }
 }
 
-static void read_f(const char *line)
+static void read_f(vector_t vv, vector_t fv, const char *line)
 {
-    int i, j, i0 = ic;
+    int i, i0, i1;
 
     /* Scan down the face string recording index set specifications. */
 
-    read_vertices(line);
+    i0 = vecnum(vv);
+    read_face_vertices(vv, line);
+    i1 = vecnum(vv);
 
-    /* Convert our N new index sets into N-2 new triangles. */
+    /* Convert our N new vertices into N-2 new triangles. */
 
-    for (i = i0; i < ic - 2; ++i)
-        if ((j = push_face()) >= 0)
-        {
-            facev[j].vi[0] = iv[(i0   ) * 4 + 3];
-            facev[j].vi[1] = iv[(i + 1) * 4 + 3];
-            facev[j].vi[2] = iv[(i + 2) * 4 + 3];
-        }
-}
-
-static void read_l(const char *line)
-{
-    int i, j, i0 = ic;
-
-    /* Scan down the edge string recording index set specifications. */
-
-    read_vertices(line);
-
-    /* Convert our N new index sets into N-2 new triangles. */
-
-    for (i = i0; i < ic - 1; ++i)
-        if ((j = push_edge()) >= 0)
-        {
-            edgev[j].vi[0] = iv[(i + 0) * 4 + 3];
-            edgev[j].vi[1] = iv[(i + 1) * 4 + 3];
-        }
+    for (i = i0; i < i1 - 2; ++i)
+    {
+        struct object_face *f = (struct object_face *) vecget(fv, vecadd(fv));
+     
+        f->vi[0] = i0;
+        f->vi[1] = i + 1;
+        f->vi[2] = i + 2;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int read_g(int i, int m)
+static int read_edge_indices(const char *line, int *vi, int *ti)
 {
-    int j;
+    static char vert[MAXSTR];
+    int n;
 
-    /* Make sure we have an initial surface. */
+    *vi = 0;
+    *ti = 0;
 
-    if (i >= 0 || (i = push_surf()) >= 0)
+    if (sscanf(line, "%s%n", vert, &n) >= 1)
     {
-        /* Close the existing surface by copying the face and edge cache. */
-
-        surfv[i].mi = m;
-        surfv[i].fc = facec;
-        surfv[i].ec = edgec;
-
-        surfv[i].fv =
-            (struct object_face *) memdup(facev,
-                                          facec, sizeof (struct object_face));
-        surfv[i].ev =
-            (struct object_edge *) memdup(edgev,
-                                          edgec, sizeof (struct object_edge));
-
-        facec = 0;
-        edgec = 0;
+        if (sscanf(vert, "%d/%d", vi, ti) == 2) return n;
+        if (sscanf(vert, "%d",    vi    ) == 1) return n;
     }
-
-    /* Initialize a new empty surface. */
-
-    if ((j = push_surf()) >= 0)
-    {
-        surfv[j].mi = m;
-        surfv[j].fc = 0;
-        surfv[j].ec = 0;
-        surfv[j].fv = NULL;
-    }
-
-    return j;
+    return 0;
 }
 
-static void read_mtllib(const char *line)
+static void read_edge_vertices(vector_t vv, const char *line)
+{
+    const char *c = line;
+    int dc;
+    int vi;
+    int ti;
+
+    /* Scan down the face string recording index set specifications. */
+
+    while ((dc = read_edge_indices(c, &vi, &ti)))
+    {
+        struct object_vert *v = (struct object_vert *) vecget(vv, vecadd(vv));
+
+        struct vec2 *tp = NULL;
+        struct vec3 *vp = NULL;
+
+        /* Locate the indexed value in the vector caches. */
+
+        if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
+        else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv) + ti);
+        if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
+        else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv) + vi);
+
+        /* Initialize the new vertex. */
+
+        v->t[0] = tp ? tp->u : 0.0f;
+        v->t[1] = tp ? tp->v : 0.0f;
+
+        v->n[0] = 0.0f;
+        v->n[1] = 0.0f;
+        v->n[2] = 1.0f;
+
+        v->v[0] = vp ? vp->x : 0.0f;
+        v->v[1] = vp ? vp->y : 0.0f;
+        v->v[2] = vp ? vp->z : 0.0f;
+
+        c += dc;
+    }
+}
+
+static void read_l(vector_t vv, vector_t ev, const char *line)
+{
+    int i, i0, i1;
+
+    /* Scan down the edge string recording index set specifications. */
+
+    i0 = vecnum(vv);
+    read_edge_vertices(vv, line);
+    i1 = vecnum(vv);
+
+    /* Convert our N new vertices into N-1 new edges. */
+
+    for (i = i0; i < i1 - 1; ++i)
+    {
+        struct object_edge *e = (struct object_edge *) vecget(ev, vecadd(ev));
+            
+        e->vi[0] = i;
+        e->vi[1] = i + 1;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static struct object_surf *read_g(vector_t sv, int mi)
+{
+    struct object_surf *s = (struct object_surf *) vecget(sv, vecadd(sv));
+
+    s->mi = mi;
+    s->fv = vecnew(256, sizeof (struct object_face));
+    s->ev = vecnew(256, sizeof (struct object_edge));
+
+    return s;
+}
+
+static void read_mtllib(vector_t mv, const char *line)
 {
     char file[MAXSTR];
+    int n = 0;
+    int s = 0;
 
-    sscanf(line, "%s", file);
-    read_mtl(file);
+    while (sscanf(line + s, "%s%n", file, &n) == 1)
+    {
+        read_mtl(mv, file);
+        s += n;
+    }
 }
 
-static int read_usemtl(const char *line)
+static int read_usemtl(vector_t mv, const char *line)
 {
     char name[MAXSTR];
-    int m = -1;
 
     if (sscanf(line, "%s", name) == 1)
-        m = find_mtl(name);
+        return find_mtl(mv, name);
+    else
+        return -1;
+}
 
-    return m;
+static struct object_surf *read_s(vector_t mv, vector_t sv, const char *line)
+{
+    struct object_surf *s = (struct object_surf *) vecget(sv, vecadd(sv));
+
+    s->mi = read_usemtl(mv, line);
+    s->fv = vecnew(256, sizeof (struct object_face));
+    s->ev = vecnew(256, sizeof (struct object_edge));
+
+    return s;
 }
 
 static void read_vt(const char *line)
 {
-    int i;
-
-    if ((i = push_t()) >= 0)
-        sscanf(line, "%f %f", tv + i * 2 + 0,
-                              tv + i * 2 + 1);
+    struct vec2 *tp = (struct vec2 *) vecget(_tv, vecadd(_tv));
+    sscanf(line, "%f %f", &tp->u, &tp->v);
 }
 
 static void read_vn(const char *line)
 {
-    int i;
-
-    if ((i = push_n()) >= 0)
-        sscanf(line, "%f %f %f", nv + i * 3 + 0,
-                                 nv + i * 3 + 1,
-                                 nv + i * 3 + 2);
+    struct vec3 *np = (struct vec3 *) vecget(_nv, vecadd(_nv));
+    sscanf(line, "%f %f %f", &np->x, &np->y, &np->z);
 }
 
 static void read_v(const char *line)
 {
-    int i;
-
-    if ((i = push_v()) >= 0)
-        sscanf(line, "%f %f %f", vv + i * 3 + 0,
-                                 vv + i * 3 + 1,
-                                 vv + i * 3 + 2);
+    struct vec3 *vp = (struct vec3 *) vecget(_vv, vecadd(_vv));
+    sscanf(line, "%f %f %f", &vp->x, &vp->y, &vp->z);
 }
 
 /*---------------------------------------------------------------------------*/
 
 static int read_obj(const char *filename, struct object *o)
 {
-    char line[MAXSTR];
+    char L[MAXSTR];
+    char W[MAXSTR];
     FILE *fin;
+    int r = 0;
+    int n = 0;
 
-    /* Initialize the vector and element caches. */
+    /* Initialize the loader vector caches. */
 
-    vc    = 0;
-    tc    = 0;
-    nc    = 0;
-    ic    = 0;
+    _tv   = vecnew(1024, sizeof (struct vec2));
+    _nv   = vecnew(1024, sizeof (struct vec3));
+    _vv   = vecnew(1024, sizeof (struct vec3));
 
-    mtrlc = 0;
-    vertc = 0;
-    facec = 0;
-    edgec = 0;
-    surfc = 0;
+    /* Initialize the object element vectors. */
 
-    if ((fin = fopen(filename, "r")))
+    o->mv = vecnew(8,    sizeof (struct object_mtrl));
+    o->vv = vecnew(1024, sizeof (struct object_vert));
+    o->sv = vecnew(1024, sizeof (struct object_surf));
+
+    if ((fin = open_file(filename, "r")))
     {
-        int s = -1;
-        int m = -1;
+        /* Create a default catch-all group using the default material. */
 
-        /* Process each line, invoking the handler for each keyword. */
+        struct object_surf *s = read_g(o->sv, new_mtrl(o->mv, NULL));
 
-        while (fgets(line, MAXSTR, fin))
-        {
-            if      (!strncmp(line, "mtllib", 6))     read_mtllib(line + 7);
-            else if (!strncmp(line, "usemtl", 6)) m = read_usemtl(line + 7);
+        /* Process each l, invoking the handler for each keyword. */
 
-            else if (!strncmp(line, "g",  1)) s = read_g(s, m);
-            else if (!strncmp(line, "f",  1)) read_f (line + 2);
-            else if (!strncmp(line, "l",  1)) read_l (line + 2);
-            else if (!strncmp(line, "vt", 2)) read_vt(line + 3);
-            else if (!strncmp(line, "vn", 2)) read_vn(line + 3);
-            else if (!strncmp(line, "v",  1)) read_v (line + 2);
-        }
+        while (fgets(L, MAXSTR, fin))
+            if (sscanf(L, "%s%n", W, &n) >= 1)
+            {
+                if      (!strcmp(W, "mtllib"))     read_mtllib(o->mv, L + n);
 
-        /* Close out the last group being read. */
+                else if (!strcmp(W, "usemtl")) s = read_s(o->mv, o->sv, L + n);
+                else if (!strcmp(W, "f"))          read_f(o->vv, s->fv, L + n);
+                else if (!strcmp(W, "l"))          read_l(o->vv, s->ev, L + n);
 
-        s = read_g(s, m);
-
-        /* Close out the object by copying the element caches. */
-
-        o->vv = (struct object_vert *)
-            memdup(vertv, vertc, sizeof (struct object_vert));
-        o->mv = (struct object_mtrl *)
-            memdup(mtrlv, mtrlc, sizeof (struct object_mtrl));
-        o->sv = (struct object_surf *)
-            memdup(surfv, surfc, sizeof (struct object_surf));
-
-        o->vc = vertc;
-        o->mc = mtrlc;
-        o->sc = s;
+                else if (!strcmp(W, "vt"))         read_vt(L + n);
+                else if (!strcmp(W, "vn"))         read_vn(L + n);
+                else if (!strcmp(W, "v"))          read_v (L + n);
+            }
 
         fclose(fin);
 
-        return 1;
+        r = 1;
     }
     else error("OBJ file '%s': %s", filename, system_error());
 
-    return 0;
+    /* Release the loader caches. */
+
+    vecdel(_vv);
+    vecdel(_nv);
+    vecdel(_tv);
+
+    return r;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int init_object(void)
 {
-    if ((O = (struct object *) calloc(OMAXINIT, sizeof (struct object))))
-        O_max = OMAXINIT;
-
-    return 1;
+    if ((object = vecnew(128, sizeof (struct object))))
+        return 1;
+    else
+        return 0;
 }
 
-void draw_object(int id, int od, const float M[16],
-                                 const float I[16],
-                                 const struct frustum *F, float a)
+void draw_object(int j, int i, const float M[16],
+                               const float I[16],
+                               const struct frustum *F, float a)
 {
     GLsizei stride = sizeof (struct object_vert);
 
-    if (object_exists(od))
+    int k, n = vecnum(O(i)->sv);
+    struct object_surf *s;
+    struct object_mtrl *m;
+
+    float N[16];
+    float J[16];
+    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    init_object_gl(i);
+
+    glPushMatrix();
     {
-        init_object_gl(od);
+        /* Apply the local coordinate system transformation. */
 
-        glPushMatrix();
+        transform_entity(j, N, M, J, I);
+
+        /* Render this object. */
+
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glPushAttrib(GL_LIGHTING_BIT |
+                     GL_TEXTURE_BIT  |
+                     GL_DEPTH_BUFFER_BIT);
         {
-            float N[16];
-            float J[16];
-
-            /* Apply the local coordinate system transformation. */
-
-            transform_entity(id, N, M, J, I);
-
-            /* Render this object. */
-
-            glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-            glPushAttrib(GL_LIGHTING_BIT |
-                         GL_TEXTURE_BIT  |
-                         GL_DEPTH_BUFFER_BIT);
+            if (GL_has_vertex_buffer_object)
             {
-                int si;
-
-                if (GL_has_vertex_buffer_object)
-                {
-                    glBindBufferARB(GL_ARRAY_BUFFER_ARB, O[od].buffer);
-                    glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
-                }
-                else
-                    glInterleavedArrays(GL_T2F_N3F_V3F, stride, O[od].vv);
-
-                /* If this object is transparent, don't write depth. */
-
-                if (a * get_entity_alpha(id) < 1.0)
-                    glDepthMask(GL_FALSE);
-
-                for (si = 0; si < O[od].sc; ++si)
-                {
-                    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-                    float z[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-                    if (O[od].sv[si].mi >= 0)
-                    {
-                        struct object_mtrl *m = O[od].mv + O[od].sv[si].mi;
-
-                        draw_image(m->image);
-
-                        /* Modulate the diffuse color by the current alpha. */
-
-                        d[0] = m->d[0];
-                        d[1] = m->d[1];
-                        d[2] = m->d[2];
-                        d[3] = m->d[3] * a * get_entity_alpha(id);
-
-                        glColor4fv(d);
-
-                        /* Apply the material properties. */
-
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
-                    }
-                    else
-                    {
-                        glBindTexture(GL_TEXTURE_2D, 0);
-
-                        d[3] = a * get_entity_alpha(id);
-
-                        glColor4fv(d);
-
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   d);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   z);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  z);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  z);
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, d);
-                    }
-
-                    /* Draw everything. */
-
-                    if (O[od].sv[si].fc > 0)
-                        glDrawElements(GL_TRIANGLES, 3 * O[od].sv[si].fc,
-                                       GL_UNSIGNED_INT,  O[od].sv[si].fv);
-                    if (O[od].sv[si].ec > 0)
-                        glDrawElements(GL_LINES,     2 * O[od].sv[si].ec,
-                                       GL_UNSIGNED_INT,  O[od].sv[si].ev);
-                }
+                glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
+                glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
             }
-            glPopAttrib();
-            glPopClientAttrib();
+            else
+                glInterleavedArrays(GL_T2F_N3F_V3F, stride, O(i)->vv);
 
-            /* Render all child entities in this coordinate system. */
+            /* If this object is transparent, don't write depth. */
 
-            draw_entity_list(id, N, J, F, a * get_entity_alpha(id));
+            if (a * get_entity_alpha(j) < 1.0)
+                glDepthMask(GL_FALSE);
+
+            for (k = 0; k < n; ++k)
+            {
+                s = (struct object_surf *) vecget(O(i)->sv, k);
+                m = (struct object_mtrl *) vecget(O(i)->mv, s->mi);
+
+                draw_image(m->image);
+
+                /* Modulate the diffuse color by the current alpha. */
+
+                d[0] = m->d[0];
+                d[1] = m->d[1];
+                d[2] = m->d[2];
+                d[3] = m->d[3] * a * get_entity_alpha(j);
+
+                /* Apply the material properties. */
+
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
+
+                /* Draw this surface's faces and edges. */
+
+                if (vecnum(s->fv) > 0)
+                    glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
+                                   GL_UNSIGNED_INT,  vecget(s->fv, 0));
+                if (vecnum(s->ev) > 0)
+                    glDrawElements(GL_LINES,     2 * vecnum(s->ev),
+                                   GL_UNSIGNED_INT,  vecget(s->ev, 0));
+            }
         }
-        glPopMatrix();
+        glPopAttrib();
+        glPopClientAttrib();
+
+        /* Render all child entities in this coordinate system. */
+
+        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
     }
+    glPopMatrix();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void init_object_gl(int od)
+void init_object_gl(int i)
 {
-    int i;
+    int j, n = vecnum(O(i)->mv);
 
-    if (O[od].state == 0)
+    if (O(i)->state == 0)
     {
         /* Initialize all referenced textures. */
 
-        for (i = 0; i < O[od].mc; ++i)
-            init_image_gl(O[od].mv[i].image);
+        for (j = 0; j < n; ++j)
+            init_image_gl(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
 
         /* Initialize the buffer object. */
     
         if (GL_has_vertex_buffer_object)
         {
-            glGenBuffersARB(1, &O[od].buffer);
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O[od].buffer);
+            glGenBuffersARB(1, &O(i)->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
 
             glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                            O[od].vc * sizeof (struct object_vert),
-                            O[od].vv,  GL_STATIC_DRAW_ARB);
+                            vecnum(O(i)->vv) * sizeof (struct object_vert),
+                            vecget(O(i)->vv, 0), GL_STATIC_DRAW_ARB);
         }
 
-        O[od].state = 1;
+        O(i)->state = 1;
     }
 }
 
-void free_object_gl(int od)
+void free_object_gl(int i)
 {
-    int i;
+    int j, n = vecnum(O(i)->mv);
 
-    if (O[od].state == 1)
+    if (O(i)->state == 1)
     {
         /* Free the vertex buffer object. */
 
         if (GL_has_vertex_buffer_object)
-        {
-            if (glIsBufferARB(O[od].buffer))
-                glDeleteBuffersARB(1, &O[od].buffer);
-        }
+            if (glIsBufferARB(O(i)->buffer))
+                glDeleteBuffersARB(1, &O(i)->buffer);
 
         /* Free all referenced textures. */
 
-        for (i = 0; i < O[od].mc; ++i)
-            free_image_gl(O[od].mv[i].image);
+        for (j = 0; j < n; ++j)
+            free_image_gl(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
 
-        O[od].buffer = 0;
-        O[od].state  = 0;
+        O(i)->buffer = 0;
+        O(i)->state  = 0;
     }
 }
 
@@ -891,47 +707,46 @@ void free_object_gl(int od)
 
 int send_create_object(const char *filename)
 {
-    int od;
-    int si;
+    struct object_surf *s;
+    int i;
+    int j;
 
-    if (O && (od = alloc_object()) >= 0)
+    if ((i = new_object()) >= 0)
     {
         /* If the file exists and is successfully read... */
 
-        if ((read_obj(filename, O + od)))
+        if ((read_obj(filename, O(i))))
         {
-            O[od].count = 1;
-            O[od].state = 0;
+            int n = vecnum(O(i)->sv);
+
+            O(i)->count = 1;
+            O(i)->state = 0;
 
             /* Pack the object header. */
 
             pack_event(EVENT_CREATE_OBJECT);
-            pack_index(od);
-            pack_index(O[od].vc);
-            pack_index(O[od].mc);
-            pack_index(O[od].sc);
+            pack_index(i);
+            pack_index(n);
 
             /* Pack the vertices and materials. */
 
-            pack_alloc(O[od].vc * sizeof (struct object_vert), O[od].vv);
-            pack_alloc(O[od].mc * sizeof (struct object_mtrl), O[od].mv);
+            pack_vector(O(i)->vv);
+            pack_vector(O(i)->mv);
 
             /* Pack each of the surfaces. */
 
-            for (si = 0; si < O[od].sc; ++si)
+            for (j = 0; j < n; ++j)
             {
-                struct object_surf *s = O[od].sv + si;
+                s = (struct object_surf *) vecget(O(i)->sv, j);
 
-                pack_index(s->mi);
-                pack_index(s->fc);
-                pack_index(s->ec);
-                pack_alloc(s->fc * sizeof (struct object_face), s->fv);
-                pack_alloc(s->ec * sizeof (struct object_edge), s->ev);
+                pack_index (s->mi);
+                pack_vector(s->fv);
+                pack_vector(s->ev);
             }
 
             /* Encapsulate this object in an entity. */
 
-            return send_create_entity(TYPE_OBJECT, od);
+            return send_create_entity(TYPE_OBJECT, i);
         }
     }
     return -1;
@@ -939,37 +754,32 @@ int send_create_object(const char *filename)
 
 void recv_create_object(void)
 {
-    int od = unpack_index();
-    int si;
-
-    O[od].count = 1;
-    O[od].state = 0;
+    struct object_surf *s;
 
     /* Unpack the object header. */
 
-    O[od].vc = unpack_index();
-    O[od].mc = unpack_index();
-    O[od].sc = unpack_index();
+    int i = unpack_index();
+    int n = unpack_index();
+    int j;
+
+    O(i)->count = 1;
+    O(i)->state = 0;
 
     /* Unpack the vertices and materials.  Allocate space for surfaces. */
 
-    O[od].vv = unpack_alloc(O[od].vc * sizeof (struct object_vert));
-    O[od].mv = unpack_alloc(O[od].mc * sizeof (struct object_mtrl));
-
-    O[od].sv = (struct object_surf *)
-        calloc(O[od].sc, sizeof (struct object_surf));
+    O(i)->vv = unpack_vector();
+    O(i)->mv = unpack_vector();
+    O(i)->sv = vecnew(n, sizeof (struct object_surf));
 
     /* Unpack each surface. */
 
-    for (si = 0; si < O[od].sc; ++si)
+    for (j = 0; j < n; ++j)
     {
-        struct object_surf *s = O[od].sv + si;
+        s = (struct object_surf *) vecget(O(i)->sv, j);
 
         s->mi = unpack_index();
-        s->fc = unpack_index();
-        s->ec = unpack_index();
-        s->fv = unpack_alloc(s->fc * sizeof (struct object_face));
-        s->ev = unpack_alloc(s->ec * sizeof (struct object_edge));
+        s->fv = unpack_vector();
+        s->ev = unpack_vector();
     }
 
     /* Encapsulate this object in an entity. */
@@ -980,32 +790,29 @@ void recv_create_object(void)
 /*---------------------------------------------------------------------------*/
 /* These may only be called by create_clone and delete_entity, respectively. */
 
-void clone_object(int od)
+void clone_object(int i)
 {
-    if (object_exists(od))
-        O[od].count++;
+    O(i)->count++;
 }
 
-void delete_object(int od)
+void delete_object(int i)
 {
-    if (object_exists(od))
+    if (--O(i)->count == 0)
     {
-        O[od].count--;
+        int j, n = vecnum(O(i)->sv);
 
-        if (O[od].count == 0)
+        free_object_gl(i);
+
+        for (j = 0; j < n; ++j)
         {
-            int si;
-
-            free_object_gl(od);
-
-            for (si = 0; si < O[od].sc; ++si)
-                if (O[od].sv[si].fv) free(O[od].sv[si].fv);
-
-            if (O[od].mv) free(O[od].mv);
-            if (O[od].vv) free(O[od].vv);
-
-            memset(O + od, 0, sizeof (struct object));
+            vecdel(((struct object_surf *) vecget(O(i)->sv, j))->fv);
+            vecdel(((struct object_surf *) vecget(O(i)->sv, j))->ev);
         }
+
+        vecdel(O(i)->mv);
+        vecdel(O(i)->vv);
+
+        memset(O(i), 0, sizeof (struct object));
     }
 }
 

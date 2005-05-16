@@ -34,9 +34,9 @@ struct sprite
     float t1;
 };
 
-/*---------------------------------------------------------------------------*/
-
 static vector_t sprite;
+
+/*---------------------------------------------------------------------------*/
 
 #define S(i) ((struct sprite *) vecget(sprite, i))
 
@@ -214,7 +214,11 @@ void clone_sprite(int i)
 void delete_sprite(int i)
 {
     if (--S(i)->count == 0)
+    {
         free_sprite_gl(i);
+
+        memset(S(i), 0, sizeof (struct sprite));
+    }
 }
 
 /*---------------------------------------------------------------------------*/
