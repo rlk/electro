@@ -27,12 +27,12 @@ function do_start()
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
     pivot  = E.create_pivot()
---  hand   = E.create_object("box.obj")
+    hand   = E.create_object("box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
---  E.parent_entity(hand,  nearby)
+    E.parent_entity(hand,  nearby)
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0,  -8.0)
@@ -40,8 +40,8 @@ function do_start()
 
     E.set_entity_scale(hand, 0.25, 0.25, 0.25)
 
---  E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
---  E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
+    E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
+    E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
 
     table.foreach(E.argument, add_object)
 

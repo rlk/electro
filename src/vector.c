@@ -60,6 +60,7 @@ void vecclr(vector_t V)
 int vecadd(vector_t V)
 {
     void *buf;
+    int i;
 
     assert(V);
 
@@ -72,7 +73,12 @@ int vecadd(vector_t V)
         }
         else return -1;
     }
-    return V->num++;
+
+    i = V->num++;
+
+    memset(vecget(V, i), 0, V->siz);
+
+    return i;
 }
 
 /*---------------------------------------------------------------------------*/

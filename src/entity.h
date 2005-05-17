@@ -57,8 +57,8 @@ int  init_entity(void);
 void draw_entity(void);
 void step_entity(void);
 
-void init_entity_gl(void);
-void free_entity_gl(void);
+void init_all_entity_gl(void);
+void free_all_entity_gl(void);
 
 /*---------------------------------------------------------------------------*/
 

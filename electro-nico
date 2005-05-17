@@ -5,4 +5,4 @@
 export ELECTRO_CONFIG=/home/evl/rlk/src/electro/config
 export ELECTRO_BIN=/home/evl/rlk/src/electro
 
-mpirun -machinefile $ELECTRO_CONFIG/nico.dat -np 11 $ELECTRO_BIN/electro-mpi $ELECTRO_CONFIG/nico.lua $@
+mpirun -machinefile $ELECTRO_CONFIG/nico.dat -np 11 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/nico.lua $@

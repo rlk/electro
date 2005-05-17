@@ -182,7 +182,7 @@ GLfloat opengl_perf(GLfloat *all)
 
     count++;
 
-    /* Compute the average FPS over 250 milliseconds. */
+    /* Compute the average FPS over 1000 milliseconds. */
 
     count++;
 

@@ -313,7 +313,7 @@ void free_image_gl(int i)
     {
         if (glIsTexture(I(i)->texture))
             glDeleteTextures(1, &I(i)->texture);
-        
+
         I(i)->texture = 0;
         I(i)->state   = 0;
     }
@@ -337,7 +337,7 @@ int send_create_image(const char *filename)
     {
         /* Note the file name. */
 
-        I(i)->filename = memdup(filename, 1, strlen(filename) + 1);
+        I(i)->filename = memdup(filename, strlen(filename) + 1, 1);
 
         /* Load and pack the image. */
 

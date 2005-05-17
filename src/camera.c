@@ -146,14 +146,16 @@ int send_create_camera(int t)
 
     if ((i = new_camera()) >= 0)
     {
-        pack_event(EVENT_CREATE_CAMERA);
-        pack_index(i);
-        pack_index(t);
-
         C(i)->count = 1;
         C(i)->type  = t;
         C(i)->near  = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
         C(i)->far   = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
+
+        pack_event(EVENT_CREATE_CAMERA);
+        pack_index(i);
+        pack_index(t);
+        pack_float(C(i)->near);
+        pack_float(C(i)->far);
 
         return send_create_entity(TYPE_CAMERA, i);
     }
@@ -167,8 +169,8 @@ void recv_create_camera(void)
 
     C(i)->count = 1;
     C(i)->type  = t;
-    C(i)->near  = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
-    C(i)->far   = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
+    C(i)->near  = unpack_float();
+    C(i)->far   = unpack_float();
 
     recv_create_entity();
 }

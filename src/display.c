@@ -144,8 +144,8 @@ void sync_display(void)
     {
         L = MIN(L, Hi[i].pix_x);
         R = MAX(R, Hi[i].pix_x + Hi[i].pix_w);
-        B = MIN(L, Hi[i].pix_y);
-        T = MAX(R, Hi[i].pix_y + Hi[i].pix_h);
+        B = MIN(B, Hi[i].pix_y);
+        T = MAX(T, Hi[i].pix_y + Hi[i].pix_h);
     }
 
     for (i = 0; i < H_num; i++)
@@ -446,10 +446,20 @@ void add_tile(const char *name, int x, int y, int w, int h,
         }
         else
         {
-            Hi[i].pix_x = MIN(Hi[i].pix_x, X);
-            Hi[i].pix_y = MIN(Hi[i].pix_y, Y);
-            Hi[i].pix_w = MAX(Hi[i].pix_w, X + W - Hi[i].pix_x);
-            Hi[i].pix_h = MAX(Hi[i].pix_h, Y + H - Hi[i].pix_y);
+            int L = Hi[i].pix_x;
+            int R = Hi[i].pix_x + Hi[i].pix_w;
+            int B = Hi[i].pix_y;
+            int T = Hi[i].pix_y + Hi[i].pix_h;
+
+            L = MIN(L, X);
+            R = MAX(R, X + W);
+            B = MIN(B, Y);
+            T = MAX(T, Y + H);
+
+            Hi[i].pix_x =     L;
+            Hi[i].pix_w = R - L;
+            Hi[i].pix_y =     B;
+            Hi[i].pix_h = T - B;
         }
     }
 }

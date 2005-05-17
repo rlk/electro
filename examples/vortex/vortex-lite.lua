@@ -80,10 +80,10 @@ function do_start()
 
     E.enable_timer(true)        
 
-    io.output("constellation.obj")
-    io.write("mtllib constellation.mtl\n")
-    io.write("g constellation\n")
-    io.write("usemtl blue\n")
+--    io.output("constellation.obj")
+--    io.write("mtllib constellation.mtl\n")
+--    io.write("g constellation\n")
+--    io.write("usemtl blue\n")
 
     return true
 end

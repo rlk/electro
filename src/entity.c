@@ -36,6 +36,7 @@ struct entity
     int type;
     int data;
     int flag;
+    int state;
 
     /* Entity transformation. */
 
@@ -100,6 +101,44 @@ const char *entity_name(int i)
     case TYPE_PIVOT:  return "pivot";
     }
     return "unknown";
+}
+
+/*---------------------------------------------------------------------------*/
+
+void init_entity_gl(int i)
+{
+    if (E(i)->state == 0)
+    {
+        /* Initialize any vertex and fragment programs. */
+
+        if (E(i)->vert_text && GL_has_vertex_program)
+            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
+
+        if (E(i)->frag_text && GL_has_fragment_program)
+            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
+
+        E(i)->state = 1;
+    }
+}
+
+void free_entity_gl(int i)
+{
+    if (E(i)->state == 1)
+    {
+        /* Finalize any vertex and fragment programs. */
+
+        if (GL_has_vertex_program)
+            if (glIsProgramARB(E(i)->vert_prog))
+                glDeleteProgramsARB(1, &E(i)->vert_prog);
+
+        if (GL_has_fragment_program)
+            if (glIsProgramARB(E(i)->frag_prog))
+                glDeleteProgramsARB(1, &E(i)->frag_prog);
+                
+        E(i)->vert_prog = 0;
+        E(i)->frag_prog = 0;
+        E(i)->state     = 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -256,6 +295,8 @@ void draw_entity_list(int i, const float M[16],
     for (j = E(i)->car; j; j = E(j)->cdr)
         if ((E(j)->flag & FLAG_HIDDEN) == 0)
         {
+            init_entity_gl(j);
+
             glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
             {
                 int k = E(j)->data;
@@ -303,6 +344,8 @@ void draw_entity_list(int i, const float M[16],
                 }
             }
             glPopAttrib();
+
+            opengl_check(entity_name(j));
         }
 }
 
@@ -382,7 +425,7 @@ void step_entity(void)
 
 /*---------------------------------------------------------------------------*/
 
-void init_entity_gl(void)
+void init_all_entity_gl(void)
 {
     int i, n = vecnum(entity);
 
@@ -390,24 +433,19 @@ void init_entity_gl(void)
 
     for (i = 0; i < n; ++i)
     {
+        if (E(i)->type)
+            init_entity_gl(i);
+
         switch (E(i)->type)
         {
         case TYPE_SPRITE: init_sprite_gl(E(i)->data); break;
         case TYPE_OBJECT: init_object_gl(E(i)->data); break;
         case TYPE_GALAXY: init_galaxy_gl(E(i)->data); break;
         }
-
-        /* Initialize any vertex and fragment programs. */
-
-        if (E(i)->vert_text && GL_has_vertex_program)
-            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
-
-        if (E(i)->frag_text && GL_has_fragment_program)
-            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
     }
 }
 
-void free_entity_gl(void)
+void free_all_entity_gl(void)
 {
     int i, n = vecnum(entity);
 
@@ -415,25 +453,15 @@ void free_entity_gl(void)
 
     for (i = 0; i < n; ++i)
     {
+        if (E(i)->type)
+            free_entity_gl(i);
+
         switch (E(i)->type)
         {
         case TYPE_SPRITE: free_sprite_gl(E(i)->data); break;
         case TYPE_OBJECT: free_object_gl(E(i)->data); break;
         case TYPE_GALAXY: free_galaxy_gl(E(i)->data); break;
         }
-
-        /* Finalize any vertex and fragment programs. */
-
-        if (GL_has_vertex_program)
-            if (glIsProgramARB(E(i)->vert_prog))
-                glDeleteProgramsARB(1, &E(i)->vert_prog);
-
-        if (GL_has_fragment_program)
-            if (glIsProgramARB(E(i)->frag_prog))
-                glDeleteProgramsARB(1, &E(i)->frag_prog);
-                
-        E(i)->vert_prog = 0;
-        E(i)->frag_prog = 0;
     }
 }
 
@@ -622,6 +650,9 @@ void send_set_entity_frag_prog(int i, const char *text)
     pack_index(n);
     pack_alloc(n, text);
 
+    if (E(i)->frag_text)
+        free(E(i)->frag_text);
+
     E(i)->frag_text = memdup(text, n, 1);
 }
 
@@ -633,6 +664,9 @@ void send_set_entity_vert_prog(int i, const char *text)
     pack_index(i);
     pack_index(n);
     pack_alloc(n, text);
+
+    if (E(i)->vert_text)
+        free(E(i)->vert_text);
 
     E(i)->vert_text = memdup(text, n, 1);
 }
@@ -760,20 +794,16 @@ void recv_set_entity_flag(void)
 
 void recv_set_entity_frag_prog(void)
 {
-    int         i    = unpack_index();
-    int         n    = unpack_index();
-    const char *text = unpack_alloc(n);
-
-    E(i)->frag_text = memdup(text, n, 1);
+    int i           = unpack_index();
+    int n           = unpack_index();
+    E(i)->frag_text = unpack_alloc(n);
 }
 
 void recv_set_entity_vert_prog(void)
 {
-    int         i    = unpack_index();
-    int         n    = unpack_index();
-    const char *text = unpack_alloc(n);
-
-    E(i)->vert_text = memdup(text, n, 1);
+    int i           = unpack_index();
+    int n           = unpack_index();
+    E(i)->vert_text = unpack_alloc(n);
 }
 
 /*---------------------------------------------------------------------------*/

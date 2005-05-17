@@ -1,3 +1,5 @@
+There are still do_start conflicts
+        viewport union must happen DURING parse_arg
 grab command line flag
 Galaxy file byte order?
 Windows DND batch

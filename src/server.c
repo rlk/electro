@@ -28,9 +28,9 @@
 #include "image.h"
 #include "event.h"
 #include "server.h"
-
+/*
 #define GRAB 1
-
+*/
 /*---------------------------------------------------------------------------*/
 
 static void server_draw(void);
@@ -113,7 +113,7 @@ static void init_server(void)
 
 static int init_video(int w, int h, int m)
 {
-    free_entity_gl();
+    free_all_entity_gl();
 
     set_window_w(w);
     set_window_h(h);
@@ -128,7 +128,7 @@ static int init_video(int w, int h, int m)
     {
         init_opengl();
         init_server();
-        init_entity_gl();
+        init_all_entity_gl();
 
         return 1;
     }
@@ -382,6 +382,7 @@ void server(int argc, char *argv[])
             init_joystick();
 
             parse_args(argc, argv);
+
             sync_display();
 
             if (init_video(get_window_w(),

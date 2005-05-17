@@ -16,8 +16,6 @@
 #	existing or modified form.  The actual Dataset (ie, geometry)
 #	may not, however, be resold in existing or modified form.
 #
-mtllib cow.mtl
-usemtl cow
 g
 v 3.716360 2.343387 0.000000
 v 4.126565 0.642027 0.000000
