@@ -47,9 +47,7 @@ static int new_light(void)
     return vecadd(light);
 }
 
-/*---------------------------------------------------------------------------*/
-
-int init_light(void)
+int startup_light(void)
 {
     if ((light = vecnew(8, sizeof (struct light))))
         return 1;
@@ -57,43 +55,7 @@ int init_light(void)
         return 0;
 }
 
-void draw_light(int j, int i, const float M[16],
-                              const float I[16],
-                              const struct frustum *F, float a)
-{
-    glPushAttrib(GL_ENABLE_BIT);
-    glPushMatrix();
-    {
-        float N[16];
-        float J[16];
-        float p[4];
-
-        GLenum o = GL_LIGHT0 + i;
-
-        transform_entity(j, N, M, J, I);
-
-        /* Determine the homogenous coordinate lightsource position. */
-
-        get_entity_position(j, p);
-
-        if (L(i)->type == LIGHT_POSITIONAL)  p[3] = 1.0f;
-        if (L(i)->type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
-
-        /* Enable this light and render all child entities. */
-
-        glEnable(GL_LIGHTING);
-        glEnable(o);
-        
-        glLightfv(o, GL_DIFFUSE,  L(i)->d);
-        glLightfv(o, GL_POSITION, p);
-
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
-    }
-    glPopMatrix();
-    glPopAttrib();
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 int send_create_light(int type)
 {
@@ -152,18 +114,63 @@ void recv_set_light_color(void)
     L(i)->d[2] = unpack_float();
 }
 
-/*---------------------------------------------------------------------------*/
-/* These may only be called by create_clone and delete_entity, respectively. */
+/*===========================================================================*/
 
-void clone_light(int i)
+static void draw_light(int j, int i, const float M[16],
+                                     const float I[16],
+                                     const struct frustum *F, float a)
+{
+    glPushAttrib(GL_ENABLE_BIT);
+    glPushMatrix();
+    {
+        float N[16];
+        float J[16];
+        float p[4];
+
+        GLenum o = GL_LIGHT0 + i;
+
+        transform_entity(j, N, M, J, I);
+
+        /* Determine the homogenous coordinate lightsource position. */
+
+        get_entity_position(j, p);
+
+        if (L(i)->type == LIGHT_POSITIONAL)  p[3] = 1.0f;
+        if (L(i)->type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
+
+        /* Enable this light and render all child entities. */
+
+        glEnable(GL_LIGHTING);
+        glEnable(o);
+        
+        glLightfv(o, GL_DIFFUSE,  L(i)->d);
+        glLightfv(o, GL_POSITION, p);
+
+        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+    }
+    glPopMatrix();
+    glPopAttrib();
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void dupe_light(int i)
 {
     L(i)->count++;
 }
 
-void delete_light(int i)
+static void free_light(int i)
 {
     if (--L(i)->count == 0)
         memset(L(i), 0, sizeof (struct light));
 }
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+
+struct entity_func light_func = {
+    NULL,
+    NULL,
+    draw_light,
+    dupe_light,
+    free_light,
+};

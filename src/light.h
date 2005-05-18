@@ -13,8 +13,6 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
-#include "frustum.h"
-
 /*---------------------------------------------------------------------------*/
 
 #define LIGHT_POSITIONAL  1
@@ -22,18 +20,15 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  init_light(void);
-void draw_light(int, int, const float[16],
-                          const float[16], const struct frustum *, float);
+int  startup_light(void);
+
+/*---------------------------------------------------------------------------*/
 
 int  send_create_light(int);
 void recv_create_light(void);
 
 void send_set_light_color(int, float, float, float);
 void recv_set_light_color(void);
-
-void clone_light(int);
-void delete_light(int);
 
 /*---------------------------------------------------------------------------*/
 

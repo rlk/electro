@@ -58,6 +58,26 @@ static int new_sound(void)
     return vecadd(sound);
 }
 
+int startup_sound(void)
+{
+    spec.callback = step_sound;
+    spec.channels = BUFCHAN;
+    spec.samples  = BUFSIZE;
+    spec.format   = BUFFORM;
+    spec.freq     = BUFFREQ;
+
+    if (SDL_OpenAudio(&spec, NULL) == 0)
+    {
+        buff = (float *) malloc(spec.samples * spec.channels * sizeof (float));
+
+        if ((sound = vecnew(32, sizeof (struct sound))))
+            return 1;
+    }
+    else fprintf(stderr, "%s\n", SDL_GetError());
+
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int mix_sound(int i, float *fbuf, short *sbuf, int max)
@@ -126,28 +146,6 @@ static void step_sound(void *data, Uint8 *stream, int length)
         if      (buff[i] >  32767) output[i] =  32767;
         else if (buff[i] < -32768) output[i] = -32768;
         else                       output[i] = (short) (buff[i]);
-}
-
-/*---------------------------------------------------------------------------*/
-
-int init_sound(void)
-{
-    spec.callback = step_sound;
-    spec.channels = BUFCHAN;
-    spec.samples  = BUFSIZE;
-    spec.format   = BUFFORM;
-    spec.freq     = BUFFREQ;
-
-    if (SDL_OpenAudio(&spec, NULL) == 0)
-    {
-        buff = (float *) malloc(spec.samples * spec.channels * sizeof (float));
-
-        if ((sound = vecnew(32, sizeof (struct sound))))
-            return 1;
-    }
-    else fprintf(stderr, "%s\n", SDL_GetError());
-
-    return 0;
 }
 
 /*---------------------------------------------------------------------------*/

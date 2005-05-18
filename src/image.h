@@ -13,31 +13,31 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include "opengl.h"
+/*---------------------------------------------------------------------------*/
+
+int startup_image(void);
 
 /*---------------------------------------------------------------------------*/
 
-GLuint make_texture(const void *, int,   int,   int);
-void  *load_image  (const char *, int *, int *, int *);
+GLuint make_texture(const void *, int, int, int);
 
 /*---------------------------------------------------------------------------*/
-
-int  init_image(void);
-void draw_image(int);
-
-void init_image_gl(int);
-void free_image_gl(int);
 
 int  send_create_image(const char *);
 void recv_create_image(void);
-
-void delete_image(int);
 
 /*---------------------------------------------------------------------------*/
 
 void get_image_p(int, int, int, unsigned char[4]);
 int  get_image_w(int);
 int  get_image_h(int);
+
+/*---------------------------------------------------------------------------*/
+
+void  init_image(int);
+void  fini_image(int);
+void  draw_image(int);
+void  free_image(int);
 
 /*---------------------------------------------------------------------------*/
 

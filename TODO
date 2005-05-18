@@ -1,3 +1,5 @@
+No depth test flag
+Disable depth test for objects with RGBA textures
 There are still do_start conflicts
         viewport union must happen DURING parse_arg
 grab command line flag

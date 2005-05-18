@@ -13,25 +13,17 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include "frustum.h"
-
 /*---------------------------------------------------------------------------*/
 
-int  init_sprite(void);
-void draw_sprite(int, int, const float[16],
-                           const float[16], const struct frustum *, float);
+int  startup_sprite(void);
 
-void init_sprite_gl(int);
-void free_sprite_gl(int);
+/*---------------------------------------------------------------------------*/
 
 int  send_create_sprite(const char *);
 void recv_create_sprite(void);
 
 void send_set_sprite_bounds(int, float, float, float, float);
 void recv_set_sprite_bounds(void);
-
-void clone_sprite(int);
-void delete_sprite(int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -13,19 +13,9 @@
 #ifndef GALAXY_H
 #define GALAXY_H
 
-#include "frustum.h"
-#include "node.h"
-#include "star.h"
-
 /*---------------------------------------------------------------------------*/
 
-int  init_galaxy(void);
-void draw_galaxy(int, int, const float[16], 
-                           const float[16], const struct frustum *, float);
-int  pick_galaxy(int, const float[3], const float[3]);
-
-void init_galaxy_gl(int);
-void free_galaxy_gl(int);
+int  startup_galaxy(void);
 
 /*---------------------------------------------------------------------------*/
 
@@ -41,6 +31,8 @@ void delete_galaxy(int);
 /*---------------------------------------------------------------------------*/
 
 void get_star_position(int, int, float[3]);
+
+int  pick_galaxy(int, const float[3], const float[3]);
 
 /*---------------------------------------------------------------------------*/
 

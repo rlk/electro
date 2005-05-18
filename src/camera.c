@@ -59,9 +59,7 @@ static int new_camera(void)
     return vecadd(camera);
 }
 
-/*---------------------------------------------------------------------------*/
-
-int init_camera(void)
+int startup_camera(void)
 {
     if ((camera = vecnew(4, sizeof (struct camera))))
         return 1;
@@ -69,76 +67,7 @@ int init_camera(void)
         return 0;
 }
 
-/*---------------------------------------------------------------------------*/
-
-static int draw_tile(int i, const float d[3], struct frustum *F, int k)
-{
-    if (C(i)->type == CAMERA_PERSP)
-        return draw_persp(F, d, C(i)->near, C(i)->far, k);
-
-    if (C(i)->type == CAMERA_ORTHO)
-        return draw_ortho(F,    C(i)->near, C(i)->far, k);
-
-    return 0;
-}
-
-void draw_camera_eye(int j, int i, const float M[16],
-                                   const float I[16],
-                                   const struct frustum *F, float a, int e)
-{
-    struct frustum G;
-
-    float N[16];
-    float J[16];
-    float d[3];
-
-    int k = 0;
-
-    d[0] = (C(i)->eye_offset[0] * C(i)->view_basis[0][0] * e +
-            C(i)->eye_offset[1] * C(i)->view_basis[1][0]     +
-            C(i)->eye_offset[2] * C(i)->view_basis[2][0]) +C(i)->pos_offset[0];
-    d[1] = (C(i)->eye_offset[0] * C(i)->view_basis[0][1] * e +
-            C(i)->eye_offset[1] * C(i)->view_basis[1][1]     +
-            C(i)->eye_offset[2] * C(i)->view_basis[2][1]) +C(i)->pos_offset[1];
-    d[2] = (C(i)->eye_offset[0] * C(i)->view_basis[0][2] * e +
-            C(i)->eye_offset[1] * C(i)->view_basis[1][2]     +
-            C(i)->eye_offset[2] * C(i)->view_basis[2][2]) +C(i)->pos_offset[2];
-
-    while ((k = draw_tile(i, d, &G, k)))
-    {
-        G.p[0] = 0.0f;
-        G.p[1] = 0.0f;
-        G.p[2] = 0.0f;
-        G.p[3] = 1.0f;
-
-        transform_camera(j, N, M, J, I, d);
-
-        /* Render all children using this camera. */
-
-        enable_stereo(C(i)->mode, e);
-        {
-            draw_entity_list(j, N, J, &G, a * get_entity_alpha(j));
-        }
-        disable_stereo(C(i)->mode);
-    }
-}
-
-void draw_camera(int j, int i, const float M[16],
-                               const float I[16],
-                               const struct frustum *F, float a)
-{
-    /* If drawing in stereo, render each eye separately. */
-
-    if (C(i)->mode)
-    {
-        draw_camera_eye(j, i, M, I, F, a, -1);
-        draw_camera_eye(j, i, M, I, F, a, +1);
-    }
-    else
-        draw_camera_eye(j, i, M, I, F, a,  0);
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 int send_create_camera(int t)
 {
@@ -243,18 +172,98 @@ void recv_set_camera_stereo(void)
     C(i)->eye_offset[2] = unpack_float();
 }
 
-/*---------------------------------------------------------------------------*/
-/* These may only be called by create_clone and delete_entity, respectively. */
+/*===========================================================================*/
 
-void clone_camera(int i)
+static int draw_tile(int i, const float d[3], struct frustum *F, int k)
+{
+    if (C(i)->type == CAMERA_PERSP)
+        return draw_persp(F, d, C(i)->near, C(i)->far, k);
+
+    if (C(i)->type == CAMERA_ORTHO)
+        return draw_ortho(F,    C(i)->near, C(i)->far, k);
+
+    return 0;
+}
+
+static void draw_eye(int j, int i, const float M[16],
+                                   const float I[16],
+                                   const struct frustum *F, float a, int e)
+{
+    struct frustum G;
+
+    float N[16];
+    float J[16];
+    float d[3];
+
+    int k = 0;
+
+    /* Compute the world-space camera offset. */
+
+    d[0] = (C(i)->eye_offset[0] * C(i)->view_basis[0][0] * e +
+            C(i)->eye_offset[1] * C(i)->view_basis[1][0]     +
+            C(i)->eye_offset[2] * C(i)->view_basis[2][0]) +C(i)->pos_offset[0];
+    d[1] = (C(i)->eye_offset[0] * C(i)->view_basis[0][1] * e +
+            C(i)->eye_offset[1] * C(i)->view_basis[1][1]     +
+            C(i)->eye_offset[2] * C(i)->view_basis[2][1]) +C(i)->pos_offset[1];
+    d[2] = (C(i)->eye_offset[0] * C(i)->view_basis[0][2] * e +
+            C(i)->eye_offset[1] * C(i)->view_basis[1][2]     +
+            C(i)->eye_offset[2] * C(i)->view_basis[2][2]) +C(i)->pos_offset[2];
+
+    /* Iterate over all tiles. */
+
+    while ((k = draw_tile(i, d, &G, k)))
+    {
+        G.p[0] = 0.0f;
+        G.p[1] = 0.0f;
+        G.p[2] = 0.0f;
+        G.p[3] = 1.0f;
+
+        transform_camera(j, N, M, J, I, d);
+
+        /* Render all children using this camera. */
+
+        enable_stereo(C(i)->mode, e);
+        {
+            draw_entity_list(j, N, J, &G, a * get_entity_alpha(j));
+        }
+        disable_stereo(C(i)->mode);
+    }
+}
+
+static void draw_camera(int j, int i, const float M[16],
+                                      const float I[16],
+                                      const struct frustum *F, float a)
+{
+    /* If drawing in stereo, render each eye separately. */
+
+    if (C(i)->mode)
+    {
+        draw_camera_eye(j, i, M, I, F, a, -1);
+        draw_camera_eye(j, i, M, I, F, a, +1);
+    }
+    else
+        draw_camera_eye(j, i, M, I, F, a,  0);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void dupe_camera(int i)
 {
     C(i)->count++;
 }
 
-void delete_camera(int i)
+static void free_camera(int i)
 {
     if (--C(i)->count == 0)
         memset(C(i), 0, sizeof (struct camera));
 }
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+
+struct entity_func camera_func = {
+    NULL,
+    NULL,
+    draw_camera,
+    dupe_camera,
+    free_camera,
+};

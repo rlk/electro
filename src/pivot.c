@@ -10,31 +10,12 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-/*---------------------------------------------------------------------------*/
-
 #include "opengl.h"
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
 
-/*---------------------------------------------------------------------------*/
-
-void draw_pivot(int j, int i, const float M[16],
-                              const float I[16],
-                              const struct frustum *F, float a)
-{
-    float N[16];
-    float J[16];
-
-    glPushMatrix();
-    {
-        transform_entity(j, N, M, J, I);
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
-    }
-    glPopMatrix();
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 int send_create_pivot(void)
 {
@@ -48,4 +29,29 @@ void recv_create_pivot(void)
     recv_create_entity();
 }
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+
+static void draw_pivot(int j, int i, const float M[16],
+                                     const float I[16],
+                                     const struct frustum *F, float a)
+{
+    float N[16];
+    float J[16];
+
+    glPushMatrix();
+    {
+        transform_entity(j, N, M, J, I);
+        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+    }
+    glPopMatrix();
+}
+
+/*===========================================================================*/
+
+struct entity_func pivot_func = {
+    NULL,
+    NULL,
+    draw_pivot,
+    NULL,
+    NULL,
+};

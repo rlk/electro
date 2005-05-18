@@ -22,7 +22,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  init_sound(void);
+int startup_sound(void);
 
 int  create_sound(const char *);
 void delete_sound(int);

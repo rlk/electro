@@ -13,8 +13,6 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "frustum.h"
-
 /*---------------------------------------------------------------------------*/
 
 #define CAMERA_ORTHO 1
@@ -22,9 +20,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  init_camera(void);
-void draw_camera(int, int, const float[16],
-                           const float[16], const struct frustum *, float);
+int  startup_camera(void);
+
+/*---------------------------------------------------------------------------*/
 
 int  send_create_camera(int);
 void recv_create_camera(void);
@@ -34,9 +32,6 @@ void recv_set_camera_offset(void);
 
 void send_set_camera_stereo(int, const float[3], int);
 void recv_set_camera_stereo(void);
-
-void clone_camera(int);
-void delete_camera(int);
 
 /*---------------------------------------------------------------------------*/
 

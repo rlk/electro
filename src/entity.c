@@ -59,7 +59,8 @@ struct entity
     int par;
 };
 
-static vector_t entity;
+static vector_t            entity;
+static struct entity_func *entity_func[TYPE_COUNT];
 
 /*---------------------------------------------------------------------------*/
 
@@ -76,7 +77,27 @@ static int new_entity(void)
     return vecadd(entity);
 }
 
-/*---------------------------------------------------------------------------*/
+int startup_entity(void)
+{
+    if ((entity = vecnew(256, sizeof (struct entity))))
+    {
+        E(vecadd(entity))->type = TYPE_ROOT;
+
+        entity_func[TYPE_NULL]   = NULL;
+        entity_func[TYPE_ROOT]   = NULL;
+        entity_func[TYPE_CAMERA] = startup_camera();
+        entity_func[TYPE_SPRITE] = startup_sprite();
+        entity_func[TYPE_OBJECT] = startup_object();
+        entity_func[TYPE_GALAXY] = startup_galaxy();
+        entity_func[TYPE_LIGHT]  = startup_light();
+        entity_func[TYPE_PIVOT]  = startup_pivot();
+
+        return 1;
+    }
+    return 0;
+}
+
+/*===========================================================================*/
 
 int entity_data(int i)
 {
@@ -101,44 +122,6 @@ const char *entity_name(int i)
     case TYPE_PIVOT:  return "pivot";
     }
     return "unknown";
-}
-
-/*---------------------------------------------------------------------------*/
-
-void init_entity_gl(int i)
-{
-    if (E(i)->state == 0)
-    {
-        /* Initialize any vertex and fragment programs. */
-
-        if (E(i)->vert_text && GL_has_vertex_program)
-            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
-
-        if (E(i)->frag_text && GL_has_fragment_program)
-            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
-
-        E(i)->state = 1;
-    }
-}
-
-void free_entity_gl(int i)
-{
-    if (E(i)->state == 1)
-    {
-        /* Finalize any vertex and fragment programs. */
-
-        if (GL_has_vertex_program)
-            if (glIsProgramARB(E(i)->vert_prog))
-                glDeleteProgramsARB(1, &E(i)->vert_prog);
-
-        if (GL_has_fragment_program)
-            if (glIsProgramARB(E(i)->frag_prog))
-                glDeleteProgramsARB(1, &E(i)->frag_prog);
-                
-        E(i)->vert_prog = 0;
-        E(i)->frag_prog = 0;
-        E(i)->state     = 0;
-    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -349,123 +332,7 @@ void draw_entity_list(int i, const float M[16],
         }
 }
 
-/*---------------------------------------------------------------------------*/
-
-int init_entity(void)
-{
-    if ((entity = vecnew(256, sizeof (struct entity))))
-    {
-        E(vecadd(entity))->type = TYPE_ROOT;
-
-        return (init_camera() && init_galaxy() &&
-                init_sprite() && init_object() && init_light());
-    }
-    return 0;
-}
-
-void draw_entity(void)
-{
-    struct frustum F;
-    float M[16];
-    float I[16];
-
-    /* Initialize the view frustum and transform matrices. */
-
-    memset(&F, 0, sizeof (struct frustum));
-    m_init(M);
-    m_init(I);
-
-    glLoadIdentity();
-
-    /* Begin traversing the scene graph at the root. */
-
-    glPushAttrib(GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
-    {
-        draw_entity_list(0, M, I, &F, 1.0f);
-    }
-    glPopAttrib();
-}
-
-void step_entity(void)
-{
-    float r[2][3];
-    float p[2][3];
-    float e[3][3];
-
-    int i, n = vecnum(entity);
-
-    /* Acquire tracking info. */
-
-    get_tracker_position(0, p[0]);
-    get_tracker_position(1, p[1]);
-    get_tracker_rotation(0, r[0]);
-    get_tracker_rotation(1, r[1]);
-
-    v_basis(e, r[0], 0);
-
-    /* Distribute it to all cameras and tracked entities. */
-
-    for (i = 0; i < n; ++i)
-        if (E(i)->type == TYPE_CAMERA)
-            send_set_camera_offset(E(i)->data, p[0], e);
-
-        else if (E(i)->type)
-        {
-            if (E(i)->flag & FLAG_POS_TRACKED_0)
-                send_set_entity_position(i, p[0]);
-            if (E(i)->flag & FLAG_POS_TRACKED_1)
-                send_set_entity_position(i, p[1]);
-
-            if (E(i)->flag & FLAG_ROT_TRACKED_0)
-                send_set_entity_rotation(i, r[0]);
-            if (E(i)->flag & FLAG_ROT_TRACKED_1)
-                send_set_entity_rotation(i, r[1]);
-        }
-}
-
-/*---------------------------------------------------------------------------*/
-
-void init_all_entity_gl(void)
-{
-    int i, n = vecnum(entity);
-
-    /* Ask all entities with GL state to initialize themselves. */
-
-    for (i = 0; i < n; ++i)
-    {
-        if (E(i)->type)
-            init_entity_gl(i);
-
-        switch (E(i)->type)
-        {
-        case TYPE_SPRITE: init_sprite_gl(E(i)->data); break;
-        case TYPE_OBJECT: init_object_gl(E(i)->data); break;
-        case TYPE_GALAXY: init_galaxy_gl(E(i)->data); break;
-        }
-    }
-}
-
-void free_all_entity_gl(void)
-{
-    int i, n = vecnum(entity);
-
-    /* Ask all entities with GL state to finalize themselves. */
-
-    for (i = 0; i < n; ++i)
-    {
-        if (E(i)->type)
-            free_entity_gl(i);
-
-        switch (E(i)->type)
-        {
-        case TYPE_SPRITE: free_sprite_gl(E(i)->data); break;
-        case TYPE_OBJECT: free_object_gl(E(i)->data); break;
-        case TYPE_GALAXY: free_galaxy_gl(E(i)->data); break;
-        }
-    }
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 static void detach_entity(int i)
 {
@@ -502,7 +369,7 @@ static void attach_entity(int i, int j)
     }
 }
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 static void create_entity(int i, int type, int data)
 {
@@ -519,7 +386,7 @@ static void create_entity(int i, int type, int data)
     attach_entity(i, 0);
 }
 
-int send_create_entity(int type, int data)
+int send_create_entity(struct entity_func *func, int type, int data)
 {
     int i;
 
@@ -889,7 +756,78 @@ void recv_create_clone(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void delete_entity(int i)
+void send_delete_entity(int i)
+{
+    pack_event(EVENT_DELETE_ENTITY);
+    pack_index(i);
+
+    delete_entity(i);
+}
+
+void recv_delete_entity(void)
+{
+    delete_entity(unpack_index());
+}
+
+/*---------------------------------------------------------------------------*/
+
+int get_entity_parent(int i)
+{
+    return E(i)->par;
+}
+
+int get_entity_child(int i, int n)
+{
+    int j, m;
+
+    for (m = 0, j = E(i)->car; j; m++, j = E(j)->cdr)
+        if (n == m)
+            return j;
+
+    return -1;
+}
+
+/*===========================================================================*/
+
+void init_entity(int i)
+{
+    if (E(i)->state == 0)
+    {
+        /* Initialize any vertex and fragment programs. */
+
+        if (E(i)->vert_text && GL_has_vertex_program)
+            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
+
+        if (E(i)->frag_text && GL_has_fragment_program)
+            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
+
+        E(i)->state = 1;
+    }
+}
+
+void fini_entity(int i)
+{
+    if (E(i)->state == 1)
+    {
+        /* Finalize any vertex and fragment programs. */
+
+        if (GL_has_vertex_program)
+            if (glIsProgramARB(E(i)->vert_prog))
+                glDeleteProgramsARB(1, &E(i)->vert_prog);
+
+        if (GL_has_fragment_program)
+            if (glIsProgramARB(E(i)->frag_prog))
+                glDeleteProgramsARB(1, &E(i)->frag_prog);
+                
+        E(i)->vert_prog = 0;
+        E(i)->frag_prog = 0;
+        E(i)->state     = 0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void free_entity(int i)
 {
     /* Delete all child entities. */
 
@@ -926,36 +864,90 @@ static void delete_entity(int i)
     if (i) memset(E(i), 0, sizeof (struct entity));
 }
 
-void send_delete_entity(int i)
-{
-    pack_event(EVENT_DELETE_ENTITY);
-    pack_index(i);
+/*===========================================================================*/
 
-    delete_entity(i);
+void draw_entities(void)
+{
+    struct frustum F;
+    float M[16];
+    float I[16];
+
+    /* Initialize the view frustum and transform matrices. */
+
+    memset(&F, 0, sizeof (struct frustum));
+    m_init(M);
+    m_init(I);
+
+    glLoadIdentity();
+
+    /* Begin traversing the scene graph at the root. */
+
+    glPushAttrib(GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
+    {
+        draw_entity_list(0, M, I, &F, 1.0f);
+    }
+    glPopAttrib();
 }
 
-void recv_delete_entity(void)
+void step_entities(void)
 {
-    delete_entity(unpack_index());
+    float r[2][3];
+    float p[2][3];
+    float e[3][3];
+
+    int i, n = vecnum(entity);
+
+    /* Acquire tracking info. */
+
+    get_tracker_position(0, p[0]);
+    get_tracker_position(1, p[1]);
+    get_tracker_rotation(0, r[0]);
+    get_tracker_rotation(1, r[1]);
+
+    v_basis(e, r[0], 0);
+
+    /* Distribute it to all cameras and tracked entities. */
+
+    for (i = 0; i < n; ++i)
+        if (E(i)->type == TYPE_CAMERA)
+            send_set_camera_offset(E(i)->data, p[0], e);
+
+        else if (E(i)->type)
+        {
+            if (E(i)->flag & FLAG_POS_TRACKED_0)
+                send_set_entity_position(i, p[0]);
+            if (E(i)->flag & FLAG_POS_TRACKED_1)
+                send_set_entity_position(i, p[1]);
+
+            if (E(i)->flag & FLAG_ROT_TRACKED_0)
+                send_set_entity_rotation(i, r[0]);
+            if (E(i)->flag & FLAG_ROT_TRACKED_1)
+                send_set_entity_rotation(i, r[1]);
+        }
 }
 
 /*---------------------------------------------------------------------------*/
 
-int get_entity_parent(int i)
+void init_entities(void)
 {
-    return E(i)->par;
+    int i, n = vecnum(entity);
+
+    /* Ask all entities with GL state to initialize themselves. */
+
+    for (i = 0; i < n; ++i)
+        if (E(i)->type)
+            init_entity(i);
 }
 
-int get_entity_child(int i, int n)
+void free_entities(void)
 {
-    int j, m;
+    int i, n = vecnum(entity);
 
-    for (m = 0, j = E(i)->car; j; m++, j = E(j)->cdr)
-        if (n == m)
-            return j;
+    /* Ask all entities with GL state to finalize themselves. */
 
-    return -1;
+    for (i = 0; i < n; ++i)
+        if (E(i)->type)
+            free_entity(i);
 }
 
-/*---------------------------------------------------------------------------*/
-
+/*===========================================================================*/

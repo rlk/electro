@@ -13,23 +13,14 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "opengl.h"
-#include "frustum.h"
+/*---------------------------------------------------------------------------*/
+
+int  startup_object(void);
 
 /*---------------------------------------------------------------------------*/
 
-int  init_object(void);
-void draw_object(int, int, const float[16],
-                           const float[16], const struct frustum *, float);
-
-void init_object_gl(int);
-void free_object_gl(int);
-
 int  send_create_object(const char *);
 void recv_create_object(void);
-
-void clone_object(int);
-void delete_object(int);
 
 /*---------------------------------------------------------------------------*/
 

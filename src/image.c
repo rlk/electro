@@ -53,7 +53,29 @@ static int new_image(void)
     return vecadd(image);
 }
 
-/*---------------------------------------------------------------------------*/
+int startup_image(void)
+{
+    int i;
+
+    if ((image = vecnew(256, sizeof (struct image))))
+    {
+        if ((i = new_image()) >= 0)
+        {
+            I(i)->filename = "null";
+            I(i)->texture  =      0;
+            I(i)->state    =      1;
+            I(i)->p        =   NULL;
+            I(i)->w        =    128;
+            I(i)->h        =    128;
+            I(i)->b        =      3;
+        }
+        return 1;
+    }
+    else
+        return 0;
+}
+
+/*===========================================================================*/
 
 static int power_of_two(int n)
 {
@@ -119,9 +141,9 @@ GLuint make_texture(const void *p, int w, int h, int b)
 
 /*---------------------------------------------------------------------------*/
 
-void *load_png_image(const char *filename, int *width,
-                                           int *height,
-                                           int *bytes)
+static void *load_png_image(const char *filename, int *width,
+                                                  int *height,
+                                                  int *bytes)
 {
     GLubyte *p = NULL;
     FILE   *fp;
@@ -198,9 +220,9 @@ void *load_png_image(const char *filename, int *width,
     return p;
 }
 
-void *load_jpg_image(const char *filename, int *width,
-                                           int *height,
-                                           int *bytes)
+static void *load_jpg_image(const char *filename, int *width,
+                                                  int *height,
+                                                  int *bytes)
 {
     GLubyte *p = NULL;
     FILE   *fp;
@@ -251,43 +273,12 @@ void *load_jpg_image(const char *filename, int *width,
     return p;
 }
 
-/*---------------------------------------------------------------------------*/
-
-int init_image(void)
-{
-    int i;
-
-    if ((image = vecnew(256, sizeof (struct image))))
-    {
-        if ((i = new_image()) >= 0)
-        {
-            I(i)->filename = "null";
-            I(i)->texture  =      0;
-            I(i)->state    =      1;
-            I(i)->p        =   NULL;
-            I(i)->w        =    128;
-            I(i)->h        =    128;
-            I(i)->b        =      3;
-        }
-        return 1;
-    }
-    else
-        return 0;
-}
-
-void draw_image(int i)
-{
-    init_image_gl(i);
-    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
-}
-
-void *load_image(const char *filename, int *width,
-                                       int *height,
-                                       int *bytes)
+static void *load_image(const char *filename, int *width,
+                                              int *height,
+                                              int *bytes)
 {
     const char *extension = filename + strlen(filename) - 4;
     
-
     if      (strcmp(extension, ".png") == 0 || strcmp(extension, ".PNG") == 0)
         return load_png_image(filename, width, height, bytes);
     else if (strcmp(extension, ".jpg") == 0 || strcmp(extension, ".JPG") == 0)
@@ -296,30 +287,7 @@ void *load_image(const char *filename, int *width,
         return error("Unsupported image format for '%s'", filename);
 }
 
-/*---------------------------------------------------------------------------*/
-
-void init_image_gl(int i)
-{
-    if (i && I(i)->state == 0)
-    {
-        I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
-        I(i)->state   = 1;
-    }
-}
-
-void free_image_gl(int i)
-{
-    if (i && I(i)->state == 1)
-    {
-        if (glIsTexture(I(i)->texture))
-            glDeleteTextures(1, &I(i)->texture);
-
-        I(i)->texture = 0;
-        I(i)->state   = 0;
-    }
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 int send_create_image(const char *filename)
 {
@@ -366,18 +334,6 @@ void recv_create_image(void)
     I(i)->p = unpack_alloc(I(i)->w * I(i)->h * I(i)->b);
 
     I(i)->filename = "unknown";
-}
-
-/*---------------------------------------------------------------------------*/
-
-void delete_image(int i)
-{
-    free_image_gl(i);
-
-    if (I(i)->filename) free(I(i)->filename);
-    if (I(i)->p)        free(I(i)->p);
-
-    memset(I(i), 0, sizeof (struct image));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -429,6 +385,49 @@ int get_image_w(int i)
 int get_image_h(int i)
 {
     return I(i)->h;
+}
+
+/*===========================================================================*/
+
+void draw_image(int i)
+{
+    init_image(i);
+    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
+}
+
+
+void init_image(int i)
+{
+    if (i && I(i)->state == 0)
+    {
+        I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
+        I(i)->state   = 1;
+    }
+}
+
+void fini_image(int i)
+{
+    if (i && I(i)->state == 1)
+    {
+        if (glIsTexture(I(i)->texture))
+            glDeleteTextures(1, &I(i)->texture);
+
+        I(i)->texture = 0;
+        I(i)->state   = 0;
+    }
+}
+
+void free_image(int i)
+{
+    if (i)
+    {
+        fini_image(i);
+
+        if (I(i)->filename) free(I(i)->filename);
+        if (I(i)->p)        free(I(i)->p);
+
+        memset(I(i), 0, sizeof (struct image));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

@@ -26,7 +26,6 @@
 struct sprite
 {
     int   count;
-    int   state;
     int   image;
     float s0;
     float s1;
@@ -51,9 +50,7 @@ static int new_sprite(void)
     return vecadd(sprite);
 }
 
-/*---------------------------------------------------------------------------*/
-
-int init_sprite(void)
+int startup_sprite(void)
 {
     if ((sprite = vecnew(256, sizeof (struct sprite))))
         return 1;
@@ -61,70 +58,7 @@ int init_sprite(void)
         return 0;
 }
 
-void draw_sprite(int j, int i, const float M[16],
-                               const float I[16],
-                               const struct frustum *F, float a)
-{
-    init_sprite_gl(i);
-
-    glPushAttrib(GL_DEPTH_BUFFER_BIT);
-    glPushMatrix();
-    {
-        float N[16];
-        float J[16];
-
-        /* Apply the local coordinate system transformation. */
-
-        transform_entity(j, N, M, J, I);
-
-        /* Draw the image to the color buffer. */
-
-        glDepthMask(GL_FALSE);
-        draw_image(S(i)->image);
-
-        glColor4f(1.0f, 1.0f, 1.0f, a * get_entity_alpha(j));
-
-        glBegin(GL_QUADS);
-        {
-            int dx = get_image_w(S(i)->image) / 2;
-            int dy = get_image_h(S(i)->image) / 2;
-
-            glTexCoord2f(S(i)->s0, S(i)->t0); glVertex2i(-dx, -dy);
-            glTexCoord2f(S(i)->s1, S(i)->t0); glVertex2i(+dx, -dy);
-            glTexCoord2f(S(i)->s1, S(i)->t1); glVertex2i(+dx, +dy);
-            glTexCoord2f(S(i)->s0, S(i)->t1); glVertex2i(-dx, +dy);
-        }
-        glEnd();
-
-        /* Render all child entities in this coordinate system. */
-
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
-    }
-    glPopMatrix();
-    glPopAttrib();
-}
-
-/*---------------------------------------------------------------------------*/
-
-void init_sprite_gl(int i)
-{
-    if (S(i)->state == 0)
-    {
-        init_image_gl(S(i)->image);
-        S(i)->state  = 1;
-    }
-}
-
-void free_sprite_gl(int i)
-{
-    if (S(i)->state == 1)
-    {
-        free_image_gl(S(i)->image);
-        S(i)->state  = 0;
-    }
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 int send_create_sprite(const char *filename)
 {
@@ -203,15 +137,69 @@ int get_sprite_h(int i)
     return get_image_h(S(i)->image);
 }
 
-/*---------------------------------------------------------------------------*/
-/* These may only be called by create_clone and delete_entity, respectively. */
+/*===========================================================================*/
 
-void clone_sprite(int i)
+static void draw_sprite(int j, int i, const float M[16],
+                                      const float I[16],
+                                      const struct frustum *F, float a)
+{
+    glPushAttrib(GL_DEPTH_BUFFER_BIT);
+    glPushMatrix();
+    {
+        float N[16];
+        float J[16];
+
+        /* Apply the local coordinate system transformation. */
+
+        transform_entity(j, N, M, J, I);
+
+        /* Draw the image to the color buffer. */
+
+        glDepthMask(GL_FALSE);
+        draw_image(S(i)->image);
+
+        glColor4f(1.0f, 1.0f, 1.0f, a * get_entity_alpha(j));
+
+        glBegin(GL_QUADS);
+        {
+            int dx = get_image_w(S(i)->image) / 2;
+            int dy = get_image_h(S(i)->image) / 2;
+
+            glTexCoord2f(S(i)->s0, S(i)->t0); glVertex2i(-dx, -dy);
+            glTexCoord2f(S(i)->s1, S(i)->t0); glVertex2i(+dx, -dy);
+            glTexCoord2f(S(i)->s1, S(i)->t1); glVertex2i(+dx, +dy);
+            glTexCoord2f(S(i)->s0, S(i)->t1); glVertex2i(-dx, +dy);
+        }
+        glEnd();
+
+        /* Render all child entities in this coordinate system. */
+
+        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+    }
+    glPopMatrix();
+    glPopAttrib();
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void init_sprite(int i)
+{
+    init_image(S(i)->image);
+}
+
+static void fini_sprite(int i)
+{
+    fini_image(S(i)->image);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void dupe_sprite(int i)
 {
     S(i)->count++;
 }
 
-void delete_sprite(int i)
+static void free_sprite(int i)
 {
     if (--S(i)->count == 0)
     {
@@ -221,4 +209,12 @@ void delete_sprite(int i)
     }
 }
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+
+struct entity_func sprite_func = {
+    init_sprite,
+    fini_sprite,
+    draw_sprite
+    dupe_sprite,
+    free_sprite,
+};

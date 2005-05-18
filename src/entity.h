@@ -18,6 +18,9 @@
 
 /*---------------------------------------------------------------------------*/
 
+/* Entity type tags. */
+
+#define TYPE_NULL   0
 #define TYPE_ROOT   1
 #define TYPE_CAMERA 2
 #define TYPE_SPRITE 3
@@ -25,6 +28,9 @@
 #define TYPE_GALAXY 5
 #define TYPE_LIGHT  6
 #define TYPE_PIVOT  7
+#define TYPE_COUNT  8
+
+/* Entity state flags. */
 
 #define FLAG_HIDDEN        0x0001
 #define FLAG_WIREFRAME     0x0002
@@ -37,6 +43,27 @@
 #define FLAG_ROT_TRACKED_1 0x0100
 
 /*---------------------------------------------------------------------------*/
+
+/* Entity virtual function table. */
+
+typedef void (*init_func)(int);
+typedef void (*fini_func)(int);
+typedef void (*dupe_func)(int);
+typedef void (*free_func)(int);
+typedef void (*draw_func)(int, int, const float[16],
+                                    const float[16],
+                                    const struct frustum *, float);
+struct entity_func
+{
+    const char *name;
+    init_func   init;
+    fini_func   fini;
+    draw_func   draw;
+    dupe_func   dupe;
+    free_func   free;
+};
+
+/*===========================================================================*/
 
 int         entity_data(int);
 int         entity_type(int);
@@ -53,16 +80,11 @@ void draw_entity_list(int, const float[16],
 
 /*---------------------------------------------------------------------------*/
 
-int  init_entity(void);
-void draw_entity(void);
-void step_entity(void);
+int startup_entity(void);
 
-void init_all_entity_gl(void);
-void free_all_entity_gl(void);
+/*===========================================================================*/
 
-/*---------------------------------------------------------------------------*/
-
-int  send_create_entity(int, int);
+int  send_create_entity(struct entity_func *, int, int);
 void recv_create_entity(void);
 
 int  send_create_clone(int);
@@ -115,6 +137,13 @@ float get_entity_alpha   (int);
 int   get_entity_parent(int);
 int   get_entity_child(int, int);
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+
+void draw_entities(void);
+void step_entities(void);
+void init_entities(void);
+void fini_entities(void);
+
+/*===========================================================================*/
 
 #endif
