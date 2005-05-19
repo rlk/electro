@@ -75,7 +75,7 @@ void transform_camera(int, float[16], const float[16],
                            float[16], const float[16], const float[3]);
 void transform_entity(int, float[16], const float[16],
                            float[16], const float[16]);
-void draw_entity_list(int, const float[16],
+void draw_entity_tree(int, const float[16],
                            const float[16], const struct frustum *, float);
 
 /*---------------------------------------------------------------------------*/
@@ -84,7 +84,7 @@ int startup_entity(void);
 
 /*===========================================================================*/
 
-int  send_create_entity(struct entity_func *, int, int);
+int  send_create_entity(int, int);
 void recv_create_entity(void);
 
 int  send_create_clone(int);

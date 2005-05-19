@@ -15,8 +15,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-void init_joystick(void);
-void free_joystick(void);
+int startup_joystick(void);
 
 void get_joystick(int, float[2]);
 

@@ -17,9 +17,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-void  init_buffer(void);
-void  free_buffer(void);
-void  sync_buffer(void);
+int startup_buffer(void);
+
+void sync_buffer(void);
 
 /*---------------------------------------------------------------------------*/
 

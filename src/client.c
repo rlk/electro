@@ -118,7 +118,7 @@ static void init_client(void)
 
 static int init_video(int w, int h, int m)
 {
-    free_all_entity_gl();
+    fini_entities();
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
@@ -130,7 +130,7 @@ static int init_video(int w, int h, int m)
     {
         init_opengl();
         init_client();
-        init_all_entity_gl();
+        init_entities();
 
         return 1;
     }
@@ -151,7 +151,7 @@ static void client_swap(void)
 static void client_draw(void)
 {
     draw_background();
-    draw_entity();
+    draw_entities();
 
     client_swap();
 }
@@ -186,24 +186,24 @@ void client(void)
     {
         SDL_ShowCursor(0);
 
-        init_buffer();
-        init_image();
-        init_entity();
-
-        sync_display();
-
-        if (init_video(get_window_w(),
-                       get_window_h(), SDL_OPENGL | SDL_NOFRAME))
+        if (startup_image()  &&
+            startup_buffer() &&
+            startup_entity())
         {
-            /* Handle any SDL events. Block on server messages. */
+            sync_display();
 
-            while (client_loop())
-                client_recv();
+            if (init_video(get_window_w(),
+                           get_window_h(), SDL_OPENGL | SDL_NOFRAME))
+            {
+                /* Handle any SDL events. Block on server messages. */
+
+                while (client_loop())
+                    client_recv();
+            }
+            else fprintf(stderr, "%s\n", SDL_GetError());
         }
-        else fprintf(stderr, "%s\n", SDL_GetError());
 
         /* Ensure everyone finishes all events before exiting. */
-
 #ifdef MPI
         assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif

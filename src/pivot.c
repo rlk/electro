@@ -41,7 +41,7 @@ static void draw_pivot(int j, int i, const float M[16],
     glPushMatrix();
     {
         transform_entity(j, N, M, J, I);
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }
@@ -49,6 +49,7 @@ static void draw_pivot(int j, int i, const float M[16],
 /*===========================================================================*/
 
 struct entity_func pivot_func = {
+    "pivot",
     NULL,
     NULL,
     draw_pivot,

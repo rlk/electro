@@ -18,6 +18,7 @@
 #include "vector.h"
 #include "matrix.h"
 #include "buffer.h"
+#include "entity.h"
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
@@ -27,7 +28,6 @@
 #include "event.h"
 #include "utility.h"
 #include "tracker.h"
-#include "entity.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -90,7 +90,7 @@ int startup_entity(void)
         entity_func[TYPE_OBJECT] = startup_object();
         entity_func[TYPE_GALAXY] = startup_galaxy();
         entity_func[TYPE_LIGHT]  = startup_light();
-        entity_func[TYPE_PIVOT]  = startup_pivot();
+        entity_func[TYPE_PIVOT]  = NULL;
 
         return 1;
     }
@@ -111,17 +111,10 @@ int entity_type(int i)
 
 const char *entity_name(int i)
 {
-    switch (E(i)->type)
-    {
-    case TYPE_ROOT:   return "root";
-    case TYPE_CAMERA: return "camera";
-    case TYPE_SPRITE: return "sprite";
-    case TYPE_OBJECT: return "object";
-    case TYPE_GALAXY: return "galaxy";
-    case TYPE_LIGHT:  return "light";
-    case TYPE_PIVOT:  return "pivot";
-    }
-    return "unknown";
+    if (entity_func[E(i)->type])
+        return entity_func[E(i)->type]->name;
+    else
+        return "unknown";
 }
 
 /*---------------------------------------------------------------------------*/
@@ -267,7 +260,57 @@ void transform_entity(int i, float N[16], const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-void draw_entity_list(int i, const float M[16],
+static void init_entity(int i)
+{
+    if (E(i)->state == 0)
+    {
+        /* Initialize type-specific OpenGL state. */
+
+        if (entity_func[E(i)->type] &&
+            entity_func[E(i)->type]->init)
+            entity_func[E(i)->type]->init(E(i)->data);
+
+        /* Initialize any vertex and fragment programs. */
+
+        if (E(i)->vert_text && GL_has_vertex_program)
+            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
+
+        if (E(i)->frag_text && GL_has_fragment_program)
+            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
+
+        E(i)->state = 1;
+    }
+}
+
+static void fini_entity(int i)
+{
+    if (E(i)->state == 1)
+    {
+        /* Finalize type-specific OpenGL state. */
+
+        if (entity_func[E(i)->type] &&
+            entity_func[E(i)->type]->fini)
+            entity_func[E(i)->type]->fini(E(i)->data);
+
+        /* Finalize any vertex and fragment programs. */
+
+        if (GL_has_vertex_program)
+            if (glIsProgramARB(E(i)->vert_prog))
+                glDeleteProgramsARB(1, &E(i)->vert_prog);
+
+        if (GL_has_fragment_program)
+            if (glIsProgramARB(E(i)->frag_prog))
+                glDeleteProgramsARB(1, &E(i)->frag_prog);
+                
+        E(i)->vert_prog = 0;
+        E(i)->frag_prog = 0;
+        E(i)->state     = 0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void draw_entity_tree(int i, const float M[16],
                              const float I[16],
                              const struct frustum *F, float a)
 {
@@ -278,12 +321,10 @@ void draw_entity_list(int i, const float M[16],
     for (j = E(i)->car; j; j = E(j)->cdr)
         if ((E(j)->flag & FLAG_HIDDEN) == 0)
         {
-            init_entity_gl(j);
+            init_entity(j);
 
             glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
             {
-                int k = E(j)->data;
-
                 /* Enable wireframe if specified. */
 
                 if (E(j)->flag & FLAG_WIREFRAME)
@@ -316,15 +357,9 @@ void draw_entity_list(int i, const float M[16],
 
                 /* Draw this entity. */
 
-                switch (E(j)->type)
-                {
-                case TYPE_CAMERA: draw_camera(j, k, M, I, F, a); break;
-                case TYPE_SPRITE: draw_sprite(j, k, M, I, F, a); break;
-                case TYPE_OBJECT: draw_object(j, k, M, I, F, a); break;
-                case TYPE_GALAXY: draw_galaxy(j, k, M, I, F, a); break;
-                case TYPE_LIGHT:  draw_light (j, k, M, I, F, a); break;
-                case TYPE_PIVOT:  draw_pivot (j, k, M, I, F, a); break;
-                }
+                if (entity_func[E(j)->type] &&
+                    entity_func[E(j)->type]->draw)
+                    entity_func[E(j)->type]->draw(j, E(j)->data, M, I, F, a);
             }
             glPopAttrib();
 
@@ -386,7 +421,7 @@ static void create_entity(int i, int type, int data)
     attach_entity(i, 0);
 }
 
-int send_create_entity(struct entity_func *func, int type, int data)
+int send_create_entity(int type, int data)
 {
     int i;
 
@@ -719,14 +754,9 @@ float get_entity_alpha(int i)
 
 static void create_clone(int i, int jd)
 {
-    switch (E(i)->type)
-    {
-    case TYPE_CAMERA: clone_camera(E(i)->data); break;
-    case TYPE_SPRITE: clone_sprite(E(i)->data); break;
-    case TYPE_OBJECT: clone_object(E(i)->data); break;
-    case TYPE_GALAXY: clone_galaxy(E(i)->data); break;
-    case TYPE_LIGHT:  clone_light (E(i)->data); break;
-    }
+    if (entity_func[E(i)->type] &&
+        entity_func[E(i)->type]->dupe)
+        entity_func[E(i)->type]->dupe(E(i)->data);
 
     create_entity(jd, E(i)->type, E(i)->data);
 }
@@ -756,17 +786,41 @@ void recv_create_clone(void)
 
 /*---------------------------------------------------------------------------*/
 
+static void free_entity(int i)
+{
+    fini_entity(i);
+
+    /* Delete all child entities. */
+
+    while (E(i)->car)
+        free_entity(E(i)->car);
+
+    /* Remove this entity from the parent's child list. */
+
+    detach_entity(i);
+
+    /* Delete the type-specific data. */
+
+    if (entity_func[E(i)->type] &&
+        entity_func[E(i)->type]->free)
+        entity_func[E(i)->type]->free(E(i)->data);
+
+    /* Pave it. */
+
+    if (i) memset(E(i), 0, sizeof (struct entity));
+}
+
 void send_delete_entity(int i)
 {
     pack_event(EVENT_DELETE_ENTITY);
     pack_index(i);
 
-    delete_entity(i);
+    free_entity(i);
 }
 
 void recv_delete_entity(void)
 {
-    delete_entity(unpack_index());
+    free_entity(unpack_index());
 }
 
 /*---------------------------------------------------------------------------*/
@@ -789,83 +843,6 @@ int get_entity_child(int i, int n)
 
 /*===========================================================================*/
 
-void init_entity(int i)
-{
-    if (E(i)->state == 0)
-    {
-        /* Initialize any vertex and fragment programs. */
-
-        if (E(i)->vert_text && GL_has_vertex_program)
-            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
-
-        if (E(i)->frag_text && GL_has_fragment_program)
-            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
-
-        E(i)->state = 1;
-    }
-}
-
-void fini_entity(int i)
-{
-    if (E(i)->state == 1)
-    {
-        /* Finalize any vertex and fragment programs. */
-
-        if (GL_has_vertex_program)
-            if (glIsProgramARB(E(i)->vert_prog))
-                glDeleteProgramsARB(1, &E(i)->vert_prog);
-
-        if (GL_has_fragment_program)
-            if (glIsProgramARB(E(i)->frag_prog))
-                glDeleteProgramsARB(1, &E(i)->frag_prog);
-                
-        E(i)->vert_prog = 0;
-        E(i)->frag_prog = 0;
-        E(i)->state     = 0;
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void free_entity(int i)
-{
-    /* Delete all child entities. */
-
-    while (E(i)->car)
-        delete_entity(E(i)->car);
-
-    /* Remove this entity from the parent's child list. */
-
-    detach_entity(i);
-
-    /* Release any program objects. */
-
-    if (GL_has_fragment_program)
-        if (glIsProgramARB(E(i)->frag_prog))
-            glDeleteProgramsARB(1, &E(i)->frag_prog);
-                
-    if (GL_has_vertex_program)
-        if (glIsProgramARB(E(i)->vert_prog))
-            glDeleteProgramsARB(1, &E(i)->vert_prog);
-
-    /* Invoke the data delete handler. */
-
-    switch (E(i)->type)
-    {
-    case TYPE_CAMERA: delete_camera(E(i)->data); break;
-    case TYPE_SPRITE: delete_sprite(E(i)->data); break;
-    case TYPE_OBJECT: delete_object(E(i)->data); break;
-    case TYPE_GALAXY: delete_galaxy(E(i)->data); break;
-    case TYPE_LIGHT:  delete_light (E(i)->data); break;
-    }
-
-    /* Pave it. */
-
-    if (i) memset(E(i), 0, sizeof (struct entity));
-}
-
-/*===========================================================================*/
-
 void draw_entities(void)
 {
     struct frustum F;
@@ -884,7 +861,7 @@ void draw_entities(void)
 
     glPushAttrib(GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
     {
-        draw_entity_list(0, M, I, &F, 1.0f);
+        draw_entity_tree(0, M, I, &F, 1.0f);
     }
     glPopAttrib();
 }
@@ -939,7 +916,7 @@ void init_entities(void)
             init_entity(i);
 }
 
-void free_entities(void)
+void fini_entities(void)
 {
     int i, n = vecnum(entity);
 
@@ -947,7 +924,7 @@ void free_entities(void)
 
     for (i = 0; i < n; ++i)
         if (E(i)->type)
-            free_entity(i);
+            fini_entity(i);
 }
 
 /*===========================================================================*/

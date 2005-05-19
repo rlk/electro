@@ -104,14 +104,6 @@ static int new_object(void)
     return vecadd(object);
 }
 
-int startup_object(void)
-{
-    if ((object = vecnew(128, sizeof (struct object))))
-        return 1;
-    else
-        return 0;
-}
-
 /*===========================================================================*/
 /* OBJ loader caches                                                         */
 
@@ -582,7 +574,6 @@ int send_create_object(const char *filename)
             int n = vecnum(O(i)->sv);
 
             O(i)->count = 1;
-            O(i)->state = 0;
 
             /* Pack the object header. */
 
@@ -625,7 +616,6 @@ void recv_create_object(void)
     int j;
 
     O(i)->count = 1;
-    O(i)->state = 0;
 
     /* Unpack the vertices and materials.  Allocate space for surfaces. */
 
@@ -728,21 +718,21 @@ static void draw_object(int j, int i, const float M[16],
 
         /* Render all child entities in this coordinate system. */
 
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void init_object_(int i)
+static void init_object(int i)
 {
     int j, n = vecnum(O(i)->mv);
 
     /* Initialize all referenced textures. */
 
     for (j = 0; j < n; ++j)
-        init_image_gl(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
+        init_image(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
 
     /* Initialize the buffer object. */
     
@@ -757,7 +747,7 @@ static void init_object_(int i)
     }
 }
 
-static void fine_object(int i)
+static void fini_object(int i)
 {
     int j, n = vecnum(O(i)->mv);
 
@@ -770,7 +760,7 @@ static void fine_object(int i)
     /* Free all referenced textures. */
 
     for (j = 0; j < n; ++j)
-        free_image_gl(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
+        free_image(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
 
     O(i)->buffer = 0;
 }
@@ -788,7 +778,7 @@ static void free_object(int i)
     {
         int j, n = vecnum(O(i)->sv);
 
-        free_object_gl(i);
+        fini_object(i);
 
         for (j = 0; j < n; ++j)
         {
@@ -805,10 +795,19 @@ static void free_object(int i)
 
 /*===========================================================================*/
 
-struct entity_func object_func = {
+static struct entity_func object_func = {
+    "object",
     init_object,
     fini_object,
-    draw_object
+    draw_object,
     dupe_object,
     free_object,
 };
+
+struct entity_func *startup_object(void)
+{
+    if ((object = vecnew(128, sizeof (struct object))))
+        return &object_func;
+    else
+        return NULL;
+}

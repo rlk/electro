@@ -13,9 +13,11 @@
 #ifndef GALAXY_H
 #define GALAXY_H
 
+#include "entity.h"
+
 /*---------------------------------------------------------------------------*/
 
-int  startup_galaxy(void);
+struct entity_func *startup_galaxy(void);
 
 /*---------------------------------------------------------------------------*/
 

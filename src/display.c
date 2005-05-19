@@ -108,7 +108,7 @@ void set_window_siz(int d)
 
 /*---------------------------------------------------------------------------*/
 
-void init_display(void)
+int startup_display(void)
 {
     int n = 0;
 
@@ -127,6 +127,8 @@ void init_display(void)
     H_num = 0;
 
     default_host(&Host);
+
+    return (Hi && Ho);
 }
 
 void sync_display(void)

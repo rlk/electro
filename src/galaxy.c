@@ -62,111 +62,6 @@ static int new_galaxy(void)
     return vecadd(galaxy);
 }
 
-int startup_galaxy(void)
-{
-    if ((galaxy = vecnew(4, sizeof (struct galaxy))))
-        return 1;
-    else
-        return 0;
-}
-
-/*===========================================================================*/
-
-int send_create_galaxy(const char *filename)
-{
-    int i;
-
-    if ((i = new_galaxy()) >= 0)
-    {
-        /* If the file exists and is successfully read... */
-
-        if ((parse_galaxy(filename, G(i))))
-        {
-            G(i)->count = 1;
-            G(i)->state = 0;
-
-            /* Pack the object header. */
-
-            pack_event(EVENT_CREATE_GALAXY);
-            pack_index(i);
-
-            pack_index(G(i)->S_num);
-            pack_index(G(i)->N_num);
-
-            /* Pack the stars and BSP nodes. */
-
-            pack_alloc(G(i)->S_num * sizeof (struct star), G(i)->S);
-            pack_alloc(G(i)->N_num * sizeof (struct node), G(i)->N);
-
-            /* Encapsulate this object in an entity. */
-
-            return send_create_entity(TYPE_GALAXY, i);
-        }
-    }
-    return -1;
-}
-
-void recv_create_galaxy(void)
-{
-    int i = unpack_index();
-
-    G(i)->count = 1;
-    G(i)->state = 0;
-
-    /* Unpack the object header. */
-
-    G(i)->S_num = unpack_index();
-    G(i)->N_num = unpack_index();
-
-    /* Unpack the stars and BSP nodes. */
-
-    G(i)->S = unpack_alloc(G(i)->S_num * sizeof (struct star));
-    G(i)->N = unpack_alloc(G(i)->N_num * sizeof (struct node));
-    
-    /* Encapsulate this object in an entity. */
-
-    recv_create_entity();
-}
-
-/*---------------------------------------------------------------------------*/
-
-void send_set_galaxy_magnitude(int i, float m)
-{
-    pack_event(EVENT_SET_GALAXY_MAGNITUDE);
-    pack_index(i);
-    pack_float(m);
-
-    G(i)->magnitude = m;
-}
-
-void recv_set_galaxy_magnitude(void)
-{
-    int i = unpack_index();
-
-    G(i)->magnitude = unpack_float();
-}
-
-/*---------------------------------------------------------------------------*/
-/* Galaxy object star query                                                  */
-
-void get_star_position(int i, int j, float p[3])
-{
-    if (0 <= j && j < G(i)->S_num)
-    {
-        p[0] = G(i)->S[j].pos[0];
-        p[1] = G(i)->S[j].pos[1];
-        p[2] = G(i)->S[j].pos[2];
-    }
-    else p[0] = p[1] = p[2] = 0.0;
-}
-
-int pick_galaxy(int i, const float p[3], const float v[3])
-{
-    float d = 0;
-
-    return node_pick(G(i)->N, 0, G(i)->S, 0, p, v, &d);
-}
-
 /*===========================================================================*/
 /* Galaxy file I/O                                                           */
 
@@ -341,6 +236,101 @@ void prep_hip_galaxy(const char *dat_name,
 
 /*===========================================================================*/
 
+int send_create_galaxy(const char *filename)
+{
+    int i;
+
+    if ((i = new_galaxy()) >= 0)
+    {
+        /* If the file exists and is successfully read... */
+
+        if ((parse_galaxy(filename, G(i))))
+        {
+            G(i)->count = 1;
+
+            /* Pack the object header. */
+
+            pack_event(EVENT_CREATE_GALAXY);
+            pack_index(i);
+
+            pack_index(G(i)->S_num);
+            pack_index(G(i)->N_num);
+
+            /* Pack the stars and BSP nodes. */
+
+            pack_alloc(G(i)->S_num * sizeof (struct star), G(i)->S);
+            pack_alloc(G(i)->N_num * sizeof (struct node), G(i)->N);
+
+            /* Encapsulate this object in an entity. */
+
+            return send_create_entity(TYPE_GALAXY, i);
+        }
+    }
+    return -1;
+}
+
+void recv_create_galaxy(void)
+{
+    int i = unpack_index();
+
+    G(i)->count = 1;
+
+    /* Unpack the object header. */
+
+    G(i)->S_num = unpack_index();
+    G(i)->N_num = unpack_index();
+
+    /* Unpack the stars and BSP nodes. */
+
+    G(i)->S = unpack_alloc(G(i)->S_num * sizeof (struct star));
+    G(i)->N = unpack_alloc(G(i)->N_num * sizeof (struct node));
+    
+    /* Encapsulate this object in an entity. */
+
+    recv_create_entity();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_galaxy_magnitude(int i, float m)
+{
+    pack_event(EVENT_SET_GALAXY_MAGNITUDE);
+    pack_index(i);
+    pack_float(m);
+
+    G(i)->magnitude = m;
+}
+
+void recv_set_galaxy_magnitude(void)
+{
+    int i = unpack_index();
+
+    G(i)->magnitude = unpack_float();
+}
+
+/*---------------------------------------------------------------------------*/
+/* Galaxy object star query                                                  */
+
+void get_star_position(int i, int j, float p[3])
+{
+    if (0 <= j && j < G(i)->S_num)
+    {
+        p[0] = G(i)->S[j].pos[0];
+        p[1] = G(i)->S[j].pos[1];
+        p[2] = G(i)->S[j].pos[2];
+    }
+    else p[0] = p[1] = p[2] = 0.0;
+}
+
+int pick_galaxy(int i, const float p[3], const float v[3])
+{
+    float d = 0;
+
+    return node_pick(G(i)->N, 0, G(i)->S, 0, p, v, &d);
+}
+
+/*===========================================================================*/
+
 static void draw_arrays(int i)
 {
     GLsizei sz = sizeof (struct star);
@@ -434,7 +424,7 @@ static void draw_galaxy(int j, int i, const float M[16],
 
         /* Render all child entities in this coordinate system. */
 
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }
@@ -460,7 +450,7 @@ static void init_galaxy(int i)
     G(i)->texture = star_make_texture();
 }
 
-static void fini_galaxy_(int i)
+static void fini_galaxy(int i)
 {
     /* Free the star texture. */
 
@@ -489,7 +479,7 @@ static void free_galaxy(int i)
 {
     if (--G(i)->count == 0)
     {
-        free_galaxy_gl(i);
+        fini_galaxy(i);
 
         if (G(i)->S) free(G(i)->S);
         if (G(i)->N) free(G(i)->N);
@@ -500,10 +490,19 @@ static void free_galaxy(int i)
 
 /*===========================================================================*/
 
-struct entity_func galaxy_func = {
+static struct entity_func galaxy_func = {
+    "galaxy",
     init_galaxy,
     fini_galaxy,
     draw_galaxy,
     dupe_galaxy,
     free_galaxy,
 };
+
+struct entity_func *startup_galaxy(void)
+{
+    if ((galaxy = vecnew(4, sizeof (struct galaxy))))
+        return &galaxy_func;
+    else
+        return NULL;
+}

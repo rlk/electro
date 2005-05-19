@@ -47,14 +47,6 @@ static int new_light(void)
     return vecadd(light);
 }
 
-int startup_light(void)
-{
-    if ((light = vecnew(8, sizeof (struct light))))
-        return 1;
-    else
-        return 0;
-}
-
 /*===========================================================================*/
 
 int send_create_light(int type)
@@ -146,7 +138,7 @@ static void draw_light(int j, int i, const float M[16],
         glLightfv(o, GL_DIFFUSE,  L(i)->d);
         glLightfv(o, GL_POSITION, p);
 
-        draw_entity_list(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
     glPopAttrib();
@@ -167,10 +159,20 @@ static void free_light(int i)
 
 /*===========================================================================*/
 
-struct entity_func light_func = {
+static struct entity_func light_func = {
+    "light",
     NULL,
     NULL,
     draw_light,
     dupe_light,
     free_light,
 };
+
+struct entity_func *startup_light(void)
+{
+    if ((light = vecnew(8, sizeof (struct light))))
+        return &light_func;
+    else
+        return NULL;
+}
+

@@ -22,21 +22,14 @@ static SDL_Joystick *joy[MAXJOY];
 
 /*---------------------------------------------------------------------------*/
 
-void init_joystick(void)
+int startup_joystick(void)
 {
     int i, n = SDL_NumJoysticks();
 
     for (i = 0; i < n && MAXJOY; ++i)
         joy[i] = SDL_JoystickOpen(i);
-}
 
-void free_joystick(void)
-{
-    int i, n = SDL_NumJoysticks();
-
-    for (i = 0; i < n && MAXJOY; ++i)
-        if (SDL_JoystickOpened(i))
-            SDL_JoystickClose(joy[i]);
+    return 1;
 }
 
 /*---------------------------------------------------------------------------*/

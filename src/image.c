@@ -19,7 +19,6 @@
 #include "vector.h"
 #include "buffer.h"
 #include "utility.h"
-#include "entity.h"
 #include "event.h"
 #include "image.h"
 

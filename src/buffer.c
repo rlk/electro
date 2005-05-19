@@ -39,22 +39,15 @@ union typecast
 
 /*---------------------------------------------------------------------------*/
 
-void init_buffer(void)
+int startup_buffer(void)
 {
     if ((buf = (unsigned char *) calloc(BUFINIT, 1)))
     {
         max = BUFINIT;
         pos = 0;
+        return 1;
     }
-}
-
-void free_buffer(void)
-{
-    free(buf);
-
-    buf = NULL;
-    pos = 0;
-    max = 0;
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -64,7 +64,8 @@ struct host
 
 /*---------------------------------------------------------------------------*/
 
-void init_display(void);
+int startup_display(void);
+
 void sync_display(void);
 
 int  draw_ortho(struct frustum *,                 float, float, int);

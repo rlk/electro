@@ -20,7 +20,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-void init_tracker(void);
+int startup_tracker(void);
 
 int  get_tracker_rotation(int, float[3]);
 int  get_tracker_position(int, float[3]);

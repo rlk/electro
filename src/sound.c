@@ -58,6 +58,8 @@ static int new_sound(void)
     return vecadd(sound);
 }
 
+static void step_sound(void *, Uint8 *, int);
+
 int startup_sound(void)
 {
     spec.callback = step_sound;

@@ -25,15 +25,23 @@ static void *controller = NULL;
 
 /*---------------------------------------------------------------------------*/
 
-void init_tracker(void)
+int startup_tracker(void)
 {
 #ifdef TRACKD
     tracker    = trackdInitTrackerReader(TRACKER_KEY);
     controller = trackdInitControllerReader(CONTROLLER_KEY);
+
+    if (tracker == NULL || controller == NULL)
+    {
+        error("Tracker/controller startup failure");
+        return 0;
+    }
 #else
     tracker    = NULL;
     controller = NULL;
 #endif
+
+    return 1;
 }
 
 /*---------------------------------------------------------------------------*/

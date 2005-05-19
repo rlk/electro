@@ -59,14 +59,6 @@ static int new_camera(void)
     return vecadd(camera);
 }
 
-int startup_camera(void)
-{
-    if ((camera = vecnew(4, sizeof (struct camera))))
-        return 1;
-    else
-        return 0;
-}
-
 /*===========================================================================*/
 
 int send_create_camera(int t)
@@ -224,7 +216,7 @@ static void draw_eye(int j, int i, const float M[16],
 
         enable_stereo(C(i)->mode, e);
         {
-            draw_entity_list(j, N, J, &G, a * get_entity_alpha(j));
+            draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
         }
         disable_stereo(C(i)->mode);
     }
@@ -238,11 +230,11 @@ static void draw_camera(int j, int i, const float M[16],
 
     if (C(i)->mode)
     {
-        draw_camera_eye(j, i, M, I, F, a, -1);
-        draw_camera_eye(j, i, M, I, F, a, +1);
+        draw_eye(j, i, M, I, F, a, -1);
+        draw_eye(j, i, M, I, F, a, +1);
     }
     else
-        draw_camera_eye(j, i, M, I, F, a,  0);
+        draw_eye(j, i, M, I, F, a,  0);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -260,10 +252,20 @@ static void free_camera(int i)
 
 /*===========================================================================*/
 
-struct entity_func camera_func = {
+static struct entity_func camera_func = {
+    "camera",
     NULL,
     NULL,
     draw_camera,
     dupe_camera,
     free_camera,
 };
+
+struct entity_func *startup_camera(void)
+{
+    if ((camera = vecnew(4, sizeof (struct camera))))
+        return &camera_func;
+    else
+        return NULL;
+}
+

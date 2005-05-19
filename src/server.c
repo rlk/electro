@@ -113,7 +113,7 @@ static void init_server(void)
 
 static int init_video(int w, int h, int m)
 {
-    free_all_entity_gl();
+    fini_entities();
 
     set_window_w(w);
     set_window_h(h);
@@ -128,7 +128,7 @@ static int init_video(int w, int h, int m)
     {
         init_opengl();
         init_server();
-        init_all_entity_gl();
+        init_entities();
 
         return 1;
     }
@@ -151,7 +151,7 @@ static void server_draw(void)
     draw_background();
 
     if (server_mirror)
-        draw_entity();
+        draw_entities();
 
     draw_console();
 
@@ -160,7 +160,7 @@ static void server_draw(void)
 
 static void server_step(void)
 {
-    step_entity();
+    step_entities();
 }
 
 static void server_perf(void)
@@ -372,37 +372,37 @@ void server(int argc, char *argv[])
         {
             /* Initialize all subsystems. */
         
-            init_console(CONSOLE_COLS, CONSOLE_ROWS);
-            init_display();
-            init_tracker();
-            init_buffer();
-            init_sound();
-            init_image();
-            init_entity();
-            init_joystick();
-
-            parse_args(argc, argv);
-
-            sync_display();
-
-            if (init_video(get_window_w(),
-                           get_window_h(), server_full))
+            if (startup_console(CONSOLE_COLS, CONSOLE_ROWS) &&
+                startup_joystick() &&
+                startup_display()  &&
+                startup_tracker()  &&
+                startup_buffer()   &&
+                startup_entity()   &&
+                startup_sound()    &&
+                startup_image())
             {
-                SDL_EnableUNICODE(1);
-                SDL_PauseAudio(0);
+                parse_args(argc, argv);
 
-                grab(1);
+                sync_display();
 
-                /* Block on SDL events.  Service them as they arrive. */
+                if (init_video(get_window_w(),
+                               get_window_h(), server_full))
+                {
+                    SDL_EnableUNICODE(1);
+                    SDL_PauseAudio(0);
 
-                while (SDL_WaitEvent(NULL))
-                    if (server_loop() == 0)
-                        break;
+                    grab(1);
+
+                    /* Block on SDL events.  Service them as they arrive. */
+
+                    while (SDL_WaitEvent(NULL))
+                        if (server_loop() == 0)
+                            break;
+                }
+                else fprintf(stderr, "%s\n", SDL_GetError());
             }
-            else fprintf(stderr, "%s\n", SDL_GetError());
 
             /* Ensure everyone finishes all events before exiting. */
-
 #ifdef MPI
             assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif

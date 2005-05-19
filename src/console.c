@@ -216,7 +216,7 @@ static void draw_image(void)
 
 /*---------------------------------------------------------------------------*/
 
-int init_console(int w, int h)
+int startup_console(int w, int h)
 {
     int W = GLYPH_W * w;
     int H = GLYPH_H * h;

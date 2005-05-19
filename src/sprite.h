@@ -13,9 +13,11 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
+#include "sprite.h"
+
 /*---------------------------------------------------------------------------*/
 
-int  startup_sprite(void);
+struct entity_func *startup_sprite(void);
 
 /*---------------------------------------------------------------------------*/
 
