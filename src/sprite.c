@@ -26,6 +26,7 @@
 struct sprite
 {
     int   count;
+    int   state;
     int   image;
     float s0;
     float s1;
@@ -66,7 +67,6 @@ int send_create_sprite(const char *filename)
         S(i)->t1 = 1.0f;
 
         pack_event(EVENT_CREATE_SPRITE);
-        pack_index(i);
         pack_index(S(i)->image);
 
         return send_create_entity(TYPE_SPRITE, i);
@@ -76,7 +76,7 @@ int send_create_sprite(const char *filename)
 
 void recv_create_sprite(void)
 {
-    int i = unpack_index();
+    int i = new_sprite();
 
     S(i)->image = unpack_index();
     S(i)->count = 1;
@@ -172,18 +172,6 @@ static void draw_sprite(int j, int i, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-static void init_sprite(int i)
-{
-    init_image(S(i)->image);
-}
-
-static void fini_sprite(int i)
-{
-    fini_image(S(i)->image);
-}
-
-/*---------------------------------------------------------------------------*/
-
 static void dupe_sprite(int i)
 {
     S(i)->count++;
@@ -193,7 +181,7 @@ static void free_sprite(int i)
 {
     if (--S(i)->count == 0)
     {
-        fini_sprite(i);
+        free_image(S(i)->image);
         memset(S(i), 0, sizeof (struct sprite));
     }
 }
@@ -202,8 +190,8 @@ static void free_sprite(int i)
 
 static struct entity_func sprite_func = {
     "sprite",
-    init_sprite,
-    fini_sprite,
+    NULL,
+    NULL,
     draw_sprite,
     dupe_sprite,
     free_sprite,

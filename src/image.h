@@ -39,6 +39,9 @@ void  fini_image(int);
 void  draw_image(int);
 void  free_image(int);
 
+void  init_images(void);
+void  fini_images(void);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

@@ -110,6 +110,7 @@ static void init_server(void)
 
 static int init_video(int w, int h, int m)
 {
+    fini_images();
     fini_entities();
 
     set_window_w(w);
@@ -125,6 +126,7 @@ static int init_video(int w, int h, int m)
     {
         init_opengl();
         init_server();
+        init_images();
         init_entities();
 
         return 1;

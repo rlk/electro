@@ -79,6 +79,7 @@ struct object_surf
 struct object
 {
     int count;
+    int state;
 
     GLuint buffer;
 
@@ -90,8 +91,14 @@ struct object
 static vector_t object;
 
 /*---------------------------------------------------------------------------*/
-
+/*
 #define O(i) ((struct object *) vecget(object, i))
+*/
+
+struct object *O(int i)
+{
+    return (struct object *) vecget(object, i);
+}
 
 static int new_object(void)
 {
@@ -578,7 +585,6 @@ int send_create_object(const char *filename)
             /* Pack the object header. */
 
             pack_event(EVENT_CREATE_OBJECT);
-            pack_index(i);
             pack_index(n);
 
             /* Pack the vertices and materials. */
@@ -611,7 +617,7 @@ void recv_create_object(void)
 
     /* Unpack the object header. */
 
-    int i = unpack_index();
+    int i = new_object();
     int n = unpack_index();
     int j;
 
@@ -727,42 +733,37 @@ static void draw_object(int j, int i, const float M[16],
 
 static void init_object(int i)
 {
-    int j, n = vecnum(O(i)->mv);
-
-    /* Initialize all referenced textures. */
-
-    for (j = 0; j < n; ++j)
-        init_image(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
-
-    /* Initialize the buffer object. */
-    
-    if (GL_has_vertex_buffer_object)
+    if (O(i)->state == 0)
     {
-        glGenBuffersARB(1, &O(i)->buffer);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
+        /* Initialize the buffer object. */
+    
+        if (GL_has_vertex_buffer_object)
+        {
+            glGenBuffersARB(1, &O(i)->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
 
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                        vecnum(O(i)->vv) * sizeof (struct object_vert),
-                        vecget(O(i)->vv, 0), GL_STATIC_DRAW_ARB);
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                            vecnum(O(i)->vv) * sizeof (struct object_vert),
+                            vecget(O(i)->vv, 0), GL_STATIC_DRAW_ARB);
+        }
+    
+        O(i)->state = 1;
     }
 }
 
 static void fini_object(int i)
 {
-    int j, n = vecnum(O(i)->mv);
+    if (O(i)->state == 1)
+    {
+        /* Free the vertex buffer object. */
 
-    /* Free the vertex buffer object. */
+        if (GL_has_vertex_buffer_object)
+            if (glIsBufferARB(O(i)->buffer))
+                glDeleteBuffersARB(1, &O(i)->buffer);
 
-    if (GL_has_vertex_buffer_object)
-        if (glIsBufferARB(O(i)->buffer))
-            glDeleteBuffersARB(1, &O(i)->buffer);
-
-    /* Free all referenced textures. */
-
-    for (j = 0; j < n; ++j)
-        free_image(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
-
-    O(i)->buffer = 0;
+        O(i)->buffer = 0;
+        O(i)->state  = 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -774,13 +775,16 @@ static void dupe_object(int i)
 
 static void free_object(int i)
 {
+    int j;
+
     if (--O(i)->count == 0)
     {
-        int j, n = vecnum(O(i)->sv);
-
         fini_object(i);
 
-        for (j = 0; j < n; ++j)
+        for (j = 0; j < vecnum(O(i)->mv); ++j)
+            free_image(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
+
+        for (j = 0; j < vecnum(O(i)->sv); ++j)
         {
             vecdel(((struct object_surf *) vecget(O(i)->sv, j))->fv);
             vecdel(((struct object_surf *) vecget(O(i)->sv, j))->ev);
@@ -788,6 +792,7 @@ static void free_object(int i)
 
         vecdel(O(i)->mv);
         vecdel(O(i)->vv);
+        vecdel(O(i)->sv);
 
         memset(O(i), 0, sizeof (struct object));
     }

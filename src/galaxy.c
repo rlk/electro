@@ -32,6 +32,7 @@
 struct galaxy
 {
     int    count;
+    int    state;
     int    S_num;
     int    N_num;
     GLuint buffer;
@@ -251,8 +252,6 @@ int send_create_galaxy(const char *filename)
             /* Pack the object header. */
 
             pack_event(EVENT_CREATE_GALAXY);
-            pack_index(i);
-
             pack_index(G(i)->S_num);
             pack_index(G(i)->N_num);
 
@@ -271,7 +270,7 @@ int send_create_galaxy(const char *filename)
 
 void recv_create_galaxy(void)
 {
-    int i = unpack_index();
+    int i = new_galaxy();
 
     G(i)->count = 1;
 
@@ -433,38 +432,46 @@ static void draw_galaxy(int j, int i, const float M[16],
 
 static void init_galaxy(int i)
 {
-    /* Initialize the vertex buffer object. */
-
-    if (GL_has_vertex_buffer_object)
+    if (G(i)->state == 0)
     {
-        glGenBuffersARB(1, &G(i)->buffer);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, G(i)->buffer);
+        /* Initialize the vertex buffer object. */
 
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                        G(i)->S_num * sizeof (struct star),
-                        G(i)->S, GL_STATIC_DRAW_ARB);
+        if (GL_has_vertex_buffer_object)
+        {
+            glGenBuffersARB(1, &G(i)->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, G(i)->buffer);
+
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                            G(i)->S_num * sizeof (struct star),
+                            G(i)->S, GL_STATIC_DRAW_ARB);
+        }
+
+        /* Initialize the star texture. */
+
+        G(i)->texture = star_make_texture();
+        G(i)->state   = 1;
     }
-
-    /* Initialize the star texture. */
-
-    G(i)->texture = star_make_texture();
 }
 
 static void fini_galaxy(int i)
 {
-    /* Free the star texture. */
+    if (G(i)->state == 1)
+    {
+        /* Free the star texture. */
 
-    if (glIsTexture(G(i)->texture))
-        glDeleteTextures(1, &G(i)->texture);
+        if (glIsTexture(G(i)->texture))
+            glDeleteTextures(1, &G(i)->texture);
 
-    /* Free the vertex buffer object. */
+        /* Free the vertex buffer object. */
 
-    if (GL_has_vertex_buffer_object)
-        if (glIsBufferARB(G(i)->buffer))
-            glDeleteBuffersARB(1, &G(i)->buffer);
+        if (GL_has_vertex_buffer_object)
+            if (glIsBufferARB(G(i)->buffer))
+                glDeleteBuffersARB(1, &G(i)->buffer);
 
-    G(i)->texture = 0;
-    G(i)->buffer  = 0;
+        G(i)->texture = 0;
+        G(i)->buffer  = 0;
+        G(i)->state   = 0;
+    }
 }
 
 /*---------------------------------------------------------------------------*/

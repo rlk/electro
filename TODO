@@ -1,3 +1,4 @@
+* test cluster with tiny starting counts
 No depth test flag
 Disable depth test for objects with RGBA textures
 There are still do_start conflicts

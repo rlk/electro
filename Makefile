@@ -58,7 +58,7 @@ LUALIB  = -llua -llualib
 IMGLIB  = -ljpeg -lpng -lz -lm
 OGGLIB  = -lvorbisfile
 
-LIBS += $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+LIBS += $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB) -lefence
 
 OBJS =	src/version.o  \
 	src/opengl.o   \

@@ -56,7 +56,6 @@ int send_create_light(int type)
     if ((i = new_light()) >= 0)
     {
         pack_event(EVENT_CREATE_LIGHT);
-        pack_index(i);
         pack_index(type);
 
         L(i)->count = 1;
@@ -73,7 +72,7 @@ int send_create_light(int type)
 
 void recv_create_light(void)
 {
-    int i = unpack_index();
+    int i = new_light();
 
     L(i)->count = 1;
     L(i)->type  = unpack_index();

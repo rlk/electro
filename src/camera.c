@@ -73,7 +73,6 @@ int send_create_camera(int t)
         C(i)->far   = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
 
         pack_event(EVENT_CREATE_CAMERA);
-        pack_index(i);
         pack_index(t);
         pack_float(C(i)->near);
         pack_float(C(i)->far);
@@ -85,7 +84,7 @@ int send_create_camera(int t)
 
 void recv_create_camera(void)
 {
-    int i = unpack_index();
+    int i = new_camera();
     int t = unpack_index();
 
     C(i)->count = 1;

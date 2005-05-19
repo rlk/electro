@@ -26,6 +26,7 @@
 
 struct image
 {
+    int    count;
     int    state;
     GLuint texture;
     char  *filename;
@@ -274,7 +275,10 @@ int send_create_image(const char *filename)
 
     for (i = 0; i < n; ++i)
         if (I(i)->filename && strcmp(I(i)->filename, filename) == 0)
+        {
+            I(i)->count++;
             return i;
+        }
 
     /* Didn't find it.  It's new. */
 
@@ -289,7 +293,6 @@ int send_create_image(const char *filename)
         if ((I(i)->p = load_image(filename, &I(i)->w, &I(i)->h, &I(i)->b)))
         {
             pack_event(EVENT_CREATE_IMAGE);
-            pack_index(i);
             pack_index(I(i)->w);
             pack_index(I(i)->h);
             pack_index(I(i)->b);
@@ -303,7 +306,7 @@ int send_create_image(const char *filename)
 
 void recv_create_image(void)
 {
-    int i = unpack_index();
+    int i = new_image();
 
     I(i)->w = unpack_index();
     I(i)->h = unpack_index();
@@ -395,7 +398,7 @@ void draw_image(int i)
 
 void free_image(int i)
 {
-    if (i)
+    if (i && --I(i)->count == 0)
     {
         fini_image(i);
 
@@ -404,6 +407,26 @@ void free_image(int i)
 
         memset(I(i), 0, sizeof (struct image));
     }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void init_images(void)
+{
+    int i, n = vecnum(image);
+
+    for (i = 0; i < n; ++i)
+        if (I(i)->count)
+            init_image(i);
+}
+
+void fini_images(void)
+{
+    int i, n = vecnum(image);
+
+    for (i = 0; i < n; ++i)
+        if (I(i)->count)
+            fini_image(i);
 }
 
 /*---------------------------------------------------------------------------*/

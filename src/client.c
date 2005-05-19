@@ -118,6 +118,7 @@ static void init_client(void)
 
 static int init_video(int w, int h, int m)
 {
+    fini_images();
     fini_entities();
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
@@ -130,6 +131,7 @@ static int init_video(int w, int h, int m)
     {
         init_opengl();
         init_client();
+        init_images();
         init_entities();
 
         return 1;

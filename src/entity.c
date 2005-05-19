@@ -63,8 +63,14 @@ static vector_t            entity;
 static struct entity_func *entity_func[TYPE_COUNT];
 
 /*---------------------------------------------------------------------------*/
-
+/*
 #define E(i) ((struct entity *) vecget(entity, i))
+*/
+
+struct entity *E(int i)
+{
+    return (struct entity *) vecget(entity, i);
+}
 
 static int new_entity(void)
 {
@@ -427,7 +433,6 @@ int send_create_entity(int type, int data)
 
     if ((i = new_entity()) >= 0)
     {
-        pack_index(i);
         pack_index(type);
         pack_index(data);
     
@@ -440,7 +445,7 @@ int send_create_entity(int type, int data)
 
 void recv_create_entity(void)
 {
-    int i    = unpack_index();
+    int i    = new_entity();
     int type = unpack_index();
     int data = unpack_index();
 
@@ -752,62 +757,61 @@ float get_entity_alpha(int i)
 
 /*---------------------------------------------------------------------------*/
 
-static void create_clone(int i, int jd)
+static void create_clone(int i, int j)
 {
     if (entity_func[E(i)->type] &&
         entity_func[E(i)->type]->dupe)
         entity_func[E(i)->type]->dupe(E(i)->data);
 
-    create_entity(jd, E(i)->type, E(i)->data);
+    create_entity(j, E(i)->type, E(i)->data);
 }
 
 int send_create_clone(int i)
 {
-    int jd;
+    int j;
 
-    if ((jd = new_entity()) >= 0)
+    if ((j = new_entity()) >= 0)
     {
         pack_event(EVENT_CREATE_CLONE);
         pack_index(i);
-        pack_index(jd);
 
-        create_clone(i, jd);
+        create_clone(i, j);
     }
-    return jd;
+    return j;
 }
 
 void recv_create_clone(void)
 {
-    int i  = unpack_index();
-    int jd = unpack_index();
-
-    create_clone(i, jd);
+    create_clone(unpack_index(), new_entity());
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void free_entity(int i)
 {
-    fini_entity(i);
+    if (i)
+    {
+        fini_entity(i);
 
-    /* Delete all child entities. */
+        /* Delete all child entities. */
 
-    while (E(i)->car)
-        free_entity(E(i)->car);
+        while (E(i)->car)
+            free_entity(E(i)->car);
 
-    /* Remove this entity from the parent's child list. */
+        /* Remove this entity from the parent's child list. */
 
-    detach_entity(i);
+        detach_entity(i);
 
-    /* Delete the type-specific data. */
+        /* Delete the type-specific data. */
 
-    if (entity_func[E(i)->type] &&
-        entity_func[E(i)->type]->free)
-        entity_func[E(i)->type]->free(E(i)->data);
+        if (entity_func[E(i)->type] &&
+            entity_func[E(i)->type]->free)
+            entity_func[E(i)->type]->free(E(i)->data);
 
-    /* Pave it. */
+        /* Pave it. */
 
-    if (i) memset(E(i), 0, sizeof (struct entity));
+        memset(E(i), 0, sizeof (struct entity));
+    }
 }
 
 void send_delete_entity(int i)
