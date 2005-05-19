@@ -633,7 +633,7 @@ void recv_create_object(void)
 
     for (j = 0; j < n; ++j)
     {
-        s = (struct object_surf *) vecget(O(i)->sv, j);
+        s = (struct object_surf *) vecget(O(i)->sv, vecadd(O(i)->sv));
 
         s->mi = unpack_index();
         s->fv = unpack_vector();
@@ -813,7 +813,7 @@ static struct entity_func object_func = {
 
 struct entity_func *startup_object(void)
 {
-    if ((object = vecnew(128, sizeof (struct object))))
+    if ((object = vecnew(MIN_OBJECTS, sizeof (struct object))))
         return &object_func;
     else
         return NULL;

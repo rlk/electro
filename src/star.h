@@ -28,7 +28,6 @@ struct star
 
 /*---------------------------------------------------------------------------*/
 
-#define STAR_BIN_RECLEN sizeof (struct star)
 #define STAR_HIP_RECLEN 451
 #define STAR_TYC_RECLEN 207
 

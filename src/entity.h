@@ -36,11 +36,20 @@
 #define FLAG_WIREFRAME     0x0002
 #define FLAG_BILLBOARD     0x0004
 #define FLAG_UNLIT         0x0008
-#define FLAG_LINE_SMOOTH   0x0010
-#define FLAG_POS_TRACKED_0 0x0020
-#define FLAG_ROT_TRACKED_0 0x0040
-#define FLAG_POS_TRACKED_1 0x0080
-#define FLAG_ROT_TRACKED_1 0x0100
+#define FLAG_TRANSPARENT   0x0010
+#define FLAG_LINE_SMOOTH   0x0020
+#define FLAG_POS_TRACKED_0 0x0040
+#define FLAG_ROT_TRACKED_0 0x0080
+#define FLAG_POS_TRACKED_1 0x0100
+#define FLAG_ROT_TRACKED_1 0x0200
+
+/* Initial entity vector sizes. */
+
+#define MIN_CAMERAS    4
+#define MIN_SPRITES  256
+#define MIN_OBJECTS  128
+#define MIN_GALAXIES   4
+#define MIN_LIGHTS     8
 
 /*---------------------------------------------------------------------------*/
 

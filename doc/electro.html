@@ -480,6 +480,12 @@ This is especially useful for sprite and wireframe objects which do
 not have lightable surfaces.  The unlit flag affects all sub entities
 and cannot be reversed lower in the hierarchy.</p>
 
+<li><tt> entity_transparent </tt><p> Entities with the transparent
+flag are drawn to the color buffer but not the depth buffer.  This
+prevents transparent objects from occluding opaque objects during the
+depth test.  Sprites automatically have the transparent flag, though
+it may be removed if depth writing sprites are desired. </p>
+
 <li><tt> entity_pos_tracked_0 </tt><p> Entities with the position-tracked
 flag have their positions updated each frame to match the position of
 tracker 0, if it is available.  This is useful for implementing head

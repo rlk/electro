@@ -317,7 +317,9 @@ void draw_entity_tree(int i, const float M[16],
         {
             init_entity(j);
 
-            glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
+            glPushAttrib(GL_POLYGON_BIT |
+                         GL_ENABLE_BIT  |
+                         GL_DEPTH_BUFFER_BIT);
             {
                 /* Enable wireframe if specified. */
 
@@ -328,6 +330,11 @@ void draw_entity_tree(int i, const float M[16],
 
                 if (E(j)->flag & FLAG_UNLIT)
                     glDisable(GL_LIGHTING);
+
+                /* Disable depth writing of transparent objects. */
+
+                if (E(j)->flag & FLAG_TRANSPARENT)
+                    glDepthMask(GL_FALSE);
 
                 /* Enable line smoothing if requested. */
 
@@ -411,6 +418,9 @@ static void create_entity(int i, int type, int data)
     E(i)->scale[1] = 1.0f;
     E(i)->scale[2] = 1.0f;
     E(i)->alpha    = 1.0f;
+
+    if (E(i)->type == TYPE_SPRITE)
+        E(i)->flag =  FLAG_TRANSPARENT;
 
     attach_entity(i, 0);
 }

@@ -262,7 +262,7 @@ static struct entity_func camera_func = {
 
 struct entity_func *startup_camera(void)
 {
-    if ((camera = vecnew(4, sizeof (struct camera))))
+    if ((camera = vecnew(MIN_CAMERAS, sizeof (struct camera))))
         return &camera_func;
     else
         return NULL;

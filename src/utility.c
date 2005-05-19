@@ -151,32 +151,78 @@ FILE *open_file(const char *filename, const char *mode)
 }
 
 /*---------------------------------------------------------------------------*/
-/* Byte order float handlers                                                 */
+/* Byte order handlers                                                       */
+
+static const int      swapint = 0x00010203;
+static unsigned char *swapmap = (unsigned char *) &swapint;
 
 union swapper
 {
-    float f;
-    long  l;
+    float         f;
+    int           d;
+    unsigned char b[4];
 };
 
-float htonf(float f)
+void host_to_net(union swapper *s)
+{
+    union swapper t = *s;
+
+    s->b[0] = t.b[swapmap[0]];
+    s->b[1] = t.b[swapmap[1]];
+    s->b[2] = t.b[swapmap[2]];
+    s->b[3] = t.b[swapmap[3]];
+}
+
+void net_to_host(union swapper *s)
+{
+    union swapper t = *s;
+
+    s->b[swapmap[0]] = t.b[0];
+    s->b[swapmap[1]] = t.b[1];
+    s->b[swapmap[2]] = t.b[2];
+    s->b[swapmap[3]] = t.b[3];
+}
+
+/*---------------------------------------------------------------------------*/
+
+float host_to_net_float(float f)
 {
     union swapper s;
 
     s.f = f;
-    s.l = htonl(s.l);
+    host_to_net(&s);
 
     return s.f;
 }
 
-float ntohf(float f)
+float net_to_host_float(float f)
 {
     union swapper s;
 
     s.f = f;
-    s.l = ntohl(s.l);
+    net_to_host(&s);
 
     return s.f;
+}
+
+int host_to_net_int(int d)
+{
+    union swapper s;
+
+    s.d = d;
+    host_to_net(&s);
+
+    return s.d;
+}
+
+int net_to_host_int(int d)
+{
+    union swapper s;
+
+    s.d = d;
+    net_to_host(&s);
+
+    return s.d;
 }
 
 /*---------------------------------------------------------------------------*/

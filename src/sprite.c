@@ -133,7 +133,6 @@ static void draw_sprite(int j, int i, const float M[16],
                                       const float I[16],
                                       const struct frustum *F, float a)
 {
-    glPushAttrib(GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
     {
         float N[16];
@@ -145,7 +144,6 @@ static void draw_sprite(int j, int i, const float M[16],
 
         /* Draw the image to the color buffer. */
 
-        glDepthMask(GL_FALSE);
         draw_image(S(i)->image);
 
         glColor4f(1.0f, 1.0f, 1.0f, a * get_entity_alpha(j));
@@ -167,7 +165,6 @@ static void draw_sprite(int j, int i, const float M[16],
         draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
-    glPopAttrib();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -199,7 +196,7 @@ static struct entity_func sprite_func = {
 
 struct entity_func *startup_sprite(void)
 {
-    if ((sprite = vecnew(256, sizeof (struct sprite))))
+    if ((sprite = vecnew(MIN_SPRITES, sizeof (struct sprite))))
         return &sprite_func;
     else
         return NULL;

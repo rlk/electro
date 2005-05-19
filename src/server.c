@@ -215,7 +215,8 @@ static int server_loop(void)
             switch (e.key.keysym.sym)
             {
             case SDLK_ESCAPE:
-                return 0;
+                e.type = SDL_QUIT;
+                break;
             case SDLK_F1:
                 dirty |= set_console_enable(!console_is_enabled());
                 break;

@@ -91,7 +91,6 @@ vector_t unpack_vector(void)
     {
          memcpy(vecget(V, 0), buf + pos, num * siz);
          V->num = num;
-         V->siz = siz;
 
          pos += (num * siz);
     }

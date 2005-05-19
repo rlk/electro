@@ -1212,6 +1212,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",     FLAG_BILLBOARD);
     lua_constant(L, "entity_flag_unlit",         FLAG_UNLIT);
+    lua_constant(L, "entity_flag_transparent",   FLAG_TRANSPARENT);
     lua_constant(L, "entity_flag_line_smooth",   FLAG_LINE_SMOOTH);
     lua_constant(L, "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0);
     lua_constant(L, "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0);

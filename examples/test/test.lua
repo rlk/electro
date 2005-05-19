@@ -20,7 +20,7 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
-    thing  = E.create_object("box.obj")
+    thing  = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
@@ -29,6 +29,12 @@ function do_start()
     E.set_entity_position(light,  0.0,  10.0,   0.0)
     E.set_entity_position(pivot,  0.0, -10.0,   0.0)
     E.set_entity_position(thing,  0.0,   0.0, -10.0)
+
+    E.enable_timer(true)
+end
+
+function do_timer(dt)
+    return true
 end
 
 function do_click(b, s)

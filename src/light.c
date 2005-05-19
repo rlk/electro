@@ -169,7 +169,7 @@ static struct entity_func light_func = {
 
 struct entity_func *startup_light(void)
 {
-    if ((light = vecnew(8, sizeof (struct light))))
+    if ((light = vecnew(MIN_LIGHTS, sizeof (struct light))))
         return &light_func;
     else
         return NULL;

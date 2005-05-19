@@ -32,18 +32,18 @@ int node_write_bin(struct node *n, FILE *fp)
 
     /* Ensure all values are represented in network byte order. */
 
-    t.split    = htonf(t.split);
-    t.bound[0] = ntohf(t.bound[0]);
-    t.bound[1] = ntohf(t.bound[1]);
-    t.bound[2] = ntohf(t.bound[2]);
-    t.bound[3] = ntohf(t.bound[3]);
-    t.bound[4] = ntohf(t.bound[4]);
-    t.bound[5] = ntohf(t.bound[5]);
+    t.split    = host_to_net_float(t.split);
+    t.bound[0] = host_to_net_float(t.bound[0]);
+    t.bound[1] = host_to_net_float(t.bound[1]);
+    t.bound[2] = host_to_net_float(t.bound[2]);
+    t.bound[3] = host_to_net_float(t.bound[3]);
+    t.bound[4] = host_to_net_float(t.bound[4]);
+    t.bound[5] = host_to_net_float(t.bound[5]);
 
-    t.star0    = htonl(t.star0);
-    t.starc    = htonl(t.starc);
-    t.nodeL    = htonl(t.nodeL);
-    t.nodeR    = htonl(t.nodeR);
+    t.star0    = host_to_net_int(t.star0);
+    t.starc    = host_to_net_int(t.starc);
+    t.nodeL    = host_to_net_int(t.nodeL);
+    t.nodeR    = host_to_net_int(t.nodeR);
 
     /* Write the record to the given file. */
 
@@ -61,18 +61,18 @@ int node_parse_bin(struct node *n, FILE *fp)
     {
         /* Ensure all values are represented in host byte order. */
 
-        n->split    = ntohf(n->split);
-        n->bound[0] = ntohf(n->bound[0]);
-        n->bound[1] = ntohf(n->bound[1]);
-        n->bound[2] = ntohf(n->bound[2]);
-        n->bound[3] = ntohf(n->bound[3]);
-        n->bound[4] = ntohf(n->bound[4]);
-        n->bound[5] = ntohf(n->bound[5]);
+        n->split    = net_to_host_float(n->split);
+        n->bound[0] = net_to_host_float(n->bound[0]);
+        n->bound[1] = net_to_host_float(n->bound[1]);
+        n->bound[2] = net_to_host_float(n->bound[2]);
+        n->bound[3] = net_to_host_float(n->bound[3]);
+        n->bound[4] = net_to_host_float(n->bound[4]);
+        n->bound[5] = net_to_host_float(n->bound[5]);
 
-        n->star0    = ntohl(n->star0);
-        n->starc    = ntohl(n->starc);
-        n->nodeL    = ntohl(n->nodeL);
-        n->nodeR    = ntohl(n->nodeR);
+        n->star0    = net_to_host_int(n->star0);
+        n->starc    = net_to_host_int(n->starc);
+        n->nodeL    = net_to_host_int(n->nodeL);
+        n->nodeR    = net_to_host_int(n->nodeR);
 
         return 1;
     }

@@ -61,8 +61,11 @@ FILE *open_file(const char *, const char *);
 
 /*---------------------------------------------------------------------------*/
 
-float htonf(float);
-float ntohf(float);
+float host_to_net_float(float);
+float net_to_host_float(float);
+
+int   host_to_net_int(int);
+int   net_to_host_int(int);
 
 /*---------------------------------------------------------------------------*/
 

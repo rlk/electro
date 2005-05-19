@@ -112,8 +112,8 @@ int write_galaxy(const char *filename, struct galaxy *g)
     {
         struct head H;
 
-        H.N_num = htonl(g->N_num);
-        H.S_num = htonl(g->S_num);
+        H.N_num = host_to_net_int(g->N_num);
+        H.S_num = host_to_net_int(g->S_num);
 
         if (fwrite(&H, sizeof (struct head), 1, fp) == 1)
         {
@@ -510,7 +510,7 @@ static struct entity_func galaxy_func = {
 
 struct entity_func *startup_galaxy(void)
 {
-    if ((galaxy = vecnew(4, sizeof (struct galaxy))))
+    if ((galaxy = vecnew(MIN_GALAXIES, sizeof (struct galaxy))))
         return &galaxy_func;
     else
         return NULL;

@@ -75,14 +75,14 @@ int star_write_bin(struct star *s, FILE *fp)
 
     /* Ensure all values are represented in network byte order. */
 
-    t.pos[0] = htonf(t.pos[0]);
-    t.pos[1] = htonf(t.pos[1]);
-    t.pos[2] = htonf(t.pos[2]);
-    t.mag    = htonf(t.mag);
+    t.pos[0] = host_to_net_float(t.pos[0]);
+    t.pos[1] = host_to_net_float(t.pos[1]);
+    t.pos[2] = host_to_net_float(t.pos[2]);
+    t.mag    = host_to_net_float(t.mag);
 
     /* Write the record to the given file. */
 
-    if (fwrite(&t, STAR_BIN_RECLEN, 1, fp) > 0)
+    if (fwrite(&t, sizeof (struct star), 1, fp) > 0)
         return 1;
     else
         return 0;
@@ -92,14 +92,14 @@ int star_parse_bin(struct star *s, FILE *fp)
 {
     /* Read a single star record from the given file. */
 
-    if (fread(s, STAR_BIN_RECLEN, 1, fp) > 0)
+    if (fread(s, sizeof (struct star), 1, fp) > 0)
     {
         /* Ensure all values are represented in host byte order. */
 
-        s->pos[0] = ntohf(s->pos[0]);
-        s->pos[1] = ntohf(s->pos[1]);
-        s->pos[2] = ntohf(s->pos[2]);
-        s->mag    = ntohf(s->mag);
+        s->pos[0] = net_to_host_float(s->pos[0]);
+        s->pos[1] = net_to_host_float(s->pos[1]);
+        s->pos[2] = net_to_host_float(s->pos[2]);
+        s->mag    = net_to_host_float(s->mag);
 
         return 1;
     }
