@@ -90,7 +90,7 @@ int startup_entity(void)
         entity_func[TYPE_OBJECT] = startup_object();
         entity_func[TYPE_GALAXY] = startup_galaxy();
         entity_func[TYPE_LIGHT]  = startup_light();
-        entity_func[TYPE_PIVOT]  = NULL;
+        entity_func[TYPE_PIVOT]  = startup_pivot();
 
         return 1;
     }

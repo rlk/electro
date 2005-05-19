@@ -66,11 +66,22 @@ efficiency.</p>
 
 <h1> Command Line Arguments </h1>
 
-<p> Electro accepts the following command line arguments.  All unrecognized arguments are copied to a table in the Electro Lua environment called <tt>E.arguments</tt>, and scripts are free to access them there. </p>
+<p> Electro accepts the following command line arguments.  All
+unrecognized arguments are copied to a table in the Electro Lua
+environment called <tt>E.arguments</tt>, and scripts are free to
+access them there. </p>
 
 <dl>
 <dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>
 Execute the named Lua script. </p>
+
+<dt><tt>-m</tt><dd><p> Grab the mouse pointer.  Normally, mouse motion
+events are only detected while the pointer is within the Electro
+window.  This limits the useful range of mouse motion to the size of
+the window.  When the mouse pointer is grabbed, an application can
+track mouse motion over unlimited distances.  This is useful to
+applications that implement a pointer that spans a large tiled
+display. </p>
 
 <dt><tt>-H</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p> 
 Process the given Hipparcos stellar catalog into an Electro galaxy file. </p>

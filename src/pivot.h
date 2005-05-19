@@ -13,6 +13,12 @@
 #ifndef PIVOT_H
 #define PIVOT_H
 
+#include "entity.h"
+
+/*---------------------------------------------------------------------------*/
+
+struct entity_func *startup_pivot();
+
 /*---------------------------------------------------------------------------*/
 
 int  send_create_pivot(void);

@@ -52,28 +52,6 @@ static int new_image(void)
     return vecadd(image);
 }
 
-int startup_image(void)
-{
-    int i;
-
-    if ((image = vecnew(256, sizeof (struct image))))
-    {
-        if ((i = new_image()) >= 0)
-        {
-            I(i)->filename = "null";
-            I(i)->texture  =      0;
-            I(i)->state    =      1;
-            I(i)->p        =   NULL;
-            I(i)->w        =    128;
-            I(i)->h        =    128;
-            I(i)->b        =      3;
-        }
-        return 1;
-    }
-    else
-        return 0;
-}
-
 /*===========================================================================*/
 
 static int power_of_two(int n)
@@ -388,13 +366,6 @@ int get_image_h(int i)
 
 /*===========================================================================*/
 
-void draw_image(int i)
-{
-    init_image(i);
-    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
-}
-
-
 void init_image(int i)
 {
     if (i && I(i)->state == 0)
@@ -416,6 +387,12 @@ void fini_image(int i)
     }
 }
 
+void draw_image(int i)
+{
+    init_image(i);
+    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
+}
+
 void free_image(int i)
 {
     if (i)
@@ -431,3 +408,24 @@ void free_image(int i)
 
 /*---------------------------------------------------------------------------*/
 
+int startup_image(void)
+{
+    int i;
+
+    if ((image = vecnew(256, sizeof (struct image))))
+    {
+        if ((i = new_image()) >= 0)
+        {
+            I(i)->filename = "null";
+            I(i)->texture  =      0;
+            I(i)->state    =      1;
+            I(i)->p        =   NULL;
+            I(i)->w        =    128;
+            I(i)->h        =    128;
+            I(i)->b        =      3;
+        }
+        return 1;
+    }
+    else
+        return 0;
+}

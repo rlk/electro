@@ -28,17 +28,15 @@
 #include "image.h"
 #include "event.h"
 #include "server.h"
-/*
-#define GRAB 1
-*/
+
 /*---------------------------------------------------------------------------*/
 
 static void server_draw(void);
 
 static int server_full   = 0;
-static int server_grab   = 0;
 static int server_time   = 0;
 static int server_mirror = 1;
+static int server_grab   = 0;
 
 static int timer_on = 0;
 
@@ -48,20 +46,19 @@ static float average_fps = 0.0f;
 
 void grab(int b)
 {
-#if GRAB
-    if (b && !server_grab)
+    if (server_grab)
     {
-        SDL_WM_GrabInput(SDL_GRAB_ON);
-        SDL_ShowCursor(0);
+        if (b)
+        {
+            SDL_WM_GrabInput(SDL_GRAB_ON);
+            SDL_ShowCursor(0);
+        }
+        else
+        {
+            SDL_WM_GrabInput(SDL_GRAB_OFF);
+            SDL_ShowCursor(1);
+        }
     }
-    if (!b && server_grab)
-    {
-        SDL_WM_GrabInput(SDL_GRAB_OFF);
-        SDL_ShowCursor(1);
-    }
-#endif
-
-    server_grab = b;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -210,16 +207,13 @@ static int server_loop(void)
 
     while (SDL_PollEvent(&e))
     {
-        /* Handle point grab toggle. */
-
-        if (e.type == SDL_KEYUP && e.key.keysym.sym == 27) grab(0);
-        if (e.type == SDL_MOUSEBUTTONDOWN)                 grab(1);
-
         /* Handle global server control keys. */
 
         if (e.type == SDL_KEYDOWN)
             switch (e.key.keysym.sym)
             {
+            case SDLK_ESCAPE:
+                return 0;
             case SDLK_F1:
                 dirty |= set_console_enable(!console_is_enabled());
                 break;
@@ -247,41 +241,40 @@ static int server_loop(void)
 
         /* Dispatch the event to the scripting system. */
 
-        if (server_grab)
-            switch (e.type)
-            {
-            case SDL_VIDEORESIZE:
-                dirty |= init_video(e.resize.w, e.resize.h, server_full);
-                break;
-            case SDL_MOUSEMOTION:
-                dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                dirty |= do_click_script(e.button.button, 1);
-                break;
-            case SDL_MOUSEBUTTONUP:
-                dirty |= do_click_script(e.button.button, 0);
-                break;
-            case SDL_JOYBUTTONDOWN:
-                dirty |= do_joystick_script(e.jbutton.which,
-                                            e.jbutton.button, 1);
-                break;
-            case SDL_JOYBUTTONUP:
-                dirty |= do_joystick_script(e.jbutton.which,
-                                            e.jbutton.button, 0);
-                break;
-            case SDL_KEYDOWN:
-                dirty |= server_keydn(&e.key);
-                break;
-            case SDL_KEYUP:
-                dirty |= server_keyup(&e.key);
-                break;
-            case SDL_USEREVENT:
-                dirty |= do_timer_script(e.user.code);
-                break;
-            default:
-                break;
-            }
+        switch (e.type)
+        {
+        case SDL_VIDEORESIZE:
+            dirty |= init_video(e.resize.w, e.resize.h, server_full);
+            break;
+        case SDL_MOUSEMOTION:
+            dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            dirty |= do_click_script(e.button.button, 1);
+            break;
+        case SDL_MOUSEBUTTONUP:
+            dirty |= do_click_script(e.button.button, 0);
+            break;
+        case SDL_JOYBUTTONDOWN:
+            dirty |= do_joystick_script(e.jbutton.which,
+                                        e.jbutton.button, 1);
+            break;
+        case SDL_JOYBUTTONUP:
+            dirty |= do_joystick_script(e.jbutton.which,
+                                        e.jbutton.button, 0);
+            break;
+        case SDL_KEYDOWN:
+            dirty |= server_keydn(&e.key);
+            break;
+        case SDL_KEYUP:
+            dirty |= server_keyup(&e.key);
+            break;
+        case SDL_USEREVENT:
+            dirty |= do_timer_script(e.user.code);
+            break;
+        default:
+            break;
+        }
 
         /* Handle a clean exit.  TODO: remove redundancy. */
 
@@ -297,7 +290,7 @@ static int server_loop(void)
 
     /* Redraw a dirty buffer. */
 
-    if (server_grab || dirty)
+    if (dirty)
     {
         do_frame_script();
 
@@ -318,7 +311,7 @@ static int server_loop(void)
         }
     }
 
-    if (timer_on && server_grab) timer_callback();
+    if (timer_on) timer_callback();
 
     return 1;
 }
@@ -335,6 +328,7 @@ void parse_args(int argc, char *argv[])
         if      (strcmp(argv[i], "-f") == 0) i += 1;
         else if (strcmp(argv[i], "-H") == 0) i += 2;
         else if (strcmp(argv[i], "-T") == 0) i += 2;
+        else if (strcmp(argv[i], "-m") == 0) i += 0;
         else
             add_argument(c++, argv[i]);
 
@@ -361,6 +355,9 @@ void parse_args(int argc, char *argv[])
 
             prep_hip_galaxy(dat, gal);
         }
+
+        else if (strcmp(argv[i], "-m") == 0)
+            server_grab = 1;
 }
 
 void server(int argc, char *argv[])
@@ -398,6 +395,8 @@ void server(int argc, char *argv[])
                     while (SDL_WaitEvent(NULL))
                         if (server_loop() == 0)
                             break;
+
+                    grab(0);
                 }
                 else fprintf(stderr, "%s\n", SDL_GetError());
             }

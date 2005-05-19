@@ -56,3 +56,8 @@ struct entity_func pivot_func = {
     NULL,
     NULL,
 };
+
+struct entity_func *startup_pivot(void)
+{
+    return &pivot_func;
+}

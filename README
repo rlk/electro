@@ -34,15 +34,12 @@
 
 * Usage
 
-    Activate the Electro application window by clicking in it.  It
-    will grab the mouse pointer.  Press ESCAPE to release the pointer
-    and pause the application.
-
-        F1 - Toggle server console
-        F2 - Toggle server rendering
-        F3 - Decrease server window resolution
-        F4 - Increase server window resolution
-        F5 - Toggle server fullscreen
+        ESC - Exit
+        F1  - Toggle server console
+        F2  - Toggle server rendering
+        F3  - Decrease server window resolution
+        F4  - Increase server window resolution
+        F5  - Toggle server fullscreen
 
 
 * rlk@evl.uic.edu

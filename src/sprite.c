@@ -194,7 +194,6 @@ static void free_sprite(int i)
     if (--S(i)->count == 0)
     {
         fini_sprite(i);
-
         memset(S(i), 0, sizeof (struct sprite));
     }
 }
