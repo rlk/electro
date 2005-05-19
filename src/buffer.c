@@ -68,8 +68,8 @@ void sync_buffer(void)
 
 void pack_vector(vector_t V)
 {
-    int num = vecnum(V);
-    int siz = vecsiz(V);
+    int num = V->num;
+    int siz = V->siz;
 
     pack_index(num);
     pack_index(siz);
@@ -90,6 +90,9 @@ vector_t unpack_vector(void)
     if ((V = vecnew(num, siz)))
     {
          memcpy(vecget(V, 0), buf + pos, num * siz);
+         V->num = num;
+         V->siz = siz;
+
          pos += (num * siz);
     }
 

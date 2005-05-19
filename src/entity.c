@@ -270,12 +270,6 @@ static void init_entity(int i)
 {
     if (E(i)->state == 0)
     {
-        /* Initialize type-specific OpenGL state. */
-
-        if (entity_func[E(i)->type] &&
-            entity_func[E(i)->type]->init)
-            entity_func[E(i)->type]->init(E(i)->data);
-
         /* Initialize any vertex and fragment programs. */
 
         if (E(i)->vert_text && GL_has_vertex_program)
@@ -292,12 +286,6 @@ static void fini_entity(int i)
 {
     if (E(i)->state == 1)
     {
-        /* Finalize type-specific OpenGL state. */
-
-        if (entity_func[E(i)->type] &&
-            entity_func[E(i)->type]->fini)
-            entity_func[E(i)->type]->fini(E(i)->data);
-
         /* Finalize any vertex and fragment programs. */
 
         if (GL_has_vertex_program)
@@ -917,7 +905,13 @@ void init_entities(void)
 
     for (i = 0; i < n; ++i)
         if (E(i)->type)
+        {
             init_entity(i);
+
+            if (entity_func[E(i)->type] &&
+                entity_func[E(i)->type]->init)
+                entity_func[E(i)->type]->init(E(i)->data);
+        }
 }
 
 void fini_entities(void)
@@ -928,7 +922,13 @@ void fini_entities(void)
 
     for (i = 0; i < n; ++i)
         if (E(i)->type)
+        {
             fini_entity(i);
+
+            if (entity_func[E(i)->type] &&
+                entity_func[E(i)->type]->fini)
+                entity_func[E(i)->type]->fini(E(i)->data);
+        }
 }
 
 /*===========================================================================*/

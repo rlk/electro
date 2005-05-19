@@ -647,6 +647,43 @@ void recv_create_object(void)
 
 /*===========================================================================*/
 
+static void init_object(int i)
+{
+    if (O(i)->state == 0)
+    {
+        /* Initialize the buffer object. */
+    
+        if (GL_has_vertex_buffer_object)
+        {
+            glGenBuffersARB(1, &O(i)->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
+
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                            vecnum(O(i)->vv) * sizeof (struct object_vert),
+                            vecget(O(i)->vv, 0), GL_STATIC_DRAW_ARB);
+        }
+    
+        O(i)->state = 1;
+    }
+}
+
+static void fini_object(int i)
+{
+    if (O(i)->state == 1)
+    {
+        /* Free the vertex buffer object. */
+
+        if (GL_has_vertex_buffer_object)
+            if (glIsBufferARB(O(i)->buffer))
+                glDeleteBuffersARB(1, &O(i)->buffer);
+
+        O(i)->buffer = 0;
+        O(i)->state  = 0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 static void draw_object(int j, int i, const float M[16],
                                       const float I[16],
                                       const struct frustum *F, float a)
@@ -660,6 +697,8 @@ static void draw_object(int j, int i, const float M[16],
     float N[16];
     float J[16];
     float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    init_object(i);
 
     glPushMatrix();
     {
@@ -727,43 +766,6 @@ static void draw_object(int j, int i, const float M[16],
         draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void init_object(int i)
-{
-    if (O(i)->state == 0)
-    {
-        /* Initialize the buffer object. */
-    
-        if (GL_has_vertex_buffer_object)
-        {
-            glGenBuffersARB(1, &O(i)->buffer);
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
-
-            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                            vecnum(O(i)->vv) * sizeof (struct object_vert),
-                            vecget(O(i)->vv, 0), GL_STATIC_DRAW_ARB);
-        }
-    
-        O(i)->state = 1;
-    }
-}
-
-static void fini_object(int i)
-{
-    if (O(i)->state == 1)
-    {
-        /* Free the vertex buffer object. */
-
-        if (GL_has_vertex_buffer_object)
-            if (glIsBufferARB(O(i)->buffer))
-                glDeleteBuffersARB(1, &O(i)->buffer);
-
-        O(i)->buffer = 0;
-        O(i)->state  = 0;
-    }
 }
 
 /*---------------------------------------------------------------------------*/

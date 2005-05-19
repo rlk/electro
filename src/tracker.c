@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "tracker.h"
+#include "utility.h"
 
 #ifdef TRACKD
 #include <trackdAPI.h>

@@ -108,6 +108,44 @@ void set_window_siz(int d)
 
 /*---------------------------------------------------------------------------*/
 
+static void bound_display(void)
+{
+    int L = INT_MAX;
+    int R = INT_MIN;
+    int B = INT_MAX;
+    int T = INT_MIN;
+
+    int i, j;
+
+    /* Compute the total pixel size of all tiles. */
+
+    for (i = 0; i < H_num; ++i)
+        for (j = 0; j < Hi[i].n; ++j)
+        {
+            int x = Hi[i].tile[j].pix_x;
+            int y = Hi[i].tile[j].pix_y;
+            int w = Hi[i].tile[j].pix_w;
+            int h = Hi[i].tile[j].pix_h;
+
+            L = MIN(L, x);
+            R = MAX(R, x + w);
+            B = MIN(B, y);
+            T = MAX(T, y + h);
+        }
+
+    /* Copy the total pixel size to all host configurations. */
+
+    for (i = 0; i < H_num; ++i)
+    {
+        Host.pix_x = Hi[i].pix_x =     L;
+        Host.pix_w = Hi[i].pix_w = R - L;
+        Host.pix_y = Hi[i].pix_y =     B;
+        Host.pix_h = Hi[i].pix_h = T - B;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 int startup_display(void)
 {
     int n = 0;
@@ -437,32 +475,7 @@ void add_tile(const char *name, int x, int y, int w, int h,
         Hi[i].tile[n].pix_w = W;
         Hi[i].tile[n].pix_h = H;
 
-        /* Compute the total pixel size of all tiles of this host. */
-
-        if (n == 0)
-        {
-            Hi[i].pix_x = X;
-            Hi[i].pix_y = Y;
-            Hi[i].pix_w = W;
-            Hi[i].pix_h = H;
-        }
-        else
-        {
-            int L = Hi[i].pix_x;
-            int R = Hi[i].pix_x + Hi[i].pix_w;
-            int B = Hi[i].pix_y;
-            int T = Hi[i].pix_y + Hi[i].pix_h;
-
-            L = MIN(L, X);
-            R = MAX(R, X + W);
-            B = MIN(B, Y);
-            T = MAX(T, Y + H);
-
-            Hi[i].pix_x =     L;
-            Hi[i].pix_w = R - L;
-            Hi[i].pix_y =     B;
-            Hi[i].pix_h = T - B;
-        }
+        bound_display();
     }
 }
 

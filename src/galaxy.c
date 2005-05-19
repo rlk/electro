@@ -330,6 +330,52 @@ int pick_galaxy(int i, const float p[3], const float v[3])
 
 /*===========================================================================*/
 
+static void init_galaxy(int i)
+{
+    if (G(i)->state == 0)
+    {
+        /* Initialize the vertex buffer object. */
+
+        if (GL_has_vertex_buffer_object)
+        {
+            glGenBuffersARB(1, &G(i)->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, G(i)->buffer);
+
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                            G(i)->S_num * sizeof (struct star),
+                            G(i)->S, GL_STATIC_DRAW_ARB);
+        }
+
+        /* Initialize the star texture. */
+
+        G(i)->texture = star_make_texture();
+        G(i)->state   = 1;
+    }
+}
+
+static void fini_galaxy(int i)
+{
+    if (G(i)->state == 1)
+    {
+        /* Free the star texture. */
+
+        if (glIsTexture(G(i)->texture))
+            glDeleteTextures(1, &G(i)->texture);
+
+        /* Free the vertex buffer object. */
+
+        if (GL_has_vertex_buffer_object)
+            if (glIsBufferARB(G(i)->buffer))
+                glDeleteBuffersARB(1, &G(i)->buffer);
+
+        G(i)->texture = 0;
+        G(i)->buffer  = 0;
+        G(i)->state   = 0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 static void draw_arrays(int i)
 {
     GLsizei sz = sizeof (struct star);
@@ -366,6 +412,8 @@ static void draw_galaxy(int j, int i, const float M[16],
                                       const float I[16],
                                       const struct frustum *F, float a)
 {
+    init_galaxy(i);
+
     glPushMatrix();
     {
         float N[16];
@@ -426,52 +474,6 @@ static void draw_galaxy(int j, int i, const float M[16],
         draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void init_galaxy(int i)
-{
-    if (G(i)->state == 0)
-    {
-        /* Initialize the vertex buffer object. */
-
-        if (GL_has_vertex_buffer_object)
-        {
-            glGenBuffersARB(1, &G(i)->buffer);
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, G(i)->buffer);
-
-            glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                            G(i)->S_num * sizeof (struct star),
-                            G(i)->S, GL_STATIC_DRAW_ARB);
-        }
-
-        /* Initialize the star texture. */
-
-        G(i)->texture = star_make_texture();
-        G(i)->state   = 1;
-    }
-}
-
-static void fini_galaxy(int i)
-{
-    if (G(i)->state == 1)
-    {
-        /* Free the star texture. */
-
-        if (glIsTexture(G(i)->texture))
-            glDeleteTextures(1, &G(i)->texture);
-
-        /* Free the vertex buffer object. */
-
-        if (GL_has_vertex_buffer_object)
-            if (glIsBufferARB(G(i)->buffer))
-                glDeleteBuffersARB(1, &G(i)->buffer);
-
-        G(i)->texture = 0;
-        G(i)->buffer  = 0;
-        G(i)->state   = 0;
-    }
 }
 
 /*---------------------------------------------------------------------------*/
