@@ -13,6 +13,7 @@
 #include <SDL.h>
 
 #include "opengl.h"
+#include "video.h"
 #include "utility.h"
 #include "display.h"
 #include "buffer.h"
@@ -93,54 +94,6 @@ static void client_recv(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void init_client(void)
-{
-    glViewport(0, 0, get_window_w(), get_window_h());
-
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-
-    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
-                  GL_SEPARATE_SPECULAR_COLOR);
-
-    glDepthFunc(GL_LEQUAL);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glLineWidth(4.0);
-}
-
-static int init_video(int w, int h, int m)
-{
-    fini_images();
-    fini_entities();
-
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-    if (SDL_SetVideoMode(w, h, 0, m))
-    {
-        init_opengl();
-        init_client();
-        init_images();
-        init_entities();
-
-        return 1;
-    }
-    return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
 static void client_swap(void)
 {
 #ifdef MPI
@@ -194,8 +147,7 @@ void client(void)
         {
             sync_display();
 
-            if (init_video(get_window_w(),
-                           get_window_h(), SDL_OPENGL | SDL_NOFRAME))
+            if (init_video(get_window_w(), get_window_h(), 1))
             {
                 /* Handle any SDL events. Block on server messages. */
 

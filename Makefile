@@ -62,6 +62,7 @@ LIBS += $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
 OBJS =	src/version.o  \
 	src/opengl.o   \
+	src/video.o    \
 	src/glyph.o    \
 	src/matrix.o   \
 	src/vector.o   \

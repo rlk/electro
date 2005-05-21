@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "opengl.h"
+#include "video.h"
 #include "version.h"
 #include "tracker.h"
 #include "joystick.h"
@@ -81,57 +82,6 @@ void enable_timer(int b)
 {
     timer_on    = b;
     server_time = SDL_GetTicks();
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void init_server(void)
-{
-    glViewport(0, 0, get_window_w(), get_window_h());
-
-    glEnable(GL_SCISSOR_TEST);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-
-    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
-                  GL_SEPARATE_SPECULAR_COLOR);
-
-    glDepthFunc(GL_LEQUAL);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPixelStorei(GL_PACK_ALIGNMENT,   1);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-}
-
-static int init_video(int w, int h, int m)
-{
-    fini_images();
-    fini_entities();
-
-    set_window_w(w);
-    set_window_h(h);
-
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-    if (SDL_SetVideoMode(w, h, 0, m | SDL_OPENGL | SDL_RESIZABLE))
-    {
-        init_opengl();
-        init_server();
-        init_images();
-        init_entities();
-
-        return 1;
-    }
-    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -225,18 +175,15 @@ static int server_loop(void)
                 break;
             case SDLK_F3:
                 set_window_siz(-1);
-                dirty |= init_video(get_window_w(),
-                                    get_window_h(), server_full);
+                dirty |= init_video(get_window_w(), get_window_h(), 0);
                 break;
             case SDLK_F4:
                 set_window_siz(+1);
-                dirty |= init_video(get_window_w(),
-                                    get_window_h(), server_full);
+                dirty |= init_video(get_window_w(), get_window_h(), 0);
                 break;
             case SDLK_F5:
-                server_full = SDL_FULLSCREEN - server_full;
-                dirty |= init_video(get_window_w(),
-                                    get_window_h(), server_full);
+                server_full = 1 - server_full;
+                dirty |= set_video_fullscreen(server_full, 0);
                 break;
             default:
                 break;
@@ -247,7 +194,7 @@ static int server_loop(void)
         switch (e.type)
         {
         case SDL_VIDEORESIZE:
-            dirty |= init_video(e.resize.w, e.resize.h, server_full);
+            dirty |= init_video(e.resize.w, e.resize.h, 0);
             break;
         case SDL_MOUSEMOTION:
             dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
@@ -385,8 +332,7 @@ void server(int argc, char *argv[])
 
                 sync_display();
 
-                if (init_video(get_window_w(),
-                               get_window_h(), server_full))
+                if (init_video(get_window_w(), get_window_h(), 0))
                 {
                     SDL_EnableUNICODE(1);
                     SDL_PauseAudio(0);

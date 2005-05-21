@@ -15,6 +15,7 @@
 #include <math.h>
 
 #include "opengl.h"
+#include "video.h"
 #include "vector.h"
 #include "matrix.h"
 #include "buffer.h"
@@ -151,6 +152,8 @@ void send_set_camera_stereo(int i, const float v[3], int mode)
     pack_float((C(i)->eye_offset[0] = v[0]));
     pack_float((C(i)->eye_offset[1] = v[1]));
     pack_float((C(i)->eye_offset[2] = v[2]));
+
+    set_video_stereo((C(i)->mode == STEREO_QUAD), 0);
 }
 
 void recv_set_camera_stereo(void)
@@ -161,6 +164,8 @@ void recv_set_camera_stereo(void)
     C(i)->eye_offset[0] = unpack_float();
     C(i)->eye_offset[1] = unpack_float();
     C(i)->eye_offset[2] = unpack_float();
+
+    set_video_stereo((C(i)->mode == STEREO_QUAD), 1);
 }
 
 /*===========================================================================*/
