@@ -196,7 +196,15 @@ SOURCE=..\src\utility.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\vector.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\version.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\video.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -308,7 +316,15 @@ SOURCE=..\src\utility.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\vector.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\version.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\video.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

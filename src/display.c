@@ -14,8 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
-#ifndef __WIN32
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 

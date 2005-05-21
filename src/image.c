@@ -284,6 +284,8 @@ int send_create_image(const char *filename)
 
     if ((i = new_image()) >= 0)
     {
+		I(i)->count = 1;
+
         /* Note the file name. */
 
         I(i)->filename = memdup(filename, strlen(filename) + 1, 1);

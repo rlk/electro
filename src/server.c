@@ -285,12 +285,12 @@ void parse_args(int argc, char *argv[])
     /* Scan the list for Electro arguments. */
 
     for (i = 1; i < argc; ++i)
-        if      (strcmp(argv[i], "-f") == 0)
+        if      (strcmp(argv[i], "-f") == 0 && i < argc - 1)
         {
             load_script(argv[++i]);
         }
 
-        else if (strcmp(argv[i], "-T") == 0)
+        else if (strcmp(argv[i], "-T") == 0 && i < argc - 2)
         {
             const char *dat = argv[++i];
             const char *gal = argv[++i];
@@ -298,7 +298,7 @@ void parse_args(int argc, char *argv[])
             prep_tyc_galaxy(dat, gal);
         }
 
-        else if (strcmp(argv[i], "-H") == 0)
+        else if (strcmp(argv[i], "-H") == 0 && i < argc - 2)
         {
             const char *dat = argv[++i];
             const char *gal = argv[++i];

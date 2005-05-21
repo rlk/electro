@@ -39,8 +39,8 @@ struct camera
     float pos_offset[3];
     float view_basis[3][3];
 
-    float near;
-    float far;
+    float n;
+    float f;
 };
 
 static vector_t camera;
@@ -70,13 +70,13 @@ int send_create_camera(int t)
     {
         C(i)->count = 1;
         C(i)->type  = t;
-        C(i)->near  = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
-        C(i)->far   = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
+        C(i)->n     = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
+        C(i)->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
 
         pack_event(EVENT_CREATE_CAMERA);
         pack_index(t);
-        pack_float(C(i)->near);
-        pack_float(C(i)->far);
+        pack_float(C(i)->n);
+        pack_float(C(i)->f);
 
         return send_create_entity(TYPE_CAMERA, i);
     }
@@ -90,8 +90,8 @@ void recv_create_camera(void)
 
     C(i)->count = 1;
     C(i)->type  = t;
-    C(i)->near  = unpack_float();
-    C(i)->far   = unpack_float();
+    C(i)->n     = unpack_float();
+    C(i)->f     = unpack_float();
 
     recv_create_entity();
 }
@@ -173,10 +173,10 @@ void recv_set_camera_stereo(void)
 static int draw_tile(int i, const float d[3], struct frustum *F, int k)
 {
     if (C(i)->type == CAMERA_PERSP)
-        return draw_persp(F, d, C(i)->near, C(i)->far, k);
+        return draw_persp(F, d, C(i)->n, C(i)->f, k);
 
     if (C(i)->type == CAMERA_ORTHO)
-        return draw_ortho(F,    C(i)->near, C(i)->far, k);
+        return draw_ortho(F,    C(i)->n, C(i)->f, k);
 
     return 0;
 }
