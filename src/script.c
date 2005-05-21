@@ -19,6 +19,7 @@
 #include <SDL.h>
 #include <lua.h>
 #include <lualib.h>
+#include <luasocket.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -1255,6 +1256,7 @@ int init_script(void)
         luaopen_table(L);
         luaopen_debug(L);
         luaopen_string(L);
+        luaopen_socket(L);
         luaopen_electro(L);
 
         return 1;

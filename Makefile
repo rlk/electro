@@ -54,7 +54,7 @@ endif
 
 CFLAGS += $(shell $(SDL_CONFIG) --cflags)
 SDLLIB  = $(shell $(SDL_CONFIG) --libs) -lSDLmain
-LUALIB  = -llua -llualib
+LUALIB  = -llua -llualib -lluasocket
 IMGLIB  = -ljpeg -lpng -lz -lm
 OGGLIB  = -lvorbisfile
 
