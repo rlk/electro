@@ -523,9 +523,9 @@ static int read_obj(const char *filename, struct object *o)
 
     /* Initialize the object element vectors. */
 
-    o->mv = vecnew(8,    sizeof (struct object_mtrl));
+    o->mv = vecnew(4,    sizeof (struct object_mtrl));
     o->vv = vecnew(1024, sizeof (struct object_vert));
-    o->sv = vecnew(1024, sizeof (struct object_surf));
+    o->sv = vecnew(4,    sizeof (struct object_surf));
 
     if ((fin = open_file(filename, "r")))
     {
@@ -719,7 +719,8 @@ static void draw_object(int j, int i, const float M[16],
                 glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
             }
             else
-                glInterleavedArrays(GL_T2F_N3F_V3F, stride, O(i)->vv);
+                glInterleavedArrays(GL_T2F_N3F_V3F, stride,
+                                    vecget(O(i)->vv, 0));
 
             /* If this object is transparent, don't write depth. */
 

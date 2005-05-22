@@ -1,3 +1,1 @@
-echo off
-cd %~p0
-electro.exe -f %1
+%~dp0electro.exe -f %1

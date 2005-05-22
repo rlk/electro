@@ -5,31 +5,19 @@
                               _
 
 
-* Setup
-
-    You might want to include the Electro binary directory in your path.
-    Using bash, type the following, or add it to your .bashrc file.
-
-        $ export PATH=$PATH:/usr/local/Electro/bin
-
-    Or using tcsh, type the following, or add it to your .cshrc file.
-
-        % setenv PATH ${PATH}:/usr/local/Electro/bin
-
-
 * Running
 
     The run scripts take a list of Lua files as parameters.  Each file
-    is executed in turn.
+    is executed in turn.  Here, Asteroids is used as an example
 
-    To run Asteroids on nico:
+    To run Asteroids under Linux or OS X:
 
-        $ cd /usr/local/Electro/examples/asteroids
-        $ electro-nico -f asteroids.lua
+        $ ./electro -f examples/asteroids/asteroids.lua
 
-    Applications may be run in standalone mode in the same fashion:
+    To run Asteroids under Windows, drag and drop the asteroids.lua icon
+    onto the electro.bat file, or:
 
-        $ electro -f asteroids.lua
+        C:\> electro.exe -f examples\asteroids\asteroids.lua
 
 
 * Usage
