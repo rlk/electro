@@ -29,16 +29,16 @@
 
 struct tile
 {
-    float o[3];
-    float r[3];
-    float u[3];
+    float o[3];                 /* World-space tile origin                   */
+    float r[3];                 /* World-space tile right vector             */
+    float u[3];                 /* World-space tile up vector                */
 
-    int   win_x;
+    int   win_x;                /* Tile rectangle within host window.        */
     int   win_y;
     int   win_w;
     int   win_h;
 
-    int   pix_x;
+    int   pix_x;                /* Tile rectangle within display.            */
     int   pix_y;
     int   pix_w;
     int   pix_h;
@@ -51,15 +51,15 @@ struct host
 
     int n;
 
-    int win_x;
+    int win_x;                  /* Host window rectangle within desktop.     */
     int win_y;
     int win_w;
     int win_h;
 
-    int pix_x;
-    int pix_y;
-    int pix_w;
-    int pix_h;
+    int tot_x;                  /* Total display rectanglar bound.           */
+    int tot_y;
+    int tot_w;
+    int tot_h;
 };
 
 /*---------------------------------------------------------------------------*/

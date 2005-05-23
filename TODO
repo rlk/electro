@@ -4,9 +4,28 @@ Bounding sphere
         auto lookat
 Tracker buttons
 Text render of some sort / TTF
-Camera offset per tile (for geowall and planar)?
 
 Test whether tracking data optimization will pay off.
 Scale and billboard frustum (thorough test)
 
 Particle system
+
+
+screen flip
+        bx
+        by
+supplemental eye offset per tile
+        dx
+        dy
+        dz
+linescreen configuration per tile
+        duty cycle
+        lines per foot
+        line angle (deg)
+        optical thickness (ft)
+        shift (ft)
+plane of reflection
+        nx
+        ny
+        nz
+        d

@@ -53,8 +53,8 @@ static void default_host(struct host *H)
     H->win_y = DEFAULT_Y;
     H->win_w = DEFAULT_W;
     H->win_h = DEFAULT_H;
-    H->pix_w = DEFAULT_W;
-    H->pix_h = DEFAULT_H;
+    H->tot_w = DEFAULT_W;
+    H->tot_h = DEFAULT_H;
     H->n     = 1;
 
     H->tile[0].win_w = DEFAULT_W;
@@ -138,10 +138,10 @@ static void bound_display(void)
 
     for (i = 0; i < H_num; ++i)
     {
-        Host.pix_x = Hi[i].pix_x =     L;
-        Host.pix_w = Hi[i].pix_w = R - L;
-        Host.pix_y = Hi[i].pix_y =     B;
-        Host.pix_h = Hi[i].pix_h = T - B;
+        Host.tot_x = Hi[i].tot_x =     L;
+        Host.tot_w = Hi[i].tot_w = R - L;
+        Host.tot_y = Hi[i].tot_y =     B;
+        Host.tot_h = Hi[i].tot_h = T - B;
     }
 }
 
@@ -172,36 +172,15 @@ int startup_display(void)
 
 void sync_display(void)
 {
-    int i, rank = 0;
+    int rank = 0;
 
-    /* Find the union of all host exents.  Copy to all hosts. */
-
-    int L = INT_MAX;
-    int R = INT_MIN;
-    int B = INT_MAX;
-    int T = INT_MIN;
-
-    for (i = 0; i < H_num; i++)
-    {
-        L = MIN(L, Hi[i].pix_x);
-        R = MAX(R, Hi[i].pix_x + Hi[i].pix_w);
-        B = MIN(B, Hi[i].pix_y);
-        T = MAX(T, Hi[i].pix_y + Hi[i].pix_h);
-    }
-
-    for (i = 0; i < H_num; i++)
-    {
-        Hi[i].pix_x =     L;
-        Hi[i].pix_w = R - L;
-        Hi[i].pix_y =     B;
-        Hi[i].pix_h = T - B;
-    }
+    bound_display();
 
 #ifdef MPI
     if (gethostname(Host.name, MAXNAME) == 0)
     {
         size_t sz = sizeof (struct host);
-        int j, size;
+        int i, j, size;
 
         assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
         assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
@@ -506,22 +485,22 @@ int get_window_h(void)
 
 int get_viewport_x(void)
 {
-    return Host.pix_x;
+    return Host.tot_x;
 }
 
 int get_viewport_y(void)
 {
-    return Host.pix_y;
+    return Host.tot_y;
 }
 
 int get_viewport_w(void)
 {
-    return Host.pix_w;
+    return Host.tot_w;
 }
 
 int get_viewport_h(void)
 {
-    return Host.pix_h;
+    return Host.tot_h;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -556,10 +535,10 @@ void draw_background(void)
 
     /* Compute the pixel bounds of the entire display. */
 
-    int hL = Host.pix_x;
-    int hR = Host.pix_x + Host.pix_w;
-    int hB = Host.pix_y;
-    int hT = Host.pix_y + Host.pix_h;
+    int hL = Host.tot_x;
+    int hR = Host.tot_x + Host.tot_w;
+    int hB = Host.tot_y;
+    int hT = Host.tot_y + Host.tot_h;
 
     glPushAttrib(GL_ENABLE_BIT   | 
                  GL_SCISSOR_BIT  |
