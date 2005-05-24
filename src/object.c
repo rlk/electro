@@ -302,46 +302,48 @@ static void read_face_vertices(vector_t vv, const char *line)
     int vi;
     int ti;
     int ni;
+    int i;
 
     /* Scan down the face string recording index set specifications. */
 
     while ((dc = read_face_indices(c, &vi, &ti, &ni)))
-    {
-        struct object_vert *v = (struct object_vert *) vecget(vv, vecadd(vv));
+        if ((i = vecadd(vv)) >= 0)
+        {
+            struct object_vert *v = (struct object_vert *) vecget(vv, i);
 
-        struct vec2 *tp = NULL;
-        struct vec3 *np = NULL;
-        struct vec3 *vp = NULL;
+            struct vec2 *tp = NULL;
+            struct vec3 *np = NULL;
+            struct vec3 *vp = NULL;
 
-        /* Locate the indexed value in the vector caches. */
+            /* Locate the indexed value in the vector caches. */
 
-        if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
-        else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv) + ti);
-        if      (ni > 0) np = (struct vec3 *) vecget(_nv, ni - 1);
-        else if (ni < 0) np = (struct vec3 *) vecget(_nv, vecnum(_nv) + ni);
-        if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
-        else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv) + vi);
+            if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
+            else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv)+ti);
+            if      (ni > 0) np = (struct vec3 *) vecget(_nv, ni - 1);
+            else if (ni < 0) np = (struct vec3 *) vecget(_nv, vecnum(_nv)+ni);
+            if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
+            else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv)+vi);
 
-        /* Initialize the new vertex. */
+            /* Initialize the new vertex. */
 
-        v->t[0] = tp ? tp->u : 0.0f;
-        v->t[1] = tp ? tp->v : 0.0f;
+            v->t[0] = tp ? tp->u : 0.0f;
+            v->t[1] = tp ? tp->v : 0.0f;
 
-        v->n[0] = np ? np->x : 0.0f;
-        v->n[1] = np ? np->y : 0.0f;
-        v->n[2] = np ? np->z : 1.0f;
+            v->n[0] = np ? np->x : 0.0f;
+            v->n[1] = np ? np->y : 0.0f;
+            v->n[2] = np ? np->z : 1.0f;
 
-        v->v[0] = vp ? vp->x : 0.0f;
-        v->v[1] = vp ? vp->y : 0.0f;
-        v->v[2] = vp ? vp->z : 0.0f;
+            v->v[0] = vp ? vp->x : 0.0f;
+            v->v[1] = vp ? vp->y : 0.0f;
+            v->v[2] = vp ? vp->z : 0.0f;
 
-        c += dc;
-    }
+            c += dc;
+        }
 }
 
 static void read_f(vector_t vv, vector_t fv, const char *line)
 {
-    int i, i0, i1;
+    int i, i0, i1, j;
 
     /* Scan down the face string recording index set specifications. */
 
@@ -352,13 +354,14 @@ static void read_f(vector_t vv, vector_t fv, const char *line)
     /* Convert our N new vertices into N-2 new triangles. */
 
     for (i = i0; i < i1 - 2; ++i)
-    {
-        struct object_face *f = (struct object_face *) vecget(fv, vecadd(fv));
-     
-        f->vi[0] = i0;
-        f->vi[1] = i + 1;
-        f->vi[2] = i + 2;
-    }
+        if ((j = vecadd(fv)) >= 0)
+        {
+            struct object_face *f = (struct object_face *) vecget(fv, j);
+         
+            f->vi[0] = i0;
+            f->vi[1] = i + 1;
+            f->vi[2] = i + 2;
+        }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -385,43 +388,45 @@ static void read_edge_vertices(vector_t vv, const char *line)
     int dc;
     int vi;
     int ti;
+    int i;
 
     /* Scan down the face string recording index set specifications. */
 
     while ((dc = read_edge_indices(c, &vi, &ti)))
-    {
-        struct object_vert *v = (struct object_vert *) vecget(vv, vecadd(vv));
+        if ((i = vecadd(vv)) >= 0)
+        {
+            struct object_vert *v = (struct object_vert *) vecget(vv, i);
 
-        struct vec2 *tp = NULL;
-        struct vec3 *vp = NULL;
+            struct vec2 *tp = NULL;
+            struct vec3 *vp = NULL;
 
-        /* Locate the indexed value in the vector caches. */
+            /* Locate the indexed value in the vector caches. */
 
-        if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
-        else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv) + ti);
-        if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
-        else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv) + vi);
+            if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
+            else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv)+ti);
+            if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
+            else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv)+vi);
 
-        /* Initialize the new vertex. */
+            /* Initialize the new vertex. */
 
-        v->t[0] = tp ? tp->u : 0.0f;
-        v->t[1] = tp ? tp->v : 0.0f;
+            v->t[0] = tp ? tp->u : 0.0f;
+            v->t[1] = tp ? tp->v : 0.0f;
 
-        v->n[0] = 0.0f;
-        v->n[1] = 0.0f;
-        v->n[2] = 1.0f;
+            v->n[0] = 0.0f;
+            v->n[1] = 0.0f;
+            v->n[2] = 1.0f;
 
-        v->v[0] = vp ? vp->x : 0.0f;
-        v->v[1] = vp ? vp->y : 0.0f;
-        v->v[2] = vp ? vp->z : 0.0f;
+            v->v[0] = vp ? vp->x : 0.0f;
+            v->v[1] = vp ? vp->y : 0.0f;
+            v->v[2] = vp ? vp->z : 0.0f;
 
-        c += dc;
-    }
+            c += dc;
+        }
 }
 
 static void read_l(vector_t vv, vector_t ev, const char *line)
 {
-    int i, i0, i1;
+    int i, i0, i1, j;
 
     /* Scan down the edge string recording index set specifications. */
 
@@ -432,25 +437,32 @@ static void read_l(vector_t vv, vector_t ev, const char *line)
     /* Convert our N new vertices into N-1 new edges. */
 
     for (i = i0; i < i1 - 1; ++i)
-    {
-        struct object_edge *e = (struct object_edge *) vecget(ev, vecadd(ev));
-            
-        e->vi[0] = i;
-        e->vi[1] = i + 1;
-    }
+        if ((j = vecadd(ev)) >= 0)
+        {
+            struct object_edge *e = (struct object_edge *) vecget(ev, j);
+                
+            e->vi[0] = i;
+            e->vi[1] = i + 1;
+        }
 }
 
 /*---------------------------------------------------------------------------*/
 
 static struct object_surf *read_g(vector_t sv, int mi)
 {
-    struct object_surf *s = (struct object_surf *) vecget(sv, vecadd(sv));
+    int i;
 
-    s->mi = mi;
-    s->fv = vecnew(256, sizeof (struct object_face));
-    s->ev = vecnew(256, sizeof (struct object_edge));
+    if ((i = vecadd(sv)) >= 0)
+    {
+        struct object_surf *s = (struct object_surf *) vecget(sv, i);
 
-    return s;
+        s->mi = mi;
+        s->fv = vecnew(256, sizeof (struct object_face));
+        s->ev = vecnew(256, sizeof (struct object_edge));
+
+        return s;
+    }
+    return NULL;
 }
 
 static void read_mtllib(vector_t mv, const char *line)
@@ -478,31 +490,52 @@ static int read_usemtl(vector_t mv, const char *line)
 
 static struct object_surf *read_s(vector_t mv, vector_t sv, const char *line)
 {
-    struct object_surf *s = (struct object_surf *) vecget(sv, vecadd(sv));
+    int i;
 
-    s->mi = read_usemtl(mv, line);
-    s->fv = vecnew(256, sizeof (struct object_face));
-    s->ev = vecnew(256, sizeof (struct object_edge));
+    if ((i = vecadd(sv)) >= 0)
+    {
+        struct object_surf *s = (struct object_surf *) vecget(sv, i);
 
-    return s;
+        s->mi = read_usemtl(mv, line);
+        s->fv = vecnew(256, sizeof (struct object_face));
+        s->ev = vecnew(256, sizeof (struct object_edge));
+
+        return s;
+    }
+    return NULL;
 }
 
 static void read_vt(const char *line)
 {
-    struct vec2 *tp = (struct vec2 *) vecget(_tv, vecadd(_tv));
-    sscanf(line, "%f %f", &tp->u, &tp->v);
+    int i;
+
+    if ((i = vecadd(_tv)) >= 0)
+    {
+        struct vec2 *tp = (struct vec2 *) vecget(_tv, i);
+        sscanf(line, "%f %f", &tp->u, &tp->v);
+    }
 }
 
 static void read_vn(const char *line)
 {
-    struct vec3 *np = (struct vec3 *) vecget(_nv, vecadd(_nv));
-    sscanf(line, "%f %f %f", &np->x, &np->y, &np->z);
+    int i;
+
+    if ((i = vecadd(_nv)) >= 0)
+    {
+        struct vec3 *np = (struct vec3 *) vecget(_nv, i);
+        sscanf(line, "%f %f %f", &np->x, &np->y, &np->z);
+    }
 }
 
 static void read_v(const char *line)
 {
-    struct vec3 *vp = (struct vec3 *) vecget(_vv, vecadd(_vv));
-    sscanf(line, "%f %f %f", &vp->x, &vp->y, &vp->z);
+    int i;
+
+    if ((i = vecadd(_vv)) >= 0)
+    {
+        struct vec3 *vp = (struct vec3 *) vecget(_vv, i);
+        sscanf(line, "%f %f %f", &vp->x, &vp->y, &vp->z);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -619,7 +652,7 @@ void recv_create_object(void)
 
     int i = new_object();
     int n = unpack_index();
-    int j;
+    int j, k;
 
     O(i)->count = 1;
 
@@ -632,13 +665,14 @@ void recv_create_object(void)
     /* Unpack each surface. */
 
     for (j = 0; j < n; ++j)
-    {
-        s = (struct object_surf *) vecget(O(i)->sv, vecadd(O(i)->sv));
+        if ((k = vecadd(O(i)->sv)) >= 0)
+        {
+            s = (struct object_surf *) vecget(O(i)->sv, k);
 
-        s->mi = unpack_index();
-        s->fv = unpack_vector();
-        s->ev = unpack_vector();
-    }
+            s->mi = unpack_index();
+            s->fv = unpack_vector();
+            s->ev = unpack_vector();
+        }
 
     /* Encapsulate this object in an entity. */
 

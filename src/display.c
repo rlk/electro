@@ -125,6 +125,9 @@ void sync_display(void)
     int num  = vecnum(host);
     int siz  = vecsiz(host);
     int rank = 0;
+    int j;
+
+    struct host *H;
 
     assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
     assert_mpi(MPI_Bcast(&num, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
@@ -132,20 +135,14 @@ void sync_display(void)
     /* Broadcast all host definitions to all nodes. */
 
     for (i = 1; i < num; i++)
-    {
-        struct host *H;
-
-        if (rank)
-            H = (struct host *) vecget(host, vecadd(host));
-        else
+        if ((j = (rank) ? vecadd(host) : i) >= 0)
+        {
             H = (struct host *) vecget(host, i);
 
-        assert_mpi(MPI_Bcast(H, siz, MPI_BYTE, 0, MPI_COMM_WORLD));
+            assert_mpi(MPI_Bcast(H, siz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
-        if (rank)
-            H->n = 0;
-    }
-
+            if (rank) H->n = 0;
+        }
 #endif
 
     /* Search the definition list for an entry matching this host's name */

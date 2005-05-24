@@ -28,7 +28,7 @@ function do_start()
 
     E.set_entity_position(light,  0.0,  10.0,   0.0)
     E.set_entity_position(pivot,  0.0, -10.0,   0.0)
-    E.set_entity_position(thing,  0.0,   5.0, -10.0)
+    E.set_entity_position(thing,  0.0,   0.0, -10.0)
 
     E.enable_timer(true)
 end

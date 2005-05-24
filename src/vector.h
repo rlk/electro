@@ -32,9 +32,16 @@ void     vecdel(vector_t);
 void     vecclr(vector_t);
 int      vecadd(vector_t);
 
-#define  vecsiz(V)    ((V)->siz)
-#define  vecnum(V)    ((V)->num)
-#define  vecget(V, i) (((char *) (V)->buf) + ((V)->siz * (i)))
+#define  vecsiz(V) ((V)->siz)
+#define  vecnum(V) ((V)->num)
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef NDEBUG
+#define vecget(V, i) (((char *) (V)->buf) + ((V)->siz * (i)))
+#else
+void   *vecget(vector_t, int);
+#endif
 
 /*---------------------------------------------------------------------------*/
 
