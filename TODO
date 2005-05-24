@@ -9,25 +9,3 @@ Test whether tracking data optimization will pay off.
 Scale and billboard frustum (thorough test)
 
 Particle system
-
-
-identifier
-
-screen flip
-        bx
-        by
-supplemental eye offset per tile
-        dx
-        dy
-        dz
-plane of reflection
-+       nx
-+       ny
-+       nz
-+       d
-linescreen configuration per tile
-+       duty cycle
-+       lines per foot
-+       line angle (deg)
-+       optical thickness (ft)
-+       shift (ft)

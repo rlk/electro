@@ -155,8 +155,7 @@ p = {
 
 for i = 1, 35 do
    j = E.add_tile(num[i], w[i][1], w[i][2], w[i][3], w[i][4])
--- E.set_tile_viewport(j, v[i][1], v[i][2], v[i][3], v[i][4])
+   E.set_tile_viewport(j, v[i][1], v[i][2], v[i][3], v[i][4])
    E.set_tile_position(j, p[i][1], p[i][2], p[i][3], p[i][4],
                           p[i][5], p[i][6], p[i][7], p[i][8], p[i][9])
-   print(i, j)
 end
