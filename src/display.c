@@ -21,6 +21,7 @@
 #endif
 
 #include "opengl.h"
+#include "vector.h"
 #include "utility.h"
 #include "tracker.h"
 #include "display.h"
@@ -30,44 +31,15 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define HMAXINIT 32
-
-static struct host  Host;
-static struct host *Hi;
-static struct host *Ho;
-static int          H_num =  0;
-static int          H_max = 64;
-
 static float color0[3] = { 0.1f, 0.2f, 0.4f };
 static float color1[3] = { 0.0f, 0.0f, 0.0f };
 
 /*---------------------------------------------------------------------------*/
 
-static void default_host(struct host *H)
-{
-    float a  = (float) DEFAULT_H / (float) DEFAULT_W;
+static vector_t tile;
+static vector_t host;
 
-    /* Set a default configuration to be used in case of config failure. */
-
-    H->win_x = DEFAULT_X;
-    H->win_y = DEFAULT_Y;
-    H->win_w = DEFAULT_W;
-    H->win_h = DEFAULT_H;
-    H->tot_w = DEFAULT_W;
-    H->tot_h = DEFAULT_H;
-    H->n     = 1;
-
-    H->tile[0].win_w = DEFAULT_W;
-    H->tile[0].win_h = DEFAULT_H;
-    H->tile[0].pix_w = DEFAULT_W;
-    H->tile[0].pix_h = DEFAULT_H;
-
-    H->tile[0].o[0]  = -0.5f;
-    H->tile[0].o[1]  = -0.5f * a;
-    H->tile[0].o[2]  = -1.0f;
-    H->tile[0].r[0]  =  1.0f;
-    H->tile[0].u[1]  =  1.0f * a;
-}
+static struct host *local = NULL;
 
 /*---------------------------------------------------------------------------*/
 
@@ -111,155 +83,424 @@ void set_window_siz(int d)
 
 static void bound_display(void)
 {
-    int L = INT_MAX;
-    int R = INT_MIN;
-    int B = INT_MAX;
-    int T = INT_MIN;
-
-    int i, j;
+    int l = INT_MAX;
+    int r = INT_MIN;
+    int b = INT_MAX;
+    int t = INT_MIN;
+    int i;
 
     /* Compute the total pixel size of all tiles. */
 
-    for (i = 0; i < H_num; ++i)
-        for (j = 0; j < Hi[i].n; ++j)
-        {
-            int x = Hi[i].tile[j].pix_x;
-            int y = Hi[i].tile[j].pix_y;
-            int w = Hi[i].tile[j].pix_w;
-            int h = Hi[i].tile[j].pix_h;
+    for (i = 0; i < vecnum(tile); ++i)
+    {
+        struct tile *T = (struct tile *) vecget(tile, i);
 
-            L = MIN(L, x);
-            R = MAX(R, x + w);
-            B = MIN(B, y);
-            T = MAX(T, y + h);
-        }
+        l = MIN(l, T->pix_x);
+        r = MAX(r, T->pix_x + T->pix_w);
+        b = MIN(b, T->pix_y);
+        t = MAX(t, T->pix_y + T->pix_h);
+    }
 
     /* Copy the total pixel size to all host configurations. */
 
-    for (i = 0; i < H_num; ++i)
+    for (i = 0; i < vecnum(host); ++i)
     {
-        Host.tot_x = Hi[i].tot_x =     L;
-        Host.tot_w = Hi[i].tot_w = R - L;
-        Host.tot_y = Hi[i].tot_y =     B;
-        Host.tot_h = Hi[i].tot_h = T - B;
+        struct host *H = (struct host *) vecget(host, i);
+
+        H->tot_x = l;
+        H->tot_y = b;
+        H->tot_w = r - l;
+        H->tot_h = t - b;
     }
 }
 
 /*---------------------------------------------------------------------------*/
 
-int startup_display(void)
-{
-    int n = 0;
-
-#ifdef MPI
-    assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &n));
-#endif
-
-    if (H_max < n)
-        H_max = n;
-
-    /* Allocate incoming and outgoing host config structures. */
-
-    Hi = (struct host *) calloc(H_max, sizeof (struct host));
-    Ho = (struct host *) calloc(H_max, sizeof (struct host));
-
-    H_num = 0;
-
-    default_host(&Host);
-
-    return (Hi && Ho);
-}
-
 void sync_display(void)
 {
-    int rank = 0;
-
-    bound_display();
+    char name[MAXNAME];
+    int  i;
 
 #ifdef MPI
-    if (gethostname(Host.name, MAXNAME) == 0)
+    int num  = vecnum(host);
+    int siz  = vecsiz(host);
+    int rank = 0;
+
+    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+    assert_mpi(MPI_Bcast(&num, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
+
+    /* Broadcast all host definitions to all nodes. */
+
+    for (i = 1; i < num; i++)
     {
-        size_t sz = sizeof (struct host);
-        int i, j, size;
+        struct host *H;
 
-        assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
-        assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
+        if (rank)
+            H = (struct host *) vecget(host, vecadd(host));
+        else
+            H = (struct host *) vecget(host, i);
 
-        /* Gather all host names at the root. */
+        assert_mpi(MPI_Bcast(H, siz, MPI_BYTE, 0, MPI_COMM_WORLD));
 
-        assert_mpi(MPI_Gather(&Host, sz, MPI_BYTE,
-                               Ho,   sz, MPI_BYTE, 0, MPI_COMM_WORLD));
-
-        /* The root assigns tiles by matching host names. */
-
-        if (rank == 0)
-            for (i = 0; i < size; i++)
-                for (j = 0; j < H_num; j++)
-                    if (strcmp(Hi[j].name, Ho[i].name) == 0)
-                    {
-                        memcpy(Ho + i, Hi + j, sizeof (struct host));
-                        break;
-                    }
-
-        /* Scatter the assignments to all clients. */
-
-        assert_mpi(MPI_Scatter(Ho,   sz, MPI_BYTE,
-                              &Host, sz, MPI_BYTE, 0, MPI_COMM_WORLD));
+        if (rank)
+            H->n = 0;
     }
+
 #endif
 
-    /* Assume the first host configuration is the server's. */
+    /* Search the definition list for an entry matching this host's name */
 
-    if (rank == 0 && H_num > 0)
-        memcpy(&Host, Hi, sizeof (struct host));
+    if (gethostname(name, MAXNAME) == 0)
+    {
+        for (i = 0; i < vecnum(host); ++i)
+        {
+            struct host *H = (struct host *) vecget(host, i);
 
-    if (rank) set_window_pos(Host.win_x, Host.win_y);
+            if (strncmp(name, H->name, MAXNAME) == 0)
+                local = H;
+        }
+
+        set_window_pos(local->win_x, local->win_y);
+    }
 }
+
+/*---------------------------------------------------------------------------*/
+
+int add_host(const char *name, int x, int y, int w, int h)
+{
+    int i;
+
+    if ((i = vecadd(host)) >= 0)
+    {
+        struct host *H = (struct host *) vecget(host, i);
+
+        /* Store the name for future host name searching. */
+
+        strncpy(H->name, name, MAXNAME);
+
+        /* The rectangle defines window size and default total display size. */
+
+        H->tot_x = H->win_x = x;
+        H->tot_y = H->win_y = y;
+        H->tot_w = H->win_w = w;
+        H->tot_h = H->win_h = h;
+    }
+    return i;
+}
+
+int add_tile(int i, int x, int y, int w, int h)
+{
+    int j = -1;
+
+    if ((i < vecnum(host)) && (j = vecadd(tile)) >= 0)
+    {
+        struct host *H = (struct host *) vecget(host, i);
+        struct tile *T = (struct tile *) vecget(tile, j);
+
+        /* The rectangle defines viewport size and default ortho projection. */
+
+        T->pix_x = T->win_x = x;
+        T->pix_y = T->win_y = y;
+        T->pix_w = T->win_w = w;
+        T->pix_h = T->win_h = h;
+
+        /* Compute a default perpective projection. */
+
+        T->o[0]  = -0.5f;
+        T->o[1]  = -0.5f * h / w;
+        T->o[2]  = -1.0f;
+        T->r[0]  =  1.0f;
+        T->u[1]  =  1.0f * h / w;
+
+        /* Include this tile in the host and in the total display. */
+
+        H->tile[H->n++] = j;
+
+        bound_display();
+    }
+    return j;
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_add_tile(int i, int x, int y, int w, int h)
+{
+    pack_event(EVENT_ADD_TILE);
+    pack_index(i);
+    pack_index(x);
+    pack_index(y);
+    pack_index(w);
+    pack_index(h);
+
+    return add_tile(i, x, y, w, h);
+}
+
+void recv_add_tile(void)
+{
+    int i = unpack_index();
+    int x = unpack_index();
+    int y = unpack_index();
+    int w = unpack_index();
+    int h = unpack_index();
+
+    add_tile(i, x, y, w, h);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_tile_flag(int i, int flags, int state)
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    pack_event(EVENT_SET_TILE_FLAG);
+    pack_index(i);
+    pack_index(flags);
+    pack_index(state);
+
+    if (state)
+        T->flag = T->flag | ( flags);
+    else
+        T->flag = T->flag & (~flags);
+}
+
+void send_set_tile_position(int i, const float o[3],
+                                   const float r[3],
+                                   const float u[3])
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    pack_event(EVENT_SET_TILE_POSITION);
+    pack_index(i);
+    pack_float((T->o[0] = o[0]));
+    pack_float((T->o[1] = o[1]));
+    pack_float((T->o[2] = o[2]));
+    pack_float((T->r[0] = r[0]));
+    pack_float((T->r[1] = r[1]));
+    pack_float((T->r[2] = r[2]));
+    pack_float((T->u[0] = u[0]));
+    pack_float((T->u[1] = u[1]));
+    pack_float((T->u[2] = u[2]));
+}
+
+void send_set_tile_viewport(int i, int x, int y, int w, int h)
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    pack_event(EVENT_SET_TILE_VIEWPORT);
+    pack_index(i);
+    pack_index((T->pix_x = x));
+    pack_index((T->pix_y = y));
+    pack_index((T->pix_w = w));
+    pack_index((T->pix_h = h));
+}
+
+void send_set_tile_line_screen(int i, float c, float l,
+                                      float a, float t, float s)
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    pack_event(EVENT_SET_TILE_LINE_SCREEN);
+    pack_index(i);
+    pack_float((T->varrier_cycle = c));
+    pack_float((T->varrier_lines = l));
+    pack_float((T->varrier_angle = a));
+    pack_float((T->varrier_thick = t));
+    pack_float((T->varrier_shift = s));
+}
+
+void send_set_tile_view_mirror(int i, const float p[4])
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    pack_event(EVENT_SET_TILE_VIEW_MIRROR);
+    pack_index(i);
+    pack_float((T->p[0] = p[0]));
+    pack_float((T->p[1] = p[1]));
+    pack_float((T->p[2] = p[2]));
+    pack_float((T->p[3] = p[3]));
+}
+
+void send_set_tile_view_offset(int i, const float d[3])
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    pack_event(EVENT_SET_TILE_VIEW_OFFSET);
+    pack_index(i);
+    pack_float((T->d[0] = d[0]));
+    pack_float((T->d[1] = d[1]));
+    pack_float((T->d[2] = d[2]));
+}
+
+/*---------------------------------------------------------------------------*/
+
+void recv_set_tile_flag(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, unpack_index());
+
+    int flags = unpack_index();
+    int state = unpack_index();
+
+    if (state)
+        T->flag = T->flag | ( flags);
+    else
+        T->flag = T->flag & (~flags);
+}
+
+void recv_set_tile_position(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, unpack_index());
+
+    T->o[0] = unpack_float();
+    T->o[1] = unpack_float();
+    T->o[2] = unpack_float();
+    T->r[0] = unpack_float();
+    T->r[1] = unpack_float();
+    T->r[2] = unpack_float();
+    T->u[0] = unpack_float();
+    T->u[1] = unpack_float();
+    T->u[2] = unpack_float();
+}
+
+void recv_set_tile_viewport(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, unpack_index());
+
+    T->pix_x = unpack_index();
+    T->pix_y = unpack_index();
+    T->pix_w = unpack_index();
+    T->pix_h = unpack_index();
+}
+
+void recv_set_tile_line_screen(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, unpack_index());
+
+    T->varrier_cycle = unpack_float();
+    T->varrier_lines = unpack_float();
+    T->varrier_angle = unpack_float();
+    T->varrier_thick = unpack_float();
+    T->varrier_shift = unpack_float();
+}
+
+void recv_set_tile_view_mirror(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, unpack_index());
+
+    T->p[0] = unpack_float();
+    T->p[1] = unpack_float();
+    T->p[2] = unpack_float();
+    T->p[3] = unpack_float();
+}
+
+void recv_set_tile_view_offset(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, unpack_index());
+
+    T->d[0] = unpack_float();
+    T->d[1] = unpack_float();
+    T->d[2] = unpack_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_background(const float c0[3], const float c1[3])
+{
+    pack_event(EVENT_SET_BACKGROUND);
+
+    pack_float((color0[0] = c0[0]));
+    pack_float((color0[1] = c0[1]));
+    pack_float((color0[2] = c0[2]));
+
+    pack_float((color1[0] = c1[0]));
+    pack_float((color1[1] = c1[1]));
+    pack_float((color1[2] = c1[2]));
+}
+
+void recv_set_background(void)
+{
+    color0[0] = unpack_float();
+    color0[1] = unpack_float();
+    color0[2] = unpack_float();
+
+    color1[0] = unpack_float();
+    color1[1] = unpack_float();
+    color1[2] = unpack_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void set_window_w(int w)
+{
+    int i;
+
+    local->win_w = w;
+
+    for (i = 0; i < local->n; ++i)
+        ((struct tile *) vecget(tile, local->tile[i]))->win_w = w;
+}
+
+void set_window_h(int h)
+{
+    int i;
+
+    local->win_h = h;
+
+    for (i = 0; i < local->n; ++i)
+        ((struct tile *) vecget(tile, local->tile[i]))->win_h = h;
+}
+
+int get_window_w(void) { return local->win_w; }
+int get_window_h(void) { return local->win_h; }
+
+/*---------------------------------------------------------------------------*/
+
+int get_viewport_x(void) { return local->tot_x; }
+int get_viewport_y(void) { return local->tot_y; }
+int get_viewport_w(void) { return local->tot_w; }
+int get_viewport_h(void) { return local->tot_h; }
 
 /*---------------------------------------------------------------------------*/
 
 int draw_ortho(struct frustum *F1, float N, float F, int i)
 {
-    if (i < Host.n)
+    if (i < local->n)
     {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
         /* Set the frustum planes. */
 
         F1->V[0][0] =  0.0f;
         F1->V[0][1] =  1.0f;
         F1->V[0][2] =  0.0f;
-        F1->V[0][3] = (float) (-Host.tile[i].pix_y);
+        F1->V[0][3] = (float) (-T->pix_y);
 
         F1->V[1][0] = -1.0f;
         F1->V[1][1] =  0.0f;
         F1->V[1][2] =  0.0f;
-        F1->V[1][3] = (float) (-Host.tile[i].pix_x - Host.tile[i].pix_w);
+        F1->V[1][3] = (float) (-T->pix_x - T->pix_w);
 
         F1->V[2][0] =  0.0f;
         F1->V[2][1] = -1.0f;
         F1->V[2][2] =  0.0f;
-        F1->V[2][3] = (float) (-Host.tile[i].pix_y - Host.tile[i].pix_h);
+        F1->V[2][3] = (float) (-T->pix_y - T->pix_h);
 
         F1->V[3][0] =  1.0f;
         F1->V[3][1] =  0.0f;
         F1->V[3][2] =  0.0f;
-        F1->V[3][3] = (float) (-Host.tile[i].pix_x);
+        F1->V[3][3] = (float) (-T->pix_x);
 
         /* Configure the viewport. */
 
-        glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
-                   Host.tile[i].win_w, Host.tile[i].win_h);
-        glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
-                   Host.tile[i].win_w, Host.tile[i].win_h);
+        glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+        glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
 
         /* Apply the projection. */
 
         glMatrixMode(GL_PROJECTION);
         {
             glLoadIdentity();
-            glOrtho(Host.tile[i].pix_x,
-                    Host.tile[i].pix_x + Host.tile[i].pix_w,
-                    Host.tile[i].pix_y,
-                    Host.tile[i].pix_y + Host.tile[i].pix_h, N, F);
+            glOrtho(T->pix_x, T->pix_x + T->pix_w,
+                    T->pix_y, T->pix_y + T->pix_h, N, F);
         }
         glMatrixMode(GL_MODELVIEW);
 
@@ -272,11 +513,9 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
 
 int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 {
-    if (i < Host.n)
+    if (i < local->n)
     {
-        const float *o = Host.tile[i].o;
-        const float *r = Host.tile[i].r;
-        const float *u = Host.tile[i].u;
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
         float p0[3];
         float p1[3];
@@ -295,21 +534,21 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 
         /* Compute the frustum planes. */
 
-        p0[0] = o[0];
-        p0[1] = o[1];
-        p0[2] = o[2];
+        p0[0] = T->o[0];
+        p0[1] = T->o[1];
+        p0[2] = T->o[2];
 
-        p1[0] = r[0] + p0[0];
-        p1[1] = r[1] + p0[1];
-        p1[2] = r[2] + p0[2];
+        p1[0] = T->r[0] + p0[0];
+        p1[1] = T->r[1] + p0[1];
+        p1[2] = T->r[2] + p0[2];
 
-        p2[0] = u[0] + p1[0];
-        p2[1] = u[1] + p1[1];
-        p2[2] = u[2] + p1[2];
+        p2[0] = T->u[0] + p1[0];
+        p2[1] = T->u[1] + p1[1];
+        p2[2] = T->u[2] + p1[2];
 
-        p3[0] = u[0] + p0[0];
-        p3[1] = u[1] + p0[1];
-        p3[2] = u[2] + p0[2];
+        p3[0] = T->u[0] + p0[0];
+        p3[1] = T->u[1] + p0[1];
+        p3[2] = T->u[2] + p0[2];
 
         v_plane(F1->V[0], p, p1, p0);
         v_plane(F1->V[1], p, p2, p1);
@@ -318,20 +557,18 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 
         /* Configure the viewport. */
 
-        glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
-                   Host.tile[i].win_w, Host.tile[i].win_h);
-        glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
-                   Host.tile[i].win_w, Host.tile[i].win_h);
+        glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+        glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
 
         /* Compute the projection. */
 
-        R[0] = Host.tile[i].r[0];
-        R[1] = Host.tile[i].r[1];
-        R[2] = Host.tile[i].r[2];
+        R[0] = T->r[0];
+        R[1] = T->r[1];
+        R[2] = T->r[2];
 
-        U[0] = Host.tile[i].u[0];
-        U[1] = Host.tile[i].u[1];
-        U[2] = Host.tile[i].u[2];
+        U[0] = T->u[0];
+        U[1] = T->u[1];
+        U[2] = T->u[2];
 
         v_cross(N, R, U);
 
@@ -348,9 +585,9 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
         N[1] /= k;
         N[2] /= k;
 
-        d = N[0] * (o[0] - p[0]) + 
-            N[1] * (o[1] - p[1]) +
-            N[2] * (o[2] - p[2]);
+        d = N[0] * (T->o[0] - p[0]) + 
+            N[1] * (T->o[1] - p[1]) +
+            N[2] * (T->o[2] - p[2]);
 
         c[0] = p[0] + N[0] * d;
         c[1] = p[1] + N[1] * d;
@@ -395,150 +632,16 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 
 /*---------------------------------------------------------------------------*/
 
-static int get_host(const char *name)
-{
-    int hd;
-
-    for (hd = 0; hd < H_max; hd++)
-        if (strncmp(Hi[hd].name, name, MAXNAME) == 0)
-            return hd;
-
-    return -1;
-}
-
-void add_host(const char *name, int x, int y, int w, int h)
-{
-    if (H_num < H_max)
-    {
-        strncpy(Hi[H_num].name, name, MAXNAME);
-
-        Hi[H_num].win_x = x;
-        Hi[H_num].win_y = y;
-        Hi[H_num].win_w = w;
-        Hi[H_num].win_h = h;
-        Hi[H_num].n     = 0;
-
-        H_num++;
-    }
-}
-
-void add_tile(const char *name, int x, int y, int w, int h,
-                                int X, int Y, int W, int H, float p[3][3])
-{
-    int i = get_host(name);
-
-    if (0 <= i && i < H_num)
-    {
-        int n = Hi[i].n++;
-
-        /* Add a new tile to this host using the given configuration. */
-
-        Hi[i].tile[n].win_x = x;
-        Hi[i].tile[n].win_y = y;
-        Hi[i].tile[n].win_w = w;
-        Hi[i].tile[n].win_h = h;
-
-        Hi[i].tile[n].o[0]  = p[0][0];
-        Hi[i].tile[n].o[1]  = p[0][1];
-        Hi[i].tile[n].o[2]  = p[0][2];
-
-        Hi[i].tile[n].r[0]  = p[1][0];
-        Hi[i].tile[n].r[1]  = p[1][1];
-        Hi[i].tile[n].r[2]  = p[1][2];
-
-        Hi[i].tile[n].u[0]  = p[2][0];
-        Hi[i].tile[n].u[1]  = p[2][1];
-        Hi[i].tile[n].u[2]  = p[2][2];
-
-        Hi[i].tile[n].pix_x = X;
-        Hi[i].tile[n].pix_y = Y;
-        Hi[i].tile[n].pix_w = W;
-        Hi[i].tile[n].pix_h = H;
-
-        bound_display();
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-
-void set_window_w(int w)
-{
-    Host.win_w = Host.tile[0].win_w = w;
-}
-
-void set_window_h(int h)
-{
-    Host.win_h = Host.tile[0].win_h = h;
-}
-
-int get_window_w(void)
-{
-    return Host.win_w;
-}
-
-int get_window_h(void)
-{
-    return Host.win_h;
-}
-
-/*---------------------------------------------------------------------------*/
-
-int get_viewport_x(void)
-{
-    return Host.tot_x;
-}
-
-int get_viewport_y(void)
-{
-    return Host.tot_y;
-}
-
-int get_viewport_w(void)
-{
-    return Host.tot_w;
-}
-
-int get_viewport_h(void)
-{
-    return Host.tot_h;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void send_set_background(const float c0[3], const float c1[3])
-{
-    pack_event(EVENT_SET_BACKGROUND);
-
-    pack_float((color0[0] = c0[0]));
-    pack_float((color0[1] = c0[1]));
-    pack_float((color0[2] = c0[2]));
-
-    pack_float((color1[0] = c1[0]));
-    pack_float((color1[1] = c1[1]));
-    pack_float((color1[2] = c1[2]));
-}
-
-void recv_set_background(void)
-{
-    color0[0] = unpack_float();
-    color0[1] = unpack_float();
-    color0[2] = unpack_float();
-
-    color1[0] = unpack_float();
-    color1[1] = unpack_float();
-    color1[2] = unpack_float();
-}
-
 void draw_background(void)
 {
     int i;
 
     /* Compute the pixel bounds of the entire display. */
 
-    int hL = Host.tot_x;
-    int hR = Host.tot_x + Host.tot_w;
-    int hB = Host.tot_y;
-    int hT = Host.tot_y + Host.tot_h;
+    int hL = local->tot_x;
+    int hR = local->tot_x + local->tot_w;
+    int hB = local->tot_y;
+    int hT = local->tot_y + local->tot_h;
 
     glPushAttrib(GL_ENABLE_BIT   | 
                  GL_SCISSOR_BIT  |
@@ -547,8 +650,8 @@ void draw_background(void)
     {
         /* Clear this entire host's framebuffer. */
 
-        glScissor(Host.win_x, Host.win_y,
-                  Host.win_w, Host.win_h);
+        glScissor(local->win_x, local->win_y,
+                  local->win_w, local->win_h);
 
         glClear(GL_COLOR_BUFFER_BIT |
                 GL_DEPTH_BUFFER_BIT);
@@ -561,21 +664,14 @@ void draw_background(void)
 
         /* Iterate over all tiles of this host. */
 
-        for (i = 0; i < Host.n; ++i)
+        for (i = 0; i < local->n; ++i)
         {
-            /* Compute the pixel bounds of this tile. */
-
-            int tL = Host.tile[i].pix_x;
-            int tR = Host.tile[i].pix_x + Host.tile[i].pix_w;
-            int tB = Host.tile[i].pix_y;
-            int tT = Host.tile[i].pix_y + Host.tile[i].pix_h;
+            struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
             /* Confine rendering to only this tile. */
 
-            glViewport(Host.tile[i].win_x, Host.tile[i].win_y,
-                       Host.tile[i].win_w, Host.tile[i].win_h);
-            glScissor (Host.tile[i].win_x, Host.tile[i].win_y,
-                       Host.tile[i].win_w, Host.tile[i].win_h);
+            glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+            glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
 
             /* Apply a projection that covers this tile. */
 
@@ -583,7 +679,8 @@ void draw_background(void)
             {
                 glPushMatrix();
                 glLoadIdentity();
-                glOrtho(tL, tR, tB, tT, -1.0, +1.0);
+                glOrtho(T->pix_x, T->pix_x + T->pix_w,
+                        T->pix_y, T->pix_y + T->pix_h, -1.0, +1.0);
             }
             glMatrixMode(GL_MODELVIEW);
             {
@@ -621,3 +718,22 @@ void draw_background(void)
 }
 
 /*---------------------------------------------------------------------------*/
+
+int startup_display(void)
+{
+    int i, j;
+
+    tile = vecnew(32, sizeof (struct tile));
+    host = vecnew(32, sizeof (struct host));
+
+    if (tile && host)
+    {
+        i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+        j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+
+        local = (struct host *) vecget(host, i);
+
+        return 1;
+    }
+    return 0;
+}

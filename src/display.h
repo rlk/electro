@@ -27,36 +27,51 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define TILE_FLIP_X  1
+#define TILE_FLIP_Y  2
+#define TILE_OFFSET  4
+#define TILE_MIRROR  8
+
 struct tile
 {
+    int   flag;
+
     float o[3];                 /* World-space tile origin                   */
     float r[3];                 /* World-space tile right vector             */
     float u[3];                 /* World-space tile up vector                */
+    float d[3];                 /* World-space view offset vector            */
+    float p[4];                 /* World-space view mirror plane             */
 
-    int   win_x;                /* Tile rectangle within host window.        */
+    int   win_x;                /* Tile rectangle within host window         */
     int   win_y;
     int   win_w;
     int   win_h;
 
-    int   pix_x;                /* Tile rectangle within display.            */
+    int   pix_x;                /* Tile rectangle within display             */
     int   pix_y;
     int   pix_w;
     int   pix_h;
+
+    float varrier_cycle;        /* Virtual barrier parameters.               */
+    float varrier_lines;
+    float varrier_angle;
+    float varrier_thick;
+    float varrier_shift;
 };
 
 struct host
 {
-    char        name[MAXNAME];
-    struct tile tile[MAXTILE];
+    char name[MAXNAME];
+    int  tile[MAXTILE];
 
     int n;
 
-    int win_x;                  /* Host window rectangle within desktop.     */
+    int win_x;                  /* Host window rectangle within desktop      */
     int win_y;
     int win_w;
     int win_h;
 
-    int tot_x;                  /* Total display rectanglar bound.           */
+    int tot_x;                  /* Total display rectanglar bound            */
     int tot_y;
     int tot_w;
     int tot_h;
@@ -71,9 +86,30 @@ void sync_display(void);
 int  draw_ortho(struct frustum *,                 float, float, int);
 int  draw_persp(struct frustum *, const float[3], float, float, int);
 
-void add_host(const char *, int, int, int, int);
-void add_tile(const char *, int, int, int, int,
-                            int, int, int, int, float[3][3]);
+int  add_host(const char *, int, int, int, int);
+
+/*---------------------------------------------------------------------------*/
+
+int  send_add_tile(int, int, int, int, int);
+void recv_add_tile(void);
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_tile_flag       (int, int, int);
+void send_set_tile_viewport   (int, int, int, int, int);
+void send_set_tile_line_screen(int, float, float, float, float, float);
+void send_set_tile_view_mirror(int, const float[4]);
+void send_set_tile_view_offset(int, const float[3]);
+void send_set_tile_position   (int, const float[3],
+                                    const float[3],
+                                    const float[3]);
+
+void recv_set_tile_flag       (void);
+void recv_set_tile_viewport   (void);
+void recv_set_tile_line_screen(void);
+void recv_set_tile_view_mirror(void);
+void recv_set_tile_view_offset(void);
+void recv_set_tile_position   (void);
 
 /*---------------------------------------------------------------------------*/
 

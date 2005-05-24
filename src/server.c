@@ -193,9 +193,6 @@ static int server_loop(void)
 
         switch (e.type)
         {
-        case SDL_VIDEORESIZE:
-            dirty |= init_video(e.resize.w, e.resize.h, 0);
-            break;
         case SDL_MOUSEMOTION:
             dirty |= do_point_script(e.motion.xrel, e.motion.yrel);
             break;
@@ -321,9 +318,9 @@ void server(int argc, char *argv[])
         
             if (startup_console(CONSOLE_COLS, CONSOLE_ROWS) &&
                 startup_joystick() &&
+                startup_buffer()   &&
                 startup_display()  &&
                 startup_tracker()  &&
-                startup_buffer()   &&
                 startup_entity()   &&
                 startup_sound()    &&
                 startup_image())

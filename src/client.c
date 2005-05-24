@@ -89,6 +89,14 @@ static void client_recv(void)
         case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
+
+        case EVENT_ADD_TILE:             recv_add_tile();             break;
+        case EVENT_SET_TILE_FLAG:        recv_set_tile_flag();        break;
+        case EVENT_SET_TILE_VIEWPORT:    recv_set_tile_viewport();    break;
+        case EVENT_SET_TILE_POSITION:    recv_set_tile_position();    break;
+        case EVENT_SET_TILE_LINE_SCREEN: recv_set_tile_line_screen(); break;
+        case EVENT_SET_TILE_VIEW_MIRROR: recv_set_tile_view_mirror(); break;
+        case EVENT_SET_TILE_VIEW_OFFSET: recv_set_tile_view_offset(); break;
         }
 }
 
@@ -141,8 +149,9 @@ void client(void)
     {
         SDL_ShowCursor(0);
 
-        if (startup_image()  &&
-            startup_buffer() &&
+        if (startup_buffer()  &&
+            startup_display() &&
+            startup_image()   &&
             startup_entity())
         {
             sync_display();

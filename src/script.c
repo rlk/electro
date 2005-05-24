@@ -238,6 +238,7 @@ static float script_getnumber(lua_State *L, int i)
     return 0.0;
 }
 
+/*
 static void script_getvector(lua_State *L, int i, float *v, int n)
 {
     int j;
@@ -266,7 +267,7 @@ static void script_getvector(lua_State *L, int i, float *v, int n)
     }
     else script_arity_error(L, i);
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 static int script_getentity(lua_State *L, int i)
@@ -358,35 +359,101 @@ static int script_getsound(lua_State *L, int i)
 
 static int script_add_host(lua_State *L)
 {
-    add_host(script_getstring(L, -5),
-       (int) script_getnumber(L, -4),
-       (int) script_getnumber(L, -3),
-       (int) script_getnumber(L, -2),
-       (int) script_getnumber(L, -1));
+    int i = add_host(script_getstring(L, -5),
+               (int) script_getnumber(L, -4),
+               (int) script_getnumber(L, -3),
+               (int) script_getnumber(L, -2),
+               (int) script_getnumber(L, -1));
 
-    return 0;
+    lua_pushnumber(L, i);
+    return 1;
 }
 
 static int script_add_tile(lua_State *L)
 {
-    const char *n = script_getstring(L, -12);
-    int   x = (int) script_getnumber(L, -11);
-    int   y = (int) script_getnumber(L, -10);
-    int   w = (int) script_getnumber(L, -9);
-    int   h = (int) script_getnumber(L, -8);
-    int   X = (int) script_getnumber(L, -7);
-    int   Y = (int) script_getnumber(L, -6);
-    int   W = (int) script_getnumber(L, -5);
-    int   H = (int) script_getnumber(L, -4);
+    int j = send_add_tile((int) script_getnumber(L, -5),
+                          (int) script_getnumber(L, -4),
+                          (int) script_getnumber(L, -3),
+                          (int) script_getnumber(L, -2),
+                          (int) script_getnumber(L, -1));
+    lua_pushnumber(L, j);
+    return 1;
+}
 
-    float p[3][3];
+static int script_set_tile_flag(lua_State *L)
+{
+    send_set_tile_flag((int) script_getnumber(L, -3),
+                       (int) script_getnumber(L, -2),
+                             script_getboolean(L, -1));
+    return 0;
+}
 
-    script_getvector(L, -3, p[0], 3);
-    script_getvector(L, -2, p[1], 3);
-    script_getvector(L, -1, p[2], 3);
+static int script_set_tile_position(lua_State *L)
+{
+    int j = (int) script_getnumber(L, -10);
 
-    add_tile(n, x, y, w, h,
-                X, Y, W, H, p);
+    float o[3];
+    float r[3];
+    float u[3];
+
+    o[0] = script_getnumber(L, -9);
+    o[1] = script_getnumber(L, -8);
+    o[2] = script_getnumber(L, -7);
+    r[0] = script_getnumber(L, -6);
+    r[1] = script_getnumber(L, -5);
+    r[2] = script_getnumber(L, -4);
+    u[0] = script_getnumber(L, -3);
+    u[1] = script_getnumber(L, -2);
+    u[2] = script_getnumber(L, -1);
+
+    send_set_tile_position(j, o, r, u);
+    return 0;
+}
+
+static int script_set_tile_viewport(lua_State *L)
+{
+    send_set_tile_viewport((int) script_getnumber(L, -5),
+                           (int) script_getnumber(L, -4),
+                           (int) script_getnumber(L, -3),
+                           (int) script_getnumber(L, -2),
+                           (int) script_getnumber(L, -1));
+    return 0;
+}
+
+static int script_set_tile_line_screen(lua_State *L)
+{
+    send_set_tile_line_screen((int) script_getnumber(L, -6),
+                                    script_getnumber(L, -5),
+                                    script_getnumber(L, -4),
+                                    script_getnumber(L, -3),
+                                    script_getnumber(L, -2),
+                                    script_getnumber(L, -1));
+    return 0;
+}
+
+static int script_set_tile_view_mirror(lua_State *L)
+{
+    float p[4];
+
+    p[0] = script_getnumber(L, -4);
+    p[1] = script_getnumber(L, -3);
+    p[2] = script_getnumber(L, -2);
+    p[3] = script_getnumber(L, -1);
+
+    send_set_tile_view_mirror((int) script_getnumber(L, -5), p);
+
+    return 0;
+}
+
+static int script_set_tile_view_offset(lua_State *L)
+{
+    float d[4];
+
+    d[0] = script_getnumber(L, -3);
+    d[1] = script_getnumber(L, -2);
+    d[2] = script_getnumber(L, -1);
+
+    send_set_tile_view_offset((int) script_getnumber(L, -4), d);
 
     return 0;
 }
@@ -413,10 +480,10 @@ static int script_get_joystick(lua_State *L)
 
 static int script_get_viewport(lua_State *L)
 {
-    lua_pushnumber(L, (float) get_viewport_x());
-    lua_pushnumber(L, (float) get_viewport_y());
-    lua_pushnumber(L, (float) get_viewport_w());
-    lua_pushnumber(L, (float) get_viewport_h());
+    lua_pushnumber(L, get_viewport_x());
+    lua_pushnumber(L, get_viewport_y());
+    lua_pushnumber(L, get_viewport_w());
+    lua_pushnumber(L, get_viewport_h());
 
     return 4;
 }
@@ -1198,6 +1265,12 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "add_host",             script_add_host);
     lua_function(L, "add_tile",             script_add_tile);
     lua_function(L, "get_viewport",         script_get_viewport);
+    lua_function(L, "set_tile_flag",        script_set_tile_flag);
+    lua_function(L, "set_tile_position",    script_set_tile_position);
+    lua_function(L, "set_tile_viewport",    script_set_tile_viewport);
+    lua_function(L, "set_tile_line_screen", script_set_tile_line_screen);
+    lua_function(L, "set_tile_view_mirror", script_set_tile_view_mirror);
+    lua_function(L, "set_tile_view_offset", script_set_tile_view_offset);
 
     /* Misc. */
 

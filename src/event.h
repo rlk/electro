@@ -46,6 +46,14 @@
 #define EVENT_SET_LIGHT_COLOR      24
 #define EVENT_SET_BACKGROUND       25
 
+#define EVENT_ADD_TILE             26
+#define EVENT_SET_TILE_FLAG        27
+#define EVENT_SET_TILE_POSITION    28
+#define EVENT_SET_TILE_VIEWPORT    29
+#define EVENT_SET_TILE_LINE_SCREEN 30
+#define EVENT_SET_TILE_VIEW_MIRROR 31
+#define EVENT_SET_TILE_VIEW_OFFSET 32
+
 /*---------------------------------------------------------------------------*/
 
 #endif
