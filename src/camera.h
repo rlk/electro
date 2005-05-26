@@ -32,7 +32,7 @@ void recv_create_camera(void);
 void send_set_camera_offset(int, const float[3], float[3][3]);
 void recv_set_camera_offset(void);
 
-void send_set_camera_stereo(int, const float[3], int);
+void send_set_camera_stereo(int, const float[3], const float[3], int);
 void recv_set_camera_stereo(void);
 
 /*---------------------------------------------------------------------------*/

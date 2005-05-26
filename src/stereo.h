@@ -20,8 +20,9 @@
 #define STEREO_RED_BLUE 2
 #define STEREO_VARRIER  3
 
-void enable_stereo(int, int);
-void disable_stereo(int);
+int stereo_quad    (int, int, int);
+int stereo_red_blue(int, int, int);
+int stereo_varrier (int, int, int);
 
 /*---------------------------------------------------------------------------*/
 

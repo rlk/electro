@@ -694,7 +694,7 @@ static void init_object(int i)
 
             glBufferDataARB(GL_ARRAY_BUFFER_ARB,
                             vecnum(O(i)->vv) * sizeof (struct object_vert),
-                            vecget(O(i)->vv, 0), GL_STATIC_DRAW_ARB);
+                            vecbuf(O(i)->vv), GL_STATIC_DRAW_ARB);
         }
     
         O(i)->state = 1;
@@ -787,10 +787,10 @@ static void draw_object(int j, int i, const float M[16],
 
                 if (vecnum(s->fv) > 0)
                     glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
-                                   GL_UNSIGNED_INT,  vecget(s->fv, 0));
+                                   GL_UNSIGNED_INT,  vecbuf(s->fv));
                 if (vecnum(s->ev) > 0)
                     glDrawElements(GL_LINES,     2 * vecnum(s->ev),
-                                   GL_UNSIGNED_INT,  vecget(s->ev, 0));
+                                   GL_UNSIGNED_INT,  vecbuf(s->ev));
             }
         }
         glPopAttrib();

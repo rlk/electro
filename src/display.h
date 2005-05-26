@@ -52,11 +52,11 @@ struct tile
     int   pix_w;
     int   pix_h;
 
-    float varrier_cycle;        /* Virtual barrier parameters.               */
-    float varrier_lines;
+    float varrier_pitch;        /* Virtual barrier parameters.               */
     float varrier_angle;
     float varrier_thick;
     float varrier_shift;
+    float varrier_cycle;
 };
 
 struct host
@@ -83,8 +83,10 @@ int startup_display(void);
 
 void sync_display(void);
 
-int  draw_ortho(struct frustum *,                 float, float, int);
-int  draw_persp(struct frustum *, const float[3], float, float, int);
+int  view_ortho(int, struct frustum *);
+int  view_persp(int, struct frustum *, const float [3]);
+int  draw_ortho(int, float, float);
+int  draw_persp(int, float, float, const float[3]);
 
 int  add_host(const char *, int, int, int, int);
 

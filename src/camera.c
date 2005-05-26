@@ -35,7 +35,7 @@ struct camera
     int   type;
     int   mode;
     
-    float eye_offset[3];
+    float eye_offset[2][3];
     float pos_offset[3];
     float view_basis[3][3];
 
@@ -143,15 +143,19 @@ void recv_set_camera_offset(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_camera_stereo(int i, const float v[3], int mode)
+void send_set_camera_stereo(int i, const float L[3],
+                                   const float R[3], int mode)
 {
     pack_event(EVENT_SET_CAMERA_STEREO);
     pack_index(i);
 
-    pack_index((C(i)->mode          = mode));
-    pack_float((C(i)->eye_offset[0] = v[0]));
-    pack_float((C(i)->eye_offset[1] = v[1]));
-    pack_float((C(i)->eye_offset[2] = v[2]));
+    pack_index((C(i)->mode             = mode));
+    pack_float((C(i)->eye_offset[0][0] = L[0]));
+    pack_float((C(i)->eye_offset[0][1] = L[1]));
+    pack_float((C(i)->eye_offset[0][2] = L[2]));
+    pack_float((C(i)->eye_offset[1][0] = R[0]));
+    pack_float((C(i)->eye_offset[1][1] = R[1]));
+    pack_float((C(i)->eye_offset[1][2] = R[2]));
 
     set_video_stereo((C(i)->mode == STEREO_QUAD), 0);
 }
@@ -160,85 +164,99 @@ void recv_set_camera_stereo(void)
 {
     int i = unpack_index();
 
-    C(i)->mode          = unpack_index();
-    C(i)->eye_offset[0] = unpack_float();
-    C(i)->eye_offset[1] = unpack_float();
-    C(i)->eye_offset[2] = unpack_float();
+    C(i)->mode             = unpack_index();
+    C(i)->eye_offset[0][0] = unpack_float();
+    C(i)->eye_offset[0][1] = unpack_float();
+    C(i)->eye_offset[0][2] = unpack_float();
+    C(i)->eye_offset[1][0] = unpack_float();
+    C(i)->eye_offset[1][1] = unpack_float();
+    C(i)->eye_offset[1][2] = unpack_float();
 
     set_video_stereo((C(i)->mode == STEREO_QUAD), 1);
 }
 
 /*===========================================================================*/
 
-static int draw_tile(int i, const float d[3], struct frustum *F, int k)
+static int view_tile(int i, int tile, const float d[3], struct frustum *F)
 {
     if (C(i)->type == CAMERA_PERSP)
-        return draw_persp(F, d, C(i)->n, C(i)->f, k);
+        return view_persp(tile, F, d);
 
     if (C(i)->type == CAMERA_ORTHO)
-        return draw_ortho(F,    C(i)->n, C(i)->f, k);
+        return view_ortho(tile, F);
 
     return 0;
 }
 
-static void draw_eye(int j, int i, const float M[16],
-                                   const float I[16],
-                                   const struct frustum *F, float a, int e)
+static int draw_tile(int i, int tile, const float d[3])
 {
+    if (C(i)->type == CAMERA_PERSP)
+        return draw_persp(tile, C(i)->n, C(i)->f, d);
+
+    if (C(i)->type == CAMERA_ORTHO)
+        return draw_ortho(tile, C(i)->n, C(i)->f);
+
+    return 0;
+}
+
+static int draw_pass(int mode, int eye, int tile, int pass)
+{
+    switch (mode)
+    {
+    case STEREO_QUAD:     return stereo_quad    (eye, tile, pass);
+    case STEREO_RED_BLUE: return stereo_red_blue(eye, tile, pass);
+    case STEREO_VARRIER:  return stereo_varrier (eye, tile, pass);
+    }
+    return (pass == 0);
+}
+
+void draw_camera(int j, int i, const float M[16],
+                               const float I[16],
+                               const struct frustum *F, float a)
+{
+    struct camera *c = C(i);
     struct frustum G;
 
     float N[16];
     float J[16];
     float d[3];
 
-    int k = 0;
+    int eye;
 
-    /* Compute the world-space camera offset. */
+    /* Iterate over the eyes. */
 
-    d[0] = (C(i)->eye_offset[0] * C(i)->view_basis[0][0] * e +
-            C(i)->eye_offset[1] * C(i)->view_basis[1][0]     +
-            C(i)->eye_offset[2] * C(i)->view_basis[2][0]) +C(i)->pos_offset[0];
-    d[1] = (C(i)->eye_offset[0] * C(i)->view_basis[0][1] * e +
-            C(i)->eye_offset[1] * C(i)->view_basis[1][1]     +
-            C(i)->eye_offset[2] * C(i)->view_basis[2][1]) +C(i)->pos_offset[1];
-    d[2] = (C(i)->eye_offset[0] * C(i)->view_basis[0][2] * e +
-            C(i)->eye_offset[1] * C(i)->view_basis[1][2]     +
-            C(i)->eye_offset[2] * C(i)->view_basis[2][2]) +C(i)->pos_offset[2];
-
-    /* Iterate over all tiles. */
-
-    while ((k = draw_tile(i, d, &G, k)))
+    for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
     {
-        G.p[0] = 0.0f;
-        G.p[1] = 0.0f;
-        G.p[2] = 0.0f;
-        G.p[3] = 1.0f;
+        int tile = 0;
 
-        transform_camera(j, N, M, J, I, d);
+        /* Compute the world-space eye position. */
 
-        /* Render all children using this camera. */
+        d[0] = c->pos_offset[0] + c->eye_offset[eye][0] * c->view_basis[0][0]
+                                + c->eye_offset[eye][1] * c->view_basis[1][0]
+                                + c->eye_offset[eye][2] * c->view_basis[2][0];
+        d[1] = c->pos_offset[1] + c->eye_offset[eye][0] * c->view_basis[0][1]
+                                + c->eye_offset[eye][1] * c->view_basis[1][1]
+                                + c->eye_offset[eye][2] * c->view_basis[2][1];
+        d[2] = c->pos_offset[2] + c->eye_offset[eye][0] * c->view_basis[0][2]
+                                + c->eye_offset[eye][1] * c->view_basis[1][2]
+                                + c->eye_offset[eye][2] * c->view_basis[2][2];
 
-        enable_stereo(C(i)->mode, e);
+        /* Iterate over all tiles of this host. */
+
+        while ((tile = draw_tile(i, tile, d)))
         {
-            draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
+            int pass = 0;
+                
+            view_tile(i, tile, d, &G);
+
+            transform_camera(j, N, M, J, I, d);
+                
+            /* Iterate over all passes of this tile. */
+
+            while ((pass = draw_pass(c->mode, eye, tile, pass)))
+                draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
         }
-        disable_stereo(C(i)->mode);
     }
-}
-
-static void draw_camera(int j, int i, const float M[16],
-                                      const float I[16],
-                                      const struct frustum *F, float a)
-{
-    /* If drawing in stereo, render each eye separately. */
-
-    if (C(i)->mode)
-    {
-        draw_eye(j, i, M, I, F, a, -1);
-        draw_eye(j, i, M, I, F, a, +1);
-    }
-    else
-        draw_eye(j, i, M, I, F, a,  0);
 }
 
 /*---------------------------------------------------------------------------*/

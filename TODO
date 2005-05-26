@@ -1,3 +1,7 @@
+Test total queue throughput.
+Test re-texture throughput on all clusters.
+    (subimage/buffer reuse)
+Uniform API
 Object geometry create
 Bounding sphere
         auto near/far

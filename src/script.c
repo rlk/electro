@@ -872,14 +872,18 @@ static int script_set_camera_offset(lua_State *L)
 
 static int script_set_camera_stereo(lua_State *L)
 {
-    float v[3];
+    float l[3];
+    float r[3];
 
-    v[0] = script_getnumber(L, -3);
-    v[1] = script_getnumber(L, -2);
-    v[2] = script_getnumber(L, -1);
+    l[0] = script_getnumber(L, -6);
+    l[1] = script_getnumber(L, -5);
+    l[2] = script_getnumber(L, -4);
+    r[0] = script_getnumber(L, -3);
+    r[1] = script_getnumber(L, -2);
+    r[2] = script_getnumber(L, -1);
 
-    send_set_camera_stereo(script_getcamera(L, -5), v,
-                     (int) script_getnumber(L, -4));
+    send_set_camera_stereo(script_getcamera(L, -8), l, r,
+                     (int) script_getnumber(L, -7));
     return 0;
 }
 

@@ -291,18 +291,18 @@ void send_set_tile_viewport(int i, int x, int y, int w, int h)
     pack_index((T->pix_h = h));
 }
 
-void send_set_tile_line_screen(int i, float c, float l,
-                                      float a, float t, float s)
+void send_set_tile_line_screen(int i, float p, float a,
+                                      float t, float s, float c)
 {
     struct tile *T = (struct tile *) vecget(tile, i);
 
     pack_event(EVENT_SET_TILE_LINE_SCREEN);
     pack_index(i);
-    pack_float((T->varrier_cycle = c));
-    pack_float((T->varrier_lines = l));
+    pack_float((T->varrier_pitch = p));
     pack_float((T->varrier_angle = a));
     pack_float((T->varrier_thick = t));
     pack_float((T->varrier_shift = s));
+    pack_float((T->varrier_cycle = c));
 }
 
 void send_set_tile_view_mirror(int i, const float p[4])
@@ -372,11 +372,11 @@ void recv_set_tile_line_screen(void)
 {
     struct tile *T = (struct tile *) vecget(tile, unpack_index());
 
-    T->varrier_cycle = unpack_float();
-    T->varrier_lines = unpack_float();
+    T->varrier_pitch = unpack_float();
     T->varrier_angle = unpack_float();
     T->varrier_thick = unpack_float();
     T->varrier_shift = unpack_float();
+    T->varrier_cycle = unpack_float();
 }
 
 void recv_set_tile_view_mirror(void)
@@ -458,7 +458,7 @@ int get_viewport_h(void) { return local->tot_h; }
 
 /*---------------------------------------------------------------------------*/
 
-int draw_ortho(struct frustum *F1, float N, float F, int i)
+int view_ortho(int i, struct frustum *F)
 {
     if (i < local->n)
     {
@@ -466,25 +466,87 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
 
         /* Set the frustum planes. */
 
-        F1->V[0][0] =  0.0f;
-        F1->V[0][1] =  1.0f;
-        F1->V[0][2] =  0.0f;
-        F1->V[0][3] = (float) (-T->pix_y);
+        F->V[0][0] =  0.0f;
+        F->V[0][1] =  1.0f;
+        F->V[0][2] =  0.0f;
+        F->V[0][3] = (float) (-T->pix_y);
 
-        F1->V[1][0] = -1.0f;
-        F1->V[1][1] =  0.0f;
-        F1->V[1][2] =  0.0f;
-        F1->V[1][3] = (float) (-T->pix_x - T->pix_w);
+        F->V[1][0] = -1.0f;
+        F->V[1][1] =  0.0f;
+        F->V[1][2] =  0.0f;
+        F->V[1][3] = (float) (-T->pix_x - T->pix_w);
 
-        F1->V[2][0] =  0.0f;
-        F1->V[2][1] = -1.0f;
-        F1->V[2][2] =  0.0f;
-        F1->V[2][3] = (float) (-T->pix_y - T->pix_h);
+        F->V[2][0] =  0.0f;
+        F->V[2][1] = -1.0f;
+        F->V[2][2] =  0.0f;
+        F->V[2][3] = (float) (-T->pix_y - T->pix_h);
 
-        F1->V[3][0] =  1.0f;
-        F1->V[3][1] =  0.0f;
-        F1->V[3][2] =  0.0f;
-        F1->V[3][3] = (float) (-T->pix_x);
+        F->V[3][0] =  1.0f;
+        F->V[3][1] =  0.0f;
+        F->V[3][2] =  0.0f;
+        F->V[3][3] = (float) (-T->pix_x);
+
+        F->p[0]    =  0.0f;
+        F->p[1]    =  0.0f;
+        F->p[2]    =  0.0f;
+        F->p[3]    =  1.0f;
+
+        return i + 1;
+    }
+    return 0;
+}
+
+int view_persp(int i, struct frustum *F, const float p[3])
+{
+    if (i < local->n)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+        float p0[3];
+        float p1[3];
+        float p2[3];
+        float p3[3];
+
+        /* Compute the frustum planes. */
+
+        p0[0] = T->o[0];
+        p0[1] = T->o[1];
+        p0[2] = T->o[2];
+
+        p1[0] = T->r[0] + p0[0];
+        p1[1] = T->r[1] + p0[1];
+        p1[2] = T->r[2] + p0[2];
+
+        p2[0] = T->u[0] + p1[0];
+        p2[1] = T->u[1] + p1[1];
+        p2[2] = T->u[2] + p1[2];
+
+        p3[0] = T->u[0] + p0[0];
+        p3[1] = T->u[1] + p0[1];
+        p3[2] = T->u[2] + p0[2];
+
+        v_plane(F->V[0], p, p1, p0);
+        v_plane(F->V[1], p, p2, p1);
+        v_plane(F->V[2], p, p3, p2);
+        v_plane(F->V[3], p, p0, p3);
+
+        F->p[0] = 0.0f;
+        F->p[1] = 0.0f;
+        F->p[2] = 0.0f;
+        F->p[3] = 1.0f;
+
+        return i + 1;
+    }
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+int draw_ortho(int i, float N, float F)
+{
+    if (i < local->n)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
         /* Configure the viewport. */
 
@@ -508,20 +570,15 @@ int draw_ortho(struct frustum *F1, float N, float F, int i)
     return 0;
 }
 
-int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
+int draw_persp(int i, float N, float F, const float p[3])
 {
     if (i < local->n)
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
-        float p0[3];
-        float p1[3];
-        float p2[3];
-        float p3[3];
-
-        float R[3];
-        float U[3];
-        float N[3];
+        float r[3];
+        float u[3];
+        float n[3];
         float c[3];
         float k;
         float d;
@@ -529,7 +586,9 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
         float M[16];
         float I[16];
 
-        /* Compute the frustum planes. */
+        float p0[3];
+        float p1[3];
+        float p3[3];
 
         p0[0] = T->o[0];
         p0[1] = T->o[1];
@@ -539,18 +598,9 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
         p1[1] = T->r[1] + p0[1];
         p1[2] = T->r[2] + p0[2];
 
-        p2[0] = T->u[0] + p1[0];
-        p2[1] = T->u[1] + p1[1];
-        p2[2] = T->u[2] + p1[2];
-
         p3[0] = T->u[0] + p0[0];
         p3[1] = T->u[1] + p0[1];
         p3[2] = T->u[2] + p0[2];
-
-        v_plane(F1->V[0], p, p1, p0);
-        v_plane(F1->V[1], p, p2, p1);
-        v_plane(F1->V[2], p, p3, p2);
-        v_plane(F1->V[3], p, p0, p3);
 
         /* Configure the viewport. */
 
@@ -559,62 +609,62 @@ int draw_persp(struct frustum *F1, const float p[3], float fN, float fF, int i)
 
         /* Compute the projection. */
 
-        R[0] = T->r[0];
-        R[1] = T->r[1];
-        R[2] = T->r[2];
+        r[0] = T->r[0];
+        r[1] = T->r[1];
+        r[2] = T->r[2];
 
-        U[0] = T->u[0];
-        U[1] = T->u[1];
-        U[2] = T->u[2];
+        u[0] = T->u[0];
+        u[1] = T->u[1];
+        u[2] = T->u[2];
 
-        v_cross(N, R, U);
+        v_cross(n, r, u);
 
-        k = (float) sqrt(R[0] * R[0] + R[1] * R[1] + R[2] * R[2]);
-        R[0] /= k;
-        R[1] /= k;
-        R[2] /= k;
-        k = (float) sqrt(U[0] * U[0] + U[1] * U[1] + U[2] * U[2]);
-        U[0] /= k;
-        U[1] /= k;
-        U[2] /= k;
-        k = (float) sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
-        N[0] /= k;
-        N[1] /= k;
-        N[2] /= k;
+        k = (float) sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+        r[0] /= k;
+        r[1] /= k;
+        r[2] /= k;
+        k = (float) sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
+        u[0] /= k;
+        u[1] /= k;
+        u[2] /= k;
+        k = (float) sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+        n[0] /= k;
+        n[1] /= k;
+        n[2] /= k;
 
-        d = N[0] * (T->o[0] - p[0]) + 
-            N[1] * (T->o[1] - p[1]) +
-            N[2] * (T->o[2] - p[2]);
+        d = n[0] * (T->o[0] - p[0]) + 
+            n[1] * (T->o[1] - p[1]) +
+            n[2] * (T->o[2] - p[2]);
 
-        c[0] = p[0] + N[0] * d;
-        c[1] = p[1] + N[1] * d;
-        c[2] = p[2] + N[2] * d;
+        c[0] = p[0] + n[0] * d;
+        c[1] = p[1] + n[1] * d;
+        c[2] = p[2] + n[2] * d;
 
         /* Apply the projection. */
 
         glMatrixMode(GL_PROJECTION);
         {
-            GLdouble fL = -fN * (R[0] * (p0[0] - c[0]) +
-                                 R[1] * (p0[1] - c[1]) +
-                                 R[2] * (p0[2] - c[2])) / d;
-            GLdouble fR = -fN * (R[0] * (p1[0] - c[0]) +
-                                 R[1] * (p1[1] - c[1]) +
-                                 R[2] * (p1[2] - c[2])) / d;
-            GLdouble fB = -fN * (U[0] * (p0[0] - c[0]) +
-                                 U[1] * (p0[1] - c[1]) +
-                                 U[2] * (p0[2] - c[2])) / d;
-            GLdouble fT = -fN * (U[0] * (p3[0] - c[0]) +
-                                 U[1] * (p3[1] - c[1]) +
-                                 U[2] * (p3[2] - c[2])) / d;
+            GLdouble fL = -N * (r[0] * (p0[0] - c[0]) +
+                                r[1] * (p0[1] - c[1]) +
+                                r[2] * (p0[2] - c[2])) / d;
+            GLdouble fR = -N * (r[0] * (p1[0] - c[0]) +
+                                r[1] * (p1[1] - c[1]) +
+                                r[2] * (p1[2] - c[2])) / d;
+            GLdouble fB = -N * (u[0] * (p0[0] - c[0]) +
+                                u[1] * (p0[1] - c[1]) +
+                                u[2] * (p0[2] - c[2])) / d;
+            GLdouble fT = -N * (u[0] * (p3[0] - c[0]) +
+                                u[1] * (p3[1] - c[1]) +
+                                u[2] * (p3[2] - c[2])) / d;
 
             glLoadIdentity();
-            glFrustum(fL, fR, fB, fT, fN, fF);
+            glFrustum(fL, fR, fB, fT, N, F);
         }
         glMatrixMode(GL_MODELVIEW);
 
-        M[0] = R[0]; M[4] = U[0]; M[8]  = N[0]; M[12] = 0.0f;
-        M[1] = R[1]; M[5] = U[1]; M[9]  = N[1]; M[13] = 0.0f;
-        M[2] = R[2]; M[6] = U[2]; M[10] = N[2]; M[14] = 0.0f;
+        M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
+        M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;
+        M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
         M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
 
         m_invt(I, M);

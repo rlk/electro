@@ -32,8 +32,9 @@ void     vecdel(vector_t);
 void     vecclr(vector_t);
 int      vecadd(vector_t);
 
-#define  vecsiz(V) ((V)->siz)
 #define  vecnum(V) ((V)->num)
+#define  vecsiz(V) ((V)->siz)
+#define  vecbuf(V) ((V)->buf)
 
 /*---------------------------------------------------------------------------*/
 

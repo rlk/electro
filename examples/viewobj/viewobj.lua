@@ -16,7 +16,6 @@ end
 function do_start()
     local x, y, w, h = E.get_viewport()
 
-    nearby = E.create_camera(E.camera_type_perspective)
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
@@ -39,6 +38,8 @@ end
 
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
+
+    print(joy_x, joy_y)
 
     if joy_x < -0.1 or 0.1 < joy_x then
         E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
@@ -102,7 +103,9 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    local d = 0.25
+    local d = 0.1666
+    local L = { -d, -d, d }
+    local R = {  d, -d, d }
 
     if s then
         if k == 13 then
@@ -111,21 +114,21 @@ function do_keyboard(k, s)
             return true
         end
         if k == 287 then
-            E.set_camera_stereo(camera, E.stereo_mode_none, 0, 0, 0)
-            E.set_camera_stereo(nearby, E.stereo_mode_none, 0, 0, 0)
             E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
+            E.set_camera_stereo(camera, E.stereo_mode_none,
+                                0, 0, 0, 0, 0, 0)
             return true
         end
         if k == 288 then
-            E.set_camera_stereo(camera, E.stereo_mode_red_blue, d, -d, d)
-            E.set_camera_stereo(nearby, E.stereo_mode_red_blue, d, -d, d)
-            E.set_background(0.0, 0.0, 0.0)
+            E.set_background(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
         if k == 289 then
-            E.set_camera_stereo(camera, E.stereo_mode_quad, d, -d, d)
-            E.set_camera_stereo(nearby, E.stereo_mode_quad, d, -d, d)
             E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
+            E.set_camera_stereo(camera, E.stereo_mode_quad,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
 

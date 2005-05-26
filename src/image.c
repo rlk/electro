@@ -373,7 +373,7 @@ int get_image_h(int i)
 
 void init_image(int i)
 {
-    if (i && I(i)->state == 0)
+    if (i > 0 && I(i)->state == 0)
     {
         I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
         I(i)->state   = 1;
@@ -382,7 +382,7 @@ void init_image(int i)
 
 void fini_image(int i)
 {
-    if (i && I(i)->state == 1)
+    if (i > 0 && I(i)->state == 1)
     {
         if (glIsTexture(I(i)->texture))
             glDeleteTextures(1, &I(i)->texture);
@@ -394,8 +394,11 @@ void fini_image(int i)
 
 void draw_image(int i)
 {
-    init_image(i);
-    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
+    if (i >= 0)
+    {
+        init_image(i);
+        glBindTexture(GL_TEXTURE_2D, I(i)->texture);
+    }
 }
 
 void free_image(int i)

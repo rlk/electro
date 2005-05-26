@@ -74,7 +74,7 @@ void pack_vector(vector_t V)
     pack_index(num);
     pack_index(siz);
 
-    memcpy(buf + pos, vecget(V, 0), num * siz);
+    memcpy(buf + pos, vecbuf(V), num * siz);
     pos += (num * siz);
 
     assert(pos < max);
@@ -89,7 +89,7 @@ vector_t unpack_vector(void)
 
     if ((V = vecnew(num, siz)))
     {
-         memcpy(vecget(V, 0), buf + pos, num * siz);
+         memcpy(vecbuf(V), buf + pos, num * siz);
          V->num = num;
 
          pos += (num * siz);
