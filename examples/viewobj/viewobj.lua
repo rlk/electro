@@ -26,7 +26,7 @@ function do_start()
     E.parent_entity(pivot, scene)
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
-    E.set_entity_position(scene,  0.0, -8.0, -16.0)
+    E.set_entity_position(scene,  0.0, -3.0, -16.0)
 
     E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
     E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
@@ -38,8 +38,6 @@ end
 
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
-
-    print(joy_x, joy_y)
 
     if joy_x < -0.1 or 0.1 < joy_x then
         E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
@@ -114,7 +112,7 @@ function do_keyboard(k, s)
             return true
         end
         if k == 287 then
-            E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
+            E.set_background(0.1, 0.2, 0.4, 0.0, 0.0, 0.0)
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
@@ -125,9 +123,15 @@ function do_keyboard(k, s)
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
-        if k == 289 then
-            E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
-            E.set_camera_stereo(camera, E.stereo_mode_quad,
+--      if k == 289 then
+--          E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
+--          E.set_camera_stereo(camera, E.stereo_mode_quad,
+--                              L[1], L[2], L[3], R[1], R[2], R[3])
+--          return true
+--      end
+        if k == 290 then
+            E.set_background(0.1, 0.2, 0.4, 0.0, 0.0, 0.0)
+            E.set_camera_stereo(camera, E.stereo_mode_varrier,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
@@ -163,6 +167,7 @@ E.print_console(" F5: Toggle server fullscreen\n")
 E.print_console(" F6: Select mono-scopic rendering\n")
 E.print_console(" F7: Select red-blue stereo\n")
 E.print_console(" F8: Select quad-buffered stereo\n")
+E.print_console(" F9: Select Varrier stereo\n")
 
 E.color_console(0.0, 0.5, 0.0)
 E.print_console("(dismiss the console before switching stereo modes)\n")

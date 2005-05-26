@@ -1,5 +1,6 @@
 
 host = { }
+tile = { }
 
 -- 19 hosts: 1 server, 18 clients.
 
@@ -193,12 +194,23 @@ l = {
    { 271.945865, -7.800000, 0.035400,  1.385150, 0.666667 }
 }
 
+tile[0] = E.add_tile(host[0], 0, 0, 800, 600)
+E.set_tile_viewport(tile[0], 0, 0, 11967, 6512)
+E.set_tile_position(tile[0], -4.0, -3.0, -3.0, 8.0, 0.0, 0.0, 0.0, 6.0, 0.0)
+E.set_tile_line_screen(tile[0], l[1][1], l[1][2], l[1][3], 0.0, l[1][5])
+
 for i = 1, 35 do
-   j = E.add_tile(num[i], w[i][1], w[i][2], w[i][3], w[i][4])
+    tile[i] = E.add_tile(num[i], w[i][1], w[i][2], w[i][3], w[i][4])
 
-   E.set_tile_viewport(j, v[i][1], v[i][2], v[i][3], v[i][4])
-   E.set_tile_position(j, p[i][1], p[i][2], p[i][3], p[i][4],
-                          p[i][5], p[i][6], p[i][7], p[i][8], p[i][9])
+    E.set_tile_viewport(tile[i], v[i][1], v[i][2], v[i][3], v[i][4])
+    E.set_tile_position(tile[i], p[i][1], p[i][2], p[i][3], p[i][4],
+                        p[i][5], p[i][6], p[i][7], p[i][8], p[i][9])
 
-   E.set_tile_line_screen(j, l[i][1], l[i][2], l[i][3], 0.0, l[i][5])
+    E.set_tile_line_screen(tile[i], l[i][1], l[i][2], l[i][3], 0.0, l[i][5])
+end
+
+function varrier_test(b)
+    for i = 1, 35 do
+        E.set_tile_flag(tile[i], E.tile_flag_test, b)
+    end
 end

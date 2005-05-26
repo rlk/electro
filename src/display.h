@@ -31,6 +31,7 @@
 #define TILE_FLIP_Y  2
 #define TILE_OFFSET  4
 #define TILE_MIRROR  8
+#define TILE_TEST   16
 
 struct tile
 {
@@ -123,10 +124,24 @@ void set_window_h(int);
 int  get_window_w(void);
 int  get_window_h(void);
 
-int  get_viewport_x(void);
-int  get_viewport_y(void);
-int  get_viewport_w(void);
-int  get_viewport_h(void);
+/*---------------------------------------------------------------------------*/
+
+int   get_viewport_x(void);
+int   get_viewport_y(void);
+int   get_viewport_w(void);
+int   get_viewport_h(void);
+
+void  get_tile_o(int, float[3]);
+void  get_tile_r(int, float[3]);
+void  get_tile_u(int, float[3]);
+
+int   get_tile_flag(int);
+
+float get_varrier_pitch(int);
+float get_varrier_angle(int);
+float get_varrier_thick(int);
+float get_varrier_shift(int);
+float get_varrier_cycle(int);
 
 /*---------------------------------------------------------------------------*/
 

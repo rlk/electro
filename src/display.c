@@ -209,6 +209,12 @@ int add_tile(int i, int x, int y, int w, int h)
         T->r[0]  =  1.0f;
         T->u[1]  =  1.0f * h / w;
 
+        T->varrier_pitch = 100.000f;
+        T->varrier_angle =  -7.000f;
+        T->varrier_thick =   0.000f;
+        T->varrier_shift =   0.000f;
+        T->varrier_cycle =   0.777f;
+
         /* Include this tile in the host and in the total display. */
 
         H->tile[H->n++] = j;
@@ -455,6 +461,63 @@ int get_viewport_x(void) { return local->tot_x; }
 int get_viewport_y(void) { return local->tot_y; }
 int get_viewport_w(void) { return local->tot_w; }
 int get_viewport_h(void) { return local->tot_h; }
+
+void get_tile_o(int i, float o[3])
+{
+    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+    o[0] = T->o[0];
+    o[1] = T->o[1];
+    o[2] = T->o[2];
+}
+
+void get_tile_r(int i, float r[3])
+{
+    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+    r[0] = T->r[0];
+    r[1] = T->r[1];
+    r[2] = T->r[2];
+}
+
+void get_tile_u(int i, float u[3])
+{
+    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+    u[0] = T->u[0];
+    u[1] = T->u[1];
+    u[2] = T->u[2];
+}
+
+int get_tile_flag(int i)
+{
+    return ((struct tile *) vecget(tile, local->tile[i]))->flag;
+}
+
+float get_varrier_pitch(int i)
+{
+    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_pitch;
+}
+
+float get_varrier_angle(int i)
+{
+    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_angle;
+}
+
+float get_varrier_thick(int i)
+{
+    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_thick;
+}
+
+float get_varrier_shift(int i)
+{
+    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_shift;
+}
+
+float get_varrier_cycle(int i)
+{
+    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_cycle;
+}
 
 /*---------------------------------------------------------------------------*/
 

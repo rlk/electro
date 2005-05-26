@@ -201,7 +201,7 @@ static int draw_tile(int i, int tile, const float d[3])
 
 static int draw_pass(int mode, int eye, int tile, int pass)
 {
-    switch (mode)
+     switch (mode)
     {
     case STEREO_QUAD:     return stereo_quad    (eye, tile, pass);
     case STEREO_RED_BLUE: return stereo_red_blue(eye, tile, pass);

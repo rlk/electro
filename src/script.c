@@ -1297,6 +1297,12 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
 
+    lua_constant(L, "tile_flag_flip_x",          TILE_FLIP_X);
+    lua_constant(L, "tile_flag_flip_y",          TILE_FLIP_Y);
+    lua_constant(L, "tile_flag_offset",          TILE_OFFSET);
+    lua_constant(L, "tile_flag_mirror",          TILE_MIRROR);
+    lua_constant(L, "tile_flag_test",            TILE_TEST);
+
     lua_constant(L, "camera_type_orthogonal",    CAMERA_ORTHO);
     lua_constant(L, "camera_type_perspective",   CAMERA_PERSP);
 
