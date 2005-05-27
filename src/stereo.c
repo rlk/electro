@@ -53,6 +53,7 @@ static void draw_varrier_lines(int tile, float w, float h)
     float dy = sin(M_RAD(a)) * w;
     float x;
 
+    glPushMatrix();
     glPushAttrib(GL_ENABLE_BIT |
                  GL_COLOR_BUFFER_BIT);
     {
@@ -78,6 +79,7 @@ static void draw_varrier_lines(int tile, float w, float h)
         glEnd();
     }
     glPopAttrib();
+    glPopMatrix();
 }
 
 static void draw_varrier_test(int eye, float w, float h)
@@ -86,6 +88,7 @@ static void draw_varrier_test(int eye, float w, float h)
     {
         glDisable(GL_LIGHTING);
         glDisable(GL_TEXTURE_2D);
+        glDepthFunc(GL_LESS);
         
         if (eye)
             glColor3f(1.0f, 0.0f, 0.0f);
@@ -95,9 +98,9 @@ static void draw_varrier_test(int eye, float w, float h)
         glBegin(GL_QUADS);
         {
             glVertex2f(0, 0);
-            glVertex2f(0, w);
-            glVertex2f(h, w);
-            glVertex2f(h, 0);
+            glVertex2f(w, 0);
+            glVertex2f(w, h);
+            glVertex2f(0, h);
         }
         glEnd();
     }
@@ -132,10 +135,9 @@ int stereo_varrier(int eye, int tile, int pass)
             glLoadIdentity();
 
             draw_varrier_lines(tile, w, h);
-/*
+
             if (get_tile_flag(tile) & TILE_TEST)
                 draw_varrier_test(eye, w, h);
-*/
         }
         pop_matrices();
 

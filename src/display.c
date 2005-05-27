@@ -36,10 +36,18 @@ static float color1[3] = { 0.0f, 0.0f, 0.0f };
 
 /*---------------------------------------------------------------------------*/
 
+static struct host default_host = {
+    "default",
+    { 0, 0, 0, 0 },
+    0,
+    DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H,
+    DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H,
+};
+
 static vector_t tile;
 static vector_t host;
 
-static struct host *local = NULL;
+static struct host *local = &default_host;
 
 /*---------------------------------------------------------------------------*/
 
@@ -134,7 +142,7 @@ void sync_display(void)
 
     /* Broadcast all host definitions to all nodes. */
 
-    for (i = 1; i < num; i++)
+    for (i = 0; i < num; i++)
         if ((j = (rank) ? vecadd(host) : i) >= 0)
         {
             H = (struct host *) vecget(host, i);
@@ -159,6 +167,17 @@ void sync_display(void)
 
         set_window_pos(local->win_x, local->win_y);
     }
+
+    /* If no host definition was found, use a default. */
+    /*
+    if (local == NULL)
+    {
+        int i, j;
+
+        i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+        j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+    }
+    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -209,11 +228,11 @@ int add_tile(int i, int x, int y, int w, int h)
         T->r[0]  =  1.0f;
         T->u[1]  =  1.0f * h / w;
 
-        T->varrier_pitch = 100.000f;
-        T->varrier_angle =  -7.000f;
-        T->varrier_thick =   0.000f;
-        T->varrier_shift =   0.000f;
-        T->varrier_cycle =   0.777f;
+        T->varrier_pitch = 1.000f;
+        T->varrier_angle = 0.000f;
+        T->varrier_thick = 0.000f;
+        T->varrier_shift = 0.000f;
+        T->varrier_cycle = 0.750f;
 
         /* Include this tile in the host and in the total display. */
 
@@ -831,19 +850,11 @@ void draw_background(void)
 
 int startup_display(void)
 {
-    int i, j;
-
     tile = vecnew(32, sizeof (struct tile));
     host = vecnew(32, sizeof (struct host));
 
     if (tile && host)
-    {
-        i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-        j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-
-        local = (struct host *) vecget(host, i);
-
         return 1;
-    }
-    return 0;
+    else
+        return 0;
 }

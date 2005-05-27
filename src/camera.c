@@ -188,8 +188,10 @@ static int view_tile(int i, int tile, const float d[3], struct frustum *F)
     return 0;
 }
 
-static int draw_tile(int i, int tile, const float d[3])
+static int draw_tile(int i, int tile, const float d[3], struct frustum *F)
 {
+    view_tile(i, tile, d, F);
+
     if (C(i)->type == CAMERA_PERSP)
         return draw_persp(tile, C(i)->n, C(i)->f, d);
 
@@ -228,6 +230,7 @@ void draw_camera(int j, int i, const float M[16],
     for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
     {
         int tile = 0;
+        int next = 0;
 
         /* Compute the world-space eye position. */
 
@@ -243,18 +246,18 @@ void draw_camera(int j, int i, const float M[16],
 
         /* Iterate over all tiles of this host. */
 
-        while ((tile = draw_tile(i, tile, d)))
+        while ((next = draw_tile(i, tile, d, &G)))
         {
             int pass = 0;
                 
-            view_tile(i, tile, d, &G);
-
             transform_camera(j, N, M, J, I, d);
                 
             /* Iterate over all passes of this tile. */
 
             while ((pass = draw_pass(c->mode, eye, tile, pass)))
                 draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
+
+            tile = next;
         }
     }
 }
