@@ -131,7 +131,7 @@ static void transform_camera_gl(int i, const float p[3])
 
     /* Camera tracking. */
 
-    glTranslatef(-p[0], -p[1], -p[2]);
+/*  glTranslatef(-p[0], -p[1], -p[2]); */
 
     /* Camera rotation. */
 

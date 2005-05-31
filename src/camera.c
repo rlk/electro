@@ -231,6 +231,7 @@ void draw_camera(int j, int i, const float M[16],
     {
         int tile = 0;
         int next = 0;
+        int pass = 0;
 
         /* Compute the world-space eye position. */
 
@@ -248,14 +249,21 @@ void draw_camera(int j, int i, const float M[16],
 
         while ((next = draw_tile(i, tile, d, &G)))
         {
-            int pass = 0;
-                
-            transform_camera(j, N, M, J, I, d);
-                
+            pass = 0;
+
+            glTranslatef(-d[0], -d[1], -d[2]);
+
             /* Iterate over all passes of this tile. */
 
             while ((pass = draw_pass(c->mode, eye, tile, pass)))
-                draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
+            {
+                glPushMatrix();
+                {
+                    transform_camera(j, N, M, J, I, d);
+                    draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
+                }
+                glPopMatrix();
+            }
 
             tile = next;
         }

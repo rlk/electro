@@ -216,5 +216,4 @@ function varrier_test(b)
     end
 end
 
-varrier_test(true)
-E.background(0.0, 0.0, 0.0)
+E.set_background(0.0, 0.0, 0.0)

@@ -439,6 +439,7 @@ static void draw_galaxy(int j, int i, const float M[16],
 
         glPushAttrib(GL_ENABLE_BIT  |
                      GL_TEXTURE_BIT |
+                     GL_DEPTH_BUFFER_BIT |
                      GL_COLOR_BUFFER_BIT);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         {
@@ -448,9 +449,9 @@ static void draw_galaxy(int j, int i, const float M[16],
 
             glDisable(GL_TEXTURE_2D);
             glDisable(GL_LIGHTING);
-            glDisable(GL_DEPTH_TEST);
             glEnable(GL_COLOR_MATERIAL);
 
+            glDepthMask(GL_FALSE);
             glBlendFunc(GL_ONE, GL_ONE);
 
             if (GL_has_point_sprite)

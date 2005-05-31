@@ -1,5 +1,6 @@
 tumble = false
 scale  = false
+test   = false
 
 zoom  = 1
 rot_x = 0
@@ -101,9 +102,9 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    local d = 0.1666
-    local L = { -d, -d, d }
-    local R = {  d, -d, d }
+    local d = 0.5 * 2.5 / 12.0
+    local L = { -d, -1.23, 1.1 }
+    local R = {  d, -1.23, 1.1 }
 
     if s then
         if k == 13 then
@@ -112,28 +113,28 @@ function do_keyboard(k, s)
             return true
         end
         if k == 287 then
-            E.set_background(0.1, 0.2, 0.4, 0.0, 0.0, 0.0)
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
         end
         if k == 288 then
-            E.set_background(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
 --      if k == 289 then
---          E.set_background(0.0, 0.0, 0.0, 0.1, 0.2, 0.4)
 --          E.set_camera_stereo(camera, E.stereo_mode_quad,
 --                              L[1], L[2], L[3], R[1], R[2], R[3])
 --          return true
 --      end
         if k == 290 then
-            E.set_background(0.1, 0.2, 0.4, 0.0, 0.0, 0.0)
             E.set_camera_stereo(camera, E.stereo_mode_varrier,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
+        end
+        if k == 291 then
+            test = not test
+            varrier_test(test)
         end
 
         if k == 273 then pan_z = pan_z + 1 end
@@ -151,24 +152,28 @@ function do_keyboard(k, s)
         if k == 276 then pan_x = pan_x + 1 end
     end
 
-
-
     return false
 end
 
 do_start()
 
-E.print_console("ESC: Exit\n")
-E.print_console(" F1: Toggle server console\n")
-E.print_console(" F2: Toggle server rendering\n")
-E.print_console(" F3: Decrease server window resolution\n")
-E.print_console(" F4: Increase server window resolution\n")
-E.print_console(" F5: Toggle server fullscreen\n")
-E.print_console(" F6: Select mono-scopic rendering\n")
-E.print_console(" F7: Select red-blue stereo\n")
-E.print_console(" F8: Select quad-buffered stereo\n")
-E.print_console(" F9: Select Varrier stereo\n")
+if help then
+    E.print_console("ESC: Exit\n")
+    E.print_console(" F1: Toggle server console\n")
+    E.print_console(" F2: Toggle server rendering\n")
+    E.print_console(" F3: Decrease server window resolution\n")
+    E.print_console(" F4: Increase server window resolution\n")
+    E.print_console(" F5: Toggle server fullscreen\n")
+    E.print_console(" F6: Select mono-scopic rendering\n")
+    E.print_console(" F7: Select red-blue stereo\n")
+    E.print_console(" F8: Select quad-buffered stereo\n")
+    E.print_console(" F9: Select Varrier stereo\n")
 
-E.color_console(0.0, 0.5, 0.0)
-E.print_console("(dismiss the console before switching stereo modes)\n")
-E.color_console(0.0, 1.0, 0.0)
+    E.color_console(0.0, 0.5, 0.0)
+    E.print_console("(dismiss the console before switching stereo modes)\n")
+    E.color_console(0.0, 1.0, 0.0)
+end
+
+do_keyboard(290, true)
+
+E.set_background(0.0, 0.0, 0.0)

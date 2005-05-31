@@ -700,19 +700,9 @@ int draw_persp(int i, float N, float F, const float p[3])
         u[2] = T->u[2];
 
         v_cross(n, r, u);
-
-        k = (float) sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
-        r[0] /= k;
-        r[1] /= k;
-        r[2] /= k;
-        k = (float) sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
-        u[0] /= k;
-        u[1] /= k;
-        u[2] /= k;
-        k = (float) sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-        n[0] /= k;
-        n[1] /= k;
-        n[2] /= k;
+        v_normal(r, r);
+        v_normal(u, u);
+        v_normal(n, n);
 
         d = n[0] * (T->o[0] - p[0]) + 
             n[1] * (T->o[1] - p[1]) +
@@ -753,6 +743,8 @@ int draw_persp(int i, float N, float F, const float p[3])
 
         glLoadIdentity();
         glMultMatrixf(I);
+
+/*      glTranslatef(-p[0], -p[1], -p[2]); */
 
         return i + 1;
     }

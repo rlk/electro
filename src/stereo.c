@@ -19,79 +19,72 @@
 
 /*---------------------------------------------------------------------------*/
 
-static void push_matrices(void)
+static void draw_varrier_lines(int tile, const float M[16],
+                                         const float o[3], float w, float h)
 {
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
+    float p = get_varrier_pitch(tile);
+    float a = get_varrier_angle(tile);
+    float t = get_varrier_thick(tile);
+    float s = get_varrier_shift(tile);
+    float c = get_varrier_cycle(tile);
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-}
-
-static void pop_matrices(void)
-{
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void draw_varrier_lines(int tile, float w, float h)
-{
-    const float p = get_varrier_pitch(tile);
-    const float a = get_varrier_angle(tile);
-    const float t = get_varrier_thick(tile);
-    const float s = get_varrier_shift(tile);
-    const float c = get_varrier_cycle(tile);
-
-    const float k = 1 / p;
+    float x;
+    float k = 1 / p;
 
     float dx = tan(M_RAD(a)) * h;
     float dy = sin(M_RAD(a)) * w;
-    float x;
 
+    glPushAttrib(GL_ENABLE_BIT | GL_VIEWPORT_BIT);
     glPushMatrix();
-    glPushAttrib(GL_ENABLE_BIT |
-                 GL_COLOR_BUFFER_BIT);
     {
         glDisable(GL_LIGHTING);
         glDisable(GL_TEXTURE_2D);
 
-        glColorMask(0, 0, 0, 0);
+        glDepthRange(0, 0);
 
-        glColor3f(1.0f, 1.0f, 1.0f);
+        /* Transform the line screen into position. */
 
-        glRotatef(a, 0.0f, 0.0f, 1.0f);
+        glTranslatef(o[0], o[1], o[2]);
+        glMultMatrixf(M);
+
+        /* Draw the line screen. */
+
+        glTranslatef(s, 0, t);
+        glRotatef(a, 0, 0, 1);
 
         glBegin(GL_QUADS);
         {
-            for (x = dx; x < w - dx; x += k)
+            glColor3f(1.0f, 1.0f, 1.0f);
+
+            for (x = dx - w / 2; x < w / 2 - dx; x += k)
             {
-                glVertex2f(x,             dy);
-                glVertex2f(x + k * c,     dy);
-                glVertex2f(x + k * c, h - dy);
-                glVertex2f(x,         h - dy);
+                glVertex2f(x,         dy - h / 2);
+                glVertex2f(x + k * c, dy - h / 2);
+                glVertex2f(x + k * c, h / 2 - dy);
+                glVertex2f(x,         h / 2 - dy);
             }
         }
         glEnd();
     }
-    glPopAttrib();
     glPopMatrix();
+    glPopAttrib();
 }
 
-static void draw_varrier_test(int eye, float w, float h)
+static void draw_varrier_test(int eye, const float M[16],
+                                       const float o[3], float w, float h)
 {
     glPushAttrib(GL_ENABLE_BIT);
+    glPushMatrix();
     {
         glDisable(GL_LIGHTING);
         glDisable(GL_TEXTURE_2D);
         glDepthFunc(GL_LESS);
         
+        glTranslatef(o[0], o[1], o[2]);
+        glMultMatrixf(M);
+
         if (eye)
-            glColor3f(1.0f, 0.0f, 0.0f);
+            glColor3f(0.0f, 1.0f, 0.0f);
         else
             glColor3f(0.0f, 0.0f, 1.0f);
 
@@ -104,42 +97,66 @@ static void draw_varrier_test(int eye, float w, float h)
         }
         glEnd();
     }
+    glPopMatrix();
     glPopAttrib();
 }
 
 int stereo_varrier(int eye, int tile, int pass)
 {
-    float o[3];
-    float r[3];
-    float u[3];
-
-    float w;
-    float h;
-
     if (pass == 0)
     {
+        float o[3];
+        float r[3];
+        float u[3];
+        float n[3];
+        float c[3];
+        float M[16];
+        float w, h;
+
+        /* Find the center and extent of the tile. */
+
         get_tile_o(tile, o);
         get_tile_r(tile, r);
         get_tile_u(tile, u);
 
-        w = (float) sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
-        h = (float) sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
+        c[0] = o[0] + (r[0] + u[0]) / 2;
+        c[1] = o[1] + (r[1] + u[1]) / 2;
+        c[2] = o[2] + (r[2] + u[2]) / 2;
 
-        push_matrices();
+        w  = (float) sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+        h  = (float) sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
+
+        /* Compute the basis and transform for the tile coordinate system. */
+
+        v_cross(n, r, u);
+        v_normal(r, r);
+        v_normal(u, u);
+        v_normal(n, n);
+
+        M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
+        M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;
+        M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
+        M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
+
+        /* Draw the line screen into the depth buffer. */
+
+        if (eye == 0)
         {
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            glOrtho(0, w, 0, h, 0, 1);
-
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-
-            draw_varrier_lines(tile, w, h);
-
-            if (get_tile_flag(tile) & TILE_TEST)
-                draw_varrier_test(eye, w, h);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            glColorMask(0, 0, 0, 0);
+            draw_varrier_lines(tile, M, c, w, h);
+            glColorMask(1, 1, 1, 1);
         }
-        pop_matrices();
+        else
+        {
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glColorMask(0, 0, 0, 0);
+            draw_varrier_lines(tile, M, c, w, h);
+            glColorMask(1, 1, 1, 1);
+        }
+
+        if (get_tile_flag(tile) & TILE_TEST)
+            draw_varrier_test(eye, M, o, w, h);
 
         return 1;
     }
