@@ -744,8 +744,6 @@ int draw_persp(int i, float N, float F, const float p[3])
         glLoadIdentity();
         glMultMatrixf(I);
 
-/*      glTranslatef(-p[0], -p[1], -p[2]); */
-
         return i + 1;
     }
     return 0;

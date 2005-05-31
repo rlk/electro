@@ -20,7 +20,7 @@
 /*---------------------------------------------------------------------------*/
 
 static void draw_varrier_lines(int tile, const float M[16],
-                                         const float o[3], float w, float h)
+                                         float o[3], float w, float h)
 {
     float p = get_varrier_pitch(tile);
     float a = get_varrier_angle(tile);
@@ -28,11 +28,11 @@ static void draw_varrier_lines(int tile, const float M[16],
     float s = get_varrier_shift(tile);
     float c = get_varrier_cycle(tile);
 
-    float x;
-    float k = 1 / p;
+    float  k = 1 / p;
+    int i, n = w / k;
 
-    float dx = tan(M_RAD(a)) * h;
-    float dy = sin(M_RAD(a)) * w;
+    int dx = tan(M_RAD(a)) * h / k;
+    int dy = sin(M_RAD(a)) * w / k;
 
     glPushAttrib(GL_ENABLE_BIT | GL_VIEWPORT_BIT);
     glPushMatrix();
@@ -56,12 +56,12 @@ static void draw_varrier_lines(int tile, const float M[16],
         {
             glColor3f(1.0f, 1.0f, 1.0f);
 
-            for (x = dx - w / 2; x < w / 2 - dx; x += k)
+            for (i = dx - n / 2; i < n / 2 - dx; ++i)
             {
-                glVertex2f(x,         dy - h / 2);
-                glVertex2f(x + k * c, dy - h / 2);
-                glVertex2f(x + k * c, h / 2 - dy);
-                glVertex2f(x,         h / 2 - dy);
+                glVertex2f(k * i,         dy - h / 2);
+                glVertex2f(k * i + k * c, dy - h / 2);
+                glVertex2f(k * i + k * c, h / 2 - dy);
+                glVertex2f(k * i,         h / 2 - dy);
             }
         }
         glEnd();

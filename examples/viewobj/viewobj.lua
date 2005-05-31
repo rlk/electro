@@ -1,6 +1,7 @@
 tumble = false
 scale  = false
 test   = false
+diff   = 0.0001
 
 zoom  = 1
 rot_x = 0
@@ -103,8 +104,10 @@ end
 
 function do_keyboard(k, s)
     local d = 0.5 * 2.5 / 12.0
-    local L = { -d, -1.23, 1.1 }
-    local R = {  d, -1.23, 1.1 }
+--  local L = { -d, -1.23 / 12, 1.1 / 12 }
+--  local R = {  d, -1.23 / 12, 1.1 / 12 }
+    local L = { -d, -1.23 / 12, 2.0 / 12 }
+    local R = {  d, -1.23 / 12, 2.0 / 12 }
 
     if s then
         if k == 13 then
@@ -135,6 +138,25 @@ function do_keyboard(k, s)
         if k == 291 then
             test = not test
             varrier_test(test)
+        end
+
+        if k == 51 then
+            varrier_shift(diff)
+        end
+        if k == 52 then
+            varrier_shift(-diff)
+        end
+        if k == 53 then
+            varrier_thick(diff)
+        end
+        if k == 54 then
+            varrier_thick(-diff)
+        end
+        if k == 55 then
+            varrier_pitch(diff)
+        end
+        if k == 56 then
+            varrier_pitch(-diff)
         end
 
         if k == 273 then pan_z = pan_z + 1 end
