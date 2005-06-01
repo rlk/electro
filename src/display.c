@@ -156,7 +156,6 @@ void sync_display(void)
     /* Search the definition list for an entry matching this host's name */
 
     if (gethostname(name, MAXNAME) == 0)
-    {
         for (i = 0; i < vecnum(host); ++i)
         {
             struct host *H = (struct host *) vecget(host, i);
@@ -165,19 +164,19 @@ void sync_display(void)
                 local = H;
         }
 
-        set_window_pos(local->win_x, local->win_y);
-    }
-
     /* If no host definition was found, use a default. */
-    /*
-    if (local == NULL)
+
+    if (local == &default_host)
     {
         int i, j;
 
         i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
         j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+
+        local = (struct host *) vecget(host, i);
     }
-    */
+
+    set_window_pos(local->win_x, local->win_y);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -314,6 +313,8 @@ void send_set_tile_viewport(int i, int x, int y, int w, int h)
     pack_index((T->pix_y = y));
     pack_index((T->pix_w = w));
     pack_index((T->pix_h = h));
+
+    bound_display();
 }
 
 void send_set_tile_line_screen(int i, float p, float a,
@@ -391,6 +392,8 @@ void recv_set_tile_viewport(void)
     T->pix_y = unpack_index();
     T->pix_w = unpack_index();
     T->pix_h = unpack_index();
+
+    bound_display();
 }
 
 void recv_set_tile_line_screen(void)
