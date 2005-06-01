@@ -193,11 +193,11 @@ void transform_camera(int i, float N[16], const float M[16],
     m_copy(J, I);
 
     /* Camera tracking */
-
+    /*
     m_trans(A, B, -p[0], -p[1], -p[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
-
+    */
     /* Camera rotation. */
 
     m_xpos(A, E(i)->rotation);

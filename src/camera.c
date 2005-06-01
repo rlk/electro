@@ -203,11 +203,12 @@ static int draw_tile(int i, int tile, const float d[3], struct frustum *F)
 
 static int draw_pass(int mode, int eye, int tile, int pass)
 {
-     switch (mode)
+    switch (mode)
     {
-    case STEREO_QUAD:     return stereo_quad    (eye, tile, pass);
-    case STEREO_RED_BLUE: return stereo_red_blue(eye, tile, pass);
-    case STEREO_VARRIER:  return stereo_varrier (eye, tile, pass);
+    case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
+    case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
+    case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
+    case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
     }
     return (pass == 0);
 }

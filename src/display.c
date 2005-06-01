@@ -124,63 +124,6 @@ static void bound_display(void)
 
 /*---------------------------------------------------------------------------*/
 
-void sync_display(void)
-{
-    char name[MAXNAME];
-    int  i;
-
-#ifdef MPI
-    int num  = vecnum(host);
-    int siz  = vecsiz(host);
-    int rank = 0;
-    int j;
-
-    struct host *H;
-
-    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
-    assert_mpi(MPI_Bcast(&num, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
-
-    /* Broadcast all host definitions to all nodes. */
-
-    for (i = 0; i < num; i++)
-        if ((j = (rank) ? vecadd(host) : i) >= 0)
-        {
-            H = (struct host *) vecget(host, i);
-
-            assert_mpi(MPI_Bcast(H, siz, MPI_BYTE, 0, MPI_COMM_WORLD));
-
-            if (rank) H->n = 0;
-        }
-#endif
-
-    /* Search the definition list for an entry matching this host's name */
-
-    if (gethostname(name, MAXNAME) == 0)
-        for (i = 0; i < vecnum(host); ++i)
-        {
-            struct host *H = (struct host *) vecget(host, i);
-
-            if (strncmp(name, H->name, MAXNAME) == 0)
-                local = H;
-        }
-
-    /* If no host definition was found, use a default. */
-
-    if (local == &default_host)
-    {
-        int i, j;
-
-        i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-        j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-
-        local = (struct host *) vecget(host, i);
-    }
-
-    set_window_pos(local->win_x, local->win_y);
-}
-
-/*---------------------------------------------------------------------------*/
-
 int add_host(const char *name, int x, int y, int w, int h)
 {
     int i;
@@ -240,6 +183,63 @@ int add_tile(int i, int x, int y, int w, int h)
         bound_display();
     }
     return j;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void sync_display(void)
+{
+    char name[MAXNAME];
+    int  i;
+
+#ifdef MPI
+    int num  = vecnum(host);
+    int siz  = vecsiz(host);
+    int rank = 0;
+    int j;
+
+    struct host *H;
+
+    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+    assert_mpi(MPI_Bcast(&num, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
+
+    /* Broadcast all host definitions to all nodes. */
+
+    for (i = 0; i < num; i++)
+        if ((j = (rank) ? vecadd(host) : i) >= 0)
+        {
+            H = (struct host *) vecget(host, i);
+
+            assert_mpi(MPI_Bcast(H, siz, MPI_BYTE, 0, MPI_COMM_WORLD));
+
+            if (rank) H->n = 0;
+        }
+#endif
+
+    /* Search the definition list for an entry matching this host's name */
+
+    if (gethostname(name, MAXNAME) == 0)
+        for (i = 0; i < vecnum(host); ++i)
+        {
+            struct host *H = (struct host *) vecget(host, i);
+
+            if (strncmp(name, H->name, MAXNAME) == 0)
+                local = H;
+        }
+
+    /* If no host definition was found, use a default. */
+
+    if (local == &default_host)
+    {
+        int i, j;
+
+        i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+        j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+
+        local = (struct host *) vecget(host, i);
+    }
+
+    set_window_pos(local->win_x, local->win_y);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -665,7 +665,6 @@ int draw_persp(int i, float N, float F, const float p[3])
         float u[3];
         float n[3];
         float c[3];
-        float k;
         float d;
 
         float M[16];
