@@ -25,6 +25,24 @@
 #define DEFAULT_W  800
 #define DEFAULT_H  600
 
+#define DEFAULT_OX  -0.5f
+#define DEFAULT_OY (-0.5f * DEFAULT_H / DEFAULT_W)
+#define DEFAULT_OZ  -1.0f
+
+#define DEFAULT_RX  1.0f
+#define DEFAULT_RY  0.0f
+#define DEFAULT_RZ  0.0f
+
+#define DEFAULT_UX  0.0f
+#define DEFAULT_UY (1.0f * DEFAULT_H / DEFAULT_W)
+#define DEFAULT_UZ  0.0f
+
+#define DEFAULT_PITCH 1.00f
+#define DEFAULT_ANGLE 0.00f
+#define DEFAULT_THICK 0.00f
+#define DEFAULT_SHIFT 0.00f
+#define DEFAULT_CYCLE 0.75f
+
 /*---------------------------------------------------------------------------*/
 
 #define TILE_FLIP_X  1

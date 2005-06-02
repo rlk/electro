@@ -36,18 +36,10 @@ static float color1[3] = { 0.0f, 0.0f, 0.0f };
 
 /*---------------------------------------------------------------------------*/
 
-static struct host default_host = {
-    "default",
-    { 0, 0, 0, 0 },
-    0,
-    DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H,
-    DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H,
-};
-
 static vector_t tile;
 static vector_t host;
 
-static struct host *local = &default_host;
+static struct host *local = NULL;
 
 /*---------------------------------------------------------------------------*/
 
@@ -162,19 +154,23 @@ int add_tile(int i, int x, int y, int w, int h)
         T->pix_w = T->win_w = w;
         T->pix_h = T->win_h = h;
 
-        /* Compute a default perpective projection. */
+        /* Set a default display configuration. */
 
-        T->o[0]  = -0.5f;
-        T->o[1]  = -0.5f * h / w;
-        T->o[2]  = -1.0f;
-        T->r[0]  =  1.0f;
-        T->u[1]  =  1.0f * h / w;
+        T->o[0] = DEFAULT_OX;
+        T->o[1] = DEFAULT_OY;
+        T->o[2] = DEFAULT_OZ;
+        T->r[0] = DEFAULT_RX;
+        T->r[1] = DEFAULT_RY;
+        T->r[2] = DEFAULT_RZ;
+        T->u[0] = DEFAULT_UX;
+        T->u[1] = DEFAULT_UY;
+        T->u[2] = DEFAULT_UZ;
 
-        T->varrier_pitch = 1.000f;
-        T->varrier_angle = 0.000f;
-        T->varrier_thick = 0.000f;
-        T->varrier_shift = 0.000f;
-        T->varrier_cycle = 0.750f;
+        T->varrier_pitch = DEFAULT_PITCH;
+        T->varrier_angle = DEFAULT_ANGLE;
+        T->varrier_thick = DEFAULT_THICK;
+        T->varrier_shift = DEFAULT_SHIFT;
+        T->varrier_cycle = DEFAULT_CYCLE;
 
         /* Include this tile in the host and in the total display. */
 
@@ -229,7 +225,7 @@ void sync_display(void)
 
     /* If no host definition was found, use a default. */
 
-    if (local == &default_host)
+    if (local == NULL)
     {
         int i, j;
 
@@ -458,94 +454,143 @@ void set_window_w(int w)
 {
     int i;
 
-    local->win_w = w;
+    if (local)
+    {
+        local->win_w = w;
 
-    for (i = 0; i < local->n; ++i)
-        ((struct tile *) vecget(tile, local->tile[i]))->win_w = w;
+        for (i = 0; i < local->n; ++i)
+            ((struct tile *) vecget(tile, local->tile[i]))->win_w = w;
+    }
 }
 
 void set_window_h(int h)
 {
     int i;
 
-    local->win_h = h;
+    if (local)
+    {
+        local->win_h = h;
 
-    for (i = 0; i < local->n; ++i)
-        ((struct tile *) vecget(tile, local->tile[i]))->win_h = h;
+        for (i = 0; i < local->n; ++i)
+            ((struct tile *) vecget(tile, local->tile[i]))->win_h = h;
+    }
 }
 
-int get_window_w(void) { return local->win_w; }
-int get_window_h(void) { return local->win_h; }
+int get_window_w(void)   { return local ? local->win_w : DEFAULT_W; }
+int get_window_h(void)   { return local ? local->win_h : DEFAULT_H; }
 
 /*---------------------------------------------------------------------------*/
 
-int get_viewport_x(void) { return local->tot_x; }
-int get_viewport_y(void) { return local->tot_y; }
-int get_viewport_w(void) { return local->tot_w; }
-int get_viewport_h(void) { return local->tot_h; }
+int get_viewport_x(void) { return local ? local->tot_x : DEFAULT_X; }
+int get_viewport_y(void) { return local ? local->tot_y : DEFAULT_Y; }
+int get_viewport_w(void) { return local ? local->tot_w : DEFAULT_W; }
+int get_viewport_h(void) { return local ? local->tot_h : DEFAULT_H; }
+int get_tile_count(void) { return local ? local->n : 1; }
 
 void get_tile_o(int i, float o[3])
 {
-    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+    if (local)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
-    o[0] = T->o[0];
-    o[1] = T->o[1];
-    o[2] = T->o[2];
+        o[0] = T->o[0];
+        o[1] = T->o[1];
+        o[2] = T->o[2];
+    }
+    else
+    {
+        o[0] = DEFAULT_OX;
+        o[1] = DEFAULT_OY;
+        o[2] = DEFAULT_OZ;
+    }
 }
 
 void get_tile_r(int i, float r[3])
 {
-    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+    if (local)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
-    r[0] = T->r[0];
-    r[1] = T->r[1];
-    r[2] = T->r[2];
+        r[0] = T->r[0];
+        r[1] = T->r[1];
+        r[2] = T->r[2];
+    }
+    else
+    {
+        r[0] = DEFAULT_RX;
+        r[1] = DEFAULT_RY;
+        r[2] = DEFAULT_RZ;
+    }
 }
 
 void get_tile_u(int i, float u[3])
 {
-    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+    if (local)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
-    u[0] = T->u[0];
-    u[1] = T->u[1];
-    u[2] = T->u[2];
+        u[0] = T->u[0];
+        u[1] = T->u[1];
+        u[2] = T->u[2];
+    }
+    else
+    {
+        u[0] = DEFAULT_UX;
+        u[1] = DEFAULT_UY;
+        u[2] = DEFAULT_UZ;
+    }
 }
 
 int get_tile_flag(int i)
 {
-    return ((struct tile *) vecget(tile, local->tile[i]))->flag;
+    return local ? ((struct tile *) vecget(tile, local->tile[i]))->flag : 0;
 }
 
 float get_varrier_pitch(int i)
 {
-    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_pitch;
+    if (local)
+        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_pitch;
+    else
+        return DEFAULT_PITCH;
 }
 
 float get_varrier_angle(int i)
 {
-    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_angle;
+    if (local)
+        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_angle;
+    else
+        return DEFAULT_ANGLE;
 }
 
 float get_varrier_thick(int i)
 {
-    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_thick;
+    if (local)
+        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_thick;
+    else
+        return DEFAULT_THICK;
 }
 
 float get_varrier_shift(int i)
 {
-    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_shift;
+    if (local)
+        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_shift;
+    else
+        return DEFAULT_SHIFT;
 }
 
 float get_varrier_cycle(int i)
 {
-    return ((struct tile *) vecget(tile, local->tile[i]))->varrier_cycle;
+    if (local)
+        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_cycle;
+    else
+        return DEFAULT_CYCLE;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int view_ortho(int i, struct frustum *F)
 {
-    if (i < local->n)
+    if (local && i < local->n)
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
@@ -583,7 +628,7 @@ int view_ortho(int i, struct frustum *F)
 
 int view_persp(int i, struct frustum *F, const float p[3])
 {
-    if (i < local->n)
+    if (local && i < local->n)
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
@@ -629,7 +674,7 @@ int view_persp(int i, struct frustum *F, const float p[3])
 
 int draw_ortho(int i, float N, float F)
 {
-    if (i < local->n)
+    if (local && i < local->n)
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
@@ -657,7 +702,7 @@ int draw_ortho(int i, float N, float F)
 
 int draw_persp(int i, float N, float F, const float p[3])
 {
-    if (i < local->n)
+    if (local && i < local->n)
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 

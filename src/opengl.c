@@ -66,7 +66,7 @@ void *opengl_proc(const char *name)
     void *p = SDL_GL_GetProcAddress(name);
 
     if (p == NULL)
-        error("OpenGL procedure '%s' not found\n", name);
+        error("OpenGL procedure '%s' not found", name);
 
     return p;
 }
