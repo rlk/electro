@@ -1311,6 +1311,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "stereo_mode_red_blue",      STEREO_RED_BLUE);
     lua_constant(L, "stereo_mode_varrier_11",    STEREO_VARRIER_11);
     lua_constant(L, "stereo_mode_varrier_33",    STEREO_VARRIER_33);
+    lua_constant(L, "stereo_mode_varrier_41",    STEREO_VARRIER_41);
 
     lua_constant(L, "light_type_positional",     LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",    LIGHT_DIRECTIONAL);

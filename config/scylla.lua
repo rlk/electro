@@ -1,3 +1,4 @@
+diff   = 0.0001
 
 host = { }
 tile = { }
@@ -256,6 +257,78 @@ function varrier_test(b)
     for i = 1, 35 do
         E.set_tile_flag(tile[i], E.tile_flag_test, b)
     end
+end
+
+function varrier_keyboard(k, s)
+    local d = 0.5 * 2.5 / 12.0
+--  local L = { -d, -1.23 / 12, 1.1 / 12 }
+--  local R = {  d, -1.23 / 12, 1.1 / 12 }
+    local L = { -d, -1.23 / 12, 2.0 / 12 }
+    local R = {  d, -1.23 / 12, 2.0 / 12 }
+
+    if s then
+        if k == 287 then
+            E.set_camera_stereo(camera, E.stereo_mode_none,
+                                0, 0, 0, 0, 0, 0)
+            return true
+        end
+        if k == 288 then
+            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+--      if k == 289 then
+--          E.set_camera_stereo(camera, E.stereo_mode_quad,
+--                              L[1], L[2], L[3], R[1], R[2], R[3])
+--          return true
+--      end
+        if k == 290 then
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+        if k == 291 then
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+        if k == 292 then
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_41,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+        if k == 293 then
+            test = not test
+            varrier_test(test)
+            return true
+        end
+
+        if k == 51 then
+            varrier_shift(-diff)
+            return true
+        end
+        if k == 52 then
+            varrier_shift(diff)
+            return true
+        end
+        if k == 53 then
+            varrier_thick(-diff)
+            return true
+        end
+        if k == 54 then
+            varrier_thick(diff)
+            return true
+        end
+        if k == 55 then
+            varrier_pitch(-diff)
+            return true
+        end
+        if k == 56 then
+            varrier_pitch(diff)
+            return true
+        end
+    end
+    return false
 end
 
 E.set_background(0.0, 0.0, 0.0)

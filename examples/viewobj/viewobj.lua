@@ -1,7 +1,6 @@
 tumble = false
 scale  = false
 test   = false
-diff   = 0.0001
 
 zoom  = 1
 rot_x = 0
@@ -10,10 +9,30 @@ pan_x = 0
 pan_y = 0
 pan_z = 0
 
+function help()
+    E.print_console("ESC: Exit\n")
+    E.print_console(" F1: Toggle server console\n")
+    E.print_console(" F2: Toggle server rendering\n")
+    E.print_console(" F3: Decrease server window resolution\n")
+    E.print_console(" F4: Increase server window resolution\n")
+    E.print_console(" F5: Toggle server fullscreen\n")
+    E.print_console(" F6: Select mono-scopic rendering\n")
+    E.print_console(" F7: Select red-blue stereo\n")
+    E.print_console(" F8: Select quad-buffered stereo\n")
+    E.print_console(" F9: Select Varrier 1-1 stereo\n")
+    E.print_console("F10: Select Varrier 3-3 stereo\n")
+    E.print_console("F11: Select Varrier 4-1 stereo\n")
+    E.print_console("F12: Toggle test mode\n")
+
+    E.color_console(0.0, 0.5, 0.0)
+    E.print_console("(dismiss the console before switching stereo modes)\n")
+    E.color_console(0.0, 1.0, 0.0)
+end
+
 function add_object(i, s)
     local object = E.create_object(s)
     E.parent_entity(object, scene)
-    E.set_entity_flag(object, E.entity_flag_transparent, true)
+--  E.set_entity_flag(object, E.entity_flag_transparent, true)
 end
 
 function do_start()
@@ -104,65 +123,12 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    local d = 0.5 * 2.5 / 12.0
---  local L = { -d, -1.23 / 12, 1.1 / 12 }
---  local R = {  d, -1.23 / 12, 1.1 / 12 }
-    local L = { -d, -1.23 / 12, 2.0 / 12 }
-    local R = {  d, -1.23 / 12, 2.0 / 12 }
 
     if s then
         if k == 13 then
             E.set_entity_position(camera, 0.0, 0.0, 0.0)
             E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
             return true
-        end
-        if k == 287 then
-            E.set_camera_stereo(camera, E.stereo_mode_none,
-                                0, 0, 0, 0, 0, 0)
-            return true
-        end
-        if k == 288 then
-            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
-            return true
-        end
---      if k == 289 then
---          E.set_camera_stereo(camera, E.stereo_mode_quad,
---                              L[1], L[2], L[3], R[1], R[2], R[3])
---          return true
---      end
-        if k == 290 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
-            return true
-        end
-        if k == 291 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
-            return true
-        end
-        if k == 292 then
-            test = not test
-            varrier_test(test)
-        end
-
-        if k == 51 then
-            varrier_shift(-diff)
-        end
-        if k == 52 then
-            varrier_shift(diff)
-        end
-        if k == 53 then
-            varrier_thick(-diff)
-        end
-        if k == 54 then
-            varrier_thick(diff)
-        end
-        if k == 55 then
-            varrier_pitch(-diff)
-        end
-        if k == 56 then
-            varrier_pitch(diff)
         end
 
         if k == 273 then pan_z = pan_z + 1 end
@@ -180,29 +146,10 @@ function do_keyboard(k, s)
         if k == 276 then pan_x = pan_x + 1 end
     end
 
-    return false
+    return varrier_keyboard(k, s)
 end
 
 do_start()
-
-if help then
-    E.print_console("ESC: Exit\n")
-    E.print_console(" F1: Toggle server console\n")
-    E.print_console(" F2: Toggle server rendering\n")
-    E.print_console(" F3: Decrease server window resolution\n")
-    E.print_console(" F4: Increase server window resolution\n")
-    E.print_console(" F5: Toggle server fullscreen\n")
-    E.print_console(" F6: Select mono-scopic rendering\n")
-    E.print_console(" F7: Select red-blue stereo\n")
-    E.print_console(" F8: Select quad-buffered stereo\n")
-    E.print_console(" F9: Select Varrier 1-1 stereo\n")
-    E.print_console("F10: Select Varrier 3-3 stereo\n")
-
-    E.color_console(0.0, 0.5, 0.0)
-    E.print_console("(dismiss the console before switching stereo modes)\n")
-    E.color_console(0.0, 1.0, 0.0)
-end
-
 do_keyboard(291, true)
 
 E.set_background(0.0, 0.0, 0.0)

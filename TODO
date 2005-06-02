@@ -1,8 +1,10 @@
+Rework background render to work with varrier
 Test total queue throughput.
 Test re-texture throughput on all clusters.
     (subimage/buffer reuse)
 Uniform API
 Object geometry create
+Particle system
 Bounding sphere
         auto near/far
         auto lookat
@@ -11,5 +13,3 @@ Text render of some sort / TTF
 
 Test whether tracking data optimization will pay off.
 Scale and billboard frustum (thorough test)
-
-Particle system

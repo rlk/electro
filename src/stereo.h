@@ -20,11 +20,13 @@
 #define STEREO_RED_BLUE   2
 #define STEREO_VARRIER_11 3
 #define STEREO_VARRIER_33 4
+#define STEREO_VARRIER_41 5
 
 int stereo_quad      (int, int, int);
 int stereo_red_blue  (int, int, int);
 int stereo_varrier_11(int, int, int);
 int stereo_varrier_33(int, int, int);
+int stereo_varrier_41(int, int, int);
 
 /*---------------------------------------------------------------------------*/
 

@@ -209,6 +209,7 @@ static int draw_pass(int mode, int eye, int tile, int pass)
     case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
     case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
     case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
+    case STEREO_VARRIER_41: return stereo_varrier_41(eye, tile, pass);
     }
     return (pass == 0);
 }
