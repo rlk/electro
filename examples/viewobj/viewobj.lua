@@ -91,6 +91,8 @@ function do_timer(dt)
 		E.set_entity_rotation(scene, rot_x, rot_y, 0)
 	end
 
+        print(dt)
+
     return true
 end
 

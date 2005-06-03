@@ -645,10 +645,15 @@ int view_persp(int i, struct frustum *F, const float p[3])
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
+        float P[3];
         float p0[3];
         float p1[3];
         float p2[3];
         float p3[3];
+
+        P[0]  = T->d[0] + p[0];
+        P[1]  = T->d[1] + p[1];
+        P[2]  = T->d[2] + p[2];
 
         /* Compute the frustum planes. */
 
@@ -668,10 +673,10 @@ int view_persp(int i, struct frustum *F, const float p[3])
         p3[1] = T->u[1] + p0[1];
         p3[2] = T->u[2] + p0[2];
 
-        v_plane(F->V[0], p, p1, p0);
-        v_plane(F->V[1], p, p2, p1);
-        v_plane(F->V[2], p, p3, p2);
-        v_plane(F->V[3], p, p0, p3);
+        v_plane(F->V[0], P, p1, p0);
+        v_plane(F->V[1], P, p2, p1);
+        v_plane(F->V[2], P, p3, p2);
+        v_plane(F->V[3], P, p0, p3);
 
         F->p[0] = 0.0f;
         F->p[1] = 0.0f;
