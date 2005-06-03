@@ -20,6 +20,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define DEFAULT_NAME "default"
+
 #define DEFAULT_X    0
 #define DEFAULT_Y    0
 #define DEFAULT_W  800
@@ -37,11 +39,11 @@
 #define DEFAULT_UY (1.0f * DEFAULT_H / DEFAULT_W)
 #define DEFAULT_UZ  0.0f
 
-#define DEFAULT_PITCH 1.00f
-#define DEFAULT_ANGLE 0.00f
-#define DEFAULT_THICK 0.00f
-#define DEFAULT_SHIFT 0.00f
-#define DEFAULT_CYCLE 0.75f
+#define DEFAULT_VARRIER_PITCH 1.00f
+#define DEFAULT_VARRIER_ANGLE 0.00f
+#define DEFAULT_VARRIER_THICK 0.00f
+#define DEFAULT_VARRIER_SHIFT 0.00f
+#define DEFAULT_VARRIER_CYCLE 0.75f
 
 /*---------------------------------------------------------------------------*/
 

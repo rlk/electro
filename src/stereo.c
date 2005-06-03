@@ -66,11 +66,12 @@ static void draw_varrier_lines(int tile, const float M[16],
     float s = get_varrier_shift(tile) + d;
     float c = get_varrier_cycle(tile) * k;
 
-    float  f = 1 / p;
-    int i, n = w / f;
+    float f = 1 / p;
+    int i;
+    int n = (int) ceil(w / f);
 
-    int dx = tan(M_RAD(a)) * h / f;
-    int dy = sin(M_RAD(a)) * w / f;
+    int dx = (int) ceil(tan(M_RAD(a)) * h / f);
+    int dy = (int) ceil(sin(M_RAD(a)) * w / f);
 
     glPushAttrib(GL_ENABLE_BIT | GL_VIEWPORT_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
@@ -186,7 +187,7 @@ int stereo_varrier_33(int eye, int tile, int pass)
 {
     float M[16];
     float c[3];
-    float w, h, d = 0.00025;
+    float w, h, d = 0.00025f;
 
     int next = 0;
 
@@ -239,7 +240,7 @@ int stereo_varrier_41(int eye, int tile, int pass)
 {
     float M[16];
     float c[3];
-    float w, h, d = 0.00025;
+    float w, h, d = 0.00025f;
 
     int next = 0;
 

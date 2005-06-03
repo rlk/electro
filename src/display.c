@@ -29,6 +29,8 @@
 #include "buffer.h"
 #include "event.h"
 
+#define swap(a, b) { double t; t = (a); (a) = (b); (b) = t; }
+
 /*---------------------------------------------------------------------------*/
 
 static float color0[3] = { 0.1f, 0.2f, 0.4f };
@@ -40,6 +42,11 @@ static vector_t tile;
 static vector_t host;
 
 static struct host *local = NULL;
+
+static int display_x = DEFAULT_X;
+static int display_y = DEFAULT_Y;
+static int display_w = DEFAULT_W;
+static int display_h = DEFAULT_H;
 
 /*---------------------------------------------------------------------------*/
 
@@ -101,16 +108,21 @@ static void bound_display(void)
         t = MAX(t, T->pix_y + T->pix_h);
     }
 
+    display_x = l;
+    display_y = b;
+    display_w = r - l;
+    display_h = t - b;
+
     /* Copy the total pixel size to all host configurations. */
 
     for (i = 0; i < vecnum(host); ++i)
     {
         struct host *H = (struct host *) vecget(host, i);
 
-        H->tot_x = l;
-        H->tot_y = b;
-        H->tot_w = r - l;
-        H->tot_h = t - b;
+        H->tot_x = display_x;
+        H->tot_y = display_y;
+        H->tot_w = display_w;
+        H->tot_h = display_h;
     }
 }
 
@@ -166,11 +178,11 @@ int add_tile(int i, int x, int y, int w, int h)
         T->u[1] = DEFAULT_UY;
         T->u[2] = DEFAULT_UZ;
 
-        T->varrier_pitch = DEFAULT_PITCH;
-        T->varrier_angle = DEFAULT_ANGLE;
-        T->varrier_thick = DEFAULT_THICK;
-        T->varrier_shift = DEFAULT_SHIFT;
-        T->varrier_cycle = DEFAULT_CYCLE;
+        T->varrier_pitch = DEFAULT_VARRIER_PITCH;
+        T->varrier_angle = DEFAULT_VARRIER_ANGLE;
+        T->varrier_thick = DEFAULT_VARRIER_THICK;
+        T->varrier_shift = DEFAULT_VARRIER_SHIFT;
+        T->varrier_cycle = DEFAULT_VARRIER_CYCLE;
 
         /* Include this tile in the host and in the total display. */
 
@@ -186,12 +198,12 @@ int add_tile(int i, int x, int y, int w, int h)
 void sync_display(void)
 {
     char name[MAXNAME];
+    int  rank = 0;
     int  i;
 
 #ifdef MPI
     int num  = vecnum(host);
     int siz  = vecsiz(host);
-    int rank = 0;
     int j;
 
     struct host *H;
@@ -219,7 +231,8 @@ void sync_display(void)
         {
             struct host *H = (struct host *) vecget(host, i);
 
-            if (strncmp(name, H->name, MAXNAME) == 0)
+            if (strncmp(H->name, name,         MAXNAME) == 0 ||
+                strncmp(H->name, DEFAULT_NAME, MAXNAME) == 0)
                 local = H;
         }
 
@@ -229,13 +242,13 @@ void sync_display(void)
     {
         int i, j;
 
-        i = add_host("default", DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-        j = add_tile(i,         DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+        i = add_host(DEFAULT_NAME, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+        j = add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
 
         local = (struct host *) vecget(host, i);
     }
 
-    set_window_pos(local->win_x, local->win_y);
+    if (rank) set_window_pos(local->win_x, local->win_y);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -481,10 +494,10 @@ int get_window_h(void)   { return local ? local->win_h : DEFAULT_H; }
 
 /*---------------------------------------------------------------------------*/
 
-int get_viewport_x(void) { return local ? local->tot_x : DEFAULT_X; }
-int get_viewport_y(void) { return local ? local->tot_y : DEFAULT_Y; }
-int get_viewport_w(void) { return local ? local->tot_w : DEFAULT_W; }
-int get_viewport_h(void) { return local ? local->tot_h : DEFAULT_H; }
+int get_viewport_x(void) { return local ? local->tot_x : display_x; }
+int get_viewport_y(void) { return local ? local->tot_y : display_y; }
+int get_viewport_w(void) { return local ? local->tot_w : display_w; }
+int get_viewport_h(void) { return local ? local->tot_h : display_h; }
 int get_tile_count(void) { return local ? local->n : 1; }
 
 void get_tile_o(int i, float o[3])
@@ -551,7 +564,7 @@ float get_varrier_pitch(int i)
     if (local)
         return ((struct tile *) vecget(tile, local->tile[i]))->varrier_pitch;
     else
-        return DEFAULT_PITCH;
+        return DEFAULT_VARRIER_PITCH;
 }
 
 float get_varrier_angle(int i)
@@ -559,7 +572,7 @@ float get_varrier_angle(int i)
     if (local)
         return ((struct tile *) vecget(tile, local->tile[i]))->varrier_angle;
     else
-        return DEFAULT_ANGLE;
+        return DEFAULT_VARRIER_ANGLE;
 }
 
 float get_varrier_thick(int i)
@@ -567,7 +580,7 @@ float get_varrier_thick(int i)
     if (local)
         return ((struct tile *) vecget(tile, local->tile[i]))->varrier_thick;
     else
-        return DEFAULT_THICK;
+        return DEFAULT_VARRIER_THICK;
 }
 
 float get_varrier_shift(int i)
@@ -575,7 +588,7 @@ float get_varrier_shift(int i)
     if (local)
         return ((struct tile *) vecget(tile, local->tile[i]))->varrier_shift;
     else
-        return DEFAULT_SHIFT;
+        return DEFAULT_VARRIER_SHIFT;
 }
 
 float get_varrier_cycle(int i)
@@ -583,7 +596,7 @@ float get_varrier_cycle(int i)
     if (local)
         return ((struct tile *) vecget(tile, local->tile[i]))->varrier_cycle;
     else
-        return DEFAULT_CYCLE;
+        return DEFAULT_VARRIER_CYCLE;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -678,6 +691,16 @@ int draw_ortho(int i, float N, float F)
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
+        GLdouble fL = T->pix_x;
+        GLdouble fR = T->pix_x + T->pix_w;
+        GLdouble fB = T->pix_y;
+        GLdouble fT = T->pix_y + T->pix_h;
+
+        /* Flip the projection if requested. */
+
+        if (T->flag & TILE_FLIP_X) swap(fL, fR);
+        if (T->flag & TILE_FLIP_Y) swap(fB, fT);
+
         /* Configure the viewport. */
 
         glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
@@ -695,6 +718,14 @@ int draw_ortho(int i, float N, float F)
 
         glLoadIdentity();
 
+        /* Rewind polygons if necessary. */
+
+        if (((T->flag & TILE_FLIP_X) ? 1 : 0) ^
+            ((T->flag & TILE_FLIP_Y) ? 1 : 0))
+            glFrontFace(GL_CW);
+        else
+            glFrontFace(GL_CCW);
+
         return i + 1;
     }
     return 0;
@@ -706,11 +737,12 @@ int draw_persp(int i, float N, float F, const float p[3])
     {
         struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
+        float P[3];
         float r[3];
         float u[3];
         float n[3];
         float c[3];
-        float d;
+        float k;
 
         float M[16];
         float I[16];
@@ -718,6 +750,10 @@ int draw_persp(int i, float N, float F, const float p[3])
         float p0[3];
         float p1[3];
         float p3[3];
+
+        P[0]  = T->d[0] + p[0];
+        P[1]  = T->d[1] + p[1];
+        P[2]  = T->d[2] + p[2];
 
         p0[0] = T->o[0];
         p0[1] = T->o[1];
@@ -751,30 +787,49 @@ int draw_persp(int i, float N, float F, const float p[3])
         v_normal(u, u);
         v_normal(n, n);
 
-        d = n[0] * (T->o[0] - p[0]) + 
-            n[1] * (T->o[1] - p[1]) +
-            n[2] * (T->o[2] - p[2]);
+        k = n[0] * (T->o[0] - P[0]) + 
+            n[1] * (T->o[1] - P[1]) +
+            n[2] * (T->o[2] - P[2]);
 
-        c[0] = p[0] + n[0] * d;
-        c[1] = p[1] + n[1] * d;
-        c[2] = p[2] + n[2] * d;
-
-        /* Apply the projection. */
+        c[0] = P[0] + n[0] * k;
+        c[1] = P[1] + n[1] * k;
+        c[2] = P[2] + n[2] * k;
 
         glMatrixMode(GL_PROJECTION);
         {
-            GLdouble fL = -N * (r[0] * (p0[0] - c[0]) +
-                                r[1] * (p0[1] - c[1]) +
-                                r[2] * (p0[2] - c[2])) / d;
-            GLdouble fR = -N * (r[0] * (p1[0] - c[0]) +
-                                r[1] * (p1[1] - c[1]) +
-                                r[2] * (p1[2] - c[2])) / d;
-            GLdouble fB = -N * (u[0] * (p0[0] - c[0]) +
-                                u[1] * (p0[1] - c[1]) +
-                                u[2] * (p0[2] - c[2])) / d;
-            GLdouble fT = -N * (u[0] * (p3[0] - c[0]) +
-                                u[1] * (p3[1] - c[1]) +
-                                u[2] * (p3[2] - c[2])) / d;
+            /*
+            double fL = -N * (r[0] * (p0[0] - c[0]) +
+                              r[1] * (p0[1] - c[1]) +
+                              r[2] * (p0[2] - c[2])) / k;
+            double fR = -N * (r[0] * (p1[0] - c[0]) +
+                              r[1] * (p1[1] - c[1]) +
+                              r[2] * (p1[2] - c[2])) / k;
+            double fB = -N * (u[0] * (p0[0] - c[0]) +
+                              u[1] * (p0[1] - c[1]) +
+                              u[2] * (p0[2] - c[2])) / k;
+            double fT = -N * (u[0] * (p3[0] - c[0]) +
+                              u[1] * (p3[1] - c[1]) +
+                              u[2] * (p3[2] - c[2])) / k;
+            */
+            double fL = N * (r[0] * (P[0] - p0[0]) +
+                             r[1] * (P[1] - p0[1]) +
+                             r[2] * (P[2] - p0[2])) / k;
+            double fR = N * (r[0] * (P[0] - p1[0]) +
+                             r[1] * (P[1] - p1[1]) +
+                             r[2] * (P[2] - p1[2])) / k;
+            double fB = N * (u[0] * (P[0] - p0[0]) +
+                             u[1] * (P[1] - p0[1]) +
+                             u[2] * (P[2] - p0[2])) / k;
+            double fT = N * (u[0] * (P[0] - p3[0]) +
+                             u[1] * (P[1] - p3[1]) +
+                             u[2] * (P[2] - p3[2])) / k;
+
+            /* Flip the projection if requested. */
+
+            if (T->flag & TILE_FLIP_X) swap(fL, fR);
+            if (T->flag & TILE_FLIP_Y) swap(fB, fT);
+
+            /* Apply the projection. */
 
             glLoadIdentity();
             glFrustum(fL, fR, fB, fT, N, F);
@@ -790,6 +845,15 @@ int draw_persp(int i, float N, float F, const float p[3])
 
         glLoadIdentity();
         glMultMatrixf(I);
+        glTranslatef(-T->d[0], -T->d[1], -T->d[2]);
+
+        /* Rewind polygons if necessary. */
+
+        if (((T->flag & TILE_FLIP_X) ? 1 : 0) ^
+            ((T->flag & TILE_FLIP_Y) ? 1 : 0))
+            glFrontFace(GL_CW);
+        else
+            glFrontFace(GL_CCW);
 
         return i + 1;
     }

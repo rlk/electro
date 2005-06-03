@@ -17,6 +17,7 @@
 #include "image.h"
 #include "entity.h"
 #include "display.h"
+#include "utility.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -79,8 +80,10 @@ int init_video(int w, int h, int r)
         return 1;
     }
     else if (video_stereo)
+    {
+        error("Error enabling stereo visual.  Disabling stereo.");
         return set_video_stereo(0, r);
-
+    }
     return 0;
 }
 

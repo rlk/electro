@@ -743,9 +743,7 @@ static void draw_object(int j, int i, const float M[16],
         /* Render this object. */
 
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glPushAttrib(GL_LIGHTING_BIT |
-                     GL_TEXTURE_BIT  |
-                     GL_DEPTH_BUFFER_BIT);
+        glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
         {
             if (GL_has_vertex_buffer_object)
             {
@@ -755,11 +753,6 @@ static void draw_object(int j, int i, const float M[16],
             else
                 glInterleavedArrays(GL_T2F_N3F_V3F, stride,
                                     vecget(O(i)->vv, 0));
-
-            /* If this object is transparent, don't write depth. */
-
-            if (a * get_entity_alpha(j) < 1.0)
-                glDepthMask(GL_FALSE);
 
             for (k = 0; k < n; ++k)
             {
@@ -783,14 +776,23 @@ static void draw_object(int j, int i, const float M[16],
                 glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
 
-                /* Draw this surface's faces and edges. */
+                glPushAttrib(GL_DEPTH_BUFFER_BIT);
+                {
+                    /* If this object is transparent, don't write depth. */
 
-                if (vecnum(s->fv) > 0)
-                    glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
-                                   GL_UNSIGNED_INT,  vecbuf(s->fv));
-                if (vecnum(s->ev) > 0)
-                    glDrawElements(GL_LINES,     2 * vecnum(s->ev),
-                                   GL_UNSIGNED_INT,  vecbuf(s->ev));
+                    if (d[3] < 1.0)
+                        glDepthMask(GL_FALSE);
+
+                    /* Draw this surface's faces and edges. */
+
+                    if (vecnum(s->fv) > 0)
+                        glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
+                                       GL_UNSIGNED_INT,  vecbuf(s->fv));
+                    if (vecnum(s->ev) > 0)
+                        glDrawElements(GL_LINES,     2 * vecnum(s->ev),
+                                       GL_UNSIGNED_INT,  vecbuf(s->ev));
+                }
+                glPopAttrib();
             }
         }
         glPopAttrib();

@@ -20,7 +20,7 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
-    thing  = E.create_object("box.obj")
+    thing  = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)

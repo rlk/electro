@@ -8,6 +8,7 @@ rot_y = 0
 pan_x = 0
 pan_y = 0
 pan_z = 0
+rot_dy = 0
 
 function help()
     E.print_console("ESC: Exit\n")
@@ -48,7 +49,8 @@ function do_start()
     E.parent_entity(pivot, scene)
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
-    E.set_entity_position(scene,  0.0, -3.0, -16.0)
+    E.set_entity_position(scene,  0.0, -8.0, -10.0)
+--- E.set_entity_position(scene,  0.0, -3.0, -16.0)
 
     E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
     E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
@@ -84,6 +86,11 @@ function do_timer(dt)
                               -mov_z * pan_z * dt * 10)
     end
 
+	if rot_dy < 0 or 0 < rot_dy then
+		rot_y = rot_y + rot_dy * dt * 10
+		E.set_entity_rotation(scene, rot_x, rot_y, 0)
+	end
+
     return true
 end
 
@@ -112,7 +119,7 @@ function do_point(dx, dy)
     end
 
     if scale then
-        zoom = zoom + dy / 100
+        zoom = zoom + dy / 500
 
         E.set_entity_scale(scene, zoom, zoom, zoom)
 
@@ -123,6 +130,11 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
+    local d = 0.5 * 2.5 / 12.0
+--  local L = { -d, -1.23 / 12, 1.1 / 12 }
+--  local R = {  d, -1.23 / 12, 1.1 / 12 }
+    local L = { -d, -1.23 / 12, 2.0 / 12 }
+    local R = {  d, -1.23 / 12, 2.0 / 12 }
 
     if s then
         if k == 13 then
@@ -130,6 +142,29 @@ function do_keyboard(k, s)
             E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
             return true
         end
+
+        if k == 287 then
+            E.set_camera_stereo(camera, E.stereo_mode_none,
+                                0, 0, 0, 0, 0, 0)
+            return true
+        end
+        if k == 288 then
+            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+        if k == 289 then
+            E.set_camera_stereo(camera, E.stereo_mode_quad,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+
+		if k == 277 then
+			rot_dy = rot_dy + 1
+		end
+		if k == 127 then
+			rot_dy = rot_dy - 1
+		end
 
         if k == 273 then pan_z = pan_z + 1 end
         if k == 274 then pan_z = pan_z - 1 end
@@ -146,10 +181,11 @@ function do_keyboard(k, s)
         if k == 276 then pan_x = pan_x + 1 end
     end
 
-    return varrier_keyboard(k, s)
+	return true
+--  return varrier_keyboard(k, s)
 end
 
 do_start()
 do_keyboard(291, true)
 
-E.set_background(0.0, 0.0, 0.0)
+--E.set_background(0.0, 0.0, 0.0)
