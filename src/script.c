@@ -369,6 +369,14 @@ static int script_add_host(lua_State *L)
     return 1;
 }
 
+static int script_set_host_flag(lua_State *L)
+{
+    send_set_host_flag((int) script_getnumber(L, -3),
+                       (int) script_getnumber(L, -2),
+                             script_getboolean(L, -1));
+    return 0;
+}
+
 static int script_add_tile(lua_State *L)
 {
     int j = send_add_tile((int) script_getnumber(L, -5),
@@ -1269,6 +1277,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "add_host",             script_add_host);
     lua_function(L, "add_tile",             script_add_tile);
     lua_function(L, "get_viewport",         script_get_viewport);
+    lua_function(L, "set_host_flag",        script_set_host_flag);
     lua_function(L, "set_tile_flag",        script_set_tile_flag);
     lua_function(L, "set_tile_position",    script_set_tile_position);
     lua_function(L, "set_tile_viewport",    script_set_tile_viewport);
@@ -1297,6 +1306,8 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
 
+    lua_constant(L, "host_flag_stereo",          HOST_STEREO);
+    lua_constant(L, "host_flag_framed",          HOST_FRAMED);
     lua_constant(L, "tile_flag_flip_x",          TILE_FLIP_X);
     lua_constant(L, "tile_flag_flip_y",          TILE_FLIP_Y);
     lua_constant(L, "tile_flag_offset",          TILE_OFFSET);

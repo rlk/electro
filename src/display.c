@@ -142,6 +142,7 @@ int add_host(const char *name, int x, int y, int w, int h)
 
         /* The rectangle defines window size and default total display size. */
 
+		H->flag  = 0;
         H->tot_x = H->win_x = x;
         H->tot_y = H->win_y = y;
         H->tot_w = H->win_w = w;
@@ -246,6 +247,8 @@ void sync_display(void)
         j = add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
 
         local = (struct host *) vecget(host, i);
+
+		local->flag = HOST_FRAMED;
     }
 
     if (rank) set_window_pos(local->win_x, local->win_y);
@@ -277,6 +280,19 @@ void recv_add_tile(void)
 }
 
 /*---------------------------------------------------------------------------*/
+
+void send_set_host_flag(int i, int flags, int state)
+{
+    struct host *H = (struct host *) vecget(host, i);
+
+	/* Host flags are only used at host creation time, so there's no point   */
+	/* in sending them off to already-initialized hosts.                     */
+
+    if (state)
+        H->flag = H->flag | ( flags);
+    else
+        H->flag = H->flag & (~flags);
+}
 
 void send_set_tile_flag(int i, int flags, int state)
 {
@@ -491,6 +507,16 @@ void set_window_h(int h)
 
 int get_window_w(void)   { return local ? local->win_w : DEFAULT_W; }
 int get_window_h(void)   { return local ? local->win_h : DEFAULT_H; }
+
+int get_window_stereo(void)
+{
+	return local ? (local->flag & HOST_STEREO) : 0;
+}
+
+int get_window_framed(void)
+{
+	return local ? (local->flag & HOST_FRAMED) : 1;
+}
 
 /*---------------------------------------------------------------------------*/
 

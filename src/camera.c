@@ -156,8 +156,6 @@ void send_set_camera_stereo(int i, const float L[3],
     pack_float((C(i)->eye_offset[1][0] = R[0]));
     pack_float((C(i)->eye_offset[1][1] = R[1]));
     pack_float((C(i)->eye_offset[1][2] = R[2]));
-
-    set_video_stereo((C(i)->mode == STEREO_QUAD), 0);
 }
 
 void recv_set_camera_stereo(void)
@@ -171,8 +169,6 @@ void recv_set_camera_stereo(void)
     C(i)->eye_offset[1][0] = unpack_float();
     C(i)->eye_offset[1][1] = unpack_float();
     C(i)->eye_offset[1][2] = unpack_float();
-
-    set_video_stereo((C(i)->mode == STEREO_QUAD), 1);
 }
 
 /*===========================================================================*/

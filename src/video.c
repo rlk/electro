@@ -21,15 +21,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-int video_stereo     = 0;
-int video_fullscreen = 0;
-
-/*---------------------------------------------------------------------------*/
-
-static void init_options(int w, int h)
+static void init_options(void)
 {
-    glViewport(0, 0, w, h);
-
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -49,58 +42,35 @@ static void init_options(int w, int h)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
-int init_video(int w, int h, int r)
+int init_video(int width, int height, int framed, int stereo)
 {
-    int m = r ? SDL_OPENGL | SDL_NOFRAME : SDL_OPENGL | SDL_RESIZABLE;
+    int mode = SDL_OPENGL | (framed ? 0 : SDL_NOFRAME);
 
     fini_images();
     fini_entities();
 
-    if (video_fullscreen)
-        m |= SDL_FULLSCREEN;
+	SDL_GL_SetAttribute(SDL_GL_STEREO,  stereo);
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    if (video_stereo)
-        SDL_GL_SetAttribute(SDL_GL_STEREO, 1);
-    else
-        SDL_GL_SetAttribute(SDL_GL_STEREO, 0);
+	if (SDL_SetVideoMode(width, height, 0, mode))
+	{
+		init_opengl();
+		init_options();
+		init_images();
+		init_entities();
 
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		return 1;
+	}
+    else fprintf(stderr, "%s\n", SDL_GetError());
 
-    if (SDL_SetVideoMode(w, h, 0, m))
-    {
-        init_opengl();
-        init_options(w, h);
-        init_images();
-        init_entities();
+	if (stereo)
+		return init_video(width, height, 0, framed);
 
-        return 1;
-    }
-    else if (video_stereo)
-    {
-        error("Error enabling stereo visual.  Disabling stereo.");
-        return set_video_stereo(0, r);
-    }
     return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-int set_video_stereo(int s, int r)
-{
-    video_stereo = s;
-
-    return init_video(get_window_w(), get_window_h(), r);
-}
-
-int set_video_fullscreen(int f, int r)
-{
-    video_fullscreen = f;
-
-    return init_video(get_window_w(), get_window_h(), r);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -17,10 +17,13 @@ function add_object(i, s)
 end
 
 function do_start()
+	local L = -0.2083 / 2
+	local R =  0.2083 / 2
+
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
-    thing  = E.create_object("checker.obj")
+    thing  = E.create_object("box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
@@ -29,8 +32,23 @@ function do_start()
     E.set_entity_position(light,  0.0,  10.0,   0.0)
     E.set_entity_position(pivot,  0.0, -10.0,   0.0)
     E.set_entity_position(thing,  0.0,   0.0, -10.0)
+  --E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)
 
     E.enable_timer(true)
+end
+
+function do_keyboard(k, s)
+	local L = -0.2083 / 2
+	local R =  0.2083 / 2
+
+	if s and k == 287 then
+		E.print_console("MONO mode\n")
+        E.set_camera_stereo(camera, E.stereo_mode_none, 0, 0, 0, 0, 0, 0)
+	end
+	if s and k == 288 then
+		E.print_console("QUAD mode\n")
+        E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)
+	end
 end
 
 function do_timer(dt)

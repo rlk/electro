@@ -15,10 +15,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-int init_video(int, int, int);
-
-int set_video_stereo    (int, int);
-int set_video_fullscreen(int, int);
+int init_video(int, int, int, int);
 
 /*---------------------------------------------------------------------------*/
 

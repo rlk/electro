@@ -47,6 +47,9 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define HOST_STEREO  1
+#define HOST_FRAMED  2
+
 #define TILE_FLIP_X  1
 #define TILE_FLIP_Y  2
 #define TILE_OFFSET  4
@@ -82,6 +85,7 @@ struct tile
 
 struct host
 {
+	int  flag;
     char name[MAXNAME];
     int  tile[MAXTILE];
 
@@ -118,6 +122,7 @@ void recv_add_tile(void);
 
 /*---------------------------------------------------------------------------*/
 
+void send_set_host_flag       (int, int, int);
 void send_set_tile_flag       (int, int, int);
 void send_set_tile_viewport   (int, int, int, int, int);
 void send_set_tile_line_screen(int, float, float, float, float, float);
@@ -143,6 +148,8 @@ void set_window_w(int);
 void set_window_h(int);
 int  get_window_w(void);
 int  get_window_h(void);
+int  get_window_framed(void);
+int  get_window_stereo(void);
 
 /*---------------------------------------------------------------------------*/
 

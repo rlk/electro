@@ -317,6 +317,9 @@ int stereo_quad(int eye, int tile, int pass)
             glDrawBuffer(GL_BACK_RIGHT);
         else
             glDrawBuffer(GL_BACK_LEFT);
+
+		glClear(GL_COLOR_BUFFER_BIT |
+			    GL_DEPTH_BUFFER_BIT);
         return 1;
     }
     else

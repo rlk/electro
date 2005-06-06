@@ -175,15 +175,17 @@ static int server_loop(void)
                 break;
             case SDLK_F3:
                 set_window_siz(-1);
-                dirty |= init_video(get_window_w(), get_window_h(), 0);
+                dirty |= init_video(get_window_w(),
+					                get_window_h(),
+									get_window_framed(),
+									get_window_stereo());
                 break;
             case SDLK_F4:
+                dirty |= init_video(get_window_w(),
+					                get_window_h(),
+									get_window_framed(),
+									get_window_stereo());
                 set_window_siz(+1);
-                dirty |= init_video(get_window_w(), get_window_h(), 0);
-                break;
-            case SDLK_F5:
-                server_full = 1 - server_full;
-                dirty |= set_video_fullscreen(server_full, 0);
                 break;
             default:
                 break;
@@ -329,7 +331,10 @@ void server(int argc, char *argv[])
 
                 sync_display();
 
-                if (init_video(get_window_w(), get_window_h(), 0))
+                if (init_video(get_window_w(),
+					           get_window_h(),
+							   get_window_framed(),
+							   get_window_stereo()))
                 {
                     SDL_EnableUNICODE(1);
                     SDL_PauseAudio(0);
