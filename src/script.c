@@ -1306,6 +1306,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
 
+    lua_constant(L, "host_flag_full",            HOST_FULL);
     lua_constant(L, "host_flag_stereo",          HOST_STEREO);
     lua_constant(L, "host_flag_framed",          HOST_FRAMED);
     lua_constant(L, "tile_flag_flip_x",          TILE_FLIP_X);

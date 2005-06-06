@@ -42,9 +42,12 @@ static void init_options(void)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
-int init_video(int width, int height, int framed, int stereo)
+int init_video(int width, int height, int full, int framed, int stereo)
 {
-    int mode = SDL_OPENGL | (framed ? 0 : SDL_NOFRAME);
+    int mode = SDL_OPENGL;
+    
+    mode |= (framed ? 0 : SDL_NOFRAME);
+    mode |= (full   ? SDL_FULLSCREEN : 0);
 
     fini_images();
     fini_entities();
@@ -68,7 +71,7 @@ int init_video(int width, int height, int framed, int stereo)
     else fprintf(stderr, "%s\n", SDL_GetError());
 
 	if (stereo)
-		return init_video(width, height, 0, framed);
+		return init_video(width, height, full, 0, framed);
 
     return 0;
 }

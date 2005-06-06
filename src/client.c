@@ -158,6 +158,7 @@ void client(void)
 
             if (init_video(get_window_w(),
 				           get_window_h(),
+                           get_window_full(),
 						   get_window_framed(),
 						   get_window_stereo()))
             {

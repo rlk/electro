@@ -508,6 +508,11 @@ void set_window_h(int h)
 int get_window_w(void)   { return local ? local->win_w : DEFAULT_W; }
 int get_window_h(void)   { return local ? local->win_h : DEFAULT_H; }
 
+int get_window_full(void)
+{
+	return local ? (local->flag & HOST_FULL) : 0;
+}
+
 int get_window_stereo(void)
 {
 	return local ? (local->flag & HOST_STEREO) : 0;

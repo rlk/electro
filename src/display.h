@@ -47,8 +47,9 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define HOST_STEREO  1
-#define HOST_FRAMED  2
+#define HOST_FULL    1
+#define HOST_STEREO  2
+#define HOST_FRAMED  4
 
 #define TILE_FLIP_X  1
 #define TILE_FLIP_Y  2
@@ -148,6 +149,7 @@ void set_window_w(int);
 void set_window_h(int);
 int  get_window_w(void);
 int  get_window_h(void);
+int  get_window_full(void);
 int  get_window_framed(void);
 int  get_window_stereo(void);
 

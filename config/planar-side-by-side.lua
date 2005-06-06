@@ -17,4 +17,5 @@ E.set_tile_viewport(tile[2], 0, 0, w / 2, h)
 E.set_tile_view_offset(tile[1], -0.05, 0, 0)
 E.set_tile_view_offset(tile[2],  0.05, 0, 0)
 
+E.set_host_flag(host,    E.host_flag_full,   true)
 E.set_tile_flag(tile[2], E.tile_flag_flip_x, true)
