@@ -34,7 +34,6 @@
 
 static void server_draw(void);
 
-static int server_full   = 0;
 static int server_time   = 0;
 static int server_mirror = 1;
 static int server_grab   = 0;
@@ -141,7 +140,7 @@ static int server_keydn(SDL_KeyboardEvent *k)
 static int server_keyup(SDL_KeyboardEvent *k)
 {
     if (console_is_enabled())
-        return 0;
+        return input_console(0, 0);
     else
         return do_keyboard_script(k->keysym.sym, 0);
 }
@@ -262,7 +261,8 @@ static int server_loop(void)
         }
     }
 
-    if (timer_on) timer_callback();
+    if (timer_on)
+        timer_callback();
 
     return 1;
 }

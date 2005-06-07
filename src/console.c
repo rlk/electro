@@ -23,6 +23,7 @@
 #include "console.h"
 #include "glyph.h"
 #include "script.h"
+#include "vector.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -31,10 +32,13 @@
 
 #define MAXHST 128
 
-static char history[MAXHST][MAXSTR];
+#define AUTO_DELAY  500
+#define AUTO_REPEAT  50
+
+static vector_t history;
+
 static char command[MAXSTR];
 static int  history_i = 0;
-static int  history_j = 0;
 static int  command_i = 0;
 
 static int console_enable = 0;
@@ -121,6 +125,8 @@ static void write_console(const char *str)
 
 int set_console_enable(int b)
 {
+    SDL_EnableKeyRepeat(b ? SDL_DEFAULT_REPEAT_DELAY    : 0,
+                        b ? SDL_DEFAULT_REPEAT_INTERVAL : 0);
     console_enable = b;
     return 1;
 }
@@ -224,6 +230,8 @@ int startup_console(int w, int h)
     if ((console = (unsigned char *) calloc(w * h * 4, 1)) &&
         (image   = (unsigned char *) calloc(W * H * 4, 1)))
     {
+        history = vecnew(256, sizeof (char *));
+
         console_w = w;
         console_h = h;
         console_x = 0;
@@ -380,10 +388,11 @@ int input_console(int symbol, int unicode)
 
         if (command_i > 0)
         {
-            strncpy(history[history_i], command, MAXSTR);
+            *((char **) vecget(history, vecadd(history))) =
+              memdup(command, strlen(command) + 1, 1);
 
-            history_i = history_j = (history_i + 1) % MAXHST;
             command_i = 0;
+            history_i = vecnum(history);
 
             do_command(command);
 
@@ -423,8 +432,10 @@ int input_console(int symbol, int unicode)
 
     else if (symbol == SDLK_UP || unicode == 16)    /* Previous history. */
     {
-        history_j = (history_j - 1) % MAXHST;
-        strncpy(command, history[history_j], MAXSTR);
+        if (history_i > 0)
+            history_i--;
+
+        strncpy(command, *((char **) vecget(history, history_i)), MAXSTR);
 
         command_i = strlen(command);
         refresh_command();
@@ -432,8 +443,10 @@ int input_console(int symbol, int unicode)
 
     else if (symbol == SDLK_DOWN || unicode == 14)  /* Next history. */
     {
-        history_j = (history_j + 1) % MAXHST;
-        strncpy(command, history[history_j], MAXSTR);
+        if (history_i < vecnum(history) - 1)
+            history_i++;
+
+        strncpy(command, *((char **) vecget(history, history_i)), MAXSTR);
 
         command_i = strlen(command);
         refresh_command();
