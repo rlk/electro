@@ -26,10 +26,10 @@
 <p> Electro is an application development environment designed for use
 on both cluster-driven tiled displays and desktop systems.  Electro is
 based on the MPI process model and is bound to the Lua programming
-language.  With support for 3D graphics, 2D graphics, audio, and input
-handling, Electro provides an easy-to-use scripting system for
-interactive applications spanning multiple processors and
-displays. </p>
+language.  With support for 3D graphics, 2D graphics, audio,
+networking, and input handling, Electro provides an easy-to-use
+scripting system for interactive applications spanning multiple
+processors and displays. </p>
 
 <h1> This Document </h1>
 
@@ -484,7 +484,9 @@ and cannot be reversed lower in the hierarchy.</p>
 flag are drawn to the color buffer but not the depth buffer.  This
 prevents transparent objects from occluding opaque objects during the
 depth test.  Sprites automatically have the transparent flag, though
-it may be removed if depth writing sprites are desired. </p>
+it may be removed if depth writing sprites are desired.  Objects with
+transparent diffuse colors do not have the transparent flag, but are
+not drawn to the depth buffer.</p>
 
 <li><tt> entity_pos_tracked_0 </tt><p> Entities with the position-tracked
 flag have their positions updated each frame to match the position of
@@ -540,32 +542,34 @@ Return the size of the sprite in pixels.</p>
 
 <a name="camera"><h3> Camera </h3>
 <dl>
-<dt><tt>set_camera_stereo</tt>(<i>mode, x, y, z</i>)<dd><p> Set stereo
-options on the given camera.  The <i>mode</i> argument gives the stereo
-method, as described below.  The <i>x, y, z</i> arguments give the offset
-from the camera to the user's right eye.  The user's left eye is assumed
-to be at <i>(-x, y, z)</i>.  In the event that the eye order is incorrect
-and the fields must be swapped, simply specify <i>-x</i> directly.</p>
+
+<dt><tt>set_camera_stereo</tt>(<i>mode, lx, ly, lz, rx, ry,
+rz</i>)<dd><p> Set stereo options on the given camera.  The
+<i>mode</i> argument gives the stereo method, as described below.  The
+(<i>lx, ly, lz</i>) and (<i>rx, ry, rz</i>) arguments give the offsets
+from the camera to the user's left and right eyes.</p>
 
 <p> The available stereo modes are as follows: </p>
 
 <ul>
 <li><tt>stereo_mode_none</tt>
 
-<p> This mode disables stereo rendering.  It is the default. </p>
+<p> This mode disables stereo rendering.  This is the default. </p>
 
 <li><tt>stereo_mode_quad</tt>
 
-<p> This mode enables quad-buffered stereo viewing on hardware capable
-of supporting it.  This is appropriate for active stereo viewing using
-LCD flicker glasses, or passive stereo viewing using dual-output video
-hardware in "clone" mode. </p>
+<p> This mode enables quad-buffered stereo viewing.  This is
+appropriate for active stereo viewing using LCD flicker glasses, or
+passive stereo viewing using dual-output video hardware in "clone"
+mode.  To function correctly, the underlying graphics hardware must
+support quad-buffered stereo, and <tt>host_flag_stereo</tt> must be
+enabled on the rendering host at application startup.  See
+<tt>set_host_flag</tt> below. </p>
 
 <li><tt>stereo_mode_red_blue</tt>
 
 <p> This mode enables red-blue anaglyphic stereo. </p>
 
-<!---
 <li><tt>stereo_mode_varrier_11</tt>
 
 <p> This mode enables
@@ -578,23 +582,8 @@ stereo viewing using the 1-line-pass/1-scene-pass Varrier algorithm. </p>
 <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
 stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering
 algorithm. </p>
-
-<li><tt>stereo_mode_varrier_41</tt>
-
-<p> This mode enables
-<a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
-stereo viewing using the 4-line-pass/1-scene-pass Varrier sub-pixel rendering
-algorithm. </p>
---->
 </ul>
 </dl>
-
-<p> Technically speaking, it is possible to include multiple cameras
-in a scene, each with a different stereo mode.  This can be used to
-insert mono elements into a stereo scene, and can even be used to compare
-stereo modes side-by-side.  Some stereo modes conflict with others,
-and render order may be significant.  In general, multiple simultaneous
-stereo modes should be avoided. </p>
 
 <!---------------------------------------------------------------------------->
 
@@ -701,53 +690,147 @@ arguments via Lua's <tt>string.format</tt> function. </p>
 <!---------------------------------------------------------------------------->
 
 <h2> Configuration API </h2>
+
+<h3> Hosts </h3>
 <dl>
 
-<dt><tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p> Add a host.
-This function is used by configuration scripts to define the structure
-of the cluster driving a tiled display.  The specified parameters are
-only accessed prior to the execution of the <tt>on_start</tt>
-callback, so any use of it must be at the global scope. </p>
+<dt><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>
+Add a host, returning a host index.  This function is used by
+configuration scripts to define the structure of the cluster driving a
+tiled display.</p>
 
 <p> The <i>name</i> argument gives the Internet hostname of the
 rendering node to be used.  The <i>x, y, w, h</i> arguments give the
 position and size of the area of that host's desktop to be used for
 OpenGL rendering.  A given render node can only support one Electro
-host.  If the same <i>name</i> argument is reused for multiple hosts,
-only the first configuration will be used.  If a render node is to
-handle multiple displays, they must be defined as Electro tiles...</p>
+host.  If the same <i>name</i> argument is reused for multiple
+configurations, only the first will be used.  If <i>name</i> is
+<tt>"default"</tt> then the given host configuration will be applied
+to all hosts not specifically named in another configuration.  If a
+render node is to handle multiple displays, they must be defined as
+Electro tiles.</p>
 
-<dt><tt>add_tile</tt>(<i>name, wx, wy, ww, wh, px, py, pw, ph, origin,
-right, up</i>)<dd><p> Add a tile to a host.  Like <tt>add_host</tt>,
-this function is used for configuration prior to the execution of
-<tt>on_start</tt>. </p>
+<p> Host configuration and rendering context creation is closely bound
+with MPI process initialization, so it must be performed immediately
+upon application startup, and cannot be modified later in an
+application's execution. </p>
 
-<p> The <i>name</i> argument gives the name of the host rendering the
-defined tile.  The <i>wx, wy, wh, ww</i> arguments give the position,
-width, and height of the area of the host's render area to be used for
-this tile.  The <i>px, py, pw, ph</i> arguments give the pixel
-position and width in the global array of pixels displayed by the tile
-array.  The <i>origin, right, up</i> arguments give the vectors
-defining the position of the actual screen in real-space
-coordinates. </p>
+<dt><tt>set_host_flag</tt>(<i>host, flags, value</i>)<dd><p>Set or
+clear host flags on <i>host</i>.  The <i>flags</i> argument gives the
+set of flags to be modified and <i>value</i> gives the desired state.
+Like host window configurations, host flags must be specified at
+application startup and later modification will have no effect.  The
+default value for all flags is <tt>false</tt>.</p>
 
-<p> In general, <i>wx, wy, ww, wh</i> define a framebuffer.  <i>px,
-py, pw, ph</i> define the parameters of the orthogonal camera.
-<i>origin, right, up</i> define the parameters of the perspective
-camera.  In many cases the <i>w</i>-arguments and <i>p</i>-arguments
-will be the same, but a display configuration is free to draw a
-distinction between real pixels and virtual pixels.  Likewise, the tile
-position vectors will be largely similar to the pixel definitions,
-though a display configuration is free to define a non-planar
-display.</p>
+<ul>
+<li><tt>host_flag_full</tt><p> The full flag sets a full-screen flag
+on the host's render window, causing it to fill the display, possibly
+switching the resolution of the display to match the configuration.
+This flag may be necessary to remove window decoration or other
+operating system screen clutter.</p>
 
-<dt><i>x, y, w, h</i> = <tt>get_viewport</tt>()<dd><p> Return the total
-size of the display.  The return values <i>x, y, w, h</i> give the X
-position, Y position, width, and height of the rectangle of available
-pixels.  This is the union of <i>p</i>-parameters of all tile definitions.
-This information is often useful when positioning entities before an
-orthogonal camera, or configuring a scene to match the aspect ratio of
-a display. </p>
+<li><tt>host_flag_stereo</tt><p> The stereo flag enables quad-buffered
+stereo rendering on a host's render window.  If this flag is not
+specified at startup, later use of <tt>stereo_mode_quad</tt> will
+fail. </p>
+
+<li><tt>host_flag_framed</tt><p> The framed flag enables window
+decoration on a host's render window.  Unconfigured host windows are
+framed by default, but configured host windows are not. </p>
+
+<p class="note"> This framing policy fails in the case of a
+specially-configured non-full server window, so don't be suprised when
+Electro display an undecorated window in response to a custom server
+configuration.</p>
+
+</ul>
+
+<p class="note"> Full-screen and frame handling are notoriously
+unpredictable.  Both are subject to the whim of the operating system,
+the window manager, and the display.  Getting this right may take some
+experimentation. </p>
+
+</dl>
+
+<h3> Tiles </h3>
+<dl>
+
+<dt><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>
+Add a tile to a host, returning a tile index.  The <i>x, y, w, h</i>
+arguments give position and size of the area of the indexed host's
+render area to be used for display.
+
+<dt><tt>set_tile_position</tt>(<i>tile, ox, oy, oz, rx, ry, rz, ux,
+uy, uz</i>)<dd><p> Set the world-space position of <i>tile</i>.  The
+(<i>ox, oy, oz</i>) arguments give the position vector of the
+lower-left corner of the tile, usually the real-space lower-left
+corner of the display to which the tile is rendered.  The (<i>rx, ry,
+rz</i>) arguments give the "right" vector, from the lower-left corner
+to the lower-right corner.  The (<i>ux, uy, uz</i>) arguments give the
+"up" vector, from the lower-left corner to the upper-left corner.</p>
+
+<p>These three vectors, with the view position vector, define the view
+frustum of the indexed tile's perspective projection.  The default
+view position vector is (<i>0, 0, 0</i>), though this is subject to
+the motion-tracked offset of any perspective camera used during
+rendering.</p>
+
+<dt><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)<dd><p> Set the
+pixel area of <i>tile</i>.  This defines the range of any orthogonal
+camera used during rendering.</p>
+
+<dt><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)<dd><p> Set a
+world-space eye offset vector to be used when rendering to
+<i>tile</i>.  Tile view offset behaves just as camera view offset, but
+is applied on a per-tile basis rather than a per-camera basis.  This
+may be used to specify a non-default view position vector, but it is
+especially useful with an untracked stereo display such as a
+side-by-side Geowall configuration, where the stereo effect depends
+not upon a stereo camera mode, but upon a pair of tiles rendered from
+distinct viewpoints. </p>
+
+<dt><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)<dd><p> Specify a
+world-space plane of reflection to be applied to the view position
+vector when rendering to <i>tile</i>.  The (<i>x, y, z</i>) arguments
+give the plane normal, and <i>d</i> gives the plane offset from the
+origin along the normal.  This allows a correct view frustem to be
+computed on PARIS and IDesk4 systems, where the view position vector
+is dynamically tracked, but the reflection of a tile is viewed in a
+mirror.  Reflection must be enabled by setting the
+<tt>tile_flag_mirror</tt> option, below.</p>
+
+<dt><tt>set_tile_flag</tt>(<i>tile, flags, value</i>)<dd><p>Set or
+clear tile flags on <i>tile</i>.  The <i>flags</i> argument gives the
+set of flags to be modified and <i>value</i> gives the desired
+state. </p>
+
+<ul>
+<li><tt>tile_flag_mirror</tt><p> The mirror flag enables projection of
+the view position vector across the plane given by
+<tt>set_tile_mirror</tt>.</p>
+
+<li><tt>tile_flag_flip_x</tt><li><tt>tile_flag_flip_y</tt><p> The flip
+flags cause the scene rendered to the tile to be flipped horizontally
+or vertically, respectively.  This may be used to correct tiles viewed
+by reflection in a mirror. </p>
+
+</ul>
+
+<dt><tt>set_tile_linescreen</tt>(<i>tile, pitch, angle, thickness,
+shift, cycle</i>)<dd><p> Set the Varrier line screen parameters for
+<i>tile</i>.  These are only significant for
+<tt>stereo_mode_varrier</tt> camera modes.  They give the line screen
+pitch, angle of rotation about the tile's Z axis, optical thickness
+(shift along the tile's Z axis), shift along the tile's X axis, and
+duty cycle (percentage of black).</p>
+
+<dt><i>x, y, w, h</i> = <tt>get_viewport</tt>()<dd><p> Return the
+total pixel size of the display.  The return values <i>x, y, w, h</i>
+give the position, width, and height of the rectangle of available
+pixels.  This is the union of the viewports of all tile definitions.
+This information is often useful when positioning entities in view of
+an orthogonal camera, or configuring a scene to match the aspect ratio
+of a display. </p>
 
 </dl>
 
@@ -940,13 +1023,13 @@ time   = 0
 
 <p> These are the global variables.  The image filename at the top
 allows the image to be changed easily.  The <tt>camera</tt> and
-<tt>sprites</tt> variables give the Electro objects that make up the
+<tt>sprites</tt> variables hold the Electro objects that make up the
 scene graph.  The graph consists of a single orthogonal camera with 16
-sprite objects as children.  This hierarchy is constructed in the
-<tt>do_start</tt> function below. </p>
+sprite objects as children.  This hierarchy is constructed at startup,
+described below. </p>
 
 <p> The <tt>numbers</tt> variable will be initialized to a 4x4 table
-of tables that indicates which tile appears at each row and column.
+of tables that indicate which tile appears at each row and column.
 Each element <tt>numbers[i][j]</tt> will give an index into the
 <tt>sprites</tt> table.  By moving indices around in the
 <tt>numbers</tt> table, we move tiles around in the puzzle. </p>
@@ -990,9 +1073,9 @@ end
 <tt>i</tt> and column <tt>j</tt>, the <tt>move_sprite</tt> function
 positions the tile object <tt>sprite</tt> at the correct location on
 screen.  This function will be called any time a tile moves.  To do
-its job, it must determine the bounds of the display and do some
-trivial but annoying math to map puzzle row and column onto
-world-space x and y.</p>
+its job, it must know the bounds of the display and do some
+trivial (but annoying) math to map puzzle row and column onto
+window x and y.</p>
 
 <pre>
 function move_piece(di, dj)
@@ -1024,7 +1107,7 @@ end
 <p> The <tt>move_piece</tt> function is the meat of the fifteen
 puzzle.  The arguments <tt>di</tt> and <tt>dj</tt> indicate the row
 and column change of the blank space respectively.  The function
-begins by confirming that the move is valid--that the blank space
+begins by confirming that the move is valid&#8212;that the blank space
 would not be moving off the grid.  If valid, the contents of the blank
 (in reality, the hidden 16th piece of the puzzle) are swapped with the
 contents of the destination space.  The two sprites in question are
@@ -1096,7 +1179,7 @@ end
 </pre>
 
 <p> The <tt>do_keyboard</tt> callback is where interactive motions are
-generated.  Arrow-key presses trigger moves.  The F1 and F2 keys
+generated.  Arrow-key-presses trigger moves.  The F1 and F2 keys
 enable and disable the <tt>do_timer</tt> callback, in effect putting
 the puzzle into non-interactive mode.  For simplicity, all keypresses
 trigger a screen update.  This is unnecessary, but brief.</p>
