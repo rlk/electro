@@ -25,6 +25,7 @@ GLboolean GL_has_fragment_program     = 0;
 GLboolean GL_has_vertex_program       = 0;
 GLboolean GL_has_vertex_buffer_object = 0;
 GLboolean GL_has_point_sprite         = 0;
+GLboolean GL_has_multitexture         = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -81,6 +82,7 @@ void init_opengl(void)
     GL_has_vertex_program       = opengl_need("GL_ARB_vertex_program");
     GL_has_vertex_buffer_object = opengl_need("GL_ARB_vertex_buffer_object");
     GL_has_point_sprite         = opengl_need("GL_ARB_point_sprite");
+    GL_has_multitexture         = opengl_need("GL_ARB_multitexture");
 }
 
 #else
@@ -99,6 +101,7 @@ PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
 PFNGLBUFFERDATAARBPROC               glBufferDataARB;
 PFNGLISBUFFERARBPROC                 glIsBufferARB;
 PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
+PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
 
 void init_opengl(void)
 {
@@ -163,6 +166,14 @@ void init_opengl(void)
     if (opengl_need("GL_ARB_point_sprite"))
     {
         GL_has_point_sprite = GL_TRUE;
+    }
+
+    if (opengl_need("GL_ARB_multitexture"))
+    {
+        glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)
+            opengl_proc("glActiveTextureARB");
+
+        GL_has_multitexture = (glActiveTextureARB && GL_TRUE);
     }
 }
 

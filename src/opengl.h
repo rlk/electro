@@ -37,6 +37,7 @@ extern GLboolean GL_has_fragment_program;
 extern GLboolean GL_has_vertex_program;
 extern GLboolean GL_has_vertex_buffer_object;
 extern GLboolean GL_has_point_sprite;
+extern GLboolean GL_has_multitexture;
 
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
@@ -53,6 +54,7 @@ extern PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
 extern PFNGLBUFFERDATAARBPROC               glBufferDataARB;
 extern PFNGLISBUFFERARBPROC                 glIsBufferARB;
 extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
+extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
 #endif
 
 #ifndef GL_POINT_SPRITE_ARB

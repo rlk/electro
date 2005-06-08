@@ -144,8 +144,82 @@ static void draw_varrier_plane(int eye, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
+static GLubyte line_image[16] = {
+    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+static GLuint line_texture = 0;
+
+static void init_line_texture(void)
+{
+    if (glIsTexture(line_texture))
+        glBindTexture(GL_TEXTURE_2D, line_texture);
+    else
+    {
+        glGenTextures(1, &line_texture);
+        glBindTexture(GL_TEXTURE_2D, line_texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, 4, 2, 0,
+                     GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, line_image);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 static int stereo_varrier_10(int eye, int tile, int pass)
 {
+    float P[16];
+    float I[16];
+
+    if (pass == 0 && eye == 0)
+    {
+        if (GL_has_multitexture)
+        {
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+            glGetFloatv(GL_PROJECTION_MATRIX, P);
+            m_invt(I, P);
+
+            glActiveTextureARB(GL_TEXTURE1_ARB);
+            glEnable(GL_TEXTURE_2D);
+            glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+
+            init_line_texture();
+
+            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+
+            glMatrixMode(GL_TEXTURE);
+            {
+                glLoadIdentity();
+                glMultMatrixf(P);
+            }
+            glMatrixMode(GL_MODELVIEW);
+
+            glActiveTextureARB(GL_TEXTURE0_ARB);
+
+            draw_tile_background(tile);
+        }
+        return 1;
+    }
+    else
+    {
+        if (GL_has_multitexture)
+        {
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            glActiveTextureARB(GL_TEXTURE1_ARB);
+            glDisable(GL_TEXTURE_2D);
+            glActiveTextureARB(GL_TEXTURE0_ARB);
+        }
+    }
     return 0;
 }
 
