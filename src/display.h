@@ -177,7 +177,8 @@ float get_varrier_cycle(int);
 void send_set_background(const float[3], const float[3]);
 void recv_set_background(void);
 
-void draw_background(void);
+void draw_tile_background(int);
+void draw_host_background(void);
 
 /*---------------------------------------------------------------------------*/
 

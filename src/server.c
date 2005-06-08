@@ -96,8 +96,6 @@ static void server_swap(void)
 
 static void server_draw(void)
 {
-    draw_background();
-
     if (server_mirror)
         draw_entities();
 
@@ -181,12 +179,12 @@ static int server_loop(void)
                                     get_window_stereo());
                 break;
             case SDLK_F4:
+                set_window_siz(+1);
                 dirty |= init_video(get_window_w(),
                                     get_window_h(),
                                     get_window_full(),
                                     get_window_framed(),
                                     get_window_stereo());
-                set_window_siz(+1);
                 break;
             default:
                 break;

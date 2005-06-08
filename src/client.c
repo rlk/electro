@@ -113,7 +113,6 @@ static void client_swap(void)
 
 static void client_draw(void)
 {
-    draw_background();
     draw_entities();
 
     client_swap();

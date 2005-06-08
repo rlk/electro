@@ -197,19 +197,6 @@ static int draw_tile(int i, int tile, const float d[3], struct frustum *F)
     return 0;
 }
 
-static int draw_pass(int mode, int eye, int tile, int pass)
-{
-    switch (mode)
-    {
-    case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
-    case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
-    case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
-    case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
-    case STEREO_VARRIER_41: return stereo_varrier_41(eye, tile, pass);
-    }
-    return (pass == 0);
-}
-
 void draw_camera(int j, int i, const float M[16],
                                const float I[16],
                                const struct frustum *F, float a)

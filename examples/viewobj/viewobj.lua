@@ -49,8 +49,7 @@ function do_start()
     E.parent_entity(pivot, scene)
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
-    E.set_entity_position(scene,  0.0, -8.0, -10.0)
---- E.set_entity_position(scene,  0.0, -3.0, -16.0)
+    E.set_entity_position(scene,  0.0, -8.0, -20.0)
 
     E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
     E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
@@ -86,12 +85,10 @@ function do_timer(dt)
                               -mov_z * pan_z * dt * 10)
     end
 
-	if rot_dy < 0 or 0 < rot_dy then
-		rot_y = rot_y + rot_dy * dt * 10
-		E.set_entity_rotation(scene, rot_x, rot_y, 0)
-	end
-
-        print(dt)
+    if rot_dy < 0 or 0 < rot_dy then
+        rot_y = rot_y + rot_dy * dt * 10
+        E.set_entity_rotation(scene, rot_x, rot_y, 0)
+    end
 
     return true
 end
@@ -145,28 +142,43 @@ function do_keyboard(k, s)
             return true
         end
 
-        if k == 287 then
+        if k == 287 then -- F6
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
         end
-        if k == 288 then
+        if k == 288 then -- F7
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
-        if k == 289 then
+        if k == 289 then -- F8
             E.set_camera_stereo(camera, E.stereo_mode_quad,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
+        if k == 290 then -- F9
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_10,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+        if k == 291 then -- F10
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
+        if k == 292 then -- F11
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
+                                L[1], L[2], L[3], R[1], R[2], R[3])
+            return true
+        end
 
-		if k == 277 then
-			rot_dy = rot_dy + 1
-		end
-		if k == 127 then
-			rot_dy = rot_dy - 1
-		end
+	if k == 277 then
+		rot_dy = rot_dy + 1
+	end
+	if k == 127 then
+		rot_dy = rot_dy - 1
+	end
 
         if k == 273 then pan_z = pan_z + 1 end
         if k == 274 then pan_z = pan_z - 1 end
@@ -188,6 +200,6 @@ function do_keyboard(k, s)
 end
 
 do_start()
-do_keyboard(291, true)
+--do_keyboard(291, true)
 
 --E.set_background(0.0, 0.0, 0.0)

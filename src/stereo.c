@@ -144,7 +144,12 @@ static void draw_varrier_plane(int eye, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-int stereo_varrier_11(int eye, int tile, int pass)
+static int stereo_varrier_10(int eye, int tile, int pass)
+{
+    return 0;
+}
+
+static int stereo_varrier_11(int eye, int tile, int pass)
 {
     if (pass == 0)
     {
@@ -162,6 +167,7 @@ int stereo_varrier_11(int eye, int tile, int pass)
             glColorMask(0, 0, 0, 0);
             draw_varrier_lines(tile, M, c, w, h, 0, 1, 0);
             glColorMask(1, 1, 1, 1);
+            draw_tile_background(tile);
         }
         else
         {
@@ -169,6 +175,7 @@ int stereo_varrier_11(int eye, int tile, int pass)
             glColorMask(0, 0, 0, 0);
             draw_varrier_lines(tile, M, c, w, h, 0, 1, 0);
             glColorMask(1, 1, 1, 1);
+            draw_tile_background(tile);
         }
 
         /* Draw the test pattern, if requested. */
@@ -183,7 +190,7 @@ int stereo_varrier_11(int eye, int tile, int pass)
     return 0;
 }
 
-int stereo_varrier_33(int eye, int tile, int pass)
+static int stereo_varrier_33(int eye, int tile, int pass)
 {
     float M[16];
     float c[3];
@@ -204,6 +211,7 @@ int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h, +d, 1, 0);
         glColorMask(1, 0, 0, 0);
+        draw_tile_background(tile);
         next = 1;
         break;
         
@@ -212,6 +220,7 @@ int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h,  0, 1, 0);
         glColorMask(0, 1, 0, 0);
+        draw_tile_background(tile);
         next = 2;
         break;
         
@@ -220,6 +229,7 @@ int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h, -d, 1, 0);
         glColorMask(0, 0, 1, 0);
+        draw_tile_background(tile);
         next = 3;
         break;
         
@@ -236,7 +246,7 @@ int stereo_varrier_33(int eye, int tile, int pass)
     return next;
 }
 
-int stereo_varrier_41(int eye, int tile, int pass)
+static int stereo_varrier_41(int eye, int tile, int pass)
 {
     float M[16];
     float c[3];
@@ -251,6 +261,7 @@ int stereo_varrier_41(int eye, int tile, int pass)
         if (pass == 0)
         {
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            draw_tile_background(tile);
             next = 1;
         }
         else
@@ -309,36 +320,40 @@ int stereo_varrier_41(int eye, int tile, int pass)
 
 /*---------------------------------------------------------------------------*/
 
-int stereo_quad(int eye, int tile, int pass)
+static int stereo_quad(int eye, int tile, int pass)
 {
     if (pass == 0)
     {
-        if (eye)
-            glDrawBuffer(GL_BACK_RIGHT);
-        else
+        if (eye == 0)
             glDrawBuffer(GL_BACK_LEFT);
+        else
+            glDrawBuffer(GL_BACK_RIGHT);
 
-		glClear(GL_COLOR_BUFFER_BIT |
-			    GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT |
+                GL_DEPTH_BUFFER_BIT);
+        draw_tile_background(tile);
+
         return 1;
     }
     else
         return 0;
 }
 
-int stereo_red_blue(int eye, int tile, int pass)
+static int stereo_red_blue(int eye, int tile, int pass)
 {
     if (pass == 0)
     {
-        if (eye)
+        if (eye == 0)
         {
+            glClear(GL_COLOR_BUFFER_BIT |
+                    GL_DEPTH_BUFFER_BIT);
+            draw_tile_background(tile);
             glColorMask(0, 0, 1, 0);
-            glClear(GL_DEPTH_BUFFER_BIT);
         }
         else
         {
-            glColorMask(1, 0, 0, 0);
             glClear(GL_DEPTH_BUFFER_BIT);
+            glColorMask(1, 0, 0, 0);
         }
         return 1;
     }
@@ -350,4 +365,31 @@ int stereo_red_blue(int eye, int tile, int pass)
 }
 
 /*---------------------------------------------------------------------------*/
+
+int draw_pass(int mode, int eye, int tile, int pass)
+{
+    /* If stereo rendering is enabled, handle it. */
+
+    switch (mode)
+    {
+    case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
+    case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
+    case STEREO_VARRIER_10: return stereo_varrier_10(eye, tile, pass);
+    case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
+    case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
+    case STEREO_VARRIER_41: return stereo_varrier_41(eye, tile, pass);
+    }
+
+    /* Otherwise, do one pass in mono. */
+
+    if (pass == 0)
+    {
+        glClear(GL_DEPTH_BUFFER_BIT |
+                GL_COLOR_BUFFER_BIT);
+        draw_tile_background(tile);
+
+        return 1;
+    }
+    return 0;
+}
 

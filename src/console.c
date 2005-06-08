@@ -153,7 +153,7 @@ static void init_fore_image(void)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glTexImage2D(GL_TEXTURE_2D, 0, 4, IMG_W, IMG_H, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                     GL_RGBA, GL_UNSIGNED_BYTE, image);
     }
 }
 
@@ -261,7 +261,7 @@ void draw_console(void)
         if (image_dirty)
             draw_image();
 
-        glPushAttrib(GL_ENABLE_BIT);
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
         {
             int x = CONSOLE_X;
             int y = CONSOLE_Y;

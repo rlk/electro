@@ -51,6 +51,23 @@ function do_keyboard(k, s)
 	end
 end
 
+function do_keyboard(k, s)
+    local L = -0.20833 / 2
+    local R =  0.20833 / 2
+
+    if s and k == 287 then
+        E.print_console("MONO mode\n")
+        E.set_camera_stereo(camera, E.stereo_mode_none, 0, 0, 0, 0, 0, 0)
+        return true
+    end
+    if s and k == 288 then
+        E.print_console("QUAD mode\n")
+        E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)
+        return true
+    end
+    return false
+end
+
 function do_timer(dt)
     return true
 end

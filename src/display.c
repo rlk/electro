@@ -28,6 +28,7 @@
 #include "matrix.h"
 #include "buffer.h"
 #include "event.h"
+#include "video.h"
 
 #define swap(a, b) { double t; t = (a); (a) = (b); (b) = t; }
 
@@ -248,7 +249,7 @@ void sync_display(void)
 
         local = (struct host *) vecget(host, i);
 
-		local->flag = HOST_FRAMED;
+        local->flag = HOST_FRAMED;
     }
 
     if (rank) set_window_pos(local->win_x, local->win_y);
@@ -285,8 +286,8 @@ void send_set_host_flag(int i, int flags, int state)
 {
     struct host *H = (struct host *) vecget(host, i);
 
-	/* Host flags are only used at host creation time, so there's no point   */
-	/* in sending them off to already-initialized hosts.                     */
+    /* Host flags are only used at host creation time, so there's no point   */
+    /* in sending them off to already-initialized hosts.                     */
 
     if (state)
         H->flag = H->flag | ( flags);
@@ -898,89 +899,70 @@ int draw_persp(int i, float N, float F, const float p[3])
 
 /*---------------------------------------------------------------------------*/
 
-void draw_background(void)
+void draw_tile_background(int i)
+{
+    /* Incur this fill penalty only if necessary. */
+
+    if (color0[0] != CLEAR_R || color1[0] != CLEAR_R ||
+        color0[1] != CLEAR_G || color1[1] != CLEAR_G ||
+        color0[2] != CLEAR_B || color1[2] != CLEAR_B)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+        /* Compute the beginning and end of this tile's gradiant. */
+
+        float k0 = (T->pix_y            - local->tot_y) / local->tot_h;
+        float k1 = (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
+
+        /* Map the tile onto the unit cube. */
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, 1, 0, 1, 0, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        /* Fill the tile at the far plane using the computed gradient. */
+
+        glPushAttrib(GL_ENABLE_BIT);
+        glDisable(GL_TEXTURE_2D);
+
+        glBegin(GL_QUADS);
+        {
+            glColor3f(color0[0] * (1 - k0) + color1[0] * k0,
+                      color0[1] * (1 - k0) + color1[1] * k0,
+                      color0[2] * (1 - k0) + color1[2] * k0);
+            glVertex3f(0, 0, -1);
+            glVertex3f(1, 0, -1);
+                
+            glColor3f(color0[0] * (1 - k1) + color1[0] * k1,
+                      color0[1] * (1 - k1) + color1[1] * k1,
+                      color0[2] * (1 - k1) + color1[2] * k1);
+            glVertex3f(1, 1, -1);
+            glVertex3f(0, 1, -1);
+        }
+        glEnd();
+
+        glPopAttrib();
+
+        /* Revert to the previous transformation. */
+
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+    }
+}
+
+void draw_host_background(void)
 {
     int i;
 
-    /* Compute the pixel bounds of the entire display. */
-
-    int hL = local->tot_x;
-    int hR = local->tot_x + local->tot_w;
-    int hB = local->tot_y;
-    int hT = local->tot_y + local->tot_h;
-
-    glPushAttrib(GL_ENABLE_BIT   | 
-                 GL_SCISSOR_BIT  |
-                 GL_VIEWPORT_BIT |
-                 GL_DEPTH_BUFFER_BIT);
-    {
-        /* Clear this entire host's framebuffer. */
-
-        glScissor(local->win_x, local->win_y,
-                  local->win_w, local->win_h);
-
-        glClear(GL_COLOR_BUFFER_BIT |
-                GL_DEPTH_BUFFER_BIT);
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_LIGHTING);
-
-        glDepthMask(GL_FALSE);
-
-        /* Iterate over all tiles of this host. */
-
-        for (i = 0; i < local->n; ++i)
-        {
-            struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-            /* Confine rendering to only this tile. */
-
-            glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
-            glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
-
-            /* Apply a projection that covers this tile. */
-
-            glMatrixMode(GL_PROJECTION);
-            {
-                glPushMatrix();
-                glLoadIdentity();
-                glOrtho(T->pix_x, T->pix_x + T->pix_w,
-                        T->pix_y, T->pix_y + T->pix_h, -1.0, +1.0);
-            }
-            glMatrixMode(GL_MODELVIEW);
-            {
-                glPushMatrix();
-                glLoadIdentity();
-            }
-
-            /* Render a background quad over the entire display. */
-
-            glBegin(GL_QUADS);
-            {
-                glColor3fv(color0);
-                glVertex2i(hL, hB);
-                glVertex2i(hR, hB);
-
-                glColor3fv(color1);
-                glVertex2i(hR, hT);
-                glVertex2i(hL, hT);
-            }
-            glEnd();
-
-            /* Revert the original projection. */
-
-            glMatrixMode(GL_PROJECTION);
-            {
-                glPopMatrix();
-            }
-            glMatrixMode(GL_MODELVIEW);
-            {
-                glPopMatrix();
-            }
-        }
-    }
-    glPopAttrib();
+    for (i = 0; i < local->n; ++i)
+        draw_tile_background(i);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -40,6 +40,8 @@ static void init_options(void)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+    glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, CLEAR_A);
 }
 
 int init_video(int width, int height, int full, int framed, int stereo)

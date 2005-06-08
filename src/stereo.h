@@ -18,15 +18,12 @@
 #define STEREO_NONE       0
 #define STEREO_QUAD       1
 #define STEREO_RED_BLUE   2
-#define STEREO_VARRIER_11 3
-#define STEREO_VARRIER_33 4
-#define STEREO_VARRIER_41 5
+#define STEREO_VARRIER_10 3
+#define STEREO_VARRIER_11 4
+#define STEREO_VARRIER_33 5
+#define STEREO_VARRIER_41 6
 
-int stereo_quad      (int, int, int);
-int stereo_red_blue  (int, int, int);
-int stereo_varrier_11(int, int, int);
-int stereo_varrier_33(int, int, int);
-int stereo_varrier_41(int, int, int);
+int draw_pass(int, int, int, int);
 
 /*---------------------------------------------------------------------------*/
 
