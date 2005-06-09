@@ -129,11 +129,12 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    local d = 0.5 * 2.5 / 12.0
---  local L = { -d, -1.23 / 12, 1.1 / 12 }
---  local R = {  d, -1.23 / 12, 1.1 / 12 }
-    local L = { -d, -1.23 / 12, 2.0 / 12 }
-    local R = {  d, -1.23 / 12, 2.0 / 12 }
+--  local dx =  2.50 / 12.0 * 0.5
+--  local dy = -1.23 / 12.0
+--  local dz =  2.00 / 12.0
+    local dx = 0
+    local dy = 0
+    local dz = 0
 
     if s then
         if k == 13 then
@@ -149,27 +150,27 @@ function do_keyboard(k, s)
         end
         if k == 288 then -- F7
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
+                                -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 289 then -- F8
             E.set_camera_stereo(camera, E.stereo_mode_quad,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
+                                -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 290 then -- F9
             E.set_camera_stereo(camera, E.stereo_mode_varrier_10,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
+                                -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 291 then -- F10
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
+                                -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 292 then -- F11
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
-                                L[1], L[2], L[3], R[1], R[2], R[3])
+                                -dx, dy, dz, dx, dy, dz)
             return true
         end
 

@@ -22,6 +22,8 @@
 
 int init_video(int, int, int, int, int);
 
+int quad_stereo_status(void);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

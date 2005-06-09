@@ -11,11 +11,13 @@
 /*    General Public License for more details.                               */
 
 #include <math.h>
+#include <stdlib.h>
 
 #include "opengl.h"
 #include "stereo.h"
 #include "matrix.h"
 #include "display.h"
+#include "video.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -144,12 +146,10 @@ static void draw_varrier_plane(int eye, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-static GLubyte line_image[16] = {
-    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+#define LINESZ 256
 
-static GLuint line_texture = 0;
+static GLubyte *line_buffer;
+static GLuint   line_texture = 0;
 
 static void init_line_texture(void)
 {
@@ -157,16 +157,29 @@ static void init_line_texture(void)
         glBindTexture(GL_TEXTURE_2D, line_texture);
     else
     {
-        glGenTextures(1, &line_texture);
-        glBindTexture(GL_TEXTURE_2D, line_texture);
+        if ((line_buffer = (GLubyte *) calloc(LINESZ * 2, 2)))
+        {
+            int i;
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glGenTextures(1, &line_texture);
+            glBindTexture(GL_TEXTURE_2D, line_texture);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, 4, 2, 0,
-                     GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, line_image);
+            for (i = 0; i < LINESZ * 0.25; ++i)
+            {
+                line_buffer[i * 2 + 0] = 0xFF;
+                line_buffer[i * 2 + 1] = 0xFF;
+                line_buffer[(i + LINESZ) * 2 + 0] = 0xFF;
+                line_buffer[(i + LINESZ) * 2 + 1] = 0xFF;
+            }
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, LINESZ, 2, 0,
+                         GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, line_buffer);
+        }
     }
 }
 
@@ -174,32 +187,22 @@ static void init_line_texture(void)
 
 static int stereo_varrier_10(int eye, int tile, int pass)
 {
-    float P[16];
-    float I[16];
-
     if (pass == 0 && eye == 0)
     {
         if (GL_has_multitexture)
         {
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-            glGetFloatv(GL_PROJECTION_MATRIX, P);
-            m_invt(I, P);
-
             glActiveTextureARB(GL_TEXTURE1_ARB);
             glEnable(GL_TEXTURE_2D);
-            glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
 
             init_line_texture();
-
-            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
 
             glMatrixMode(GL_TEXTURE);
             {
                 glLoadIdentity();
-                glMultMatrixf(P);
+                glRotatef(7, 0, 0, 1);
+                glScalef(64, 64, 64);
             }
             glMatrixMode(GL_MODELVIEW);
 
@@ -398,10 +401,13 @@ static int stereo_quad(int eye, int tile, int pass)
 {
     if (pass == 0)
     {
-        if (eye == 0)
-            glDrawBuffer(GL_BACK_LEFT);
-        else
-            glDrawBuffer(GL_BACK_RIGHT);
+        if (quad_stereo_status())
+        {
+            if (eye == 0)
+                glDrawBuffer(GL_BACK_LEFT);
+            else
+                glDrawBuffer(GL_BACK_RIGHT);
+        }
 
         glClear(GL_COLOR_BUFFER_BIT |
                 GL_DEPTH_BUFFER_BIT);
@@ -422,12 +428,12 @@ static int stereo_red_blue(int eye, int tile, int pass)
             glClear(GL_COLOR_BUFFER_BIT |
                     GL_DEPTH_BUFFER_BIT);
             draw_tile_background(tile);
-            glColorMask(0, 0, 1, 0);
+            glColorMask(1, 0, 0, 0);
         }
         else
         {
             glClear(GL_DEPTH_BUFFER_BIT);
-            glColorMask(1, 0, 0, 0);
+            glColorMask(0, 0, 1, 0);
         }
         return 1;
     }

@@ -180,6 +180,8 @@ void recv_set_background(void);
 void draw_tile_background(int);
 void draw_host_background(void);
 
+void set_texture_coordinates(void);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

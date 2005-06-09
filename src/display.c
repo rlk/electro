@@ -927,8 +927,7 @@ void draw_tile_background(int i)
 
         /* Fill the tile at the far plane using the computed gradient. */
 
-        glPushAttrib(GL_ENABLE_BIT);
-        glDisable(GL_TEXTURE_2D);
+        set_texture_coordinates();
 
         glBegin(GL_QUADS);
         {
@@ -946,8 +945,6 @@ void draw_tile_background(int i)
         }
         glEnd();
 
-        glPopAttrib();
-
         /* Revert to the previous transformation. */
 
         glMatrixMode(GL_PROJECTION);
@@ -963,6 +960,55 @@ void draw_host_background(void)
 
     for (i = 0; i < local->n; ++i)
         draw_tile_background(i);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void set_active_texture_coordinates(const float S[4],
+                                           const float T[4],
+                                           const float R[4],
+                                           const float Q[4])
+{
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glEnable(GL_TEXTURE_GEN_R);
+    glEnable(GL_TEXTURE_GEN_Q);
+
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    
+    glTexGenfv(GL_S, GL_EYE_PLANE, S);
+    glTexGenfv(GL_T, GL_EYE_PLANE, T);
+    glTexGenfv(GL_R, GL_EYE_PLANE, R);
+    glTexGenfv(GL_Q, GL_EYE_PLANE, Q);
+}
+
+void set_texture_coordinates(void)
+{
+    if (GL_has_multitexture)
+    {
+        float P[16], M[16], X[16], S[4], T[4], R[4], Q[4];
+
+        glGetFloatv(GL_PROJECTION_MATRIX, P);
+        glGetFloatv(GL_MODELVIEW_MATRIX,  M);
+
+        m_mult(X, P, M);
+
+        S[0] = X[0]; S[1] = X[4]; S[2] = X[8];  S[3] = X[12];
+        T[0] = X[1]; T[1] = X[5]; T[2] = X[9];  T[3] = X[13];
+        R[0] = X[2]; R[1] = X[6]; R[2] = X[10]; R[3] = X[14];
+        Q[0] = X[3]; Q[1] = X[7]; Q[2] = X[11]; Q[3] = X[15];
+
+        /* Supply the product of the projection and modelview matrices as    */
+        /* plane coefficients in order to transform vertices to normalized   */
+        /* device coordinates and apply them as texture coordinates.         */
+
+        glActiveTextureARB(GL_TEXTURE1_ARB);
+        set_active_texture_coordinates(S, T, R, Q);
+        glActiveTextureARB(GL_TEXTURE0_ARB);
+    }
 }
 
 /*---------------------------------------------------------------------------*/

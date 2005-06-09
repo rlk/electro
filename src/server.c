@@ -350,7 +350,6 @@ void server(int argc, char *argv[])
 
                     grab(0);
                 }
-                else fprintf(stderr, "%s\n", SDL_GetError());
             }
 
             /* Ensure everyone finishes all events before exiting. */
@@ -359,7 +358,7 @@ void server(int argc, char *argv[])
 #endif
             SDL_Quit();
         }
-        else fprintf(stderr, "%s\n", SDL_GetError());
+        else fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
     }
 }
 
