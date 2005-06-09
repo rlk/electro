@@ -240,7 +240,7 @@ void draw_camera(int j, int i, const float M[16],
 
             /* Iterate over all passes of this tile. */
 
-            while ((pass = draw_pass(c->mode, eye, tile, pass)))
+            while ((pass = draw_pass(c->mode, eye, tile, pass, d)))
             {
                 glPushMatrix();
                 {

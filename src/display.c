@@ -586,6 +586,18 @@ void get_tile_u(int i, float u[3])
     }
 }
 
+void get_tile_n(int i, float n[3])
+{
+    float r[3];
+    float u[3];
+
+    get_tile_r(i, r);
+    get_tile_u(i, u);
+
+    v_cross(n, r, u);
+    v_normal(n, n);
+}
+
 int get_tile_flag(int i)
 {
     return local ? ((struct tile *) vecget(tile, local->tile[i]))->flag : 0;
@@ -1002,8 +1014,9 @@ void set_texture_coordinates(void)
         Q[0] = X[3]; Q[1] = X[7]; Q[2] = X[11]; Q[3] = X[15];
 
         /* Supply the product of the projection and modelview matrices as    */
-        /* plane coefficients in order to transform vertices to normalized   */
-        /* device coordinates and apply them as texture coordinates.         */
+        /* plane coefficients.  This will transform vertices to normalized   */
+        /* device coordinates, which we can apply as screen-space texture    */
+        /* coordinates.                                                      */
 
         glActiveTextureARB(GL_TEXTURE1_ARB);
         set_active_texture_coordinates(S, T, R, Q);

@@ -129,17 +129,20 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
---  local dx =  2.50 / 12.0 * 0.5
---  local dy = -1.23 / 12.0
---  local dz =  2.00 / 12.0
-    local dx = 0
-    local dy = 0
-    local dz = 0
+    local dx =  2.50 / 12.0 * 0.5
+    local dy = -1.23 / 12.0
+    local dz =  2.00 / 12.0
+--  local dx = 0
+--  local dy = 0
+--  local dz = 0
 
     if s then
         if k == 13 then
             E.set_entity_position(camera, 0.0, 0.0, 0.0)
             E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
+            pan_x = 0
+            pan_y = 0
+            pan_z = 0
             return true
         end
 

@@ -163,6 +163,7 @@ int   get_viewport_h(void);
 void  get_tile_o(int, float[3]);
 void  get_tile_r(int, float[3]);
 void  get_tile_u(int, float[3]);
+void  get_tile_n(int, float[3]);
 
 int   get_tile_flag(int);
 
