@@ -1,9 +1,9 @@
 -- Configure a simple default window with a line screen.
 
-W =  1.3333
-H =  1.0000
-D =  5.0000
-O =  0.2083
+W =  1.3333333
+H =  1.0000000
+D =  4.0000000
+O =  0.2083333
 
 w = 1600
 h = 1200

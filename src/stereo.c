@@ -150,14 +150,17 @@ static void draw_varrier_plane(int eye, const float M[16],
 static GLubyte *line_buffer;
 static GLuint   line_texture = 0;
 
-static void init_line_texture(float c)
+static void init_line_texture(int tile)
 {
+    glEnable(GL_TEXTURE_2D);
+
     if (glIsTexture(line_texture))
         glBindTexture(GL_TEXTURE_2D, line_texture);
     else
     {
         if ((line_buffer = (GLubyte *) calloc(LINESZ * 2, 2)))
         {
+            float c = get_varrier_cycle(tile);
             int i;
 
             glGenTextures(1, &line_texture);
@@ -165,16 +168,16 @@ static void init_line_texture(float c)
 
             for (i = 0; i < LINESZ * (1 - c); ++i)
             {
-                line_buffer[i * 2 + 0] = 0xFF;
-                line_buffer[i * 2 + 1] = 0xFF;
+                line_buffer[i * 2 + 0]            = 0xFF;
+                line_buffer[i * 2 + 1]            = 0xFF;
                 line_buffer[(i + LINESZ) * 2 + 0] = 0xFF;
                 line_buffer[(i + LINESZ) * 2 + 1] = 0xFF;
             }
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, LINESZ, 2, 0,
                          GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, line_buffer);
@@ -182,48 +185,64 @@ static void init_line_texture(float c)
     }
 }
 
+int tweak1 = 1;
+int tweak2 = 0;
+
+static void move_line_texture(int tile, const float v[3])
+{
+    float p = get_varrier_pitch(tile);
+    float a = get_varrier_angle(tile);
+    float t = get_varrier_thick(tile);
+    float s = get_varrier_shift(tile);
+
+    float M[16];
+    float o[3];
+    float n[3];
+    float m[3];
+    float d[3];
+    float w, h;
+    float k, dx, dy;
+
+    float W = 1600;
+    float H = 1200;
+
+    get_varrier_tile(tile, M, o, n, &w, &h);
+
+    k = ((v[0] - o[0]) * n[0] +
+         (v[1] - o[1]) * n[1] +
+         (v[2] - o[2]) * n[2]);
+
+    m[0] = v[0] - n[0] * k;
+    m[1] = v[1] - n[1] * k;
+    m[2] = v[2] - n[2] * k;
+
+    d[0] = m[0] - o[0];
+    d[1] = m[1] - o[1];
+    d[2] = m[2] - o[2];
+
+    dx = d[0] * t / k;
+    dy = d[1] * t / k;
+    p  = p * (k - t) / k;
+
+    glMatrixMode(GL_TEXTURE);
+    {
+        glLoadIdentity();
+        glScalef(p, p, 1);                 /* Pitch                         */
+        glTranslatef(-s - dx, 0, 0);        /* Shift in feet                 */
+        glScalef(w, h, 1);                 /* Scale to feet                 */
+        glRotatef(-a, 0, 0, 1);            /* Angle                         */
+        glTranslatef(-0.5f, -0.5f, 0.0f);  /* Translate to center of screen */
+        glScalef(1 / W, 1 / H, 1);         /* Scale to normal coordinates   */
+    }
+    glMatrixMode(GL_MODELVIEW);
+}
+
 /*---------------------------------------------------------------------------*/
 
-static int stereo_varrier_10(int eye, int tile, int pass, const float v[3])
+static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 {
     if (pass == 0)
     {
-        float p = get_varrier_pitch(tile);
-        float a = get_varrier_angle(tile);
-        float t = get_varrier_thick(tile);
-        float s = get_varrier_shift(tile);
-        float c = get_varrier_cycle(tile);
-
-        float M[16];
-        float o[3];
-        float n[3];
-        float m[3];
-        float d[3];
-        float w, h;
-        float k, dx, dy;
-
-        get_varrier_tile(tile, M, o, n, &w, &h);
-
-        /* Experimental crap begins here. */
-
-        k = ((v[0] - o[0]) * n[0] +
-             (v[1] - o[1]) * n[1] +
-             (v[2] - o[2]) * n[2]);
-
-        m[0] = v[0] - n[0] * k;
-        m[1] = v[1] - n[1] * k;
-        m[2] = v[2] - n[2] * k;
-
-        d[0] = m[0] - o[0];
-        d[1] = m[1] - o[1];
-        d[2] = m[2] - o[2];
-
-        dx = d[0] * t / k;
-        dy = d[1] * t / k;
-        p  = p * (k - t) / k;
-
-        /* Non-experimental crap begins here. */
-
         if (eye == 0)
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         else
@@ -231,34 +250,30 @@ static int stereo_varrier_10(int eye, int tile, int pass, const float v[3])
 
         if (GL_has_multitexture)
         {
+            glActiveTextureARB(GL_TEXTURE3_ARB);
+            init_line_texture(tile);
+            move_line_texture(tile, v);
+            glActiveTextureARB(GL_TEXTURE2_ARB);
+            init_line_texture(tile);
+            move_line_texture(tile, v);
             glActiveTextureARB(GL_TEXTURE1_ARB);
-            glEnable(GL_TEXTURE_2D);
-
-            init_line_texture(c);
-
-            glMatrixMode(GL_TEXTURE);
-            {
-                glLoadIdentity();
-                glScalef(p, p, p);
-                glTranslatef(s, 0, 0);
-                glTranslatef(dx, dy, 0);
-                glRotatef(-a, 0, 0, 1);
-                glScalef(w / 2, h / 2, 0.5f);
-            }
-            glMatrixMode(GL_MODELVIEW);
-
+            init_line_texture(tile);
+            move_line_texture(tile, v);
             glActiveTextureARB(GL_TEXTURE0_ARB);
         }
 
         draw_tile_background(tile);
+
         return 1;
     }
     else
     {
         if (GL_has_multitexture)
         {
-            glClear(GL_DEPTH_BUFFER_BIT);
-
+            glActiveTextureARB(GL_TEXTURE3_ARB);
+            glDisable(GL_TEXTURE_2D);
+            glActiveTextureARB(GL_TEXTURE2_ARB);
+            glDisable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE1_ARB);
             glDisable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -498,7 +513,7 @@ int draw_pass(int mode, int eye, int tile, int pass, const float v[3])
     {
     case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
     case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
-    case STEREO_VARRIER_10: return stereo_varrier_10(eye, tile, pass, v);
+    case STEREO_VARRIER_01: return stereo_varrier_01(eye, tile, pass, v);
     case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
     case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
     case STEREO_VARRIER_41: return stereo_varrier_41(eye, tile, pass);

@@ -48,6 +48,8 @@ function do_start()
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
 
+    E.set_entity_frag_prog(scene, "../varrier_01.fp")
+
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0, -20.0)
 
@@ -56,7 +58,7 @@ function do_start()
 
     table.foreach(E.argument, add_object)
 
-    E.enable_timer(true)
+--  E.enable_timer(true)
 end
 
 function do_timer(dt)
@@ -178,10 +180,10 @@ function do_keyboard(k, s)
         end
 
 	if k == 277 then
-		rot_dy = rot_dy + 1
+            rot_dy = rot_dy + 1
 	end
 	if k == 127 then
-		rot_dy = rot_dy - 1
+            rot_dy = rot_dy - 1
 	end
 
         if k == 273 then pan_z = pan_z + 1 end
@@ -204,6 +206,6 @@ function do_keyboard(k, s)
 end
 
 do_start()
---do_keyboard(291, true)
+do_keyboard(290, true)
 
---E.set_background(0.0, 0.0, 0.0)
+E.set_background(0.0, 0.0, 0.0)

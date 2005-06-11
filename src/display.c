@@ -939,23 +939,29 @@ void draw_tile_background(int i)
 
         /* Fill the tile at the far plane using the computed gradient. */
 
-        set_texture_coordinates();
-
-        glBegin(GL_QUADS);
+        glPushAttrib(GL_ENABLE_BIT);
         {
-            glColor3f(color0[0] * (1 - k0) + color1[0] * k0,
-                      color0[1] * (1 - k0) + color1[1] * k0,
-                      color0[2] * (1 - k0) + color1[2] * k0);
-            glVertex3f(0, 0, -1);
-            glVertex3f(1, 0, -1);
+            glDisable(GL_TEXTURE_2D);
+
+            set_texture_coordinates();
+
+            glBegin(GL_QUADS);
+            {
+                glColor3f(color0[0] * (1 - k0) + color1[0] * k0,
+                          color0[1] * (1 - k0) + color1[1] * k0,
+                          color0[2] * (1 - k0) + color1[2] * k0);
+                glVertex3f(0, 0, -1);
+                glVertex3f(1, 0, -1);
                 
-            glColor3f(color0[0] * (1 - k1) + color1[0] * k1,
-                      color0[1] * (1 - k1) + color1[1] * k1,
-                      color0[2] * (1 - k1) + color1[2] * k1);
-            glVertex3f(1, 1, -1);
-            glVertex3f(0, 1, -1);
+                glColor3f(color0[0] * (1 - k1) + color1[0] * k1,
+                          color0[1] * (1 - k1) + color1[1] * k1,
+                          color0[2] * (1 - k1) + color1[2] * k1);
+                glVertex3f(1, 1, -1);
+                glVertex3f(0, 1, -1);
+            }
+            glEnd();
         }
-        glEnd();
+        glPopAttrib();
 
         /* Revert to the previous transformation. */
 

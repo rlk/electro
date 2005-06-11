@@ -30,6 +30,10 @@
 #include "event.h"
 #include "server.h"
 
+extern int tweak1;
+extern int tweak2;
+
+
 /*---------------------------------------------------------------------------*/
 
 static void server_draw(void);
@@ -114,11 +118,11 @@ static void server_perf(void)
     static int fps_old = 0;
     int        fps_new = (int) opengl_perf(&average_fps);
 
-    if (fps_new != fps_old)
+/*    if (fps_new != fps_old)*/
     {
         char buf[32];
 
-        sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
+        sprintf(buf, "%s %s (%d FPS) [%d %d]", TITLE, version(), fps_new, tweak1, tweak2);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;
@@ -159,6 +163,7 @@ static int server_loop(void)
         /* Handle global server control keys. */
 
         if (e.type == SDL_KEYDOWN)
+        {
             switch (e.key.keysym.sym)
             {
             case SDLK_ESCAPE:
@@ -189,6 +194,15 @@ static int server_loop(void)
             default:
                 break;
             }
+
+            switch (e.key.keysym.scancode)
+            {
+            case 87: tweak1--; printf("tweak1 = %d\n", tweak1); break;
+            case 89: tweak1++; printf("tweak1 = %d\n", tweak1); break;
+            case 83: tweak2--; printf("tweak2 = %d\n", tweak2); break;
+            case 85: tweak2++; printf("tweak2 = %d\n", tweak2); break;
+            }
+        }
 
         /* Dispatch the event to the scripting system. */
 

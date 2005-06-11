@@ -359,7 +359,7 @@ void draw_entity_tree(int i, const float M[16],
 
                 /* Draw this entity. */
 
-                set_texture_coordinates();
+/*              set_texture_coordinates(); */
 
                 if (entity_func[E(j)->type] &&
                     entity_func[E(j)->type]->draw)
