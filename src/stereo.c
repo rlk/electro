@@ -110,6 +110,51 @@ static void draw_varrier_lines(int tile, const float M[16],
     glPopAttrib();
 }
 
+static void draw_varrier_plane(int eye)
+{
+    /* Map the tile onto the unit cube. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, 0, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    /* Fill the tile at the far plane using the computed gradient. */
+
+    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+    {
+        glDisable(GL_TEXTURE_2D);
+        glDepthMask(GL_FALSE);
+        
+        glBegin(GL_QUADS);
+        {
+            if (eye == 0)
+                glColor3f(0.0f, 1.0f, 0.0f);
+            else
+                glColor3f(0.0f, 0.0f, 1.0f);
+
+            glVertex3f(0, 0, -0.5);
+            glVertex3f(1, 0, -0.5);
+            glVertex3f(1, 1, -0.5);
+            glVertex3f(0, 1, -0.5);
+        }
+        glEnd();
+    }
+    glPopAttrib();
+
+    /* Revert to the previous transformation. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+/*
 static void draw_varrier_plane(int eye, const float M[16],
                                         const float c[3],
                                         float w, float h, float z)
@@ -142,6 +187,7 @@ static void draw_varrier_plane(int eye, const float M[16],
     glPopMatrix();
     glPopAttrib();
 }
+*/
 
 /*---------------------------------------------------------------------------*/
 
@@ -228,7 +274,7 @@ static void move_line_texture(int tile, const float v[3])
     {
         glLoadIdentity();
         glScalef(p, p, 1);                 /* Pitch                         */
-        glTranslatef(-s - dx, 0, 0);        /* Shift in feet                 */
+        glTranslatef(-s + dx, dy, 0);       /* Shift in feet                 */
         glScalef(w, h, 1);                 /* Scale to feet                 */
         glRotatef(-a, 0, 0, 1);            /* Angle                         */
         glTranslatef(-0.5f, -0.5f, 0.0f);  /* Translate to center of screen */
@@ -264,6 +310,11 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 
         draw_tile_background(tile);
 
+        if (get_tile_flag(tile) & TILE_TEST)
+        {
+            draw_varrier_plane(eye);
+            return 0;
+        }
         return 1;
     }
     else
@@ -316,7 +367,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
 
         if (get_tile_flag(tile) & TILE_TEST)
         {
-            draw_varrier_plane(eye, M, c, w, h, 0.5);
+            draw_varrier_plane(eye);
             return 0;
         }
         return 1;
@@ -376,80 +427,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
     /* Draw the test pattern, if requested. */
 
     if (next && get_tile_flag(tile) & TILE_TEST)
-        draw_varrier_plane(eye, M, c, w, h, 0.5);
-
-    return next;
-}
-
-static int stereo_varrier_41(int eye, int tile, int pass)
-{
-    float M[16];
-    float c[3];
-    float n[3];
-    float w, h, d = 0.00025f;
-
-    int next = 0;
-
-    get_varrier_tile(tile, M, c, n, &w, &h);
-
-    if (eye == 0)
-    {
-        if (pass == 0)
-        {
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            draw_tile_background(tile);
-            next = 1;
-        }
-        else
-        {
-            glColorMask(0, 0, 0, 0);
-            glDepthFunc(GL_ALWAYS);
-            draw_varrier_plane(0, M, c, w, h, 0);
-            glDepthFunc(GL_LEQUAL);
-
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(0);
-
-            glColorMask(1, 0, 0, 0);
-            draw_varrier_lines(tile, M, c, w, h, +d, 1, 0);
-            glColorMask(0, 1, 0, 0);
-            draw_varrier_lines(tile, M, c, w, h,  0, 1, 0);
-            glColorMask(0, 0, 1, 0);
-            draw_varrier_lines(tile, M, c, w, h, -d, 1, 0);
-
-            glDepthMask(1);
-            glEnable(GL_DEPTH_TEST);
-
-            glColorMask(0, 0, 0, 0);
-            glDepthFunc(GL_ALWAYS);
-            draw_varrier_lines(tile, M, c, w, h, 0, 1.05f, 1);
-            glDepthFunc(GL_LEQUAL);
-
-            glColorMask(1, 1, 1, 1);
-        }
-    }
-    else
-    {
-        if (pass == 0)
-            next = 1;
-        else
-        {
-            glDepthFunc(GL_LESS);
-            glColorMask(1, 0, 0, 0);
-            draw_varrier_lines(tile, M, c, w, h, +d, 1, 0);
-            glColorMask(0, 1, 0, 0);
-            draw_varrier_lines(tile, M, c, w, h,  0, 1, 0);
-            glColorMask(0, 0, 1, 0);
-            draw_varrier_lines(tile, M, c, w, h, -d, 1, 0);
-            glColorMask(1, 1, 1, 1);
-            glDepthFunc(GL_LEQUAL);
-        }
-    }
-
-    /* Draw the test pattern, if requested. */
-
-    if (next && get_tile_flag(tile) & TILE_TEST)
-        draw_varrier_plane(eye, M, c, w, h, 0.5);
+        draw_varrier_plane(eye);
 
     return next;
 }
@@ -516,7 +494,6 @@ int draw_pass(int mode, int eye, int tile, int pass, const float v[3])
     case STEREO_VARRIER_01: return stereo_varrier_01(eye, tile, pass, v);
     case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
     case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
-    case STEREO_VARRIER_41: return stereo_varrier_41(eye, tile, pass);
     }
 
     /* Otherwise, do one pass in mono. */

@@ -1321,7 +1321,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "stereo_mode_none",          STEREO_NONE);
     lua_constant(L, "stereo_mode_quad",          STEREO_QUAD);
     lua_constant(L, "stereo_mode_red_blue",      STEREO_RED_BLUE);
-    lua_constant(L, "stereo_mode_varrier_10",    STEREO_VARRIER_10);
+    lua_constant(L, "stereo_mode_varrier_01",    STEREO_VARRIER_01);
     lua_constant(L, "stereo_mode_varrier_11",    STEREO_VARRIER_11);
     lua_constant(L, "stereo_mode_varrier_33",    STEREO_VARRIER_33);
     lua_constant(L, "stereo_mode_varrier_41",    STEREO_VARRIER_41);

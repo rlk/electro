@@ -21,6 +21,10 @@ ifdef TRACKD
 	CFLAGS += -DTRACKD
 endif
 
+ifdef NAUDIO
+	CFLAGS += -DNAUDIO
+endif
+
 #------------------------------------------------------------------------------
 
 # Assume the Fink tree is available under OSX and GL is in a framework.

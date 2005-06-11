@@ -25,6 +25,8 @@ host[16] = E.add_host("scylla16-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[17] = E.add_host("scylla17-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
 
+E.set_host_flag(host[0], E.host_flag_framed, true);
+
 -- Tile host numbers.
 
 num = {
@@ -207,7 +209,7 @@ l = {
 
 tile[0] = E.add_tile(host[0], 0, 0, 800, 600)
 E.set_tile_viewport(tile[0], 0, 0, 11967, 6512)
-E.set_tile_position(tile[0], -4.0, -3.0, -3.0, 8.0, 0.0, 0.0, 0.0, 6.0, 0.0)
+E.set_tile_position(tile[0], -4.0, 2.0, -3.0, 8.0, 0.0, 0.0, 0.0, 6.0, 0.0)
 E.set_tile_line_screen(tile[0], l[1][1], l[1][2], l[1][3], l[1][4], l[1][5])
 
 for i = 1, 35 do
@@ -253,6 +255,16 @@ function varrier_pitch(d)
     end
 end
 
+function varrier_angle(d)
+    for i = 1, 35 do
+        local k = map[i]
+        l[k][2] = l[k][2] + d;
+        E.set_tile_line_screen(tile[i], l[k][1], l[k][2],
+                               l[k][3], l[k][4], l[k][5])
+        print("{ "..l[k][1]..", "..l[k][2]..", "..l[k][3]..", "..l[k][4]..", "..l[k][5].." }, -- "..k)
+    end
+end
+
 function varrier_test(b)
     for i = 1, 35 do
         E.set_tile_flag(tile[i], E.tile_flag_test, b)
@@ -283,17 +295,17 @@ function varrier_keyboard(k, s)
 --          return true
 --      end
         if k == 290 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
         if k == 291 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
         if k == 292 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_41,
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
                                 L[1], L[2], L[3], R[1], R[2], R[3])
             return true
         end
@@ -327,10 +339,18 @@ function varrier_keyboard(k, s)
             varrier_pitch(diff)
             return true
         end
+        if k == 91 then
+            varrier_angle(-diff)
+            return true
+        end
+        if k == 93 then
+            varrier_angle(diff)
+            return true
+        end
     end
     return false
 end
 
-E.set_background(0.0, 0.0, 0.0)
+--E.set_background(0.0, 0.0, 0.0)
 
-varrier_shift(-0.0006)
+--varrier_shift(-0.0006)

@@ -118,12 +118,13 @@ static void server_perf(void)
     static int fps_old = 0;
     int        fps_new = (int) opengl_perf(&average_fps);
 
-/*    if (fps_new != fps_old)*/
+    if (fps_new != fps_old)
     {
         char buf[32];
 
-        sprintf(buf, "%s %s (%d FPS) [%d %d]", TITLE, version(), fps_new, tweak1, tweak2);
+        sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
         SDL_WM_SetCaption(buf, buf);
+        printf("%s\n", buf);
 
         fps_old = fps_new;
     }
@@ -325,10 +326,17 @@ void parse_args(int argc, char *argv[])
 
 void server(int argc, char *argv[])
 {
+#ifndef NAUDIO
+    int flags = (SDL_INIT_VIDEO | SDL_INIT_TIMER |
+                 SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
+#else
+    int flags = (SDL_INIT_VIDEO | SDL_INIT_TIMER |
+                 SDL_INIT_JOYSTICK);
+#endif
+
     if (init_script())
     {
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK |
-                     SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
+        if (SDL_Init(flags) == 0)
         {
             /* Initialize all subsystems. */
         

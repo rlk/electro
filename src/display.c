@@ -943,7 +943,7 @@ void draw_tile_background(int i)
         {
             glDisable(GL_TEXTURE_2D);
 
-            set_texture_coordinates();
+/*          set_texture_coordinates(); */
 
             glBegin(GL_QUADS);
             {

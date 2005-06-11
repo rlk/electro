@@ -58,7 +58,7 @@ function do_start()
 
     table.foreach(E.argument, add_object)
 
---  E.enable_timer(true)
+    E.enable_timer(true)
 end
 
 function do_timer(dt)
@@ -164,7 +164,7 @@ function do_keyboard(k, s)
             return true
         end
         if k == 290 then -- F9
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_10,
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
@@ -200,8 +200,7 @@ function do_keyboard(k, s)
         if k == 275 then pan_x = pan_x - 1 end
         if k == 276 then pan_x = pan_x + 1 end
     end
-
-	return true
+    return true
 --  return varrier_keyboard(k, s)
 end
 
