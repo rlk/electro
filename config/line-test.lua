@@ -18,6 +18,7 @@ E.set_tile_viewport(tile, 0, 0, w, h)
 E.set_tile_line_screen(tile, 271.945865, -7.88, 0.037, 0.0037, 0.777777)
 
 E.set_host_flag(host, E.host_flag_framed, false)
+E.set_host_flag(host, E.host_flag_full,   true)
 
 ------------------------------------------------------------------------------
 

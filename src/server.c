@@ -30,10 +30,6 @@
 #include "event.h"
 #include "server.h"
 
-extern int tweak1;
-extern int tweak2;
-
-
 /*---------------------------------------------------------------------------*/
 
 static void server_draw(void);
@@ -157,6 +153,9 @@ static int server_loop(void)
     static int dirty = 1;
     static int count = 0;
 
+    extern int tweak1;
+    extern int tweak2;
+
     SDL_Event e;
 
     while (SDL_PollEvent(&e))
@@ -198,10 +197,10 @@ static int server_loop(void)
 
             switch (e.key.keysym.scancode)
             {
-            case 87: tweak1--; printf("tweak1 = %d\n", tweak1); break;
-            case 89: tweak1++; printf("tweak1 = %d\n", tweak1); break;
-            case 83: tweak2--; printf("tweak2 = %d\n", tweak2); break;
-            case 85: tweak2++; printf("tweak2 = %d\n", tweak2); break;
+            case 87: tweak1--; print("tweak1 = %d\n", tweak1); break;
+            case 89: tweak1++; print("tweak1 = %d\n", tweak1); break;
+            case 83: tweak2--; print("tweak2 = %d\n", tweak2); break;
+            case 85: tweak2++; print("tweak2 = %d\n", tweak2); break;
             }
         }
 

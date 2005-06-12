@@ -48,8 +48,6 @@ function do_start()
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
 
-    E.set_entity_frag_prog(scene, "../varrier_01.fp")
-
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0, -20.0)
 
@@ -132,11 +130,11 @@ end
 
 function do_keyboard(k, s)
     local dx =  2.50 / 12.0 * 0.5
-    local dy = -1.23 / 12.0
-    local dz =  2.00 / 12.0
+--  local dy = -1.23 / 12.0
+--  local dz =  2.00 / 12.0
 --  local dx = 0
---  local dy = 0
---  local dz = 0
+    local dy = 0
+    local dz = 0
 
     if s then
         if k == 13 then

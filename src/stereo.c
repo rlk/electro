@@ -71,8 +71,10 @@ static void draw_varrier_lines(int tile, const float M[16],
     int i;
     int n = (int) ceil(w / f);
 
-    int dx = (int) ceil(tan(M_RAD(a)) * h / f);
-    int dy = (int) ceil(sin(M_RAD(a)) * w / f);
+    /* TODO: Compute out the proper scale of the line screen. */
+
+    int dx = (int) ceil(n);
+    int dy = (int) ceil(h);
 
     glPushAttrib(GL_ENABLE_BIT | GL_VIEWPORT_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
@@ -96,12 +98,12 @@ static void draw_varrier_lines(int tile, const float M[16],
         {
             glColor3f(0.0f, 0.0f, 0.0f);
 
-            for (i = dx - n / 2; i < n / 2 - dx; ++i)
+            for (i = -n / 2 - dx; i < n / 2 + dx; ++i)
             {
-                glVertex2f(f * i,         dy - h / 2);
-                glVertex2f(f * i + f * c, dy - h / 2);
-                glVertex2f(f * i + f * c, h / 2 - dy);
-                glVertex2f(f * i,         h / 2 - dy);
+                glVertex2f(f * i,         -h / 2 - dy);
+                glVertex2f(f * i + f * c, -h / 2 - dy);
+                glVertex2f(f * i + f * c,  h / 2 + dy);
+                glVertex2f(f * i,          h / 2 + dy);
             }
         }
         glEnd();
@@ -123,7 +125,7 @@ static void draw_varrier_plane(int eye)
     glPushMatrix();
     glLoadIdentity();
 
-    /* Fill the tile at the far plane using the computed gradient. */
+    /* Fill the tile. */
 
     glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
     {
@@ -212,7 +214,7 @@ static void init_line_texture(int tile)
             glGenTextures(1, &line_texture);
             glBindTexture(GL_TEXTURE_2D, line_texture);
 
-            for (i = 0; i < LINESZ * (1 - c); ++i)
+            for (i = LINESZ * c; i < LINESZ; ++i)
             {
                 line_buffer[i * 2 + 0]            = 0xFF;
                 line_buffer[i * 2 + 1]            = 0xFF;
@@ -220,8 +222,8 @@ static void init_line_texture(int tile)
                 line_buffer[(i + LINESZ) * 2 + 1] = 0xFF;
             }
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
 
@@ -231,10 +233,10 @@ static void init_line_texture(int tile)
     }
 }
 
-int tweak1 = 1;
+int tweak1 = 0;
 int tweak2 = 0;
 
-static void move_line_texture(int tile, const float v[3])
+static void move_line_texture(int tile, const float v[3], float px)
 {
     float p = get_varrier_pitch(tile);
     float a = get_varrier_angle(tile);
@@ -242,43 +244,36 @@ static void move_line_texture(int tile, const float v[3])
     float s = get_varrier_shift(tile);
 
     float M[16];
-    float o[3];
+    float c[3];
     float n[3];
-    float m[3];
-    float d[3];
     float w, h;
-    float k, dx, dy;
+    float nn, dd, pp;
 
-    float W = 1600;
-    float H = 1200;
+    get_varrier_tile(tile, M, c, n, &w, &h);
 
-    get_varrier_tile(tile, M, o, n, &w, &h);
+    /* Find the distance to the display. */
 
-    k = ((v[0] - o[0]) * n[0] +
-         (v[1] - o[1]) * n[1] +
-         (v[2] - o[2]) * n[2]);
+    nn = ((v[0] - c[0]) * n[0] +
+          (v[1] - c[1]) * n[1] +
+          (v[2] - c[2]) * n[2]);
 
-    m[0] = v[0] - n[0] * k;
-    m[1] = v[1] - n[1] * k;
-    m[2] = v[2] - n[2] * k;
+    /* Compute the parallax offset due to optical thickness. */
 
-    d[0] = m[0] - o[0];
-    d[1] = m[1] - o[1];
-    d[2] = m[2] - o[2];
+    dd = (v[0] - n[0] * nn - c[0]) * t / nn;
 
-    dx = d[0] * t / k;
-    dy = d[1] * t / k;
-    p  = p * (k - t) / k;
+    /* Compute the pitch reduction due to optical thickness. */
+
+    pp = p * (nn - t) / nn;
+
+    /* Transform the line screen texture into position. */
 
     glMatrixMode(GL_TEXTURE);
     {
         glLoadIdentity();
-        glScalef(p, p, 1);                 /* Pitch                         */
-        glTranslatef(-s + dx, dy, 0);       /* Shift in feet                 */
-        glScalef(w, h, 1);                 /* Scale to feet                 */
-        glRotatef(-a, 0, 0, 1);            /* Angle                         */
-        glTranslatef(-0.5f, -0.5f, 0.0f);  /* Translate to center of screen */
-        glScalef(1 / W, 1 / H, 1);         /* Scale to normal coordinates   */
+        glScalef(pp, pp, 1.0);             /* Pitch in feet.                */
+        glTranslatef(-s + dd, 0, 0);       /* Shift in feet.                */
+        glRotatef(-a, 0, 0, 1);            /* Angle.                        */
+        glScalef(0.5 * w, 0.5 * h, 1.0);   /* Scale to feet.                */
     }
     glMatrixMode(GL_MODELVIEW);
 }
@@ -287,6 +282,8 @@ static void move_line_texture(int tile, const float v[3])
 
 static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 {
+    float d = 0.00025f;
+
     if (pass == 0)
     {
         if (eye == 0)
@@ -296,15 +293,17 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 
         if (GL_has_multitexture)
         {
+            /*
             glActiveTextureARB(GL_TEXTURE3_ARB);
             init_line_texture(tile);
-            move_line_texture(tile, v);
+            move_line_texture(tile, v, +d);
             glActiveTextureARB(GL_TEXTURE2_ARB);
             init_line_texture(tile);
-            move_line_texture(tile, v);
+            move_line_texture(tile, v,  0);
+            */
             glActiveTextureARB(GL_TEXTURE1_ARB);
             init_line_texture(tile);
-            move_line_texture(tile, v);
+            move_line_texture(tile, v, -d);
             glActiveTextureARB(GL_TEXTURE0_ARB);
         }
 

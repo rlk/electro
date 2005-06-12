@@ -943,7 +943,7 @@ void draw_tile_background(int i)
         {
             glDisable(GL_TEXTURE_2D);
 
-/*          set_texture_coordinates(); */
+            set_texture_coordinates();
 
             glBegin(GL_QUADS);
             {
@@ -1009,6 +1009,11 @@ void set_texture_coordinates(void)
     {
         float P[16], M[16], X[16], S[4], T[4], R[4], Q[4];
 
+        /* Supply the product of the projection and modelview matrices as    */
+        /* plane coefficients.  This will transform vertices to normalized   */
+        /* device coordinates, which we can apply as screen-space texture    */
+        /* coordinates.                                                      */
+
         glGetFloatv(GL_PROJECTION_MATRIX, P);
         glGetFloatv(GL_MODELVIEW_MATRIX,  M);
 
@@ -1019,11 +1024,10 @@ void set_texture_coordinates(void)
         R[0] = X[2]; R[1] = X[6]; R[2] = X[10]; R[3] = X[14];
         Q[0] = X[3]; Q[1] = X[7]; Q[2] = X[11]; Q[3] = X[15];
 
-        /* Supply the product of the projection and modelview matrices as    */
-        /* plane coefficients.  This will transform vertices to normalized   */
-        /* device coordinates, which we can apply as screen-space texture    */
-        /* coordinates.                                                      */
-
+        glActiveTextureARB(GL_TEXTURE3_ARB);
+        set_active_texture_coordinates(S, T, R, Q);
+        glActiveTextureARB(GL_TEXTURE2_ARB);
+        set_active_texture_coordinates(S, T, R, Q);
         glActiveTextureARB(GL_TEXTURE1_ARB);
         set_active_texture_coordinates(S, T, R, Q);
         glActiveTextureARB(GL_TEXTURE0_ARB);
