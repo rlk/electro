@@ -559,7 +559,10 @@ void send_set_entity_frag_prog(int i, const char *text)
     pack_alloc(n, text);
 
     if (E(i)->frag_text)
+    {
+        fini_entity(i);
         free(E(i)->frag_text);
+    }
 
     E(i)->frag_text = memdup(text, n, 1);
 }
@@ -574,7 +577,10 @@ void send_set_entity_vert_prog(int i, const char *text)
     pack_alloc(n, text);
 
     if (E(i)->vert_text)
+    {
+        fini_entity(i);
         free(E(i)->vert_text);
+    }
 
     E(i)->vert_text = memdup(text, n, 1);
 }

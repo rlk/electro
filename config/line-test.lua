@@ -16,9 +16,10 @@ tile = E.add_tile(host,      0, 0, w, h)
 E.set_tile_position(tile, -W / 2, -H / 2, -D, W, 0, 0, 0, H, 0)
 E.set_tile_viewport(tile, 0, 0, w, h)
 E.set_tile_line_screen(tile, 271.945865, -7.88, 0.037, 0.0037, 0.777777)
+--E.set_tile_line_screen(tile, 12, -7.88, 0.037, 0.0037, 0.777777)
 
-E.set_host_flag(host, E.host_flag_framed, false)
-E.set_host_flag(host, E.host_flag_full,   true)
+--E.set_host_flag(host, E.host_flag_framed, true)
+--E.set_host_flag(host, E.host_flag_full,   true)
 
 ------------------------------------------------------------------------------
 

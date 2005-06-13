@@ -987,24 +987,39 @@ static void set_active_texture_coordinates(const float S[4],
                                            const float R[4],
                                            const float Q[4])
 {
+#ifdef SNIP
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
     glEnable(GL_TEXTURE_GEN_R);
     glEnable(GL_TEXTURE_GEN_Q);
 
+#ifdef TEXGEN_EYE
     glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
     glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
     glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
     glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-    
+
     glTexGenfv(GL_S, GL_EYE_PLANE, S);
     glTexGenfv(GL_T, GL_EYE_PLANE, T);
     glTexGenfv(GL_R, GL_EYE_PLANE, R);
     glTexGenfv(GL_Q, GL_EYE_PLANE, Q);
+#else
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+
+    glTexGenfv(GL_S, GL_OBJECT_PLANE, S);
+    glTexGenfv(GL_T, GL_OBJECT_PLANE, T);
+    glTexGenfv(GL_R, GL_OBJECT_PLANE, R);
+    glTexGenfv(GL_Q, GL_OBJECT_PLANE, Q);
+#endif
+#endif
 }
 
 void set_texture_coordinates(void)
 {
+#ifdef SNIP
     if (GL_has_multitexture)
     {
         float P[16], M[16], X[16], S[4], T[4], R[4], Q[4];
@@ -1019,10 +1034,17 @@ void set_texture_coordinates(void)
 
         m_mult(X, P, M);
 
-        S[0] = X[0]; S[1] = X[4]; S[2] = X[8];  S[3] = X[12];
-        T[0] = X[1]; T[1] = X[5]; T[2] = X[9];  T[3] = X[13];
-        R[0] = X[2]; R[1] = X[6]; R[2] = X[10]; R[3] = X[14];
-        Q[0] = X[3]; Q[1] = X[7]; Q[2] = X[11]; Q[3] = X[15];
+#ifdef TEXGEN_EYE
+        S[0] = X[0];  S[1] = X[1];  S[2] = X[2];  S[3] = X[3];
+        T[0] = X[4];  T[1] = X[5];  T[2] = X[6];  T[3] = X[7];
+        R[0] = X[8];  R[1] = X[9];  R[2] = X[10]; R[3] = X[11];
+        Q[0] = X[12]; Q[1] = X[13]; Q[2] = X[14]; Q[3] = X[15];
+#else
+        S[0] = X[0];  S[1] = X[4];  S[2] = X[8];  S[3] = X[12];
+        T[0] = X[1];  T[1] = X[5];  T[2] = X[9];  T[3] = X[13];
+        R[0] = X[2];  R[1] = X[6];  R[2] = X[10]; R[3] = X[14];
+        Q[0] = X[3];  Q[1] = X[7];  Q[2] = X[11]; Q[3] = X[15];
+#endif
 
         glActiveTextureARB(GL_TEXTURE3_ARB);
         set_active_texture_coordinates(S, T, R, Q);
@@ -1032,6 +1054,7 @@ void set_texture_coordinates(void)
         set_active_texture_coordinates(S, T, R, Q);
         glActiveTextureARB(GL_TEXTURE0_ARB);
     }
+#endif
 }
 
 /*---------------------------------------------------------------------------*/

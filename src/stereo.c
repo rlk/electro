@@ -195,41 +195,51 @@ static void draw_varrier_plane(int eye, const float M[16],
 
 #define LINESZ 256
 
-static GLubyte *line_buffer;
-static GLuint   line_texture = 0;
+static GLuint line_object[3] = { 0, 0, 0 };
 
-static void init_line_texture(int tile)
+static void init_line_texture(int tile, int chan)
 {
+    GLubyte *p;
+
     glEnable(GL_TEXTURE_2D);
 
-    if (glIsTexture(line_texture))
-        glBindTexture(GL_TEXTURE_2D, line_texture);
-    else
+    /* If the requested texture object already exists, bind it. */
+
+    if (glIsTexture(line_object[chan]))
+        glBindTexture(GL_TEXTURE_2D, line_object[chan]);
+
+    else if ((p = (GLubyte *) calloc(LINESZ * 2, 4)))
     {
-        if ((line_buffer = (GLubyte *) calloc(LINESZ * 2, 2)))
-        {
-            float c = get_varrier_cycle(tile);
-            int i;
+        float c = get_varrier_cycle(tile);
+        int i;
+        int j;
 
-            glGenTextures(1, &line_texture);
-            glBindTexture(GL_TEXTURE_2D, line_texture);
+        /* Generate a new texture object */
 
-            for (i = LINESZ * c; i < LINESZ; ++i)
+        glGenTextures(1, line_object + chan);
+        glBindTexture(GL_TEXTURE_2D, line_object[chan]);
+
+        /* Fill it with the line screen pattern for the given channel. */
+
+        for (i = LINESZ * c; i < LINESZ; ++i)
+            for (j = 0; j < 2; ++j)
             {
-                line_buffer[i * 2 + 0]            = 0xFF;
-                line_buffer[i * 2 + 1]            = 0xFF;
-                line_buffer[(i + LINESZ) * 2 + 0] = 0xFF;
-                line_buffer[(i + LINESZ) * 2 + 1] = 0xFF;
+                p[(j * LINESZ + i) * 4 + 0] = (chan == 0) ? 0xFF : 0x00;
+                p[(j * LINESZ + i) * 4 + 1] = (chan == 1) ? 0xFF : 0x00;
+                p[(j * LINESZ + i) * 4 + 2] = (chan == 2) ? 0xFF : 0x00;
+                p[(j * LINESZ + i) * 4 + 3] = 0xFF;
             }
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
+        /* Configure the texture and specify the pixel buffer. */
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, LINESZ, 2, 0,
-                         GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, line_buffer);
-        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, LINESZ, 2, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, p);
+        free(p);
     }
 }
 
@@ -270,10 +280,16 @@ static void move_line_texture(int tile, const float v[3], float px)
     glMatrixMode(GL_TEXTURE);
     {
         glLoadIdentity();
-        glScalef(pp, pp, 1.0);             /* Pitch in feet.                */
-        glTranslatef(-s + dd, 0, 0);       /* Shift in feet.                */
-        glRotatef(-a, 0, 0, 1);            /* Angle.                        */
-        glScalef(0.5 * w, 0.5 * h, 1.0);   /* Scale to feet.                */
+
+        glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
+/*      glTranslatef(-s + dd - px, 0, 0);       Shift in feet.    */
+        glTranslatef(-s + dd, 0, 0);         /* Shift in feet.    */
+        glRotatef(-a, 0, 0, 1);              /* Angle.            */
+/*      glScalef(0.5 * w, 0.5 * h, 1.0);        Scale to feet.    */
+        glScalef(1.0 * w, 1.0 * h, 1.0);     /* Scale to feet.    */
+
+        glTranslatef(-0.5f, -0.5f, 0.0f);
+        glScalef(1.0 / 1600.0, 1.0 / 1200.0, 1.0);
     }
     glMatrixMode(GL_MODELVIEW);
 }
@@ -282,7 +298,7 @@ static void move_line_texture(int tile, const float v[3], float px)
 
 static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 {
-    float d = 0.00025f;
+    float px = 0.00025f;
 
     if (pass == 0)
     {
@@ -293,17 +309,15 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 
         if (GL_has_multitexture)
         {
-            /*
             glActiveTextureARB(GL_TEXTURE3_ARB);
-            init_line_texture(tile);
-            move_line_texture(tile, v, +d);
+            init_line_texture(tile, 2);
+            move_line_texture(tile, v, -px);
             glActiveTextureARB(GL_TEXTURE2_ARB);
-            init_line_texture(tile);
-            move_line_texture(tile, v,  0);
-            */
+            init_line_texture(tile, 1);
+            move_line_texture(tile, v, 0);
             glActiveTextureARB(GL_TEXTURE1_ARB);
-            init_line_texture(tile);
-            move_line_texture(tile, v, -d);
+            init_line_texture(tile, 0);
+            move_line_texture(tile, v, +px);
             glActiveTextureARB(GL_TEXTURE0_ARB);
         }
 
