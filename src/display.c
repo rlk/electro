@@ -980,7 +980,13 @@ void draw_tile_background(int i)
 
         glPushAttrib(GL_ENABLE_BIT);
         {
+            float l = (T->flag & TILE_FLIP_X) ? 1 : 0;
+            float r = (T->flag & TILE_FLIP_X) ? 0 : 1;
+            float b = (T->flag & TILE_FLIP_Y) ? 1 : 0;
+            float t = (T->flag & TILE_FLIP_Y) ? 0 : 1;
+
             glDisable(GL_TEXTURE_2D);
+            glDisable(GL_CULL_FACE);
 
             set_texture_coordinates();
 
@@ -989,14 +995,14 @@ void draw_tile_background(int i)
                 glColor3f(color0[0] * (1 - k0) + color1[0] * k0,
                           color0[1] * (1 - k0) + color1[1] * k0,
                           color0[2] * (1 - k0) + color1[2] * k0);
-                glVertex3f(0, 0, -1);
-                glVertex3f(1, 0, -1);
+                glVertex3f(l, b, -1);
+                glVertex3f(r, b, -1);
                 
                 glColor3f(color0[0] * (1 - k1) + color1[0] * k1,
                           color0[1] * (1 - k1) + color1[1] * k1,
                           color0[2] * (1 - k1) + color1[2] * k1);
-                glVertex3f(1, 1, -1);
-                glVertex3f(0, 1, -1);
+                glVertex3f(r, t, -1);
+                glVertex3f(l, t, -1);
             }
             glEnd();
         }
@@ -1014,6 +1020,14 @@ void draw_tile_background(int i)
 void draw_host_background(void)
 {
     int i;
+
+    glViewport(local->win_x, local->win_y,
+               local->win_w, local->win_h);
+    glScissor (local->win_x, local->win_y,
+               local->win_w, local->win_h);
+
+    glClear(GL_DEPTH_BUFFER_BIT |
+            GL_COLOR_BUFFER_BIT);
 
     for (i = 0; i < local->n; ++i)
         draw_tile_background(i);

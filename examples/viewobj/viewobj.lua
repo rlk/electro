@@ -211,4 +211,4 @@ end
 do_start()
 --do_keyboard(290, true)
 
-E.set_background(0, 0, 0, 0, 0, 0)
+--E.set_background(1, 0, 0, 0, 1, 0)
