@@ -120,7 +120,7 @@ static void server_perf(void)
 
         sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
         SDL_WM_SetCaption(buf, buf);
-        print("%s\n", buf);
+/*      print("%s\n", buf); */
 
         fps_old = fps_new;
     }

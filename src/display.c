@@ -695,11 +695,26 @@ int view_persp(int i, struct frustum *F, const float p[3])
         float p2[3];
         float p3[3];
 
-        P[0]  = T->d[0] + p[0];
-        P[1]  = T->d[1] + p[1];
-        P[2]  = T->d[2] + p[2];
+        /* Compute the view position. */
 
-        /* Compute the frustum planes. */
+        P[0] = T->d[0] + p[0];
+        P[1] = T->d[1] + p[1];
+        P[2] = T->d[2] + p[2];
+
+        /* Optionally reflect the view position across the mirror plane. */
+
+        if (T->flag & TILE_MIRROR)
+        {
+            float k = (P[0] * T->p[0] +
+                       P[1] * T->p[1] +
+                       P[2] * T->p[2]) - T->p[3];
+
+            P[0] -= T->p[0] * k * 2;
+            P[1] -= T->p[1] * k * 2;
+            P[2] -= T->p[2] * k * 2;
+        }
+
+        /* Compute the screen corners. */
 
         p0[0] = T->o[0];
         p0[1] = T->o[1];
@@ -716,6 +731,8 @@ int view_persp(int i, struct frustum *F, const float p[3])
         p3[0] = T->u[0] + p0[0];
         p3[1] = T->u[1] + p0[1];
         p3[2] = T->u[2] + p0[2];
+
+        /* Compute the frustum planes. */
 
         v_plane(F->V[0], P, p1, p0);
         v_plane(F->V[1], P, p2, p1);
@@ -800,9 +817,26 @@ int draw_persp(int i, float N, float F, const float p[3])
         float p1[3];
         float p3[3];
 
+        /* Compute the view position. */
+
         P[0]  = T->d[0] + p[0];
         P[1]  = T->d[1] + p[1];
         P[2]  = T->d[2] + p[2];
+
+        /* Optionally reflect the view position across the mirror. */
+
+        if (T->flag & TILE_MIRROR)
+        {
+            float k = (P[0] * T->p[0] +
+                       P[1] * T->p[1] +
+                       P[2] * T->p[2]) - T->p[3];
+
+            P[0] -= T->p[0] * k * 2;
+            P[1] -= T->p[1] * k * 2;
+            P[2] -= T->p[2] * k * 2;
+        }
+
+        /* Compute the screen corners. */
 
         p0[0] = T->o[0];
         p0[1] = T->o[1];
@@ -925,6 +959,11 @@ void draw_tile_background(int i)
 
         float k0 = (T->pix_y            - local->tot_y) / local->tot_h;
         float k1 = (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
+
+        /* Confine rendering to this tile. */
+
+        glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+        glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
 
         /* Map the tile onto the unit cube. */
 

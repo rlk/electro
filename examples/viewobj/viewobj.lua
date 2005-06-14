@@ -209,6 +209,6 @@ function do_keyboard(k, s)
 end
 
 do_start()
-do_keyboard(290, true)
+--do_keyboard(290, true)
 
-E.set_background(0.0, 0.0, 0.0)
+E.set_background(0, 0, 0, 0, 0, 0)
