@@ -132,11 +132,11 @@ end
 
 function do_keyboard(k, s)
     local dx =  2.50 / 12.0 * 0.5
---  local dy = -1.23 / 12.0
---  local dz =  2.00 / 12.0
+    local dy = -1.23 / 12.0
+    local dz =  2.00 / 12.0
 --  local dx = 0
-    local dy = 0
-    local dz = 0
+--  local dy = 0
+--  local dz = 0
 
     if s then
         if k == 13 then
@@ -164,21 +164,16 @@ function do_keyboard(k, s)
             return true
         end
         if k == 290 then -- F9
---          E.set_entity_frag_prog(scene, "../varrier.fp")
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 291 then -- F10
---          E.set_entity_frag_prog(scene, nil)
---          E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 292 then -- F11
---          E.set_entity_frag_prog(scene, nil)
---          E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
                                 -dx, dy, dz, dx, dy, dz)
             return true
@@ -205,8 +200,12 @@ function do_keyboard(k, s)
         if k == 275 then pan_x = pan_x - 1 end
         if k == 276 then pan_x = pan_x + 1 end
     end
-    return true
---  return varrier_keyboard(k, s)
+
+    if varrier_keyboard then
+        return varrier_keyboard(k, s)
+    else
+        return true
+    end
 end
 
 do_start()

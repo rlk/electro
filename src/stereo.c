@@ -194,7 +194,7 @@ static void draw_varrier_plane(int eye, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-#define LINESZ 256
+#define LINESZ 128
 
 static GLuint line_object[3] = { 0, 0, 0 };
 
