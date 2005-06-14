@@ -551,36 +551,34 @@ void send_set_entity_flag(int i, int flags, int state)
 
 void send_set_entity_frag_prog(int i, const char *text)
 {
-    int n = strlen(text) + 1;
+    int n = text ? (strlen(text) + 1) : 0;
 
     pack_event(EVENT_SET_ENTITY_FRAG_PROG);
     pack_index(i);
     pack_index(n);
     pack_alloc(n, text);
 
-    if (E(i)->frag_text)
-    {
-        fini_entity(i);
-        free(E(i)->frag_text);
-    }
+    fini_entity(i);
 
+    if (E(i)->frag_text)
+        free(E(i)->frag_text);
+    
     E(i)->frag_text = memdup(text, n, 1);
 }
 
 void send_set_entity_vert_prog(int i, const char *text)
 {
-    int n = strlen(text) + 1;
+    int n = text ? (strlen(text) + 1) : 0;
 
     pack_event(EVENT_SET_ENTITY_VERT_PROG);
     pack_index(i);
     pack_index(n);
     pack_alloc(n, text);
 
+    fini_entity(i);
+
     if (E(i)->vert_text)
-    {
-        fini_entity(i);
         free(E(i)->vert_text);
-    }
 
     E(i)->vert_text = memdup(text, n, 1);
 }

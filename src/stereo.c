@@ -12,6 +12,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "opengl.h"
 #include "stereo.h"
@@ -199,9 +200,13 @@ static GLuint line_object[3] = { 0, 0, 0 };
 
 static void init_line_texture(int tile, int chan)
 {
-    GLubyte *p;
+    static const GLubyte color[3][4] = {
+        { 0x00, 0xFF, 0xFF, 0xFF },
+        { 0xFF, 0x00, 0xFF, 0xFF },
+        { 0xFF, 0xFF, 0x00, 0xFF },
+    };
 
-    glEnable(GL_TEXTURE_2D);
+    GLubyte *p;
 
     /* If the requested texture object already exists, bind it. */
 
@@ -221,6 +226,18 @@ static void init_line_texture(int tile, int chan)
 
         /* Fill it with the line screen pattern for the given channel. */
 
+        memset(p, 0xFF, LINESZ * 8);
+
+        for (i = 0; i < LINESZ * c; ++i)
+            for (j = 0; j < 2; ++j)
+            {
+                p[(j * LINESZ + i) * 4 + 0] = color[chan][0];
+                p[(j * LINESZ + i) * 4 + 1] = color[chan][1];
+                p[(j * LINESZ + i) * 4 + 2] = color[chan][2];
+                p[(j * LINESZ + i) * 4 + 3] = color[chan][3];
+            }
+
+#ifdef SNIP
         for (i = LINESZ * c; i < LINESZ; ++i)
             for (j = 0; j < 2; ++j)
             {
@@ -229,6 +246,7 @@ static void init_line_texture(int tile, int chan)
                 p[(j * LINESZ + i) * 4 + 2] = (chan == 2) ? 0xFF : 0x00;
                 p[(j * LINESZ + i) * 4 + 3] = 0xFF;
             }
+#endif
 
         /* Configure the texture and specify the pixel buffer. */
 
@@ -281,15 +299,20 @@ static void move_line_texture(int tile, const float v[3], float px)
     {
         glLoadIdentity();
 
+#ifdef NORMILIZED_DEVICE_COORDINATES
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
-/*      glTranslatef(-s + dd - px, 0, 0);       Shift in feet.    */
         glTranslatef(-s + dd, 0, 0);         /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */
-/*      glScalef(0.5 * w, 0.5 * h, 1.0);        Scale to feet.    */
         glScalef(1.0 * w, 1.0 * h, 1.0);     /* Scale to feet.    */
 
         glTranslatef(-0.5f, -0.5f, 0.0f);
         glScalef(1.0 / 1600.0, 1.0 / 1200.0, 1.0);
+#else
+        glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
+        glTranslatef(-s + dd - px, 0, 0);    /* Shift in feet.    */
+        glRotatef(-a, 0, 0, 1);              /* Angle.            */
+        glScalef(0.5 * w, 0.5 * h, 1.0);     /* Scale to feet.    */
+#endif
     }
     glMatrixMode(GL_MODELVIEW);
 }
@@ -307,17 +330,64 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
         else
             glClear(GL_DEPTH_BUFFER_BIT);
 
+        /* Set up the line screen texture environments, last to first. */
+
         if (GL_has_multitexture)
         {
-            glActiveTextureARB(GL_TEXTURE3_ARB);
-            init_line_texture(tile, 2);
-            move_line_texture(tile, v, -px);
-            glActiveTextureARB(GL_TEXTURE2_ARB);
-            init_line_texture(tile, 1);
-            move_line_texture(tile, v, 0);
+            /* TU0 modulates the material against the base texture. */
+
+            glActiveTextureARB(GL_TEXTURE0_ARB);
+            glEnable(GL_TEXTURE_2D);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
+
+            /* TU1 samples the red line screen to the alpha channel. */
+
             glActiveTextureARB(GL_TEXTURE1_ARB);
+            glEnable(GL_TEXTURE_2D);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
             init_line_texture(tile, 0);
             move_line_texture(tile, v, +px);
+
+            /* TU2 accumulates the green line screen in the alpha channel. */
+
+            glActiveTextureARB(GL_TEXTURE2_ARB);
+            glEnable(GL_TEXTURE_2D);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
+            init_line_texture(tile, 1);
+            move_line_texture(tile, v, 0);
+
+            /* TU3 accumulates the blue line screen in the alpha channel. */
+
+            glActiveTextureARB(GL_TEXTURE3_ARB);
+            glEnable(GL_TEXTURE_2D);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
+            init_line_texture(tile, 2);
+            move_line_texture(tile, v, -px);
+
             glActiveTextureARB(GL_TEXTURE0_ARB);
         }
 
@@ -341,6 +411,7 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
             glActiveTextureARB(GL_TEXTURE1_ARB);
             glDisable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE0_ARB);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         }
     }
     return 0;

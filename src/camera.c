@@ -212,7 +212,7 @@ void draw_camera(int j, int i, const float M[16],
 
     /* Iterate over the eyes. */
 
-    for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
+    for (eye = 0; eye < 1 /*(c->mode ? 2 : 1)*/; ++eye)
     {
         int tile = 0;
         int next = 0;

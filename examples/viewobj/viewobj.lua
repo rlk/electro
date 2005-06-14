@@ -164,19 +164,21 @@ function do_keyboard(k, s)
             return true
         end
         if k == 290 then -- F9
-            E.set_entity_frag_prog(scene, "../varrier.fp")
+--          E.set_entity_frag_prog(scene, "../varrier.fp")
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 291 then -- F10
-            E.set_entity_frag_prog(scene, "../passthrough.fp")
+--          E.set_entity_frag_prog(scene, nil)
+--          E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 292 then -- F11
-            E.set_entity_frag_prog(scene, "../passthrough.fp")
+--          E.set_entity_frag_prog(scene, nil)
+--          E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
                                 -dx, dy, dz, dx, dy, dz)
             return true
@@ -208,6 +210,6 @@ function do_keyboard(k, s)
 end
 
 do_start()
-do_keyboard(291, true)
+do_keyboard(290, true)
 
 E.set_background(0.0, 0.0, 0.0)

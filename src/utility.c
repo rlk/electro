@@ -263,19 +263,21 @@ char *alloc_text(const char *filename)
     char *txt = NULL;
     FILE *fp  = NULL;
 
-    if (stat_file(filename, &buf) == 0)
+    if (filename)
     {
-        if ((fp = open_file(filename, "r")))
+        if (stat_file(filename, &buf) == 0)
         {
-            if ((txt = (char *) calloc(buf.st_size + 1, 1)))
-                fread(txt, 1, buf.st_size + 1, fp);
+            if ((fp = open_file(filename, "r")))
+            {
+                if ((txt = (char *) calloc(buf.st_size + 1, 1)))
+                    fread(txt, 1, buf.st_size + 1, fp);
 
-            fclose(fp);
+                fclose(fp);
+            }
+            else error ("'%s': %s", filename, system_error());
         }
-        else error ("'%s': %s", filename, system_error());
+        else error("'%s': %s", filename, system_error());
     }
-    else error("'%s': %s", filename, system_error());
-
     return txt;
 }
 

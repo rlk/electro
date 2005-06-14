@@ -200,6 +200,9 @@ static const char *script_getstring(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
+        if (lua_isnil(L, i))
+            return NULL;
+
         if (lua_isstring(L, i))
             return lua_tostring(L, i);
         else
@@ -632,12 +635,11 @@ static int script_set_entity_frag_prog(lua_State *L)
 {
     int id           = script_getentity(L, -2);
     const char *file = script_getstring(L, -1);
+    char       *text = alloc_text(file);
 
-    char *text = alloc_text(file);
-
-    if (text) send_set_entity_frag_prog(id, text);
-
+    send_set_entity_frag_prog(id, text);
     free(text);
+
     return 0;
 }
 
@@ -645,12 +647,11 @@ static int script_set_entity_vert_prog(lua_State *L)
 {
     int id           = script_getentity(L, -2);
     const char *file = script_getstring(L, -1);
+    char       *text = alloc_text(file);
 
-    char *text = alloc_text(file);
-
-    if (text) send_set_entity_vert_prog(id, text);
-
+    send_set_entity_vert_prog(id, text);
     free(text);
+
     return 0;
 }
 

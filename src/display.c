@@ -987,7 +987,6 @@ static void set_active_texture_coordinates(const float S[4],
                                            const float R[4],
                                            const float Q[4])
 {
-#ifdef SNIP
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
     glEnable(GL_TEXTURE_GEN_R);
@@ -1014,12 +1013,10 @@ static void set_active_texture_coordinates(const float S[4],
     glTexGenfv(GL_R, GL_OBJECT_PLANE, R);
     glTexGenfv(GL_Q, GL_OBJECT_PLANE, Q);
 #endif
-#endif
 }
 
 void set_texture_coordinates(void)
 {
-#ifdef SNIP
     if (GL_has_multitexture)
     {
         float P[16], M[16], X[16], S[4], T[4], R[4], Q[4];
@@ -1054,7 +1051,6 @@ void set_texture_coordinates(void)
         set_active_texture_coordinates(S, T, R, Q);
         glActiveTextureARB(GL_TEXTURE0_ARB);
     }
-#endif
 }
 
 /*---------------------------------------------------------------------------*/
