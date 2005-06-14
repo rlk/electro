@@ -201,9 +201,9 @@ static GLuint line_object[3] = { 0, 0, 0 };
 static void init_line_texture(int tile, int chan)
 {
     static const GLubyte color[3][4] = {
-        { 0x00, 0xFF, 0xFF, 0xFF },
-        { 0xFF, 0x00, 0xFF, 0xFF },
-        { 0xFF, 0xFF, 0x00, 0xFF },
+        { 0x00, 0xFF, 0xFF, 0x00 },
+        { 0xFF, 0x00, 0xFF, 0x00 },
+        { 0xFF, 0xFF, 0x00, 0x00 },
     };
 
     GLubyte *p;
@@ -330,23 +330,27 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
         else
             glClear(GL_DEPTH_BUFFER_BIT);
 
-        /* Set up the line screen texture environments, last to first. */
+        /* Set up the line screen texture environments. */
 
         if (GL_has_multitexture)
         {
-            /* TU0 modulates the material against the base texture. */
+            /* TU0 modulates the material RGB against the base texture,      */
+            /* giving the pixel RGB, and sums (and clamps) the red and       */
+            /* green line screen alpha values.                               */
 
             glActiveTextureARB(GL_TEXTURE0_ARB);
             glEnable(GL_TEXTURE_2D);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE0);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_TEXTURE1);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE2);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_ADD);
 
-            /* TU1 samples the red line screen to the alpha channel. */
+            /* TU1 modulates the pixel RGB against the red line screen and   */
+            /* sums (and clamps) the blue linescreen alpha value with the    */
+            /* red and green alpha values.                                   */
 
             glActiveTextureARB(GL_TEXTURE1_ARB);
             glEnable(GL_TEXTURE_2D);
@@ -355,12 +359,14 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE3);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_ADD);
             init_line_texture(tile, 0);
             move_line_texture(tile, v, +px);
 
-            /* TU2 accumulates the green line screen in the alpha channel. */
+            /* TU2 modulates the pixel color against the green line screen   */
+            /* and modulates the accumulated line screen alpha against the   */
+            /* material alpha value.                                         */
 
             glActiveTextureARB(GL_TEXTURE2_ARB);
             glEnable(GL_TEXTURE_2D);
@@ -369,12 +375,14 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_PRIMARY_COLOR);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
             init_line_texture(tile, 1);
             move_line_texture(tile, v, 0);
 
-            /* TU3 accumulates the blue line screen in the alpha channel. */
+            /* TU3 modulates the pixel color against the blue line screen    */
+            /* and modulates the accumulated line screen alpha against the   */
+            /* base texture alpha value.                                     */
 
             glActiveTextureARB(GL_TEXTURE3_ARB);
             glEnable(GL_TEXTURE_2D);
@@ -383,7 +391,7 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
             glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE0);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
             init_line_texture(tile, 2);
             move_line_texture(tile, v, -px);

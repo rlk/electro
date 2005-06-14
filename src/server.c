@@ -120,7 +120,7 @@ static void server_perf(void)
 
         sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
         SDL_WM_SetCaption(buf, buf);
-        printf("%s\n", buf);
+        print("%s\n", buf);
 
         fps_old = fps_new;
     }
@@ -130,18 +130,26 @@ static void server_perf(void)
 
 static int server_keydn(SDL_KeyboardEvent *k)
 {
+    int dirty = 0;
+
     if (console_is_enabled())
-        return input_console(k->keysym.sym, k->keysym.unicode);
-    else
-        return do_keyboard_script(k->keysym.sym, 1);
+        dirty |= input_console(k->keysym.sym, k->keysym.unicode);
+
+    dirty |= do_keyboard_script(k->keysym.sym, 1);
+
+    return dirty;
 }
 
 static int server_keyup(SDL_KeyboardEvent *k)
 {
+    int dirty = 0;
+
     if (console_is_enabled())
-        return input_console(0, 0);
-    else
-        return do_keyboard_script(k->keysym.sym, 0);
+        dirty |= input_console(0, 0);
+
+    dirty |= do_keyboard_script(k->keysym.sym, 0);
+
+    return dirty;
 }
 
 /*---------------------------------------------------------------------------*/
