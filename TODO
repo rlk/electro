@@ -1,5 +1,3 @@
-Backface culling on transparent objects.
-Rework background render to work with varrier
 Test total queue throughput.
 Test re-texture throughput on all clusters.
     (subimage/buffer reuse)

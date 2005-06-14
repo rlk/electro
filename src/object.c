@@ -778,12 +778,22 @@ static void draw_object(int j, int i, const float M[16],
 
                 glPushAttrib(GL_DEPTH_BUFFER_BIT);
                 {
-                    /* If this object is transparent, don't write depth. */
+                    /* If this object is transparent, don't write depth      */
+                    /* and render back-facing and front-facing separately.   */
 
                     if (d[3] < 1.0)
+                    {
                         glDepthMask(GL_FALSE);
+                        glCullFace(GL_FRONT);
 
-                    /* Draw this surface's faces and edges. */
+                        if (vecnum(s->fv) > 0)
+                            glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
+                                           GL_UNSIGNED_INT,  vecbuf(s->fv));
+
+                        glCullFace(GL_BACK);
+                    }
+
+                    /* Render all faces and edges. */
 
                     if (vecnum(s->fv) > 0)
                         glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
