@@ -224,8 +224,8 @@ static void draw_image(void)
 
 int startup_console(int w, int h)
 {
-    int W = GLYPH_W * w;
-    int H = GLYPH_H * h;
+    int W = IMG_W;
+    int H = IMG_H;
 
     if ((console = (unsigned char *) calloc(w * h * 4, 1)) &&
         (image   = (unsigned char *) calloc(W * H * 4, 1)))
@@ -434,8 +434,8 @@ int input_console(int symbol, int unicode)
     {
         if (history_i > 0)
             history_i--;
-
-        strncpy(command, *((char **) vecget(history, history_i)), MAXSTR);
+        if (history_i < vecnum(history))
+            strncpy(command, *((char **) vecget(history, history_i)), MAXSTR);
 
         command_i = strlen(command);
         refresh_command();
@@ -445,8 +445,8 @@ int input_console(int symbol, int unicode)
     {
         if (history_i < vecnum(history) - 1)
             history_i++;
-
-        strncpy(command, *((char **) vecget(history, history_i)), MAXSTR);
+        if (history_i < vecnum(history))
+            strncpy(command, *((char **) vecget(history, history_i)), MAXSTR);
 
         command_i = strlen(command);
         refresh_command();
