@@ -27,4 +27,4 @@ function tile_test(b)
     E.set_tile_flag(tile, E.tile_flag_test, b)
 end
 
-E.set_background(1, 1, 1)
+E.set_background(0, 0, 0)

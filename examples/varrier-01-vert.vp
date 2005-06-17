@@ -1,0 +1,37 @@
+!!ARBvp1.0
+
+OPTION ARB_position_invariant;
+
+TEMP norm;
+TEMP temp;
+TEMP clip;
+
+# Transform the vertex position to clip coordinates.
+
+DP4 clip.x, state.matrix.mvp.row[0], vertex.position;
+DP4 clip.y, state.matrix.mvp.row[1], vertex.position;
+DP4 clip.z, state.matrix.mvp.row[2], vertex.position;
+DP4 clip.w, state.matrix.mvp.row[3], vertex.position;
+
+# Transform the normalized position for use as line screen texture coordinate.
+
+DP4 result.texcoord[1].x, state.matrix.texture[1].row[0], clip;
+DP4 result.texcoord[1].y, state.matrix.texture[1].row[1], clip;
+DP4 result.texcoord[1].z, state.matrix.texture[1].row[2], clip;
+DP4 result.texcoord[1].w, state.matrix.texture[1].row[3], clip;
+
+DP4 result.texcoord[2].x, state.matrix.texture[2].row[0], clip;
+DP4 result.texcoord[2].y, state.matrix.texture[2].row[1], clip;
+DP4 result.texcoord[2].z, state.matrix.texture[2].row[2], clip;
+DP4 result.texcoord[2].w, state.matrix.texture[2].row[3], clip;
+
+DP4 result.texcoord[3].x, state.matrix.texture[3].row[0], clip;
+DP4 result.texcoord[3].y, state.matrix.texture[3].row[1], clip;
+DP4 result.texcoord[3].z, state.matrix.texture[3].row[2], clip;
+DP4 result.texcoord[3].w, state.matrix.texture[3].row[3], clip;
+
+# Copy over the necessary vertex parameters.
+
+MOV result.texcoord[0], vertex.texcoord[0];
+
+END

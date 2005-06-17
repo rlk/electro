@@ -28,18 +28,12 @@ ADD pos_b, pos_g, third;
 
 DP4 tex_r.r, state.matrix.texture[1].row[0], pos_r;
 DP4 tex_r.g, state.matrix.texture[1].row[1], pos_r;
-DP4 tex_r.b, state.matrix.texture[1].row[2], pos_r;
-DP4 tex_r.a, state.matrix.texture[1].row[3], pos_r;
 
 DP4 tex_g.r, state.matrix.texture[2].row[0], pos_g;
 DP4 tex_g.g, state.matrix.texture[2].row[1], pos_g;
-DP4 tex_g.b, state.matrix.texture[2].row[2], pos_g;
-DP4 tex_g.a, state.matrix.texture[2].row[3], pos_g;
 
 DP4 tex_b.r, state.matrix.texture[3].row[0], pos_b;
 DP4 tex_b.g, state.matrix.texture[3].row[1], pos_b;
-DP4 tex_b.b, state.matrix.texture[3].row[2], pos_b;
-DP4 tex_b.a, state.matrix.texture[3].row[3], pos_b;
 
 # Modulate the base material and line screen values for each channel.
 

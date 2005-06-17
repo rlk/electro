@@ -299,7 +299,7 @@ static void move_line_texture(int tile, const float v[3], float px)
     {
         glLoadIdentity();
 
-#ifdef NORMILIZED_DEVICE_COORDINATES
+#ifdef NORMALIZED_DEVICE_COORDINATES
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
         glTranslatef(-s + dd, 0, 0);         /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */

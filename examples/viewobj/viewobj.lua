@@ -17,24 +17,19 @@ function help()
     E.print_console(" F2: Toggle server rendering\n")
     E.print_console(" F3: Decrease server window resolution\n")
     E.print_console(" F4: Increase server window resolution\n")
-    E.print_console(" F5: Toggle server fullscreen\n")
-    E.print_console(" F6: Select mono-scopic rendering\n")
-    E.print_console(" F7: Select red-blue stereo\n")
-    E.print_console(" F8: Select quad-buffered stereo\n")
-    E.print_console(" F9: Select Varrier 1-1 stereo\n")
-    E.print_console("F10: Select Varrier 3-3 stereo\n")
-    E.print_console("F11: Select Varrier 4-1 stereo\n")
-    E.print_console("F12: Toggle test mode\n")
-
-    E.color_console(0.0, 0.5, 0.0)
-    E.print_console("(dismiss the console before switching stereo modes)\n")
-    E.color_console(0.0, 1.0, 0.0)
+    E.print_console(" F5: Select mono-scopic rendering\n")
+    E.print_console(" F6: Select red-blue stereo\n")
+    E.print_console(" F7: Select quad-buffered stereo\n")
+    E.print_console(" F8: Select Varrier 0-1 fixed function pipeline\n")
+    E.print_console(" F9: Select Varrier 0-1 fragment program\n")
+    E.print_console("F10: Select Varrier 0-1 vertex/fragment program\n")
+    E.print_console("F11: Select Varrier 1-1 stereo\n")
+    E.print_console("F12: Select Varrier 3-3 stereo\n")
 end
 
 function add_object(i, s)
     local object = E.create_object(s)
     E.parent_entity(object, scene)
---  E.set_entity_flag(object, E.entity_flag_transparent, true)
 end
 
 function do_start()
@@ -148,32 +143,58 @@ function do_keyboard(k, s)
             return true
         end
 
-        if k == 287 then -- F6
+        if k == 286 then -- F5
+            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
         end
-        if k == 288 then -- F7
+        if k == 287 then -- F6
+            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 289 then -- F8
+        if k == 288 then -- F7
+            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_quad,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
+        if k == 289 then -- F8
+            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_vert_prog(scene, nil)
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
+                                -dx, dy, dz, dx, dy, dz)
+            return true
+        end
         if k == 290 then -- F9
+            E.set_entity_frag_prog(scene, "../varrier-01-both.fp")
+            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 291 then -- F10
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
+            E.set_entity_frag_prog(scene, "../varrier-01-frag.fp")
+            E.set_entity_vert_prog(scene, "../varrier-01-vert.vp")
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 292 then -- F11
+            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_vert_prog(scene, nil)
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
+                                -dx, dy, dz, dx, dy, dz)
+            return true
+        end
+        if k == 293 then -- F12
+            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
                                 -dx, dy, dz, dx, dy, dz)
             return true
@@ -208,7 +229,7 @@ function do_keyboard(k, s)
     end
 end
 
+help()
 do_start()
---do_keyboard(290, true)
 
---E.set_background(1, 0, 0, 0, 1, 0)
+E.set_background(0, 0, 0)
