@@ -299,20 +299,13 @@ static void move_line_texture(int tile, const float v[3], float px)
     {
         glLoadIdentity();
 
-#ifdef NORMALIZED_DEVICE_COORDINATES
-        glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
-        glTranslatef(-s + dd, 0, 0);         /* Shift in feet.    */
-        glRotatef(-a, 0, 0, 1);              /* Angle.            */
-        glScalef(1.0 * w, 1.0 * h, 1.0);     /* Scale to feet.    */
+        glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0,
+                                   1.0 / 800.0, 1.0 / 600.0, 0.0, 0.0);
 
-        glTranslatef(-0.5f, -0.5f, 0.0f);
-        glScalef(1.0 / 1600.0, 1.0 / 1200.0, 1.0);
-#else
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
         glTranslatef(-s + dd - px, 0, 0);    /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */
         glScalef(0.5 * w, 0.5 * h, 1.0);     /* Scale to feet.    */
-#endif
     }
     glMatrixMode(GL_MODELVIEW);
 }

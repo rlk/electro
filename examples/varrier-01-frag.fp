@@ -9,6 +9,8 @@ TXP line.g, fragment.texcoord[2], texture[2], 2D;
 TXP line.b, fragment.texcoord[3], texture[3], 2D;
 DP3 line.a, line, line;
 
+#MUL base, base, fragment.color.primary;
+#ADD base, base, fragment.color.secondary;
 MUL result.color, base, line;
 
 END
