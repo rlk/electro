@@ -153,26 +153,26 @@ function do_keyboard(k, s)
         if k == 287 then -- F6
             E.set_entity_frag_prog(scene, nil)
             E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 288 then -- F7
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_quad,
+            E.set_entity_frag_prog(scene, "../varrier-01-fntx.fp")
+            E.set_entity_vert_prog(scene, "../varrier-01-vert.vp")
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 289 then -- F8
-            E.set_entity_frag_prog(scene, nil)
+            E.set_entity_frag_prog(scene, "../varrier-01-both.fp")
             E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 290 then -- F9
-            E.set_entity_frag_prog(scene, "../varrier-01-both.fp")
+            E.set_entity_frag_prog(scene, "../varrier-01-ntex.fp")
             E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
