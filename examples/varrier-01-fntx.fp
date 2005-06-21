@@ -18,13 +18,15 @@ RCP temp.g, fragment.texcoord[2].w;
 RCP temp.b, fragment.texcoord[3].w;
 
 MUL texc.r, fragment.texcoord[1].x, temp.r;
-MUL texc.g, fragment.texcoord[1].x, temp.g;
-MUL texc.b, fragment.texcoord[1].x, temp.b;
+MUL texc.g, fragment.texcoord[2].x, temp.g;
+MUL texc.b, fragment.texcoord[3].x, temp.b;
 
 FRC texc, texc;
 SGE line, texc, cycle;
 DP3 line.a, line, line;
 
+MUL base, base, fragment.color.primary;
+ADD base, base, fragment.color.secondary;
 MUL result.color, base, line;
 
 END
