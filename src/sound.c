@@ -21,6 +21,8 @@
 #include "entity.h"
 #include "sound.h"
 
+#ifndef NAUDIO
+
 /*---------------------------------------------------------------------------*/
 
 #define BUFSIZE 2048
@@ -28,12 +30,8 @@
 #define BUFCHAN 2
 #define BUFFORM AUDIO_S16
 
-#ifndef NAUDIO
-
 static SDL_AudioSpec spec;
 static float        *buff;
-
-#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -63,8 +61,6 @@ static int new_sound(void)
 }
 
 /*---------------------------------------------------------------------------*/
-
-#ifndef NAUDIO
 
 static int mix_sound(int i, float *fbuf, short *sbuf, int max)
 {
@@ -134,8 +130,6 @@ static void step_sound(void *data, Uint8 *stream, int length)
         else                       output[i] = (short) (buff[i]);
 }
 
-#endif
-
 /*---------------------------------------------------------------------------*/
 
 int create_sound(const char *filename)
@@ -173,14 +167,12 @@ void delete_sound(int i)
 
 static void set_sound_mode(int i, int mode)
 {
-#ifndef NAUDIO
     SDL_LockAudio();
     {
         ov_pcm_seek(&S(i)->file, 0);
         S(i)->mode = mode;
     }
     SDL_UnlockAudio();
-#endif
 }
 
 void stop_sound(int i)
@@ -202,7 +194,6 @@ void loop_sound(int i)
 
 int startup_sound(void)
 {
-#ifndef NAUDIO
     spec.callback = step_sound;
     spec.channels = BUFCHAN;
     spec.samples  = BUFSIZE;
@@ -219,7 +210,27 @@ int startup_sound(void)
     else fprintf(stderr, "%s\n", SDL_GetError());
 
     return 0;
-#else
-    return 1;
-#endif
 }
+
+/*---------------------------------------------------------------------------*/
+
+#else  /* NAUDIO is defined.  Stub all audio functions. */
+
+int startup_sound(void)
+{
+    return 1;
+}
+
+int create_sound(const char *filename)
+{
+    return -1;
+}
+
+void delete_sound(int i) { }
+void stop_sound(int i)   { }
+void play_sound(int i)   { }
+void loop_sound(int i)   { }
+
+#endif /* NAUDIO */
+
+/*---------------------------------------------------------------------------*/

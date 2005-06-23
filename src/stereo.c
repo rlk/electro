@@ -237,17 +237,6 @@ static void init_line_texture(int tile, int chan)
                 p[(j * LINESZ + i) * 4 + 3] = color[chan][3];
             }
 
-#ifdef SNIP
-        for (i = LINESZ * c; i < LINESZ; ++i)
-            for (j = 0; j < 2; ++j)
-            {
-                p[(j * LINESZ + i) * 4 + 0] = (chan == 0) ? 0xFF : 0x00;
-                p[(j * LINESZ + i) * 4 + 1] = (chan == 1) ? 0xFF : 0x00;
-                p[(j * LINESZ + i) * 4 + 2] = (chan == 2) ? 0xFF : 0x00;
-                p[(j * LINESZ + i) * 4 + 3] = 0xFF;
-            }
-#endif
-
         /* Configure the texture and specify the pixel buffer. */
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

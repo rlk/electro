@@ -15,7 +15,7 @@ OUTPUT ocol = result.color;
 
 SUB    dist, texc, half;
 
-# Scole the normal distribution texture inversely to the value of each channel.
+# Scale the normal distribution texture inversely to the value of each channel.
 
 RCP    ncol.r, icol.r;
 RCP    ncol.g, icol.g;

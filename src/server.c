@@ -98,6 +98,8 @@ static void server_draw(void)
 {
     if (server_mirror)
         draw_entities();
+    else
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     draw_console();
 
@@ -120,7 +122,6 @@ static void server_perf(void)
 
         sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
         SDL_WM_SetCaption(buf, buf);
-        print("%s\n", buf);
 
         fps_old = fps_new;
     }

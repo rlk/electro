@@ -86,7 +86,7 @@ struct tile
 
 struct host
 {
-	int  flag;
+    int  flag;
     char name[MAXNAME];
     int  tile[MAXTILE];
 

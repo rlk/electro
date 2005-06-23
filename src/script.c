@@ -124,6 +124,8 @@ static void lua_pushentity(lua_State *L, int id)
 /*---------------------------------------------------------------------------*/
 /* Sound userdata handlers                                                   */
 
+#ifndef NAUDIO
+
 static int lua_tosound(lua_State *L, int i)
 {
     return lua_touserdata_data(L, i);
@@ -142,6 +144,8 @@ static void lua_pushsound(lua_State *L, int id)
     else
         lua_pushuserdata(L, USERDATA_SOUND, id);
 }
+
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* Function argument error reporters                                         */
@@ -347,13 +351,16 @@ static int script_getsound(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
+#ifndef NAUDIO
         if (lua_issound(L, i))
             return lua_tosound(L, i);
         else
             script_type_error("sound", L, i);
+#else
+        lua_pushnil(L);
+        return 1;
+#endif
     }
-    else script_arity_error(L, i);
-
     return 0;
 }
 
@@ -952,7 +959,11 @@ static int script_get_sprite_size(lua_State *L)
 
 static int script_load_sound(lua_State *L)
 {
+#ifndef NAUDIO
     lua_pushsound(L, create_sound(script_getstring(L, -1)));
+#else
+    lua_pushnil(L);
+#endif
     return 1;
 }
 

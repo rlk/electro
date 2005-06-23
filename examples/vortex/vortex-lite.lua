@@ -68,8 +68,8 @@ function do_start()
     E.parent_entity(hilite, camera)
     E.parent_entity(marker, camera)
 
---  add_constellation("cassiopeia.obj")
---  add_constellation("orion.obj")
+    add_constellation("cassiopeia.obj")
+    add_constellation("orion.obj")
     
     E.set_galaxy_magnitude(galaxy, magn)
 

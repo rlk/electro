@@ -137,13 +137,14 @@ int add_host(const char *name, int x, int y, int w, int h)
     {
         struct host *H = (struct host *) vecget(host, i);
 
+        H->flag  = 0;
+
         /* Store the name for future host name searching. */
 
         strncpy(H->name, name, MAXNAME);
 
         /* The rectangle defines window size and default total display size. */
 
-		H->flag  = 0;
         H->tot_x = H->win_x = x;
         H->tot_y = H->win_y = y;
         H->tot_w = H->win_w = w;
@@ -160,6 +161,8 @@ int add_tile(int i, int x, int y, int w, int h)
     {
         struct host *H = (struct host *) vecget(host, i);
         struct tile *T = (struct tile *) vecget(tile, j);
+
+        T->flag = 0;
 
         /* The rectangle defines viewport size and default ortho projection. */
 
