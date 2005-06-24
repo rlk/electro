@@ -781,7 +781,7 @@ static void draw_object(int j, int i, const float M[16],
                     /* If this object is transparent, don't write depth      */
                     /* and render back-facing and front-facing separately.   */
 
-                    if (d[3] < 1.0)
+                    if ((d[3] < 1) || (get_entity_flag(j) & FLAG_TRANSPARENT))
                     {
                         glDepthMask(GL_FALSE);
                         glCullFace(GL_FRONT);

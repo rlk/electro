@@ -116,9 +116,9 @@ ifneq ($(shell which svnversion),)
 
 src/version.c : FORCE
 	echo -n 'const char *version(void) { const char *str = "' \
-	                         > src/version.c
-	svnversion -n .         >> src/version.c
-	echo '"; return str; }' >> src/version.c
+	                              > src/version.c
+	svnversion -n . | tr -d '\n' >> src/version.c
+	echo '"; return str; }'      >> src/version.c
 
 else
 

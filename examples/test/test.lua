@@ -31,7 +31,7 @@ function do_start()
     E.parent_entity(thing1, pivot)
     E.parent_entity(thing2, pivot)
 
-    E.set_entity_alpha(thing2, 0.75)
+    E.set_entity_flag(thing2, E.entity_flag_transparent, true)
 
     E.set_entity_position(light,  0.0,  10.0,   0.0)
     E.set_entity_position(pivot,  0.0, -10.0, -10.0)

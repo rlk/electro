@@ -760,6 +760,11 @@ float get_entity_alpha(int i)
     return E(i)->alpha;
 }
 
+int get_entity_flag(int i)
+{
+    return E(i)->flag;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static void create_clone(int i, int j)

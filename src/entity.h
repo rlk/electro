@@ -140,6 +140,7 @@ void  get_entity_y_vector(int, float[3]);
 void  get_entity_z_vector(int, float[3]);
 void  get_entity_scale   (int, float[3]);
 float get_entity_alpha   (int);
+int   get_entity_flag    (int);
 
 /*---------------------------------------------------------------------------*/
 

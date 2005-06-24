@@ -96,10 +96,13 @@ static void server_swap(void)
 
 static void server_draw(void)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     if (server_mirror)
+    {
+        draw_host_background();
         draw_entities();
-    else
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
     draw_console();
 
