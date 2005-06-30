@@ -46,7 +46,7 @@ int test_frustum(const struct frustum *F, const float b[6])
     if ((c2 = test_plane(F->V[2], b)) == 0) return -1;
     if ((c3 = test_plane(F->V[3], b)) == 0) return -1;
 
-    return (c0 + c1 + c2 + c3 == 32) ? +1 : 0;
+    return (c0 + c1 + c2 + c3 == 32) ? 1 : 0;
 }
 
 /*---------------------------------------------------------------------------*/

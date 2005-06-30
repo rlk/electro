@@ -338,7 +338,7 @@ void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
     p[0] /= k;
     p[1] /= k;
     p[2] /= k;
-    p[3]  = (p[0] * a[0] + p[1] * a[1] + p[2] * a[2]);
+    p[3]  = p[0] * a[0] + p[1] * a[1] + p[2] * a[2];
 }
 
 void v_basis(float e[3][3], const float r[3], int b)

@@ -742,9 +742,9 @@ int view_persp(int i, struct frustum *F, const float p[3])
         v_plane(F->V[2], P, p3, p2);
         v_plane(F->V[3], P, p0, p3);
 
-        F->p[0] = 0.0f;
-        F->p[1] = 0.0f;
-        F->p[2] = 0.0f;
+        F->p[0] = P[0];
+        F->p[1] = P[1];
+        F->p[2] = P[2];
         F->p[3] = 1.0f;
 
         return i + 1;
@@ -960,8 +960,8 @@ void draw_tile_background(int i)
 
         /* Compute the beginning and end of this tile's gradiant. */
 
-        float k0 = (T->pix_y            - local->tot_y) / local->tot_h;
-        float k1 = (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
+        float k0 = (float) (T->pix_y            - local->tot_y) / local->tot_h;
+        float k1 = (float) (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
 
         /* Confine rendering to this tile. */
 

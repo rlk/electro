@@ -130,10 +130,6 @@ static void transform_camera_gl(int i, const float p[3])
 {
     GLfloat A[16];
 
-    /* Camera tracking. */
-
-/*  glTranslatef(-p[0], -p[1], -p[2]); */
-
     /* Camera rotation. */
 
     m_xpos(A, E(i)->rotation);
@@ -193,12 +189,6 @@ void transform_camera(int i, float N[16], const float M[16],
     m_copy(N, M);
     m_copy(J, I);
 
-    /* Camera tracking */
-    /*
-    m_trans(A, B, -p[0], -p[1], -p[2]);
-    m_mult(N, N, A);
-    m_mult(J, B, J);
-    */
     /* Camera rotation. */
 
     m_xpos(A, E(i)->rotation);
@@ -228,16 +218,16 @@ void transform_entity(int i, float N[16], const float M[16],
 
     /* Entity position. */
 
-    m_trans(A, B, E(i)->position[0],
-                  E(i)->position[1],
-                  E(i)->position[2]);
+    m_trans(A, B, -E(i)->position[0],
+                  -E(i)->position[1],
+                  -E(i)->position[2]);
     m_mult(N, N, A);
     m_mult(J, B, J);
 
     /* Entity rotation. */
 
-    m_copy(A, E(i)->rotation);
-    m_xpos(B, E(i)->rotation);
+    m_xpos(A, E(i)->rotation);
+    m_copy(B, E(i)->rotation);
     m_mult(N, N, A);
     m_mult(J, B, J);
 

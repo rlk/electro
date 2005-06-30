@@ -16,6 +16,7 @@
 
 #include "opengl.h"
 #include "vector.h"
+#include "matrix.h"
 #include "buffer.h"
 #include "entity.h"
 #include "image.h"
@@ -86,6 +87,8 @@ struct object
     vector_t mv;
     vector_t vv;
     vector_t sv;
+
+    float bound[6];
 };
 
 static vector_t object;
@@ -545,6 +548,8 @@ static int read_obj(const char *filename, struct object *o)
     char L[MAXSTR];
     char W[MAXSTR];
     FILE *fin;
+
+    int i;
     int r = 0;
     int n = 0;
 
@@ -588,6 +593,29 @@ static int read_obj(const char *filename, struct object *o)
     }
     else error("OBJ file '%s': %s", filename, system_error());
 
+    /* Find the object's bounding box. */
+
+    if (vecnum(o->vv) > 0)
+    {
+        const float *v = ((struct object_vert *) vecget(o->vv, 0))->v;
+
+        o->bound[0] = o->bound[3] = v[0];
+        o->bound[1] = o->bound[4] = v[1];
+        o->bound[2] = o->bound[5] = v[2];
+    }
+
+    for (i = 0; i < vecnum(o->vv); ++i)
+    {
+        const float *v = ((struct object_vert *) vecget(o->vv, i))->v;
+
+        o->bound[0] = MIN(v[0], o->bound[0]);
+        o->bound[1] = MIN(v[1], o->bound[1]);
+        o->bound[2] = MIN(v[2], o->bound[2]);
+        o->bound[3] = MAX(v[0], o->bound[3]);
+        o->bound[4] = MAX(v[1], o->bound[4]);
+        o->bound[5] = MAX(v[2], o->bound[5]);
+    }
+
     /* Release the loader caches. */
 
     vecdel(_vv);
@@ -619,6 +647,12 @@ int send_create_object(const char *filename)
 
             pack_event(EVENT_CREATE_OBJECT);
             pack_index(n);
+            pack_float(O(i)->bound[0]);
+            pack_float(O(i)->bound[1]);
+            pack_float(O(i)->bound[2]);
+            pack_float(O(i)->bound[3]);
+            pack_float(O(i)->bound[4]);
+            pack_float(O(i)->bound[5]);
 
             /* Pack the vertices and materials. */
 
@@ -654,7 +688,13 @@ void recv_create_object(void)
     int n = unpack_index();
     int j, k;
 
-    O(i)->count = 1;
+    O(i)->count    = 1;
+    O(i)->bound[0] = unpack_float();
+    O(i)->bound[1] = unpack_float();
+    O(i)->bound[2] = unpack_float();
+    O(i)->bound[3] = unpack_float();
+    O(i)->bound[4] = unpack_float();
+    O(i)->bound[5] = unpack_float();
 
     /* Unpack the vertices and materials.  Allocate space for surfaces. */
 
@@ -718,6 +758,57 @@ static void fini_object(int i)
 
 /*---------------------------------------------------------------------------*/
 
+static void draw_surface(const struct object_surf *s,
+                         const struct object_mtrl *m, int flag, float alpha)
+{
+    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    draw_image(m->image);
+
+    /* Modulate the diffuse color by the current alpha. */
+
+    d[0] = m->d[0];
+    d[1] = m->d[1];
+    d[2] = m->d[2];
+    d[3] = m->d[3] * alpha;
+
+    /* Apply the material properties. */
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
+
+    glPushAttrib(GL_DEPTH_BUFFER_BIT);
+    {
+        /* If this object is transparent, don't write depth      */
+        /* and render back-facing and front-facing separately.   */
+
+        if ((d[3] < 1) || (flag & FLAG_TRANSPARENT))
+        {
+            glDepthMask(GL_FALSE);
+            glCullFace(GL_FRONT);
+
+            if (vecnum(s->fv) > 0)
+                glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
+                               GL_UNSIGNED_INT,  vecbuf(s->fv));
+
+            glCullFace(GL_BACK);
+        }
+
+        /* Render all faces and edges. */
+
+        if (vecnum(s->fv) > 0)
+            glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
+                           GL_UNSIGNED_INT,  vecbuf(s->fv));
+        if (vecnum(s->ev) > 0)
+            glDrawElements(GL_LINES,     2 * vecnum(s->ev),
+                           GL_UNSIGNED_INT,  vecbuf(s->ev));
+    }
+    glPopAttrib();
+}
+
 static void draw_object(int j, int i, const float M[16],
                                       const float I[16],
                                       const struct frustum *F, float a)
@@ -730,83 +821,55 @@ static void draw_object(int j, int i, const float M[16],
 
     float N[16];
     float J[16];
-    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
     init_object(i);
 
     glPushMatrix();
     {
+        struct frustum E;
+
         /* Apply the local coordinate system transformation. */
 
         transform_entity(j, N, M, J, I);
 
+        m_pfrm(E.V[0], N, F->V[0]);
+        m_pfrm(E.V[1], N, F->V[1]);
+        m_pfrm(E.V[2], N, F->V[2]);
+        m_pfrm(E.V[3], N, F->V[3]);
+        m_xfrm(E.p,    J, F->p);
+
         /* Render this object. */
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
+        if (test_frustum(&E, O(i)->bound) >= 0)
         {
-            if (GL_has_vertex_buffer_object)
+            glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+            glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
             {
-                glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
-                glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
-            }
-            else
-                glInterleavedArrays(GL_T2F_N3F_V3F, stride,
-                                    vecget(O(i)->vv, 0));
+                /* Bind a vertex buffer or array. */
 
-            for (k = 0; k < n; ++k)
-            {
-                s = (struct object_surf *) vecget(O(i)->sv, k);
-                m = (struct object_mtrl *) vecget(O(i)->mv, s->mi);
-
-                draw_image(m->image);
-
-                /* Modulate the diffuse color by the current alpha. */
-
-                d[0] = m->d[0];
-                d[1] = m->d[1];
-                d[2] = m->d[2];
-                d[3] = m->d[3] * a * get_entity_alpha(j);
-
-                /* Apply the material properties. */
-
-                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
-
-                glPushAttrib(GL_DEPTH_BUFFER_BIT);
+                if (GL_has_vertex_buffer_object)
                 {
-                    /* If this object is transparent, don't write depth      */
-                    /* and render back-facing and front-facing separately.   */
-
-                    if ((d[3] < 1) || (get_entity_flag(j) & FLAG_TRANSPARENT))
-                    {
-                        glDepthMask(GL_FALSE);
-                        glCullFace(GL_FRONT);
-
-                        if (vecnum(s->fv) > 0)
-                            glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
-                                           GL_UNSIGNED_INT,  vecbuf(s->fv));
-
-                        glCullFace(GL_BACK);
-                    }
-
-                    /* Render all faces and edges. */
-
-                    if (vecnum(s->fv) > 0)
-                        glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
-                                       GL_UNSIGNED_INT,  vecbuf(s->fv));
-                    if (vecnum(s->ev) > 0)
-                        glDrawElements(GL_LINES,     2 * vecnum(s->ev),
-                                       GL_UNSIGNED_INT,  vecbuf(s->ev));
+                    glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
+                    glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
                 }
-                glPopAttrib();
+                else
+                    glInterleavedArrays(GL_T2F_N3F_V3F, stride,
+                                        vecget(O(i)->vv, 0));
+
+                /* Draw each surface. */
+
+                for (k = 0; k < n; ++k)
+                {
+                    s = (struct object_surf *) vecget(O(i)->sv, k);
+                    m = (struct object_mtrl *) vecget(O(i)->mv, s->mi);
+  
+                    draw_surface(s, m, get_entity_flag(j),
+                                       get_entity_alpha(j) * a);
+                }
             }
+            glPopAttrib();
+            glPopClientAttrib();
         }
-        glPopAttrib();
-        glPopClientAttrib();
 
         /* Render all child entities in this coordinate system. */
 

@@ -437,8 +437,8 @@ static void draw_galaxy(int j, int i, const float M[16],
             glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
                                        -E.p[0], -E.p[1], -E.p[2], -E.p[3]);
 
-        glPushAttrib(GL_ENABLE_BIT  |
-                     GL_TEXTURE_BIT |
+        glPushAttrib(GL_ENABLE_BIT       |
+                     GL_TEXTURE_BIT      |
                      GL_DEPTH_BUFFER_BIT |
                      GL_COLOR_BUFFER_BIT);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);

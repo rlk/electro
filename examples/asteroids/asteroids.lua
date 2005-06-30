@@ -11,7 +11,7 @@
 --    General Public License for more details.
 
 sound_on = true
-music_on = false
+music_on = true
 
 -------------------------------------------------------------------------------
 -- Global variables, game state, and scene graph entities:
@@ -824,7 +824,7 @@ function test_player(id, asteroid)
     end
 end
 
-function init_player()
+function init_player(new)
     local s = 0.05
 
     -- If the player has not yet been initialized, create its entities.
@@ -842,7 +842,11 @@ function init_player()
     -- If any ships remain, initialize one of them.
 
     if curr_ships > 0 then
-        curr_ships = curr_ships - 1
+        if new then
+            curr_ships = curr_ships - 1
+        end
+
+        set_overlay_curr_ships(curr_ships)
 
         E.set_entity_position(player.entity, 0, 0, 0)
         E.set_entity_rotation(player.entity, 0, 0, 0)
@@ -856,8 +860,6 @@ function init_player()
         player.rot       = 0
         player.dx        = 0
         player.dy        = 0
-
-        set_overlay_curr_ships(curr_ships)
 
         return true
     else
@@ -913,6 +915,7 @@ function step_player(dt)
 end
 
 function kill_player()
+
     add_explosion(player.entity, entity.ship_explosion, 5)
     add_shockwave(player.entity, entity.ship_shockwave, 5)
     
@@ -971,7 +974,7 @@ function state.title.enter()
 end
 
 function state.title.leave()
-    curr_ships =    3
+    curr_ships =    2
     curr_speed =  100
     curr_level =    0
     curr_score =    0
@@ -1010,7 +1013,7 @@ function state.ready.enter()
 
     stop_level()
     init_level()
-    init_player()
+    init_player(false)
 
     set_overlay_digit(overlay.level, curr_level)
 end
@@ -1079,7 +1082,7 @@ end
 
 function state.dead.button_A(s)
     if s and time_state > 1 then
-        if init_player() then
+        if init_player(true) then
             return state.play
         else
             if curr_score > high_score then

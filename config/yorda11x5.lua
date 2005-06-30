@@ -9,19 +9,19 @@ iw =   17.000 / 12.0 -- inside size in feet
 ih =   12.750 / 12.0
 mw =    1.375 / 12.0 -- mullion size in feet
 mh =    1.250 / 12.0
-ow = iw + mw         -- outsize size in feet
+ow = iw + mw         -- outside size in feet
 oh = ih + mh
 kw = pw / iw         -- pixels per foot
 kh = ph / ih
 
-x = { -iw - mw / 2 - ow * 4,
-      -iw - mw / 2 - ow * 3,
-      -iw - mw / 2 - ow * 2,
-      -iw - mw / 2 - ow,
-      -iw - mw / 2,
-      -iw - mw / 2 + ow,
-      -iw - mw / 2 + ow * 2,
-      -iw - mw / 2 + ow * 3 }
+x = { mw / 2 - ow * 4,
+      mw / 2 - ow * 3,
+      mw / 2 - ow * 2,
+      mw / 2 - ow,
+      mw / 2,
+      mw / 2 + ow,
+      mw / 2 + ow * 2,
+      mw / 2 + ow * 3 }
 
 y = { -ih / 2 - oh * 2,
       -ih / 2 - oh,
@@ -29,7 +29,7 @@ y = { -ih / 2 - oh * 2,
       -ih / 2 + oh,
       -ih / 2 + oh * 2 }
 
-z = -10
+z = -6
 
 L = { (x[1] - x[1]) * kw,
       (x[2] - x[1]) * kw,
@@ -70,47 +70,47 @@ host[20] = E.add_host("nico5-10",   0, 0, pw * 2, ph)
 
 E.set_host_flag(host[0], E.host_flag_framed, true)
 
-tile[0]  = E.add_tile(host[0],   0, 0, sw, sh)
-tile[1]  = E.add_tile(host[1],   0, 0, pw, ph)
-tile[2]  = E.add_tile(host[1],  pw, 0, pw, ph)
-tile[3]  = E.add_tile(host[2],   0, 0, pw, ph)
-tile[4]  = E.add_tile(host[2],  pw, 0, pw, ph)
-tile[5]  = E.add_tile(host[3],   0, 0, pw, ph)
-tile[6]  = E.add_tile(host[3],  pw, 0, pw, ph)
-tile[7]  = E.add_tile(host[4],   0, 0, pw, ph)
-tile[8]  = E.add_tile(host[4],  pw, 0, pw, ph)
-tile[9]  = E.add_tile(host[5],   0, 0, pw, ph)
-tile[10] = E.add_tile(host[5],  pw, 0, pw, ph)
-tile[11] = E.add_tile(host[6],   0, 0, pw, ph)
-tile[12] = E.add_tile(host[6],  pw, 0, pw, ph)
-tile[13] = E.add_tile(host[7],   0, 0, pw, ph)
-tile[14] = E.add_tile(host[7],  pw, 0, pw, ph)
-tile[15] = E.add_tile(host[8],   0, 0, pw, ph)
-tile[16] = E.add_tile(host[8],  pw, 0, pw, ph)
-tile[17] = E.add_tile(host[9],   0, 0, pw, ph)
-tile[18] = E.add_tile(host[9],  pw, 0, pw, ph)
-tile[19] = E.add_tile(host[10],  0, 0, pw, ph)
-tile[20] = E.add_tile(host[10], pw, 0, pw, ph)
-tile[21] = E.add_tile(host[11],  0, 0, pw, ph)
-tile[22] = E.add_tile(host[11], pw, 0, pw, ph)
-tile[23] = E.add_tile(host[12],  0, 0, pw, ph)
-tile[24] = E.add_tile(host[12], pw, 0, pw, ph)
-tile[25] = E.add_tile(host[13],  0, 0, pw, ph)
-tile[26] = E.add_tile(host[13], pw, 0, pw, ph)
-tile[27] = E.add_tile(host[14],  0, 0, pw, ph)
-tile[28] = E.add_tile(host[14], pw, 0, pw, ph)
-tile[29] = E.add_tile(host[15],  0, 0, pw, ph)
-tile[30] = E.add_tile(host[15], pw, 0, pw, ph)
-tile[31] = E.add_tile(host[16],  0, 0, pw, ph)
-tile[32] = E.add_tile(host[16], pw, 0, pw, ph)
-tile[33] = E.add_tile(host[17],  0, 0, pw, ph)
-tile[34] = E.add_tile(host[17], pw, 0, pw, ph)
-tile[35] = E.add_tile(host[18],  0, 0, pw, ph)
-tile[36] = E.add_tile(host[18], pw, 0, pw, ph)
-tile[37] = E.add_tile(host[19],  0, 0, pw, ph)
-tile[38] = E.add_tile(host[19], pw, 0, pw, ph)
-tile[39] = E.add_tile(host[20],  0, 0, pw, ph)
-tile[40] = E.add_tile(host[20], pw, 0, pw, ph)
+tile[0]  = E.add_tile(host[0],       0, 0, sw, sh)
+tile[1]  = E.add_tile(host[1],       0, 0, pw - 1, ph)
+tile[2]  = E.add_tile(host[1],  pw - 1, 0, pw - 1, ph)
+tile[3]  = E.add_tile(host[2],       0, 0, pw - 1, ph)
+tile[4]  = E.add_tile(host[2],  pw - 1, 0, pw - 1, ph)
+tile[5]  = E.add_tile(host[3],       0, 0, pw - 1, ph)
+tile[6]  = E.add_tile(host[3],  pw - 1, 0, pw - 1, ph)
+tile[7]  = E.add_tile(host[4],       0, 0, pw - 1, ph)
+tile[8]  = E.add_tile(host[4],  pw - 1, 0, pw - 1, ph)
+tile[9]  = E.add_tile(host[5],       0, 0, pw - 1, ph)
+tile[10] = E.add_tile(host[5],  pw - 1, 0, pw - 1, ph)
+tile[11] = E.add_tile(host[6],       0, 0, pw - 1, ph)
+tile[12] = E.add_tile(host[6],  pw - 1, 0, pw - 1, ph)
+tile[13] = E.add_tile(host[7],       0, 0, pw - 1, ph)
+tile[14] = E.add_tile(host[7],  pw - 1, 0, pw - 1, ph)
+tile[15] = E.add_tile(host[8],       0, 0, pw - 1, ph)
+tile[16] = E.add_tile(host[8],  pw - 1, 0, pw - 1, ph)
+tile[17] = E.add_tile(host[9],       0, 0, pw - 1, ph)
+tile[18] = E.add_tile(host[9],  pw - 1, 0, pw - 1, ph)
+tile[19] = E.add_tile(host[10],      0, 0, pw - 1, ph)
+tile[20] = E.add_tile(host[10], pw - 1, 0, pw - 1, ph)
+tile[21] = E.add_tile(host[11],      0, 0, pw - 1, ph)
+tile[22] = E.add_tile(host[11], pw - 1, 0, pw - 1, ph)
+tile[23] = E.add_tile(host[12],      0, 0, pw - 1, ph)
+tile[24] = E.add_tile(host[12], pw - 1, 0, pw - 1, ph)
+tile[25] = E.add_tile(host[13],      0, 0, pw - 1, ph)
+tile[26] = E.add_tile(host[13], pw - 1, 0, pw - 1, ph)
+tile[27] = E.add_tile(host[14],      0, 0, pw - 1, ph)
+tile[28] = E.add_tile(host[14], pw - 1, 0, pw - 1, ph)
+tile[29] = E.add_tile(host[15],      0, 0, pw - 1, ph)
+tile[30] = E.add_tile(host[15], pw - 1, 0, pw - 1, ph)
+tile[31] = E.add_tile(host[16],      0, 0, pw - 1, ph)
+tile[32] = E.add_tile(host[16], pw - 1, 0, pw - 1, ph)
+tile[33] = E.add_tile(host[17],      0, 0, pw - 1, ph)
+tile[34] = E.add_tile(host[17], pw - 1, 0, pw - 1, ph)
+tile[35] = E.add_tile(host[18],      0, 0, pw - 1, ph)
+tile[36] = E.add_tile(host[18], pw - 1, 0, pw - 1, ph)
+tile[37] = E.add_tile(host[19],      0, 0, pw - 1, ph)
+tile[38] = E.add_tile(host[19], pw - 1, 0, pw - 1, ph)
+tile[39] = E.add_tile(host[20],      0, 0, pw - 1, ph)
+tile[40] = E.add_tile(host[20], pw - 1, 0, pw - 1, ph)
  
 E.set_tile_viewport(tile[0],  L[1], B[1], pw * 8, ph * 5)
 E.set_tile_viewport(tile[1],  L[1], B[5], pw, ph)

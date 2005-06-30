@@ -232,4 +232,4 @@ end
 help()
 do_start()
 
-E.set_background(0, 0, 0)
+--E.set_background(0, 0, 0)
