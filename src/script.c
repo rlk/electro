@@ -871,18 +871,18 @@ static int script_get_star_position(lua_State *L)
 
 static int script_set_camera_offset(lua_State *L)
 {
-    float v[3];
-    float e[3][3] = {
-        { 1.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f }
+    float v[3], M[16] = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
     };
 
     v[0] = script_getnumber(L, -3);
     v[1] = script_getnumber(L, -2);
     v[2] = script_getnumber(L, -1);
 
-    send_set_camera_offset(script_getcamera(L, -4), v, e);
+    send_set_camera_offset(script_getcamera(L, -4), v, M);
     return 0;
 }
 

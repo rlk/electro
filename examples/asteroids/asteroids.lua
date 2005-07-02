@@ -11,7 +11,7 @@
 --    General Public License for more details.
 
 sound_on = true
-music_on = true
+music_on = false
 
 -------------------------------------------------------------------------------
 -- Global variables, game state, and scene graph entities:

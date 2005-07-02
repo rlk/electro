@@ -15,310 +15,317 @@
 #include "matrix.h"
 
 /*---------------------------------------------------------------------------*/
+
+#define A 10
+#define B 11
+#define C 12
+#define D 13
+#define E 14
+#define F 15
+
+/*---------------------------------------------------------------------------*/
 /* Matrix operations                                                         */
 
-void m_init(float A[16])
+void load_idt(float M[16])
 {
-    A[0] = 1.0f; A[4] = 0.0f; A[8]  = 0.0f; A[12] = 0.0f;
-    A[1] = 0.0f; A[5] = 1.0f; A[9]  = 0.0f; A[13] = 0.0f;
-    A[2] = 0.0f; A[6] = 0.0f; A[10] = 1.0f; A[14] = 0.0f;
-    A[3] = 0.0f; A[7] = 0.0f; A[11] = 0.0f; A[15] = 1.0f;
+    M[0] = 1; M[4] = 0; M[8] = 0; M[C] = 0;
+    M[1] = 0; M[5] = 1; M[9] = 0; M[D] = 0;
+    M[2] = 0; M[6] = 0; M[A] = 1; M[E] = 0;
+    M[3] = 0; M[7] = 0; M[B] = 0; M[F] = 1;
 }
 
-void m_copy(float A[16], const float B[16])
+void load_mat(float M[16], const float N[16])
 {
-    A[0] = B[0];  A[4] = B[4];  A[8]  = B[8];  A[12] = B[12];
-    A[1] = B[1];  A[5] = B[5];  A[9]  = B[9];  A[13] = B[13];
-    A[2] = B[2];  A[6] = B[6];  A[10] = B[10]; A[14] = B[14];
-    A[3] = B[3];  A[7] = B[7];  A[11] = B[11]; A[15] = B[15];
+    M[0] = N[0]; M[4] = N[4]; M[8] = N[8]; M[C] = N[C];
+    M[1] = N[1]; M[5] = N[5]; M[9] = N[9]; M[D] = N[D];
+    M[2] = N[2]; M[6] = N[6]; M[A] = N[A]; M[E] = N[E];
+    M[3] = N[3]; M[7] = N[7]; M[B] = N[B]; M[F] = N[F];
 }
 
-void m_xpos(float A[16], const float B[16])
+void load_xps(float M[16], const float N[16])
 {
-    A[0] = B[0];  A[4] = B[1];  A[8]  = B[2];  A[12] = B[3];
-    A[1] = B[4];  A[5] = B[5];  A[9]  = B[6];  A[13] = B[7];
-    A[2] = B[8];  A[6] = B[9];  A[10] = B[10]; A[14] = B[11];
-    A[3] = B[12]; A[7] = B[13]; A[11] = B[14]; A[15] = B[15];
+    M[0] = N[0]; M[4] = N[1]; M[8] = N[2]; M[C] = N[3];
+    M[1] = N[4]; M[5] = N[5]; M[9] = N[6]; M[D] = N[7];
+    M[2] = N[8]; M[6] = N[9]; M[A] = N[A]; M[E] = N[B];
+    M[3] = N[C]; M[7] = N[D]; M[B] = N[E]; M[F] = N[F];
 }
 
-void m_invt(float I[16], const float M[16])
+void load_inv(float I[16], const float M[16])
 {
     float T[16];
     float d;
 
-    T[0]  = +(M[5]  * (M[10] * M[15] - M[11] * M[14]) -
-              M[9]  * (M[6]  * M[15] - M[7]  * M[14]) +
-              M[13] * (M[6]  * M[11] - M[7]  * M[10]));
-    T[1]  = -(M[4]  * (M[10] * M[15] - M[11] * M[14]) -
-              M[8]  * (M[6]  * M[15] - M[7]  * M[14]) +
-              M[12] * (M[6]  * M[11] - M[7]  * M[10]));
-    T[2]  = +(M[4]  * (M[9]  * M[15] - M[11] * M[13]) -
-              M[8]  * (M[5]  * M[15] - M[7]  * M[13]) +
-              M[12] * (M[5]  * M[11] - M[7]  * M[9]));
-    T[3]  = -(M[4]  * (M[9]  * M[14] - M[10] * M[13]) -
-              M[8]  * (M[5]  * M[14] - M[6]  * M[13]) +
-              M[12] * (M[5]  * M[10] - M[6]  * M[9]));
+    T[0] = +(M[5] * (M[A] * M[F] - M[B] * M[E]) -
+             M[9] * (M[6] * M[F] - M[7] * M[E]) +
+             M[D] * (M[6] * M[B] - M[7] * M[A]));
+    T[1] = -(M[4] * (M[A] * M[F] - M[B] * M[E]) -
+             M[8] * (M[6] * M[F] - M[7] * M[E]) +
+             M[C] * (M[6] * M[B] - M[7] * M[A]));
+    T[2] = +(M[4] * (M[9] * M[F] - M[B] * M[D]) -
+             M[8] * (M[5] * M[F] - M[7] * M[D]) +
+             M[C] * (M[5] * M[B] - M[7] * M[9]));
+    T[3] = -(M[4] * (M[9] * M[E] - M[A] * M[D]) -
+             M[8] * (M[5] * M[E] - M[6] * M[D]) +
+             M[C] * (M[5] * M[A] - M[6] * M[9]));
 
-    T[4]  = -(M[1]  * (M[10] * M[15] - M[11] * M[14]) -
-              M[9]  * (M[2]  * M[15] - M[3]  * M[14]) +
-              M[13] * (M[2]  * M[11] - M[3]  * M[10]));
-    T[5]  = +(M[0]  * (M[10] * M[15] - M[11] * M[14]) -
-              M[8]  * (M[2]  * M[15] - M[3]  * M[14]) +
-              M[12] * (M[2]  * M[11] - M[3]  * M[10]));
-    T[6]  = -(M[0]  * (M[9]  * M[15] - M[11] * M[13]) -
-              M[8]  * (M[1]  * M[15] - M[3]  * M[13]) +
-              M[12] * (M[1]  * M[11] - M[3]  * M[9]));
-    T[7]  = +(M[0]  * (M[9]  * M[14] - M[10] * M[13]) -
-              M[8]  * (M[1]  * M[14] - M[2]  * M[13]) +
-              M[12] * (M[1]  * M[10] - M[2]  * M[9]));
+    T[4] = -(M[1] * (M[A] * M[F] - M[B] * M[E]) -
+             M[9] * (M[2] * M[F] - M[3] * M[E]) +
+             M[D] * (M[2] * M[B] - M[3] * M[A]));
+    T[5] = +(M[0] * (M[A] * M[F] - M[B] * M[E]) -
+             M[8] * (M[2] * M[F] - M[3] * M[E]) +
+             M[C] * (M[2] * M[B] - M[3] * M[A]));
+    T[6] = -(M[0] * (M[9] * M[F] - M[B] * M[D]) -
+             M[8] * (M[1] * M[F] - M[3] * M[D]) +
+             M[C] * (M[1] * M[B] - M[3] * M[9]));
+    T[7] = +(M[0] * (M[9] * M[E] - M[A] * M[D]) -
+             M[8] * (M[1] * M[E] - M[2] * M[D]) +
+             M[C] * (M[1] * M[A] - M[2] * M[9]));
 
-    T[8]  = +(M[1]  * (M[6]  * M[15] - M[7]  * M[14]) -
-              M[5]  * (M[2]  * M[15] - M[3]  * M[14]) +
-              M[13] * (M[2]  * M[7]  - M[3]  * M[6]));
-    T[9]  = -(M[0]  * (M[6]  * M[15] - M[7]  * M[14]) -
-              M[4]  * (M[2]  * M[15] - M[3]  * M[14]) +
-              M[12] * (M[2]  * M[7]  - M[3]  * M[6]));
-    T[10] = +(M[0]  * (M[5]  * M[15] - M[7]  * M[13]) -
-              M[4]  * (M[1]  * M[15] - M[3]  * M[13]) +
-              M[12] * (M[1]  * M[7]  - M[3]  * M[5]));
-    T[11] = -(M[0]  * (M[5]  * M[14] - M[6]  * M[13]) -
-              M[4]  * (M[1]  * M[14] - M[2]  * M[13]) +
-              M[12] * (M[1]  * M[6]  - M[2]  * M[5]));
+    T[8] = +(M[1] * (M[6] * M[F] - M[7] * M[E]) -
+             M[5] * (M[2] * M[F] - M[3] * M[E]) +
+             M[D] * (M[2] * M[7] - M[3] * M[6]));
+    T[9] = -(M[0] * (M[6] * M[F] - M[7] * M[E]) -
+             M[4] * (M[2] * M[F] - M[3] * M[E]) +
+             M[C] * (M[2] * M[7] - M[3] * M[6]));
+    T[A] = +(M[0] * (M[5] * M[F] - M[7] * M[D]) -
+             M[4] * (M[1] * M[F] - M[3] * M[D]) +
+             M[C] * (M[1] * M[7] - M[3] * M[5]));
+    T[B] = -(M[0] * (M[5] * M[E] - M[6] * M[D]) -
+             M[4] * (M[1] * M[E] - M[2] * M[D]) +
+             M[C] * (M[1] * M[6] - M[2] * M[5]));
 
-    T[12] = -(M[1]  * (M[6]  * M[11] - M[7]  * M[10]) -
-              M[5]  * (M[2]  * M[11] - M[3]  * M[10]) +
-              M[9]  * (M[2]  * M[7]  - M[3]  * M[6]));
-    T[13] = +(M[0]  * (M[6]  * M[11] - M[7]  * M[10]) -
-              M[4]  * (M[2]  * M[11] - M[3]  * M[10]) +
-              M[8]  * (M[2]  * M[7]  - M[3]  * M[6]));
-    T[14] = -(M[0]  * (M[5]  * M[11] - M[7]  * M[9])  -
-              M[4]  * (M[1]  * M[11] - M[3]  * M[9])  +
-              M[8]  * (M[1]  * M[7]  - M[3]  * M[5]));
-    T[15] = +(M[0]  * (M[5]  * M[10] - M[6]  * M[9])  -
-              M[4]  * (M[1]  * M[10] - M[2]  * M[9])  +
-              M[8]  * (M[1]  * M[6]  - M[2]  * M[5]));
+    T[C] = -(M[1] * (M[6] * M[B] - M[7] * M[A]) -
+             M[5] * (M[2] * M[B] - M[3] * M[A]) +
+             M[9] * (M[2] * M[7] - M[3] * M[6]));
+    T[D] = +(M[0] * (M[6] * M[B] - M[7] * M[A]) -
+             M[4] * (M[2] * M[B] - M[3] * M[A]) +
+             M[8] * (M[2] * M[7] - M[3] * M[6]));
+    T[E] = -(M[0] * (M[5] * M[B] - M[7] * M[9]) -
+             M[4] * (M[1] * M[B] - M[3] * M[9]) +
+             M[8] * (M[1] * M[7] - M[3] * M[5]));
+    T[F] = +(M[0] * (M[5] * M[A] - M[6] * M[9]) -
+             M[4] * (M[1] * M[A] - M[2] * M[9]) +
+             M[8] * (M[1] * M[6] - M[2] * M[5]));
 
-    d = M[0] * T[0] + M[4] * T[4] + M[8] * T[8] + M[12] * T[12];
+    d = M[0] * T[0] + M[4] * T[4] + M[8] * T[8] + M[C] * T[C];
 
-    I[0]  = T[0]  / d;
-    I[1]  = T[4]  / d;
-    I[2]  = T[8]  / d;
-    I[3]  = T[12] / d;
-    I[4]  = T[1]  / d;
-    I[5]  = T[5]  / d;
-    I[6]  = T[9]  / d;
-    I[7]  = T[13] / d;
-    I[8]  = T[2]  / d;
-    I[9]  = T[6]  / d;
-    I[10] = T[10] / d;
-    I[11] = T[14] / d;
-    I[12] = T[3]  / d;
-    I[13] = T[7]  / d;
-    I[14] = T[11] / d;
-    I[15] = T[15] / d;
-}
-
-void m_mult(float A[16], const float B[16], const float C[16])
-{
-    float T[16];
-
-    T[0]  = B[0] * C[0]  + B[4] * C[1]  + B[8]  * C[2]  + B[12] * C[3];
-    T[1]  = B[1] * C[0]  + B[5] * C[1]  + B[9]  * C[2]  + B[13] * C[3];
-    T[2]  = B[2] * C[0]  + B[6] * C[1]  + B[10] * C[2]  + B[14] * C[3];
-    T[3]  = B[3] * C[0]  + B[7] * C[1]  + B[11] * C[2]  + B[15] * C[3];
-
-    T[4]  = B[0] * C[4]  + B[4] * C[5]  + B[8]  * C[6]  + B[12] * C[7];
-    T[5]  = B[1] * C[4]  + B[5] * C[5]  + B[9]  * C[6]  + B[13] * C[7];
-    T[6]  = B[2] * C[4]  + B[6] * C[5]  + B[10] * C[6]  + B[14] * C[7];
-    T[7]  = B[3] * C[4]  + B[7] * C[5]  + B[11] * C[6]  + B[15] * C[7];
-
-    T[8]  = B[0] * C[8]  + B[4] * C[9]  + B[8]  * C[10] + B[12] * C[11];
-    T[9]  = B[1] * C[8]  + B[5] * C[9]  + B[9]  * C[10] + B[13] * C[11];
-    T[10] = B[2] * C[8]  + B[6] * C[9]  + B[10] * C[10] + B[14] * C[11];
-    T[11] = B[3] * C[8]  + B[7] * C[9]  + B[11] * C[10] + B[15] * C[11];
-
-    T[12] = B[0] * C[12] + B[4] * C[13] + B[8]  * C[14] + B[12] * C[15];
-    T[13] = B[1] * C[12] + B[5] * C[13] + B[9]  * C[14] + B[13] * C[15];
-    T[14] = B[2] * C[12] + B[6] * C[13] + B[10] * C[14] + B[14] * C[15];
-    T[15] = B[3] * C[12] + B[7] * C[13] + B[11] * C[14] + B[15] * C[15];
-
-    m_copy(A, T);
-}
-
-/*---------------------------------------------------------------------------*/
-/* Vector transformers                                                       */
-
-void m_xfrm(float v[4], const float A[16], const float u[4])
-{
-    v[0] = A[0] * u[0] + A[4] * u[1] + A[8]  * u[2] + A[12] * u[3];
-    v[1] = A[1] * u[0] + A[5] * u[1] + A[9]  * u[2] + A[13] * u[3];
-    v[2] = A[2] * u[0] + A[6] * u[1] + A[10] * u[2] + A[14] * u[3];
-    v[3] = A[3] * u[0] + A[7] * u[1] + A[11] * u[2] + A[15] * u[3];
-}
-
-void m_pfrm(float v[4], const float A[16], const float u[4])
-{
-    v[0] = A[0]  * u[0] + A[1]  * u[1] + A[2]  * u[2] + A[3]  * u[3];
-    v[1] = A[4]  * u[0] + A[5]  * u[1] + A[6]  * u[2] + A[7]  * u[3];
-    v[2] = A[8]  * u[0] + A[9]  * u[1] + A[10] * u[2] + A[11] * u[3];
-    v[3] = A[12] * u[0] + A[13] * u[1] + A[14] * u[2] + A[15] * u[3];
-}
-
-void m_vfrm(float v[3], const float A[16], const float u[3])
-{
-    v[0] = A[0] * u[0] + A[4] * u[1] + A[8]  * u[2] + A[12];
-    v[1] = A[1] * u[0] + A[5] * u[1] + A[9]  * u[2] + A[13];
-    v[2] = A[2] * u[0] + A[6] * u[1] + A[10] * u[2] + A[14];
+    I[0] = T[0] / d;
+    I[1] = T[4] / d;
+    I[2] = T[8] / d;
+    I[3] = T[C] / d;
+    I[4] = T[1] / d;
+    I[5] = T[5] / d;
+    I[6] = T[9] / d;
+    I[7] = T[D] / d;
+    I[8] = T[2] / d;
+    I[9] = T[6] / d;
+    I[A] = T[A] / d;
+    I[B] = T[E] / d;
+    I[C] = T[3] / d;
+    I[D] = T[7] / d;
+    I[E] = T[B] / d;
+    I[F] = T[F] / d;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Matrix constructors                                                       */
 
-void m_xrot(float M[16], float I[16], float a)
+void load_xlt_mat(float M[16], float x, float y, float z)
 {
-    const float s = (float) sin((double) M_RAD(a));
-    const float c = (float) cos((double) M_RAD(a));
-
-    M[0] = 1.0f; M[4] = 0.0f; M[8]  = 0.0f; M[12] = 0.0f;
-    M[1] = 0.0f; M[5] =    c; M[9]  =   -s; M[13] = 0.0f;
-    M[2] = 0.0f; M[6] =    s; M[10] =    c; M[14] = 0.0f;
-    M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
-
-    m_xpos(I, M);
+    M[0] = 1; M[4] = 0; M[8] = 0; M[C] = x;
+    M[1] = 0; M[5] = 1; M[9] = 0; M[D] = y;
+    M[2] = 0; M[6] = 0; M[A] = 1; M[E] = z;
+    M[3] = 0; M[7] = 0; M[B] = 0; M[F] = 1;
 }
 
-void m_yrot(float M[16], float I[16], float a)
+void load_scl_mat(float M[16], float x, float y, float z)
 {
-    const float s = (float) sin((double) M_RAD(a));
-    const float c = (float) cos((double) M_RAD(a));
-
-    M[0] =    c; M[4] = 0.0f; M[8]  =    s; M[12] = 0.0f;
-    M[1] = 0.0f; M[5] = 1.0f; M[9]  = 0.0f; M[13] = 0.0f;
-    M[2] =   -s; M[6] = 0.0f; M[10] =    c; M[14] = 0.0f;
-    M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
-
-    m_xpos(I, M);
+    M[0] = x; M[4] = 0; M[8] = 0; M[C] = 0;
+    M[1] = 0; M[5] = y; M[9] = 0; M[D] = 0;
+    M[2] = 0; M[6] = 0; M[A] = z; M[E] = 0;
+    M[3] = 0; M[7] = 0; M[B] = 0; M[F] = 1;
 }
 
-void m_zrot(float M[16], float I[16], float a)
+void load_rot_mat(float M[16], float x, float y, float z, float a)
 {
-    const float s = (float) sin((double) M_RAD(a));
-    const float c = (float) cos((double) M_RAD(a));
+    float U[16], S[16], u[3], k = (float) sqrt(x * x + y * y + z * z);
 
-    M[0] =    c; M[4] =   -s; M[8]  = 0.0f; M[12] = 0.0f;
-    M[1] =    s; M[5] =    c; M[9]  = 0.0f; M[13] = 0.0f;
-    M[2] = 0.0f; M[6] = 0.0f; M[10] = 1.0f; M[14] = 0.0f;
-    M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
-
-    m_xpos(I, M);
-}
-
-/*---------------------------------------------------------------------------*/
-
-void m_rotat(float M[16], float I[16], float x, float y, float z, float a)
-{
-    float U[16];
-    float S[16];
-    float u[3];
-    float k;
-
-    const float s = (float) sin((double) M_RAD(a));
-    const float c = (float) cos((double) M_RAD(a));
-
-    k = (float) sqrt(x * x + y * y + z * z);
+    const float s = (float) sin((double) TO_RAD(a));
+    const float c = (float) cos((double) TO_RAD(a));
 
     u[0] = x / k;
     u[1] = y / k;
     u[2] = z / k;
 
-    U[0] = u[0] * u[0]; U[4] = u[0] * u[1]; U[8]  = u[0] * u[2]; 
-    U[1] = u[1] * u[0]; U[5] = u[1] * u[1]; U[9]  = u[1] * u[2]; 
-    U[2] = u[2] * u[0]; U[6] = u[2] * u[1]; U[10] = u[2] * u[2]; 
+    U[0] = u[0] * u[0]; U[4] = u[0] * u[1]; U[8] = u[0] * u[2]; 
+    U[1] = u[1] * u[0]; U[5] = u[1] * u[1]; U[9] = u[1] * u[2]; 
+    U[2] = u[2] * u[0]; U[6] = u[2] * u[1]; U[A] = u[2] * u[2]; 
 
-    S[0] =   0.f; S[4] = -u[2]; S[8]  =  u[1];
-    S[1] =  u[2]; S[5] =   0.f; S[9]  = -u[0];
-    S[2] = -u[1]; S[6] =  u[0]; S[10] =   0.f;
+    S[0] =     0; S[4] = -u[2]; S[8] =  u[1];
+    S[1] =  u[2]; S[5] =     0; S[9] = -u[0];
+    S[2] = -u[1]; S[6] =  u[0]; S[A] =     0;
 
-    M[0]  = I[0]  = U[0]  + c * (1.0f - U[0])  + s * S[0];
-    M[1]  = I[4]  = U[1]  + c * (0.0f - U[1])  + s * S[1];
-    M[2]  = I[8]  = U[2]  + c * (0.0f - U[2])  + s * S[2];
-    M[3]  = I[12] = 0.0f;
-    M[4]  = I[1]  = U[4]  + c * (0.0f - U[4])  + s * S[4];
-    M[5]  = I[5]  = U[5]  + c * (1.0f - U[5])  + s * S[5];
-    M[6]  = I[9]  = U[6]  + c * (0.0f - U[6])  + s * S[6];
-    M[7]  = I[13] = 0.0f;
-    M[8]  = I[2]  = U[8]  + c * (0.0f - U[8])  + s * S[8];
-    M[9]  = I[6]  = U[9]  + c * (0.0f - U[9])  + s * S[9];
-    M[10] = I[10] = U[10] + c * (1.0f - U[10]) + s * S[10];
-    M[11] = I[14] = 0.0f;
-    M[12] = I[3]  = 0.0f;
-    M[13] = I[7]  = 0.0f;
-    M[14] = I[11] = 0.0f;
-    M[15] = I[15] = 1.0f;
+    M[0] = U[0] + c * (1 - U[0]) + s * S[0];
+    M[1] = U[1] + c * (0 - U[1]) + s * S[1];
+    M[2] = U[2] + c * (0 - U[2]) + s * S[2];
+    M[3] = 0;
+    M[4] = U[4] + c * (0 - U[4]) + s * S[4];
+    M[5] = U[5] + c * (1 - U[5]) + s * S[5];
+    M[6] = U[6] + c * (0 - U[6]) + s * S[6];
+    M[7] = 0;
+    M[8] = U[8] + c * (0 - U[8]) + s * S[8];
+    M[9] = U[9] + c * (0 - U[9]) + s * S[9];
+    M[A] = U[A] + c * (1 - U[A]) + s * S[A];
+    M[B] = 0;
+    M[C] = 0;
+    M[D] = 0;
+    M[E] = 0;
+    M[F] = 1;
 }
 
-void m_trans(float M[16], float I[16], float x, float y, float z)
-{
-    M[0] = 1.0f; M[4] = 0.0f; M[8]  = 0.0f; M[12] =     x;
-    M[1] = 0.0f; M[5] = 1.0f; M[9]  = 0.0f; M[13] =     y;
-    M[2] = 0.0f; M[6] = 0.0f; M[10] = 1.0f; M[14] =     z;
-    M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] =  1.0f;
+/*---------------------------------------------------------------------------*/
+/* Matrix inverse constructors.                                              */
 
-    I[0] = 1.0f; I[4] = 0.0f; I[8]  = 0.0f; I[12] =    -x;
-    I[1] = 0.0f; I[5] = 1.0f; I[9]  = 0.0f; I[13] =    -y;
-    I[2] = 0.0f; I[6] = 0.0f; I[10] = 1.0f; I[14] =    -z;
-    I[3] = 0.0f; I[7] = 0.0f; I[11] = 0.0f; I[15] =  1.0f;
+void load_xlt_inv(float I[16], float x, float y, float z)
+{
+    load_xlt_mat(I, -x, -y, -z);
 }
 
-void m_scale(float M[16], float I[16], float x, float y, float z)
+void load_scl_inv(float I[16], float x, float y, float z)
 {
-    M[0] =    x; M[4] = 0.0f; M[8]  = 0.0f; M[12] = 0.0f;
-    M[1] = 0.0f; M[5] =    y; M[9]  = 0.0f; M[13] = 0.0f;
-    M[2] = 0.0f; M[6] = 0.0f; M[10] =    z; M[14] = 0.0f;
-    M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
-
-    I[0] = 1.0f / x; I[4] =      0.0f; I[8]  =      0.0f; I[12] = 0.0f;
-    I[1] =     0.0f; I[5] =  1.0f / y; I[9]  =      0.0f; I[13] = 0.0f;
-    I[2] =     0.0f; I[6] =      0.0f; I[10] =  1.0f / z; I[14] = 0.0f;
-    I[3] =     0.0f; I[7] =      0.0f; I[11] =      0.0f; I[15] = 1.0f;
+    load_scl_mat(I, 1 / x, 1 / y, 1 / z);
 }
 
-void m_basis(float M[16], float I[16], const float e0[3],
-                                       const float e1[3],
-                                       const float e2[3])
+void load_rot_inv(float I[16], float x, float y, float z, float a)
 {
-    M[0] = e0[0]; M[4] = e1[0]; M[8]  = e2[0]; M[12] = 0.f;
-    M[1] = e0[1]; M[5] = e1[1]; M[9]  = e2[1]; M[13] = 0.f;
-    M[2] = e0[2]; M[6] = e1[2]; M[10] = e2[2]; M[14] = 0.f;
-    M[3] =   0.f; M[7] =   0.f; M[11] =   0.f; M[15] = 1.f;
+    load_rot_mat(I, x, y, z, -a);
+}
 
-    m_xpos(I, M);
+/*---------------------------------------------------------------------------*/
+/* Matrix composers                                                          */
+
+void mult_xlt_mat(float M[16], float x, float y, float z)
+{
+    float T[16];
+
+    load_xlt_mat(T, x, y, z);
+    mult_mat_mat(M, M, T);
+}
+
+void mult_scl_mat(float M[16], float x, float y, float z)
+{
+    float T[16];
+
+    load_scl_mat(T, x, y, z);
+    mult_mat_mat(M, M, T);
+}
+
+void mult_rot_mat(float M[16], float x, float y, float z, float a)
+{
+    float T[16];
+
+    load_rot_mat(T, x, y, z, a);
+    mult_mat_mat(M, M, T);
+}
+
+/*---------------------------------------------------------------------------*/
+/* Matrix inverse composers                                                  */
+
+void mult_xlt_inv(float M[16], float x, float y, float z)
+{
+    float T[16];
+
+    load_xlt_inv(T, x, y, z);
+    mult_mat_mat(M, T, M);
+}
+
+void mult_scl_inv(float M[16], float x, float y, float z)
+{
+    float T[16];
+
+    load_scl_inv(T, x, y, z);
+    mult_mat_mat(M, T, M);
+}
+
+void mult_rot_inv(float M[16], float x, float y, float z, float a)
+{
+    float T[16];
+
+    load_rot_inv(T, x, y, z, a);
+    mult_mat_mat(M, T, M);
+}
+
+/*---------------------------------------------------------------------------*/
+/* Multipliers and transformers                                              */
+
+void mult_mat_mat(float M[16], const float N[16], const float O[16])
+{
+    float T[16];
+
+    T[0] = N[0] * O[0] + N[4] * O[1] + N[8] * O[2] + N[C] * O[3];
+    T[1] = N[1] * O[0] + N[5] * O[1] + N[9] * O[2] + N[D] * O[3];
+    T[2] = N[2] * O[0] + N[6] * O[1] + N[A] * O[2] + N[E] * O[3];
+    T[3] = N[3] * O[0] + N[7] * O[1] + N[B] * O[2] + N[F] * O[3];
+
+    T[4] = N[0] * O[4] + N[4] * O[5] + N[8] * O[6] + N[C] * O[7];
+    T[5] = N[1] * O[4] + N[5] * O[5] + N[9] * O[6] + N[D] * O[7];
+    T[6] = N[2] * O[4] + N[6] * O[5] + N[A] * O[6] + N[E] * O[7];
+    T[7] = N[3] * O[4] + N[7] * O[5] + N[B] * O[6] + N[F] * O[7];
+
+    T[8] = N[0] * O[8] + N[4] * O[9] + N[8] * O[A] + N[C] * O[B];
+    T[9] = N[1] * O[8] + N[5] * O[9] + N[9] * O[A] + N[D] * O[B];
+    T[A] = N[2] * O[8] + N[6] * O[9] + N[A] * O[A] + N[E] * O[B];
+    T[B] = N[3] * O[8] + N[7] * O[9] + N[B] * O[A] + N[F] * O[B];
+
+    T[C] = N[0] * O[C] + N[4] * O[D] + N[8] * O[E] + N[C] * O[F];
+    T[D] = N[1] * O[C] + N[5] * O[D] + N[9] * O[E] + N[D] * O[F];
+    T[E] = N[2] * O[C] + N[6] * O[D] + N[A] * O[E] + N[E] * O[F];
+    T[F] = N[3] * O[C] + N[7] * O[D] + N[B] * O[E] + N[F] * O[F];
+
+    load_mat(M, T);
+}
+
+void mult_mat_vec(float v[4], const float M[16], const float u[4])
+{
+    v[0] = M[0] * u[0] + M[4] * u[1] + M[8] * u[2] + M[C] * u[3];
+    v[1] = M[1] * u[0] + M[5] * u[1] + M[9] * u[2] + M[D] * u[3];
+    v[2] = M[2] * u[0] + M[6] * u[1] + M[A] * u[2] + M[E] * u[3];
+    v[3] = M[3] * u[0] + M[7] * u[1] + M[B] * u[2] + M[F] * u[3];
+}
+
+void mult_xps_vec(float v[4], const float M[16], const float u[4])
+{
+    v[0] = M[0] * u[0] + M[1] * u[1] + M[2] * u[2] + M[3] * u[3];
+    v[1] = M[4] * u[0] + M[5] * u[1] + M[6] * u[2] + M[7] * u[3];
+    v[2] = M[8] * u[0] + M[9] * u[1] + M[A] * u[2] + M[B] * u[3];
+    v[3] = M[C] * u[0] + M[D] * u[1] + M[E] * u[2] + M[F] * u[3];
 }
 
 /*---------------------------------------------------------------------------*/
 /* Miscellaneous vector operations                                           */
 
-void v_normal(float n[3], const float v[3])
+void normalize(float v[3])
 {
-    double k = 1.0 / sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    float k = (float) sqrt(DOT3(v, v));
 
-    n[0] = (float) (v[0] * k);
-    n[1] = (float) (v[1] * k);
-    n[2] = (float) (v[2] * k);
+    v[0] /= k;
+    v[1] /= k;
+    v[2] /= k;
 }
 
-void v_cross(float u[3], const float v[3], const float w[3])
+void cross(float u[3], const float v[3],
+                       const float w[3])
 {
     u[0] = v[1] * w[2] - v[2] * w[1];
     u[1] = v[2] * w[0] - v[0] * w[2];
     u[2] = v[0] * w[1] - v[1] * w[0];
 }
 
-void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
+void plane(float p[4], const float a[3],
+                       const float b[3],
+                       const float c[3])
 {
-    float x[3];
-    float y[3];
-    float k;
+    float x[3], y[3];
 
     x[0] = b[0] - a[0];
     x[1] = b[1] - a[1];
@@ -328,61 +335,10 @@ void v_plane(float p[4], const float a[3], const float b[3], const float c[3])
     y[1] = c[1] - a[1];
     y[2] = c[2] - a[2];
 
-    p[0] = x[1] * y[2] - x[2] * y[1];
-    p[1] = x[2] * y[0] - x[0] * y[2];
-    p[2] = x[0] * y[1] - x[1] * y[0];
+    cross(p, x, y);
+    normalize(p);
 
-    k = (float) sqrt(p[0] * p[0] +
-                     p[1] * p[1] +
-                     p[2] * p[2]);
-    p[0] /= k;
-    p[1] /= k;
-    p[2] /= k;
-    p[3]  = p[0] * a[0] + p[1] * a[1] + p[2] * a[2];
-}
-
-void v_basis(float e[3][3], const float r[3], int b)
-{
-    float M[16], A[16], B[16];
-
-    float f[3][3] = {
-        { 1.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f }
-    };
-
-    /* Compose a transformation matrix. */
-
-    m_init(M);
-
-    if (b)
-    {
-        m_zrot(A, B, r[2]);
-        m_mult(M, M, A);
-
-        m_yrot(A, B, r[1]);
-        m_mult(M, M, A);
-
-        m_xrot(A, B, r[0]);
-        m_mult(M, M, A);
-    }
-    else
-    {
-        m_xrot(A, B, r[0]);
-        m_mult(M, M, A);
-
-        m_yrot(A, B, r[1]);
-        m_mult(M, M, A);
-
-        m_zrot(A, B, r[2]);
-        m_mult(M, M, A);
-    }
-
-    /* Transform the basis. */
-
-    m_vfrm(e[0], M, f[0]);
-    m_vfrm(e[1], M, f[1]);
-    m_vfrm(e[2], M, f[2]);
+    p[3] = DOT3(p, a);
 }
 
 /*---------------------------------------------------------------------------*/

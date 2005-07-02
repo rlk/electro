@@ -59,9 +59,8 @@ typedef void (*init_func)(int);
 typedef void (*fini_func)(int);
 typedef void (*dupe_func)(int);
 typedef void (*free_func)(int);
-typedef void (*draw_func)(int, int, const float[16],
-                                    const float[16],
-                                    const struct frustum *, float);
+typedef void (*draw_func)(int, int, float);
+
 struct entity_func
 {
     const char *name;
@@ -80,12 +79,9 @@ const char *entity_name(int);
 
 /*---------------------------------------------------------------------------*/
 
-void transform_camera(int, float[16], const float[16],
-                           float[16], const float[16], const float[3]);
-void transform_entity(int, float[16], const float[16],
-                           float[16], const float[16]);
-void draw_entity_tree(int, const float[16],
-                           const float[16], const struct frustum *, float);
+void transform_camera(int);
+void transform_entity(int);
+void draw_entity_tree(int, float);
 
 /*---------------------------------------------------------------------------*/
 
@@ -110,9 +106,7 @@ void recv_delete_entity(void);
 void  send_set_entity_position (int, const float[3]);
 void  send_set_entity_rotation (int, const float[3]);
 void  send_set_entity_scale    (int, const float[3]);
-void  send_set_entity_basis    (int, const float[3],
-                                     const float[3],
-                                     const float[3]);
+void  send_set_entity_basis    (int, const float[16]);
 
 void  send_set_entity_alpha    (int, float);
 void  send_set_entity_flag     (int, int, int);

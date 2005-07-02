@@ -15,6 +15,7 @@
 
 #include "opengl.h"
 #include "vector.h"
+#include "frustum.h"
 #include "buffer.h"
 #include "entity.h"
 #include "image.h"
@@ -129,40 +130,50 @@ int get_sprite_h(int i)
 
 /*===========================================================================*/
 
-static void draw_sprite(int j, int i, const float M[16],
-                                      const float I[16],
-                                      const struct frustum *F, float a)
+static void draw_sprite(int j, int i, float a)
 {
+    struct frustum F;
+
     glPushMatrix();
     {
-        float N[16];
-        float J[16];
+        int dx = get_image_w(S(i)->image) / 2;
+        int dy = get_image_h(S(i)->image) / 2;
+
+        float b[6];
 
         /* Apply the local coordinate system transformation. */
 
-        transform_entity(j, N, M, J, I);
+        transform_entity(j);
+        get_frustum(&F);
 
-        /* Draw the image to the color buffer. */
+        b[0] = -dx;
+        b[1] = -dy;
+        b[2] =   0;
+        b[3] = +dx;
+        b[4] = +dy;
+        b[5] =   0;
 
-        draw_image(S(i)->image);
-
-        glColor4f(1.0f, 1.0f, 1.0f, a * get_entity_alpha(j));
-
-        glBegin(GL_QUADS);
+        if (tst_frustum(&F, b) >= 0)
         {
-            int dx = get_image_w(S(i)->image) / 2;
-            int dy = get_image_h(S(i)->image) / 2;
+            /* Draw the image to the color buffer. */
 
-            glTexCoord2f(S(i)->s0, S(i)->t0); glVertex2i(-dx, -dy);
-            glTexCoord2f(S(i)->s1, S(i)->t0); glVertex2i(+dx, -dy);
-            glTexCoord2f(S(i)->s1, S(i)->t1); glVertex2i(+dx, +dy);
-            glTexCoord2f(S(i)->s0, S(i)->t1); glVertex2i(-dx, +dy);
+            draw_image(S(i)->image);
+
+            glColor4f(1, 1, 1, a * get_entity_alpha(j));
+
+            glBegin(GL_QUADS);
+            {
+                glTexCoord2f(S(i)->s0, S(i)->t0); glVertex2i(-dx, -dy);
+                glTexCoord2f(S(i)->s1, S(i)->t0); glVertex2i(+dx, -dy);
+                glTexCoord2f(S(i)->s1, S(i)->t1); glVertex2i(+dx, +dy);
+                glTexCoord2f(S(i)->s0, S(i)->t1); glVertex2i(-dx, +dy);
+            }
+            glEnd();
+
+            /* Render all child entities in this coordinate system. */
+
+            draw_entity_tree(j, a * get_entity_alpha(j));
         }
-        glEnd();
-
-        /* Render all child entities in this coordinate system. */
-
-        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }

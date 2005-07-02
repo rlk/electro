@@ -809,9 +809,7 @@ static void draw_surface(const struct object_surf *s,
     glPopAttrib();
 }
 
-static void draw_object(int j, int i, const float M[16],
-                                      const float I[16],
-                                      const struct frustum *F, float a)
+static void draw_object(int j, int i, float a)
 {
     GLsizei stride = sizeof (struct object_vert);
 
@@ -819,28 +817,20 @@ static void draw_object(int j, int i, const float M[16],
     struct object_surf *s;
     struct object_mtrl *m;
 
-    float N[16];
-    float J[16];
-
     init_object(i);
 
     glPushMatrix();
     {
-        struct frustum E;
+        struct frustum F;
 
         /* Apply the local coordinate system transformation. */
 
-        transform_entity(j, N, M, J, I);
-
-        m_pfrm(E.V[0], N, F->V[0]);
-        m_pfrm(E.V[1], N, F->V[1]);
-        m_pfrm(E.V[2], N, F->V[2]);
-        m_pfrm(E.V[3], N, F->V[3]);
-        m_xfrm(E.p,    J, F->p);
+        transform_entity(j);
+        get_frustum(&F);
 
         /* Render this object. */
 
-        if (test_frustum(&E, O(i)->bound) >= 0)
+        if (tst_frustum(&F, O(i)->bound) >= 0)
         {
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
@@ -873,7 +863,7 @@ static void draw_object(int j, int i, const float M[16],
 
         /* Render all child entities in this coordinate system. */
 
-        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }

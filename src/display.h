@@ -13,8 +13,6 @@
 #ifndef DISPLAY
 #define DISPLAY
 
-#include "frustum.h"
-
 #define MAXNAME 32
 #define MAXTILE  4
 
@@ -109,8 +107,6 @@ int startup_display(void);
 
 void sync_display(void);
 
-int  view_ortho(int, struct frustum *);
-int  view_persp(int, struct frustum *, const float [3]);
 int  draw_ortho(int, float, float);
 int  draw_persp(int, float, float, const float[3]);
 

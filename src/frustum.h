@@ -18,12 +18,13 @@
 struct frustum
 {
     float p[4];       /* View position */
-    float V[4][4];    /* View volume   */
+    float V[6][4];    /* View volume   */
 };
 
 /*---------------------------------------------------------------------------*/
 
-int test_frustum(const struct frustum *, const float[6]);
+int  tst_frustum(const struct frustum *, const float[6]);
+void get_frustum(struct frustum *);
 
 /*---------------------------------------------------------------------------*/
 

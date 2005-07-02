@@ -146,7 +146,7 @@ int node_sort(struct node *N, int n0, int n1,
 
 int node_draw(const struct node *N, int n, int i, const struct frustum *F)
 {
-    int r = test_frustum(F, N[n].bound);
+    int r = tst_frustum(F, N[n].bound);
 
     /* If this node is entirely invisible, prune the tree. */
 

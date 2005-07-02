@@ -126,133 +126,60 @@ const char *entity_name(int i)
 
 /*---------------------------------------------------------------------------*/
 
-static void transform_camera_gl(int i, const float p[3])
+void transform_camera(int i)
 {
-    GLfloat A[16];
+    float M[16];
 
-    /* Camera rotation. */
+    /* Inverse scale. */
 
-    m_xpos(A, E(i)->rotation);
-    glMultMatrixf(A);
+    glScalef(1 / E(i)->scale[0],
+             1 / E(i)->scale[1],
+             1 / E(i)->scale[2]);
 
-    /* Camera position. */
+    /* Inverse (transposed) rotation. */
+
+    load_xps(M, E(i)->rotation);
+    glMultMatrixf(M);
+
+    /* Inverse translation. */
 
     glTranslatef(-E(i)->position[0],
                  -E(i)->position[1],
                  -E(i)->position[2]);
 }
 
-static void transform_entity_gl(int i)
+void transform_entity(int i)
 {
-    GLfloat A[16];
+    /* Translation. */
 
-    /* Entity position. */
+    glTranslatef(E(i)->position[0],
+                 E(i)->position[1],
+                 E(i)->position[2]);
 
-    glTranslatef (E(i)->position[0],
-                  E(i)->position[1],
-                  E(i)->position[2]);
-
-    /* Entity rotation. */
+    /* Rotation. */
 
     glMultMatrixf(E(i)->rotation);
-
-    /* Entity billboard. */
-
-    if (E(i)->flag & FLAG_BILLBOARD)
-    {
-        glGetFloatv(GL_MODELVIEW_MATRIX, A);
-
-        A[0] = 1.f; A[4] = 0.f; A[8]  = 0.f;
-        A[1] = 0.f; A[5] = 1.f; A[9]  = 0.f;
-        A[2] = 0.f; A[6] = 0.f; A[10] = 1.f;
-
-        glLoadMatrixf(A);
-    }
-
-    /* Entity scale. */
-
-    glScalef(E(i)->scale[0],
-             E(i)->scale[1],
-             E(i)->scale[2]);
-}
-
-/*---------------------------------------------------------------------------*/
-
-void transform_camera(int i, float N[16], const float M[16],
-                             float J[16], const float I[16], const float p[3])
-{
-    float A[16];
-    float B[16];
-
-    transform_camera_gl(i, p);
-
-    m_copy(N, M);
-    m_copy(J, I);
-
-    /* Camera rotation. */
-
-    m_xpos(A, E(i)->rotation);
-    m_copy(B, E(i)->rotation);
-    m_mult(N, N, A);
-    m_mult(J, B, J);
-
-    /* Camera position. */
-
-    m_trans(A, B, E(i)->position[0],
-                  E(i)->position[1],
-                  E(i)->position[2]);
-    m_mult(N, N, A);
-    m_mult(J, B, J);
-}
-
-void transform_entity(int i, float N[16], const float M[16],
-                             float J[16], const float I[16])
-{
-    float A[16];
-    float B[16];
-
-    transform_entity_gl(i);
-
-    m_copy(N, M);
-    m_copy(J, I);
-
-    /* Entity position. */
-
-    m_trans(A, B, -E(i)->position[0],
-                  -E(i)->position[1],
-                  -E(i)->position[2]);
-    m_mult(N, N, A);
-    m_mult(J, B, J);
-
-    /* Entity rotation. */
-
-    m_xpos(A, E(i)->rotation);
-    m_copy(B, E(i)->rotation);
-    m_mult(N, N, A);
-    m_mult(J, B, J);
 
     /* Billboard. */
 
     if (E(i)->flag & FLAG_BILLBOARD)
     {
-        glGetFloatv(GL_MODELVIEW_MATRIX, A);
+        float M[16];
 
-        A[0] = 1.f; A[4] = 0.f; A[8]  = 0.f;
-        A[1] = 0.f; A[5] = 1.f; A[9]  = 0.f;
-        A[2] = 0.f; A[6] = 0.f; A[10] = 1.f;
+        glGetFloatv(GL_MODELVIEW_MATRIX, M);
 
-        m_xpos(B, A);
-        m_mult(N, N, A);  /* TODO: copy instead of mult? */
-        m_mult(J, B, J);
+        M[0] = 1; M[4] = 0; M[ 8] = 0;
+        M[1] = 0; M[5] = 1; M[ 9] = 0;
+        M[2] = 0; M[6] = 0; M[10] = 1;
+
+        glLoadMatrixf(M);
     }
 
     /* Scale. */
 
-    m_scale(A, B, E(i)->scale[0],
-                  E(i)->scale[1],
-                  E(i)->scale[2]);
-    m_mult(N, N, A);
-    m_mult(J, B, J);
+    glScalef(E(i)->scale[0],
+             E(i)->scale[1],
+             E(i)->scale[2]);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -295,9 +222,7 @@ static void fini_entity(int i)
 
 /*---------------------------------------------------------------------------*/
 
-void draw_entity_tree(int i, const float M[16],
-                             const float I[16],
-                             const struct frustum *F, float a)
+void draw_entity_tree(int i, float a)
 {
     int j;
 
@@ -353,7 +278,7 @@ void draw_entity_tree(int i, const float M[16],
 
                 if (entity_func[E(j)->type] &&
                     entity_func[E(j)->type]->draw)
-                    entity_func[E(j)->type]->draw(j, E(j)->data, M, I, F, a);
+                    entity_func[E(j)->type]->draw(j, E(j)->data, a);
             }
             glPopAttrib();
 
@@ -402,15 +327,15 @@ static void attach_entity(int i, int j)
 
 static void create_entity(int i, int type, int data)
 {
-    m_init(E(i)->rotation);
+    load_idt(E(i)->rotation);
 
     E(i)->type     = type;
     E(i)->data     = data;
-    E(i)->flag     =    0;
-    E(i)->scale[0] = 1.0f;
-    E(i)->scale[1] = 1.0f;
-    E(i)->scale[2] = 1.0f;
-    E(i)->alpha    = 1.0f;
+    E(i)->flag     = 0;
+    E(i)->scale[0] = 1;
+    E(i)->scale[1] = 1;
+    E(i)->scale[2] = 1;
+    E(i)->alpha    = 1;
 
     if (E(i)->type == TYPE_SPRITE)
         E(i)->flag =  FLAG_TRANSPARENT;
@@ -468,14 +393,22 @@ void recv_parent_entity(void)
 
 void send_set_entity_rotation(int i, const float r[3])
 {
-    float e[3][3];
+    float M[16];
 
     if (E(i)->type == TYPE_CAMERA)
-        v_basis(e, r, 1);
+    {
+        load_rot_mat(M, 0, 0, 1, r[2]);
+        mult_rot_mat(M, 0, 1, 0, r[1]);
+        mult_rot_mat(M, 1, 0, 0, r[0]);
+    }
     else
-        v_basis(e, r, 0);
+    {
+        load_rot_mat(M, 1, 0, 0, r[0]);
+        mult_rot_mat(M, 0, 1, 0, r[1]);
+        mult_rot_mat(M, 0, 0, 1, r[2]);
+    }
 
-    send_set_entity_basis(i, e[0], e[1], e[2]);
+    send_set_entity_basis(i, M);
 }
 
 void send_set_entity_position(int i, const float p[3])
@@ -488,24 +421,24 @@ void send_set_entity_position(int i, const float p[3])
     pack_float((E(i)->position[2] = p[2]));
 }
 
-void send_set_entity_basis(int i, const float e0[3],
-                                  const float e1[3],
-                                  const float e2[3])
+void send_set_entity_basis(int i, const float M[16])
 {
     pack_event(EVENT_SET_ENTITY_BASIS);
     pack_index(i);
 
-    pack_float((E(i)->rotation[0]  = e0[0]));
-    pack_float((E(i)->rotation[1]  = e0[1]));
-    pack_float((E(i)->rotation[2]  = e0[2]));
+    pack_float(M[0]);
+    pack_float(M[1]);
+    pack_float(M[2]);
 
-    pack_float((E(i)->rotation[4]  = e1[0]));
-    pack_float((E(i)->rotation[5]  = e1[1]));
-    pack_float((E(i)->rotation[6]  = e1[2]));
+    pack_float(M[4]);
+    pack_float(M[5]);
+    pack_float(M[6]);
 
-    pack_float((E(i)->rotation[8]  = e2[0]));
-    pack_float((E(i)->rotation[9]  = e2[1]));
-    pack_float((E(i)->rotation[10] = e2[2]));
+    pack_float(M[8]);
+    pack_float(M[9]);
+    pack_float(M[10]);
+
+    load_mat(E(i)->rotation, M);
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -594,46 +527,41 @@ void send_move_entity(int i, const float v[3])
 
 void send_turn_entity(int i, const float r[3])
 {
-    float M[16], A[16], B[16], e[3][3];
+    float M[16], R[16];
 
     /* Compose a transformation matrix. */
 
-    m_init(M);
-
-    m_rotat(A, B, E(i)->rotation[0],
-                  E(i)->rotation[1],
-                  E(i)->rotation[2], r[0]);
-    m_mult(M, M, A);
-
-    m_rotat(A, B, E(i)->rotation[4],
-                  E(i)->rotation[5],
-                  E(i)->rotation[6], r[1]);
-    m_mult(M, M, A);
-
-    m_rotat(A, B, E(i)->rotation[8],
-                  E(i)->rotation[9],
-                  E(i)->rotation[10], r[2]);
-    m_mult(M, M, A);
+    load_rot_mat(M, E(i)->rotation[0],
+                    E(i)->rotation[1],
+                    E(i)->rotation[2], r[0]);
+    mult_rot_mat(M, E(i)->rotation[4],
+                    E(i)->rotation[5],
+                    E(i)->rotation[6], r[1]);
+    mult_rot_mat(M, E(i)->rotation[8],
+                    E(i)->rotation[9],
+                    E(i)->rotation[10], r[2]);
 
     /* Transform the entity's basis. */
 
-    m_xfrm(e[0], M, E(i)->rotation);
-    m_xfrm(e[1], M, E(i)->rotation + 4);
-    m_xfrm(e[2], M, E(i)->rotation + 8);
+    load_idt(R);
+
+    mult_mat_vec(R + 0, M, E(i)->rotation + 0);
+    mult_mat_vec(R + 4, M, E(i)->rotation + 4);
+    mult_mat_vec(R + 8, M, E(i)->rotation + 8);
 
     /* Re-orthogonalize the basis. */
 
-    v_cross(e[2], e[0], e[1]);
-    v_cross(e[1], e[2], e[0]);
-    v_cross(e[0], e[1], e[2]);
+    cross(R + 8, R + 0, R + 4);
+    cross(R + 4, R + 8, R + 0);
+    cross(R + 0, R + 4, R + 8);
 
     /* Re-normalize the basis. */
 
-    v_normal(e[0], e[0]);
-    v_normal(e[1], e[1]);
-    v_normal(e[2], e[2]);
+    normalize(R + 0);
+    normalize(R + 4);
+    normalize(R + 8);
 
-    send_set_entity_basis(i, e[0], e[1], e[2]);
+    send_set_entity_basis(i, R);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -651,7 +579,7 @@ void recv_set_entity_basis(void)
 {
     int i = unpack_index();
 
-    m_init(E(i)->rotation);
+    load_idt(E(i)->rotation);
 
     E(i)->rotation[0]  = unpack_float();
     E(i)->rotation[1]  = unpack_float();
@@ -849,23 +777,13 @@ int get_entity_child(int i, int n)
 
 void draw_entities(void)
 {
-    struct frustum F;
-    float M[16];
-    float I[16];
-
-    /* Initialize the view frustum and transform matrices. */
-
-    memset(&F, 0, sizeof (struct frustum));
-    m_init(M);
-    m_init(I);
-
     glLoadIdentity();
 
     /* Begin traversing the scene graph at the root. */
 
     glPushAttrib(GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
     {
-        draw_entity_tree(0, M, I, &F, 1.0f);
+        draw_entity_tree(0, 1);
     }
     glPopAttrib();
 }
@@ -874,7 +792,7 @@ void step_entities(void)
 {
     float r[2][3];
     float p[2][3];
-    float e[3][3];
+    float M[16];
 
     int i, n = vecnum(entity);
 
@@ -885,13 +803,15 @@ void step_entities(void)
     get_tracker_rotation(0, r[0]);
     get_tracker_rotation(1, r[1]);
 
-    v_basis(e, r[0], 0);
+    load_rot_mat(M, 1, 0, 0, r[0][0]);
+    mult_rot_mat(M, 0, 1, 0, r[0][1]);
+    mult_rot_mat(M, 0, 0, 1, r[0][2]);
 
     /* Distribute it to all cameras and tracked entities. */
 
     for (i = 0; i < n; ++i)
         if (E(i)->type == TYPE_CAMERA)
-            send_set_camera_offset(E(i)->data, p[0], e);
+            send_set_camera_offset(E(i)->data, p[0], M);
 
         else if (E(i)->type)
         {

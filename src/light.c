@@ -107,20 +107,16 @@ void recv_set_light_color(void)
 
 /*===========================================================================*/
 
-static void draw_light(int j, int i, const float M[16],
-                                     const float I[16],
-                                     const struct frustum *F, float a)
+static void draw_light(int j, int i, float a)
 {
     glPushAttrib(GL_ENABLE_BIT);
     glPushMatrix();
     {
-        float N[16];
-        float J[16];
         float p[4];
 
         GLenum o = GL_LIGHT0 + i;
 
-        transform_entity(j, N, M, J, I);
+        transform_entity(j);
 
         /* Determine the homogenous coordinate lightsource position. */
 
@@ -137,7 +133,7 @@ static void draw_light(int j, int i, const float M[16],
         glLightfv(o, GL_DIFFUSE,  L(i)->d);
         glLightfv(o, GL_POSITION, p);
 
-        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, a * get_entity_alpha(j));
     }
     glPopMatrix();
     glPopAttrib();

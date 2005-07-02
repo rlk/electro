@@ -94,8 +94,14 @@ static void server_swap(void)
     SDL_GL_SwapBuffers();
 }
 
+int draw;
+int cull;
+
 static void server_draw(void)
 {
+    draw = 0;
+    cull = 0;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (server_mirror)
@@ -105,6 +111,8 @@ static void server_draw(void)
     }
 
     draw_console();
+
+    printf("%d draw %d cull %f\n", draw, cull, (float) draw / (draw + cull));
 
     server_swap();
 }

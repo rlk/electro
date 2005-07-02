@@ -17,43 +17,55 @@
 
 #define PI 3.14159265f
 
-#define M_DEG(r) (180.0f * (r) / PI)
-#define M_RAD(d) (PI * (d) / 180.0f)
+#define TO_DEG(r) (180.0f * (r) / PI)
+#define TO_RAD(d) (PI * (d) / 180.0f)
+
+#define DOT3(v, w) ((v)[0] * (w)[0] + \
+                    (v)[1] * (w)[1] + \
+                    (v)[2] * (w)[2])
+#define DOT4(v, w) ((v)[0] * (w)[0] + \
+                    (v)[1] * (w)[1] + \
+                    (v)[2] * (w)[2] + \
+                    (v)[3] * (w)[3])
 
 /*---------------------------------------------------------------------------*/
 
-void m_init(float[16]);
-void m_copy(float[16], const float[16]);
-void m_xpos(float[16], const float[16]);
-void m_invt(float[16], const float[16]);
-void m_mult(float[16], const float[16], const float[16]);
+void load_idt(float[16]);
+
+void load_mat(float[16], const float[16]);
+void load_xps(float[16], const float[16]);
+void load_inv(float[16], const float[16]);
 
 /*---------------------------------------------------------------------------*/
 
-void m_xfrm(float[4], const float[16], const float[4]);
-void m_pfrm(float[4], const float[16], const float[4]);
-void m_vfrm(float[3], const float[16], const float[3]);
+void load_xlt_mat(float[16], float, float, float);
+void load_scl_mat(float[16], float, float, float);
+void load_rot_mat(float[16], float, float, float, float);
+
+void load_xlt_inv(float[16], float, float, float);
+void load_scl_inv(float[16], float, float, float);
+void load_rot_inv(float[16], float, float, float, float);
+
+void mult_xlt_mat(float[16], float, float, float);
+void mult_scl_mat(float[16], float, float, float);
+void mult_rot_mat(float[16], float, float, float, float);
+
+void mult_xlt_int(float[16], float, float, float);
+void mult_scl_int(float[16], float, float, float);
+void mult_rot_int(float[16], float, float, float, float);
 
 /*---------------------------------------------------------------------------*/
 
-void m_xrot(float[16], float[16], float);
-void m_yrot(float[16], float[16], float);
-void m_zrot(float[16], float[16], float);
-
-void m_rotat(float[16], float[16], float, float, float, float);
-void m_trans(float[16], float[16], float, float, float);
-void m_scale(float[16], float[16], float, float, float);
-void m_basis(float[16], float[16], const float[3],
-                                   const float[3],
-                                   const float[3]);
+void mult_mat_mat(float[16], const float[16], const float[16]);
+void mult_mat_vec(float[4],  const float[16], const float[4]);
+void mult_xps_vec(float[4],  const float[16], const float[4]);
 
 /*---------------------------------------------------------------------------*/
 
-void v_normal(float[3], const float[3]);
+void normalize(float[3]);
 
-void v_cross(float[3], const float[3], const float[3]);
-void v_plane(float[4], const float[3], const float[3], const float[3]);
-void v_basis(float[3][3], const float[3], int);
+void cross(float[3], const float[3], const float[3]);
+void plane(float[4], const float[3], const float[3], const float[3]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -46,8 +46,8 @@ static void get_varrier_tile(int tile, float M[16],
 
     /* Compute the basis and transform for the tile coordinate system. */
 
-    v_normal(r, r);
-    v_normal(u, u);
+    normalize(r);
+    normalize(u);
 
     M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
     M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;

@@ -597,8 +597,8 @@ void get_tile_n(int i, float n[3])
     get_tile_r(i, r);
     get_tile_u(i, u);
 
-    v_cross(n, r, u);
-    v_normal(n, n);
+    cross(n, r, u);
+    normalize(n);
 }
 
 int get_tile_flag(int i)
@@ -644,112 +644,6 @@ float get_varrier_cycle(int i)
         return ((struct tile *) vecget(tile, local->tile[i]))->varrier_cycle;
     else
         return DEFAULT_VARRIER_CYCLE;
-}
-
-/*---------------------------------------------------------------------------*/
-
-int view_ortho(int i, struct frustum *F)
-{
-    if (local && i < local->n)
-    {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        /* Set the frustum planes. */
-
-        F->V[0][0] =  0.0f;
-        F->V[0][1] =  1.0f;
-        F->V[0][2] =  0.0f;
-        F->V[0][3] = (float) (-T->pix_y);
-
-        F->V[1][0] = -1.0f;
-        F->V[1][1] =  0.0f;
-        F->V[1][2] =  0.0f;
-        F->V[1][3] = (float) (-T->pix_x - T->pix_w);
-
-        F->V[2][0] =  0.0f;
-        F->V[2][1] = -1.0f;
-        F->V[2][2] =  0.0f;
-        F->V[2][3] = (float) (-T->pix_y - T->pix_h);
-
-        F->V[3][0] =  1.0f;
-        F->V[3][1] =  0.0f;
-        F->V[3][2] =  0.0f;
-        F->V[3][3] = (float) (-T->pix_x);
-
-        F->p[0]    =  0.0f;
-        F->p[1]    =  0.0f;
-        F->p[2]    =  0.0f;
-        F->p[3]    =  1.0f;
-
-        return i + 1;
-    }
-    return 0;
-}
-
-int view_persp(int i, struct frustum *F, const float p[3])
-{
-    if (local && i < local->n)
-    {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        float P[3];
-        float p0[3];
-        float p1[3];
-        float p2[3];
-        float p3[3];
-
-        /* Compute the view position. */
-
-        P[0] = T->d[0] + p[0];
-        P[1] = T->d[1] + p[1];
-        P[2] = T->d[2] + p[2];
-
-        /* Optionally reflect the view position across the mirror plane. */
-
-        if (T->flag & TILE_MIRROR)
-        {
-            float k = (P[0] * T->p[0] +
-                       P[1] * T->p[1] +
-                       P[2] * T->p[2]) - T->p[3];
-
-            P[0] -= T->p[0] * k * 2;
-            P[1] -= T->p[1] * k * 2;
-            P[2] -= T->p[2] * k * 2;
-        }
-
-        /* Compute the screen corners. */
-
-        p0[0] = T->o[0];
-        p0[1] = T->o[1];
-        p0[2] = T->o[2];
-
-        p1[0] = T->r[0] + p0[0];
-        p1[1] = T->r[1] + p0[1];
-        p1[2] = T->r[2] + p0[2];
-
-        p2[0] = T->u[0] + p1[0];
-        p2[1] = T->u[1] + p1[1];
-        p2[2] = T->u[2] + p1[2];
-
-        p3[0] = T->u[0] + p0[0];
-        p3[1] = T->u[1] + p0[1];
-        p3[2] = T->u[2] + p0[2];
-
-        /* Compute the frustum planes. */
-
-        v_plane(F->V[0], P, p1, p0);
-        v_plane(F->V[1], P, p2, p1);
-        v_plane(F->V[2], P, p3, p2);
-        v_plane(F->V[3], P, p0, p3);
-
-        F->p[0] = P[0];
-        F->p[1] = P[1];
-        F->p[2] = P[2];
-        F->p[3] = 1.0f;
-
-        return i + 1;
-    }
-    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -868,10 +762,10 @@ int draw_persp(int i, float N, float F, const float p[3])
         u[1] = T->u[1];
         u[2] = T->u[2];
 
-        v_cross(n, r, u);
-        v_normal(r, r);
-        v_normal(u, u);
-        v_normal(n, n);
+        cross(n, r, u);
+        normalize(r);
+        normalize(u);
+        normalize(n);
 
         k = n[0] * (T->o[0] - P[0]) + 
             n[1] * (T->o[1] - P[1]) +
@@ -883,20 +777,6 @@ int draw_persp(int i, float N, float F, const float p[3])
 
         glMatrixMode(GL_PROJECTION);
         {
-            /*
-            double fL = -N * (r[0] * (p0[0] - c[0]) +
-                              r[1] * (p0[1] - c[1]) +
-                              r[2] * (p0[2] - c[2])) / k;
-            double fR = -N * (r[0] * (p1[0] - c[0]) +
-                              r[1] * (p1[1] - c[1]) +
-                              r[2] * (p1[2] - c[2])) / k;
-            double fB = -N * (u[0] * (p0[0] - c[0]) +
-                              u[1] * (p0[1] - c[1]) +
-                              u[2] * (p0[2] - c[2])) / k;
-            double fT = -N * (u[0] * (p3[0] - c[0]) +
-                              u[1] * (p3[1] - c[1]) +
-                              u[2] * (p3[2] - c[2])) / k;
-            */
             double fL = N * (r[0] * (P[0] - p0[0]) +
                              r[1] * (P[1] - p0[1]) +
                              r[2] * (P[2] - p0[2])) / k;
@@ -927,7 +807,7 @@ int draw_persp(int i, float N, float F, const float p[3])
         M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
         M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
 
-        m_invt(I, M);
+        load_inv(I, M);
 
         glLoadIdentity();
         glMultMatrixf(I);
@@ -1085,7 +965,7 @@ void set_texture_coordinates(void)
         glGetFloatv(GL_PROJECTION_MATRIX, P);
         glGetFloatv(GL_MODELVIEW_MATRIX,  M);
 
-        m_mult(X, P, M);
+        mult_mat_mat(X, P, M);
 
 #ifdef TEXGEN_EYE
         S[0] = X[0];  S[1] = X[1];  S[2] = X[2];  S[3] = X[3];

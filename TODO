@@ -1,3 +1,9 @@
+billboard's use of modelview matrix conflicts with persp's use
+compressed textures
+view culling
+Expandable MPI buffer
+optimize varrier-01-both texture transform
+fix varrier-01-both image scaling
 consider killing fragments
 
 Test total queue throughput.

@@ -98,7 +98,7 @@ void recv_create_camera(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_camera_offset(int i, const float p[3], float e[3][3])
+void send_set_camera_offset(int i, const float p[3], const float M[16])
 {
     pack_event(EVENT_SET_CAMERA_OFFSET);
     pack_index(i);
@@ -107,17 +107,17 @@ void send_set_camera_offset(int i, const float p[3], float e[3][3])
     pack_float((C(i)->pos_offset[1]    = p[1]));
     pack_float((C(i)->pos_offset[2]    = p[2]));
 
-    pack_float((C(i)->view_basis[0][0] = e[0][0]));
-    pack_float((C(i)->view_basis[0][1] = e[0][1]));
-    pack_float((C(i)->view_basis[0][2] = e[0][2]));
+    pack_float((C(i)->view_basis[0][0] = M[0]));
+    pack_float((C(i)->view_basis[0][1] = M[1]));
+    pack_float((C(i)->view_basis[0][2] = M[2]));
 
-    pack_float((C(i)->view_basis[1][0] = e[1][0]));
-    pack_float((C(i)->view_basis[1][1] = e[1][1]));
-    pack_float((C(i)->view_basis[1][2] = e[1][2]));
+    pack_float((C(i)->view_basis[1][0] = M[4]));
+    pack_float((C(i)->view_basis[1][1] = M[5]));
+    pack_float((C(i)->view_basis[1][2] = M[6]));
 
-    pack_float((C(i)->view_basis[2][0] = e[2][0]));
-    pack_float((C(i)->view_basis[2][1] = e[2][1]));
-    pack_float((C(i)->view_basis[2][2] = e[2][2]));
+    pack_float((C(i)->view_basis[2][0] = M[8]));
+    pack_float((C(i)->view_basis[2][1] = M[9]));
+    pack_float((C(i)->view_basis[2][2] = M[10]));
 }
 
 void recv_set_camera_offset(void)
@@ -173,21 +173,8 @@ void recv_set_camera_stereo(void)
 
 /*===========================================================================*/
 
-static int view_tile(int i, int tile, const float d[3], struct frustum *F)
+static int draw_tile(int i, int tile, const float d[3])
 {
-    if (C(i)->type == CAMERA_PERSP)
-        return view_persp(tile, F, d);
-
-    if (C(i)->type == CAMERA_ORTHO)
-        return view_ortho(tile, F);
-
-    return 0;
-}
-
-static int draw_tile(int i, int tile, const float d[3], struct frustum *F)
-{
-    view_tile(i, tile, d, F);
-
     if (C(i)->type == CAMERA_PERSP)
         return draw_persp(tile, C(i)->n, C(i)->f, d);
 
@@ -197,17 +184,9 @@ static int draw_tile(int i, int tile, const float d[3], struct frustum *F)
     return 0;
 }
 
-void draw_camera(int j, int i, const float M[16],
-                               const float I[16],
-                               const struct frustum *F, float a)
+void draw_camera(int j, int i, float a)
 {
     struct camera *c = C(i);
-    struct frustum G;
-
-    float N[16];
-    float J[16];
-    float d[3];
-
     int eye;
 
     /* Iterate over the eyes. */
@@ -217,6 +196,8 @@ void draw_camera(int j, int i, const float M[16],
         int tile = 0;
         int next = 0;
         int pass = 0;
+
+        float d[3];
 
         /* Compute the world-space eye position. */
 
@@ -232,7 +213,7 @@ void draw_camera(int j, int i, const float M[16],
 
         /* Iterate over all tiles of this host. */
 
-        while ((next = draw_tile(i, tile, d, &G)))
+        while ((next = draw_tile(i, tile, d)))
         {
             pass = 0;
 
@@ -244,8 +225,8 @@ void draw_camera(int j, int i, const float M[16],
             {
                 glPushMatrix();
                 {
-                    transform_camera(j, N, M, J, I, d);
-                    draw_entity_tree(j, N, J, &G, a * get_entity_alpha(j));
+                    transform_camera(j);
+                    draw_entity_tree(j, a * get_entity_alpha(j));
                 }
                 glPopMatrix();
             }

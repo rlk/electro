@@ -29,7 +29,7 @@ struct entity_func *startup_camera(void);
 int  send_create_camera(int);
 void recv_create_camera(void);
 
-void send_set_camera_offset(int, const float[3], float[3][3]);
+void send_set_camera_offset(int, const float[3], const float[16]);
 void recv_set_camera_offset(void);
 
 void send_set_camera_stereo(int, const float[3], const float[3], int);

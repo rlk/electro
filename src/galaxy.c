@@ -408,34 +408,24 @@ static void draw_arrays(int i)
     }
 }
 
-static void draw_galaxy(int j, int i, const float M[16],
-                                      const float I[16],
-                                      const struct frustum *F, float a)
+static void draw_galaxy(int j, int i, float a)
 {
+    struct frustum F;
+
     init_galaxy(i);
 
     glPushMatrix();
     {
-        float N[16];
-        float J[16];
-
-        struct frustum E;
-
         /* Apply the local coordinate system transformation. */
 
-        transform_entity(j, N, M, J, I);
-
-        m_pfrm(E.V[0], N, F->V[0]);
-        m_pfrm(E.V[1], N, F->V[1]);
-        m_pfrm(E.V[2], N, F->V[2]);
-        m_pfrm(E.V[3], N, F->V[3]);
-        m_xfrm(E.p,    J, F->p);
+        transform_entity(j);
+        get_frustum(&F);
 
         /* Supply the view position as a vertex program parameter. */
 
         if (GL_has_vertex_program)
             glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
-                                       -E.p[0], -E.p[1], -E.p[2], -E.p[3]);
+                                       F.p[0], F.p[1], F.p[2], F.p[3]);
 
         glPushAttrib(GL_ENABLE_BIT       |
                      GL_TEXTURE_BIT      |
@@ -465,14 +455,14 @@ static void draw_galaxy(int j, int i, const float M[16],
 
             /* Render all stars. */
 
-            node_draw(G(i)->N, 0, 0, &E);
+            node_draw(G(i)->N, 0, 0, &F);
         }
         glPopClientAttrib();
         glPopAttrib();
 
         /* Render all child entities in this coordinate system. */
 
-        draw_entity_tree(j, N, J, F, a * get_entity_alpha(j));
+        draw_entity_tree(j, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }
