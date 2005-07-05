@@ -55,8 +55,8 @@ int send_create_light(int type)
 
     if ((i = new_light()) >= 0)
     {
-        pack_event(EVENT_CREATE_LIGHT);
-        pack_index(type);
+        send_event(EVENT_CREATE_LIGHT);
+        send_index(type);
 
         L(i)->count = 1;
         L(i)->type  = type;
@@ -75,7 +75,7 @@ void recv_create_light(void)
     int i = new_light();
 
     L(i)->count = 1;
-    L(i)->type  = unpack_index();
+    L(i)->type  = recv_index();
     L(i)->d[0]  = 1.0f;
     L(i)->d[1]  = 1.0f;
     L(i)->d[2]  = 1.0f;
@@ -88,21 +88,21 @@ void recv_create_light(void)
 
 void send_set_light_color(int i, float r, float g, float b)
 {
-    pack_event(EVENT_SET_LIGHT_COLOR);
-    pack_index(i);
+    send_event(EVENT_SET_LIGHT_COLOR);
+    send_index(i);
 
-    pack_float((L(i)->d[0] = r));
-    pack_float((L(i)->d[1] = g));
-    pack_float((L(i)->d[2] = b));
+    send_float((L(i)->d[0] = r));
+    send_float((L(i)->d[1] = g));
+    send_float((L(i)->d[2] = b));
 }
 
 void recv_set_light_color(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    L(i)->d[0] = unpack_float();
-    L(i)->d[1] = unpack_float();
-    L(i)->d[2] = unpack_float();
+    L(i)->d[0] = recv_float();
+    L(i)->d[1] = recv_float();
+    L(i)->d[2] = recv_float();
 }
 
 /*===========================================================================*/

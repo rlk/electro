@@ -73,10 +73,10 @@ int send_create_camera(int t)
         C(i)->n     = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
         C(i)->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
 
-        pack_event(EVENT_CREATE_CAMERA);
-        pack_index(t);
-        pack_float(C(i)->n);
-        pack_float(C(i)->f);
+        send_event(EVENT_CREATE_CAMERA);
+        send_index(t);
+        send_float(C(i)->n);
+        send_float(C(i)->f);
 
         return send_create_entity(TYPE_CAMERA, i);
     }
@@ -86,12 +86,12 @@ int send_create_camera(int t)
 void recv_create_camera(void)
 {
     int i = new_camera();
-    int t = unpack_index();
+    int t = recv_index();
 
     C(i)->count = 1;
     C(i)->type  = t;
-    C(i)->n     = unpack_float();
-    C(i)->f     = unpack_float();
+    C(i)->n     = recv_float();
+    C(i)->f     = recv_float();
 
     recv_create_entity();
 }
@@ -100,45 +100,45 @@ void recv_create_camera(void)
 
 void send_set_camera_offset(int i, const float p[3], const float M[16])
 {
-    pack_event(EVENT_SET_CAMERA_OFFSET);
-    pack_index(i);
+    send_event(EVENT_SET_CAMERA_OFFSET);
+    send_index(i);
 
-    pack_float((C(i)->pos_offset[0]    = p[0]));
-    pack_float((C(i)->pos_offset[1]    = p[1]));
-    pack_float((C(i)->pos_offset[2]    = p[2]));
+    send_float((C(i)->pos_offset[0]    = p[0]));
+    send_float((C(i)->pos_offset[1]    = p[1]));
+    send_float((C(i)->pos_offset[2]    = p[2]));
 
-    pack_float((C(i)->view_basis[0][0] = M[0]));
-    pack_float((C(i)->view_basis[0][1] = M[1]));
-    pack_float((C(i)->view_basis[0][2] = M[2]));
+    send_float((C(i)->view_basis[0][0] = M[0]));
+    send_float((C(i)->view_basis[0][1] = M[1]));
+    send_float((C(i)->view_basis[0][2] = M[2]));
 
-    pack_float((C(i)->view_basis[1][0] = M[4]));
-    pack_float((C(i)->view_basis[1][1] = M[5]));
-    pack_float((C(i)->view_basis[1][2] = M[6]));
+    send_float((C(i)->view_basis[1][0] = M[4]));
+    send_float((C(i)->view_basis[1][1] = M[5]));
+    send_float((C(i)->view_basis[1][2] = M[6]));
 
-    pack_float((C(i)->view_basis[2][0] = M[8]));
-    pack_float((C(i)->view_basis[2][1] = M[9]));
-    pack_float((C(i)->view_basis[2][2] = M[10]));
+    send_float((C(i)->view_basis[2][0] = M[8]));
+    send_float((C(i)->view_basis[2][1] = M[9]));
+    send_float((C(i)->view_basis[2][2] = M[10]));
 }
 
 void recv_set_camera_offset(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    C(i)->pos_offset[0]    = unpack_float();
-    C(i)->pos_offset[1]    = unpack_float();
-    C(i)->pos_offset[2]    = unpack_float();
+    C(i)->pos_offset[0]    = recv_float();
+    C(i)->pos_offset[1]    = recv_float();
+    C(i)->pos_offset[2]    = recv_float();
 
-    C(i)->view_basis[0][0] = unpack_float();
-    C(i)->view_basis[0][1] = unpack_float();
-    C(i)->view_basis[0][2] = unpack_float();
+    C(i)->view_basis[0][0] = recv_float();
+    C(i)->view_basis[0][1] = recv_float();
+    C(i)->view_basis[0][2] = recv_float();
 
-    C(i)->view_basis[1][0] = unpack_float();
-    C(i)->view_basis[1][1] = unpack_float();
-    C(i)->view_basis[1][2] = unpack_float();
+    C(i)->view_basis[1][0] = recv_float();
+    C(i)->view_basis[1][1] = recv_float();
+    C(i)->view_basis[1][2] = recv_float();
 
-    C(i)->view_basis[2][0] = unpack_float();
-    C(i)->view_basis[2][1] = unpack_float();
-    C(i)->view_basis[2][2] = unpack_float();
+    C(i)->view_basis[2][0] = recv_float();
+    C(i)->view_basis[2][1] = recv_float();
+    C(i)->view_basis[2][2] = recv_float();
  }
 
 /*---------------------------------------------------------------------------*/
@@ -146,29 +146,29 @@ void recv_set_camera_offset(void)
 void send_set_camera_stereo(int i, const float L[3],
                                    const float R[3], int mode)
 {
-    pack_event(EVENT_SET_CAMERA_STEREO);
-    pack_index(i);
+    send_event(EVENT_SET_CAMERA_STEREO);
+    send_index(i);
 
-    pack_index((C(i)->mode             = mode));
-    pack_float((C(i)->eye_offset[0][0] = L[0]));
-    pack_float((C(i)->eye_offset[0][1] = L[1]));
-    pack_float((C(i)->eye_offset[0][2] = L[2]));
-    pack_float((C(i)->eye_offset[1][0] = R[0]));
-    pack_float((C(i)->eye_offset[1][1] = R[1]));
-    pack_float((C(i)->eye_offset[1][2] = R[2]));
+    send_index((C(i)->mode             = mode));
+    send_float((C(i)->eye_offset[0][0] = L[0]));
+    send_float((C(i)->eye_offset[0][1] = L[1]));
+    send_float((C(i)->eye_offset[0][2] = L[2]));
+    send_float((C(i)->eye_offset[1][0] = R[0]));
+    send_float((C(i)->eye_offset[1][1] = R[1]));
+    send_float((C(i)->eye_offset[1][2] = R[2]));
 }
 
 void recv_set_camera_stereo(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    C(i)->mode             = unpack_index();
-    C(i)->eye_offset[0][0] = unpack_float();
-    C(i)->eye_offset[0][1] = unpack_float();
-    C(i)->eye_offset[0][2] = unpack_float();
-    C(i)->eye_offset[1][0] = unpack_float();
-    C(i)->eye_offset[1][1] = unpack_float();
-    C(i)->eye_offset[1][2] = unpack_float();
+    C(i)->mode             = recv_index();
+    C(i)->eye_offset[0][0] = recv_float();
+    C(i)->eye_offset[0][1] = recv_float();
+    C(i)->eye_offset[0][2] = recv_float();
+    C(i)->eye_offset[1][0] = recv_float();
+    C(i)->eye_offset[1][1] = recv_float();
+    C(i)->eye_offset[1][2] = recv_float();
 }
 
 /*===========================================================================*/

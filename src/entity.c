@@ -349,8 +349,8 @@ int send_create_entity(int type, int data)
 
     if ((i = new_entity()) >= 0)
     {
-        pack_index(type);
-        pack_index(data);
+        send_index(type);
+        send_index(data);
     
         create_entity(i, type, data);
 
@@ -362,8 +362,8 @@ int send_create_entity(int type, int data)
 void recv_create_entity(void)
 {
     int i    = new_entity();
-    int type = unpack_index();
-    int data = unpack_index();
+    int type = recv_index();
+    int data = recv_index();
 
     create_entity(i, type, data);
 }
@@ -372,9 +372,9 @@ void recv_create_entity(void)
 
 void send_parent_entity(int i, int j)
 {
-    pack_event(EVENT_PARENT_ENTITY);
-    pack_index(i);
-    pack_index(j);
+    send_event(EVENT_PARENT_ENTITY);
+    send_index(i);
+    send_index(j);
 
     detach_entity(i);
     attach_entity(i, j);
@@ -382,8 +382,8 @@ void send_parent_entity(int i, int j)
 
 void recv_parent_entity(void)
 {
-    int i = unpack_index();
-    int j = unpack_index();
+    int i = recv_index();
+    int j = recv_index();
 
     detach_entity(i);
     attach_entity(i, j);
@@ -413,58 +413,58 @@ void send_set_entity_rotation(int i, const float r[3])
 
 void send_set_entity_position(int i, const float p[3])
 {
-    pack_event(EVENT_SET_ENTITY_POSITION);
-    pack_index(i);
+    send_event(EVENT_SET_ENTITY_POSITION);
+    send_index(i);
 
-    pack_float((E(i)->position[0] = p[0]));
-    pack_float((E(i)->position[1] = p[1]));
-    pack_float((E(i)->position[2] = p[2]));
+    send_float((E(i)->position[0] = p[0]));
+    send_float((E(i)->position[1] = p[1]));
+    send_float((E(i)->position[2] = p[2]));
 }
 
 void send_set_entity_basis(int i, const float M[16])
 {
-    pack_event(EVENT_SET_ENTITY_BASIS);
-    pack_index(i);
+    send_event(EVENT_SET_ENTITY_BASIS);
+    send_index(i);
 
-    pack_float(M[0]);
-    pack_float(M[1]);
-    pack_float(M[2]);
+    send_float(M[0]);
+    send_float(M[1]);
+    send_float(M[2]);
 
-    pack_float(M[4]);
-    pack_float(M[5]);
-    pack_float(M[6]);
+    send_float(M[4]);
+    send_float(M[5]);
+    send_float(M[6]);
 
-    pack_float(M[8]);
-    pack_float(M[9]);
-    pack_float(M[10]);
+    send_float(M[8]);
+    send_float(M[9]);
+    send_float(M[10]);
 
     load_mat(E(i)->rotation, M);
 }
 
 void send_set_entity_scale(int i, const float v[3])
 {
-    pack_event(EVENT_SET_ENTITY_SCALE);
-    pack_index(i);
+    send_event(EVENT_SET_ENTITY_SCALE);
+    send_index(i);
 
-    pack_float((E(i)->scale[0] = v[0]));
-    pack_float((E(i)->scale[1] = v[1]));
-    pack_float((E(i)->scale[2] = v[2]));
+    send_float((E(i)->scale[0] = v[0]));
+    send_float((E(i)->scale[1] = v[1]));
+    send_float((E(i)->scale[2] = v[2]));
 }
 
 void send_set_entity_alpha(int i, float a)
 {
-    pack_event(EVENT_SET_ENTITY_ALPHA);
-    pack_index(i);
+    send_event(EVENT_SET_ENTITY_ALPHA);
+    send_index(i);
 
-    pack_float((E(i)->alpha = a));
+    send_float((E(i)->alpha = a));
 }
 
 void send_set_entity_flag(int i, int flags, int state)
 {
-    pack_event(EVENT_SET_ENTITY_FLAG);
-    pack_index(i);
-    pack_index(flags);
-    pack_index(state);
+    send_event(EVENT_SET_ENTITY_FLAG);
+    send_index(i);
+    send_index(flags);
+    send_index(state);
 
     if (state)
         E(i)->flag = E(i)->flag | ( flags);
@@ -476,10 +476,10 @@ void send_set_entity_frag_prog(int i, const char *text)
 {
     int n = text ? (strlen(text) + 1) : 0;
 
-    pack_event(EVENT_SET_ENTITY_FRAG_PROG);
-    pack_index(i);
-    pack_index(n);
-    pack_alloc(n, text);
+    send_event(EVENT_SET_ENTITY_FRAG_PROG);
+    send_index(i);
+    send_index(n);
+    send_array(text, n, 1);
 
     fini_entity(i);
 
@@ -493,10 +493,10 @@ void send_set_entity_vert_prog(int i, const char *text)
 {
     int n = text ? (strlen(text) + 1) : 0;
 
-    pack_event(EVENT_SET_ENTITY_VERT_PROG);
-    pack_index(i);
-    pack_index(n);
-    pack_alloc(n, text);
+    send_event(EVENT_SET_ENTITY_VERT_PROG);
+    send_index(i);
+    send_index(n);
+    send_array(text, n, 1);
 
     fini_entity(i);
 
@@ -568,53 +568,53 @@ void send_turn_entity(int i, const float r[3])
 
 void recv_set_entity_position(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    E(i)->position[0] = unpack_float();
-    E(i)->position[1] = unpack_float();
-    E(i)->position[2] = unpack_float();
+    E(i)->position[0] = recv_float();
+    E(i)->position[1] = recv_float();
+    E(i)->position[2] = recv_float();
 }
 
 void recv_set_entity_basis(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
     load_idt(E(i)->rotation);
 
-    E(i)->rotation[0]  = unpack_float();
-    E(i)->rotation[1]  = unpack_float();
-    E(i)->rotation[2]  = unpack_float();
+    E(i)->rotation[0]  = recv_float();
+    E(i)->rotation[1]  = recv_float();
+    E(i)->rotation[2]  = recv_float();
 
-    E(i)->rotation[4]  = unpack_float();
-    E(i)->rotation[5]  = unpack_float();
-    E(i)->rotation[6]  = unpack_float();
+    E(i)->rotation[4]  = recv_float();
+    E(i)->rotation[5]  = recv_float();
+    E(i)->rotation[6]  = recv_float();
 
-    E(i)->rotation[8]  = unpack_float();
-    E(i)->rotation[9]  = unpack_float();
-    E(i)->rotation[10] = unpack_float();
+    E(i)->rotation[8]  = recv_float();
+    E(i)->rotation[9]  = recv_float();
+    E(i)->rotation[10] = recv_float();
 }
 
 void recv_set_entity_scale(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    E(i)->scale[0] = unpack_float();
-    E(i)->scale[1] = unpack_float();
-    E(i)->scale[2] = unpack_float();
+    E(i)->scale[0] = recv_float();
+    E(i)->scale[1] = recv_float();
+    E(i)->scale[2] = recv_float();
 }
 
 void recv_set_entity_alpha(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    E(i)->alpha = unpack_float();
+    E(i)->alpha = recv_float();
 }
 
 void recv_set_entity_flag(void)
 {
-    int i     = unpack_index();
-    int flags = unpack_index();
-    int state = unpack_index();
+    int i     = recv_index();
+    int flags = recv_index();
+    int state = recv_index();
 
     if (state)
         E(i)->flag = E(i)->flag | ( flags);
@@ -624,16 +624,22 @@ void recv_set_entity_flag(void)
 
 void recv_set_entity_frag_prog(void)
 {
-    int i           = unpack_index();
-    int n           = unpack_index();
-    E(i)->frag_text = unpack_alloc(n);
+    int i = recv_index();
+    int n = recv_index();
+
+    E(i)->frag_text = (char *) malloc(n);
+
+    recv_array(E(i)->frag_text, n, 1);
 }
 
 void recv_set_entity_vert_prog(void)
 {
-    int i           = unpack_index();
-    int n           = unpack_index();
-    E(i)->vert_text = unpack_alloc(n);
+    int i = recv_index();
+    int n = recv_index();
+
+    E(i)->vert_text = (char *) malloc(n);
+
+    recv_array(E(i)->vert_text, n, 1);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -700,8 +706,8 @@ int send_create_clone(int i)
 
     if ((j = new_entity()) >= 0)
     {
-        pack_event(EVENT_CREATE_CLONE);
-        pack_index(i);
+        send_event(EVENT_CREATE_CLONE);
+        send_index(i);
 
         create_clone(i, j);
     }
@@ -710,7 +716,7 @@ int send_create_clone(int i)
 
 void recv_create_clone(void)
 {
-    create_clone(unpack_index(), new_entity());
+    create_clone(recv_index(), new_entity());
 }
 
 /*---------------------------------------------------------------------------*/
@@ -744,15 +750,15 @@ static void free_entity(int i)
 
 void send_delete_entity(int i)
 {
-    pack_event(EVENT_DELETE_ENTITY);
-    pack_index(i);
+    send_event(EVENT_DELETE_ENTITY);
+    send_index(i);
 
     free_entity(i);
 }
 
 void recv_delete_entity(void)
 {
-    free_entity(unpack_index());
+    free_entity(recv_index());
 }
 
 /*---------------------------------------------------------------------------*/

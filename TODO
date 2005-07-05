@@ -1,22 +1,15 @@
 billboard's use of modelview matrix conflicts with persp's use
 compressed textures
-view culling
-Expandable MPI buffer
-optimize varrier-01-both texture transform
-fix varrier-01-both image scaling
 consider killing fragments
 
+Bounding volume query
 Test total queue throughput.
 Test re-texture throughput on all clusters.
     (subimage/buffer reuse)
 Uniform API
 Object geometry create
 Particle system
-Bounding sphere
-        auto near/far
-        auto lookat
 Tracker buttons
 Text render of some sort / TTF
 
-Test whether tracking data optimization will pay off.
 Scale and billboard frustum (thorough test)

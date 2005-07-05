@@ -57,7 +57,7 @@ static void client_recv(void)
 
     sync_buffer();
 
-    while ((event = unpack_event()))
+    while ((event = recv_event()))
         switch (event)
         {
         case EVENT_DRAW:                 recv_draw_client();          break;

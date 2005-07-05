@@ -299,11 +299,11 @@ int send_create_image(const char *filename)
 
         if ((I(i)->p = load_image(filename, &I(i)->w, &I(i)->h, &I(i)->b)))
         {
-            pack_event(EVENT_CREATE_IMAGE);
-            pack_index(I(i)->w);
-            pack_index(I(i)->h);
-            pack_index(I(i)->b);
-            pack_alloc(I(i)->w * I(i)->h * I(i)->b, I(i)->p);
+            send_event(EVENT_CREATE_IMAGE);
+            send_index(I(i)->w);
+            send_index(I(i)->h);
+            send_index(I(i)->b);
+            send_array(I(i)->p, I(i)->w * I(i)->h, I(i)->b);
 
             return i;
         }
@@ -315,10 +315,12 @@ void recv_create_image(void)
 {
     int i = new_image();
 
-    I(i)->w = unpack_index();
-    I(i)->h = unpack_index();
-    I(i)->b = unpack_index();
-    I(i)->p = unpack_alloc(I(i)->w * I(i)->h * I(i)->b);
+    I(i)->w = recv_index();
+    I(i)->h = recv_index();
+    I(i)->b = recv_index();
+    I(i)->p = (GLubyte *) malloc(I(i)->w * I(i)->h * I(i)->b);
+
+    recv_array(I(i)->p, I(i)->w * I(i)->h, I(i)->b);
 
     I(i)->filename = "unknown";
 }

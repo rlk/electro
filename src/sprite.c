@@ -67,8 +67,8 @@ int send_create_sprite(const char *filename)
         S(i)->s1 = 1.0f;
         S(i)->t1 = 1.0f;
 
-        pack_event(EVENT_CREATE_SPRITE);
-        pack_index(S(i)->image);
+        send_event(EVENT_CREATE_SPRITE);
+        send_index(S(i)->image);
 
         return send_create_entity(TYPE_SPRITE, i);
     }
@@ -79,7 +79,7 @@ void recv_create_sprite(void)
 {
     int i = new_sprite();
 
-    S(i)->image = unpack_index();
+    S(i)->image = recv_index();
     S(i)->count = 1;
     S(i)->s0 = 0.0f;
     S(i)->t0 = 0.0f;
@@ -93,22 +93,22 @@ void recv_create_sprite(void)
 
 void send_set_sprite_bounds(int i, float s0, float s1, float t0, float t1)
 {
-    pack_event(EVENT_SET_SPRITE_BOUNDS);
-    pack_index(i);
-    pack_float((S(i)->s0 = s0));
-    pack_float((S(i)->s1 = s1));
-    pack_float((S(i)->t0 = t0));
-    pack_float((S(i)->t1 = t1));
+    send_event(EVENT_SET_SPRITE_BOUNDS);
+    send_index(i);
+    send_float((S(i)->s0 = s0));
+    send_float((S(i)->s1 = s1));
+    send_float((S(i)->t0 = t0));
+    send_float((S(i)->t1 = t1));
 }
 
 void recv_set_sprite_bounds(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    S(i)->s0 = unpack_float();
-    S(i)->s1 = unpack_float();
-    S(i)->t0 = unpack_float();
-    S(i)->t1 = unpack_float();
+    S(i)->s0 = recv_float();
+    S(i)->s1 = recv_float();
+    S(i)->t0 = recv_float();
+    S(i)->t1 = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/

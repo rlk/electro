@@ -21,7 +21,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define BUCKETSZ (1 * 1024 * 1024)
+#define BUCKETSZ (4 * 1024 * 1024)
 
 struct bucket
 {
@@ -52,6 +52,35 @@ int startup_buffer(void)
     return 0;
 }
 
+/*---------------------------------------------------------------------------*/
+
+#ifdef MPI
+
+static void clear_buffer(void)
+{
+    struct bucket *prev = NULL;
+    struct bucket *temp;
+
+    /* Empty all buckets. */
+
+    for (temp = first; temp->next; prev = temp, temp = temp->next)
+        temp->size = sizeof (struct bucket);
+
+    /* If the last bucket was not used during the recent cycle, release it. */
+
+    if (temp != first && temp->size == sizeof (struct bucket))
+    {
+        free(temp);
+        prev->next = NULL;
+    }
+    else
+        temp->size = sizeof (struct bucket);
+
+    /* Reset the read point to the beginning. */
+
+    count = sizeof (struct bucket);
+}
+
 void sync_buffer(void)
 {
     struct bucket *temp;
@@ -60,9 +89,11 @@ void sync_buffer(void)
 
     assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
 
-    /* Iterate over all data-containing buckets. */
+    if (rank != 0) clear_buffer();
 
-    for (curr = first; curr->size == BUCKETSZ; curr = curr->next)
+    /* Iterate over all buckets. */
+
+    for (curr = first; curr; curr = curr->next)
     {
         /* Broadcast this bucket, preserving client 'next' links. */
 
@@ -74,17 +105,21 @@ void sync_buffer(void)
 
         curr->next = temp;
 
+        /* Loop until a non-full bucket is sent or received. */
+
+        if (len < BUCKETSZ)
+            break;
+
         /* If a client is out of buckets but more are coming, allocate. */
 
-        if (rank && len == BUCKETSZ && curr->next == NULL)
+        if (rank && curr->next == NULL)
         {
             if ((curr->next = (struct bucket *) malloc(BUCKETSZ)))
-            {
-                curr = curr->next;
-                curr->next = NULL;
-            }
+                curr->next->next = NULL;
         }
     }
+
+    if (rank == 0) clear_buffer();
 
     /* Rewind all hosts to read or write at the first bucket. */
 
@@ -95,31 +130,37 @@ void sync_buffer(void)
 
 static void send_data(const void *buf, size_t len)
 {
-    size_t fit = BUCKETSZ - curr->size;
-
-    /* Check if all of the data fit in the current bucket. */
-
-    if (len < fit)
+    if (buf && len > 0)
     {
-        /* Append the data to the current bucket. */
+        size_t fit = BUCKETSZ - curr->size;
 
-        memcpy((char *) curr + curr->size, buf, len);
-        curr->size += len;
-    }
-    else
-    {
-        /* Append as many data as will fit in the current bucket. */
+        /* Check if all of the data fit in the current bucket. */
 
-        memcpy((char *) curr + curr->size, buf, fit);
-        curr->size += fit;
-
-        /* Ensure there is another bucket and handle the remaining data. */
-        
-        if (curr->next || (curr->next = (struct bucket *) malloc(BUCKETSZ)))
+        if (len < fit)
         {
+            /* Append the data to the current bucket. */
+
+            memcpy((char *) curr + curr->size, buf, len);
+            curr->size += len;
+        }
+        else
+        {
+            /* Append as many data as will fit in the current bucket. */
+
+            memcpy((char *) curr + curr->size, buf, fit);
+            curr->size += fit;
+
+            /* Ensure there is another bucket and handle the remaining data. */
+
+            if (curr->next == NULL)
+            {
+                curr->next = (struct bucket *) malloc(BUCKETSZ);
+
+                curr->next->next = NULL;
+                curr->next->size = sizeof (struct bucket);
+            }
+
             curr = curr->next;
-            curr->next = NULL;
-            curr->size = sizeof (struct bucket);
 
             send_data((char *) buf + fit, len - fit);
         }
@@ -128,28 +169,28 @@ static void send_data(const void *buf, size_t len)
 
 static void recv_data(void *buf, size_t len)
 {
-    size_t fit = curr->size - count;
-
-    /* Check if the current bucket holds all of the requested data. */
-
-    if (len < fit)
+    if (buf && len > 0)
     {
-        /* Copy the requested data from the current bucket. */
+        size_t fit = curr->size - count;
 
-        memcpy(buf, (char *) curr + curr->size, len);
-        count += len;
-    }
-    else
-    {
-        /* Copy as many of the requested data as the current bucket holds. */
+        /* Check if the current bucket holds all of the requested data. */
 
-        memcpy(buf, (char *) curr + curr->size, fit);
-        count += fit;
-
-        /* Move to the next bucket and handle the remainder of the request. */
-
-        if (curr->next)
+        if (len < fit)
         {
+            /* Copy the requested data from the current bucket. */
+
+            memcpy(buf, (char *) curr + count, len);
+            count += len;
+        }
+        else
+        {
+            /* Copy as many of the data as fit in the current bucket. */
+
+            memcpy(buf, (char *) curr + count, fit);
+            count += fit;
+
+            /* Move to the next bucket and handle the remainder of the data. */
+
             curr  = curr->next;
             count = sizeof (struct bucket);
 
@@ -158,173 +199,100 @@ static void recv_data(void *buf, size_t len)
     }
 }
 
-#ifdef SNIP
-
-/*---------------------------------------------------------------------------*/
-/* FIXME: Byte-order dependant.                                              */
-/* FIXME: Not protected against buffer overflow.                             */
-
-/*
-#define BUFINIT (64 * 1024 * 1024)
-*/
-#define BUFINIT (1 * 1024 * 1024)
-
-static unsigned char *buf;
-static int            pos;
-static int            len;
-static int            max;
-
-union typecast
-{
-    int   i;
-    char  c;
-    float f;
-};
-
 /*---------------------------------------------------------------------------*/
 
-int startup_buffer(void)
-{
-    if ((buf = (unsigned char *) calloc(BUFINIT, 1)))
-    {
-        max = BUFINIT;
-        pos = 0;
-        return 1;
-    }
-    return 0;
-}
-
-/*---------------------------------------------------------------------------*/
+#else  /* non-MPI stub functions*/
 
 void sync_buffer(void)
 {
-    len = pos;
+}
 
-#ifdef MPI
-    assert_mpi(MPI_Bcast(&len,  1, MPI_INTEGER, 0, MPI_COMM_WORLD));
-    assert_mpi(MPI_Bcast(buf, len, MPI_BYTE,    0, MPI_COMM_WORLD));
-#endif
+static void send_data(const void *buf, size_t len)
+{
+}
 
-    pos = 0;
+static void recv_data(void *buf, size_t len)
+{
+    memset(buf, 0, len);
+}
+
+#endif /* MPI */
+
+/*---------------------------------------------------------------------------*/
+
+void send_array(const void *p, size_t n, size_t s)
+{
+    send_data(p, n * s);
+}
+
+void send_index(int i)
+{
+    send_data(&i, sizeof (int));
+}
+
+void send_event(char c)
+{
+    send_data(&c, sizeof (char));
+}
+
+void send_float(float f)
+{
+    send_data(&f, sizeof (float));
 }
 
 /*---------------------------------------------------------------------------*/
 
-void pack_vector(vector_t V)
+void recv_array(void *p, size_t n, size_t s)
 {
-    int num = V->num;
-    int siz = V->siz;
-
-    assert(pos + num * siz < max);
-
-    pack_index(num);
-    pack_index(siz);
-
-    memcpy(buf + pos, vecbuf(V), num * siz);
-    pos += (num * siz);
+    recv_data(p, n * s);
 }
 
-vector_t unpack_vector(void)
+int recv_index(void)
+{
+    int i;
+
+    recv_data(&i, sizeof (int));
+    return i;
+}
+
+char recv_event(void)
+{
+    char c;
+
+    recv_data(&c, sizeof (char));
+    return c;
+}
+
+float recv_float(void)
+{
+    float f;
+
+    recv_data(&f, sizeof (float));
+    return f;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_vector(vector_t V)
+{
+    send_index(vecnum(V));
+    send_index(vecsiz(V));
+    send_array(vecbuf(V), vecnum(V), vecsiz(V));
+}
+
+vector_t recv_vector(void)
 {
     vector_t V;
 
-    int num = unpack_index();
-    int siz = unpack_index();
+    int num = recv_index();
+    int siz = recv_index();
 
-    if ((V = vecnew(num, siz)))
-    {
-         memcpy(vecbuf(V), buf + pos, num * siz);
-         V->num = num;
+    V      = vecnew(num, siz);
+    V->num = num;
 
-         pos += (num * siz);
-    }
+    recv_array(vecbuf(V), num, siz);
 
     return V;
 }
 
 /*---------------------------------------------------------------------------*/
-
-void pack_index(int i)
-{
-    union typecast *T = (union typecast *) (buf + pos);
-
-    assert(pos + sizeof (int) < max);
-
-    T->i = i;
-    pos += sizeof (int);
-}
-
-void pack_event(char c)
-{
-    union typecast *T = (union typecast *) (buf + pos);
-
-    assert(pos + sizeof (unsigned char) < max);
-
-    T->c = c;
-    pos += sizeof (unsigned char);
-}
-
-void pack_float(float f)
-{
-    union typecast *T = (union typecast *) (buf + pos);
-
-    assert(pos + sizeof (float) < max);
-
-    T->f = f;
-    pos += sizeof (float);
-}
-
-void pack_alloc(int siz, const void *ptr)
-{
-    assert(pos + siz < max);
-
-    memcpy(buf + pos, ptr, siz);
-    pos += siz;
-}
-
-/*---------------------------------------------------------------------------*/
-
-int unpack_count(void)
-{
-    return (len - pos);
-}
-
-int unpack_index(void)
-{
-    union typecast *T = (union typecast *) (buf + pos);
-
-    pos += sizeof (int);
-    return T->i;
-}
-
-char unpack_event(void)
-{
-    union typecast *T = (union typecast *) (buf + pos);
-
-    pos += sizeof (char);
-    return T->c;
-}
-
-float unpack_float(void)
-{
-    union typecast *T = (union typecast *) (buf + pos);
-
-    pos += sizeof (float);
-    return T->f;
-}
-
-void *unpack_alloc(int siz)
-{
-    void *ptr = NULL;
-
-    if ((ptr = malloc(siz)))
-    {
-        memcpy(ptr, buf + pos, siz);
-        pos += siz;
-    }
-    return ptr;
-}
-
-/*---------------------------------------------------------------------------*/
-
-#endif

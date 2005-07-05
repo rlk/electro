@@ -25,36 +25,22 @@ void sync_buffer(void);
 
 /*---------------------------------------------------------------------------*/
 
-void  send_array(size_t, size_t, const void *);
+void  send_array(const void *, size_t, size_t);
 void  send_index(int);
 void  send_event(char);
 void  send_float(float);
 
 /*---------------------------------------------------------------------------*/
 
-void  recv_array(size_t, size_t, void *);
+void  recv_array(void *, size_t, size_t);
 int   recv_index(void);
 char  recv_event(void);
 float recv_float(void);
 
 /*---------------------------------------------------------------------------*/
 
-void *unpack_array(int);
-int   unpack_index(void);
-char  unpack_event(void);
-float unpack_float(void);
-
-/*---------------------------------------------------------------------------*/
-
-void  pack_array(int, const void *);
-void  pack_index(int);
-void  pack_event(char);
-void  pack_float(float);
-
-/*---------------------------------------------------------------------------*/
-
-vector_t unpack_vector(void);
-void       pack_vector(vector_t);
+void     send_vector(vector_t);
+vector_t recv_vector(void);
 
 /*---------------------------------------------------------------------------*/
 

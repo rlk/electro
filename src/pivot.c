@@ -21,7 +21,7 @@
 
 int send_create_pivot(void)
 {
-    pack_event(EVENT_CREATE_PIVOT);
+    send_event(EVENT_CREATE_PIVOT);
 
     return send_create_entity(TYPE_PIVOT, 0);
 }

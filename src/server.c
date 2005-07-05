@@ -253,8 +253,8 @@ static int server_loop(void)
 
         if (e.type == SDL_QUIT)
         {
-            pack_event(EVENT_EXIT);
-            pack_event(EVENT_NULL);
+            send_event(EVENT_EXIT);
+            send_event(EVENT_NULL);
             sync_buffer();
 
             return 0;
@@ -268,9 +268,9 @@ static int server_loop(void)
         do_frame_script();
 
         if (dirty)
-            pack_event(EVENT_DRAW);
+            send_event(EVENT_DRAW);
 
-        pack_event(EVENT_NULL);
+        send_event(EVENT_NULL);
         sync_buffer();
 
         if (dirty)

@@ -251,14 +251,14 @@ int send_create_galaxy(const char *filename)
 
             /* Pack the object header. */
 
-            pack_event(EVENT_CREATE_GALAXY);
-            pack_index(G(i)->S_num);
-            pack_index(G(i)->N_num);
+            send_event(EVENT_CREATE_GALAXY);
+            send_index(G(i)->S_num);
+            send_index(G(i)->N_num);
 
             /* Pack the stars and BSP nodes. */
 
-            pack_alloc(G(i)->S_num * sizeof (struct star), G(i)->S);
-            pack_alloc(G(i)->N_num * sizeof (struct node), G(i)->N);
+            send_array(G(i)->S, G(i)->S_num, sizeof (struct star));
+            send_array(G(i)->N, G(i)->N_num, sizeof (struct node));
 
             /* Encapsulate this object in an entity. */
 
@@ -274,16 +274,19 @@ void recv_create_galaxy(void)
 
     G(i)->count = 1;
 
-    /* Unpack the object header. */
+    /* Receive the object header. */
 
-    G(i)->S_num = unpack_index();
-    G(i)->N_num = unpack_index();
+    G(i)->S_num = recv_index();
+    G(i)->N_num = recv_index();
 
-    /* Unpack the stars and BSP nodes. */
+    /* Receive the stars and BSP nodes. */
 
-    G(i)->S = unpack_alloc(G(i)->S_num * sizeof (struct star));
-    G(i)->N = unpack_alloc(G(i)->N_num * sizeof (struct node));
-    
+    G(i)->S = (struct star *) malloc(G(i)->S_num * sizeof (struct star));
+    G(i)->N = (struct node *) malloc(G(i)->N_num * sizeof (struct node));
+
+    recv_array(G(i)->S, G(i)->S_num, sizeof (struct star));
+    recv_array(G(i)->N, G(i)->N_num, sizeof (struct node));
+
     /* Encapsulate this object in an entity. */
 
     recv_create_entity();
@@ -293,18 +296,18 @@ void recv_create_galaxy(void)
 
 void send_set_galaxy_magnitude(int i, float m)
 {
-    pack_event(EVENT_SET_GALAXY_MAGNITUDE);
-    pack_index(i);
-    pack_float(m);
+    send_event(EVENT_SET_GALAXY_MAGNITUDE);
+    send_index(i);
+    send_float(m);
 
     G(i)->magnitude = m;
 }
 
 void recv_set_galaxy_magnitude(void)
 {
-    int i = unpack_index();
+    int i = recv_index();
 
-    G(i)->magnitude = unpack_float();
+    G(i)->magnitude = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/

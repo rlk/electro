@@ -2943,7 +2943,7 @@ extern "C" {
 #define GL_BLEND_EQUATION_ALPHA_EXT       0x883D
 #endif
 
-#ifndef GL_MESA_pack_invert
+#ifndef GL_MESA_send_invert
 #define GL_PACK_INVERT_MESA               0x8758
 #endif
 
@@ -6353,8 +6353,8 @@ GLAPI void APIENTRY glBlendEquationSeparateEXT (GLenum, GLenum);
 typedef void (APIENTRYP PFNGLBLENDEQUATIONSEPARATEEXTPROC) (GLenum modeRGB, GLenum modeAlpha);
 #endif
 
-#ifndef GL_MESA_pack_invert
-#define GL_MESA_pack_invert 1
+#ifndef GL_MESA_send_invert
+#define GL_MESA_send_invert 1
 #endif
 
 #ifndef GL_MESA_ycbcr_texture

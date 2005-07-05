@@ -643,31 +643,27 @@ int send_create_object(const char *filename)
 
             O(i)->count = 1;
 
-            /* Pack the object header. */
+            /* Send the object header. */
 
-            pack_event(EVENT_CREATE_OBJECT);
-            pack_index(n);
-            pack_float(O(i)->bound[0]);
-            pack_float(O(i)->bound[1]);
-            pack_float(O(i)->bound[2]);
-            pack_float(O(i)->bound[3]);
-            pack_float(O(i)->bound[4]);
-            pack_float(O(i)->bound[5]);
+            send_event(EVENT_CREATE_OBJECT);
+            send_index(n);
+            send_array(O(i)->bound, 6, sizeof (float));
 
-            /* Pack the vertices and materials. */
+            /* Send the vertices and materials. */
 
-            pack_vector(O(i)->vv);
-            pack_vector(O(i)->mv);
+            send_vector(O(i)->vv);
+            send_vector(O(i)->mv);
 
-            /* Pack each of the surfaces. */
+            /* Send each of the surfaces. */
 
             for (j = 0; j < n; ++j)
             {
                 s = (struct object_surf *) vecget(O(i)->sv, j);
 
-                pack_index (s->mi);
-                pack_vector(s->fv);
-                pack_vector(s->ev);
+                send_index(s->mi);
+
+                send_vector(s->fv);
+                send_vector(s->ev);
             }
 
             /* Encapsulate this object in an entity. */
@@ -685,33 +681,30 @@ void recv_create_object(void)
     /* Unpack the object header. */
 
     int i = new_object();
-    int n = unpack_index();
+    int n = recv_index();
     int j, k;
 
-    O(i)->count    = 1;
-    O(i)->bound[0] = unpack_float();
-    O(i)->bound[1] = unpack_float();
-    O(i)->bound[2] = unpack_float();
-    O(i)->bound[3] = unpack_float();
-    O(i)->bound[4] = unpack_float();
-    O(i)->bound[5] = unpack_float();
+    O(i)->count = 1;
 
-    /* Unpack the vertices and materials.  Allocate space for surfaces. */
+    recv_array(O(i)->bound, 6, sizeof (float));
 
-    O(i)->vv = unpack_vector();
-    O(i)->mv = unpack_vector();
-    O(i)->sv = vecnew(n, sizeof (struct object_surf));
+    /* Unpack the vertices and materials. */
+
+    O(i)->vv = recv_vector();
+    O(i)->mv = recv_vector();
 
     /* Unpack each surface. */
+
+    O(i)->sv = vecnew(n, sizeof (struct object_surf));
 
     for (j = 0; j < n; ++j)
         if ((k = vecadd(O(i)->sv)) >= 0)
         {
             s = (struct object_surf *) vecget(O(i)->sv, k);
 
-            s->mi = unpack_index();
-            s->fv = unpack_vector();
-            s->ev = unpack_vector();
+            s->mi = recv_index();
+            s->fv = recv_vector();
+            s->ev = recv_vector();
         }
 
     /* Encapsulate this object in an entity. */
