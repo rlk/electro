@@ -135,8 +135,11 @@ function do_keyboard(k, s)
 
     if s then
         if k == 13 then
+            E.set_entity_rotation(scene,  0.0, 0.0, 0.0)
             E.set_entity_position(camera, 0.0, 0.0, 0.0)
             E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
+            rot_x = 0
+            rot_y = 0
             pan_x = 0
             pan_y = 0
             pan_z = 0

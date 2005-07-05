@@ -67,6 +67,7 @@ static int power_of_two(int n)
 
 GLuint make_texture(const void *p, int w, int h, int b)
 {
+    GLenum i = GL_RGB;
     GLenum f = GL_RGB;
     GLuint o = 0;
 
@@ -82,10 +83,14 @@ GLuint make_texture(const void *p, int w, int h, int b)
 
     switch (b)
     {
-    case 1: f = GL_LUMINANCE;       break;
-    case 2: f = GL_LUMINANCE_ALPHA; break;
-    case 3: f = GL_RGB;             break;
-    case 4: f = GL_RGBA;            break;
+    case 1: f = GL_LUMINANCE;
+            i = GL_LUMINANCE;       break;
+    case 2: f = GL_LUMINANCE_ALPHA;
+            i = GL_LUMINANCE_ALPHA; break;
+    case 3: f = GL_RGB;
+            i = GL_COMPRESSED_RGB_S3TC_DXT1_EXT;  break;
+    case 4: f = GL_RGBA;
+            i = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT; break;
     }
 
     /* Ensure that the image is power-of-two in size.  Generate mipmaps. */
@@ -98,13 +103,13 @@ GLuint make_texture(const void *p, int w, int h, int b)
         {
             gluScaleImage(f, w, h, GL_UNSIGNED_BYTE, p,
                              W, H, GL_UNSIGNED_BYTE, P);
-            gluBuild2DMipmaps(GL_TEXTURE_2D, b, W, H, f, GL_UNSIGNED_BYTE, P);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, i, W, H, f, GL_UNSIGNED_BYTE, P);
 
             free(P);
         }
     }
     else
-        gluBuild2DMipmaps(GL_TEXTURE_2D, b, w, h, f, GL_UNSIGNED_BYTE, p);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, i, w, h, f, GL_UNSIGNED_BYTE, p);
 
 
     /* Enable mipmapping on it. */
@@ -284,7 +289,7 @@ int send_create_image(const char *filename)
 
     if ((i = new_image()) >= 0)
     {
-		I(i)->count = 1;
+        I(i)->count = 1;
 
         /* Note the file name. */
 

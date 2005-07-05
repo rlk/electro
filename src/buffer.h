@@ -13,6 +13,8 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include <stdlib.h>
+
 #include "vector.h"
 
 /*---------------------------------------------------------------------------*/
@@ -23,27 +25,36 @@ void sync_buffer(void);
 
 /*---------------------------------------------------------------------------*/
 
-void *unpack_alloc(int);
-void    pack_alloc(int, const void *);
+void  send_array(size_t, size_t, const void *);
+void  send_index(int);
+void  send_event(char);
+void  send_float(float);
 
 /*---------------------------------------------------------------------------*/
 
-vector_t unpack_vector(void);
-void       pack_vector(vector_t);
+void  recv_array(size_t, size_t, void *);
+int   recv_index(void);
+char  recv_event(void);
+float recv_float(void);
 
 /*---------------------------------------------------------------------------*/
 
+void *unpack_array(int);
+int   unpack_index(void);
+char  unpack_event(void);
+float unpack_float(void);
+
+/*---------------------------------------------------------------------------*/
+
+void  pack_array(int, const void *);
 void  pack_index(int);
 void  pack_event(char);
 void  pack_float(float);
 
 /*---------------------------------------------------------------------------*/
 
-int   unpack_count(void);
-
-int      unpack_index(void);
-char     unpack_event(void);
-float    unpack_float(void);
+vector_t unpack_vector(void);
+void       pack_vector(vector_t);
 
 /*---------------------------------------------------------------------------*/
 
