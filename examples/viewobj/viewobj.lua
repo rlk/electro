@@ -17,14 +17,8 @@ function help()
     E.print_console(" F2: Toggle server rendering\n")
     E.print_console(" F3: Decrease server window resolution\n")
     E.print_console(" F4: Increase server window resolution\n")
-    E.print_console(" F5: Select mono-scopic rendering\n")
-    E.print_console(" F6: Select red-blue stereo\n")
-    E.print_console(" F7: Select quad-buffered stereo\n")
-    E.print_console(" F8: Select Varrier 0-1 fixed function pipeline\n")
-    E.print_console(" F9: Select Varrier 0-1 fragment program\n")
-    E.print_console("F10: Select Varrier 0-1 vertex/fragment program\n")
-    E.print_console("F11: Select Varrier 1-1 stereo\n")
-    E.print_console("F12: Select Varrier 3-3 stereo\n")
+
+    if varrier_help then varrier_help() end
 end
 
 function add_object(i, s)
@@ -126,12 +120,12 @@ function do_point(dx, dy)
 end
 
 function do_keyboard(k, s)
-    local dx =  2.50 / 12.0 * 0.5
-    local dy = -1.23 / 12.0
-    local dz =  2.00 / 12.0
---  local dx = 0
---  local dy = 0
---  local dz = 0
+
+    if varrier_keyboard then
+        if varrier_keyboard(k, s, camera) then
+            return true
+        end
+    end
 
     if s then
         if k == 13 then
@@ -146,63 +140,6 @@ function do_keyboard(k, s)
             return true
         end
 
-        if k == 286 then -- F5
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_none,
-                                0, 0, 0, 0, 0, 0)
-            return true
-        end
-        if k == 287 then -- F6
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == 288 then -- F7
-            E.set_entity_frag_prog(scene, "../varrier-01-frag.fp")
-            E.set_entity_vert_prog(scene, "../varrier-01-vert.vp")
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == 289 then -- F8
-            E.set_entity_frag_prog(scene, "../varrier-01-fntx.fp")
---          E.set_entity_vert_prog(scene, "../varrier-01-vert.vp")
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == 290 then -- F9
-            E.set_entity_frag_prog(scene, "../varrier-01-both.fp")
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == 291 then -- F10
-            E.set_entity_frag_prog(scene, "../varrier-01-bntx.fp")
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == 292 then -- F11
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == 293 then -- F12
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-
 	if k == 277 then
             rot_dy = rot_dy + 1
 	end
@@ -210,29 +147,29 @@ function do_keyboard(k, s)
             rot_dy = rot_dy - 1
 	end
 
-        if k == 273 then pan_z = pan_z + 1 end
-        if k == 274 then pan_z = pan_z - 1 end
-        if k == 281 then pan_y = pan_y + 1 end
-        if k == 280 then pan_y = pan_y - 1 end
-        if k == 275 then pan_x = pan_x + 1 end
-        if k == 276 then pan_x = pan_x - 1 end
+        if not E.get_modifier(E.key_modifier_control) then
+            if k == 273 then pan_z = pan_z + 1 end
+            if k == 274 then pan_z = pan_z - 1 end
+            if k == 281 then pan_y = pan_y + 1 end
+            if k == 280 then pan_y = pan_y - 1 end
+            if k == 275 then pan_x = pan_x + 1 end
+            if k == 276 then pan_x = pan_x - 1 end
+        end
     else
-        if k == 273 then pan_z = pan_z - 1 end
-        if k == 274 then pan_z = pan_z + 1 end
-        if k == 281 then pan_y = pan_y - 1 end
-        if k == 280 then pan_y = pan_y + 1 end
-        if k == 275 then pan_x = pan_x - 1 end
-        if k == 276 then pan_x = pan_x + 1 end
+        if not E.get_modifier(E.key_modifier_control) then
+            if k == 273 then pan_z = pan_z - 1 end
+            if k == 274 then pan_z = pan_z + 1 end
+            if k == 281 then pan_y = pan_y - 1 end
+            if k == 280 then pan_y = pan_y + 1 end
+            if k == 275 then pan_x = pan_x - 1 end
+            if k == 276 then pan_x = pan_x + 1 end
+        end
     end
 
-    if varrier_keyboard then
-        return varrier_keyboard(k, s)
-    else
-        return true
-    end
+    return false
 end
 
 help()
 do_start()
 
---E.set_background(0, 0, 0)
+E.set_background(0, 0, 0)

@@ -4,3 +4,4 @@ export ELECTRO_CONFIG=/nfs/disk2/evl/rlk/src/electro/config
 export ELECTRO_BIN=/nfs/disk2/evl/rlk/src/electro
 
 mpirun -machinefile $ELECTRO_CONFIG/scylla.dat -np 19 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/scylla.lua $@
+#mpirun -machinefile $ELECTRO_CONFIG/scylla.dat -np 1 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/scylla.lua $@

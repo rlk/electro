@@ -627,6 +627,11 @@ void recv_set_entity_frag_prog(void)
     int i = recv_index();
     int n = recv_index();
 
+    fini_entity(i);
+
+    if (E(i)->frag_text)
+        free(E(i)->frag_text);
+
     E(i)->frag_text = (char *) malloc(n);
 
     recv_array(E(i)->frag_text, n, 1);
@@ -636,6 +641,11 @@ void recv_set_entity_vert_prog(void)
 {
     int i = recv_index();
     int n = recv_index();
+
+    fini_entity(i);
+
+    if (E(i)->vert_text)
+        free(E(i)->vert_text);
 
     E(i)->vert_text = (char *) malloc(n);
 
