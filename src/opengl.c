@@ -26,6 +26,7 @@ GLboolean GL_has_vertex_program       = 0;
 GLboolean GL_has_vertex_buffer_object = 0;
 GLboolean GL_has_point_sprite         = 0;
 GLboolean GL_has_multitexture         = 0;
+GLboolean GL_has_texture_compression  = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -83,6 +84,7 @@ void init_opengl(void)
     GL_has_vertex_buffer_object = opengl_need("GL_ARB_vertex_buffer_object");
     GL_has_point_sprite         = opengl_need("GL_ARB_point_sprite");
     GL_has_multitexture         = opengl_need("GL_ARB_multitexture");
+    GL_has_texture_compression  = opengl_need("GL_ARB_texture_compression");
 }
 
 #else
@@ -163,11 +165,6 @@ void init_opengl(void)
                                     && glDeleteBuffersARB);
     }
 
-    if (opengl_need("GL_ARB_point_sprite"))
-    {
-        GL_has_point_sprite = GL_TRUE;
-    }
-
     if (opengl_need("GL_ARB_multitexture"))
     {
         glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)
@@ -175,6 +172,11 @@ void init_opengl(void)
 
         GL_has_multitexture = (glActiveTextureARB && GL_TRUE);
     }
+
+    GL_has_point_sprite
+        = opengl_need("GL_ARB_point_sprite");
+    GL_has_texture_compression
+        = opengl_need("GL_ARB_texture_compression");
 }
 
 #endif
@@ -214,32 +216,6 @@ GLfloat opengl_perf(GLfloat *all)
     if (all) *all = 1000.0f * total / (now - start);
 
     return fps;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void opengl_basis_mult(float e[3][3])
-{
-    float M[16];
-
-    M[0] = e[0][0]; M[4] = e[1][0]; M[8]  = e[2][0]; M[12] = 0.0f;
-    M[1] = e[0][1]; M[5] = e[1][1]; M[9]  = e[2][1]; M[13] = 0.0f;
-    M[2] = e[0][2]; M[6] = e[1][2]; M[10] = e[2][2]; M[14] = 0.0f;
-    M[3] =    0.0f; M[7] =    0.0f; M[11] =    0.0f; M[15] = 1.0f;
-
-    glMultMatrixf(M);
-}
-
-void opengl_basis_invt(float e[3][3])
-{
-    float M[16];
-
-    M[0] = e[0][0]; M[4] = e[0][1]; M[8]  = e[0][2]; M[12] = 0.0f;
-    M[1] = e[1][0]; M[5] = e[1][1]; M[9]  = e[1][2]; M[13] = 0.0f;
-    M[2] = e[2][0]; M[6] = e[2][1]; M[10] = e[2][2]; M[14] = 0.0f;
-    M[3] =    0.0f; M[7] =    0.0f; M[11] =    0.0f; M[15] = 1.0f;
-
-    glMultMatrixf(M);
 }
 
 /*---------------------------------------------------------------------------*/

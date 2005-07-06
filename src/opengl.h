@@ -38,6 +38,7 @@ extern GLboolean GL_has_vertex_program;
 extern GLboolean GL_has_vertex_buffer_object;
 extern GLboolean GL_has_point_sprite;
 extern GLboolean GL_has_multitexture;
+extern GLboolean GL_has_texture_compression;
 
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;

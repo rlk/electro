@@ -1,3 +1,4 @@
+profilers
 billboard's use of modelview matrix conflicts with persp's use
 compressed textures
 consider killing fragments

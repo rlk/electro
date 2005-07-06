@@ -83,15 +83,22 @@ GLuint make_texture(const void *p, int w, int h, int b)
 
     switch (b)
     {
-    case 1: f = GL_LUMINANCE;
-            i = GL_LUMINANCE;       break;
-    case 2: f = GL_LUMINANCE_ALPHA;
-            i = GL_LUMINANCE_ALPHA; break;
-    case 3: f = GL_RGB;
-            i = GL_COMPRESSED_RGB_S3TC_DXT1_EXT;  break;
-    case 4: f = GL_RGBA;
-            i = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT; break;
+    case 1: f = i = GL_LUMINANCE;       break;
+    case 2: f = i = GL_LUMINANCE_ALPHA; break;
+    case 3: f = i = GL_RGB;             break;
+    case 4: f = i = GL_RGBA;            break;
     }
+
+/*
+    if (GL_has_texture_compression)
+        switch (b)
+        {
+        case 1: i = GL_COMPRESSED_LUMINANCE_ARB;       break;
+        case 2: i = GL_COMPRESSED_LUMINANCE_ALPHA_ARB; break;
+        case 3: i = GL_COMPRESSED_RGB_ARB;             break;
+        case 4: i = GL_COMPRESSED_RGBA_ARB;            break;
+        }
+*/
 
     /* Ensure that the image is power-of-two in size.  Generate mipmaps. */
 
