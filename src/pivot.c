@@ -33,12 +33,18 @@ void recv_create_pivot(void)
 
 /*===========================================================================*/
 
-static void draw_pivot(int j, int i, float a)
+static void draw_pivot(int j, int i, int f, float a)
 {
     glPushMatrix();
     {
         transform_entity(j);
-        draw_entity_tree(j, a * get_entity_alpha(j));
+
+        if (entity_flag(j) & FLAG_BOUNDED)
+        {
+            if (test_entity_bbox(j) >= 0)
+                draw_entity_tree(j, f, a * get_entity_alpha(j));
+        }
+        else draw_entity_tree(j, f, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }
@@ -47,6 +53,7 @@ static void draw_pivot(int j, int i, float a)
 
 struct entity_func pivot_func = {
     "pivot",
+    NULL,
     NULL,
     NULL,
     draw_pivot,

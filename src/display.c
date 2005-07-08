@@ -828,7 +828,7 @@ int draw_persp(int i, float N, float F, const float p[3])
 
 /*---------------------------------------------------------------------------*/
 
-void draw_tile_background(int i)
+void draw_tile_background(int i, int flag)
 {
     /* Incur this fill penalty only if necessary. */
 
@@ -871,7 +871,8 @@ void draw_tile_background(int i)
             glDisable(GL_TEXTURE_2D);
             glDisable(GL_CULL_FACE);
 
-            set_texture_coordinates();
+            if (flag & DRAW_VARRIER_TEXGEN)
+                set_texture_coordinates();
 
             glBegin(GL_QUADS);
             {
@@ -903,7 +904,7 @@ void draw_tile_background(int i)
 void draw_host_background(void)
 {
     int i;
-
+/*
     glViewport(local->win_x, local->win_y,
                local->win_w, local->win_h);
     glScissor (local->win_x, local->win_y,
@@ -911,9 +912,9 @@ void draw_host_background(void)
 
     glClear(GL_DEPTH_BUFFER_BIT |
             GL_COLOR_BUFFER_BIT);
-
+*/
     for (i = 0; i < local->n; ++i)
-        draw_tile_background(i);
+        draw_tile_background(i, 0);
 }
 
 /*---------------------------------------------------------------------------*/

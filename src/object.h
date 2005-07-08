@@ -15,6 +15,39 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define FLAG_MTRL_TRNS 0x0001
+#define FLAG_MTRL_DIFF 0x0002
+#define FLAG_MTRL_AMBT 0x0004
+#define FLAG_MTRL_SPEC 0x0008
+#define FLAG_MTRL_EMSV 0x0010
+#define FLAG_MTRL_SHIN 0x0020
+
+/* Default material properties */
+
+#define MTRL_DIFF_R 0.8f
+#define MTRL_DIFF_G 0.8f
+#define MTRL_DIFF_B 0.8f
+#define MTRL_DIFF_A 1.0f
+
+#define MTRL_AMBT_R 0.2f
+#define MTRL_AMBT_G 0.2f
+#define MTRL_AMBT_B 0.2f
+#define MTRL_AMBT_A 1.0f
+
+#define MTRL_SPEC_R 0.0f
+#define MTRL_SPEC_G 0.0f
+#define MTRL_SPEC_B 0.0f
+#define MTRL_SPEC_A 1.0f
+
+#define MTRL_EMSV_R 0.0f
+#define MTRL_EMSV_G 0.0f
+#define MTRL_EMSV_B 0.0f
+#define MTRL_EMSV_A 1.0f
+
+#define MTRL_SHIN_K 0.0f
+
+/*---------------------------------------------------------------------------*/
+
 struct entity_func *startup_object(void);
 
 /*---------------------------------------------------------------------------*/

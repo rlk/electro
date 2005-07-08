@@ -107,7 +107,7 @@ void recv_set_light_color(void)
 
 /*===========================================================================*/
 
-static void draw_light(int j, int i, float a)
+static void draw_light(int j, int i, int f, float a)
 {
     glPushAttrib(GL_ENABLE_BIT);
     glPushMatrix();
@@ -133,7 +133,7 @@ static void draw_light(int j, int i, float a)
         glLightfv(o, GL_DIFFUSE,  L(i)->d);
         glLightfv(o, GL_POSITION, p);
 
-        draw_entity_tree(j, a * get_entity_alpha(j));
+        draw_entity_tree(j, f, a * get_entity_alpha(j));
     }
     glPopMatrix();
     glPopAttrib();
@@ -156,6 +156,7 @@ static void free_light(int i)
 
 static struct entity_func light_func = {
     "light",
+    NULL,
     NULL,
     NULL,
     draw_light,

@@ -262,17 +262,17 @@ overlay_alpha_map = {
 }
 
 function set_overlay_digit(sprite, n)
-    E.set_sprite_bounds(sprite, overlay_digit_map[n][1],
-                                overlay_digit_map[n][2],
-                                overlay_digit_map[n][3],
-                                overlay_digit_map[n][4])
+    E.set_sprite_range(sprite, overlay_digit_map[n][1],
+                               overlay_digit_map[n][2],
+                               overlay_digit_map[n][3],
+                               overlay_digit_map[n][4])
 end
 
 function set_overlay_alpha(sprite, c)
-    E.set_sprite_bounds(sprite, overlay_alpha_map[c][1],
-                                overlay_alpha_map[c][2],
-                                overlay_alpha_map[c][3],
-                                overlay_alpha_map[c][4])
+    E.set_sprite_range(sprite, overlay_alpha_map[c][1],
+                               overlay_alpha_map[c][2],
+                               overlay_alpha_map[c][3],
+                               overlay_alpha_map[c][4])
 end
 
 function set_overlay_curr_score(n)

@@ -1,9 +1,12 @@
 profilers
-billboard's use of modelview matrix conflicts with persp's use
+freetype
+display volume query / smart viewobj
+compute view position from projection matrix
+new billboard transform
+cooler vortex demo
 compressed textures
 consider killing fragments
 
-Bounding volume query
 Test total queue throughput.
 Test re-texture throughput on all clusters.
     (subimage/buffer reuse)
@@ -11,6 +14,5 @@ Uniform API
 Object geometry create
 Particle system
 Tracker buttons
-Text render of some sort / TTF
 
 Scale and billboard frustum (thorough test)

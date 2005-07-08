@@ -24,8 +24,8 @@ struct entity_func *startup_sprite(void);
 int  send_create_sprite(const char *);
 void recv_create_sprite(void);
 
-void send_set_sprite_bounds(int, float, float, float, float);
-void recv_set_sprite_bounds(void);
+void send_set_sprite_range(int, float, float, float, float);
+void recv_set_sprite_range(void);
 
 /*---------------------------------------------------------------------------*/
 

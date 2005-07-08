@@ -44,6 +44,7 @@ struct entity
     float rotation[16];
     float position[3];
     float scale[3];
+    float bound[6];
     float alpha;
 
     /* Entity fragment and vertex programs. */
@@ -64,6 +65,7 @@ static vector_t            entity;
 static struct entity_func *entity_func[TYPE_COUNT];
 
 /*---------------------------------------------------------------------------*/
+
 /*
 #define E(i) ((struct entity *) vecget(entity, i))
 */
@@ -114,6 +116,11 @@ int entity_data(int i)
 int entity_type(int i)
 {
     return E(i)->type;
+}
+
+int entity_flag(int i)
+{
+    return E(i)->flag;
 }
 
 const char *entity_name(int i)
@@ -188,6 +195,13 @@ static void init_entity(int i)
 {
     if (E(i)->state == 0)
     {
+        /* Find the bounding box of this entity, if any. */
+
+        if (entity_func[E(i)->type] &&
+            entity_func[E(i)->type]->bbox &&
+            entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
+            E(i)->flag |= FLAG_BOUNDED;
+
         /* Initialize any vertex and fragment programs. */
 
         if (E(i)->vert_text && GL_has_vertex_program)
@@ -222,7 +236,20 @@ static void fini_entity(int i)
 
 /*---------------------------------------------------------------------------*/
 
-void draw_entity_tree(int i, float a)
+int test_entity_bbox(int i)
+{
+    struct frustum F;
+
+    if (E(i)->flag & FLAG_BOUNDED)
+    {
+        get_frustum(&F);
+        return tst_frustum(&F, E(i)->bound);
+    }
+
+    return 1;
+}
+
+void draw_entity_tree(int i, int f, float a)
 {
     int j;
 
@@ -274,15 +301,14 @@ void draw_entity_tree(int i, float a)
 
                 /* Draw this entity. */
 
-                set_texture_coordinates();
+                if (f & DRAW_VARRIER_TEXGEN)
+                    set_texture_coordinates();
 
                 if (entity_func[E(j)->type] &&
                     entity_func[E(j)->type]->draw)
-                    entity_func[E(j)->type]->draw(j, E(j)->data, a);
+                    entity_func[E(j)->type]->draw(j, E(j)->data, f, a);
             }
             glPopAttrib();
-
-            opengl_check(entity_name(j));
         }
 }
 
@@ -451,6 +477,19 @@ void send_set_entity_scale(int i, const float v[3])
     send_float((E(i)->scale[2] = v[2]));
 }
 
+void send_set_entity_bound(int i, const float v[3])
+{
+    send_event(EVENT_SET_ENTITY_BOUND);
+    send_index(i);
+
+    send_float((E(i)->bound[0] = v[0]));
+    send_float((E(i)->bound[1] = v[1]));
+    send_float((E(i)->bound[2] = v[2]));
+    send_float((E(i)->bound[3] = v[3]));
+    send_float((E(i)->bound[4] = v[4]));
+    send_float((E(i)->bound[5] = v[5]));
+}
+
 void send_set_entity_alpha(int i, float a)
 {
     send_event(EVENT_SET_ENTITY_ALPHA);
@@ -603,6 +642,18 @@ void recv_set_entity_scale(void)
     E(i)->scale[2] = recv_float();
 }
 
+void recv_set_entity_bound(void)
+{
+    int i = recv_index();
+
+    E(i)->bound[0] = recv_float();
+    E(i)->bound[1] = recv_float();
+    E(i)->bound[2] = recv_float();
+    E(i)->bound[3] = recv_float();
+    E(i)->bound[4] = recv_float();
+    E(i)->bound[5] = recv_float();
+}
+
 void recv_set_entity_alpha(void)
 {
     int i = recv_index();
@@ -687,6 +738,16 @@ void get_entity_scale(int i, float v[3])
     v[0] = E(i)->scale[0];
     v[1] = E(i)->scale[1];
     v[2] = E(i)->scale[2];
+}
+
+void get_entity_bound(int i, float v[6])
+{
+    v[0] = E(i)->bound[0];
+    v[1] = E(i)->bound[1];
+    v[2] = E(i)->bound[2];
+    v[2] = E(i)->bound[3];
+    v[2] = E(i)->bound[4];
+    v[2] = E(i)->bound[5];
 }
 
 float get_entity_alpha(int i)
@@ -797,11 +858,8 @@ void draw_entities(void)
 
     /* Begin traversing the scene graph at the root. */
 
-    glPushAttrib(GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
-    {
-        draw_entity_tree(0, 1);
-    }
-    glPopAttrib();
+    draw_entity_tree(0, 0, 1);
+    opengl_check("draw_entities");
 }
 
 void step_entities(void)

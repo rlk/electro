@@ -162,9 +162,6 @@ static int server_loop(void)
     static int dirty = 1;
     static int count = 0;
 
-    extern int tweak1;
-    extern int tweak2;
-
     SDL_Event e;
 
     while (SDL_PollEvent(&e))
@@ -203,14 +200,6 @@ static int server_loop(void)
             default:
                 break;
             }
-
-            switch (e.key.keysym.scancode)
-            {
-            case 87: tweak1--; print("tweak1 = %d\n", tweak1); break;
-            case 89: tweak1++; print("tweak1 = %d\n", tweak1); break;
-            case 83: tweak2--; print("tweak2 = %d\n", tweak2); break;
-            case 85: tweak2++; print("tweak2 = %d\n", tweak2); break;
-            }
         }
 
         /* Dispatch the event to the scripting system. */
@@ -243,6 +232,8 @@ static int server_loop(void)
         case SDL_USEREVENT:
             dirty |= do_timer_script(e.user.code);
             break;
+        case SDL_VIDEOEXPOSE:
+            dirty |= 1;
         default:
             break;
         }

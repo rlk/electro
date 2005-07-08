@@ -335,6 +335,17 @@ the scale of the entity.  The 3 values give scale multipliers along
 the X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
 
+<dt><tt>set_entity_bound</tt>(<i>entity, x0, y0, z0, x1, y1, z1</i>)
+<dd><p> Specify the axis-aligned bounding box of the entity.  The 6
+values give the minimum and maximum X, Y, and Z values in object
+coordinates.</p>
+
+<p> To enable view culling based on the given bound, set
+<tt>entity_flag_bounded</tt>.  Keep in mind that object and sprite
+bounds are computed automatically, and manually-set boundries are not
+likely to be used.  The intended use of <tt>set_entity_bound</tt> is
+the specification of pivot bounds for hierarchical view culling. </p>
+
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -424,6 +435,13 @@ Return the vector pointing to the rear of entity in local coordinates.
 Return the scaling of the entity along the local X, Y, and Z axes.
 </p>
 
+<dt><i>x0, y0, z0, x1, y1, z1</i> =
+<tt>get_entity_bound</tt>(<i>entity</i>) <dd><p> Return the minimum
+and maximum X, Y, and Z values of the entity.  This may be used to
+determine the extent of an object or sprite.  This is useful when
+computing pivot bounds for hierarchical view culling, or when
+positioning object on-screen. </p>
+
 <dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p> Return
 the transparency value of the entity.
 </p>
@@ -480,30 +498,40 @@ This is especially useful for sprite and wireframe objects which do
 not have lightable surfaces.  The unlit flag affects all sub entities
 and cannot be reversed lower in the hierarchy.</p>
 
-<li><tt> entity_transparent </tt><p> Entities with the transparent
-flag are drawn to the color buffer but not the depth buffer.  This
-prevents transparent objects from occluding opaque objects during the
-depth test.  Sprites automatically have the transparent flag, though
-it may be removed if depth writing sprites are desired.  Objects with
-transparent diffuse colors do not have the transparent flag, but are
-not drawn to the depth buffer.</p>
+<li><tt> entity_flag_transparent </tt><p> Entities with the
+transparent flag are drawn to the color buffer but not the depth
+buffer.  This prevents transparent objects from occluding opaque
+objects during the depth test.  Sprites automatically have the
+transparent flag, though it may be removed if depth writing sprites
+are desired.  Objects with transparent diffuse colors do not have the
+transparent flag, but are not drawn to the depth buffer.</p>
 
-<li><tt> entity_pos_tracked_0 </tt><p> Entities with the position-tracked
-flag have their positions updated each frame to match the position of
-tracker 0, if it is available.  This is useful for implementing head
-or wand tracking in an immersive VR environment.  If an application
-requires the position of the tracker without reference to any visible
-entity, the position-tracked flag should be set on a pivot entity and
-the pivot's position queried with <tt>get_entity_position</tt>.</p>
+<li><tt> entity_flag_bounded </tt><p> Entities with the bounded flag are
+rendered only when their bounding box falls within the view frustum of
+the current camera.  Objects and sprites have automatically computed
+bounding boxes, so they are automatically given the bounded flag.
+Other entities may be assigned a bounding box using
+<tt>set_entity_bound</tt>.  When an entity is culled it behaves is
+though it is hidden and traversal of the hierarchy is pruned. </p>
 
-<li><tt> entity_rot_tracked_0 </tt><p> Entities with the rotation-tracked
-flag have their orientations updated to match that of tracker 0, if it
-is available.  Again, this is useful in immersive VR applications.  The
-orientation of a tracker may be queried by setting the rotation-tracked
-flag on a pivot and calling <tt>get_entity_x_vector</tt>, etc. </p>
+<li><tt> entity_flag_pos_tracked_0 </tt><p> Entities with the
+position-tracked flag have their positions updated each frame to match
+the position of tracker 0, if it is available.  This is useful for
+implementing head or wand tracking in an immersive VR environment.  If
+an application requires the position of the tracker without reference
+to any visible entity, the position-tracked flag should be set on a
+pivot entity and the pivot's position queried with
+<tt>get_entity_position</tt>.</p>
 
-<li><tt> entity_pos_tracked_1 </tt>
-<li><tt> entity_rot_tracked_1 </tt>
+<li><tt> entity_flag_rot_tracked_0 </tt><p> Entities with the
+rotation-tracked flag have their orientations updated to match that of
+tracker 0, if it is available.  Again, this is useful in immersive VR
+applications.  The orientation of a tracker may be queried by setting
+the rotation-tracked flag on a pivot and calling
+<tt>get_entity_x_vector</tt>, etc. </p>
+
+<li><tt> entity_flag_pos_tracked_1 </tt>
+<li><tt> entity_flag_rot_tracked_1 </tt>
 
 <p> These flags behave as above, using tracker 1.  In many
 configurations, trackers 0 and 1 will be head and wand, or
@@ -517,7 +545,7 @@ vice-versa. </p>
 <a name="sprite"><h3> Sprite </h3>
 <dl>
 
-<dt><tt>set_sprite_bounds</tt>(<i>sprite, s0, s1, t0, t1</i>)<dd><p>
+<dt><tt>set_sprite_range</tt>(<i>sprite, s0, s1, t0, t1</i>)<dd><p>
 Set the texture coordinate rectangle used by a sprite.  By default,
 sprites use the entire texture.  This corresponds to texture
 coordinate rectangle (<i>0.0, 1.0, 0.0, 1.0</i>).  However it is
@@ -1215,7 +1243,7 @@ function do_start()
             local y1 = (5 - i) / 4
 
             move_sprite(sprites[numbers[i][j]], i, j)
-            E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
+            E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
     end
 
@@ -1396,7 +1424,7 @@ function do_start()
             local y1 = (5 - i) / 4
 
             move_sprite(sprites[numbers[i][j]], i, j)
-            E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
+            E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
     end
 

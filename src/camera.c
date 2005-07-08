@@ -184,9 +184,11 @@ static int draw_tile(int i, int tile, const float d[3])
     return 0;
 }
 
-void draw_camera(int j, int i, float a)
+void draw_camera(int j, int i, int f, float a)
 {
     struct camera *c = C(i);
+
+    int flag = f | ((c->mode == STEREO_VARRIER_01) ? DRAW_VARRIER_TEXGEN : 0);
     int eye;
 
     /* Iterate over the eyes. */
@@ -226,7 +228,7 @@ void draw_camera(int j, int i, float a)
                 glPushMatrix();
                 {
                     transform_camera(j);
-                    draw_entity_tree(j, a * get_entity_alpha(j));
+                    draw_entity_tree(j, flag, a * get_entity_alpha(j));
                 }
                 glPopMatrix();
             }
@@ -253,6 +255,7 @@ static void free_camera(int i)
 
 static struct entity_func camera_func = {
     "camera",
+    NULL,
     NULL,
     NULL,
     draw_camera,

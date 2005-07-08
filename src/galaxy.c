@@ -411,7 +411,7 @@ static void draw_arrays(int i)
     }
 }
 
-static void draw_galaxy(int j, int i, float a)
+static void draw_galaxy(int j, int i, int f, float a)
 {
     struct frustum F;
 
@@ -465,9 +465,25 @@ static void draw_galaxy(int j, int i, float a)
 
         /* Render all child entities in this coordinate system. */
 
-        draw_entity_tree(j, a * get_entity_alpha(j));
+        draw_entity_tree(j, f, a * get_entity_alpha(j));
     }
     glPopMatrix();
+}
+
+static int bbox_galaxy(int i, float bound[6])
+{
+    if (G(i)->N)
+    {
+        bound[0] = G(i)->N->bound[0];
+        bound[1] = G(i)->N->bound[1];
+        bound[2] = G(i)->N->bound[2];
+        bound[3] = G(i)->N->bound[3];
+        bound[4] = G(i)->N->bound[4];
+        bound[5] = G(i)->N->bound[5];
+
+        return 1;
+    }
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -497,6 +513,7 @@ static struct entity_func galaxy_func = {
     "galaxy",
     init_galaxy,
     fini_galaxy,
+    bbox_galaxy,
     draw_galaxy,
     dupe_galaxy,
     free_galaxy,

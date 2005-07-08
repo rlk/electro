@@ -45,6 +45,7 @@ struct object_mtrl
 {
     const char *name;
     int image;
+    int flag;
 
     float d[4];
     float a[4];
@@ -87,13 +88,12 @@ struct object
     vector_t mv;
     vector_t vv;
     vector_t sv;
-
-    float bound[6];
 };
 
 static vector_t object;
 
 /*---------------------------------------------------------------------------*/
+
 /*
 #define O(i) ((struct object *) vecget(object, i))
 */
@@ -132,39 +132,40 @@ static int new_mtrl(vector_t mv, const char *name)
         struct object_mtrl *m = (struct object_mtrl *) vecget(mv, i);
 
         m->name  = name ? memdup(name, 1, strlen(name) + 1) : NULL;
+        m->flag  = 0;
         m->image = 0;
 
         /* Default diffuse */
 
-        m->d[0] = 0.8f;
-        m->d[1] = 0.8f;
-        m->d[2] = 0.8f;
-        m->d[3] = 1.0f;
+        m->d[0] = MTRL_DIFF_R;
+        m->d[1] = MTRL_DIFF_G;
+        m->d[2] = MTRL_DIFF_B;
+        m->d[3] = MTRL_DIFF_A;
 
         /* Default ambient */
 
-        m->a[0] = 0.2f;
-        m->a[1] = 0.2f;
-        m->a[2] = 0.2f;
-        m->a[3] = 1.0f;
+        m->a[0] = MTRL_AMBT_R;
+        m->a[1] = MTRL_AMBT_G;
+        m->a[2] = MTRL_AMBT_B;
+        m->a[3] = MTRL_AMBT_A;
 
         /* Default specular */
 
-        m->s[0] = 0.0f;
-        m->s[1] = 0.0f;
-        m->s[2] = 0.0f;
-        m->s[3] = 1.0f;
+        m->s[0] = MTRL_SPEC_R;
+        m->s[1] = MTRL_SPEC_G;
+        m->s[2] = MTRL_SPEC_B;
+        m->s[3] = MTRL_SPEC_A;
 
         /* Default emmisive */
 
-        m->e[0] = 0.0f;
-        m->e[1] = 0.0f;
-        m->e[2] = 0.0f;
-        m->e[3] = 1.0f;
+        m->e[0] = MTRL_EMSV_R;
+        m->e[1] = MTRL_EMSV_G;
+        m->e[2] = MTRL_EMSV_B;
+        m->e[3] = MTRL_EMSV_A;
 
         /* Default shininess */
 
-        m->x[0] = 0.0f;
+        m->x[0] = MTRL_SHIN_K;
 
         return i;
     }
@@ -202,31 +203,57 @@ static void read_map_Kd(struct object_mtrl *m, const char *line)
 static void read_Kd(struct object_mtrl *m, const char *line)
 {
     sscanf(line, "%f %f %f", m->d, m->d + 1, m->d + 2);
+
+    if (m->d[0] != MTRL_DIFF_R ||
+        m->d[1] != MTRL_DIFF_G ||
+        m->d[2] != MTRL_DIFF_B)
+        m->flag |= FLAG_MTRL_DIFF;
 }
 
 static void read_Ka(struct object_mtrl *m, const char *line)
 {
     sscanf(line, "%f %f %f", m->a, m->a + 1, m->a + 2);
+
+    if (m->a[0] != MTRL_DIFF_R ||
+        m->a[1] != MTRL_DIFF_G ||
+        m->a[2] != MTRL_DIFF_B)
+        m->flag |= FLAG_MTRL_DIFF;
 }
 
 static void read_Ks(struct object_mtrl *m, const char *line)
 {
     sscanf(line, "%f %f %f", m->s, m->s + 1, m->s + 2);
+
+    if (m->s[0] != MTRL_SPEC_R ||
+        m->s[1] != MTRL_SPEC_G ||
+        m->s[2] != MTRL_SPEC_B)
+        m->flag |= FLAG_MTRL_SPEC;
 }
 
 static void read_Ke(struct object_mtrl *m, const char *line)
 {
     sscanf(line, "%f %f %f", m->e, m->e + 1, m->e + 2);
+
+    if (m->e[0] != MTRL_EMSV_R ||
+        m->e[1] != MTRL_EMSV_G ||
+        m->e[2] != MTRL_EMSV_B)
+        m->flag |= FLAG_MTRL_EMSV;
 }
 
 static void read_Ns(struct object_mtrl *m, const char *line)
 {
     sscanf(line, "%f", m->x);
+
+    if (m->x[0] != MTRL_SHIN_K)
+        m->flag |= FLAG_MTRL_SHIN;
 }
 
 static void read_d(struct object_mtrl *m, const char *line)
 {
     sscanf(line, "%f", m->d + 3);
+
+    if (m->d[3] != MTRL_DIFF_A)
+        m->flag |= FLAG_MTRL_DIFF;
 }
 
 static void read_mtl(vector_t mv, const char *filename)
@@ -549,7 +576,6 @@ static int read_obj(const char *filename, struct object *o)
     char W[MAXSTR];
     FILE *fin;
 
-    int i;
     int r = 0;
     int n = 0;
 
@@ -593,29 +619,6 @@ static int read_obj(const char *filename, struct object *o)
     }
     else error("OBJ file '%s': %s", filename, system_error());
 
-    /* Find the object's bounding box. */
-
-    if (vecnum(o->vv) > 0)
-    {
-        const float *v = ((struct object_vert *) vecget(o->vv, 0))->v;
-
-        o->bound[0] = o->bound[3] = v[0];
-        o->bound[1] = o->bound[4] = v[1];
-        o->bound[2] = o->bound[5] = v[2];
-    }
-
-    for (i = 0; i < vecnum(o->vv); ++i)
-    {
-        const float *v = ((struct object_vert *) vecget(o->vv, i))->v;
-
-        o->bound[0] = MIN(v[0], o->bound[0]);
-        o->bound[1] = MIN(v[1], o->bound[1]);
-        o->bound[2] = MIN(v[2], o->bound[2]);
-        o->bound[3] = MAX(v[0], o->bound[3]);
-        o->bound[4] = MAX(v[1], o->bound[4]);
-        o->bound[5] = MAX(v[2], o->bound[5]);
-    }
-
     /* Release the loader caches. */
 
     vecdel(_vv);
@@ -647,7 +650,6 @@ int send_create_object(const char *filename)
 
             send_event(EVENT_CREATE_OBJECT);
             send_index(n);
-            send_array(O(i)->bound, 6, sizeof (float));
 
             /* Send the vertices and materials. */
 
@@ -685,8 +687,6 @@ void recv_create_object(void)
     int j, k;
 
     O(i)->count = 1;
-
-    recv_array(O(i)->bound, 6, sizeof (float));
 
     /* Unpack the vertices and materials. */
 
@@ -751,58 +751,81 @@ static void fini_object(int i)
 
 /*---------------------------------------------------------------------------*/
 
-static void draw_surface(const struct object_surf *s,
-                         const struct object_mtrl *m, int flag, float alpha)
+static int draw_material(const struct object_mtrl *m, int flag, float alpha)
 {
-    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    static const struct object_mtrl *last_mtrl = NULL;
+    static int                       last_trns =    0;
 
-    draw_image(m->image);
+    if (m == last_mtrl)
+        return last_trns;
 
-    /* Modulate the diffuse color by the current alpha. */
-
-    d[0] = m->d[0];
-    d[1] = m->d[1];
-    d[2] = m->d[2];
-    d[3] = m->d[3] * alpha;
-
-    /* Apply the material properties. */
-
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,      d);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   m->a);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  m->s);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  m->e);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, m->x);
-
-    glPushAttrib(GL_DEPTH_BUFFER_BIT);
+    if ((last_mtrl = m))
     {
-        /* If this object is transparent, don't write depth      */
-        /* and render back-facing and front-facing separately.   */
+        float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-        if ((d[3] < 1) || (flag & FLAG_TRANSPARENT))
-        {
-            glDepthMask(GL_FALSE);
-            glCullFace(GL_FRONT);
+        /* Apply the texture. */
 
-            if (vecnum(s->fv) > 0)
-                glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
-                               GL_UNSIGNED_INT,  vecbuf(s->fv));
+        draw_image(m->image);
 
-            glCullFace(GL_BACK);
-        }
+        /* Modulate the diffuse color by the current alpha. */
 
-        /* Render all faces and edges. */
+        d[0] = m->d[0];
+        d[1] = m->d[1];
+        d[2] = m->d[2];
+        d[3] = m->d[3] * alpha;
+
+        last_trns = (d[3] < 1) || (flag & FLAG_TRANSPARENT);
+
+        /* Apply the material properties. */
+
+        if (m->flag & FLAG_MTRL_DIFF)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,     d);
+        if (m->flag & FLAG_MTRL_AMBT)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  m->a);
+        if (m->flag & FLAG_MTRL_SPEC)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, m->s);
+        if (m->flag & FLAG_MTRL_EMSV)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, m->e);
+        if (m->flag & FLAG_MTRL_SHIN)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS,m->x);
+    }
+
+    return last_trns;
+}
+
+static void draw_surface(const struct object_surf *s, int transparent)
+{
+    /* If this object is transparent, don't write depth and render */
+    /* back-facing and front-facing separately.                    */
+
+    if (transparent)
+    {
+        glPushAttrib(GL_DEPTH_BUFFER_BIT);
+        glDepthMask(GL_FALSE);
+
+        glCullFace(GL_FRONT);
 
         if (vecnum(s->fv) > 0)
             glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
                            GL_UNSIGNED_INT,  vecbuf(s->fv));
-        if (vecnum(s->ev) > 0)
-            glDrawElements(GL_LINES,     2 * vecnum(s->ev),
-                           GL_UNSIGNED_INT,  vecbuf(s->ev));
+
+        glCullFace(GL_BACK);
     }
-    glPopAttrib();
+
+    /* Render all faces and edges. */
+
+    if (vecnum(s->fv) > 0)
+        glDrawElements(GL_TRIANGLES, 3 * vecnum(s->fv),
+                       GL_UNSIGNED_INT,  vecbuf(s->fv));
+    if (vecnum(s->ev) > 0)
+        glDrawElements(GL_LINES,     2 * vecnum(s->ev),
+                       GL_UNSIGNED_INT,  vecbuf(s->ev));
+
+    if (transparent)
+        glPopAttrib();
 }
 
-static void draw_object(int j, int i, float a)
+static void draw_object(int j, int i, int f, float a)
 {
     GLsizei stride = sizeof (struct object_vert);
 
@@ -814,16 +837,13 @@ static void draw_object(int j, int i, float a)
 
     glPushMatrix();
     {
-        struct frustum F;
-
         /* Apply the local coordinate system transformation. */
 
         transform_entity(j);
-        get_frustum(&F);
 
         /* Render this object. */
 
-        if (tst_frustum(&F, O(i)->bound) >= 0)
+        if (test_entity_bbox(j) >= 0)
         {
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
@@ -839,6 +859,10 @@ static void draw_object(int j, int i, float a)
                     glInterleavedArrays(GL_T2F_N3F_V3F, stride,
                                         vecget(O(i)->vv, 0));
 
+                /* Clear the material cache. */
+
+                (void) draw_material(NULL, 0, 1);
+
                 /* Draw each surface. */
 
                 for (k = 0; k < n; ++k)
@@ -846,8 +870,12 @@ static void draw_object(int j, int i, float a)
                     s = (struct object_surf *) vecget(O(i)->sv, k);
                     m = (struct object_mtrl *) vecget(O(i)->mv, s->mi);
   
-                    draw_surface(s, m, get_entity_flag(j),
-                                       get_entity_alpha(j) * a);
+                    if (vecnum(s->fv) > 0 || vecnum(s->ev) > 0)
+                    {
+                        int t = draw_material(m, get_entity_flag(j),
+                                                 get_entity_alpha(j) * a);
+                        draw_surface(s, t);
+                    }
                 }
             }
             glPopAttrib();
@@ -856,9 +884,40 @@ static void draw_object(int j, int i, float a)
 
         /* Render all child entities in this coordinate system. */
 
-        draw_entity_tree(j, a * get_entity_alpha(j));
+        draw_entity_tree(j, f, a * get_entity_alpha(j));
     }
     glPopMatrix();
+}
+
+static int bbox_object(int i, float bound[6])
+{
+    int j, n = vecnum(O(i)->vv);
+
+    /* Find the object's bounding box. */
+
+    if (n > 0)
+    {
+        const float *v = ((struct object_vert *) vecget(O(i)->vv, 0))->v;
+
+        bound[0] = bound[3] = v[0];
+        bound[1] = bound[4] = v[1];
+        bound[2] = bound[5] = v[2];
+    }
+    else return 0;
+
+    for (j = 0; j < n; ++j)
+    {
+        const float *v = ((struct object_vert *) vecget(O(i)->vv, j))->v;
+
+        bound[0] = MIN(v[0], bound[0]);
+        bound[1] = MIN(v[1], bound[1]);
+        bound[2] = MIN(v[2], bound[2]);
+        bound[3] = MAX(v[0], bound[3]);
+        bound[4] = MAX(v[1], bound[4]);
+        bound[5] = MAX(v[2], bound[5]);
+    }
+
+    return 1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -899,6 +958,7 @@ static struct entity_func object_func = {
     "object",
     init_object,
     fini_object,
+    bbox_object,
     draw_object,
     dupe_object,
     free_object,

@@ -31,13 +31,13 @@ function do_start()
     E.parent_entity(thing1, pivot)
     E.parent_entity(thing2, pivot)
 
-    E.set_entity_flag(thing2, E.entity_flag_transparent, true)
+--  E.set_entity_flag(thing2, E.entity_flag_transparent, true)
 
     E.set_entity_position(light,  0.0,  10.0,   0.0)
     E.set_entity_position(pivot,  0.0, -10.0, -10.0)
     E.set_entity_position(thing1, -2.0,   0.0,   0.0)
     E.set_entity_position(thing2,  2.0,   0.0,   0.0)
-  --E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)
+--  E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)
 
     E.enable_timer(true)
 end

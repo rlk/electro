@@ -78,6 +78,7 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_POSITION:  recv_set_entity_position();  break;
         case EVENT_SET_ENTITY_BASIS:     recv_set_entity_basis();     break;
         case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
+        case EVENT_SET_ENTITY_BOUND:     recv_set_entity_bound();     break;
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
         case EVENT_SET_ENTITY_FLAG:      recv_set_entity_flag();      break;
         case EVENT_SET_ENTITY_FRAG_PROG: recv_set_entity_frag_prog(); break;
@@ -86,7 +87,7 @@ static void client_recv(void)
         case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
         case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
-        case EVENT_SET_SPRITE_BOUNDS:    recv_set_sprite_bounds();    break;
+        case EVENT_SET_SPRITE_RANGE:     recv_set_sprite_range();     break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
 

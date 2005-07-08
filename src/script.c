@@ -623,6 +623,21 @@ static int script_set_entity_scale(lua_State *L)
     return 0;
 }
 
+static int script_set_entity_bound(lua_State *L)
+{
+    float b[6];
+
+    b[0] = script_getnumber(L, -6);
+    b[0] = script_getnumber(L, -5);
+    b[0] = script_getnumber(L, -4);
+    b[0] = script_getnumber(L, -3);
+    b[1] = script_getnumber(L, -2);
+    b[2] = script_getnumber(L, -1);
+
+    send_set_entity_bound(script_getentity(L, -7), b);
+    return 0;
+}
+
 static int script_set_entity_alpha(lua_State *L)
 {
     send_set_entity_alpha(script_getentity(L, -2),
@@ -768,6 +783,23 @@ static int script_get_entity_alpha(lua_State *L)
     lua_pushnumber(L, a);
 
     return 1;
+}
+
+static int script_get_entity_bound(lua_State *L)
+{
+    int id = script_getentity(L, -1);
+    float b[6];
+
+    get_entity_bound(id, b);
+
+    lua_pushnumber(L, b[0]);
+    lua_pushnumber(L, b[1]);
+    lua_pushnumber(L, b[2]);
+    lua_pushnumber(L, b[3]);
+    lua_pushnumber(L, b[4]);
+    lua_pushnumber(L, b[5]);
+
+    return 6;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -918,13 +950,13 @@ static int script_set_light_color(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Sprite controls                                                           */
 
-static int script_set_sprite_bounds(lua_State *L)
+static int script_set_sprite_range(lua_State *L)
 {
-    send_set_sprite_bounds(script_getsprite(L, -5),
-                           script_getnumber(L, -4),
-                           script_getnumber(L, -3),
-                           script_getnumber(L, -2),
-                           script_getnumber(L, -1));
+    send_set_sprite_range(script_getsprite(L, -5),
+                          script_getnumber(L, -4),
+                          script_getnumber(L, -3),
+                          script_getnumber(L, -2),
+                          script_getnumber(L, -1));
     return 0;
 }
 
@@ -1234,6 +1266,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_position",  script_set_entity_position);
     lua_function(L, "set_entity_rotation",  script_set_entity_rotation);
     lua_function(L, "set_entity_scale",     script_set_entity_scale);
+    lua_function(L, "set_entity_bound",     script_set_entity_bound);
     lua_function(L, "set_entity_alpha",     script_set_entity_alpha);
     lua_function(L, "set_entity_flag",      script_set_entity_flag);
     lua_function(L, "set_entity_frag_prog", script_set_entity_frag_prog);
@@ -1244,6 +1277,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "get_entity_y_vector",  script_get_entity_y_vector);
     lua_function(L, "get_entity_z_vector",  script_get_entity_z_vector);
     lua_function(L, "get_entity_scale",     script_get_entity_scale);
+    lua_function(L, "get_entity_bound",     script_get_entity_bound);
     lua_function(L, "get_entity_alpha",     script_get_entity_alpha);
 
     lua_function(L, "move_entity",          script_move_entity);
@@ -1266,7 +1300,7 @@ void luaopen_electro(lua_State *L)
 
     /* Sprite control. */
 
-    lua_function(L, "set_sprite_bounds",    script_set_sprite_bounds);
+    lua_function(L, "set_sprite_range",     script_set_sprite_range);
     lua_function(L, "get_sprite_pixel",     script_get_sprite_pixel);
     lua_function(L, "get_sprite_size",      script_get_sprite_size);
 
@@ -1312,6 +1346,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_billboard",     FLAG_BILLBOARD);
     lua_constant(L, "entity_flag_unlit",         FLAG_UNLIT);
     lua_constant(L, "entity_flag_transparent",   FLAG_TRANSPARENT);
+    lua_constant(L, "entity_flag_bounded",       FLAG_BOUNDED);
     lua_constant(L, "entity_flag_line_smooth",   FLAG_LINE_SMOOTH);
     lua_constant(L, "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0);
     lua_constant(L, "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0);

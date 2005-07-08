@@ -250,9 +250,6 @@ static void init_line_texture(int tile, int chan)
     }
 }
 
-int tweak1 = 0;
-int tweak2 = 0;
-
 static void move_line_texture(int tile, const float v[3], float px)
 {
     float p = get_varrier_pitch(tile);
@@ -381,7 +378,7 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
             glActiveTextureARB(GL_TEXTURE0_ARB);
         }
 
-        draw_tile_background(tile);
+        draw_tile_background(tile, DRAW_VARRIER_TEXGEN);
 
         if (get_tile_flag(tile) & TILE_TEST)
         {
@@ -426,7 +423,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
             glColorMask(0, 0, 0, 0);
             draw_varrier_lines(tile, M, c, w, h, 0, 1, 0);
             glColorMask(1, 1, 1, 1);
-            draw_tile_background(tile);
+            draw_tile_background(tile, 0);
         }
         else
         {
@@ -434,7 +431,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
             glColorMask(0, 0, 0, 0);
             draw_varrier_lines(tile, M, c, w, h, 0, 1, 0);
             glColorMask(1, 1, 1, 1);
-            draw_tile_background(tile);
+            draw_tile_background(tile, 0);
         }
 
         /* Draw the test pattern, if requested. */
@@ -471,7 +468,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h, +d, 1, 0);
         glColorMask(1, 0, 0, 0);
-        draw_tile_background(tile);
+        draw_tile_background(tile, 0);
         next = 1;
         break;
         
@@ -480,7 +477,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h,  0, 1, 0);
         glColorMask(0, 1, 0, 0);
-        draw_tile_background(tile);
+        draw_tile_background(tile, 0);
         next = 2;
         break;
         
@@ -489,7 +486,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h, -d, 1, 0);
         glColorMask(0, 0, 1, 0);
-        draw_tile_background(tile);
+        draw_tile_background(tile, 0);
         next = 3;
         break;
         
@@ -530,7 +527,7 @@ static int stereo_quad(int eye, int tile, int pass)
 
         glClear(GL_COLOR_BUFFER_BIT |
                 GL_DEPTH_BUFFER_BIT);
-        draw_tile_background(tile);
+        draw_tile_background(tile, 0);
 
         return 1;
     }
@@ -546,7 +543,7 @@ static int stereo_red_blue(int eye, int tile, int pass)
         {
             glClear(GL_COLOR_BUFFER_BIT |
                     GL_DEPTH_BUFFER_BIT);
-            draw_tile_background(tile);
+            draw_tile_background(tile, 0);
             glColorMask(1, 0, 0, 0);
         }
         else
