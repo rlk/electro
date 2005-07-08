@@ -476,6 +476,36 @@ static int script_set_tile_view_offset(lua_State *L)
     return 0;
 }
 
+static int script_get_display_union(lua_State *L)
+{
+    float b[4];
+
+    get_display_union(b);
+
+    lua_pushnumber(L, b[0]);
+    lua_pushnumber(L, b[1]);
+    lua_pushnumber(L, b[2]);
+    lua_pushnumber(L, b[3]);
+
+    return 4;
+}
+
+static int script_get_display_bound(lua_State *L)
+{
+    float b[6];
+
+    get_display_bound(b);
+
+    lua_pushnumber(L, b[0]);
+    lua_pushnumber(L, b[1]);
+    lua_pushnumber(L, b[2]);
+    lua_pushnumber(L, b[3]);
+    lua_pushnumber(L, b[4]);
+    lua_pushnumber(L, b[5]);
+
+    return 6;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Miscellaneous functions                                                   */
 
@@ -494,16 +524,6 @@ static int script_get_joystick(lua_State *L)
     lua_pushnumber(L, (double) a[0]);
     lua_pushnumber(L, (double) a[1]);
     return 2;
-}
-
-static int script_get_viewport(lua_State *L)
-{
-    lua_pushnumber(L, get_viewport_x());
-    lua_pushnumber(L, get_viewport_y());
-    lua_pushnumber(L, get_viewport_w());
-    lua_pushnumber(L, get_viewport_h());
-
-    return 4;
 }
 
 static int script_get_modifier(lua_State *L)
@@ -1322,7 +1342,6 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "add_host",             script_add_host);
     lua_function(L, "add_tile",             script_add_tile);
-    lua_function(L, "get_viewport",         script_get_viewport);
     lua_function(L, "set_host_flag",        script_set_host_flag);
     lua_function(L, "set_tile_flag",        script_set_tile_flag);
     lua_function(L, "set_tile_position",    script_set_tile_position);
@@ -1330,6 +1349,8 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_tile_line_screen", script_set_tile_line_screen);
     lua_function(L, "set_tile_view_mirror", script_set_tile_view_mirror);
     lua_function(L, "set_tile_view_offset", script_set_tile_view_offset);
+    lua_function(L, "get_display_union",    script_get_display_union);
+    lua_function(L, "get_display_bound",    script_get_display_bound);
 
     /* Misc. */
 

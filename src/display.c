@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -529,11 +530,76 @@ int get_window_framed(void)
 
 /*---------------------------------------------------------------------------*/
 
-int get_viewport_x(void) { return local ? local->tot_x : display_x; }
-int get_viewport_y(void) { return local ? local->tot_y : display_y; }
-int get_viewport_w(void) { return local ? local->tot_w : display_w; }
-int get_viewport_h(void) { return local ? local->tot_h : display_h; }
-int get_tile_count(void) { return local ? local->n : 1; }
+void get_display_union(float b[4])
+{
+    if (local)
+    {
+        b[0] = (float) local->tot_x;
+        b[1] = (float) local->tot_y;
+        b[2] = (float) local->tot_w;
+        b[3] = (float) local->tot_h;
+    }
+    else
+    {
+        b[0] = (float) display_x;
+        b[1] = (float) display_y;
+        b[2] = (float) display_w;
+        b[3] = (float) display_h;
+    }
+}
+
+void get_display_bound(float b[6])
+{
+    int i;
+
+    b[0] = FLT_MAX;
+    b[1] = FLT_MAX;
+    b[2] = FLT_MAX;
+    b[3] = FLT_MIN;
+    b[4] = FLT_MIN;
+    b[5] = FLT_MIN;
+
+    for (i = 0; i < vecnum(tile); ++i)
+    {
+        struct tile *T = (struct tile *) vecget(tile, i);
+
+        /* Lower left corner. */
+
+        b[0] = MIN(b[0], T->o[0]);
+        b[1] = MIN(b[1], T->o[1]);
+        b[2] = MIN(b[2], T->o[2]);
+        b[3] = MAX(b[3], T->o[0]);
+        b[4] = MAX(b[4], T->o[1]);
+        b[5] = MAX(b[5], T->o[2]);
+
+        /* Lower right corner. */
+
+        b[0] = MIN(b[0], T->o[0] + T->r[0]);
+        b[1] = MIN(b[1], T->o[1] + T->r[1]);
+        b[2] = MIN(b[2], T->o[2] + T->r[2]);
+        b[3] = MAX(b[3], T->o[0] + T->r[0]);
+        b[4] = MAX(b[4], T->o[1] + T->r[1]);
+        b[5] = MAX(b[5], T->o[2] + T->r[2]);
+
+        /* Upper left corner. */
+
+        b[0] = MIN(b[0], T->o[0]           + T->u[0]);
+        b[1] = MIN(b[1], T->o[1]           + T->u[1]);
+        b[2] = MIN(b[2], T->o[2]           + T->u[2]);
+        b[3] = MAX(b[3], T->o[0]           + T->u[0]);
+        b[4] = MAX(b[4], T->o[1]           + T->u[1]);
+        b[5] = MAX(b[5], T->o[2]           + T->u[2]);
+
+        /* Upper right corner. */
+
+        b[0] = MIN(b[0], T->o[0] + T->r[0] + T->u[0]);
+        b[1] = MIN(b[1], T->o[1] + T->r[1] + T->u[1]);
+        b[2] = MIN(b[2], T->o[2] + T->r[2] + T->u[2]);
+        b[3] = MAX(b[3], T->o[0] + T->r[0] + T->u[0]);
+        b[4] = MAX(b[4], T->o[1] + T->r[1] + T->u[1]);
+        b[5] = MAX(b[5], T->o[2] + T->r[2] + T->u[2]);
+    }
+}
 
 void get_tile_o(int i, float o[3])
 {

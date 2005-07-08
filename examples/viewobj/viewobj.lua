@@ -27,8 +27,6 @@ function add_object(i, s)
 end
 
 function do_start()
-    local x, y, w, h = E.get_viewport()
-
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
     scene  = E.create_pivot()
@@ -37,7 +35,6 @@ function do_start()
     E.parent_entity(light, camera)
     E.parent_entity(scene, light)
     E.parent_entity(pivot, scene)
-
 
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0, -20.0)

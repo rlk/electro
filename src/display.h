@@ -157,10 +157,8 @@ int  get_window_stereo(void);
 
 /*---------------------------------------------------------------------------*/
 
-int   get_viewport_x(void);
-int   get_viewport_y(void);
-int   get_viewport_w(void);
-int   get_viewport_h(void);
+void  get_display_union(float[4]);
+void  get_display_bound(float[6]);
 
 void  get_tile_o(int, float[3]);
 void  get_tile_r(int, float[3]);

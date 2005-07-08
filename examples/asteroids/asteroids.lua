@@ -83,7 +83,7 @@ end
 -- to any arbitrary display size.
 
 function init_viewport()
-    viewport.x, viewport.y, viewport.w, viewport.h = E.get_viewport()
+    viewport.x, viewport.y, viewport.w, viewport.h = E.get_display_union()
 
     viewport.a = viewport.h / viewport.w
     viewport.k = viewport.w / 1024.0

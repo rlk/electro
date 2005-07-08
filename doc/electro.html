@@ -852,13 +852,23 @@ pitch, angle of rotation about the tile's Z axis, optical thickness
 (shift along the tile's Z axis), shift along the tile's X axis, and
 duty cycle (percentage of black).</p>
 
-<dt><i>x, y, w, h</i> = <tt>get_viewport</tt>()<dd><p> Return the
+</dl>
+
+<h3> Query </h3>
+<dl>
+
+<dt><i>x, y, w, h</i> = <tt>get_display_union</tt>()<dd><p> Return the
 total pixel size of the display.  The return values <i>x, y, w, h</i>
 give the position, width, and height of the rectangle of available
 pixels.  This is the union of the viewports of all tile definitions.
 This information is often useful when positioning entities in view of
 an orthogonal camera, or configuring a scene to match the aspect ratio
 of a display. </p>
+
+<dt><i>x0, y0, z0, x1, y1, z1</i> =
+<tt>get_display_bound</tt>()<dd><p> Return the axis-aligned bounding
+box of the entire display, in world coordinates.  This information is
+useful when positioning entities in view of a perspective camera. </p>
 
 </dl>
 
@@ -872,8 +882,8 @@ b1</i>])<dd><p> Set the backgound color of the display.  If only one
 color (<i>r0, g0, b0</i>) is specified, the background will appear a
 solid color.  If an optional second color (<i>r1, g1, b1</i>) is
 supplied, the background will be drawn with a top-to-bottom gradient.
-The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>
-0.1, 0.2, 0.4</i>). </p>
+The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to
+(<i>0.1, 0.2, 0.4</i>). </p>
 
 <dt><tt>enable_timer</tt>(<i>enabled</i>)<dd><p> Enable or disable the
 <tt>do_timer</tt> callback.  If <i>enabled</i> has value <tt>true</tt>
@@ -1215,7 +1225,7 @@ trigger a screen update.  This is unnecessary, but brief.</p>
 <pre>
 function do_start()
 
-    view_x, view_y, view_w, view_h = E.get_viewport()
+    view_x, view_y, view_w, view_h = E.get_display_union()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);
@@ -1390,7 +1400,7 @@ end
 
 function do_start()
 
-    view_x, view_y, view_w, view_h = E.get_viewport()
+    view_x, view_y, view_w, view_h = E.get_display_union()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     E.set_entity_flag(camera, E.entity_flag_unlit, true);
