@@ -14,18 +14,6 @@ oh = ih + mh
 kw = pw / iw         -- pixels per foot
 kh = ph / ih
 
-x = { mw / 2 - ow * 6,
-      mw / 2 - ow * 5,
-      mw / 2 - ow * 4,
-      mw / 2 - ow * 3,
-      mw / 2 - ow * 2,
-      mw / 2 - ow,
-      mw / 2,
-      mw / 2 + ow,
-      mw / 2 + ow * 2,
-      mw / 2 + ow * 3,
-      mw / 2 + ow * 4 }
-
 x = { -iw / 2 - ow * 5,
       -iw / 2 - ow * 4,
       -iw / 2 - ow * 3,
@@ -65,6 +53,8 @@ B = { (y[1] - y[1]) * kh,
       (y[5] - y[1]) * kh }
 
 host[0]  = E.add_host("nico",       0, 0, sw, sh)
+host[1]  = E.add_host("nico18-10",  0, 0, pw, ph)
+host[2]  = E.add_host("nico17-10",  0, 0, pw, ph * 2)
 host[3]  = E.add_host("yorda1-10",  0, 0, pw, ph * 2)
 host[4]  = E.add_host("yorda2-10",  0, 0, pw * 2, ph)
 host[5]  = E.add_host("yorda3-10",  0, 0, pw * 2, ph)
@@ -95,6 +85,9 @@ host[28] = E.add_host("nico5-10",   0, 0, pw * 2, ph)
 E.set_host_flag(host[0], E.host_flag_framed, true)
 
 tile[ 0] = E.add_tile(host[0],       0, 0, sw, sh)
+tile[ 1] = E.add_tile(host[1],       0, 0, pw - 1, ph)
+tile[ 2] = E.add_tile(host[2],  0, ph - 1, pw - 1, ph)
+tile[ 3] = E.add_tile(host[2],       0, 0, pw - 1, ph)
 tile[ 4] = E.add_tile(host[3],  0, ph - 1, pw - 1, ph)
 tile[ 5] = E.add_tile(host[3],       0, 0, pw - 1, ph)
 tile[ 6] = E.add_tile(host[4],       0, 0, pw - 1, ph)
@@ -149,6 +142,9 @@ tile[54] = E.add_tile(host[28],      0, 0, pw - 1, ph)
 tile[55] = E.add_tile(host[28], pw - 1, 0, pw - 1, ph)
  
 E.set_tile_viewport(tile[ 0], L[1], B[1], pw * 11, ph * 5)
+E.set_tile_viewport(tile[ 1], L[1], B[5], pw, ph)
+E.set_tile_viewport(tile[ 2], L[1], B[4], pw, ph)
+E.set_tile_viewport(tile[ 3], L[1], B[3], pw, ph)
 E.set_tile_viewport(tile[ 4], L[1], B[2], pw, ph)
 E.set_tile_viewport(tile[ 5], L[1], B[1], pw, ph)
 E.set_tile_viewport(tile[ 6], L[2], B[5], pw, ph)
@@ -203,6 +199,9 @@ E.set_tile_viewport(tile[54], L[10], B[1], pw, ph)
 E.set_tile_viewport(tile[55], L[11], B[1], pw, ph)
 
 E.set_tile_position(tile[ 0], x[1], y[1], z, iw * 11, 0, 0, 0, ih * 5, 0)
+E.set_tile_position(tile[ 1], x[1], y[5], z, iw, 0, 0, 0, ih, 0)
+E.set_tile_position(tile[ 2], x[1], y[4], z, iw, 0, 0, 0, ih, 0)
+E.set_tile_position(tile[ 3], x[1], y[3], z, iw, 0, 0, 0, ih, 0)
 E.set_tile_position(tile[ 4], x[1], y[2], z, iw, 0, 0, 0, ih, 0)
 E.set_tile_position(tile[ 5], x[1], y[1], z, iw, 0, 0, 0, ih, 0)
 E.set_tile_position(tile[ 6], x[2], y[5], z, iw, 0, 0, 0, ih, 0)

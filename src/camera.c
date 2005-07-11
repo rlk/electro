@@ -22,6 +22,7 @@
 #include "entity.h"
 #include "stereo.h"
 #include "event.h"
+#include "image.h"
 #include "display.h"
 #include "tracker.h"
 #include "utility.h"
@@ -172,6 +173,102 @@ void recv_set_camera_stereo(void)
 }
 
 /*===========================================================================*/
+/*
+static void test_camera(int tile, int eye, int flag)
+{
+    float o[3];
+    float r[3];
+    float u[3];
+
+    get_tile_o(tile, o);
+    get_tile_r(tile, r);
+    get_tile_u(tile, u);
+    
+    if (flag & DRAW_VARRIER_TEXGEN)
+        set_texture_coordinates();
+
+    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+    {
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LESS);
+
+        draw_image(0);
+
+        glBegin(GL_POLYGON);
+        {
+            if (eye == 0)
+                glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+            else
+                glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+
+            glVertex3f(o[0],
+                       o[1],
+                       o[2]);
+            glVertex3f(o[0] + r[0],
+                       o[1] + r[1],
+                       o[2] + r[2]);
+            glVertex3f(o[0] + r[0] + u[0],
+                       o[1] + r[1] + u[1],
+                       o[2] + r[2] + u[2]);
+            glVertex3f(o[0] + u[0],
+                       o[1] + u[1],
+                       o[2] + u[2]);
+        }
+        glEnd();
+    }
+    glPopAttrib();
+}
+*/
+
+static void test_camera(int eye, int flag)
+{
+    /* Map the tile onto the unit cube. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, 0, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    /* Fill the tile. */
+
+    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+    {
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LESS);
+
+        if (flag & DRAW_VARRIER_TEXGEN)
+            set_texture_coordinates();
+
+        draw_image(0);
+        
+        glBegin(GL_QUADS);
+        {
+            if (eye == 0)
+                glColor3f(0.0f, 1.0f, 0.0f);
+            else
+                glColor3f(0.0f, 0.0f, 1.0f);
+
+            glVertex3f(0, 0, 0);
+            glVertex3f(1, 0, 0);
+            glVertex3f(1, 1, 0);
+            glVertex3f(0, 1, 0);
+        }
+        glEnd();
+    }
+    glPopAttrib();
+
+    /* Revert to the previous transformation. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
 
 static int draw_tile(int i, int tile, const float d[3])
 {
@@ -228,7 +325,11 @@ void draw_camera(int j, int i, int f, float a)
                 glPushMatrix();
                 {
                     transform_camera(j);
-                    draw_entity_tree(j, flag, a * get_entity_alpha(j));
+
+                    if (get_tile_flag(tile) & TILE_TEST)
+                        test_camera(eye, flag);
+                    else
+                        draw_entity_tree(j, flag, a * get_entity_alpha(j));
                 }
                 glPopMatrix();
             }

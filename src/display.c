@@ -870,18 +870,22 @@ int draw_persp(int i, float N, float F, const float p[3])
 
             glLoadIdentity();
             glFrustum(fL, fR, fB, fT, N, F);
+
+            /* Account for the orientation of the display. */
+
+            M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
+            M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;
+            M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
+            M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
+
+            load_inv(I, M);
+            glMultMatrixf(I);
         }
         glMatrixMode(GL_MODELVIEW);
 
-        M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
-        M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;
-        M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
-        M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
-
-        load_inv(I, M);
+        /* Apply the tile offset. */
 
         glLoadIdentity();
-        glMultMatrixf(I);
         glTranslatef(-T->d[0], -T->d[1], -T->d[2]);
 
         /* Rewind polygons if necessary. */

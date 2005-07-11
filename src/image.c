@@ -387,7 +387,7 @@ int get_image_h(int i)
 
 void init_image(int i)
 {
-    if (i > 0 && I(i)->state == 0)
+    if (i >= 0 && I(i)->state == 0)
     {
         I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
         I(i)->state   = 1;
@@ -396,7 +396,7 @@ void init_image(int i)
 
 void fini_image(int i)
 {
-    if (i > 0 && I(i)->state == 1)
+    if (i >= 0 && I(i)->state == 1)
     {
         if (glIsTexture(I(i)->texture))
             glDeleteTextures(1, &I(i)->texture);
@@ -460,11 +460,13 @@ int startup_image(void)
         {
             I(i)->filename = "null";
             I(i)->texture  =      0;
-            I(i)->state    =      1;
-            I(i)->p        =   NULL;
+            I(i)->state    =      0;
             I(i)->w        =    128;
             I(i)->h        =    128;
-            I(i)->b        =      3;
+            I(i)->b        =      4;
+            I(i)->p        = malloc(128 * 128 * 4);
+
+            memset(I(i)->p, 0xFF, 128 * 128 * 4);
         }
         return 1;
     }
