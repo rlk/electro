@@ -970,7 +970,7 @@ void draw_tile_background(int i, int flag)
 void draw_host_background(void)
 {
     int i;
-/*
+
     glViewport(local->win_x, local->win_y,
                local->win_w, local->win_h);
     glScissor (local->win_x, local->win_y,
@@ -978,7 +978,7 @@ void draw_host_background(void)
 
     glClear(GL_DEPTH_BUFFER_BIT |
             GL_COLOR_BUFFER_BIT);
-*/
+
     for (i = 0; i < local->n; ++i)
         draw_tile_background(i, 0);
 }
