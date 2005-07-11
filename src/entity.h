@@ -25,10 +25,11 @@
 #define TYPE_CAMERA 2
 #define TYPE_SPRITE 3
 #define TYPE_OBJECT 4
-#define TYPE_GALAXY 5
-#define TYPE_LIGHT  6
-#define TYPE_PIVOT  7
-#define TYPE_COUNT  8
+#define TYPE_STRING 5
+#define TYPE_GALAXY 6
+#define TYPE_LIGHT  7
+#define TYPE_PIVOT  8
+#define TYPE_COUNT  9
 
 /* Entity state flags. */
 
@@ -49,6 +50,7 @@
 #define MIN_CAMERAS    4
 #define MIN_SPRITES  256
 #define MIN_OBJECTS  128
+#define MIN_STRINGS  128
 #define MIN_GALAXIES   4
 #define MIN_LIGHTS     8
 

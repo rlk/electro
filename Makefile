@@ -21,6 +21,8 @@ ifdef TRACKD
 	CFLAGS += -DTRACKD
 endif
 
+# To build without audio: "make NAUDIO=1"
+
 ifdef NAUDIO
 	CFLAGS += -DNAUDIO
 endif
@@ -34,9 +36,11 @@ ifeq ($(shell uname), Darwin)
 	LIBDIR = -L/sw/lib
 	OGLLIB =
 	SDL_CONFIG = /sw/bin/sdl-config
+	FT2_CONFIG = /sw/bin/freetype-config
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
+	FT2_CONFIG = /usr/bin/freetype-config
 endif
 
 # Include Lua, if it exists.
@@ -56,13 +60,14 @@ endif
 
 #------------------------------------------------------------------------------
 
-CFLAGS += $(shell $(SDL_CONFIG) --cflags)
+CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
 SDLLIB  = $(shell $(SDL_CONFIG) --libs) -lSDLmain
+FT2LIB  = $(shell $(FT2_CONFIG) --libs)
 LUALIB  = -llua -llualib -lluasocket
 IMGLIB  = -ljpeg -lpng -lz -lm
 OGGLIB  = -lvorbisfile
 
-LIBS += $(SDLLIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+LIBS += $(SDLLIB) $(FT2LIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
 OBJS =	src/version.o  \
 	src/opengl.o   \
@@ -85,11 +90,13 @@ OBJS =	src/version.o  \
 	src/galaxy.o   \
 	src/sprite.o   \
 	src/object.o   \
+	src/string.o   \
 	src/light.o    \
 	src/pivot.o    \
 	src/script.o   \
 	src/image.o    \
 	src/sound.o    \
+	src/font.o     \
 	src/node.o     \
 	src/star.o     \
 	src/main.o
@@ -110,7 +117,7 @@ install : $(TARG)
 	cp config/* $(PREFIX)/config
 
 #------------------------------------------------------------------------------
-# If Subversion is installed then report the revision number in the source.
+# If Subversion is available, report the revision number in the source.
 
 ifneq ($(shell which svnversion),)
 
@@ -119,12 +126,10 @@ src/version.c : FORCE
 	                              > src/version.c
 	svnversion -n . | tr -d '\n' >> src/version.c
 	echo '"; return str; }'      >> src/version.c
-
 else
 
 src/version.c : FORCE
 	echo 'const char *version(void) { return ""; }' > src/version.c
-
 endif
 
 #------------------------------------------------------------------------------

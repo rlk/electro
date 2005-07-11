@@ -132,7 +132,7 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
 /*---------------------------------------------------------------------------*/
 
-int create_sound(const char *filename)
+int load_sound(const char *filename)
 {
     int   i;
     FILE *fp;
@@ -157,7 +157,7 @@ int create_sound(const char *filename)
     return -1;
 }
 
-void delete_sound(int i)
+void free_sound(int i)
 {
     ov_clear(&S(i)->file);
     memset(S(i), 0, sizeof (struct sound));
@@ -221,15 +221,15 @@ int startup_sound(void)
     return 1;
 }
 
-int create_sound(const char *filename)
+int load_sound(const char *filename)
 {
     return -1;
 }
 
-void delete_sound(int i) { }
-void stop_sound(int i)   { }
-void play_sound(int i)   { }
-void loop_sound(int i)   { }
+void free_sound(int i) { }
+void stop_sound(int i) { }
+void play_sound(int i) { }
+void loop_sound(int i) { }
 
 #endif /* NAUDIO */
 

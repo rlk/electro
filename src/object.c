@@ -94,14 +94,14 @@ static vector_t object;
 
 /*---------------------------------------------------------------------------*/
 
-/*
 #define O(i) ((struct object *) vecget(object, i))
-*/
 
+/*
 struct object *O(int i)
 {
     return (struct object *) vecget(object, i);
 }
+*/
 
 static int new_object(void)
 {

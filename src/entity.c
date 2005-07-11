@@ -23,6 +23,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
+#include "string.h"
 #include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
@@ -66,14 +67,14 @@ static struct entity_func *entity_func[TYPE_COUNT];
 
 /*---------------------------------------------------------------------------*/
 
-/*
 #define E(i) ((struct entity *) vecget(entity, i))
-*/
 
+/*
 struct entity *E(int i)
 {
     return (struct entity *) vecget(entity, i);
 }
+*/
 
 static int new_entity(void)
 {
@@ -97,6 +98,7 @@ int startup_entity(void)
         entity_func[TYPE_CAMERA] = startup_camera();
         entity_func[TYPE_SPRITE] = startup_sprite();
         entity_func[TYPE_OBJECT] = startup_object();
+        entity_func[TYPE_STRING] = startup_string();
         entity_func[TYPE_GALAXY] = startup_galaxy();
         entity_func[TYPE_LIGHT]  = startup_light();
         entity_func[TYPE_PIVOT]  = startup_pivot();

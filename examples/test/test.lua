@@ -23,23 +23,30 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
-    thing1 = E.create_object("box.obj")
-    thing2 = E.create_object("box.obj")
+
+    E.set_typeface("Times_New_Roman.ttf")
+    thing1 = E.create_string("AElectro")
+
+    E.set_typeface("Times_New_Roman.ttf")
+    thing2 = E.create_string("AElectro")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(thing1, pivot)
     E.parent_entity(thing2, pivot)
 
---  E.set_entity_flag(thing2, E.entity_flag_transparent, true)
+    E.set_entity_flag(thing1, E.entity_flag_unlit,     true)
+    E.set_entity_flag(thing2, E.entity_flag_unlit,     true)
+--    E.set_entity_flag(thing1, E.entity_flag_wireframe, true)
+    E.set_entity_flag(thing2, E.entity_flag_wireframe, true)
 
     E.set_entity_position(light,  0.0,  10.0,   0.0)
     E.set_entity_position(pivot,  0.0, -10.0, -10.0)
-    E.set_entity_position(thing1, -2.0,   0.0,   0.0)
-    E.set_entity_position(thing2,  2.0,   0.0,   0.0)
+    E.set_entity_position(thing1, -1.0,  0.5,   0.0)
+    E.set_entity_position(thing2, -1.0, -0.5,   0.0)
 --  E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)
 
-    E.enable_timer(true)
+--  E.enable_timer(true)
 end
 
 function do_keyboard(k, s)
@@ -82,7 +89,7 @@ function do_point(dx, dy)
         if rot_x >  90.0 then rot_x =  90 end
         if rot_x < -90.0 then rot_x = -90 end
 
-        E.set_entity_rotation(pivot, rot_x, rot_y, 0)
+--       E.set_entity_rotation(pivot, rot_x, rot_y, 0)
         return true
     end
 

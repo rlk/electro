@@ -81,18 +81,14 @@ int vecadd(vector_t V)
     return i;
 }
 
-/*---------------------------------------------------------------------------*/
-
-#ifndef NDEBUG
-
 void *vecget(vector_t V, int i)
 {
     assert(V);
-    assert(0 <= i && i < V->num);
 
-    return ((char *) (V)->buf) + ((V)->siz * (i));
+    if (i >= 0)
+        return ((char *) (V)->buf) + ((V)->siz * (i));
+    else
+        return NULL;
 }
-
-#endif
 
 /*---------------------------------------------------------------------------*/

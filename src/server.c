@@ -27,6 +27,7 @@
 #include "utility.h"
 #include "sound.h"
 #include "image.h"
+#include "font.h"
 #include "event.h"
 #include "server.h"
 
@@ -346,7 +347,8 @@ void server(int argc, char *argv[])
                 startup_tracker()  &&
                 startup_entity()   &&
                 startup_sound()    &&
-                startup_image())
+                startup_image()    &&
+                startup_font())
             {
                 parse_args(argc, argv);
 

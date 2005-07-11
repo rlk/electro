@@ -31,12 +31,14 @@
 #include "stereo.h"
 #include "sprite.h"
 #include "object.h"
+#include "string.h"
 #include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
 #include "utility.h"
 #include "entity.h"
 #include "sound.h"
+#include "font.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/
@@ -81,17 +83,17 @@ static const char *charreader(lua_State *L, void *data, size_t *size)
 #define USERDATA_SOUND  1
 #define USERDATA_IMAGE  2
 
-static int lua_touserdata_type(lua_State *L, int i)
+static int E_tousertype(lua_State *L, int i)
 {
     return ((int *) lua_touserdata(L, i))[0];
 }
 
-static int lua_touserdata_data(lua_State *L, int i)
+static int E_touserdata(lua_State *L, int i)
 {
     return ((int *) lua_touserdata(L, i))[1];
 }
 
-static void lua_pushuserdata(lua_State *L, int type, int data)
+static void E_pushuserdata(lua_State *L, int type, int data)
 {
     int *p = (int *) lua_newuserdata(L, 2 * sizeof (int));
 
@@ -102,23 +104,23 @@ static void lua_pushuserdata(lua_State *L, int type, int data)
 /*---------------------------------------------------------------------------*/
 /* Entity userdata handlers                                                  */
 
-static int lua_toentity(lua_State *L, int i)
+static int E_toentity(lua_State *L, int i)
 {
-    return lua_touserdata_data(L, i);
+    return E_touserdata(L, i);
 }
 
-static int lua_isentity(lua_State *L, int i)
+static int E_isentity(lua_State *L, int i)
 {
     return ((lua_isuserdata(L, i)) &&
-            (lua_touserdata_type(L, i) == USERDATA_ENTITY));
+              (E_tousertype(L, i) == USERDATA_ENTITY));
 }
 
-static void lua_pushentity(lua_State *L, int id)
+static void E_pushentity(lua_State *L, int id)
 {
     if (id <= 0)
         lua_pushnil(L);
     else
-        lua_pushuserdata(L, USERDATA_ENTITY, id);
+        E_pushuserdata(L, USERDATA_ENTITY, id);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -126,23 +128,23 @@ static void lua_pushentity(lua_State *L, int id)
 
 #ifndef NAUDIO
 
-static int lua_tosound(lua_State *L, int i)
+static int E_tosound(lua_State *L, int i)
 {
-    return lua_touserdata_data(L, i);
+    return E_touserdata(L, i);
 }
 
-static int lua_issound(lua_State *L, int i)
+static int E_issound(lua_State *L, int i)
 {
     return ((lua_isuserdata(L, i)) &&
-            (lua_touserdata_type(L, i) == USERDATA_SOUND));
+              (E_tousertype(L, i) == USERDATA_SOUND));
 }
 
-static void lua_pushsound(lua_State *L, int id)
+static void E_pushsound(lua_State *L, int id)
 {
     if (id < 0)
         lua_pushnil(L);
     else
-        lua_pushuserdata(L, USERDATA_SOUND, id);
+        E_pushuserdata(L, USERDATA_SOUND, id);
 }
 
 #endif
@@ -150,20 +152,20 @@ static void lua_pushsound(lua_State *L, int id)
 /*---------------------------------------------------------------------------*/
 /* Function argument error reporters                                         */
 
-static void script_type_error(const char *type, lua_State *L, int i)
+static void E_type_error(const char *type, lua_State *L, int i)
 {
     const char *name = lua_tostring(L, lua_upvalueindex(1));
     const char *got;
 
     if (lua_isuserdata(L, i))
-        got = entity_name(lua_toentity(L, i));
+        got = entity_name(E_toentity(L, i));
     else
         got = lua_typename(L, lua_type(L, i));
 
     error("'%s' expected %s, got %s", name, type, got);
 }
 
-static void script_arity_error(lua_State *L, int i)
+static void E_arity_error(lua_State *L, int i)
 {
     const char *name = lua_tostring(L, lua_upvalueindex(1));
 
@@ -173,34 +175,40 @@ static void script_arity_error(lua_State *L, int i)
 /*---------------------------------------------------------------------------*/
 /* Type checking functions                                                   */
 
-static int lua_iscamera(lua_State *L, int i)
+static int E_iscamera(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(lua_toentity(L, i)) == TYPE_CAMERA);
+        && (entity_type(E_toentity(L, i)) == TYPE_CAMERA);
 }
 
-static int lua_isgalaxy(lua_State *L, int i)
+static int E_isgalaxy(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(lua_toentity(L, i)) == TYPE_GALAXY);
+        && (entity_type(E_toentity(L, i)) == TYPE_GALAXY);
 }
 
-static int lua_issprite(lua_State *L, int i)
+static int E_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(lua_toentity(L, i)) == TYPE_SPRITE);
+        && (entity_type(E_toentity(L, i)) == TYPE_SPRITE);
 }
 
-static int lua_islight(lua_State *L, int i)
+static int E_isstring(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(lua_toentity(L, i)) == TYPE_LIGHT);
+        && (entity_type(E_toentity(L, i)) == TYPE_STRING);
+}
+
+static int E_islight(lua_State *L, int i)
+{
+    return lua_isuserdata(L, i)
+        && (entity_type(E_toentity(L, i)) == TYPE_LIGHT);
 }
 
 /*---------------------------------------------------------------------------*/
 /* Function argument type and arity checkers                                 */
 
-static const char *script_getstring(lua_State *L, int i)
+static const char *L_getstring(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
@@ -210,152 +218,150 @@ static const char *script_getstring(lua_State *L, int i)
         if (lua_isstring(L, i))
             return lua_tostring(L, i);
         else
-            script_type_error("string", L, i);
+            E_type_error("string", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return "";
 }
 
-static int script_getboolean(lua_State *L, int i)
+static int L_getboolean(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (lua_isboolean(L, i))
             return lua_toboolean(L, i);
         else
-            script_type_error("boolean", L, i);
+            E_type_error("boolean", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0;
 }
 
-static float script_getnumber(lua_State *L, int i)
+static float L_getnumber(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (lua_isnumber(L, i))
             return (float) lua_tonumber(L, i);
         else
-            script_type_error("number", L, i);
+            E_type_error("number", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0.0;
 }
 
-/*
-static void script_getvector(lua_State *L, int i, float *v, int n)
+static int L_getinteger(lua_State *L, int i)
 {
-    int j;
-
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_istable(L, i))
-        {
-            for (j = 0; j < n; j++)
-            {
-                lua_pushnumber(L, j + 1);
-                lua_gettable  (L, i - 1);
-
-                if (lua_isnumber(L, -1))
-                    v[j] = (float) lua_tonumber(L, -1);
-                else
-                {
-                    script_type_error("number", L, -1);
-                    break;
-                }
-
-                lua_pop(L, 1);
-            }
-        }
-        else script_type_error("vector", L, i);
+        if (lua_isnumber(L, i))
+            return (int) lua_tonumber(L, i);
+        else
+            E_type_error("number", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
+
+    return 0.0;
 }
-*/
+
 /*---------------------------------------------------------------------------*/
 
-static int script_getentity(lua_State *L, int i)
+static int E_getentity(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_isnil   (L, i)) return 0;
-        if (lua_isentity(L, i)) return lua_toentity(L, i);
+        if (lua_isnil (L, i)) return 0;
+        if (E_isentity(L, i)) return E_toentity(L, i);
 
-        script_type_error("entity", L, i);
+        E_type_error("entity", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0;
 }
 
-static int script_getcamera(lua_State *L, int i)
+static int E_getcamera(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_iscamera(L, i))
-            return entity_data(lua_toentity(L, i));
+        if (E_iscamera(L, i))
+            return entity_data(E_toentity(L, i));
         else
-            script_type_error("camera", L, i);
+            E_type_error("camera", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0;
 }
 
-static int script_getgalaxy(lua_State *L, int i)
+static int E_getgalaxy(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_isgalaxy(L, i))
-            return entity_data(lua_toentity(L, i));
+        if (E_isgalaxy(L, i))
+            return entity_data(E_toentity(L, i));
         else
-            script_type_error("galaxy", L, i);
+            E_type_error("galaxy", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0;
 }
 
-static int script_getsprite(lua_State *L, int i)
+static int E_getsprite(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_issprite(L, i))
-            return entity_data(lua_toentity(L, i));
+        if (E_issprite(L, i))
+            return entity_data(E_toentity(L, i));
         else
-            script_type_error("sprite", L, i);
+            E_type_error("sprite", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0;
 }
 
-static int script_getlight(lua_State *L, int i)
+static int E_getstring(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_islight(L, i))
-            return entity_data(lua_toentity(L, i));
+        if (E_isstring(L, i))
+            return entity_data(E_toentity(L, i));
         else
-            script_type_error("light", L, i);
+            E_type_error("string", L, i);
     }
-    else script_arity_error(L, i);
+    else E_arity_error(L, i);
 
     return 0;
 }
 
-static int script_getsound(lua_State *L, int i)
+static int E_getlight(lua_State *L, int i)
+{
+    if (1 <= -i && -i <= lua_gettop(L))
+    {
+        if (E_islight(L, i))
+            return entity_data(E_toentity(L, i));
+        else
+            E_type_error("light", L, i);
+    }
+    else E_arity_error(L, i);
+
+    return 0;
+}
+
+static int E_getsound(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
 #ifndef NAUDIO
-        if (lua_issound(L, i))
-            return lua_tosound(L, i);
+        if (E_issound(L, i))
+            return E_tosound(L, i);
         else
-            script_type_error("sound", L, i);
+            E_type_error("sound", L, i);
 #else
         lua_pushnil(L);
         return 1;
@@ -367,116 +373,116 @@ static int script_getsound(lua_State *L, int i)
 /*---------------------------------------------------------------------------*/
 /* Display configuration                                                     */
 
-static int script_add_host(lua_State *L)
+static int E_add_host(lua_State *L)
 {
-    int i = add_host(script_getstring(L, -5),
-               (int) script_getnumber(L, -4),
-               (int) script_getnumber(L, -3),
-               (int) script_getnumber(L, -2),
-               (int) script_getnumber(L, -1));
+    int i = add_host(L_getstring (L, -5),
+                     L_getinteger(L, -4),
+                     L_getinteger(L, -3),
+                     L_getinteger(L, -2),
+                     L_getinteger(L, -1));
 
     lua_pushnumber(L, i);
     return 1;
 }
 
-static int script_set_host_flag(lua_State *L)
+static int E_set_host_flag(lua_State *L)
 {
-    send_set_host_flag((int) script_getnumber(L, -3),
-                       (int) script_getnumber(L, -2),
-                             script_getboolean(L, -1));
+    send_set_host_flag(L_getinteger(L, -3),
+                       L_getinteger(L, -2),
+                       L_getboolean(L, -1));
     return 0;
 }
 
-static int script_add_tile(lua_State *L)
+static int E_add_tile(lua_State *L)
 {
-    int j = send_add_tile((int) script_getnumber(L, -5),
-                          (int) script_getnumber(L, -4),
-                          (int) script_getnumber(L, -3),
-                          (int) script_getnumber(L, -2),
-                          (int) script_getnumber(L, -1));
+    int j = send_add_tile(L_getinteger(L, -5),
+                          L_getinteger(L, -4),
+                          L_getinteger(L, -3),
+                          L_getinteger(L, -2),
+                          L_getinteger(L, -1));
     lua_pushnumber(L, j);
     return 1;
 }
 
-static int script_set_tile_flag(lua_State *L)
+static int E_set_tile_flag(lua_State *L)
 {
-    send_set_tile_flag((int) script_getnumber(L, -3),
-                       (int) script_getnumber(L, -2),
-                             script_getboolean(L, -1));
+    send_set_tile_flag(L_getinteger(L, -3),
+                       L_getinteger(L, -2),
+                       L_getboolean(L, -1));
     return 0;
 }
 
-static int script_set_tile_position(lua_State *L)
+static int E_set_tile_position(lua_State *L)
 {
-    int j = (int) script_getnumber(L, -10);
+    int j = L_getinteger(L, -10);
 
     float o[3];
     float r[3];
     float u[3];
 
-    o[0] = script_getnumber(L, -9);
-    o[1] = script_getnumber(L, -8);
-    o[2] = script_getnumber(L, -7);
-    r[0] = script_getnumber(L, -6);
-    r[1] = script_getnumber(L, -5);
-    r[2] = script_getnumber(L, -4);
-    u[0] = script_getnumber(L, -3);
-    u[1] = script_getnumber(L, -2);
-    u[2] = script_getnumber(L, -1);
+    o[0] = L_getnumber(L, -9);
+    o[1] = L_getnumber(L, -8);
+    o[2] = L_getnumber(L, -7);
+    r[0] = L_getnumber(L, -6);
+    r[1] = L_getnumber(L, -5);
+    r[2] = L_getnumber(L, -4);
+    u[0] = L_getnumber(L, -3);
+    u[1] = L_getnumber(L, -2);
+    u[2] = L_getnumber(L, -1);
 
     send_set_tile_position(j, o, r, u);
     return 0;
 }
 
-static int script_set_tile_viewport(lua_State *L)
+static int E_set_tile_viewport(lua_State *L)
 {
-    send_set_tile_viewport((int) script_getnumber(L, -5),
-                           (int) script_getnumber(L, -4),
-                           (int) script_getnumber(L, -3),
-                           (int) script_getnumber(L, -2),
-                           (int) script_getnumber(L, -1));
+    send_set_tile_viewport(L_getinteger(L, -5),
+                           L_getinteger(L, -4),
+                           L_getinteger(L, -3),
+                           L_getinteger(L, -2),
+                           L_getinteger(L, -1));
     return 0;
 }
 
-static int script_set_tile_line_screen(lua_State *L)
+static int E_set_tile_line_screen(lua_State *L)
 {
-    send_set_tile_line_screen((int) script_getnumber(L, -6),
-                                    script_getnumber(L, -5),
-                                    script_getnumber(L, -4),
-                                    script_getnumber(L, -3),
-                                    script_getnumber(L, -2),
-                                    script_getnumber(L, -1));
+    send_set_tile_line_screen(L_getinteger(L, -6),
+                              L_getnumber (L, -5),
+                              L_getnumber (L, -4),
+                              L_getnumber (L, -3),
+                              L_getnumber (L, -2),
+                              L_getnumber (L, -1));
     return 0;
 }
 
-static int script_set_tile_view_mirror(lua_State *L)
+static int E_set_tile_view_mirror(lua_State *L)
 {
     float p[4];
 
-    p[0] = script_getnumber(L, -4);
-    p[1] = script_getnumber(L, -3);
-    p[2] = script_getnumber(L, -2);
-    p[3] = script_getnumber(L, -1);
+    p[0] = L_getnumber(L, -4);
+    p[1] = L_getnumber(L, -3);
+    p[2] = L_getnumber(L, -2);
+    p[3] = L_getnumber(L, -1);
 
-    send_set_tile_view_mirror((int) script_getnumber(L, -5), p);
+    send_set_tile_view_mirror(L_getinteger(L, -5), p);
 
     return 0;
 }
 
-static int script_set_tile_view_offset(lua_State *L)
+static int E_set_tile_view_offset(lua_State *L)
 {
     float d[4];
 
-    d[0] = script_getnumber(L, -3);
-    d[1] = script_getnumber(L, -2);
-    d[2] = script_getnumber(L, -1);
+    d[0] = L_getnumber(L, -3);
+    d[1] = L_getnumber(L, -2);
+    d[2] = L_getnumber(L, -1);
 
-    send_set_tile_view_offset((int) script_getnumber(L, -4), d);
+    send_set_tile_view_offset(L_getinteger(L, -4), d);
 
     return 0;
 }
 
-static int script_get_display_union(lua_State *L)
+static int E_get_display_union(lua_State *L)
 {
     float b[4];
 
@@ -490,7 +496,7 @@ static int script_get_display_union(lua_State *L)
     return 4;
 }
 
-static int script_get_display_bound(lua_State *L)
+static int E_get_display_bound(lua_State *L)
 {
     float b[6];
 
@@ -509,33 +515,43 @@ static int script_get_display_bound(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Miscellaneous functions                                                   */
 
-static int script_enable_timer(lua_State *L)
+static int E_enable_timer(lua_State *L)
 {
-    enable_timer(script_getboolean(L, -1));
+    enable_timer(L_getboolean(L, -1));
     return 0;
 }
 
-static int script_get_joystick(lua_State *L)
+static int E_get_joystick(lua_State *L)
 {
     float a[2];
 
-    get_joystick((int) script_getnumber(L, -1), a);
+    get_joystick(L_getinteger(L, -1), a);
 
     lua_pushnumber(L, (double) a[0]);
     lua_pushnumber(L, (double) a[1]);
     return 2;
 }
 
-static int script_get_modifier(lua_State *L)
+static int E_get_modifier(lua_State *L)
 {
-    int i = (int) script_getnumber(L, -1);
+    int i = L_getinteger(L, -1);
 
     lua_pushboolean(L, (SDL_GetModState() & i) ? 1 : 0);
 
     return 1;
 }
 
-static int script_set_background(lua_State *L)
+static int E_set_typeface(lua_State *L)
+{
+    if (lua_gettop(L) == 2)
+        set_font(L_getstring(L, -2), L_getnumber(L, -1));
+    else
+        set_font(L_getstring(L, -1), 0.001f);
+
+    return 0;
+}
+
+static int E_set_background(lua_State *L)
 {
     int n = lua_gettop(L);
     float c0[3];
@@ -543,20 +559,20 @@ static int script_set_background(lua_State *L)
 
     if (n == 6)
     {
-        c0[0] = script_getnumber(L, -6);
-        c0[1] = script_getnumber(L, -5);
-        c0[2] = script_getnumber(L, -4);
-        c1[0] = script_getnumber(L, -3);
-        c1[1] = script_getnumber(L, -2);
-        c1[2] = script_getnumber(L, -1);
+        c0[0] = L_getnumber(L, -6);
+        c0[1] = L_getnumber(L, -5);
+        c0[2] = L_getnumber(L, -4);
+        c1[0] = L_getnumber(L, -3);
+        c1[1] = L_getnumber(L, -2);
+        c1[2] = L_getnumber(L, -1);
 
         send_set_background(c0, c1);
     }
     else
     {
-        c0[0] = script_getnumber(L, -3);
-        c0[1] = script_getnumber(L, -2);
-        c0[2] = script_getnumber(L, -1);
+        c0[0] = L_getnumber(L, -3);
+        c0[1] = L_getnumber(L, -2);
+        c0[2] = L_getnumber(L, -1);
 
         send_set_background(c0, c0);
     }
@@ -566,118 +582,118 @@ static int script_set_background(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Entity hierarchy functions                                                */
 
-static int script_parent_entity(lua_State *L)
+static int E_parent_entity(lua_State *L)
 {
-    send_parent_entity(script_getentity(L, -2),
-                       script_getentity(L, -1));
+    send_parent_entity(E_getentity(L, -2),
+                       E_getentity(L, -1));
     return 0;
 }
 
-static int script_delete_entity(lua_State *L)
+static int E_delete_entity(lua_State *L)
 {
-    send_delete_entity(script_getentity(L, -1));
+    send_delete_entity(E_getentity(L, -1));
     return 0;
 }
 
-static int script_create_clone(lua_State *L)
+static int E_create_clone(lua_State *L)
 {
-    int id = send_create_clone(script_getentity(L, -1));
+    int id = send_create_clone(E_getentity(L, -1));
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_get_entity_parent(lua_State *L)
+static int E_get_entity_parent(lua_State *L)
 {
-    int id = get_entity_parent(script_getentity(L, -1));
+    int id = get_entity_parent(E_getentity(L, -1));
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_get_entity_child(lua_State *L)
+static int E_get_entity_child(lua_State *L)
 {
-    int id = get_entity_child(script_getentity(L, -2),
-                        (int) script_getnumber(L, -1));
+    int id = get_entity_child(E_getentity (L, -2),
+                            L_getinteger(L, -1));
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Entity transform functions                                                */
 
-static int script_set_entity_position(lua_State *L)
+static int E_set_entity_position(lua_State *L)
 {
     float p[3];
 
-    p[0] = script_getnumber(L, -3);
-    p[1] = script_getnumber(L, -2);
-    p[2] = script_getnumber(L, -1);
+    p[0] = L_getnumber(L, -3);
+    p[1] = L_getnumber(L, -2);
+    p[2] = L_getnumber(L, -1);
 
-    send_set_entity_position(script_getentity(L, -4), p);
+    send_set_entity_position(E_getentity(L, -4), p);
     return 0;
 }
 
-static int script_set_entity_rotation(lua_State *L)
+static int E_set_entity_rotation(lua_State *L)
 {
     float r[3];
 
-    r[0] = script_getnumber(L, -3);
-    r[1] = script_getnumber(L, -2);
-    r[2] = script_getnumber(L, -1);
+    r[0] = L_getnumber(L, -3);
+    r[1] = L_getnumber(L, -2);
+    r[2] = L_getnumber(L, -1);
 
-    send_set_entity_rotation(script_getentity(L, -4), r);
+    send_set_entity_rotation(E_getentity(L, -4), r);
     return 0;
 }
 
-static int script_set_entity_scale(lua_State *L)
+static int E_set_entity_scale(lua_State *L)
 {
     float s[3];
 
-    s[0] = script_getnumber(L, -3);
-    s[1] = script_getnumber(L, -2);
-    s[2] = script_getnumber(L, -1);
+    s[0] = L_getnumber(L, -3);
+    s[1] = L_getnumber(L, -2);
+    s[2] = L_getnumber(L, -1);
 
-    send_set_entity_scale(script_getentity(L, -4), s);
+    send_set_entity_scale(E_getentity(L, -4), s);
     return 0;
 }
 
-static int script_set_entity_bound(lua_State *L)
+static int E_set_entity_bound(lua_State *L)
 {
     float b[6];
 
-    b[0] = script_getnumber(L, -6);
-    b[0] = script_getnumber(L, -5);
-    b[0] = script_getnumber(L, -4);
-    b[0] = script_getnumber(L, -3);
-    b[1] = script_getnumber(L, -2);
-    b[2] = script_getnumber(L, -1);
+    b[0] = L_getnumber(L, -6);
+    b[0] = L_getnumber(L, -5);
+    b[0] = L_getnumber(L, -4);
+    b[0] = L_getnumber(L, -3);
+    b[1] = L_getnumber(L, -2);
+    b[2] = L_getnumber(L, -1);
 
-    send_set_entity_bound(script_getentity(L, -7), b);
+    send_set_entity_bound(E_getentity(L, -7), b);
     return 0;
 }
 
-static int script_set_entity_alpha(lua_State *L)
+static int E_set_entity_alpha(lua_State *L)
 {
-    send_set_entity_alpha(script_getentity(L, -2),
-                          script_getnumber(L, -1));
+    send_set_entity_alpha(E_getentity(L, -2),
+                          L_getnumber(L, -1));
     return 0;
 }
 
-static int script_set_entity_flag(lua_State *L)
+static int E_set_entity_flag(lua_State *L)
 {
-    send_set_entity_flag(script_getentity(L, -3),
-                   (int) script_getnumber(L, -2),
-                         script_getboolean(L, -1));
+    send_set_entity_flag(E_getentity (L, -3),
+                         L_getinteger(L, -2),
+                         L_getboolean(L, -1));
     return 0;
 }
 
-static int script_set_entity_frag_prog(lua_State *L)
+static int E_set_entity_frag_prog(lua_State *L)
 {
-    int id           = script_getentity(L, -2);
-    const char *file = script_getstring(L, -1);
-    char       *text = alloc_text(file);
+    int id           = E_getentity(L, -2);
+    const char *file = L_getstring(L, -1);
+    char       *text = load_file(file, "r", NULL);
 
     send_set_entity_frag_prog(id, text);
     free(text);
@@ -685,11 +701,11 @@ static int script_set_entity_frag_prog(lua_State *L)
     return 0;
 }
 
-static int script_set_entity_vert_prog(lua_State *L)
+static int E_set_entity_vert_prog(lua_State *L)
 {
-    int id           = script_getentity(L, -2);
-    const char *file = script_getstring(L, -1);
-    char       *text = alloc_text(file);
+    int id           = E_getentity(L, -2);
+    const char *file = L_getstring(L, -1);
+    char       *text = load_file(file, "r", NULL);
 
     send_set_entity_vert_prog(id, text);
     free(text);
@@ -699,35 +715,35 @@ static int script_set_entity_vert_prog(lua_State *L)
 
 /*---------------------------------------------------------------------------*/
 
-static int script_move_entity(lua_State *L)
+static int E_move_entity(lua_State *L)
 {
     float v[3];
 
-    v[0] = script_getnumber(L, -3);
-    v[1] = script_getnumber(L, -2);
-    v[2] = script_getnumber(L, -1);
+    v[0] = L_getnumber(L, -3);
+    v[1] = L_getnumber(L, -2);
+    v[2] = L_getnumber(L, -1);
 
-    send_move_entity(script_getentity(L, -4), v);
+    send_move_entity(E_getentity(L, -4), v);
     return 0;
 }
 
-static int script_turn_entity(lua_State *L)
+static int E_turn_entity(lua_State *L)
 {
     float r[3];
 
-    r[0] = script_getnumber(L, -3);
-    r[1] = script_getnumber(L, -2);
-    r[2] = script_getnumber(L, -1);
+    r[0] = L_getnumber(L, -3);
+    r[1] = L_getnumber(L, -2);
+    r[2] = L_getnumber(L, -1);
 
-    send_turn_entity(script_getentity(L, -4), r);
+    send_turn_entity(E_getentity(L, -4), r);
     return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int script_get_entity_position(lua_State *L)
+static int E_get_entity_position(lua_State *L)
 {
-    int id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float p[3];
 
     get_entity_position(id, p);
@@ -739,9 +755,9 @@ static int script_get_entity_position(lua_State *L)
     return 3;
 }
 
-static int script_get_entity_x_vector(lua_State *L)
+static int E_get_entity_x_vector(lua_State *L)
 {
-    int id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float v[3];
 
     get_entity_x_vector(id, v);
@@ -753,9 +769,9 @@ static int script_get_entity_x_vector(lua_State *L)
     return 3;
 }
 
-static int script_get_entity_y_vector(lua_State *L)
+static int E_get_entity_y_vector(lua_State *L)
 {
-    int id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float v[3];
 
     get_entity_y_vector(id, v);
@@ -767,9 +783,9 @@ static int script_get_entity_y_vector(lua_State *L)
     return 3;
 }
 
-static int script_get_entity_z_vector(lua_State *L)
+static int E_get_entity_z_vector(lua_State *L)
 {
-    int id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float v[3];
 
     get_entity_z_vector(id, v);
@@ -781,9 +797,9 @@ static int script_get_entity_z_vector(lua_State *L)
     return 3;
 }
 
-static int script_get_entity_scale(lua_State *L)
+static int E_get_entity_scale(lua_State *L)
 {
-    int id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float s[3];
 
     get_entity_scale(id, s);
@@ -795,9 +811,9 @@ static int script_get_entity_scale(lua_State *L)
     return 3;
 }
 
-static int script_get_entity_alpha(lua_State *L)
+static int E_get_entity_alpha(lua_State *L)
 {
-    int  id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float a = get_entity_alpha(id);
 
     lua_pushnumber(L, a);
@@ -805,9 +821,9 @@ static int script_get_entity_alpha(lua_State *L)
     return 1;
 }
 
-static int script_get_entity_bound(lua_State *L)
+static int E_get_entity_bound(lua_State *L)
 {
-    int id = script_getentity(L, -1);
+    int  id = E_getentity(L, -1);
     float b[6];
 
     get_entity_bound(id, b);
@@ -825,70 +841,78 @@ static int script_get_entity_bound(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Entity constructors.                                                      */
 
-static int script_create_camera(lua_State *L)
+static int E_create_camera(lua_State *L)
 {
-    int fl = (int) script_getnumber(L, -1);
+    int fl = L_getinteger(L, -1);
     int id = send_create_camera(fl);
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_create_sprite(lua_State *L)
+static int E_create_sprite(lua_State *L)
 {
-    int id = send_create_sprite(script_getstring(L, -1));
+    int id = send_create_sprite(L_getstring(L, -1));
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_create_object(lua_State *L)
+static int E_create_object(lua_State *L)
 {
-    int id = send_create_object(script_getstring(L, -1));
+    int id = send_create_object(L_getstring(L, -1));
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_create_galaxy(lua_State *L)
+static int E_create_string(lua_State *L)
 {
-    int id = send_create_galaxy(script_getstring(L, -1));
+    int id = send_create_string(L_getstring(L, -1));
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_create_light(lua_State *L)
+static int E_create_galaxy(lua_State *L)
 {
-    int fl = (int) script_getnumber(L, -1);
+    int id = send_create_galaxy(L_getstring(L, -1));
+
+    E_pushentity(L, id);
+    return 1;
+}
+
+static int E_create_light(lua_State *L)
+{
+    int fl = L_getinteger(L, -1);
     int id = send_create_light(fl);
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
-static int script_create_pivot(lua_State *L)
+static int E_create_pivot(lua_State *L)
 {
     int id = send_create_pivot();
 
-    lua_pushentity(L, id);
+    E_pushentity(L, id);
     return 1;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Galaxy controls                                                           */
 
-static int script_set_galaxy_magnitude(lua_State *L)
+static int E_set_galaxy_magnitude(lua_State *L)
 {
-    send_set_galaxy_magnitude(script_getgalaxy(L, -2),
-                              script_getnumber(L, -1));
+    send_set_galaxy_magnitude(E_getgalaxy(L, -2),
+                              L_getnumber(L, -1));
     return 0;
 }
 
-static int script_get_star_index(lua_State *L)
+static int E_get_star_index(lua_State *L)
 {
-    int gd = script_getgalaxy(L, -2);
-    int id = script_getentity(L, -1);
+    int gd = E_getgalaxy(L, -2);
+    int id = E_getentity(L, -1);
 
     float p[3];
     float v[3];
@@ -904,12 +928,12 @@ static int script_get_star_index(lua_State *L)
     return 1;
 }
 
-static int script_get_star_position(lua_State *L)
+static int E_get_star_position(lua_State *L)
 {
     float p[3];
 
-    get_star_position(script_getgalaxy(L, -2),
-                (int) script_getnumber(L, -1), p);
+    get_star_position(E_getgalaxy (L, -2),
+                      L_getinteger(L, -1), p);
 
     lua_pushnumber(L, p[0]);
     lua_pushnumber(L, p[1]);
@@ -921,7 +945,7 @@ static int script_get_star_position(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Camera controls                                                           */
 
-static int script_set_camera_offset(lua_State *L)
+static int E_set_camera_offset(lua_State *L)
 {
     float v[3], M[16] = {
         1, 0, 0, 0,
@@ -930,63 +954,81 @@ static int script_set_camera_offset(lua_State *L)
         0, 0, 0, 1,
     };
 
-    v[0] = script_getnumber(L, -3);
-    v[1] = script_getnumber(L, -2);
-    v[2] = script_getnumber(L, -1);
+    v[0] = L_getnumber(L, -3);
+    v[1] = L_getnumber(L, -2);
+    v[2] = L_getnumber(L, -1);
 
-    send_set_camera_offset(script_getcamera(L, -4), v, M);
+    send_set_camera_offset(E_getcamera(L, -4), v, M);
     return 0;
 }
 
-static int script_set_camera_stereo(lua_State *L)
+static int E_set_camera_stereo(lua_State *L)
 {
     float l[3];
     float r[3];
 
-    l[0] = script_getnumber(L, -6);
-    l[1] = script_getnumber(L, -5);
-    l[2] = script_getnumber(L, -4);
-    r[0] = script_getnumber(L, -3);
-    r[1] = script_getnumber(L, -2);
-    r[2] = script_getnumber(L, -1);
+    l[0] = L_getnumber(L, -6);
+    l[1] = L_getnumber(L, -5);
+    l[2] = L_getnumber(L, -4);
+    r[0] = L_getnumber(L, -3);
+    r[1] = L_getnumber(L, -2);
+    r[2] = L_getnumber(L, -1);
 
-    send_set_camera_stereo(script_getcamera(L, -8), l, r,
-                     (int) script_getnumber(L, -7));
+    send_set_camera_stereo(E_getcamera(L, -8), l, r, L_getinteger(L, -7));
     return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Light controls                                                            */
 
-static int script_set_light_color(lua_State *L)
+static int E_set_light_color(lua_State *L)
 {
-    send_set_light_color(script_getlight(L, -4),
-                         script_getnumber(L, -3),
-                         script_getnumber(L, -2),
-                         script_getnumber(L, -1));
+    send_set_light_color(E_getlight (L, -4),
+                         L_getnumber(L, -3),
+                         L_getnumber(L, -2),
+                         L_getnumber(L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+/* String controls                                                           */
+
+static int E_set_string_color(lua_State *L)
+{
+    send_set_string_color(E_getstring(L, -4),
+                          L_getnumber(L, -3),
+                          L_getnumber(L, -2),
+                          L_getnumber(L, -1));
+    return 0;
+}
+
+static int E_set_string_value(lua_State *L)
+{
+    send_set_string_value(E_getstring(L, -2),
+                          L_getstring(L, -1));
     return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Sprite controls                                                           */
 
-static int script_set_sprite_range(lua_State *L)
+static int E_set_sprite_range(lua_State *L)
 {
-    send_set_sprite_range(script_getsprite(L, -5),
-                          script_getnumber(L, -4),
-                          script_getnumber(L, -3),
-                          script_getnumber(L, -2),
-                          script_getnumber(L, -1));
+    send_set_sprite_range(E_getsprite(L, -5),
+                          L_getnumber(L, -4),
+                          L_getnumber(L, -3),
+                          L_getnumber(L, -2),
+                          L_getnumber(L, -1));
     return 0;
 }
 
-static int script_get_sprite_pixel(lua_State *L)
+static int E_get_sprite_pixel(lua_State *L)
 {
     unsigned char p[4];
 
-    get_sprite_p(script_getsprite(L, -3),
-                 (int) script_getnumber(L, -2),
-                 (int) script_getnumber(L, -1), p);
+    get_sprite_p(E_getsprite (L, -3),
+                 L_getinteger(L, -2),
+                 L_getinteger(L, -1), p);
 
     lua_pushnumber(L, (double) p[0] / 255.0);
     lua_pushnumber(L, (double) p[1] / 255.0);
@@ -996,9 +1038,9 @@ static int script_get_sprite_pixel(lua_State *L)
     return 4;
 }
 
-static int script_get_sprite_size(lua_State *L)
+static int E_get_sprite_size(lua_State *L)
 {
-    int id = script_getsprite(L, -1);
+    int id = E_getsprite(L, -1);
 
     lua_pushnumber(L, (double) get_sprite_w(id));
     lua_pushnumber(L, (double) get_sprite_h(id));
@@ -1009,64 +1051,64 @@ static int script_get_sprite_size(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Sound functions                                                           */
 
-static int script_load_sound(lua_State *L)
+static int E_load_sound(lua_State *L)
 {
 #ifndef NAUDIO
-    lua_pushsound(L, create_sound(script_getstring(L, -1)));
+    E_pushsound(L, load_sound(L_getstring(L, -1)));
 #else
     lua_pushnil(L);
 #endif
     return 1;
 }
 
-static int script_free_sound(lua_State *L)
+static int E_free_sound(lua_State *L)
 {
-    delete_sound(script_getsound(L, -1));
+    free_sound(E_getsound(L, -1));
     return 0;
 }
 
-static int script_stop_sound(lua_State *L)
+static int E_stop_sound(lua_State *L)
 {
-    stop_sound(script_getsound(L, -1));
+    stop_sound(E_getsound(L, -1));
     return 0;
 }
 
-static int script_play_sound(lua_State *L)
+static int E_play_sound(lua_State *L)
 {
-    play_sound(script_getsound(L, -1));
+    play_sound(E_getsound(L, -1));
     return 0;
 }
 
-static int script_loop_sound(lua_State *L)
+static int E_loop_sound(lua_State *L)
 {
-    loop_sound(script_getsound(L, -1));
+    loop_sound(E_getsound(L, -1));
     return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Console functions                                                         */
 
-static int script_clear_console(lua_State *L)
+static int E_clear_console(lua_State *L)
 {
     clear_console();
     return 0;
 }
 
-static int script_color_console(lua_State *L)
+static int E_color_console(lua_State *L)
 {
-    color_console(script_getnumber(L, -3),
-                  script_getnumber(L, -2),
-                  script_getnumber(L, -1));
+    color_console(L_getnumber(L, -3),
+                  L_getnumber(L, -2),
+                  L_getnumber(L, -1));
     return 0;
 }
 
-static int script_print_console(lua_State *L)
+static int E_print_console(lua_State *L)
 {
     int i, n = lua_gettop(L);
     const char *str;
 
     for (i = n; i > 0; --i)
-        if ((str = script_getstring(L, -i)))
+        if ((str = L_getstring(L, -i)))
             print_console(str);
 
     return 1;
@@ -1074,7 +1116,7 @@ static int script_print_console(lua_State *L)
 
 /*---------------------------------------------------------------------------*/
 
-static int script_exit(lua_State *L)
+static int E_exit(lua_State *L)
 {
     SDL_Event e;
 
@@ -1267,98 +1309,105 @@ void luaopen_electro(lua_State *L)
 
     /* Entity contructors and destructor. */
 
-    lua_function(L, "create_camera",        script_create_camera);
-    lua_function(L, "create_sprite",        script_create_sprite);
-    lua_function(L, "create_object",        script_create_object);
-    lua_function(L, "create_galaxy",        script_create_galaxy);
-    lua_function(L, "create_light",         script_create_light);
-    lua_function(L, "create_pivot",         script_create_pivot);
-    lua_function(L, "create_clone",         script_create_clone);
+    lua_function(L, "create_camera",        E_create_camera);
+    lua_function(L, "create_sprite",        E_create_sprite);
+    lua_function(L, "create_object",        E_create_object);
+    lua_function(L, "create_string",        E_create_string);
+    lua_function(L, "create_galaxy",        E_create_galaxy);
+    lua_function(L, "create_light",         E_create_light);
+    lua_function(L, "create_pivot",         E_create_pivot);
+    lua_function(L, "create_clone",         E_create_clone);
 
     /* Entity control. */
 
-    lua_function(L, "parent_entity",        script_parent_entity);
-    lua_function(L, "delete_entity",        script_delete_entity);
+    lua_function(L, "parent_entity",        E_parent_entity);
+    lua_function(L, "delete_entity",        E_delete_entity);
 
-    lua_function(L, "get_entity_parent",    script_get_entity_parent);
-    lua_function(L, "get_entity_child",     script_get_entity_child);
+    lua_function(L, "get_entity_parent",    E_get_entity_parent);
+    lua_function(L, "get_entity_child",     E_get_entity_child);
 
-    lua_function(L, "set_entity_position",  script_set_entity_position);
-    lua_function(L, "set_entity_rotation",  script_set_entity_rotation);
-    lua_function(L, "set_entity_scale",     script_set_entity_scale);
-    lua_function(L, "set_entity_bound",     script_set_entity_bound);
-    lua_function(L, "set_entity_alpha",     script_set_entity_alpha);
-    lua_function(L, "set_entity_flag",      script_set_entity_flag);
-    lua_function(L, "set_entity_frag_prog", script_set_entity_frag_prog);
-    lua_function(L, "set_entity_vert_prog", script_set_entity_vert_prog);
+    lua_function(L, "set_entity_position",  E_set_entity_position);
+    lua_function(L, "set_entity_rotation",  E_set_entity_rotation);
+    lua_function(L, "set_entity_scale",     E_set_entity_scale);
+    lua_function(L, "set_entity_bound",     E_set_entity_bound);
+    lua_function(L, "set_entity_alpha",     E_set_entity_alpha);
+    lua_function(L, "set_entity_flag",      E_set_entity_flag);
+    lua_function(L, "set_entity_frag_prog", E_set_entity_frag_prog);
+    lua_function(L, "set_entity_vert_prog", E_set_entity_vert_prog);
 
-    lua_function(L, "get_entity_position",  script_get_entity_position);
-    lua_function(L, "get_entity_x_vector",  script_get_entity_x_vector);
-    lua_function(L, "get_entity_y_vector",  script_get_entity_y_vector);
-    lua_function(L, "get_entity_z_vector",  script_get_entity_z_vector);
-    lua_function(L, "get_entity_scale",     script_get_entity_scale);
-    lua_function(L, "get_entity_bound",     script_get_entity_bound);
-    lua_function(L, "get_entity_alpha",     script_get_entity_alpha);
+    lua_function(L, "get_entity_position",  E_get_entity_position);
+    lua_function(L, "get_entity_x_vector",  E_get_entity_x_vector);
+    lua_function(L, "get_entity_y_vector",  E_get_entity_y_vector);
+    lua_function(L, "get_entity_z_vector",  E_get_entity_z_vector);
+    lua_function(L, "get_entity_scale",     E_get_entity_scale);
+    lua_function(L, "get_entity_bound",     E_get_entity_bound);
+    lua_function(L, "get_entity_alpha",     E_get_entity_alpha);
 
-    lua_function(L, "move_entity",          script_move_entity);
-    lua_function(L, "turn_entity",          script_turn_entity);
+    lua_function(L, "move_entity",          E_move_entity);
+    lua_function(L, "turn_entity",          E_turn_entity);
 
     /* Galaxy control. */
 
-    lua_function(L, "set_galaxy_magnitude", script_set_galaxy_magnitude);
-    lua_function(L, "get_star_index",       script_get_star_index);
-    lua_function(L, "get_star_position",    script_get_star_position);
+    lua_function(L, "set_galaxy_magnitude", E_set_galaxy_magnitude);
+    lua_function(L, "get_star_index",       E_get_star_index);
+    lua_function(L, "get_star_position",    E_get_star_position);
 
     /* Camera control. */
 
-    lua_function(L, "set_camera_offset",    script_set_camera_offset);
-    lua_function(L, "set_camera_stereo",    script_set_camera_stereo);
+    lua_function(L, "set_camera_offset",    E_set_camera_offset);
+    lua_function(L, "set_camera_stereo",    E_set_camera_stereo);
 
     /* Light control. */
 
-    lua_function(L, "set_light_color",      script_set_light_color);
+    lua_function(L, "set_light_color",      E_set_light_color);
 
     /* Sprite control. */
 
-    lua_function(L, "set_sprite_range",     script_set_sprite_range);
-    lua_function(L, "get_sprite_pixel",     script_get_sprite_pixel);
-    lua_function(L, "get_sprite_size",      script_get_sprite_size);
+    lua_function(L, "set_sprite_range",     E_set_sprite_range);
+    lua_function(L, "get_sprite_pixel",     E_get_sprite_pixel);
+    lua_function(L, "get_sprite_size",      E_get_sprite_size);
+
+    /* String control. */
+
+    lua_function(L, "set_string_color",     E_set_string_color);
+    lua_function(L, "set_string_value",     E_set_string_value);
 
     /* Sound control. */
 
-    lua_function(L, "load_sound",           script_load_sound);
-    lua_function(L, "free_sound",           script_free_sound);
-    lua_function(L, "stop_sound",           script_stop_sound);
-    lua_function(L, "play_sound",           script_play_sound);
-    lua_function(L, "loop_sound",           script_loop_sound);
+    lua_function(L, "load_sound",           E_load_sound);
+    lua_function(L, "free_sound",           E_free_sound);
+    lua_function(L, "stop_sound",           E_stop_sound);
+    lua_function(L, "play_sound",           E_play_sound);
+    lua_function(L, "loop_sound",           E_loop_sound);
 
     /* Console */
 
-    lua_function(L, "clear_console",        script_clear_console);
-    lua_function(L, "color_console",        script_color_console);
-    lua_function(L, "print_console",        script_print_console);
+    lua_function(L, "clear_console",        E_clear_console);
+    lua_function(L, "color_console",        E_color_console);
+    lua_function(L, "print_console",        E_print_console);
 
     /* Display */
 
-    lua_function(L, "add_host",             script_add_host);
-    lua_function(L, "add_tile",             script_add_tile);
-    lua_function(L, "set_host_flag",        script_set_host_flag);
-    lua_function(L, "set_tile_flag",        script_set_tile_flag);
-    lua_function(L, "set_tile_position",    script_set_tile_position);
-    lua_function(L, "set_tile_viewport",    script_set_tile_viewport);
-    lua_function(L, "set_tile_line_screen", script_set_tile_line_screen);
-    lua_function(L, "set_tile_view_mirror", script_set_tile_view_mirror);
-    lua_function(L, "set_tile_view_offset", script_set_tile_view_offset);
-    lua_function(L, "get_display_union",    script_get_display_union);
-    lua_function(L, "get_display_bound",    script_get_display_bound);
+    lua_function(L, "add_host",             E_add_host);
+    lua_function(L, "add_tile",             E_add_tile);
+    lua_function(L, "set_host_flag",        E_set_host_flag);
+    lua_function(L, "set_tile_flag",        E_set_tile_flag);
+    lua_function(L, "set_tile_position",    E_set_tile_position);
+    lua_function(L, "set_tile_viewport",    E_set_tile_viewport);
+    lua_function(L, "set_tile_line_screen", E_set_tile_line_screen);
+    lua_function(L, "set_tile_view_mirror", E_set_tile_view_mirror);
+    lua_function(L, "set_tile_view_offset", E_set_tile_view_offset);
+    lua_function(L, "get_display_union",    E_get_display_union);
+    lua_function(L, "get_display_bound",    E_get_display_bound);
 
     /* Misc. */
 
-    lua_function(L, "enable_timer",         script_enable_timer);
-    lua_function(L, "get_joystick",         script_get_joystick);
-    lua_function(L, "get_modifier",         script_get_modifier);
-    lua_function(L, "set_background",       script_set_background);
-    lua_function(L, "exit",                 script_exit);
+    lua_function(L, "enable_timer",         E_enable_timer);
+    lua_function(L, "get_joystick",         E_get_joystick);
+    lua_function(L, "get_modifier",         E_get_modifier);
+    lua_function(L, "set_typeface",         E_set_typeface);
+    lua_function(L, "set_background",       E_set_background);
+    lua_function(L, "exit",                 E_exit);
 
     /* Constants. */
 

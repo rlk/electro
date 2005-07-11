@@ -65,6 +65,7 @@ const char *get_file_path(const char *);
 void  open_path(const char *);
 int   stat_file(const char *, struct stat *);
 FILE *open_file(const char *, const char *);
+void *load_file(const char *, const char *, size_t *);
 
 /*---------------------------------------------------------------------------*/
 

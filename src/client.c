@@ -20,10 +20,12 @@
 #include "camera.h"
 #include "sprite.h"
 #include "object.h"
+#include "string.h"
 #include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
 #include "image.h"
+#include "font.h"
 #include "event.h"
 #include "entity.h"
 
@@ -66,6 +68,7 @@ static void client_recv(void)
         case EVENT_CREATE_CAMERA:        recv_create_camera();        break;
         case EVENT_CREATE_SPRITE:        recv_create_sprite();        break;
         case EVENT_CREATE_OBJECT:        recv_create_object();        break;
+        case EVENT_CREATE_STRING:        recv_create_string();        break;
         case EVENT_CREATE_GALAXY:        recv_create_galaxy();        break;
         case EVENT_CREATE_LIGHT:         recv_create_light();         break;
         case EVENT_CREATE_PIVOT:         recv_create_pivot();         break;
@@ -88,6 +91,8 @@ static void client_recv(void)
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
         case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
         case EVENT_SET_SPRITE_RANGE:     recv_set_sprite_range();     break;
+        case EVENT_SET_STRING_COLOR:     recv_set_string_color();     break;
+        case EVENT_SET_STRING_VALUE:     recv_set_string_value();     break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
 
@@ -155,6 +160,7 @@ void client(void)
         if (startup_buffer()  &&
             startup_display() &&
             startup_image()   &&
+            startup_font()    &&
             startup_entity())
         {
             sync_display();

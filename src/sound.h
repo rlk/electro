@@ -24,9 +24,8 @@
 
 int startup_sound(void);
 
-int  create_sound(const char *);
-void delete_sound(int);
-
+int  load_sound(const char *);
+void free_sound(int);
 void stop_sound(int);
 void play_sound(int);
 void loop_sound(int);

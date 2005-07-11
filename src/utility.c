@@ -102,6 +102,17 @@ void open_path(const char *path)
     strncpy(filepath, path, MAXSTR);
 }
 
+const char *make_path(const char *filename)
+{
+    static char pathname[MAXSTR];
+
+    strncpy(pathname, filepath, MAXSTR);
+    strncat(pathname, FILESEP,  MAXSTR);
+    strncat(pathname, filename, MAXSTR);
+
+    return pathname;
+}
+
 int stat_file(const char *filename, struct stat *buf)
 {
     char pathname[MAXSTR];
@@ -148,6 +159,33 @@ FILE *open_file(const char *filename, const char *mode)
     /* Can't find it.  Punt. */
 
     return NULL;
+}
+
+void *load_file(const char *filename, const char *mode, size_t *size)
+{
+    struct stat buf;
+    void *ptr = NULL;
+    FILE *fp  = NULL;
+
+    if (filename && mode)
+    {
+        if (stat_file(filename, &buf) == 0)
+        {
+            if ((fp = open_file(filename, mode)))
+            {
+                if ((ptr = calloc(buf.st_size + 1, 1)))
+                    fread(ptr, 1, buf.st_size, fp);
+
+                if (size)
+                   *size = buf.st_size;
+
+                fclose(fp);
+            }
+            else error ("'%s': %s", filename, system_error());
+        }
+        else error("'%s': %s", filename, system_error());
+    }
+    return ptr;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -256,7 +294,7 @@ void *print(char *format, ...)
 }
 
 /*---------------------------------------------------------------------------*/
-
+/*
 char *alloc_text(const char *filename)
 {
     struct stat buf;
@@ -280,7 +318,7 @@ char *alloc_text(const char *filename)
     }
     return txt;
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 #ifdef MPI

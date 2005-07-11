@@ -358,13 +358,13 @@ orthogonality.  In this case, I just couldn't resist.  Inspiration for
 this feature is drawn from Blitz3D, which showed that relative
 transform is very beginner-friendly, leading to a very intuitive
 turtle-style system of entity control.  Unlike Blitz3D however,
-Electro's relative transform is not susceptible to gimble lock. </p>
+Electro's relative transform is not susceptible to gimbal lock. </p>
 
 <dl>
 
 <dt><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Move the
 entity relative to its current position.  X is to the right, Y is up,
-and Z axis is to the rear, as defined by the entity's current
+and Z is to the rear, as defined by the entity's current
 orientation. </p>
 
 <p class="note"> It might be more clear to the beginner if the Z axis
@@ -440,7 +440,7 @@ Return the scaling of the entity along the local X, Y, and Z axes.
 and maximum X, Y, and Z values of the entity.  This may be used to
 determine the extent of an object or sprite.  This is useful when
 computing pivot bounds for hierarchical view culling, or when
-positioning object on-screen. </p>
+positioning objects on-screen. </p>
 
 <dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p> Return
 the transparency value of the entity.

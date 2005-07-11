@@ -31,18 +31,13 @@ vector_t vecnew(int, int);
 void     vecdel(vector_t);
 void     vecclr(vector_t);
 int      vecadd(vector_t);
+void    *vecget(vector_t, int);
 
 #define  vecnum(V) ((V)->num)
 #define  vecsiz(V) ((V)->siz)
 #define  vecbuf(V) ((V)->buf)
 
-/*---------------------------------------------------------------------------*/
-
-#ifdef NDEBUG
-#define vecget(V, i) (((char *) (V)->buf) + ((V)->siz * (i)))
-#else
-void   *vecget(vector_t, int);
-#endif
+#define  veccmp(V, i, j) memcmp(vecget((V), (i)), vecget((V), (j)), (V)->siz)
 
 /*---------------------------------------------------------------------------*/
 
