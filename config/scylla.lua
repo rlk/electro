@@ -320,8 +320,13 @@ end
 
 function tog_varrier_test()
     varrier_test = not varrier_test
-    for i = 1, 35 do
-        E.set_tile_flag(tile[i], E.tile_flag_test, varrier_test)
+
+    if varrier_tile > 0 then
+        E.set_tile_flag(tile[varrier_tile], E.tile_flag_test, varrier_test)
+    else
+        for i = 0, 35 do
+            E.set_tile_flag(tile[i], E.tile_flag_test, varrier_test)
+        end
     end
 end
 
@@ -395,6 +400,7 @@ function varrier_keyboard(k, s, camera)
         end
         if k == 289 then -- F8
             E.set_entity_frag_prog(scene, "../varrier-01-fntx.fp")
+            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true

@@ -696,7 +696,7 @@ static int E_set_entity_frag_prog(lua_State *L)
     char       *text = load_file(file, "r", NULL);
 
     send_set_entity_frag_prog(id, text);
-    free(text);
+    if (text) free(text);
 
     return 0;
 }
@@ -708,7 +708,7 @@ static int E_set_entity_vert_prog(lua_State *L)
     char       *text = load_file(file, "r", NULL);
 
     send_set_entity_vert_prog(id, text);
-    free(text);
+    if (text) free(text);
 
     return 0;
 }

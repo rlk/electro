@@ -1,4 +1,5 @@
 Varrier finalize
+Lua state flush / app switch
 profilers
 freetype
 display volume query / smart viewobj

@@ -31,9 +31,14 @@
 #include "event.h"
 #include "video.h"
 
-#define swap(a, b) { double t; t = (a); (a) = (b); (b) = t; }
+/* TODO: -ansi -pedantic does not permit these to be defined in the headers. */
+
+int setenv(const char *, const char *, int);
+int gethostname(char *, size_t);
 
 /*---------------------------------------------------------------------------*/
+
+#define swap(a, b) { double t; t = (a); (a) = (b); (b) = t; }
 
 static float color0[3] = { 0.1f, 0.2f, 0.4f };
 static float color1[3] = { 0.0f, 0.0f, 0.0f };

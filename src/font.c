@@ -15,6 +15,7 @@
 #include FT_OUTLINE_H
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "opengl.h"
 #include "vector.h"
@@ -72,6 +73,7 @@ static void add_point(vector_t points, const GLdouble p[3])
     }
 }
 
+/*
 static void get_point(vector_t points, GLdouble p[3])
 {
     struct point *P;
@@ -83,6 +85,7 @@ static void get_point(vector_t points, GLdouble p[3])
         p[2] = P->p[2];
     }
 }
+*/
 
 /*---------------------------------------------------------------------------*/
 /*

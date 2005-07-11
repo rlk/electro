@@ -520,14 +520,20 @@ void send_set_entity_frag_prog(int i, const char *text)
     send_event(EVENT_SET_ENTITY_FRAG_PROG);
     send_index(i);
     send_index(n);
-    send_array(text, n, 1);
 
     fini_entity(i);
 
     if (E(i)->frag_text)
+    {
         free(E(i)->frag_text);
-    
-    E(i)->frag_text = memdup(text, n, 1);
+        E(i)->frag_text = NULL;
+    }
+
+    if (n > 0)
+    {
+        E(i)->frag_text = memdup(text, n, 1);
+        send_array(text, n, 1);
+    }
 }
 
 void send_set_entity_vert_prog(int i, const char *text)
@@ -537,14 +543,20 @@ void send_set_entity_vert_prog(int i, const char *text)
     send_event(EVENT_SET_ENTITY_VERT_PROG);
     send_index(i);
     send_index(n);
-    send_array(text, n, 1);
 
     fini_entity(i);
 
     if (E(i)->vert_text)
+    {
         free(E(i)->vert_text);
+        E(i)->vert_text = NULL;
+    }
 
-    E(i)->vert_text = memdup(text, n, 1);
+    if (n > 0)
+    {
+        E(i)->vert_text = memdup(text, n, 1);
+        send_array(text, n, 1);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -683,11 +695,16 @@ void recv_set_entity_frag_prog(void)
     fini_entity(i);
 
     if (E(i)->frag_text)
+    {
         free(E(i)->frag_text);
+        E(i)->frag_text = NULL;
+    }
 
-    E(i)->frag_text = (char *) malloc(n);
-
-    recv_array(E(i)->frag_text, n, 1);
+    if (n > 0)
+    {
+        E(i)->frag_text = (char *) malloc(n);
+        recv_array(E(i)->frag_text, n, 1);
+    }
 }
 
 void recv_set_entity_vert_prog(void)
@@ -698,11 +715,16 @@ void recv_set_entity_vert_prog(void)
     fini_entity(i);
 
     if (E(i)->vert_text)
+    {
         free(E(i)->vert_text);
+        E(i)->vert_text = NULL;
+    }
 
-    E(i)->vert_text = (char *) malloc(n);
-
-    recv_array(E(i)->vert_text, n, 1);
+    if (n > 0)
+    {
+        E(i)->vert_text = (char *) malloc(n);
+        recv_array(E(i)->vert_text, n, 1);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
