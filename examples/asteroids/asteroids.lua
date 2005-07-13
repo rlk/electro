@@ -83,18 +83,20 @@ end
 -- to any arbitrary display size.
 
 function init_viewport()
+    local width = 1280.0
+
     viewport.x, viewport.y, viewport.w, viewport.h = E.get_display_union()
 
     viewport.a = viewport.h / viewport.w
-    viewport.k = viewport.w / 1024.0
+    viewport.k = viewport.w / width
 
-    viewport.h =     1024.0 * viewport.a
-    viewport.B =     -512.0 * viewport.a
-    viewport.T =      512.0 * viewport.a
+    viewport.h =     width * viewport.a
+    viewport.B =    -width * viewport.a / 2
+    viewport.T =     width * viewport.a / 2
 
-    viewport.w =     1024.0
-    viewport.L =     -512.0
-    viewport.R =      512.0
+    viewport.w =     width 
+    viewport.L =    -width / 2
+    viewport.R =     width / 2
 end
 
 function init_scene()
