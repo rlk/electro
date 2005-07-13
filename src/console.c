@@ -15,12 +15,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "opengl.h"
 #include "version.h"
 #include "utility.h"
 #include "display.h"
 #include "console.h"
+#include "matrix.h"
 #include "glyph.h"
 #include "script.h"
 #include "vector.h"
@@ -270,6 +272,9 @@ void draw_console(void)
             int w = CONSOLE_COLS * GLYPH_W;
             int h = CONSOLE_ROWS * GLYPH_H;
 
+            int W = get_window_w();
+            int H = get_window_h();
+
             float s = (float) w / IMG_W;
             float t = (float) h / IMG_H;
 
@@ -293,6 +298,35 @@ void draw_console(void)
             {
                 glLoadIdentity();
             }
+
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glEnable(GL_LINE_SMOOTH);
+            
+            glBegin(GL_LINES);
+            {
+                glColor4f(1.0f, 1.0f, 0.0f, 0.5f);
+
+                glVertex2f(W / 2, 0);
+                glVertex2f(W / 2, H);
+                glVertex2f(0, H / 2);
+                glVertex2f(W, H / 2);
+
+                glVertex2f(W / 2 - H / 2, 0);
+                glVertex2f(W / 2 - H / 2, H);
+                glVertex2f(W / 2 + H / 2, 0);
+                glVertex2f(W / 2 + H / 2, H);
+            }
+            glEnd();
+
+            glBegin(GL_LINE_LOOP);
+            {
+                int i;
+
+                for (i = 0; i < 360; i++)
+                    glVertex2f(W / 2 + cos(TO_RAD(i)) * H / 2,
+                               H / 2 + sin(TO_RAD(i)) * H / 2);
+            }
+            glEnd();
 
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 

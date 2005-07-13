@@ -57,8 +57,67 @@ static void get_varrier_tile(int tile, float M[16],
 
 /*---------------------------------------------------------------------------*/
 
+#define EXTENT 500
+
+static void lines(float k)
+{
+    int i;
+
+    glBegin(GL_QUADS);
+    {
+        for (i = -EXTENT; i < EXTENT; ++i)
+        {
+            glVertex2f(i,     -EXTENT);
+            glVertex2f(i + k, -EXTENT);
+            glVertex2f(i + k,  EXTENT);
+            glVertex2f(i,      EXTENT);
+        }
+    }
+    glEnd();
+}
+
+static void draw_varrier_lines_new(int tile, const float M[16],
+                                         const float c[3],
+                                         float w, float h, float d)
+{
+    float p = get_varrier_pitch(tile);
+    float a = get_varrier_angle(tile);
+    float t = get_varrier_thick(tile);
+    float s = get_varrier_shift(tile) + d;
+    float k = get_varrier_cycle(tile);
+
+    glPushAttrib(GL_ENABLE_BIT | GL_VIEWPORT_BIT | GL_DEPTH_BUFFER_BIT);
+    glPushMatrix();
+    {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
+        glColor3f(0.0f, 0.0f, 0.0f);
+
+        glDepthRange(0, 0);
+
+        /* Transform the line screen into position. */
+
+        glTranslatef(c[0], c[1], c[2]);
+        glMultMatrixf(M);
+
+        /* Apply the line screen configuration. */
+
+        glRotatef(a, 0, 0, 1);
+        glTranslatef(s, 0, t);
+        glScalef(1 / p, 1 / p, 1 / p);
+/*      glScalef(h, h, h); */
+
+        /* Draw the line screen. */
+
+        lines(k);
+    }
+    glPopMatrix();
+    glPopAttrib();
+}
+
 static void draw_varrier_lines(int tile, const float M[16],
-                                         const float o[3],
+                                         const float C[3],
                                          float w, float h, float d)
 {
     float p = get_varrier_pitch(tile);
@@ -71,7 +130,7 @@ static void draw_varrier_lines(int tile, const float M[16],
     int i;
     int n = (int) ceil(w / f);
 
-    /* TODO: Compute out the proper scale of the line screen. */
+    /* TODO: Compute out the proper range of the line screen. */
 
     int dx = (int) ceil(n);
     int dy = (int) ceil(h);
@@ -86,7 +145,7 @@ static void draw_varrier_lines(int tile, const float M[16],
 
         /* Transform the line screen into position. */
 
-        glTranslatef(o[0], o[1], o[2]);
+        glTranslatef(C[0], C[1], C[2]);
         glMultMatrixf(M);
 
         /* Draw the line screen. */
@@ -114,7 +173,7 @@ static void draw_varrier_lines(int tile, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-#define LINESZ 128
+#define LINESZ 256
 
 static GLuint line_object[3] = { 0, 0, 0 };
 
@@ -148,7 +207,7 @@ static void init_line_texture(int tile, int chan)
 
         memset(p, 0xFF, LINESZ * 8);
 
-        for (i = 0; i < LINESZ * c; ++i)
+        for (i = 0; i < LINESZ * c - 1; ++i)
             for (j = 0; j < 2; ++j)
             {
                 p[(j * LINESZ + i) * 4 + 0] = color[chan][0];
@@ -178,28 +237,51 @@ static void move_line_texture(int tile, const float v[3], float px)
     float s = get_varrier_shift(tile);
 
     float M[16];
-    float c[3];
+    float C[3];
     float n[3];
+    float u[3];
+    float r[3];
+    float q[3];
+    float e[3];
     float w, h;
-    float nn, pp;
+    float x, y, z;
+    float nn, pp, ss;
     float dx, dy;
 
-    get_varrier_tile(tile, M, c, n, &w, &h);
+    get_varrier_tile(tile, M, C, n, &w, &h);
+    get_tile_r(tile, r);
+    get_tile_u(tile, u);
 
     /* Find the distance to the display. */
 
-    nn = ((v[0] - c[0]) * n[0] +
-          (v[1] - c[1]) * n[1] +
-          (v[2] - c[2]) * n[2]);
+    nn = ((v[0] - C[0]) * n[0] +
+          (v[1] - C[1]) * n[1] +
+          (v[2] - C[2]) * n[2]);
+
+    q[0] = v[0] - n[0] * nn;
+    q[1] = v[1] - n[1] * nn;
+    q[2] = v[2] - n[2] * nn;
 
     /* Compute the parallax offset due to optical thickness. */
 
-    dx = (v[0] - n[0] * nn - c[0]) * t / nn;
-    dy = (v[1] - n[1] * nn - c[1]) * t / nn;
+    e[0] = v[0] - C[0];
+    e[1] = v[1] - C[1];
+    e[2] = v[2] - C[2];
+
+    normalize(r);
+    normalize(u);
+
+    x = e[0] * r[0] + e[1] * r[1] + e[2] * r[2];
+    y = e[0] * u[0] + e[1] * u[1] + e[2] * u[2];
+    z = e[0] * n[0] + e[1] * n[1] + e[2] * n[2];
+
+    dx = t * x / z;
+    dy = t * y / z;
 
     /* Compute the pitch reduction due to optical thickness. */
 
     pp = p * (nn - t) / nn;
+    ss = s * (nn - t) / nn;
 
     /* Transform the line screen texture into position. */
 
@@ -211,7 +293,7 @@ static void move_line_texture(int tile, const float v[3], float px)
                                    1.0 / 800.0, 1.0 / 600.0, 0.0, 0.0);
 
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
-        glTranslatef(-s + dx - px, dy, 0);   /* Shift in feet.    */
+        glTranslatef(-ss + dx + px, dy, 0);  /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */
         glScalef(0.5 * w, 0.5 * h, 1.0);     /* Scale to feet.    */
     }
@@ -321,6 +403,7 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
     return 0;
 }
 
+#ifdef SNIP
 static int stereo_varrier_11(int eye, int tile, int pass)
 {
     if (pass == 0)
@@ -355,6 +438,59 @@ static int stereo_varrier_11(int eye, int tile, int pass)
     }
     return 0;
 }
+#else
+static int stereo_varrier_11(int eye, int tile, int pass)
+{
+    float M[16];
+    float c[3];
+    float n[3];
+    float w, h, d = 0.00025f;
+
+    int next = 0;
+
+    get_varrier_tile(tile, M, c, n, &w, &h);
+
+    switch (pass)
+    {
+    case 0:
+        if (eye == 0)
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        else
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+        glColorMask(0, 0, 0, 0);
+        draw_varrier_lines_new(tile, M, c, w, h, +d);
+        glColorMask(1, 0, 0, 0);
+        draw_tile_background(tile, 0);
+        next = 1;
+        break;
+        
+    case 1:
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glColorMask(0, 0, 0, 0);
+        draw_varrier_lines_new(tile, M, c, w, h,  0);
+        glColorMask(0, 1, 0, 0);
+        draw_tile_background(tile, 0);
+        next = 2;
+        break;
+        
+    case 2:
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glColorMask(0, 0, 0, 0);
+        draw_varrier_lines_new(tile, M, c, w, h, -d);
+        glColorMask(0, 0, 1, 0);
+        draw_tile_background(tile, 0);
+        next = 3;
+        break;
+        
+    case 3:
+        glColorMask(1, 1, 1, 1);
+        next = 0;
+    }
+
+    return next;
+}
+#endif
 
 static int stereo_varrier_33(int eye, int tile, int pass)
 {
