@@ -3,7 +3,7 @@ tile = { }
 
 -- 19 hosts: 1 server, 18 clients.
 
-host[0]  = E.add_host("scylla.evl.uic.edu",      0, 0, 1600, 1200)
+host[0]  = E.add_host("default",                 0, 0, 1600, 1200)
 host[1]  = E.add_host("scylla1-10.evl.uic.edu",  0, 0, 1600, 2400)
 host[2]  = E.add_host("scylla2-10.evl.uic.edu",  0, 0, 1600, 2400)
 host[3]  = E.add_host("scylla3-10.evl.uic.edu",  0, 0, 1600, 2400)
@@ -23,7 +23,7 @@ host[16] = E.add_host("scylla16-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[17] = E.add_host("scylla17-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
 
-E.set_host_flag(host[0], E.host_flag_framed, false);
+E.set_host_flag(host[0], E.host_flag_framed, true);
 
 -- Tile host numbers.
 

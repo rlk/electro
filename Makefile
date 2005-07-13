@@ -36,7 +36,7 @@ ifeq ($(shell uname), Darwin)
 	LIBDIR = -L/sw/lib
 	OGLLIB =
 	SDL_CONFIG = /sw/bin/sdl-config
-	FT2_CONFIG = /sw/bin/freetype-config
+	FT2_CONFIG = /usr/X11R6/bin/freetype-config
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
