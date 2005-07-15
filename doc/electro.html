@@ -132,6 +132,7 @@ The class hierarchy is as follows: </p>
 <ul>
 <li><a href="#object"> Object </a>
 <li><a href="#sprite"> Sprite </a>
+<li><a href="#string"> String </a>
 <li><a href="#camera"> Camera </a>
 <li><a href="#light">  Light  </a>
 <li><a href="#pivot">  Pivot  </a>
@@ -189,6 +190,12 @@ image quality degradation.  If you are picky about image quality, or
 you desire pixel-for-pixel correctness, be sure to use only
 power-of-two source images.  The same applies to texture images loaded
 by <tt>create_object</tt>.</p>
+
+<dt><i>string</i> = <tt>create_string</tt>(<i>text</i>)<dd><p> Create
+a string object using the current typeface and the given text.  A
+string object is a polygonal model one unit in height.  It sits in the
+XY-plane, with its lower-left corner at the origin.  See
+<tt>set_typeface</tt> for font selection and configuration. </p>
 
 <dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p> Create
 a camera of the given type.  To be visible in a scene, all entities
@@ -273,8 +280,8 @@ created and destroyed.</p>
 original.  A clone has all of the attributes of a distinct entity, but
 it shares the attributes specific to its derived type.  For example,
 if a scaling operation is applied to a cloned entity, only that entity
-will be scaled.  However if the color of a cloned light source is
-changed, all instances of the original light source will change.
+will be scaled.  However if the text value of a string entity is
+changed, all instances of the original string will change. </p>
 
 </dl>
 
@@ -341,10 +348,11 @@ values give the minimum and maximum X, Y, and Z values in object
 coordinates.</p>
 
 <p> To enable view culling based on the given bound, set
-<tt>entity_flag_bounded</tt>.  Keep in mind that object and sprite
-bounds are computed automatically, and manually-set boundries are not
-likely to be used.  The intended use of <tt>set_entity_bound</tt> is
-the specification of pivot bounds for hierarchical view culling. </p>
+<tt>entity_flag_bounded</tt>.  Keep in mind that object, sprite, and
+string bounds are computed automatically, and manually-set boundries
+are not likely to be used.  The intended use of
+<tt>set_entity_bound</tt> is the specification of pivot bounds for
+hierarchical view culling. </p>
 
 </dl>
 
@@ -440,7 +448,7 @@ Return the scaling of the entity along the local X, Y, and Z axes.
 and maximum X, Y, and Z values of the entity.  This may be used to
 determine the extent of an object or sprite.  This is useful when
 computing pivot bounds for hierarchical view culling, or when
-positioning objects on-screen. </p>
+positioning entities on-screen. </p>
 
 <dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p> Return
 the transparency value of the entity.
@@ -506,11 +514,11 @@ transparent flag, though it may be removed if depth writing sprites
 are desired.  Objects with transparent diffuse colors do not have the
 transparent flag, but are not drawn to the depth buffer.</p>
 
-<li><tt> entity_flag_bounded </tt><p> Entities with the bounded flag are
-rendered only when their bounding box falls within the view frustum of
-the current camera.  Objects and sprites have automatically computed
-bounding boxes, so they are automatically given the bounded flag.
-Other entities may be assigned a bounding box using
+<li><tt> entity_flag_bounded </tt><p> Entities with the bounded flag
+are rendered only when their bounding box falls within the view
+frustum of the current camera.  Objects, sprites, and strings have
+automatically computed bounding boxes, so they are automatically given
+the bounded flag.  Other entities may be assigned a bounding box using
 <tt>set_entity_bound</tt>.  When an entity is culled it behaves is
 though it is hidden and traversal of the hierarchy is pruned. </p>
 
@@ -563,6 +571,25 @@ textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
 Return the size of the sprite in pixels.</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="string"><h3> String </h3>
+<dl>
+
+<dt><tt>set_string_value</tt>(<i>string, text</i>)<dd><p> Set the
+text displayed by the given string object. </p>
+
+<p class="note"> Modifying a string value is very cheap.  When an
+application requires that an on-screen text element change frequently,
+changes should be made using <tt>set_string_value</tt> rather than the
+deletion and creation of string objects. </p>
+
+<dt><tt>set_string_color</tt>(<i>string, r, g, b</i>)<dd> <p> Set the
+(<i>r, g, b</i>) color of the string entity.  Change a string's
+transparency using <tt>set_entity_alpha</tt>.</p>
 
 </dl>
 
@@ -884,6 +911,28 @@ solid color.  If an optional second color (<i>r1, g1, b1</i>) is
 supplied, the background will be drawn with a top-to-bottom gradient.
 The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to
 (<i>0.1, 0.2, 0.4</i>). </p>
+
+<dt><tt>set_typeface</tt>(<i>filename</i>, [<i>epsilon,
+outline</i>])<dd><p> Set the typeface to be used for all subsequently
+created string entities.  The filename gives a TrueType font file.</p>
+
+<p> The optional <i>epsilon</i> parameter gives an error bound in
+world units to which glyphs are tessalated.  This allows the
+application to make a quality-speed trade-off, favoring finely
+tessalated text for magnified string entities, and coarse text for
+minimized string entities.  The default <i>epsilon</i> value is
+<i>0.001</i>.</p>
+
+<p> The optional <i>outline</i> parameter is a boolean value
+requesting an outline font.  If <tt>true</tt>, glyph outlines are
+drawn as lines.  The default value is <tt>false</tt>.</p>
+
+<p class="note">Applications that use multiple typefaces need not be
+concerned about the cost of switching typefaces.  The overhead of
+loading a new typeface is incurred only the first time.  Applications
+are free to switch from one typeface to another and back again without
+penalty. </p>
+</p>
 
 <dt><tt>enable_timer</tt>(<i>enabled</i>)<dd><p> Enable or disable the
 <tt>do_timer</tt> callback.  If <i>enabled</i> has value <tt>true</tt>

@@ -20,7 +20,7 @@ int startup_font(void);
 /*---------------------------------------------------------------------------*/
 
 void send_set_font(const char *, float, int);
-void revc_set_font(void);
+void recv_set_font(void);
 
 /*---------------------------------------------------------------------------*/
 

@@ -5,7 +5,7 @@
                               _
 
 
-* Running
+* Running on PCs
 
     The run scripts take a list of Lua files as parameters.  Each file
     is executed in turn.  Here, Asteroids is used as an example
@@ -15,9 +15,30 @@
         $ ./electro -f examples/asteroids/asteroids.lua
 
     To run Asteroids under Windows, drag and drop the asteroids.lua icon
-    onto the electro.bat file, or:
+    onto the electro.bat file, or type:
 
         C:\> electro.exe -f examples\asteroids\asteroids.lua
+
+
+* Running on clusters
+
+    Each cluster has an associated run script.  To run Asteroids on nico,
+    change to the Electro DEMO directory and run it as follows:
+
+        $ cd /DEMO/evl/Electro
+        $ bin/electro-nico11x5 -f examples/asteroids/asteroids.lua
+
+    On yorda:
+
+        $ cd /DEMO/evl/Electro
+        $ bin/electro-yorda11x5 -f examples/asteroids/asteroids.lua
+
+    Running Vortex on nico and yorda is similar, but Vortex works best
+    when Electro is allowed to capture the mouse pointer:
+
+        $ bin/electro-nico11x5 -m -f examples/vortex/vortex.lua
+    or
+        $ bin/electro-yorda11x5 -m -f examples/vortex/vortex.lua
 
 
 * Usage
@@ -27,7 +48,7 @@
         F2  - Toggle server rendering
         F3  - Decrease server window resolution
         F4  - Increase server window resolution
-        F5  - Toggle server fullscreen
+
 
 
 * rlk@evl.uic.edu
