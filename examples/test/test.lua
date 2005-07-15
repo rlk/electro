@@ -23,18 +23,16 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
-    sprite = E.create_sprite("texture.jpg")
 
-    E.set_typeface("Times_New_Roman.ttf", 0.001)
+    E.set_typeface("VeraBI.ttf", 0.0001)
     thing1 = E.create_string("Electro")
 
-    E.set_typeface("Times_New_Roman.ttf", 0.001, true)
+    E.set_typeface("VeraBI.ttf", 0.0001, true)
     thing2 = E.create_string("Electro")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
-    E.parent_entity(sprite, pivot)
-    E.parent_entity(thing1, sprite)
+    E.parent_entity(thing1, pivot)
     E.parent_entity(thing2, thing1)
 
     E.set_entity_alpha(thing1, 0.50)
@@ -49,7 +47,7 @@ function do_start()
 
     x0, y0, z0, x1, y1, z1 = E.get_entity_bound(thing1)
 
---    E.set_entity_flag(thing1, E.entity_flag_wireframe, true)
+    E.set_entity_flag(thing1, E.entity_flag_wireframe, true)
 --    E.set_entity_flag(thing2, E.entity_flag_wireframe, true)
 
     E.set_entity_position(light,  0.0,  10.0,   0.0)

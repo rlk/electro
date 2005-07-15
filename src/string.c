@@ -53,19 +53,23 @@ static int new_string(void)
 
 int send_create_string(const char *text)
 {
-    int i;
+    int i, n = strlen(text) + 1;
 
     if ((i = new_string()) >= 0)
     {
         send_event(EVENT_CREATE_STRING);
 
-        S(i)->text     = memdup(text, strlen(text) + 1, 1);
+        S(i)->text     = memdup(text, n, 1);
         S(i)->font     = get_font();
         S(i)->count    = 1;
         S(i)->color[0] = 1.0f;
         S(i)->color[1] = 1.0f;
         S(i)->color[2] = 1.0f;
         S(i)->color[3] = 1.0f;
+
+        send_index(n);
+        send_array(text, n, 1);
+        send_index(S(i)->font);
 
         return send_create_entity(TYPE_STRING, i);
     }
@@ -75,7 +79,12 @@ int send_create_string(const char *text)
 void recv_create_string(void)
 {
     int i = new_string();
+    int n = recv_index();
 
+    S(i)->text = (char *) malloc(n);
+    recv_array(S(i)->text, n, 1);
+
+    S(i)->font     = recv_index();
     S(i)->count    = 1;
     S(i)->color[0] = 1.0f;
     S(i)->color[1] = 1.0f;

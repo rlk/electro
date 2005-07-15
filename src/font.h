@@ -19,7 +19,11 @@ int startup_font(void);
 
 /*---------------------------------------------------------------------------*/
 
-void set_font(const char *, float, int);
+void send_set_font(const char *, float, int);
+void revc_set_font(void);
+
+/*---------------------------------------------------------------------------*/
+
 int  get_font(void);
 
 void init_font(int);

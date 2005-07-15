@@ -548,12 +548,12 @@ static int E_set_typeface(lua_State *L)
 
     switch (lua_gettop(L))
     {
-    case 1: set_font(L_getstring (L, -1), e, o); break;
-    case 2: set_font(L_getstring (L, -2),
-                     L_getnumber (L, -1), o);    break;
-    case 3: set_font(L_getstring (L, -3),
-                     L_getnumber (L, -2),
-                     L_getboolean(L, -1));       break;
+    case 1: send_set_font(L_getstring (L, -1), e, o); break;
+    case 2: send_set_font(L_getstring (L, -2),
+                          L_getnumber (L, -1), o);    break;
+    case 3: send_set_font(L_getstring (L, -3),
+                          L_getnumber (L, -2),
+                          L_getboolean(L, -1));       break;
     }
 
     return 0;

@@ -21,6 +21,7 @@
 #include "vector.h"
 #include "buffer.h"
 #include "utility.h"
+#include "event.h"
 #include "font.h"
 
 /*---------------------------------------------------------------------------*/
@@ -242,7 +243,7 @@ static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
 
 /*===========================================================================*/
 
-void set_font(const char *filename, float e, int o)
+void send_set_font(const char *filename, float e, int o)
 {
     int r, c, i, n = vecnum(font);
 
@@ -301,12 +302,44 @@ void set_font(const char *filename, float e, int o)
                 F(i)->epsilon  = e;
                 F(i)->outline  = o;
                 curr           = i;
+
+                /* Pack the font on the broadcast queue. */
+
+                send_event(EVENT_SET_FONT);
+                send_float(F(i)->epsilon);
+                send_index(F(i)->outline);
+                send_array(F(i)->kerns, NUMGLYPH * NUMGLYPH, sizeof (double));
+
+                for (c = 0; c < NUMGLYPH; ++c)
+                {
+                    send_float (F(i)->glyph[c].space);
+                    send_vector(F(i)->glyph[c].points);
+                }
             }
             else error("Failure making sense of '%s'", filename);
 
             free(buffer);
         }
         else error("Failure loading '%s'", filename);
+    }
+}
+
+void recv_set_font(void)
+{
+    int i, c;
+
+    if ((i = vecadd(font)) >= 0)
+    {
+        F(i)->epsilon = recv_float();
+        F(i)->outline = recv_index();
+
+        recv_array(F(i)->kerns, NUMGLYPH * NUMGLYPH, sizeof (double));
+
+        for (c = 0; c < NUMGLYPH; ++c)
+        {
+            F(i)->glyph[c].space  = recv_float();
+            F(i)->glyph[c].points = recv_vector();
+        }
     }
 }
 
@@ -366,35 +399,37 @@ void init_font(int i)
             for (j = MINGLYPH; j < MAXGLYPH; ++j)
             {
                 struct glyph *glyph = &F(i)->glyph[j - MINGLYPH];
-                vector_t     points = glyph->points;
 
-                glyph->list = lists + j - MINGLYPH;
-
-                /* Tessalate the glyph to a display list. */
-
-                glNewList(glyph->list, GL_COMPILE);
-                glNormal3f(0, 0, 1);
-
-                gluTessBeginPolygon(T, points);
+                if (glyph->points)
                 {
-                    for (k = 0, l = 0; k < vecnum(points); ++k)
-                        if (l == k)
-                        {
-                            gluTessBeginContour(T);
-                            gluTessVertex(T, vecget(points, k),
-                                             vecget(points, k));
-                        }
-                        else if (veccmp(glyph->points, k, l) == 0)
-                        {
-                            gluTessEndContour(T);
-                            l = k + 1;
-                        }
-                        else
-                            gluTessVertex(T, vecget(points, k),
-                                             vecget(points, k));
+                    glyph->list = lists + j - MINGLYPH;
+
+                    /* Tessalate the glyph to a display list. */
+
+                    glNewList(glyph->list, GL_COMPILE);
+                    glNormal3f(0, 0, 1);
+
+                    gluTessBeginPolygon(T, glyph->points);
+                    {
+                        for (k = 0, l = 0; k < vecnum(glyph->points); ++k)
+                            if (l == k)
+                            {
+                                gluTessBeginContour(T);
+                                gluTessVertex(T, vecget(glyph->points, k),
+                                              vecget(glyph->points, k));
+                            }
+                            else if (veccmp(glyph->points, k, l) == 0)
+                            {
+                                gluTessEndContour(T);
+                                l = k + 1;
+                            }
+                            else
+                                gluTessVertex(T, vecget(glyph->points, k),
+                                              vecget(glyph->points, k));
+                    }
+                    gluTessEndPolygon(T);
+                    glEndList();
                 }
-                gluTessEndPolygon(T);
-                glEndList();
             }
             gluDeleteTess(T);
         }
@@ -432,7 +467,7 @@ void draw_font(int i, const char *text)
 
         for (j = 0; j < n; ++j)
         {
-            struct glyph *glyph = &F(i)->glyph[text[j] - MINGLYPH];
+            struct glyph *glyph = F(i)->glyph + text[j] - MINGLYPH;
             GLdouble d  = glyph->space;
 
             /* Determine the kerning distance. */
@@ -467,35 +502,37 @@ void bbox_font(int i, const char *text, float bound[6])
 
     for (j = 0; j < n; ++j)
     {
-        struct glyph *glyph = &F(i)->glyph[text[j] - MINGLYPH];
+        struct glyph *glyph = F(i)->glyph + text[j] - MINGLYPH;
         GLdouble d  = glyph->space;
 
-        int k, m = vecnum(glyph->points);
-
-        /* Determine the kerning distance. */
-
-        if (j < n - 1)
+        if (glyph->points)
         {
-            int r = (int) text[j]     - MINGLYPH;
-            int c = (int) text[j + 1] - MINGLYPH;
+            int k, m = vecnum(glyph->points);
 
-            d += F(i)->kerns[r][c];
+            /* Determine the kerning distance. */
+
+            if (j < n - 1)
+            {
+                int r = (int) text[j]     - MINGLYPH;
+                int c = (int) text[j + 1] - MINGLYPH;
+
+                d += F(i)->kerns[r][c];
+            }
+
+            /* Include the current glyph in the bound. */
+
+            for (k = 0; k < m; ++k)
+            {
+                GLdouble *p = ((struct point *) vecget(glyph->points, k))->p;
+
+                bound[0] = MIN(bound[0], (float) (p[0] + x));
+                bound[1] = MIN(bound[1], (float)  p[1]);
+                bound[2] = MIN(bound[2], (float)  p[2]);
+                bound[3] = MAX(bound[3], (float) (p[0] + x));
+                bound[4] = MAX(bound[4], (float)  p[1]);
+                bound[5] = MAX(bound[5], (float)  p[2]);
+            }
         }
-
-        /* Include the current glyph in the bound. */
-
-        for (k = 0; k < m; ++k)
-        {
-            GLdouble *p = ((struct point *) vecget(glyph->points, k))->p;
-
-            bound[0] = MIN(bound[0], (float) (p[0] + x));
-            bound[1] = MIN(bound[1], (float)  p[1]);
-            bound[2] = MIN(bound[2], (float)  p[2]);
-            bound[3] = MAX(bound[3], (float) (p[0] + x));
-            bound[4] = MAX(bound[4], (float)  p[1]);
-            bound[5] = MAX(bound[5], (float)  p[2]);
-        }
-
         /* Advance the insertion point. */
 
         x += d;

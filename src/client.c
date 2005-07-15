@@ -95,6 +95,7 @@ static void client_recv(void)
         case EVENT_SET_STRING_VALUE:     recv_set_string_value();     break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
+        case EVENT_SET_FONT:             recv_set_font();             break;
 
         case EVENT_ADD_TILE:             recv_add_tile();             break;
         case EVENT_SET_TILE_FLAG:        recv_set_tile_flag();        break;
