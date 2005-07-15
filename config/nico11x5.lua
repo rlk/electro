@@ -52,7 +52,7 @@ B = { (y[1] - y[1]) * kh,
       (y[4] - y[1]) * kh,
       (y[5] - y[1]) * kh }
 
-host[0]  = E.add_host("nico",       0, 0, sw, sh)
+host[0]  = E.add_host("default",    0, 0, sw, sh)
 host[1]  = E.add_host("yorda18-10", 0, 0, pw, ph)
 host[2]  = E.add_host("yorda17-10", 0, 0, pw, ph * 2)
 host[3]  = E.add_host("yorda1-10",  0, 0, pw, ph * 2)
