@@ -199,7 +199,7 @@ static void init_entity(int i)
     {
         /* Find the bounding box of this entity, if any. */
 
-        if (entity_func[E(i)->type] &&
+        if (entity_func[E(i)->type]       &&
             entity_func[E(i)->type]->bbox &&
             entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
             E(i)->flag |= FLAG_BOUNDED;
@@ -766,12 +766,17 @@ void get_entity_scale(int i, float v[3])
 
 void get_entity_bound(int i, float v[6])
 {
+    if (entity_func[E(i)->type]       &&
+        entity_func[E(i)->type]->bbox &&
+        entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
+        E(i)->flag |= FLAG_BOUNDED;
+
     v[0] = E(i)->bound[0];
     v[1] = E(i)->bound[1];
     v[2] = E(i)->bound[2];
-    v[2] = E(i)->bound[3];
-    v[2] = E(i)->bound[4];
-    v[2] = E(i)->bound[5];
+    v[3] = E(i)->bound[3];
+    v[4] = E(i)->bound[4];
+    v[5] = E(i)->bound[5];
 }
 
 float get_entity_alpha(int i)

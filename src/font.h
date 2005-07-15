@@ -19,10 +19,14 @@ int startup_font(void);
 
 /*---------------------------------------------------------------------------*/
 
-void set_font(const char *, float);
+void set_font(const char *, float, int);
 int  get_font(void);
 
+void init_font(int);
+void fini_font(int);
+
 void draw_font(int, const char *);
+void bbox_font(int, const char *, float[6]);
 
 /*---------------------------------------------------------------------------*/
 

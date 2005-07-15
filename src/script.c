@@ -543,10 +543,18 @@ static int E_get_modifier(lua_State *L)
 
 static int E_set_typeface(lua_State *L)
 {
-    if (lua_gettop(L) == 2)
-        set_font(L_getstring(L, -2), L_getnumber(L, -1));
-    else
-        set_font(L_getstring(L, -1), 0.001f);
+    float e = 0.001f;
+    int   o = 0;
+
+    switch (lua_gettop(L))
+    {
+    case 1: set_font(L_getstring (L, -1), e, o); break;
+    case 2: set_font(L_getstring (L, -2),
+                     L_getnumber (L, -1), o);    break;
+    case 3: set_font(L_getstring (L, -3),
+                     L_getnumber (L, -2),
+                     L_getboolean(L, -1));       break;
+    }
 
     return 0;
 }

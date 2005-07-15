@@ -281,7 +281,8 @@ static void move_line_texture(int tile, const float v[3], float px)
     /* Compute the pitch reduction due to optical thickness. */
 
     pp = p * (nn - t) / nn;
-    ss = s * (nn - t) / nn;
+/*  ss = s * (nn - t) / nn; */
+    ss = s;
 
     /* Transform the line screen texture into position. */
 

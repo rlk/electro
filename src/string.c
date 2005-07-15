@@ -136,6 +136,22 @@ void recv_set_string_value(void)
 
 /*===========================================================================*/
 
+static void init_string(int i)
+{
+    init_font(S(i)->font);
+}
+
+static void fini_string(int i)
+{
+    fini_font(S(i)->font);
+}
+
+static int bbox_string(int i, float bound[6])
+{
+    bbox_font(S(i)->font, S(i)->text, bound);
+    return 1;
+}
+
 static void draw_string(int j, int i, int f, float a)
 {
     glPushMatrix();
@@ -169,9 +185,9 @@ static void free_string(int i)
 
 static struct entity_func string_func = {
     "string",
-    NULL,
-    NULL,
-    NULL,
+    init_string,
+    fini_string,
+    bbox_string,
     draw_string,
     dupe_string,
     free_string,

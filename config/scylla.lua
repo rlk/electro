@@ -23,7 +23,8 @@ host[16] = E.add_host("scylla16-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[17] = E.add_host("scylla17-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
 
-E.set_host_flag(host[0], E.host_flag_framed, true);
+E.set_host_flag(host[0], E.host_flag_full,   true);
+E.set_host_flag(host[0], E.host_flag_framed, false);
 
 -- Tile host numbers.
 
@@ -219,10 +220,10 @@ v[0] = v[18]
 p[0] = p[18]
 
 for i = 0, 35 do
---    l[i][1] = 1
---    l[i][2] = 0
---    l[i][3] = 0
---    l[i][4] = 0
+    l[i][1] = 1
+    l[i][2] = 0
+    l[i][3] = 0
+    l[i][4] = 0
 end
 
 -------------------------------------------------------------------------------

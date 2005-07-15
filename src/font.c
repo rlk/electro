@@ -27,6 +27,13 @@
 
 #define MINGLYPH  32
 #define MAXGLYPH 128
+#define NUMGLYPH (MAXGLYPH - MINGLYPH)
+
+#define SCALE 1024
+
+#define TO_DBL(n) (((GLdouble) (n) / 64.0) / SCALE)
+
+/*---------------------------------------------------------------------------*/
 
 struct point
 {
@@ -36,15 +43,18 @@ struct point
 struct glyph
 {
     vector_t points;
-    float    space;
+    GLdouble space;
     GLuint   list;
 };
 
 struct font
 {
-    char *filename;
+    char     *filename;
+    GLdouble  epsilon;
+    GLboolean outline;
 
-    struct glyph glyph[MAXGLYPH - MINGLYPH];
+    GLdouble     kerns[NUMGLYPH][NUMGLYPH]; 
+    struct glyph glyph[NUMGLYPH];
     int          state;
 };
 
@@ -61,6 +71,13 @@ static FT_Library library;
 
 /*===========================================================================*/
 
+static void new_point(GLdouble p[3], FT_Vector *to)
+{
+    p[0] = TO_DBL(to->x);
+    p[1] = TO_DBL(to->y);
+    p[2] = 0;
+}
+
 static void add_point(vector_t points, const GLdouble p[3])
 {
     struct point *P;
@@ -73,8 +90,7 @@ static void add_point(vector_t points, const GLdouble p[3])
     }
 }
 
-/*
-static void get_point(vector_t points, GLdouble p[3])
+static void get_point(GLdouble p[3], vector_t points)
 {
     struct point *P;
 
@@ -85,39 +101,33 @@ static void get_point(vector_t points, GLdouble p[3])
         p[2] = P->p[2];
     }
 }
-*/
 
 /*---------------------------------------------------------------------------*/
-/*
+
 void linear(GLdouble p[3], const GLdouble a[3],
                            const GLdouble b[3], GLdouble u)
 
 {
-    GLdouble v = (1 - u);
+    const GLdouble v = 1.0 - u;
 
-    p[0] = a[0] * v +
-           b[0] * u;
-    p[1] = a[1] * v +
-           b[1] * u;
-    p[2] = a[2] * v +
-           b[2] * u;
+    p[0] = a[0] * v + b[0] * u;
+    p[1] = a[1] * v + b[1] * u;
+    p[2] = a[2] * v + b[2] * u;
 }
 
 void conic(GLdouble p[3], const GLdouble a[3],
                           const GLdouble b[3],
                           const GLdouble c[3], GLdouble u)
 {
-    GLdouble v = (1.0 - u);
+    const GLdouble v = 1.0 - u;
 
-    p[0] = a[0] * v * v +
-       2 * b[0] * u * v +
-           c[0] * u * u;
-    p[1] = a[1] * v * v +
-       2 * b[1] * u * v +
-           c[1] * u * u;
-    p[2] = a[2] * v * v +
-       2 * b[2] * u * v +
-           c[2] * u * u;
+    const GLdouble ka =       v * v;
+    const GLdouble kb = 2.0 * u * v;
+    const GLdouble kc =       u * u;
+
+    p[0] = a[0] * ka + b[0] * kb + c[0] * kc;
+    p[1] = a[1] * ka + b[1] * kb + c[1] * kc;
+    p[2] = a[2] * ka + b[2] * kb + c[2] * kc;
 }
 
 void cubic(GLdouble p[3], const GLdouble a[3],
@@ -125,32 +135,28 @@ void cubic(GLdouble p[3], const GLdouble a[3],
                           const GLdouble c[3],
                           const GLdouble d[3], GLdouble u)
 {
-    GLdouble v = (1 - u);
+    const GLdouble v = 1.0 - u;
 
-    p[0] = a[0] * v * v * v +
-       3 * b[0] * u * v * v +
-       3 * c[0] * u * u * v +
-           d[0] * u * u * u;
-    p[1] = a[1] * v * v * v +
-       3 * b[1] * u * v * v +
-       3 * c[1] * u * u * v +
-           d[1] * u * u * u;
-    p[2] = a[2] * v * v * v +
-       3 * b[2] * u * v * v +
-       3 * c[2] * u * u * v +
-           d[2] * u * u * u;
+    const GLdouble ka =       v * v * v;
+    const GLdouble kb = 3.0 * u * v * v;
+    const GLdouble kc = 3.0 * u * u * v;
+    const GLdouble kd =       u * u * u;
+
+    p[0] = a[0] * ka + b[0] * kb + c[0] * kc + d[0] * kd;
+    p[1] = a[1] * ka + b[1] * kb + c[1] * kc + d[1] * kd;
+    p[2] = a[2] * ka + b[2] * kb + c[2] * kc + d[2] * kd;
 }
-*/
+
 /*---------------------------------------------------------------------------*/
 
 static GLdouble epsilon = 0.001;
-/*
-static void adapt_conic(const GLdouble la[3],
-                        const GLdouble lc[3],
-                        const GLdouble ca[3],
-                        const GLdouble cb[3],
-                        const GLdouble cc[3], GLdouble u0, GLdouble u1,
-                        vector_t points)
+
+static void add_conic(const GLdouble la[3],
+                      const GLdouble lc[3],
+                      const GLdouble ca[3],
+                      const GLdouble cb[3],
+                      const GLdouble cc[3], GLdouble u0, GLdouble u1,
+                      vector_t points)
 {
     GLdouble lp[3];
     GLdouble cp[3];
@@ -166,24 +172,21 @@ static void adapt_conic(const GLdouble la[3],
     
     if (d[0] * d[0] + d[1] * d[1] > epsilon * epsilon)
     {
-        adapt_conic(la, cp, ca, cb, cc, u0, uu, points);
-        adapt_conic(cp, lc, ca, cb, cc, uu, u1, points);
+        add_conic(la, cp, ca, cb, cc, u0, uu, points);
+        add_conic(cp, lc, ca, cb, cc, uu, u1, points);
     }
     else
         add_point(points, lc);
 }
-*/
+
 
 /*---------------------------------------------------------------------------*/
-/*
+
 static int move_to(FT_Vector *to, vector_t points)
 {
     GLdouble p[3];
 
-    p[0] = (GLdouble) to->x / 64;
-    p[1] = (GLdouble) to->y / 64;
-    p[2] = 0;
-
+    new_point(p, to);
     add_point(points, p);
 
     return 0;
@@ -193,30 +196,20 @@ static int line_to(FT_Vector *to, vector_t points)
 {
     GLdouble p[3];
 
-    p[0] = (GLdouble) to->x / 64;
-    p[1] = (GLdouble) to->y / 64;
-    p[2] = 0;
-
+    new_point(p, to);
     add_point(points, p);
 
     return 0;
 }
 
-static int conic_to(FT_Vector *control, FT_Vector *to, vector_t points)
+static int conic_to(FT_Vector *ct, FT_Vector *to, vector_t points)
 {
     GLdouble a[3], b[3], c[3];
 
-    get_point(points, a);
-
-    b[0] = (GLdouble) control->x / 64;
-    b[1] = (GLdouble) control->y / 64;
-    b[2] = 0;
-
-    c[0] = (GLdouble) to->x      / 64;
-    c[1] = (GLdouble) to->y      / 64;
-    c[2] = 0;
-
-    adapt_conic(a, c, a, b, c, 0, 1, points);
+    get_point(a, points);
+    new_point(b, ct);
+    new_point(c, to);
+    add_conic(a, c, a, b, c, 0, 1, points);
 
     return 0;
 }
@@ -224,34 +217,12 @@ static int conic_to(FT_Vector *control, FT_Vector *to, vector_t points)
 static int cubic_to(FT_Vector *control1,
                     FT_Vector *control2, FT_Vector *to, vector_t points)
 {
-    GLdouble p[3], a[3], b[3], c[3], d[3];
-
-    get_point(points, a);
-
-    b[0] = (GLdouble) control1->x / 64;
-    b[1] = (GLdouble) control1->y / 64;
-    b[2] = 0;
-
-    c[0] = (GLdouble) control2->x / 64;
-    c[1] = (GLdouble) control2->y / 64;
-    c[2] = 0;
-
-    d[0] = (GLdouble) to->x       / 64;
-    d[1] = (GLdouble) to->y       / 64;
-    d[2] = 0;
-
-    cubic(p, a, b, c, d, 0.5);
-
-    add_point(points, p);
-    add_point(points, d);
-
-    printf("cubic!\n");
-
+    error("TTF only.  Cubic bezier curves are not supported.");
     return 0;
 }
-*/
+
 /*---------------------------------------------------------------------------*/
-/*
+
 static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
 {
     FT_Outline_Funcs funcs;
@@ -264,122 +235,25 @@ static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
     funcs.delta    = 0;
 
     glyph->points = vecnew(16, sizeof (struct point));
-    glyph->space  = (GLdouble) slot->advance.x / 64;
+    glyph->space  = TO_DBL(slot->advance.x);
 
     FT_Outline_Decompose(&slot->outline, &funcs, glyph->points);
-}
-*/
-
-FT_Vector midpt(FT_Vector a, FT_Vector b)
-{
-    FT_Vector p;
-
-    p.x = (a.x + b.x) / 2;
-    p.y = (a.y + b.y) / 2;
-
-    return p;
-}
-
-void addpt(vector_t points, FT_Vector p)
-{
-    struct point *P;
-
-    if ((P = (struct point *) vecget(points, vecadd(points))))
-    {
-        P->p[0] = (GLdouble) p.x / 64;
-        P->p[1] = (GLdouble) p.y / 64;
-        P->p[2] = 0;
-    }
-}
-
-FT_Vector conic(FT_Vector a, FT_Vector b, FT_Vector c, float u)
-{
-    float v = 1.0f - u; 
-    FT_Vector p;
-
-    p.x = (a.x * v * v +
-       2 * b.x * u * v +
-           c.x * u * u);
-    p.y = (a.y * v * v +
-       2 * b.y * u * v +
-           c.y * u * u);
-
-    return p;
-}
-
-static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
-{
-    FT_Outline *o = &slot->outline;
-
-    short pc = 0;
-    short pi = 0;
-    short ci = 0;
-
-    glyph->points = vecnew(16, sizeof (struct point));
-    glyph->space  = (GLdouble) slot->advance.x / 64;
-
-    if (o->n_points > 0)
-    {
-        FT_Vector init_p = o->points[0];
-        FT_Vector last_p;
-        FT_Vector virt_p;
-
-        while (pi < o->n_points && ci < o->n_contours)
-        {
-            if (o->tags[pi] & 0x1)
-            {
-                addpt(glyph->points, o->points[pi]);
-                last_p = o->points[pi];
-
-                if (pc == 0)
-                    init_p = last_p;
-            }
-            else if (o->tags[pi + 1] & 0x1)
-            {
-                addpt(glyph->points, conic(last_p, o->points[pi], o->points[pi + 1], 0.25f));
-                addpt(glyph->points, conic(last_p, o->points[pi], o->points[pi + 1], 0.50f));
-                addpt(glyph->points, conic(last_p, o->points[pi], o->points[pi + 1], 0.75f));
-
-                last_p = o->points[pi];
-            }
-            else
-            {
-                virt_p = midpt(o->points[pi], o->points[pi + 1]);
-
-                addpt(glyph->points, conic(last_p, o->points[pi], virt_p, 0.25f));
-                addpt(glyph->points, conic(last_p, o->points[pi], virt_p, 0.50f));
-                addpt(glyph->points, conic(last_p, o->points[pi], virt_p, 0.75f));
-                addpt(glyph->points, virt_p);
-
-                last_p = virt_p;
-            }
-
-            pc++;
-
-            if (pi == o->contours[ci])
-            {
-                addpt(glyph->points, init_p);
-                ci++;
-                pc = 0;
-            }
-
-            pi++;
-        }
-    }
 }
 
 /*===========================================================================*/
 
-void set_font(const char *filename, float e)
+void set_font(const char *filename, float e, int o)
 {
-    int c, i, n = vecnum(font);
+    int r, c, i, n = vecnum(font);
 
     epsilon = (GLdouble) e;
 
     /* If the requested font is already loaded, select it and return. */
 
     for (i = 0; i < n; ++i)
-        if (strcmp(F(i)->filename, filename) == 0)
+        if (F(i)->epsilon == e &&
+            F(i)->outline == o &&
+            strcmp(F(i)->filename, filename) == 0)
         {
             curr = i;
             return;
@@ -389,6 +263,7 @@ void set_font(const char *filename, float e)
 
     if ((i = vecadd(font)) >= 0)
     {
+        FT_Vector v;
         FT_Face face;
         void *buffer;
         size_t size;
@@ -399,7 +274,9 @@ void set_font(const char *filename, float e)
         {
             if ((FT_New_Memory_Face(library, buffer, size, 0, &face)) == 0)
             {
-                FT_Set_Pixel_Sizes(face, 0, 1);
+                /* This scale is arbitrary.  Final linegap is 1 GL unit. */
+
+                FT_Set_Pixel_Sizes(face, 0, SCALE);
 
                 /* Extract all necessary glyphs. */
 
@@ -407,10 +284,23 @@ void set_font(const char *filename, float e)
                     if (FT_Load_Glyph(face, FT_Get_Char_Index(face, c), 0) ==0)
                         read_glyph(&F(i)->glyph[c - MINGLYPH], face->glyph);
 
-                /* Select the successfully loaded font at current. */
+                /* Retrieve all kerning pairs. */
 
-                curr = i;
+                for (r = MINGLYPH; r < MAXGLYPH; ++r)
+                    for (c = MINGLYPH; c < MAXGLYPH; ++c)
+                    {
+                        FT_Get_Kerning(face, FT_Get_Char_Index(face, r),
+                                             FT_Get_Char_Index(face, c),
+                                             FT_KERNING_UNFITTED, &v);
+                        F(i)->kerns[r - MINGLYPH][c - MINGLYPH] = TO_DBL(v.x);
+                    }
+
+                /* Select the successfully loaded font as current. */
+
                 F(i)->filename = memdup(filename, strlen(filename) + 1, 1);
+                F(i)->epsilon  = e;
+                F(i)->outline  = o;
+                curr           = i;
             }
             else error("Failure making sense of '%s'", filename);
 
@@ -448,13 +338,15 @@ static void combine(GLdouble coords[3], void *vertex_data[3],
     *out_data = vecget(points, vecnum(points) - 1);
 }
 
+/*---------------------------------------------------------------------------*/
+
 void init_font(int i)
 {
     int j, k, l;
 
     if (F(i)->state == 0)
     {
-        GLuint lists = glGenLists(MAXGLYPH - MINGLYPH);
+        GLuint lists = glGenLists(NUMGLYPH);
         GLUtesselator *T;
 
         /* Set up a GLU tessalator to handle glyph outlines. */
@@ -466,7 +358,8 @@ void init_font(int i)
             gluTessCallback(T, GLU_TESS_VERTEX,       (_GLUfuncptr) vertex);
             gluTessCallback(T, GLU_TESS_END,          (_GLUfuncptr) glEnd);
 
-            gluTessProperty(T, GLU_TESS_BOUNDARY_ONLY, GL_TRUE);
+            if (F(i)->outline)
+                gluTessProperty(T, GLU_TESS_BOUNDARY_ONLY, GL_TRUE);
 
             /* Enumerate all glyphs. */
 
@@ -509,6 +402,17 @@ void init_font(int i)
     }
 }
 
+void fini_font(int i)
+{
+    if (F(i)->state == 1)
+    {
+        struct glyph *glyph = &F(i)->glyph[MINGLYPH];
+
+        glDeleteLists(glyph->list, NUMGLYPH);
+        F(i)->state = 0;
+    }
+}
+
 /*---------------------------------------------------------------------------*/
 
 void draw_font(int i, const char *text)
@@ -529,15 +433,73 @@ void draw_font(int i, const char *text)
         for (j = 0; j < n; ++j)
         {
             struct glyph *glyph = &F(i)->glyph[text[j] - MINGLYPH];
+            GLdouble d  = glyph->space;
+
+            /* Determine the kerning distance. */
+
+            if (j < n - 1)
+            {
+                int r = (int) text[j]     - MINGLYPH;
+                int c = (int) text[j + 1] - MINGLYPH;
+
+                d += F(i)->kerns[r][c];
+            }
 
             /* Invoke the glyph display, and advance the insertion point. */
 
             glCallList  (glyph->list);
-            glTranslatef(glyph->space, 0, 0);
+            glTranslated(d, 0, 0);
         }
     }
     glPopAttrib();
     glPopMatrix();
+}
+
+void bbox_font(int i, const char *text, float bound[6])
+{
+    int j, n = strlen(text);
+
+    GLdouble x = 0.0;
+
+    bound[0] = bound[3] = 0;
+    bound[1] = bound[4] = 0;
+    bound[2] = bound[5] = 0;
+
+    for (j = 0; j < n; ++j)
+    {
+        struct glyph *glyph = &F(i)->glyph[text[j] - MINGLYPH];
+        GLdouble d  = glyph->space;
+
+        int k, m = vecnum(glyph->points);
+
+        /* Determine the kerning distance. */
+
+        if (j < n - 1)
+        {
+            int r = (int) text[j]     - MINGLYPH;
+            int c = (int) text[j + 1] - MINGLYPH;
+
+            d += F(i)->kerns[r][c];
+        }
+
+        /* Include the current glyph in the bound. */
+
+        for (k = 0; k < m; ++k)
+        {
+            GLdouble *p = ((struct point *) vecget(glyph->points, k))->p;
+
+            bound[0] = MIN(bound[0], (float) (p[0] + x));
+            bound[1] = MIN(bound[1], (float)  p[1]);
+            bound[2] = MIN(bound[2], (float)  p[2]);
+            bound[3] = MAX(bound[3], (float) (p[0] + x));
+            bound[4] = MAX(bound[4], (float)  p[1]);
+            bound[5] = MAX(bound[5], (float)  p[2]);
+        }
+
+        /* Advance the insertion point. */
+
+        x += d;
+    }
 }
 
 /*===========================================================================*/

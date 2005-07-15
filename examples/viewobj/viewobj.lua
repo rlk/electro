@@ -44,7 +44,7 @@ function do_start()
 
     table.foreach(E.argument, add_object)
 
-    E.enable_timer(true)
+--  E.enable_timer(true)
 end
 
 function do_timer(dt)
