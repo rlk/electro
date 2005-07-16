@@ -19,6 +19,7 @@
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
+#include "image.h"
 #include "font.h"
 #include "string.h"
 
@@ -29,7 +30,8 @@ struct string
     int   count;
     int   font;
     char *text;
-    float color[4];
+    float fill[4];
+    float line[4];
 };
 
 static vector_t string;
@@ -62,10 +64,11 @@ int send_create_string(const char *text)
         S(i)->text     = memdup(text, n, 1);
         S(i)->font     = get_font();
         S(i)->count    = 1;
-        S(i)->color[0] = 1.0f;
-        S(i)->color[1] = 1.0f;
-        S(i)->color[2] = 1.0f;
-        S(i)->color[3] = 1.0f;
+
+        S(i)->line[0] = S(i)->fill[0] = 1.0f;
+        S(i)->line[1] = S(i)->fill[1] = 1.0f;
+        S(i)->line[2] = S(i)->fill[2] = 1.0f;
+        S(i)->line[3] = S(i)->fill[3] = 1.0f;
 
         send_index(n);
         send_array(text, n, 1);
@@ -84,42 +87,70 @@ void recv_create_string(void)
     S(i)->text = (char *) malloc(n);
     recv_array(S(i)->text, n, 1);
 
-    S(i)->font     = recv_index();
-    S(i)->count    = 1;
-    S(i)->color[0] = 1.0f;
-    S(i)->color[1] = 1.0f;
-    S(i)->color[2] = 1.0f;
-    S(i)->color[3] = 1.0f;
+    S(i)->font    = recv_index();
+    S(i)->count   = 1;
+
+    S(i)->line[0] = S(i)->fill[0] = 1.0f;
+    S(i)->line[1] = S(i)->fill[1] = 1.0f;
+    S(i)->line[2] = S(i)->fill[2] = 1.0f;
+    S(i)->line[3] = S(i)->fill[3] = 1.0f;
 
     recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_string_color(int i, float r, float g, float b)
+void send_set_string_fill(int i, float r, float g, float b, float a)
 {
-    send_event(EVENT_SET_STRING_COLOR);
+    send_event(EVENT_SET_STRING_FILL);
     send_index(i);
 
-    send_float((S(i)->color[0] = r));
-    send_float((S(i)->color[1] = g));
-    send_float((S(i)->color[2] = b));
+    send_float((S(i)->fill[0] = r));
+    send_float((S(i)->fill[1] = g));
+    send_float((S(i)->fill[2] = b));
+    send_float((S(i)->fill[3] = a));
 }
 
-void recv_set_string_color(void)
+void recv_set_string_fill(void)
 {
     int i = recv_index();
 
-    S(i)->color[0] = recv_float();
-    S(i)->color[1] = recv_float();
-    S(i)->color[2] = recv_float();
+    S(i)->fill[0] = recv_float();
+    S(i)->fill[1] = recv_float();
+    S(i)->fill[2] = recv_float();
+    S(i)->fill[3] = recv_float();
 }
 
-void send_set_string_value(int i, const char *text)
+/*---------------------------------------------------------------------------*/
+
+void send_set_string_line(int i, float r, float g, float b, float a)
+{
+    send_event(EVENT_SET_STRING_LINE);
+    send_index(i);
+
+    send_float((S(i)->line[0] = r));
+    send_float((S(i)->line[1] = g));
+    send_float((S(i)->line[2] = b));
+    send_float((S(i)->line[3] = a));
+}
+
+void recv_set_string_line(void)
+{
+    int i = recv_index();
+
+    S(i)->line[0] = recv_float();
+    S(i)->line[1] = recv_float();
+    S(i)->line[2] = recv_float();
+    S(i)->line[3] = recv_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_string_text(int i, const char *text)
 {
     int n = strlen(text) + 1;
 
-    send_event(EVENT_SET_STRING_VALUE);
+    send_event(EVENT_SET_STRING_TEXT);
     send_index(i);
     send_index(n);
     send_array(text, n, 1);
@@ -131,7 +162,7 @@ void send_set_string_value(int i, const char *text)
         strcpy(S(i)->text, text);
 }
 
-void recv_set_string_value(void)
+void recv_set_string_text(void)
 {
     int i = recv_index();
     int n = recv_index();
@@ -145,16 +176,6 @@ void recv_set_string_value(void)
 
 /*===========================================================================*/
 
-static void init_string(int i)
-{
-    init_font(S(i)->font);
-}
-
-static void fini_string(int i)
-{
-    fini_font(S(i)->font);
-}
-
 static int bbox_string(int i, float bound[6])
 {
     bbox_font(S(i)->font, S(i)->text, bound);
@@ -167,10 +188,19 @@ static void draw_string(int j, int i, int f, float a)
     {
         transform_entity(j);
 
-        glColor4f(S(i)->color[0],
-                  S(i)->color[1],
-                  S(i)->color[2], a * get_entity_alpha(j));
-        draw_font(S(i)->font, S(i)->text);
+        draw_image(0);
+
+        glColor4f(S(i)->fill[0],
+                  S(i)->fill[1],
+                  S(i)->fill[2],
+                  S(i)->fill[3] * a * get_entity_alpha(j));
+        draw_font(S(i)->font, S(i)->text, 0);
+
+        glColor4f(S(i)->line[0],
+                  S(i)->line[1],
+                  S(i)->line[2],
+                  S(i)->line[3] * a * get_entity_alpha(j));
+        draw_font(S(i)->font, S(i)->text, 1);
 
         draw_entity_tree(j, f, a * get_entity_alpha(j));
     }
@@ -194,8 +224,8 @@ static void free_string(int i)
 
 static struct entity_func string_func = {
     "string",
-    init_string,
-    fini_string,
+    NULL,
+    NULL,
     bbox_string,
     draw_string,
     dupe_string,

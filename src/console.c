@@ -272,9 +272,6 @@ void draw_console(void)
             int w = CONSOLE_COLS * GLYPH_W;
             int h = CONSOLE_ROWS * GLYPH_H;
 
-            int W = get_window_w();
-            int H = get_window_h();
-
             float s = (float) w / IMG_W;
             float t = (float) h / IMG_H;
 
@@ -299,11 +296,17 @@ void draw_console(void)
                 glLoadIdentity();
             }
 
+            /* This test pattern is useful for Varrier development. */
+
+#ifdef TEST_PATTERN
             glBindTexture(GL_TEXTURE_2D, 0);
             glEnable(GL_LINE_SMOOTH);
             
             glBegin(GL_LINES);
             {
+                int W = get_window_w();
+                int H = get_window_h();
+
                 glColor4f(1.0f, 1.0f, 0.0f, 0.5f);
 
                 glVertex2f(W / 2, 0);
@@ -327,11 +330,11 @@ void draw_console(void)
                                H / 2 + sin(TO_RAD(i)) * H / 2);
             }
             glEnd();
-
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#endif
 
             /* Draw the console background. */
 
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             init_back_image();
 
             glBegin(GL_QUADS);

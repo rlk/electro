@@ -12,11 +12,13 @@
 
 sound_on = true
 music_on = false
+stars_on = true
 
 -------------------------------------------------------------------------------
 -- Global variables, game state, and scene graph entities:
 
 high_score_file = "asteroids.dat"
+typeface        = "../VeraBd.ttf"
 
 state      = { }
 sound      = { }
@@ -83,20 +85,20 @@ end
 -- to any arbitrary display size.
 
 function init_viewport()
-    local width = 1280.0
-
     viewport.x, viewport.y, viewport.w, viewport.h = E.get_display_union()
+
+    local width = 512 + 384 * viewport.w / viewport.h
 
     viewport.a = viewport.h / viewport.w
     viewport.k = viewport.w / width
 
-    viewport.h =     width * viewport.a
-    viewport.B =    -width * viewport.a / 2
-    viewport.T =     width * viewport.a / 2
+    viewport.h =  width * viewport.a
+    viewport.B = -width * viewport.a / 2
+    viewport.T =  width * viewport.a / 2
 
-    viewport.w =     width 
-    viewport.L =    -width / 2
-    viewport.R =     width / 2
+    viewport.w =  width 
+    viewport.L = -width / 2
+    viewport.R =  width / 2
 end
 
 function init_scene()
@@ -104,11 +106,15 @@ function init_scene()
     local camera_3d = E.create_camera(E.camera_type_orthogonal)
     local light_L   = E.create_light (E.light_type_positional)
     local light_R   = E.create_light (E.light_type_positional)
-    local galaxy    = E.create_galaxy("../galaxy_hip.gal")
+    local galaxy    = nil
 
     space    = E.create_camera(E.camera_type_perspective)
     scene_2d = E.create_pivot()
     scene_3d = E.create_pivot()
+
+    if stars_on then
+        galaxy = E.create_galaxy("../galaxy_hip.gal")
+    end
 
     E.parent_entity(scene_2d, camera_2d)
     E.parent_entity(light_L,  camera_3d)
@@ -130,9 +136,11 @@ function init_scene()
 
     -- Configure the background stars.
 
-    E.set_galaxy_magnitude(galaxy, 100.0 * viewport.k)
-    E.set_entity_vert_prog(galaxy, "../star.vp")
-    E.set_entity_frag_prog(galaxy, "../star.fp")
+    if galaxy then
+       E.set_galaxy_magnitude(galaxy, 100.0 * viewport.k)
+       E.set_entity_vert_prog(galaxy, "../star.vp")
+       E.set_entity_frag_prog(galaxy, "../star.fp")
+    end
 
     -- Configure the lights.
 
@@ -176,11 +184,35 @@ function create_overlay(filename, scale, hidden)
     return sprite
 end
 
+function create_title(text, width, hidden)
+    E.set_typeface(typeface, 0.001, false)
+    local face  = E.create_string(text)
+
+    E.set_typeface(typeface, 0.001, true)
+    local line = E.create_string(text)
+
+    x0, y0, z0, x1, y1, z1 = E.get_entity_bound(face)
+
+    local scale = width / (x1 - x0)
+
+    E.parent_entity      (face, scene_2d)
+    E.parent_entity      (line, face)
+    E.set_entity_flag    (face, E.entity_flag_hidden, hidden)
+    E.set_entity_flag    (line, E.entity_flag_line_smooth, true)
+    E.set_entity_scale   (face, scale, scale, scale)
+    E.set_entity_alpha   (face, 0.5)
+    E.set_entity_alpha   (line, 2.0)
+    E.set_entity_position(face, -scale * (x1 - x0) / 2,
+                                -scale * (y1 - y0) / 2, 0.0)
+    return face
+end
+
 function init_overlay()
 
     -- Create all game state text overlays.
 
-    overlay.title = create_overlay("title.png", 1.00, true)
+
+    overlay.title = create_title("ASTEROIDS", 0.8 * viewport.w, true)
     overlay.ready = create_overlay("ready.png", 1.00, true)
     overlay.level = create_overlay("digit.png", 0.25, true)
     overlay.clear = create_overlay("clear.png", 1.00, true)

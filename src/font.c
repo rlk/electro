@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "opengl.h"
 #include "vector.h"
@@ -45,14 +46,15 @@ struct glyph
 {
     vector_t points;
     GLdouble space;
-    GLuint   list;
+    GLuint   fill;
+    GLuint   line;
 };
 
 struct font
 {
-    char     *filename;
-    GLdouble  epsilon;
-    GLboolean outline;
+    char    *filename;
+    GLdouble epsilon;
+    GLdouble outline;
 
     GLdouble     kerns[NUMGLYPH][NUMGLYPH]; 
     struct glyph glyph[NUMGLYPH];
@@ -152,12 +154,12 @@ void cubic(GLdouble p[3], const GLdouble a[3],
 
 static GLdouble epsilon = 0.001;
 
-static void add_conic(const GLdouble la[3],
+static void add_conic(vector_t points,
+                      const GLdouble la[3],
                       const GLdouble lc[3],
                       const GLdouble ca[3],
                       const GLdouble cb[3],
-                      const GLdouble cc[3], GLdouble u0, GLdouble u1,
-                      vector_t points)
+                      const GLdouble cc[3], GLdouble u0, GLdouble u1)
 {
     GLdouble lp[3];
     GLdouble cp[3];
@@ -173,8 +175,8 @@ static void add_conic(const GLdouble la[3],
     
     if (d[0] * d[0] + d[1] * d[1] > epsilon * epsilon)
     {
-        add_conic(la, cp, ca, cb, cc, u0, uu, points);
-        add_conic(cp, lc, ca, cb, cc, uu, u1, points);
+        add_conic(points, la, cp, ca, cb, cc, u0, uu);
+        add_conic(points, cp, lc, ca, cb, cc, uu, u1);
     }
     else
         add_point(points, lc);
@@ -210,7 +212,7 @@ static int conic_to(FT_Vector *ct, FT_Vector *to, vector_t points)
     get_point(a, points);
     new_point(b, ct);
     new_point(c, to);
-    add_conic(a, c, a, b, c, 0, 1, points);
+    add_conic(points, a, c, a, b, c, 0, 1);
 
     return 0;
 }
@@ -243,7 +245,7 @@ static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
 
 /*===========================================================================*/
 
-void send_set_font(const char *filename, float e, int o)
+void send_set_font(const char *filename, float e, float o)
 {
     int r, c, i, n = vecnum(font);
 
@@ -307,7 +309,7 @@ void send_set_font(const char *filename, float e, int o)
 
                 send_event(EVENT_SET_FONT);
                 send_float(F(i)->epsilon);
-                send_index(F(i)->outline);
+                send_float(F(i)->outline);
                 send_array(F(i)->kerns, NUMGLYPH * NUMGLYPH, sizeof (double));
 
                 for (c = 0; c < NUMGLYPH; ++c)
@@ -331,7 +333,7 @@ void recv_set_font(void)
     if ((i = vecadd(font)) >= 0)
     {
         F(i)->epsilon = recv_float();
-        F(i)->outline = recv_index();
+        F(i)->outline = recv_float();
 
         recv_array(F(i)->kerns, NUMGLYPH * NUMGLYPH, sizeof (double));
 
@@ -373,61 +375,134 @@ static void combine(GLdouble coords[3], void *vertex_data[3],
 
 /*---------------------------------------------------------------------------*/
 
-void init_font(int i)
+static void tess_glyph(GLUtesselator *T, struct glyph *glyph)
 {
-    int j, k, l;
+    int i, j, n = vecnum(glyph->points);
 
+    gluTessBeginPolygon(T, glyph->points);
+    {
+        for (i = 0, j = 0; i < n; ++i)
+            if (j == i)
+            {
+                gluTessBeginContour(T);
+                gluTessVertex(T, vecget(glyph->points, i),
+                                 vecget(glyph->points, i));
+            }
+            else if (veccmp(glyph->points, i, j) == 0)
+            {
+                gluTessEndContour(T);
+                j = i + 1;
+            }
+            else
+                gluTessVertex(T, vecget(glyph->points, i),
+                                 vecget(glyph->points, i));
+    }
+    gluTessEndPolygon(T);
+}
+
+static void line_stroke(vector_t points, int first, int last, GLdouble k)
+{
+    int i, n = last - first;
+
+    GLdouble pn[2];
+    GLdouble qn[2];
+    GLdouble rn[2];
+    GLdouble m, l;
+
+    glBegin(GL_QUAD_STRIP);
+    {
+        for (i = 0; i <= n; i++)
+        {
+            const int a = first + (i + n - 1) % n;
+            const int b = first +  i;
+            const int c = first + (i     + 1) % n;
+
+            const GLdouble *p = ((struct point *) vecget(points, a))->p;
+            const GLdouble *q = ((struct point *) vecget(points, b))->p;
+            const GLdouble *r = ((struct point *) vecget(points, c))->p;
+
+            pn[0] = -(q[1] - p[1]);
+            pn[1] =  (q[0] - p[0]);
+            l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
+            pn[0] /= l;
+            pn[1] /= l;
+
+            rn[0] = -(r[1] - q[1]);
+            rn[1] =  (r[0] - q[0]);
+            l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
+            rn[0] /= l;
+            rn[1] /= l;
+
+            qn[0] = pn[0] + rn[0];
+            qn[1] = pn[1] + rn[1];
+            l = sqrt(qn[0] * qn[0] + qn[1] * qn[1]);
+            qn[0] /= l;
+            qn[1] /= l;
+
+            m = k / (qn[0] * pn[0] + qn[1] * pn[1]);
+
+            glVertex3d(q[0] - qn[0] * 0, q[1] - qn[1] * 0, q[2]);
+            glVertex3d(q[0] + qn[0] * m, q[1] + qn[1] * m, q[2]);
+        }
+    }
+    glEnd();
+}
+
+static void line_glyph(struct glyph *glyph, GLdouble O)
+{
+    int b, i, n = vecnum(glyph->points);
+
+    for (b = 0, i = 1; i < n; ++i)
+        if (veccmp(glyph->points, b, i) == 0)
+        {
+            line_stroke(glyph->points, b, i, O);
+            i = b = i + 1;
+        }
+}
+
+void init_font(int i, GLdouble O)
+{
     if (F(i)->state == 0)
     {
-        GLuint lists = glGenLists(NUMGLYPH);
+        GLuint fills = glGenLists(NUMGLYPH);
+        GLuint lines = glGenLists(NUMGLYPH);
+
         GLUtesselator *T;
 
-        /* Set up a GLU tessalator to handle glyph outlines. */
+        /* Set up a GLU tessalator to handle glyphs. */
 
         if ((T = gluNewTess()))
         {
+            int j;
+
             gluTessCallback(T, GLU_TESS_BEGIN,        (_GLUfuncptr) glBegin);
             gluTessCallback(T, GLU_TESS_COMBINE_DATA, (_GLUfuncptr) combine);
             gluTessCallback(T, GLU_TESS_VERTEX,       (_GLUfuncptr) vertex);
             gluTessCallback(T, GLU_TESS_END,          (_GLUfuncptr) glEnd);
 
-            if (F(i)->outline)
-                gluTessProperty(T, GLU_TESS_BOUNDARY_ONLY, GL_TRUE);
-
             /* Enumerate all glyphs. */
 
             for (j = MINGLYPH; j < MAXGLYPH; ++j)
             {
-                struct glyph *glyph = &F(i)->glyph[j - MINGLYPH];
+                struct glyph *glyph = F(i)->glyph + j - MINGLYPH;
 
                 if (glyph->points)
                 {
-                    glyph->list = lists + j - MINGLYPH;
+                    glyph->fill = fills + j - MINGLYPH;
+                    glyph->line = lines + j - MINGLYPH;
 
                     /* Tessalate the glyph to a display list. */
 
-                    glNewList(glyph->list, GL_COMPILE);
+                    glNewList(glyph->fill, GL_COMPILE);
                     glNormal3f(0, 0, 1);
+                    tess_glyph(T, glyph);
+                    glEndList();
 
-                    gluTessBeginPolygon(T, glyph->points);
-                    {
-                        for (k = 0, l = 0; k < vecnum(glyph->points); ++k)
-                            if (l == k)
-                            {
-                                gluTessBeginContour(T);
-                                gluTessVertex(T, vecget(glyph->points, k),
-                                              vecget(glyph->points, k));
-                            }
-                            else if (veccmp(glyph->points, k, l) == 0)
-                            {
-                                gluTessEndContour(T);
-                                l = k + 1;
-                            }
-                            else
-                                gluTessVertex(T, vecget(glyph->points, k),
-                                              vecget(glyph->points, k));
-                    }
-                    gluTessEndPolygon(T);
+                    /* Tessalate the outline to a display list. */
+
+                    glNewList(glyph->line, GL_COMPILE);
+                    glNormal3f(0, 0, 1);
+                    line_glyph(glyph, O);
                     glEndList();
                 }
             }
@@ -441,18 +516,20 @@ void fini_font(int i)
 {
     if (F(i)->state == 1)
     {
-        struct glyph *glyph = &F(i)->glyph[MINGLYPH];
+        struct glyph *glyph = F(i)->glyph + MINGLYPH;
 
-        glDeleteLists(glyph->list, NUMGLYPH);
+        glDeleteLists(glyph->fill, NUMGLYPH);
+        glDeleteLists(glyph->line, NUMGLYPH);
+
         F(i)->state = 0;
     }
 }
 
 /*---------------------------------------------------------------------------*/
 
-void draw_font(int i, const char *text)
+void draw_font(int i, const char *text, int line)
 {
-    init_font(i);
+    init_font(i, F(i)->outline);
 
     glPushMatrix();
     glPushAttrib(GL_POLYGON_BIT);
@@ -482,7 +559,11 @@ void draw_font(int i, const char *text)
 
             /* Invoke the glyph display, and advance the insertion point. */
 
-            glCallList  (glyph->list);
+            if (line)
+                glCallList(glyph->line);
+            else
+                glCallList(glyph->fill);
+
             glTranslated(d, 0, 0);
         }
     }

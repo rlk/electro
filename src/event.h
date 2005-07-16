@@ -45,19 +45,20 @@
 #define EVENT_SET_CAMERA_OFFSET    23
 #define EVENT_SET_CAMERA_STEREO    24
 #define EVENT_SET_SPRITE_RANGE     25
-#define EVENT_SET_STRING_COLOR     26
-#define EVENT_SET_STRING_VALUE     27
-#define EVENT_SET_LIGHT_COLOR      28
-#define EVENT_SET_BACKGROUND       29
-#define EVENT_SET_FONT             30
+#define EVENT_SET_STRING_FILL      26
+#define EVENT_SET_STRING_LINE      27
+#define EVENT_SET_STRING_TEXT      28
+#define EVENT_SET_LIGHT_COLOR      29
+#define EVENT_SET_BACKGROUND       30
+#define EVENT_SET_FONT             31
 
-#define EVENT_ADD_TILE             31
-#define EVENT_SET_TILE_FLAG        32
-#define EVENT_SET_TILE_POSITION    33
-#define EVENT_SET_TILE_VIEWPORT    34
-#define EVENT_SET_TILE_LINE_SCREEN 35
-#define EVENT_SET_TILE_VIEW_MIRROR 36
-#define EVENT_SET_TILE_VIEW_OFFSET 37
+#define EVENT_ADD_TILE             32
+#define EVENT_SET_TILE_FLAG        33
+#define EVENT_SET_TILE_POSITION    34
+#define EVENT_SET_TILE_VIEWPORT    35
+#define EVENT_SET_TILE_LINE_SCREEN 36
+#define EVENT_SET_TILE_VIEW_MIRROR 37
+#define EVENT_SET_TILE_VIEW_OFFSET 38
 
 /*---------------------------------------------------------------------------*/
 

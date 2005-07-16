@@ -91,8 +91,9 @@ static void client_recv(void)
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
         case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
         case EVENT_SET_SPRITE_RANGE:     recv_set_sprite_range();     break;
-        case EVENT_SET_STRING_COLOR:     recv_set_string_color();     break;
-        case EVENT_SET_STRING_VALUE:     recv_set_string_value();     break;
+        case EVENT_SET_STRING_FILL:      recv_set_string_fill();      break;
+        case EVENT_SET_STRING_LINE:      recv_set_string_line();      break;
+        case EVENT_SET_STRING_TEXT:      recv_set_string_text();      break;
         case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
         case EVENT_SET_BACKGROUND:       recv_set_background();       break;
         case EVENT_SET_FONT:             recv_set_font();             break;

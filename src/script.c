@@ -544,16 +544,16 @@ static int E_get_modifier(lua_State *L)
 static int E_set_typeface(lua_State *L)
 {
     float e = 0.001f;
-    int   o = 0;
+    float o = 0.010f;
 
     switch (lua_gettop(L))
     {
-    case 1: send_set_font(L_getstring (L, -1), e, o); break;
-    case 2: send_set_font(L_getstring (L, -2),
-                          L_getnumber (L, -1), o);    break;
-    case 3: send_set_font(L_getstring (L, -3),
-                          L_getnumber (L, -2),
-                          L_getboolean(L, -1));       break;
+    case 1: send_set_font(L_getstring(L, -1), e, o); break;
+    case 2: send_set_font(L_getstring(L, -2),
+                          L_getnumber(L, -1), o);    break;
+    case 3: send_set_font(L_getstring(L, -3),
+                          L_getnumber(L, -2),
+                          L_getnumber(L, -1));       break;
     }
 
     return 0;
@@ -1001,19 +1001,30 @@ static int E_set_light_color(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* String controls                                                           */
 
-static int E_set_string_color(lua_State *L)
+static int E_set_string_fill(lua_State *L)
 {
-    send_set_string_color(E_getstring(L, -4),
-                          L_getnumber(L, -3),
-                          L_getnumber(L, -2),
-                          L_getnumber(L, -1));
+    send_set_string_fill(E_getstring(L, -5),
+                         L_getnumber(L, -4),
+                         L_getnumber(L, -3),
+                         L_getnumber(L, -2),
+                         L_getnumber(L, -1));
     return 0;
 }
 
-static int E_set_string_value(lua_State *L)
+static int E_set_string_line(lua_State *L)
 {
-    send_set_string_value(E_getstring(L, -2),
-                          L_getstring(L, -1));
+    send_set_string_line(E_getstring(L, -5),
+                         L_getnumber(L, -4),
+                         L_getnumber(L, -3),
+                         L_getnumber(L, -2),
+                         L_getnumber(L, -1));
+    return 0;
+}
+
+static int E_set_string_text(lua_State *L)
+{
+    send_set_string_text(E_getstring(L, -2),
+                         L_getstring(L, -1));
     return 0;
 }
 
@@ -1377,8 +1388,9 @@ void luaopen_electro(lua_State *L)
 
     /* String control. */
 
-    lua_function(L, "set_string_color",     E_set_string_color);
-    lua_function(L, "set_string_value",     E_set_string_value);
+    lua_function(L, "set_string_fill",      E_set_string_fill);
+    lua_function(L, "set_string_line",      E_set_string_line);
+    lua_function(L, "set_string_text",      E_set_string_text);
 
     /* Sound control. */
 

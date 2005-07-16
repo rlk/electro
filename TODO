@@ -1,19 +1,21 @@
-Brain in jar.
+Text texture
+texture transform
+Uniform API
+Object geometry create
 Varrier finalize
 Lua state flush / app switch
 profilers
+Tracker buttons
 display volume query / smart viewobj
 new billboard transform
 cooler vortex demo
-compressed textures
-consider killing fragments
+
+
+App
+    Brain in jar.
 
 Test total queue throughput.
 Test re-texture throughput on all clusters.
     (subimage/buffer reuse)
-Uniform API
-Object geometry create
+consider killing fragments
 Particle system
-Tracker buttons
-
-Scale and billboard frustum (thorough test)
