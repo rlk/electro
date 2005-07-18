@@ -26,10 +26,10 @@ function do_start()
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
 
-    E.set_typeface(typeface, 0.0001, 0.04)
+    E.set_typeface(typeface, 0.001, 0.04)
     thing1 = E.create_string("Electro")
 
-    E.set_typeface(typeface, 0.0001, 0.02)
+    E.set_typeface(typeface, 0.001, 0.02)
     thing2 = E.create_string("Electro")
 
 
@@ -40,10 +40,10 @@ function do_start()
 
     E.set_string_fill(thing1, 1.0, 1.0, 0.0, 0.5)
     E.set_string_line(thing1, 1.0, 1.0, 1.0, 0.5)
-    E.set_string_fill(thing2, 0.0, 0.0, 0.0, 0.0)
+    E.set_string_fill(thing2, 1.0, 1.0, 0.0, 0.5)
     E.set_string_line(thing2, 1.0, 1.0, 1.0, 1.0)
 
-    E.set_entity_flag(thing1, E.entity_flag_unlit,       true)
+--    E.set_entity_flag(thing1, E.entity_flag_unlit,       true)
     E.set_entity_flag(thing2, E.entity_flag_unlit,       true)
     E.set_entity_flag(thing1, E.entity_flag_line_smooth, true)
     E.set_entity_flag(thing2, E.entity_flag_line_smooth, true)
@@ -54,6 +54,7 @@ function do_start()
     E.set_entity_position(pivot,  0.0, -10.0, -10.0)
 
     E.set_entity_position(thing1, -(x1 - x0) / 2, -(y1 - y0) / 2, 0.0)
+    E.set_entity_position(thing2, 0, 0, 0.001)
 --    E.set_entity_position(thing2, -(x1 - x0) / 2, -(y1 - y0) / 2 + 0.5, 0.0)
 
 --  E.set_camera_stereo(camera, E.stereo_mode_quad, L, 0, 0, R, 0, 0)

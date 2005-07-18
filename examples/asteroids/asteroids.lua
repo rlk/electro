@@ -185,32 +185,33 @@ function create_overlay(filename, scale, hidden)
 end
 
 function create_title(text, width, hidden)
-    E.set_typeface(typeface, 0.001, false)
-    local face  = E.create_string(text)
+    E.set_typeface(typeface, 0.0001, 0.06250)
+    local string1 = E.create_string(text)
 
-    E.set_typeface(typeface, 0.001, true)
-    local line = E.create_string(text)
+    E.set_typeface(typeface, 0.0001, 0.03125)
+    local string2 = E.create_string(text)
 
-    x0, y0, z0, x1, y1, z1 = E.get_entity_bound(face)
+    x0, y0, z0, x1, y1, z1 = E.get_entity_bound(string1)
 
     local scale = width / (x1 - x0)
 
-    E.parent_entity      (face, scene_2d)
-    E.parent_entity      (line, face)
-    E.set_entity_flag    (face, E.entity_flag_hidden, hidden)
-    E.set_entity_flag    (line, E.entity_flag_line_smooth, true)
-    E.set_entity_scale   (face, scale, scale, scale)
-    E.set_entity_alpha   (face, 0.5)
-    E.set_entity_alpha   (line, 2.0)
-    E.set_entity_position(face, -scale * (x1 - x0) / 2,
-                                -scale * (y1 - y0) / 2, 0.0)
-    return face
+    E.parent_entity      (string1, scene_2d)
+    E.parent_entity      (string2, string1)
+    E.set_entity_flag    (string1, E.entity_flag_hidden, hidden)
+    E.set_string_fill    (string1, 1.0, 1.0, 0.0, 0.25)
+    E.set_string_line    (string1, 1.0, 1.0, 0.8, 0.50)
+    E.set_string_fill    (string2, 1.0, 1.0, 0.0, 0.25)
+    E.set_string_line    (string2, 1.0, 1.0, 1.0, 1.00)
+    E.set_entity_scale   (string1, scale, scale, scale)
+    E.set_entity_position(string2, 0, 0, 0.001)
+    E.set_entity_position(string1, -scale * (x1 - x0) / 2,
+                                   -scale * (y1 - y0) / 2, 0.0)
+    return string1
 end
 
 function init_overlay()
 
     -- Create all game state text overlays.
-
 
     overlay.title = create_title("ASTEROIDS", 0.8 * viewport.w, true)
     overlay.ready = create_overlay("ready.png", 1.00, true)

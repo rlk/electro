@@ -1,0 +1,42 @@
+
+i = create_object_vert(o, x, y, z, nx, ny, nz, u, v)
+i = create_object_face(s, i, j, k)
+i = create_object_edge(s, i, j)
+i = create_object_mesh(o, i)
+
+    delete_object_vert(o, i)
+    delete_object_face(o, i)
+    delete_object_edge(o, i)
+    delete_object_mesh(o, i)
+
+      set_object_vert(o, x, y, z, nx, ny, nz, u, v)
+      set_object_face(s, i, j, k)
+      set_object_edge(s, i, j)
+      set_object_mesh(o, i)
+
+... = get_object_vert(o, i)
+... = get_object_face(o, i)
+... = get_object_edge(o, i)
+... = get_object_mesh(o, i)
+
+n = get_object_vert_count(o, i)
+n = get_object_face_count(o, i)
+n = get_object_edge_count(o, i)
+n = get_object_surf_count(o, i)
+
+
+set_brush_image
+set_brush_color
+
+set_sprite_brush
+set_string_fill_brush
+set_string_line_brush
+
+brush has
+     image
+     materials
+     transform
+     flags
+
+sprites and strings create objects
+several entity flags become brush flags

@@ -87,27 +87,6 @@ static int new_entity(void)
     return vecadd(entity);
 }
 
-int startup_entity(void)
-{
-    if ((entity = vecnew(256, sizeof (struct entity))))
-    {
-        E(vecadd(entity))->type = TYPE_ROOT;
-
-        entity_func[TYPE_NULL]   = NULL;
-        entity_func[TYPE_ROOT]   = NULL;
-        entity_func[TYPE_CAMERA] = startup_camera();
-        entity_func[TYPE_SPRITE] = startup_sprite();
-        entity_func[TYPE_OBJECT] = startup_object();
-        entity_func[TYPE_STRING] = startup_string();
-        entity_func[TYPE_GALAXY] = startup_galaxy();
-        entity_func[TYPE_LIGHT]  = startup_light();
-        entity_func[TYPE_PIVOT]  = startup_pivot();
-
-        return 1;
-    }
-    return 0;
-}
-
 /*===========================================================================*/
 
 int entity_data(int i)
@@ -967,3 +946,25 @@ void fini_entities(void)
 }
 
 /*===========================================================================*/
+
+int startup_entity(void)
+{
+    if ((entity = vecnew(256, sizeof (struct entity))))
+    {
+        E(vecadd(entity))->type = TYPE_ROOT;
+
+        entity_func[TYPE_NULL]   = NULL;
+        entity_func[TYPE_ROOT]   = NULL;
+        entity_func[TYPE_CAMERA] = startup_camera();
+        entity_func[TYPE_SPRITE] = startup_sprite();
+        entity_func[TYPE_OBJECT] = startup_object();
+        entity_func[TYPE_STRING] = startup_string();
+        entity_func[TYPE_GALAXY] = startup_galaxy();
+        entity_func[TYPE_LIGHT]  = startup_light();
+        entity_func[TYPE_PIVOT]  = startup_pivot();
+
+        return 1;
+    }
+    return 0;
+}
+

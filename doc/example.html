@@ -1,0 +1,439 @@
+<html>
+<head>
+  <style type="text/css">
+    body   { text-align:   justify;
+             margin-right: 12%;
+             margin-left:  12%; }
+    h1     { margin-left: -12%; }
+    h2     { margin-left:  -9%; }
+    h3     { margin-left:  -6%; }
+    h4     { margin-left:  -3%; }
+    dt     { background: #EEEEEE; padding: 0.5em; }
+    pre    { background: #FFFFCC; padding: 1.0em; }
+    p.note { background: #CCFFFF; padding: 1.0em; }
+  </style>
+</head>
+<body>
+
+<!---------------------------------------------------------------------------->
+
+<pre style="font-size:3em; font-weight:bold; padding: 0.25em">
+  |||
+  O o  Electro
+   -
+</pre>
+
+<!---------------------------------------------------------------------------->
+
+<h1> Example </h1>
+
+<p> What follows is a complete example of a small Electro application.
+It implements the Fifteen Puzzle, the ubiquitous sliding-tile game
+where an image is cut into 16 squares, one tile is removed, and the
+remaining tiles are scrambled.  The object is to slide the tiles back
+into place to restore the image. </p>
+
+<p> Each important chunk of code is described in turn, and the
+complete, commented source code is presented below for copying and
+pasting if necessary. </p>
+
+<pre>
+image_file = "venus.png"
+
+camera  = nil
+numbers = { }
+sprites = { }
+
+curr_i = 4
+curr_j = 4
+time   = 0
+</pre>
+
+<p> These are the global variables.  The image filename at the top
+allows the image to be changed easily.  The <tt>camera</tt> and
+<tt>sprites</tt> variables hold the Electro objects that make up the
+scene graph.  The graph consists of a single orthogonal camera with 16
+sprite objects as children.  This hierarchy is constructed at startup,
+described below. </p>
+
+<p> The <tt>numbers</tt> variable will be initialized to a 4x4 table
+of tables that indicate which tile appears at each row and column.
+Each element <tt>numbers[i][j]</tt> will give an index into the
+<tt>sprites</tt> table.  By moving indices around in the
+<tt>numbers</tt> table, we move tiles around in the puzzle. </p>
+
+<p> The <tt>curr_i</tt> and <tt>curr_j</tt> globals track the current
+location of the blank spot.  The <tt>time</tt> variable allows the
+total amount of time passed to be tracked by the <tt>do_timer</tt>
+function. </p>
+
+<pre>
+function solved()
+    local k = 1
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            if numbers[i][j] == k then
+                k = k + 1
+            else
+                return false
+            end
+        end
+    end
+    return true
+end
+</pre>
+
+<p> The <tt>solved</tt> function lets us know when the puzzle is
+complete.  When solved, the tile numbers will read in order from left
+to right and top to bottom.  This function scans the rows and columns
+of the <tt>numbers</tt> table checking for that property and returning
+a boolean indicating the result. </p>
+
+<pre>
+function move_sprite(sprite, i, j)
+    E.set_entity_position(sprite, view_x + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_y + view_h * (4 - i) / 4 + view_h / 8, 0)
+end
+</pre>
+
+<p> This is an important bit of Electro code.  Given a puzzle row
+<tt>i</tt> and column <tt>j</tt>, the <tt>move_sprite</tt> function
+positions the tile object <tt>sprite</tt> at the correct location on
+screen.  This function will be called any time a tile moves.  To do
+its job, it must know the bounds of the display and do some
+trivial (but annoying) math to map puzzle row and column onto
+window x and y.</p>
+
+<pre>
+function move_piece(di, dj)
+    local next_i = curr_i + di
+    local next_j = curr_j + dj
+
+    if 1 &lt;= next_i and next_i &lt;= 4 and
+       1 &lt;= next_j and next_j &lt;= 4 then
+
+        temp                    = numbers[curr_i][curr_j]
+        numbers[curr_i][curr_j] = numbers[next_i][next_j]
+        numbers[next_i][next_j] = temp
+
+        move_sprite(sprites[numbers[curr_i][curr_j]], curr_i, curr_j)
+        move_sprite(sprites[numbers[next_i][next_j]], next_i, next_j)
+
+        curr_i = next_i
+        curr_j = next_j
+
+        E.set_entity_flag(sprites[16], E.entity_flag_hidden, not solved())
+
+        return true
+    else
+        return false
+    end
+end
+</pre>
+
+<p> The <tt>move_piece</tt> function is the meat of the fifteen
+puzzle.  The arguments <tt>di</tt> and <tt>dj</tt> indicate the row
+and column change of the blank space respectively.  The function
+begins by confirming that the move is valid&#8212;that the blank space
+would not be moving off the grid.  If valid, the contents of the blank
+(in reality, the hidden 16th piece of the puzzle) are swapped with the
+contents of the destination space.  The two sprites in question are
+repositioned, and the puzzle is checked for completeness.  The
+<tt>hidden</tt> flag of the 16th piece is set to the opposite of the
+solved stutus, thus the 16th piece is displayed when the puzzle is
+solved, but not otherwise. </p>
+
+<p> The return value indicates whether the requested move is valid.
+This is used when generating random moves... </p>
+
+<pre>
+function move_random()
+    while true do
+        local d = math.random(-1, 1)
+
+        if math.random(0, 1) == 0 then
+            if move_piece(d, 0) then
+                return
+            end
+        else
+            if move_piece(0, d) then
+                return
+            end
+        end
+    end
+end
+</pre>
+
+<p> Random moves are useful for scrambling the puzzle during
+initialization, and for running the app in a non-interactive
+screensaver mode.  If we just pick a tile motion at random, there is
+no guarantee that it will be valid, so we loop until
+<tt>move_piece</tt> returns <tt>true</tt> to indicate success. </p>
+
+<pre>
+function do_timer(dt)
+    time = time + dt
+
+    if time &gt; 0.25 then
+        move_random()
+        time = 0
+        return true
+    end
+
+    return false
+end
+</pre>
+
+<p> The <tt>do_timer</tt> callback is where non-interactive random
+motions are generated.  It tracks the amount of time that has passed,
+and triggers a move after a quarter of a second.  It returns
+<tt>true</tt> to indicate that a move has occurred and the screen
+needs to be redrawn. </p>
+
+<pre>
+function do_keyboard(k, s)
+    if s then
+        if k == 276 then move_piece( 0,  1) end
+        if k == 275 then move_piece( 0, -1) end
+        if k == 273 then move_piece( 1,  0) end
+        if k == 274 then move_piece(-1,  0) end
+
+        if k == 282 then E.enable_timer(true)  end
+        if k == 283 then E.enable_timer(false) end
+    end
+    return true
+end
+</pre>
+
+<p> The <tt>do_keyboard</tt> callback is where interactive motions are
+generated.  Arrow-key-presses trigger moves.  The F1 and F2 keys
+enable and disable the <tt>do_timer</tt> callback, in effect putting
+the puzzle into non-interactive mode.  For simplicity, all keypresses
+trigger a screen update.  This is unnecessary, but brief.</p>
+
+<pre>
+function do_start()
+
+    view_x, view_y, view_w, view_h = E.get_display_union()
+
+    camera = E.create_camera(E.camera_type_orthogonal)
+    E.set_entity_flag(camera, E.entity_flag_unlit, true);
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
+
+    for i = 1, 16 do
+        sprites[i] = E.create_sprite(image_file)
+
+        local sw, sh = E.get_sprite_size(sprites[i])
+
+        E.parent_entity(sprites[i], camera)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
+                                       0.25 * view_h / sh, 1.0)
+    end
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            local x0 = (j - 1) / 4
+            local x1 = (j - 0) / 4
+            local y0 = (4 - i) / 4
+            local y1 = (5 - i) / 4
+
+            move_sprite(sprites[numbers[i][j]], i, j)
+            E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
+        end
+    end
+
+    return true
+end
+</pre>
+
+<p> Finally, here is the <tt>do_start</tt> function.  For the fifteen
+puzzle, we begin by creating an orthogonal camera, which will be the root
+of our hierarchy.  We want all of our puzzle pieces to be rendered at
+full brightness, so we disable lighting on the entire scene by setting
+the <tt>unlit</tt> flag at this root.  We then create 16 child sprite
+objects to represent the puzzle tiles.  Together, these 16 sprites should
+fill the display, so we must determine both the size of the display and
+the size of the sprite in order to scale each sprite to 1/16th of the
+area of the display.</p>
+
+<p> Then, we create the <tt>numbers</tt> table.  It is simply a 4x4
+table of tables initialized to a solved configuration.  We use the row
+and column numbers of this table to position our 16 sprites on screen.
+We also use each sprite's initial row and column number to specify the
+sprite bounds, that is, we determine what subset of the image should
+be mapped onto each sprite. </p>
+
+<p> That is all there is to it. </p>
+
+<!---------------------------------------------------------------------------->
+
+<h2> The full source of the Fifteen Puzzle example </h2>
+
+<pre>
+image_file = "venus.jpg"
+
+view_x = 0
+view_y = 0
+view_w = 0
+view_h = 0
+
+camera  = nil
+numbers = { }
+sprites = { }
+
+curr_i  = 4
+curr_j  = 4
+time    = 0
+
+function move_sprite(sprite, i, j)
+    E.set_entity_position(sprite, view_x + view_w * (j - 1) / 4 + view_w / 8,
+                                  view_y + view_h * (4 - i) / 4 + view_h / 8, 0)
+end
+
+function solved()
+    local k = 1
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            if numbers[i][j] == k then
+                k = k + 1
+            else
+                return false
+            end
+        end
+    end
+    return true
+end
+
+function move_piece(di, dj)
+    local next_i = curr_i + di
+    local next_j = curr_j + dj
+
+    -- Confirm that the move is valid.
+
+    if 1 &lt;= next_i and next_i &lt;= 4 and
+       1 &lt;= next_j and next_j &lt;= 4 then
+
+        -- Swap the moving piece with the blank piece.
+
+        temp                    = numbers[curr_i][curr_j]
+        numbers[curr_i][curr_j] = numbers[next_i][next_j]
+        numbers[next_i][next_j] = temp
+
+        -- Set the new on-screen locations of the moving sprites.
+
+        move_sprite(sprites[numbers[curr_i][curr_j]], curr_i, curr_j)
+        move_sprite(sprites[numbers[next_i][next_j]], next_i, next_j)
+
+        curr_i = next_i
+        curr_j = next_j
+
+        -- Set the visibility of the 16th piece to indicate solution.
+
+        E.set_entity_flag(sprites[16], E.entity_flag_hidden, not solved())
+
+        return true
+    else
+        return false
+    end
+end
+
+function move_random()
+    while true do
+        local d = math.random(-1, 1)
+
+        if math.random(0, 1) == 0 then
+            if move_piece(d, 0) then
+                return
+            end
+        else
+            if move_piece(0, d) then
+                return
+            end
+        end
+    end
+end
+
+function do_keyboard(k, s)
+    if s then
+        -- If an arrow key has been pressed, move a puzzle piece.
+
+        if k == 276 then move_piece( 0,  1) end
+        if k == 275 then move_piece( 0, -1) end
+        if k == 273 then move_piece( 1,  0) end
+        if k == 274 then move_piece(-1,  0) end
+
+        -- If autoplay has been switched, toggle the idle function.
+
+        if k == 283 then E.enable_timer(true)  end
+        if k == 284 then E.enable_timer(false) end
+    end
+    return true
+end
+
+function do_timer(dt)
+    time = time + dt
+
+    if time &gt; 0.25 then
+        move_random()
+        time = 0
+      return true
+    end
+
+    return false
+end
+
+function do_start()
+
+    view_x, view_y, view_w, view_h = E.get_display_union()
+
+    camera = E.create_camera(E.camera_type_orthogonal)
+    E.set_entity_flag(camera, E.entity_flag_unlit, true);
+
+    -- Initialize an array that maps rows and columns onto puzzle pieces.
+
+    numbers[1] = {  1,  2,  3,  4 }
+    numbers[2] = {  5,  6,  7,  8 }
+    numbers[3] = {  9, 10, 11, 12 }
+    numbers[4] = { 13, 14, 15, 16 }
+
+    -- Add 16 sprites and scale each to 1/16th the size of the display.
+
+    for i = 1, 16 do
+        sprites[i] = E.create_sprite(image_file)
+
+        local sw, sh = E.get_sprite_size(sprites[i])
+
+        E.parent_entity(sprites[i], camera)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
+                                       0.25 * view_h / sh, 1.0)
+    end
+
+    -- Assign 1/16th of the image to each sprite.
+
+    for i = 1, 4 do
+        for j = 1, 4 do
+            local x0 = (j - 1) / 4
+            local x1 = (j - 0) / 4
+            local y0 = (4 - i) / 4
+            local y1 = (5 - i) / 4
+
+            move_sprite(sprites[numbers[i][j]], i, j)
+            E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
+        end
+    end
+
+    return true
+end
+
+do_start()
+</pre>
+
+<!---------------------------------------------------------------------------->
+
+<p class="note" style="text-align: right"><i> rlk (at) evl.uic.edu </i></p>

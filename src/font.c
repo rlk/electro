@@ -375,30 +375,36 @@ static void combine(GLdouble coords[3], void *vertex_data[3],
 
 /*---------------------------------------------------------------------------*/
 
-static void tess_glyph(GLUtesselator *T, struct glyph *glyph)
+static void tess_stroke(vector_t points, int first, int last, GLUtesselator *T)
 {
-    int i, j, n = vecnum(glyph->points);
+    int i;
+
+    gluTessBeginContour(T);
+    {
+        for (i = first; i <= last; ++i)
+            gluTessVertex(T, vecget(points, i),
+                             vecget(points, i));
+    }
+    gluTessEndContour(T);
+}
+
+static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
+{
+    int b, i, n = vecnum(glyph->points);
 
     gluTessBeginPolygon(T, glyph->points);
     {
-        for (i = 0, j = 0; i < n; ++i)
-            if (j == i)
+        for (b = 0, i = 1; i < n; ++i)
+            if (veccmp(glyph->points, b, i) == 0)
             {
-                gluTessBeginContour(T);
-                gluTessVertex(T, vecget(glyph->points, i),
-                                 vecget(glyph->points, i));
+                tess_stroke(glyph->points, b, i, T);
+                i = b = i + 1;
             }
-            else if (veccmp(glyph->points, i, j) == 0)
-            {
-                gluTessEndContour(T);
-                j = i + 1;
-            }
-            else
-                gluTessVertex(T, vecget(glyph->points, i),
-                                 vecget(glyph->points, i));
     }
     gluTessEndPolygon(T);
 }
+
+/*---------------------------------------------------------------------------*/
 
 static void line_stroke(vector_t points, int first, int last, GLdouble k)
 {
@@ -409,43 +415,46 @@ static void line_stroke(vector_t points, int first, int last, GLdouble k)
     GLdouble rn[2];
     GLdouble m, l;
 
-    glBegin(GL_QUAD_STRIP);
+    if (k > 0)
     {
-        for (i = 0; i <= n; i++)
+        glBegin(GL_QUAD_STRIP);
         {
-            const int a = first + (i + n - 1) % n;
-            const int b = first +  i;
-            const int c = first + (i     + 1) % n;
+            for (i = 0; i <= n; i++)
+            {
+                const int a = first + (i + n - 1) % n;
+                const int b = first +  i;
+                const int c = first + (i     + 1) % n;
 
-            const GLdouble *p = ((struct point *) vecget(points, a))->p;
-            const GLdouble *q = ((struct point *) vecget(points, b))->p;
-            const GLdouble *r = ((struct point *) vecget(points, c))->p;
+                const GLdouble *p = ((struct point *) vecget(points, a))->p;
+                const GLdouble *q = ((struct point *) vecget(points, b))->p;
+                const GLdouble *r = ((struct point *) vecget(points, c))->p;
 
-            pn[0] = -(q[1] - p[1]);
-            pn[1] =  (q[0] - p[0]);
-            l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
-            pn[0] /= l;
-            pn[1] /= l;
+                pn[0] = -(q[1] - p[1]);
+                pn[1] =  (q[0] - p[0]);
+                l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
+                pn[0] /= l;
+                pn[1] /= l;
 
-            rn[0] = -(r[1] - q[1]);
-            rn[1] =  (r[0] - q[0]);
-            l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
-            rn[0] /= l;
-            rn[1] /= l;
+                rn[0] = -(r[1] - q[1]);
+                rn[1] =  (r[0] - q[0]);
+                l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
+                rn[0] /= l;
+                rn[1] /= l;
 
-            qn[0] = pn[0] + rn[0];
-            qn[1] = pn[1] + rn[1];
-            l = sqrt(qn[0] * qn[0] + qn[1] * qn[1]);
-            qn[0] /= l;
-            qn[1] /= l;
+                qn[0] = pn[0] + rn[0];
+                qn[1] = pn[1] + rn[1];
+                l = sqrt(qn[0] * qn[0] + qn[1] * qn[1]);
+                qn[0] /= l;
+                qn[1] /= l;
 
-            m = k / (qn[0] * pn[0] + qn[1] * pn[1]);
+                m = k / (qn[0] * pn[0] + qn[1] * pn[1]);
 
-            glVertex3d(q[0] - qn[0] * 0, q[1] - qn[1] * 0, q[2]);
-            glVertex3d(q[0] + qn[0] * m, q[1] + qn[1] * m, q[2]);
+                glVertex3d(q[0] - qn[0] * 0, q[1] - qn[1] * 0, q[2]);
+                glVertex3d(q[0] + qn[0] * m, q[1] + qn[1] * m, q[2]);
+            }
         }
+        glEnd();
     }
-    glEnd();
 }
 
 static void line_glyph(struct glyph *glyph, GLdouble O)
@@ -459,6 +468,8 @@ static void line_glyph(struct glyph *glyph, GLdouble O)
             i = b = i + 1;
         }
 }
+
+/*---------------------------------------------------------------------------*/
 
 void init_font(int i, GLdouble O)
 {
@@ -495,7 +506,7 @@ void init_font(int i, GLdouble O)
 
                     glNewList(glyph->fill, GL_COMPILE);
                     glNormal3f(0, 0, 1);
-                    tess_glyph(T, glyph);
+                    tess_glyph(glyph, T);
                     glEndList();
 
                     /* Tessalate the outline to a display list. */
@@ -614,6 +625,7 @@ void bbox_font(int i, const char *text, float bound[6])
                 bound[5] = MAX(bound[5], (float)  p[2]);
             }
         }
+
         /* Advance the insertion point. */
 
         x += d;

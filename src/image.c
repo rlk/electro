@@ -47,7 +47,7 @@ static int new_image(void)
     int i, n = vecnum(image);
 
     for (i = 0; i < n; ++i)
-        if (I(i)->filename == 0)
+        if (I(i)->count == 0)
             return i;
 
     return vecadd(image);

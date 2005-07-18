@@ -57,4 +57,27 @@ void recv_create_object(void);
 
 /*---------------------------------------------------------------------------*/
 
+int  create_object_mtrl(int, const char *,
+                             const float[4],
+                             const float[4],
+                             const float[4],
+                             const float[4], float);
+int  create_object_vert(int, const float[3],
+                             const float[3],
+                             const float[3]);
+int  create_object_face(int, int, int, int, int);
+int  create_object_edge(int, int, int, int);
+int  create_object_surf(int, int);
+
+/*---------------------------------------------------------------------------*/
+
+void delete_object_mtrl(int, int);
+void delete_object_vert(int, int);
+void delete_object_surf(int, int);
+void delete_object_face(int, int, int);
+void delete_object_edge(int, int, int);
+void delete_object_surf(int, int);
+
+/*---------------------------------------------------------------------------*/
+
 #endif

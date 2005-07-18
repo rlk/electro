@@ -188,19 +188,26 @@ static void draw_string(int j, int i, int f, float a)
     {
         transform_entity(j);
 
-        draw_image(0);
+        glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+        {
+            draw_image(0);
 
-        glColor4f(S(i)->fill[0],
-                  S(i)->fill[1],
-                  S(i)->fill[2],
-                  S(i)->fill[3] * a * get_entity_alpha(j));
-        draw_font(S(i)->font, S(i)->text, 0);
+            glEnable(GL_COLOR_MATERIAL);
+            glDepthMask(GL_FALSE);
 
-        glColor4f(S(i)->line[0],
-                  S(i)->line[1],
-                  S(i)->line[2],
-                  S(i)->line[3] * a * get_entity_alpha(j));
-        draw_font(S(i)->font, S(i)->text, 1);
+            glColor4f(S(i)->fill[0],
+                      S(i)->fill[1],
+                      S(i)->fill[2],
+                      S(i)->fill[3] * a * get_entity_alpha(j));
+            draw_font(S(i)->font, S(i)->text, 0);
+
+            glColor4f(S(i)->line[0],
+                      S(i)->line[1],
+                      S(i)->line[2],
+                      S(i)->line[3] * a * get_entity_alpha(j));
+            draw_font(S(i)->font, S(i)->text, 1);
+        }
+        glPopAttrib();
 
         draw_entity_tree(j, f, a * get_entity_alpha(j));
     }

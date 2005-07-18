@@ -544,7 +544,7 @@ static int E_get_modifier(lua_State *L)
 static int E_set_typeface(lua_State *L)
 {
     float e = 0.001f;
-    float o = 0.010f;
+    float o = 0.000f;
 
     switch (lua_gettop(L))
     {

@@ -1,14 +1,16 @@
+Bound recompute
 Text texture
 texture transform
-Uniform API
+replace get_sprite_size with bound query
 Object geometry create
-Varrier finalize
+new billboard transform
+Uniform API
 Lua state flush / app switch
 profilers
 Tracker buttons
 display volume query / smart viewobj
-new billboard transform
 cooler vortex demo
+Varrier finalize
 
 
 App
