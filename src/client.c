@@ -25,6 +25,7 @@
 #include "light.h"
 #include "pivot.h"
 #include "image.h"
+#include "brush.h"
 #include "font.h"
 #include "event.h"
 #include "entity.h"
@@ -72,8 +73,9 @@ static void client_recv(void)
         case EVENT_CREATE_GALAXY:        recv_create_galaxy();        break;
         case EVENT_CREATE_LIGHT:         recv_create_light();         break;
         case EVENT_CREATE_PIVOT:         recv_create_pivot();         break;
-        case EVENT_CREATE_IMAGE:         recv_create_image();         break;
         case EVENT_CREATE_CLONE:         recv_create_clone();         break;
+        case EVENT_CREATE_IMAGE:         recv_create_image();         break;
+        case EVENT_CREATE_BRUSH:         recv_create_brush();         break;
 
         case EVENT_PARENT_ENTITY:        recv_parent_entity();        break;
         case EVENT_DELETE_ENTITY:        recv_delete_entity();        break;
@@ -84,8 +86,12 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_BOUND:     recv_set_entity_bound();     break;
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
         case EVENT_SET_ENTITY_FLAG:      recv_set_entity_flag();      break;
-        case EVENT_SET_ENTITY_FRAG_PROG: recv_set_entity_frag_prog(); break;
-        case EVENT_SET_ENTITY_VERT_PROG: recv_set_entity_vert_prog(); break;
+
+        case EVENT_SET_BRUSH_IMAGE:      recv_set_brush_image();      break;
+        case EVENT_SET_BRUSH_COLOR:      recv_set_brush_color();      break;
+        case EVENT_SET_BRUSH_FLAGS:      recv_set_brush_flags();      break;
+        case EVENT_SET_BRUSH_FRAG_PROG:  recv_set_brush_frag_prog();  break;
+        case EVENT_SET_BRUSH_VERT_PROG:  recv_set_brush_vert_prog();  break;
 
         case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
@@ -162,6 +168,7 @@ void client(void)
         if (startup_buffer()  &&
             startup_display() &&
             startup_image()   &&
+            startup_brush()   &&
             startup_font()    &&
             startup_entity())
         {

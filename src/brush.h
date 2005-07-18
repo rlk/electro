@@ -15,6 +15,37 @@
 
 /*---------------------------------------------------------------------------*/
 
+/* Default material properties */
+
+#define BRUSH_DIFFUSE_R  0.8f
+#define BRUSH_DIFFUSE_G  0.8f
+#define BRUSH_DIFFUSE_B  0.8f
+#define BRUSH_DIFFUSE_A  1.0f
+
+#define BRUSH_SPECULAR_R 0.0f
+#define BRUSH_SPECULAR_G 0.0f
+#define BRUSH_SPECULAR_B 0.0f
+#define BRUSH_SPECULAR_A 1.0f
+
+#define BRUSH_AMBIENT_R  0.2f
+#define BRUSH_AMBIENT_G  0.2f
+#define BRUSH_AMBIENT_B  0.2f
+#define BRUSH_AMBIENT_A  1.0f
+
+#define BRUSH_SHININESS  0.0f
+
+/*---------------------------------------------------------------------------*/
+
+/* Brush flags */
+
+#define BRUSH_TRANSPARENT 0x01
+#define BRUSH_DIFFUSE     0x02
+#define BRUSH_SPECULAR    0x04
+#define BRUSH_AMBIENT     0x08
+#define BRUSH_SHINY       0x10
+
+/*---------------------------------------------------------------------------*/
+
 int startup_brush(void);
 
 /*---------------------------------------------------------------------------*/
@@ -22,7 +53,7 @@ int startup_brush(void);
 int  send_create_brush(const char *, const char *);
 void recv_create_brush(void);
 
-void send_set_brush_flags(int, int);
+void send_set_brush_flags(int, int, int);
 void recv_set_brush_flags(void);
 
 void send_set_brush_image(int, int);
@@ -34,15 +65,18 @@ void recv_set_brush_frag_prog(void);
 void send_set_brush_vert_prog(int, const char *);
 void recv_set_brush_vert_prog(void);
 
-void send_set_brush_color(int, const float[4], const float[4],
-                               const float[4], float);
+void send_set_brush_color(int, const float[4],
+                               const float[4],
+                               const float[4],
+                               const float[1], int);
 void recv_set_brush_color(void);
 
 /*---------------------------------------------------------------------------*/
 
 void init_brush(int);
 void fini_brush(int);
-int  draw_brush(int);
+int  draw_brush(int, float);
+void dupe_brush(int);
 void free_brush(int);
 
 void init_brushes(void);

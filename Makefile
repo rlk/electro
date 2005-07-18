@@ -11,7 +11,7 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -O2 -Wall -ansi -pedantic
+	CFLAGS = -g -Wall -ansi -pedantic
 endif
 
 # To build with trackdAPI: "make TRACKD=1"
@@ -36,7 +36,8 @@ ifeq ($(shell uname), Darwin)
 	LIBDIR = -L/sw/lib
 	OGLLIB =
 	SDL_CONFIG = /sw/bin/sdl-config
-	FT2_CONFIG = /usr/X11R6/bin/freetype-config
+	FT2_CONFIG = /sw/lib/freetype2/bin/freetype-config
+#	FT2_CONFIG = /usr/X11R6/bin/freetype-config
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
@@ -95,6 +96,7 @@ OBJS =	src/version.o  \
 	src/pivot.o    \
 	src/script.o   \
 	src/image.o    \
+	src/brush.o    \
 	src/sound.o    \
 	src/font.o     \
 	src/node.o     \

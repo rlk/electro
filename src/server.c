@@ -348,6 +348,7 @@ void server(int argc, char *argv[])
                 startup_entity()   &&
                 startup_sound()    &&
                 startup_image()    &&
+                startup_brush()    &&
                 startup_font())
             {
                 parse_args(argc, argv);

@@ -38,6 +38,8 @@
 #include "utility.h"
 #include "entity.h"
 #include "sound.h"
+#include "image.h"
+#include "brush.h"
 #include "font.h"
 #include "script.h"
 
@@ -82,6 +84,7 @@ static const char *charreader(lua_State *L, void *data, size_t *size)
 #define USERDATA_ENTITY 0
 #define USERDATA_SOUND  1
 #define USERDATA_IMAGE  2
+#define USERDATA_BRUSH  3
 
 static int E_tousertype(lua_State *L, int i)
 {
@@ -148,6 +151,50 @@ static void E_pushsound(lua_State *L, int id)
 }
 
 #endif
+
+/*---------------------------------------------------------------------------*/
+/* Image userdata handlers                                                   */
+
+static int E_toimage(lua_State *L, int i)
+{
+    return E_touserdata(L, i);
+}
+
+static int E_isimage(lua_State *L, int i)
+{
+    return ((lua_isuserdata(L, i)) &&
+              (E_tousertype(L, i) == USERDATA_IMAGE));
+}
+
+static void E_pushimage(lua_State *L, int id)
+{
+    if (id < 0)
+        lua_pushnil(L);
+    else
+        E_pushuserdata(L, USERDATA_IMAGE, id);
+}
+
+/*---------------------------------------------------------------------------*/
+/* Brush userdata handlers                                                   */
+
+static int E_tobrush(lua_State *L, int i)
+{
+    return E_touserdata(L, i);
+}
+
+static int E_isbrush(lua_State *L, int i)
+{
+    return ((lua_isuserdata(L, i)) &&
+              (E_tousertype(L, i) == USERDATA_BRUSH));
+}
+
+static void E_pushbrush(lua_State *L, int id)
+{
+    if (id < 0)
+        lua_pushnil(L);
+    else
+        E_pushuserdata(L, USERDATA_BRUSH, id);
+}
 
 /*---------------------------------------------------------------------------*/
 /* Function argument error reporters                                         */
@@ -366,6 +413,30 @@ static int E_getsound(lua_State *L, int i)
         lua_pushnil(L);
         return 1;
 #endif
+    }
+    return 0;
+}
+
+static int E_getimage(lua_State *L, int i)
+{
+    if (1 <= -i && -i <= lua_gettop(L))
+    {
+        if (E_isimage(L, i))
+            return E_toimage(L, i);
+        else
+            E_type_error("image", L, i);
+    }
+    return 0;
+}
+
+static int E_getbrush(lua_State *L, int i)
+{
+    if (1 <= -i && -i <= lua_gettop(L))
+    {
+        if (E_isbrush(L, i))
+            return E_tobrush(L, i);
+        else
+            E_type_error("brush", L, i);
     }
     return 0;
 }
@@ -1003,21 +1074,15 @@ static int E_set_light_color(lua_State *L)
 
 static int E_set_string_fill(lua_State *L)
 {
-    send_set_string_fill(E_getstring(L, -5),
-                         L_getnumber(L, -4),
-                         L_getnumber(L, -3),
-                         L_getnumber(L, -2),
-                         L_getnumber(L, -1));
+    send_set_string_fill(E_getstring(L, -2),
+                         E_getbrush (L, -1));
     return 0;
 }
 
 static int E_set_string_line(lua_State *L)
 {
-    send_set_string_line(E_getstring(L, -5),
-                         L_getnumber(L, -4),
-                         L_getnumber(L, -3),
-                         L_getnumber(L, -2),
-                         L_getnumber(L, -1));
+    send_set_string_line(E_getstring(L, -2),
+                         E_getbrush (L, -1));
     return 0;
 }
 
@@ -1101,6 +1166,105 @@ static int E_play_sound(lua_State *L)
 static int E_loop_sound(lua_State *L)
 {
     loop_sound(E_getsound(L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int E_create_image(lua_State *L)
+{
+    E_pushimage(L, send_create_image(L_getstring(L, -1)));
+    return 1;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int E_create_brush(lua_State *L)
+{
+    E_pushbrush(L, send_create_brush(NULL, NULL));
+    return 1;
+}
+
+static int E_set_brush_flags(lua_State *L)
+{
+    send_set_brush_flags(E_getbrush  (L, -3),
+                         L_getinteger(L, -2),
+                         L_getboolean(L, -1));
+    return 0;
+}
+
+static int E_set_brush_image(lua_State *L)
+{
+    send_set_brush_image(E_getbrush(L, -2),
+                         E_getimage(L, -1));
+    return 0;
+}
+
+static int E_set_brush_color(lua_State *L)
+{
+    float d[4], s[4], a[4], x[1];
+
+    int n = lua_gettop(L);
+    int f = 0;
+
+    if (n >= 5)
+    {
+        d[0] = L_getnumber(L, -n + 1);
+        d[1] = L_getnumber(L, -n + 2);
+        d[2] = L_getnumber(L, -n + 3);
+        d[3] = L_getnumber(L, -n + 4);
+        f   |= BRUSH_DIFFUSE;
+    }
+    if (n >= 9)
+    {
+        s[0] = L_getnumber(L, -n + 5);
+        s[1] = L_getnumber(L, -n + 6);
+        s[2] = L_getnumber(L, -n + 7);
+        s[3] = L_getnumber(L, -n + 8);
+        f   |= BRUSH_SPECULAR;
+    }
+    if (n >= 13)
+    {
+        a[0] = L_getnumber(L, -n +  9);
+        a[1] = L_getnumber(L, -n + 10);
+        a[2] = L_getnumber(L, -n + 11);
+        a[3] = L_getnumber(L, -n + 12);
+        f   |= BRUSH_AMBIENT;
+    }
+
+    if (n >= 14)
+    {
+        x[0] = L_getnumber(L, -n + 13);
+        f   |= BRUSH_SHINY;
+    }
+
+    send_set_brush_color(E_getbrush(L, -n), d, s, a, x, f);
+    return 0;
+}
+
+static int E_set_brush_frag_prog(lua_State *L)
+{
+    int id           = E_getbrush (L, -2);
+    const char *file = L_getstring(L, -1);
+
+    char *text = load_file(file, "r", NULL);
+
+    send_set_brush_frag_prog(id, text);
+    if (text) free(text);
+
+    return 0;
+}
+
+static int E_set_brush_vert_prog(lua_State *L)
+{
+    int id           = E_getbrush (L, -2);
+    const char *file = L_getstring(L, -1);
+
+    char *text = load_file(file, "r", NULL);
+
+    send_set_brush_vert_prog(id, text);
+    if (text) free(text);
+
     return 0;
 }
 
@@ -1328,106 +1492,116 @@ void luaopen_electro(lua_State *L)
 
     /* Entity contructors and destructor. */
 
-    lua_function(L, "create_camera",        E_create_camera);
-    lua_function(L, "create_sprite",        E_create_sprite);
-    lua_function(L, "create_object",        E_create_object);
-    lua_function(L, "create_string",        E_create_string);
-    lua_function(L, "create_galaxy",        E_create_galaxy);
-    lua_function(L, "create_light",         E_create_light);
-    lua_function(L, "create_pivot",         E_create_pivot);
-    lua_function(L, "create_clone",         E_create_clone);
+    lua_function(L, "create_camera",         E_create_camera);
+    lua_function(L, "create_sprite",         E_create_sprite);
+    lua_function(L, "create_object",         E_create_object);
+    lua_function(L, "create_string",         E_create_string);
+    lua_function(L, "create_galaxy",         E_create_galaxy);
+    lua_function(L, "create_light",          E_create_light);
+    lua_function(L, "create_pivot",          E_create_pivot);
+    lua_function(L, "create_clone",          E_create_clone);
+    lua_function(L, "create_image",          E_create_image);
+    lua_function(L, "create_brush",          E_create_brush);
 
     /* Entity control. */
 
-    lua_function(L, "parent_entity",        E_parent_entity);
-    lua_function(L, "delete_entity",        E_delete_entity);
+    lua_function(L, "parent_entity",         E_parent_entity);
+    lua_function(L, "delete_entity",         E_delete_entity);
 
-    lua_function(L, "get_entity_parent",    E_get_entity_parent);
-    lua_function(L, "get_entity_child",     E_get_entity_child);
+    lua_function(L, "get_entity_parent",     E_get_entity_parent);
+    lua_function(L, "get_entity_child",      E_get_entity_child);
 
-    lua_function(L, "set_entity_position",  E_set_entity_position);
-    lua_function(L, "set_entity_rotation",  E_set_entity_rotation);
-    lua_function(L, "set_entity_scale",     E_set_entity_scale);
-    lua_function(L, "set_entity_bound",     E_set_entity_bound);
-    lua_function(L, "set_entity_alpha",     E_set_entity_alpha);
-    lua_function(L, "set_entity_flag",      E_set_entity_flag);
-    lua_function(L, "set_entity_frag_prog", E_set_entity_frag_prog);
-    lua_function(L, "set_entity_vert_prog", E_set_entity_vert_prog);
+    lua_function(L, "set_entity_position",   E_set_entity_position);
+    lua_function(L, "set_entity_rotation",   E_set_entity_rotation);
+    lua_function(L, "set_entity_scale",      E_set_entity_scale);
+    lua_function(L, "set_entity_bound",      E_set_entity_bound);
+    lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
+    lua_function(L, "set_entity_flag",       E_set_entity_flag);
+    lua_function(L, "set_entity_frag_prog",  E_set_entity_frag_prog);
+    lua_function(L, "set_entity_vert_prog",  E_set_entity_vert_prog);
 
-    lua_function(L, "get_entity_position",  E_get_entity_position);
-    lua_function(L, "get_entity_x_vector",  E_get_entity_x_vector);
-    lua_function(L, "get_entity_y_vector",  E_get_entity_y_vector);
-    lua_function(L, "get_entity_z_vector",  E_get_entity_z_vector);
-    lua_function(L, "get_entity_scale",     E_get_entity_scale);
-    lua_function(L, "get_entity_bound",     E_get_entity_bound);
-    lua_function(L, "get_entity_alpha",     E_get_entity_alpha);
+    lua_function(L, "get_entity_position",   E_get_entity_position);
+    lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
+    lua_function(L, "get_entity_y_vector",   E_get_entity_y_vector);
+    lua_function(L, "get_entity_z_vector",   E_get_entity_z_vector);
+    lua_function(L, "get_entity_scale",      E_get_entity_scale);
+    lua_function(L, "get_entity_bound",      E_get_entity_bound);
+    lua_function(L, "get_entity_alpha",      E_get_entity_alpha);
 
-    lua_function(L, "move_entity",          E_move_entity);
-    lua_function(L, "turn_entity",          E_turn_entity);
+    lua_function(L, "move_entity",           E_move_entity);
+    lua_function(L, "turn_entity",           E_turn_entity);
 
     /* Galaxy control. */
 
-    lua_function(L, "set_galaxy_magnitude", E_set_galaxy_magnitude);
-    lua_function(L, "get_star_index",       E_get_star_index);
-    lua_function(L, "get_star_position",    E_get_star_position);
+    lua_function(L, "set_galaxy_magnitude",  E_set_galaxy_magnitude);
+    lua_function(L, "get_star_index",        E_get_star_index);
+    lua_function(L, "get_star_position",     E_get_star_position);
 
     /* Camera control. */
 
-    lua_function(L, "set_camera_offset",    E_set_camera_offset);
-    lua_function(L, "set_camera_stereo",    E_set_camera_stereo);
+    lua_function(L, "set_camera_offset",     E_set_camera_offset);
+    lua_function(L, "set_camera_stereo",     E_set_camera_stereo);
 
     /* Light control. */
 
-    lua_function(L, "set_light_color",      E_set_light_color);
+    lua_function(L, "set_light_color",       E_set_light_color);
 
     /* Sprite control. */
 
-    lua_function(L, "set_sprite_range",     E_set_sprite_range);
-    lua_function(L, "get_sprite_pixel",     E_get_sprite_pixel);
-    lua_function(L, "get_sprite_size",      E_get_sprite_size);
+    lua_function(L, "set_sprite_range",      E_set_sprite_range);
+    lua_function(L, "get_sprite_pixel",      E_get_sprite_pixel);
+    lua_function(L, "get_sprite_size",       E_get_sprite_size);
 
     /* String control. */
 
-    lua_function(L, "set_string_fill",      E_set_string_fill);
-    lua_function(L, "set_string_line",      E_set_string_line);
-    lua_function(L, "set_string_text",      E_set_string_text);
+    lua_function(L, "set_string_fill",       E_set_string_fill);
+    lua_function(L, "set_string_line",       E_set_string_line);
+    lua_function(L, "set_string_text",       E_set_string_text);
 
     /* Sound control. */
 
-    lua_function(L, "load_sound",           E_load_sound);
-    lua_function(L, "free_sound",           E_free_sound);
-    lua_function(L, "stop_sound",           E_stop_sound);
-    lua_function(L, "play_sound",           E_play_sound);
-    lua_function(L, "loop_sound",           E_loop_sound);
+    lua_function(L, "load_sound",            E_load_sound);
+    lua_function(L, "free_sound",            E_free_sound);
+    lua_function(L, "stop_sound",            E_stop_sound);
+    lua_function(L, "play_sound",            E_play_sound);
+    lua_function(L, "loop_sound",            E_loop_sound);
+
+    /* Brush control. */
+
+    lua_function(L, "set_brush_flags",       E_set_brush_flags);
+    lua_function(L, "set_brush_image",       E_set_brush_image);
+    lua_function(L, "set_brush_color",       E_set_brush_color);
+    lua_function(L, "set_brush_frag_prog",   E_set_brush_frag_prog);
+    lua_function(L, "set_brush_vert_prog",   E_set_brush_vert_prog);
 
     /* Console */
 
-    lua_function(L, "clear_console",        E_clear_console);
-    lua_function(L, "color_console",        E_color_console);
-    lua_function(L, "print_console",        E_print_console);
+    lua_function(L, "clear_console",         E_clear_console);
+    lua_function(L, "color_console",         E_color_console);
+    lua_function(L, "print_console",         E_print_console);
 
     /* Display */
 
-    lua_function(L, "add_host",             E_add_host);
-    lua_function(L, "add_tile",             E_add_tile);
-    lua_function(L, "set_host_flag",        E_set_host_flag);
-    lua_function(L, "set_tile_flag",        E_set_tile_flag);
-    lua_function(L, "set_tile_position",    E_set_tile_position);
-    lua_function(L, "set_tile_viewport",    E_set_tile_viewport);
-    lua_function(L, "set_tile_line_screen", E_set_tile_line_screen);
-    lua_function(L, "set_tile_view_mirror", E_set_tile_view_mirror);
-    lua_function(L, "set_tile_view_offset", E_set_tile_view_offset);
-    lua_function(L, "get_display_union",    E_get_display_union);
-    lua_function(L, "get_display_bound",    E_get_display_bound);
+    lua_function(L, "add_host",              E_add_host);
+    lua_function(L, "add_tile",              E_add_tile);
+    lua_function(L, "set_host_flag",         E_set_host_flag);
+    lua_function(L, "set_tile_flag",         E_set_tile_flag);
+    lua_function(L, "set_tile_position",     E_set_tile_position);
+    lua_function(L, "set_tile_viewport",     E_set_tile_viewport);
+    lua_function(L, "set_tile_line_screen",  E_set_tile_line_screen);
+    lua_function(L, "set_tile_view_mirror",  E_set_tile_view_mirror);
+    lua_function(L, "set_tile_view_offset",  E_set_tile_view_offset);
+    lua_function(L, "get_display_union",     E_get_display_union);
+    lua_function(L, "get_display_bound",     E_get_display_bound);
 
     /* Misc. */
 
-    lua_function(L, "enable_timer",         E_enable_timer);
-    lua_function(L, "get_joystick",         E_get_joystick);
-    lua_function(L, "get_modifier",         E_get_modifier);
-    lua_function(L, "set_typeface",         E_set_typeface);
-    lua_function(L, "set_background",       E_set_background);
-    lua_function(L, "exit",                 E_exit);
+    lua_function(L, "enable_timer",          E_enable_timer);
+    lua_function(L, "get_joystick",          E_get_joystick);
+    lua_function(L, "get_modifier",          E_get_modifier);
+    lua_function(L, "set_typeface",          E_set_typeface);
+    lua_function(L, "set_background",        E_set_background);
+    lua_function(L, "exit",                  E_exit);
 
     /* Constants. */
 

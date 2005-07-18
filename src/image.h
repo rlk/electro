@@ -37,6 +37,7 @@ int  get_image_h(int);
 void  init_image(int);
 void  fini_image(int);
 void  draw_image(int);
+void  dupe_image(int);
 void  free_image(int);
 
 void  init_images(void);

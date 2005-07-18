@@ -415,6 +415,11 @@ void draw_image(int i)
     }
 }
 
+void dupe_image(int i)
+{
+    I(i)->count++;
+}
+
 void free_image(int i)
 {
     if (i && --I(i)->count == 0)

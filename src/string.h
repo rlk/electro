@@ -24,10 +24,10 @@ struct entity_func *startup_string(void);
 int  send_create_string(const char *);
 void recv_create_string(void);
 
-void send_set_string_fill(int, float, float, float, float);
+void send_set_string_fill(int, int);
 void recv_set_string_fill(void);
 
-void send_set_string_line(int, float, float, float, float);
+void send_set_string_line(int, int);
 void recv_set_string_line(void);
 
 void send_set_string_text(int, const char *);

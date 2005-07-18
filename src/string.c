@@ -19,7 +19,7 @@
 #include "buffer.h"
 #include "entity.h"
 #include "event.h"
-#include "image.h"
+#include "brush.h"
 #include "font.h"
 #include "string.h"
 
@@ -30,8 +30,8 @@ struct string
     int   count;
     int   font;
     char *text;
-    float fill[4];
-    float line[4];
+    int   fill;
+    int   line;
 };
 
 static vector_t string;
@@ -61,14 +61,11 @@ int send_create_string(const char *text)
     {
         send_event(EVENT_CREATE_STRING);
 
-        S(i)->text     = memdup(text, n, 1);
-        S(i)->font     = get_font();
-        S(i)->count    = 1;
-
-        S(i)->line[0] = S(i)->fill[0] = 1.0f;
-        S(i)->line[1] = S(i)->fill[1] = 1.0f;
-        S(i)->line[2] = S(i)->fill[2] = 1.0f;
-        S(i)->line[3] = S(i)->fill[3] = 1.0f;
+        S(i)->text  = memdup(text, n, 1);
+        S(i)->font  = get_font();
+        S(i)->count = 1;
+        S(i)->fill  = 0;
+        S(i)->line  = 0;
 
         send_index(n);
         send_array(text, n, 1);
@@ -87,61 +84,42 @@ void recv_create_string(void)
     S(i)->text = (char *) malloc(n);
     recv_array(S(i)->text, n, 1);
 
-    S(i)->font    = recv_index();
-    S(i)->count   = 1;
-
-    S(i)->line[0] = S(i)->fill[0] = 1.0f;
-    S(i)->line[1] = S(i)->fill[1] = 1.0f;
-    S(i)->line[2] = S(i)->fill[2] = 1.0f;
-    S(i)->line[3] = S(i)->fill[3] = 1.0f;
+    S(i)->font  = recv_index();
+    S(i)->count = 1;
+    S(i)->fill  = 0;
+    S(i)->line  = 0;
 
     recv_create_entity();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_string_fill(int i, float r, float g, float b, float a)
+void send_set_string_fill(int i, int j)
 {
     send_event(EVENT_SET_STRING_FILL);
     send_index(i);
-
-    send_float((S(i)->fill[0] = r));
-    send_float((S(i)->fill[1] = g));
-    send_float((S(i)->fill[2] = b));
-    send_float((S(i)->fill[3] = a));
+    send_index((S(i)->fill = j));
 }
 
 void recv_set_string_fill(void)
 {
-    int i = recv_index();
-
-    S(i)->fill[0] = recv_float();
-    S(i)->fill[1] = recv_float();
-    S(i)->fill[2] = recv_float();
-    S(i)->fill[3] = recv_float();
+    int i      = recv_index();
+    S(i)->fill = recv_index();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_string_line(int i, float r, float g, float b, float a)
+void send_set_string_line(int i, int j)
 {
     send_event(EVENT_SET_STRING_LINE);
     send_index(i);
-
-    send_float((S(i)->line[0] = r));
-    send_float((S(i)->line[1] = g));
-    send_float((S(i)->line[2] = b));
-    send_float((S(i)->line[3] = a));
+    send_index((S(i)->line = j));
 }
 
 void recv_set_string_line(void)
 {
-    int i = recv_index();
-
-    S(i)->line[0] = recv_float();
-    S(i)->line[1] = recv_float();
-    S(i)->line[2] = recv_float();
-    S(i)->line[3] = recv_float();
+    int i      = recv_index();
+    S(i)->line = recv_index();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -188,24 +166,15 @@ static void draw_string(int j, int i, int f, float a)
     {
         transform_entity(j);
 
-        glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+        glPushAttrib(GL_DEPTH_BUFFER_BIT);
         {
-            draw_image(0);
-
-            glEnable(GL_COLOR_MATERIAL);
             glDepthMask(GL_FALSE);
 
-            glColor4f(S(i)->fill[0],
-                      S(i)->fill[1],
-                      S(i)->fill[2],
-                      S(i)->fill[3] * a * get_entity_alpha(j));
-            draw_font(S(i)->font, S(i)->text, 0);
+            draw_brush(S(i)->fill, a * get_entity_alpha(j));
+            draw_font (S(i)->font, S(i)->text, 0);
 
-            glColor4f(S(i)->line[0],
-                      S(i)->line[1],
-                      S(i)->line[2],
-                      S(i)->line[3] * a * get_entity_alpha(j));
-            draw_font(S(i)->font, S(i)->text, 1);
+            draw_brush(S(i)->line, a * get_entity_alpha(j));
+            draw_font (S(i)->font, S(i)->text, 1);
         }
         glPopAttrib();
 
