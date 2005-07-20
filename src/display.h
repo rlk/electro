@@ -63,7 +63,7 @@
 
 struct tile
 {
-    int   flag;
+    int   flags;
 
     float o[3];                 /* World-space tile origin                   */
     float r[3];                 /* World-space tile right vector             */
@@ -90,7 +90,7 @@ struct tile
 
 struct host
 {
-    int  flag;
+    int  flags;
     char name[MAXNAME];
     int  tile[MAXTILE];
 
@@ -125,8 +125,8 @@ void recv_add_tile(void);
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_host_flag       (int, int, int);
-void send_set_tile_flag       (int, int, int);
+void send_set_host_flags      (int, int, int);
+void send_set_tile_flags      (int, int, int);
 void send_set_tile_viewport   (int, int, int, int, int);
 void send_set_tile_line_screen(int, float, float, float, float, float);
 void send_set_tile_view_mirror(int, const float[4]);
@@ -135,7 +135,7 @@ void send_set_tile_position   (int, const float[3],
                                     const float[3],
                                     const float[3]);
 
-void recv_set_tile_flag       (void);
+void recv_set_tile_flags      (void);
 void recv_set_tile_viewport   (void);
 void recv_set_tile_line_screen(void);
 void recv_set_tile_view_mirror(void);
@@ -165,7 +165,7 @@ void  get_tile_r(int, float[3]);
 void  get_tile_u(int, float[3]);
 void  get_tile_n(int, float[3]);
 
-int   get_tile_flag(int);
+int   get_tile_flags(int);
 
 float get_varrier_pitch(int);
 float get_varrier_angle(int);

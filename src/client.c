@@ -85,7 +85,7 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
         case EVENT_SET_ENTITY_BOUND:     recv_set_entity_bound();     break;
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
-        case EVENT_SET_ENTITY_FLAG:      recv_set_entity_flag();      break;
+        case EVENT_SET_ENTITY_FLAGS:     recv_set_entity_flags();     break;
 
         case EVENT_SET_BRUSH_IMAGE:      recv_set_brush_image();      break;
         case EVENT_SET_BRUSH_COLOR:      recv_set_brush_color();      break;
@@ -97,6 +97,7 @@ static void client_recv(void)
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
         case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
         case EVENT_SET_SPRITE_RANGE:     recv_set_sprite_range();     break;
+        case EVENT_SET_SPRITE_BRUSH:     recv_set_sprite_brush();     break;
         case EVENT_SET_STRING_FILL:      recv_set_string_fill();      break;
         case EVENT_SET_STRING_LINE:      recv_set_string_line();      break;
         case EVENT_SET_STRING_TEXT:      recv_set_string_text();      break;
@@ -105,7 +106,7 @@ static void client_recv(void)
         case EVENT_SET_FONT:             recv_set_font();             break;
 
         case EVENT_ADD_TILE:             recv_add_tile();             break;
-        case EVENT_SET_TILE_FLAG:        recv_set_tile_flag();        break;
+        case EVENT_SET_TILE_FLAGS:       recv_set_tile_flags();       break;
         case EVENT_SET_TILE_VIEWPORT:    recv_set_tile_viewport();    break;
         case EVENT_SET_TILE_POSITION:    recv_set_tile_position();    break;
         case EVENT_SET_TILE_LINE_SCREEN: recv_set_tile_line_screen(); break;

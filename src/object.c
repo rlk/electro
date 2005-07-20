@@ -774,7 +774,7 @@ static int draw_material(const struct object_mtrl *m, int flag, float alpha)
         d[2] = m->d[2];
         d[3] = m->d[3] * alpha;
 
-        last_trns = (d[3] < 1) || (flag & FLAG_TRANSPARENT);
+        last_trns = (d[3] < 1);
 
         /* Apply the material properties. */
 
@@ -872,7 +872,7 @@ static void draw_object(int j, int i, int f, float a)
   
                     if (vecnum(s->fv) > 0 || vecnum(s->ev) > 0)
                     {
-                        int t = draw_material(m, get_entity_flag(j),
+                        int t = draw_material(m, get_entity_flags(j),
                                                  get_entity_alpha(j) * a);
                         draw_surface(s, t);
                     }

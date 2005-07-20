@@ -143,7 +143,7 @@ int add_host(const char *name, int x, int y, int w, int h)
     {
         struct host *H = (struct host *) vecget(host, i);
 
-        H->flag  = 0;
+        H->flags  = 0;
 
         /* Store the name for future host name searching. */
 
@@ -168,7 +168,7 @@ int add_tile(int i, int x, int y, int w, int h)
         struct host *H = (struct host *) vecget(host, i);
         struct tile *T = (struct tile *) vecget(tile, j);
 
-        T->flag = 0;
+        T->flags = 0;
 
         /* The rectangle defines viewport size and default ortho projection. */
 
@@ -258,7 +258,7 @@ void sync_display(void)
 
         local = (struct host *) vecget(host, i);
 
-        local->flag = HOST_FRAMED;
+        local->flags = HOST_FRAMED;
     }
 
     if (rank) set_window_pos(local->win_x, local->win_y);
@@ -291,7 +291,7 @@ void recv_add_tile(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_host_flag(int i, int flags, int state)
+void send_set_host_flags(int i, int flags, int state)
 {
     struct host *H = (struct host *) vecget(host, i);
 
@@ -299,24 +299,24 @@ void send_set_host_flag(int i, int flags, int state)
     /* in sending them off to already-initialized hosts.                     */
 
     if (state)
-        H->flag = H->flag | ( flags);
+        H->flags = H->flags | ( flags);
     else
-        H->flag = H->flag & (~flags);
+        H->flags = H->flags & (~flags);
 }
 
-void send_set_tile_flag(int i, int flags, int state)
+void send_set_tile_flags(int i, int flags, int state)
 {
     struct tile *T = (struct tile *) vecget(tile, i);
 
-    send_event(EVENT_SET_TILE_FLAG);
+    send_event(EVENT_SET_TILE_FLAGS);
     send_index(i);
     send_index(flags);
     send_index(state);
 
     if (state)
-        T->flag = T->flag | ( flags);
+        T->flags = T->flags | ( flags);
     else
-        T->flag = T->flag & (~flags);
+        T->flags = T->flags & (~flags);
 }
 
 void send_set_tile_position(int i, const float o[3],
@@ -391,7 +391,7 @@ void send_set_tile_view_offset(int i, const float d[3])
 
 /*---------------------------------------------------------------------------*/
 
-void recv_set_tile_flag(void)
+void recv_set_tile_flags(void)
 {
     struct tile *T = (struct tile *) vecget(tile, recv_index());
 
@@ -399,9 +399,9 @@ void recv_set_tile_flag(void)
     int state = recv_index();
 
     if (state)
-        T->flag = T->flag | ( flags);
+        T->flags = T->flags | ( flags);
     else
-        T->flag = T->flag & (~flags);
+        T->flags = T->flags & (~flags);
 }
 
 void recv_set_tile_position(void)
@@ -520,17 +520,17 @@ int get_window_h(void)   { return local ? local->win_h : DEFAULT_H; }
 
 int get_window_full(void)
 {
-	return local ? (local->flag & HOST_FULL) : 0;
+	return local ? (local->flags & HOST_FULL) : 0;
 }
 
 int get_window_stereo(void)
 {
-	return local ? (local->flag & HOST_STEREO) : 0;
+	return local ? (local->flags & HOST_STEREO) : 0;
 }
 
 int get_window_framed(void)
 {
-	return local ? (local->flag & HOST_FRAMED) : 1;
+	return local ? (local->flags & HOST_FRAMED) : 1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -672,9 +672,9 @@ void get_tile_n(int i, float n[3])
     normalize(n);
 }
 
-int get_tile_flag(int i)
+int get_tile_flags(int i)
 {
-    return local ? ((struct tile *) vecget(tile, local->tile[i]))->flag : 0;
+    return local ? ((struct tile *) vecget(tile, local->tile[i]))->flags : 0;
 }
 
 float get_varrier_pitch(int i)
@@ -732,8 +732,8 @@ int draw_ortho(int i, float N, float F)
 
         /* Flip the projection if requested. */
 
-        if (T->flag & TILE_FLIP_X) swap(fL, fR);
-        if (T->flag & TILE_FLIP_Y) swap(fB, fT);
+        if (T->flags & TILE_FLIP_X) swap(fL, fR);
+        if (T->flags & TILE_FLIP_Y) swap(fB, fT);
 
         /* Configure the viewport. */
 
@@ -754,8 +754,8 @@ int draw_ortho(int i, float N, float F)
 
         /* Rewind polygons if necessary. */
 
-        if (((T->flag & TILE_FLIP_X) ? 1 : 0) ^
-            ((T->flag & TILE_FLIP_Y) ? 1 : 0))
+        if (((T->flags & TILE_FLIP_X) ? 1 : 0) ^
+            ((T->flags & TILE_FLIP_Y) ? 1 : 0))
             glFrontFace(GL_CW);
         else
             glFrontFace(GL_CCW);
@@ -793,7 +793,7 @@ int draw_persp(int i, float N, float F, const float p[3])
 
         /* Optionally reflect the view position across the mirror. */
 
-        if (T->flag & TILE_MIRROR)
+        if (T->flags & TILE_MIRROR)
         {
             float k = (P[0] * T->p[0] +
                        P[1] * T->p[1] +
@@ -863,8 +863,8 @@ int draw_persp(int i, float N, float F, const float p[3])
 
             /* Flip the projection if requested. */
 
-            if (T->flag & TILE_FLIP_X) swap(fL, fR);
-            if (T->flag & TILE_FLIP_Y) swap(fB, fT);
+            if (T->flags & TILE_FLIP_X) swap(fL, fR);
+            if (T->flags & TILE_FLIP_Y) swap(fB, fT);
 
             /* Apply the projection. */
 
@@ -890,8 +890,8 @@ int draw_persp(int i, float N, float F, const float p[3])
 
         /* Rewind polygons if necessary. */
 
-        if (((T->flag & TILE_FLIP_X) ? 1 : 0) ^
-            ((T->flag & TILE_FLIP_Y) ? 1 : 0))
+        if (((T->flags & TILE_FLIP_X) ? 1 : 0) ^
+            ((T->flags & TILE_FLIP_Y) ? 1 : 0))
             glFrontFace(GL_CW);
         else
             glFrontFace(GL_CCW);
@@ -903,7 +903,7 @@ int draw_persp(int i, float N, float F, const float p[3])
 
 /*---------------------------------------------------------------------------*/
 
-void draw_tile_background(int i, int flag)
+void draw_tile_background(int i, int flags)
 {
     /* Incur this fill penalty only if necessary. */
 
@@ -938,15 +938,15 @@ void draw_tile_background(int i, int flag)
 
         glPushAttrib(GL_ENABLE_BIT);
         {
-            float l = (T->flag & TILE_FLIP_X) ? 1 : 0;
-            float r = (T->flag & TILE_FLIP_X) ? 0 : 1;
-            float b = (T->flag & TILE_FLIP_Y) ? 1 : 0;
-            float t = (T->flag & TILE_FLIP_Y) ? 0 : 1;
+            float l = (T->flags & TILE_FLIP_X) ? 1 : 0;
+            float r = (T->flags & TILE_FLIP_X) ? 0 : 1;
+            float b = (T->flags & TILE_FLIP_Y) ? 1 : 0;
+            float t = (T->flags & TILE_FLIP_Y) ? 0 : 1;
 
             glDisable(GL_TEXTURE_2D);
             glDisable(GL_CULL_FACE);
 
-            if (flag & DRAW_VARRIER_TEXGEN)
+            if (flags & DRAW_VARRIER_TEXGEN)
                 set_texture_coordinates();
 
             glBegin(GL_QUADS);

@@ -356,10 +356,7 @@ static void vertex(void *vertex_data)
 {
     struct point *P = (struct point *) vertex_data;
 
-    /* Generate texture coordinates for each vertex. */
-
-    glTexCoord2d(P->p[0], P->p[1]);
-    glVertex3d  (P->p[0], P->p[1], P->p[2]);
+    glVertex3d(P->p[0], P->p[1], P->p[2]);
 }
 
 static void combine(GLdouble coords[3], void *vertex_data[3],
@@ -542,6 +539,9 @@ void draw_font(int i, const char *text, int line)
 {
     init_font(i, F(i)->outline);
 
+    glMatrixMode(GL_TEXTURE);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glPushAttrib(GL_POLYGON_BIT);
     {
@@ -575,10 +575,16 @@ void draw_font(int i, const char *text, int line)
             else
                 glCallList(glyph->fill);
 
+            glMatrixMode(GL_TEXTURE);
+            glTranslated(d, 0, 0);
+            glMatrixMode(GL_MODELVIEW);
             glTranslated(d, 0, 0);
         }
     }
     glPopAttrib();
+    glMatrixMode(GL_TEXTURE);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 }
 

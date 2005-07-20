@@ -589,6 +589,18 @@ void free_brush(int i)
 
 /*---------------------------------------------------------------------------*/
 
+int get_brush_w(int i)
+{
+    return get_image_w(B(i)->image);
+}
+
+int get_brush_h(int i)
+{
+    return get_image_h(B(i)->image);
+}
+
+/*---------------------------------------------------------------------------*/
+
 void init_brushes(void)
 {
     int i, n = vecnum(brush);

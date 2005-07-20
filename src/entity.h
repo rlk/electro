@@ -14,7 +14,6 @@
 #define ENTITY_H
 
 #include "opengl.h"
-#include "frustum.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -36,14 +35,12 @@
 #define FLAG_HIDDEN        0x0001
 #define FLAG_WIREFRAME     0x0002
 #define FLAG_BILLBOARD     0x0004
-#define FLAG_UNLIT         0x0008
-#define FLAG_TRANSPARENT   0x0010
-#define FLAG_BOUNDED       0x0020
-#define FLAG_LINE_SMOOTH   0x0040
-#define FLAG_POS_TRACKED_0 0x0080
-#define FLAG_ROT_TRACKED_0 0x0100
-#define FLAG_POS_TRACKED_1 0x0200
-#define FLAG_ROT_TRACKED_1 0x0400
+#define FLAG_BOUNDED       0x0008
+#define FLAG_LINE_SMOOTH   0x0010
+#define FLAG_POS_TRACKED_0 0x0020
+#define FLAG_ROT_TRACKED_0 0x0040
+#define FLAG_POS_TRACKED_1 0x0080
+#define FLAG_ROT_TRACKED_1 0x0100
 
 /* Initial entity vector sizes. */
 
@@ -115,11 +112,8 @@ void  send_set_entity_rotation (int, const float[3]);
 void  send_set_entity_scale    (int, const float[3]);
 void  send_set_entity_bound    (int, const float[6]);
 void  send_set_entity_basis    (int, const float[16]);
-
 void  send_set_entity_alpha    (int, float);
-void  send_set_entity_flag     (int, int, int);
-void  send_set_entity_frag_prog(int, const char *);
-void  send_set_entity_vert_prog(int, const char *);
+void  send_set_entity_flags    (int, int, int);
 
 void  send_move_entity(int, const float[3]);
 void  send_turn_entity(int, const float[3]);
@@ -131,9 +125,7 @@ void  recv_set_entity_basis    (void);
 void  recv_set_entity_scale    (void);
 void  recv_set_entity_bound    (void);
 void  recv_set_entity_alpha    (void);
-void  recv_set_entity_flag     (void);
-void  recv_set_entity_frag_prog(void);
-void  recv_set_entity_vert_prog(void);
+void  recv_set_entity_flags    (void);
 
 /*---------------------------------------------------------------------------*/
 
@@ -144,7 +136,7 @@ void  get_entity_z_vector(int, float[3]);
 void  get_entity_scale   (int, float[3]);
 void  get_entity_bound   (int, float[6]);
 float get_entity_alpha   (int);
-int   get_entity_flag    (int);
+int   get_entity_flags   (int);
 
 /*---------------------------------------------------------------------------*/
 

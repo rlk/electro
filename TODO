@@ -1,7 +1,6 @@
+Telnet to luasocket
 struct foo *f = F(i)  /* makes for easier debugging */
 Bound recompute
-string generated texture coordinates
-Text texture
 texture transform
 replace get_sprite_size with bound query
 Object geometry create

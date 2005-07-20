@@ -421,6 +421,8 @@ static int E_getimage(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
+        if (lua_isnil (L, i))
+            return 0;
         if (E_isimage(L, i))
             return E_toimage(L, i);
         else
@@ -433,6 +435,8 @@ static int E_getbrush(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
+        if (lua_isnil (L, i))
+            return 0;
         if (E_isbrush(L, i))
             return E_tobrush(L, i);
         else
@@ -458,9 +462,9 @@ static int E_add_host(lua_State *L)
 
 static int E_set_host_flag(lua_State *L)
 {
-    send_set_host_flag(L_getinteger(L, -3),
-                       L_getinteger(L, -2),
-                       L_getboolean(L, -1));
+    send_set_host_flags(L_getinteger(L, -3),
+                        L_getinteger(L, -2),
+                        L_getboolean(L, -1));
     return 0;
 }
 
@@ -477,9 +481,9 @@ static int E_add_tile(lua_State *L)
 
 static int E_set_tile_flag(lua_State *L)
 {
-    send_set_tile_flag(L_getinteger(L, -3),
-                       L_getinteger(L, -2),
-                       L_getboolean(L, -1));
+    send_set_tile_flags(L_getinteger(L, -3),
+                        L_getinteger(L, -2),
+                        L_getboolean(L, -1));
     return 0;
 }
 
@@ -762,33 +766,9 @@ static int E_set_entity_alpha(lua_State *L)
 
 static int E_set_entity_flag(lua_State *L)
 {
-    send_set_entity_flag(E_getentity (L, -3),
-                         L_getinteger(L, -2),
-                         L_getboolean(L, -1));
-    return 0;
-}
-
-static int E_set_entity_frag_prog(lua_State *L)
-{
-    int id           = E_getentity(L, -2);
-    const char *file = L_getstring(L, -1);
-    char       *text = load_file(file, "r", NULL);
-
-    send_set_entity_frag_prog(id, text);
-    if (text) free(text);
-
-    return 0;
-}
-
-static int E_set_entity_vert_prog(lua_State *L)
-{
-    int id           = E_getentity(L, -2);
-    const char *file = L_getstring(L, -1);
-    char       *text = load_file(file, "r", NULL);
-
-    send_set_entity_vert_prog(id, text);
-    if (text) free(text);
-
+    send_set_entity_flags(E_getentity (L, -3),
+                          L_getinteger(L, -2),
+                          L_getboolean(L, -1));
     return 0;
 }
 
@@ -931,7 +911,7 @@ static int E_create_camera(lua_State *L)
 
 static int E_create_sprite(lua_State *L)
 {
-    int id = send_create_sprite(L_getstring(L, -1));
+    int id = send_create_sprite(E_getbrush(L, -1));
 
     E_pushentity(L, id);
     return 1;
@@ -1096,6 +1076,13 @@ static int E_set_string_text(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Sprite controls                                                           */
 
+static int E_set_sprite_brush(lua_State *L)
+{
+    send_set_sprite_brush(E_getsprite(L, -2),
+                          E_getbrush (L, -1));
+    return 0;
+}
+
 static int E_set_sprite_range(lua_State *L)
 {
     send_set_sprite_range(E_getsprite(L, -5),
@@ -1104,32 +1091,6 @@ static int E_set_sprite_range(lua_State *L)
                           L_getnumber(L, -2),
                           L_getnumber(L, -1));
     return 0;
-}
-
-static int E_get_sprite_pixel(lua_State *L)
-{
-    unsigned char p[4];
-
-    get_sprite_p(E_getsprite (L, -3),
-                 L_getinteger(L, -2),
-                 L_getinteger(L, -1), p);
-
-    lua_pushnumber(L, (double) p[0] / 255.0);
-    lua_pushnumber(L, (double) p[1] / 255.0);
-    lua_pushnumber(L, (double) p[2] / 255.0);
-    lua_pushnumber(L, (double) p[3] / 255.0);
-
-    return 4;
-}
-
-static int E_get_sprite_size(lua_State *L)
-{
-    int id = E_getsprite(L, -1);
-
-    lua_pushnumber(L, (double) get_sprite_w(id));
-    lua_pushnumber(L, (double) get_sprite_h(id));
-
-    return 2;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1175,6 +1136,32 @@ static int E_create_image(lua_State *L)
 {
     E_pushimage(L, send_create_image(L_getstring(L, -1)));
     return 1;
+}
+
+static int E_get_image_pixel(lua_State *L)
+{
+    unsigned char p[4];
+
+    get_image_p(E_getimage  (L, -3),
+                L_getinteger(L, -2),
+                L_getinteger(L, -1), p);
+
+    lua_pushnumber(L, (double) p[0] / 255.0);
+    lua_pushnumber(L, (double) p[1] / 255.0);
+    lua_pushnumber(L, (double) p[2] / 255.0);
+    lua_pushnumber(L, (double) p[3] / 255.0);
+
+    return 4;
+}
+
+static int E_get_image_size(lua_State *L)
+{
+    int id = E_getimage(L, -1);
+
+    lua_pushnumber(L, (double) get_image_w(id));
+    lua_pushnumber(L, (double) get_image_h(id));
+
+    return 2;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1517,8 +1504,6 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_bound",      E_set_entity_bound);
     lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
     lua_function(L, "set_entity_flag",       E_set_entity_flag);
-    lua_function(L, "set_entity_frag_prog",  E_set_entity_frag_prog);
-    lua_function(L, "set_entity_vert_prog",  E_set_entity_vert_prog);
 
     lua_function(L, "get_entity_position",   E_get_entity_position);
     lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
@@ -1548,9 +1533,8 @@ void luaopen_electro(lua_State *L)
 
     /* Sprite control. */
 
+    lua_function(L, "set_sprite_brush",      E_set_sprite_brush);
     lua_function(L, "set_sprite_range",      E_set_sprite_range);
-    lua_function(L, "get_sprite_pixel",      E_get_sprite_pixel);
-    lua_function(L, "get_sprite_size",       E_get_sprite_size);
 
     /* String control. */
 
@@ -1565,6 +1549,11 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "stop_sound",            E_stop_sound);
     lua_function(L, "play_sound",            E_play_sound);
     lua_function(L, "loop_sound",            E_loop_sound);
+
+    /* Image control. */
+
+    lua_function(L, "get_image_pixel",       E_get_image_pixel);
+    lua_function(L, "get_image_size",        E_get_image_size);
 
     /* Brush control. */
 
@@ -1608,8 +1597,6 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_hidden",        FLAG_HIDDEN);
     lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",     FLAG_BILLBOARD);
-    lua_constant(L, "entity_flag_unlit",         FLAG_UNLIT);
-    lua_constant(L, "entity_flag_transparent",   FLAG_TRANSPARENT);
     lua_constant(L, "entity_flag_bounded",       FLAG_BOUNDED);
     lua_constant(L, "entity_flag_line_smooth",   FLAG_LINE_SMOOTH);
     lua_constant(L, "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0);
@@ -1617,9 +1604,17 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
 
+    lua_constant(L, "brush_flag_diffuse",        BRUSH_DIFFUSE);
+    lua_constant(L, "brush_flag_specular",       BRUSH_SPECULAR);
+    lua_constant(L, "brush_flag_ambient",        BRUSH_AMBIENT);
+    lua_constant(L, "brush_flag_shiny",          BRUSH_SHINY);
+    lua_constant(L, "brush_flag_transparent",    BRUSH_TRANSPARENT);
+    lua_constant(L, "brush_flag_unlit",          BRUSH_UNLIT);
+
     lua_constant(L, "host_flag_full",            HOST_FULL);
     lua_constant(L, "host_flag_stereo",          HOST_STEREO);
     lua_constant(L, "host_flag_framed",          HOST_FRAMED);
+
     lua_constant(L, "tile_flag_flip_x",          TILE_FLIP_X);
     lua_constant(L, "tile_flag_flip_y",          TILE_FLIP_Y);
     lua_constant(L, "tile_flag_offset",          TILE_OFFSET);

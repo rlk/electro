@@ -96,30 +96,54 @@ void recv_create_string(void)
 
 void send_set_string_fill(int i, int j)
 {
+    struct string *s = S(i);
+
+    dupe_brush(j);
+    free_brush(s->fill);
+
     send_event(EVENT_SET_STRING_FILL);
     send_index(i);
-    send_index((S(i)->fill = j));
+    send_index((s->fill = j));
 }
 
 void recv_set_string_fill(void)
 {
-    int i      = recv_index();
-    S(i)->fill = recv_index();
+    int i = recv_index();
+    int j = recv_index();
+
+    struct string *s = S(i);
+
+    dupe_brush(j);
+    free_brush(s->fill);
+
+    s->fill = j;
 }
 
 /*---------------------------------------------------------------------------*/
 
 void send_set_string_line(int i, int j)
 {
+    struct string *s = S(i);
+
+    dupe_brush(j);
+    free_brush(s->line);
+
     send_event(EVENT_SET_STRING_LINE);
     send_index(i);
-    send_index((S(i)->line = j));
+    send_index((s->line = j));
 }
 
 void recv_set_string_line(void)
 {
-    int i      = recv_index();
-    S(i)->line = recv_index();
+    int i = recv_index();
+    int j = recv_index();
+
+    struct string *s = S(i);
+
+    dupe_brush(j);
+    free_brush(s->line);
+
+    s->line = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -166,9 +190,15 @@ static void draw_string(int j, int i, int f, float a)
     {
         transform_entity(j);
 
-        glPushAttrib(GL_DEPTH_BUFFER_BIT);
+        glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
         {
             glDepthMask(GL_FALSE);
+
+            glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+
+            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
 
             draw_brush(S(i)->fill, a * get_entity_alpha(j));
             draw_font (S(i)->font, S(i)->text, 0);

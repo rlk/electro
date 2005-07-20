@@ -18,7 +18,7 @@
 #include "frustum.h"
 #include "buffer.h"
 #include "entity.h"
-#include "image.h"
+#include "brush.h"
 #include "event.h"
 #include "sprite.h"
 
@@ -28,7 +28,7 @@ struct sprite
 {
     int   count;
     int   state;
-    int   image;
+    int   brush;
     float s0;
     float s1;
     float t0;
@@ -54,13 +54,13 @@ static int new_sprite(void)
 
 /*===========================================================================*/
 
-int send_create_sprite(const char *filename)
+int send_create_sprite(int j)
 {
     int i;
 
     if ((i = new_sprite()) >= 0)
     {
-        S(i)->image = send_create_image(filename);
+        S(i)->brush = j;
         S(i)->count = 1;
         S(i)->s0 = 0.0f;
         S(i)->t0 = 0.0f;
@@ -68,7 +68,7 @@ int send_create_sprite(const char *filename)
         S(i)->t1 = 1.0f;
 
         send_event(EVENT_CREATE_SPRITE);
-        send_index(S(i)->image);
+        send_index(S(i)->brush);
 
         return send_create_entity(TYPE_SPRITE, i);
     }
@@ -78,8 +78,9 @@ int send_create_sprite(const char *filename)
 void recv_create_sprite(void)
 {
     int i = new_sprite();
+    int j = recv_index();
 
-    S(i)->image = recv_index();
+    S(i)->brush = j;
     S(i)->count = 1;
     S(i)->s0 = 0.0f;
     S(i)->t0 = 0.0f;
@@ -87,6 +88,33 @@ void recv_create_sprite(void)
     S(i)->t1 = 1.0f;
 
     recv_create_entity();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_sprite_brush(int i, int j)
+{
+    struct sprite *s = S(i);
+
+    dupe_brush(j);
+    free_brush(s->brush);
+
+    send_event(EVENT_SET_SPRITE_BRUSH);
+    send_index(i);
+    send_index((s->brush = j));
+}
+
+void recv_set_sprite_brush(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+
+    struct sprite *s = S(i);
+
+    dupe_brush(j);
+    free_brush(s->brush);
+
+    s->brush = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -111,31 +139,14 @@ void recv_set_sprite_range(void)
     S(i)->t1 = recv_float();
 }
 
-/*---------------------------------------------------------------------------*/
-
-void get_sprite_p(int i, int x, int y, unsigned char p[4])
-{
-    get_image_p(S(i)->image, x, y, p);
-}
-
-int get_sprite_w(int i)
-{
-    return get_image_w(S(i)->image);
-}
-
-int get_sprite_h(int i)
-{
-    return get_image_h(S(i)->image);
-}
-
 /*===========================================================================*/
 
 static void draw_sprite(int j, int i, int f, float a)
 {
     glPushMatrix();
     {
-        int dx = get_image_w(S(i)->image) / 2;
-        int dy = get_image_h(S(i)->image) / 2;
+        int dx = get_brush_w(S(i)->brush) / 2;
+        int dy = get_brush_h(S(i)->brush) / 2;
 
         /* Apply the local coordinate system transformation. */
 
@@ -143,11 +154,9 @@ static void draw_sprite(int j, int i, int f, float a)
 
         if (test_entity_bbox(j) >= 0)
         {
-            /* Draw the image to the color buffer. */
+            /* Draw the sprite to the color buffer. */
 
-            draw_image(S(i)->image);
-
-            glColor4f(1, 1, 1, a * get_entity_alpha(j));
+            draw_brush(S(i)->brush, a * get_entity_alpha(j));
 
             glBegin(GL_QUADS);
             {
@@ -168,8 +177,8 @@ static void draw_sprite(int j, int i, int f, float a)
 
 static int bbox_sprite(int i, float bound[6])
 {
-    int dx = get_image_w(S(i)->image) / 2;
-    int dy = get_image_h(S(i)->image) / 2;
+    int dx = get_brush_w(S(i)->brush) / 2;
+    int dy = get_brush_h(S(i)->brush) / 2;
 
     bound[0] = -dx;
     bound[1] = -dy;
@@ -192,7 +201,7 @@ static void free_sprite(int i)
 {
     if (--S(i)->count == 0)
     {
-        free_image(S(i)->image);
+        free_brush(S(i)->brush);
         memset(S(i), 0, sizeof (struct sprite));
     }
 }

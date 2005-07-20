@@ -16,6 +16,7 @@
 
 #include "opengl.h"
 #include "vector.h"
+#include "frustum.h"
 #include "display.h"
 #include "matrix.h"
 #include "buffer.h"
@@ -37,7 +38,7 @@ struct entity
 {
     int type;
     int data;
-    int flag;
+    int flags;
     int state;
 
     /* Entity transformation. */
@@ -47,13 +48,6 @@ struct entity
     float scale[3];
     float bound[6];
     float alpha;
-
-    /* Entity fragment and vertex programs. */
-
-    char  *frag_text;
-    char  *vert_text;
-    GLuint frag_prog;
-    GLuint vert_prog;
 
     /* Entity hierarchy. */
 
@@ -101,7 +95,7 @@ int entity_type(int i)
 
 int entity_flag(int i)
 {
-    return E(i)->flag;
+    return E(i)->flags;
 }
 
 const char *entity_name(int i)
@@ -150,7 +144,7 @@ void transform_entity(int i)
 
     /* Billboard. */
 
-    if (E(i)->flag & FLAG_BILLBOARD)
+    if (E(i)->flags & FLAG_BILLBOARD)
     {
         float M[16];
 
@@ -181,15 +175,8 @@ static void init_entity(int i)
         if (entity_func[E(i)->type]       &&
             entity_func[E(i)->type]->bbox &&
             entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
-            E(i)->flag |= FLAG_BOUNDED;
+            E(i)->flags |= FLAG_BOUNDED;
 
-        /* Initialize any vertex and fragment programs. */
-
-        if (E(i)->vert_text && GL_has_vertex_program)
-            E(i)->vert_prog = opengl_vert_prog(E(i)->vert_text);
-
-        if (E(i)->frag_text && GL_has_fragment_program)
-            E(i)->frag_prog = opengl_frag_prog(E(i)->frag_text);
 
         E(i)->state = 1;
     }
@@ -199,18 +186,6 @@ static void fini_entity(int i)
 {
     if (E(i)->state == 1)
     {
-        /* Finalize any vertex and fragment programs. */
-
-        if (GL_has_vertex_program)
-            if (glIsProgramARB(E(i)->vert_prog))
-                glDeleteProgramsARB(1, &E(i)->vert_prog);
-
-        if (GL_has_fragment_program)
-            if (glIsProgramARB(E(i)->frag_prog))
-                glDeleteProgramsARB(1, &E(i)->frag_prog);
-                
-        E(i)->vert_prog = 0;
-        E(i)->frag_prog = 0;
         E(i)->state     = 0;
     }
 }
@@ -221,7 +196,7 @@ int test_entity_bbox(int i)
 {
     struct frustum F;
 
-    if (E(i)->flag & FLAG_BOUNDED)
+    if (E(i)->flags & FLAG_BOUNDED)
     {
         get_frustum(&F);
         return tst_frustum(&F, E(i)->bound);
@@ -237,7 +212,7 @@ void draw_entity_tree(int i, int f, float a)
     /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
     for (j = E(i)->car; j; j = E(j)->cdr)
-        if ((E(j)->flag & FLAG_HIDDEN) == 0)
+        if ((E(j)->flags & FLAG_HIDDEN) == 0)
         {
             init_entity(j);
 
@@ -247,38 +222,13 @@ void draw_entity_tree(int i, int f, float a)
             {
                 /* Enable wireframe if specified. */
 
-                if (E(j)->flag & FLAG_WIREFRAME)
+                if (E(j)->flags & FLAG_WIREFRAME)
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-                /* Disable lighting if requested. */
-
-                if (E(j)->flag & FLAG_UNLIT)
-                    glDisable(GL_LIGHTING);
-
-                /* Disable depth writing of transparent objects. */
-
-                if (E(j)->flag & FLAG_TRANSPARENT)
-                    glDepthMask(GL_FALSE);
 
                 /* Enable line smoothing if requested. */
 
-                if (E(j)->flag & FLAG_LINE_SMOOTH)
+                if (E(j)->flags & FLAG_LINE_SMOOTH)
                     glEnable(GL_LINE_SMOOTH);
-
-                /* Enable vertex and fragment programs if specified. */
-
-                if (E(j)->frag_prog && GL_has_fragment_program)
-                {
-                    glEnable(GL_FRAGMENT_PROGRAM_ARB);
-                    glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, E(j)->frag_prog);
-                }
-
-                if (E(j)->vert_prog && GL_has_vertex_program)
-                {
-                    glEnable(GL_VERTEX_PROGRAM_ARB);
-                    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-                    glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   E(j)->vert_prog);
-                }
 
                 /* Draw this entity. */
 
@@ -338,14 +288,11 @@ static void create_entity(int i, int type, int data)
 
     E(i)->type     = type;
     E(i)->data     = data;
-    E(i)->flag     = 0;
+    E(i)->flags    = 0;
     E(i)->scale[0] = 1;
     E(i)->scale[1] = 1;
     E(i)->scale[2] = 1;
     E(i)->alpha    = 1;
-
-    if (E(i)->type == TYPE_SPRITE)
-        E(i)->flag =  FLAG_TRANSPARENT;
 
     attach_entity(i, 0);
 }
@@ -479,63 +426,17 @@ void send_set_entity_alpha(int i, float a)
     send_float((E(i)->alpha = a));
 }
 
-void send_set_entity_flag(int i, int flags, int state)
+void send_set_entity_flags(int i, int flags, int state)
 {
-    send_event(EVENT_SET_ENTITY_FLAG);
+    send_event(EVENT_SET_ENTITY_FLAGS);
     send_index(i);
     send_index(flags);
     send_index(state);
 
     if (state)
-        E(i)->flag = E(i)->flag | ( flags);
+        E(i)->flags = E(i)->flags | ( flags);
     else
-        E(i)->flag = E(i)->flag & (~flags);
-}
-
-void send_set_entity_frag_prog(int i, const char *text)
-{
-    int n = text ? (strlen(text) + 1) : 0;
-
-    send_event(EVENT_SET_ENTITY_FRAG_PROG);
-    send_index(i);
-    send_index(n);
-
-    fini_entity(i);
-
-    if (E(i)->frag_text)
-    {
-        free(E(i)->frag_text);
-        E(i)->frag_text = NULL;
-    }
-
-    if (n > 0)
-    {
-        E(i)->frag_text = memdup(text, n, 1);
-        send_array(text, n, 1);
-    }
-}
-
-void send_set_entity_vert_prog(int i, const char *text)
-{
-    int n = text ? (strlen(text) + 1) : 0;
-
-    send_event(EVENT_SET_ENTITY_VERT_PROG);
-    send_index(i);
-    send_index(n);
-
-    fini_entity(i);
-
-    if (E(i)->vert_text)
-    {
-        free(E(i)->vert_text);
-        E(i)->vert_text = NULL;
-    }
-
-    if (n > 0)
-    {
-        E(i)->vert_text = memdup(text, n, 1);
-        send_array(text, n, 1);
-    }
+        E(i)->flags = E(i)->flags & (~flags);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -654,56 +555,16 @@ void recv_set_entity_alpha(void)
     E(i)->alpha = recv_float();
 }
 
-void recv_set_entity_flag(void)
+void recv_set_entity_flags(void)
 {
     int i     = recv_index();
     int flags = recv_index();
     int state = recv_index();
 
     if (state)
-        E(i)->flag = E(i)->flag | ( flags);
+        E(i)->flags = E(i)->flags | ( flags);
     else
-        E(i)->flag = E(i)->flag & (~flags);
-}
-
-void recv_set_entity_frag_prog(void)
-{
-    int i = recv_index();
-    int n = recv_index();
-
-    fini_entity(i);
-
-    if (E(i)->frag_text)
-    {
-        free(E(i)->frag_text);
-        E(i)->frag_text = NULL;
-    }
-
-    if (n > 0)
-    {
-        E(i)->frag_text = (char *) malloc(n);
-        recv_array(E(i)->frag_text, n, 1);
-    }
-}
-
-void recv_set_entity_vert_prog(void)
-{
-    int i = recv_index();
-    int n = recv_index();
-
-    fini_entity(i);
-
-    if (E(i)->vert_text)
-    {
-        free(E(i)->vert_text);
-        E(i)->vert_text = NULL;
-    }
-
-    if (n > 0)
-    {
-        E(i)->vert_text = (char *) malloc(n);
-        recv_array(E(i)->vert_text, n, 1);
-    }
+        E(i)->flags = E(i)->flags & (~flags);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -748,7 +609,7 @@ void get_entity_bound(int i, float v[6])
     if (entity_func[E(i)->type]       &&
         entity_func[E(i)->type]->bbox &&
         entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
-        E(i)->flag |= FLAG_BOUNDED;
+        E(i)->flags |= FLAG_BOUNDED;
 
     v[0] = E(i)->bound[0];
     v[1] = E(i)->bound[1];
@@ -763,9 +624,9 @@ float get_entity_alpha(int i)
     return E(i)->alpha;
 }
 
-int get_entity_flag(int i)
+int get_entity_flags(int i)
 {
-    return E(i)->flag;
+    return E(i)->flags;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -897,14 +758,14 @@ void step_entities(void)
 
         else if (E(i)->type)
         {
-            if (E(i)->flag & FLAG_POS_TRACKED_0)
+            if (E(i)->flags & FLAG_POS_TRACKED_0)
                 send_set_entity_position(i, p[0]);
-            if (E(i)->flag & FLAG_POS_TRACKED_1)
+            if (E(i)->flags & FLAG_POS_TRACKED_1)
                 send_set_entity_position(i, p[1]);
 
-            if (E(i)->flag & FLAG_ROT_TRACKED_0)
+            if (E(i)->flags & FLAG_ROT_TRACKED_0)
                 send_set_entity_rotation(i, r[0]);
-            if (E(i)->flag & FLAG_ROT_TRACKED_1)
+            if (E(i)->flags & FLAG_ROT_TRACKED_1)
                 send_set_entity_rotation(i, r[1]);
         }
 }

@@ -387,7 +387,7 @@ int get_image_h(int i)
 
 void init_image(int i)
 {
-    if (i >= 0 && I(i)->state == 0)
+    if (I(i)->state == 0)
     {
         I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
         I(i)->state   = 1;
@@ -396,7 +396,7 @@ void init_image(int i)
 
 void fini_image(int i)
 {
-    if (i >= 0 && I(i)->state == 1)
+    if (I(i)->state == 1)
     {
         if (glIsTexture(I(i)->texture))
             glDeleteTextures(1, &I(i)->texture);
@@ -408,11 +408,8 @@ void fini_image(int i)
 
 void draw_image(int i)
 {
-    if (i >= 0)
-    {
-        init_image(i);
-        glBindTexture(GL_TEXTURE_2D, I(i)->texture);
-    }
+    init_image(i);
+    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
 }
 
 void dupe_image(int i)
@@ -466,6 +463,7 @@ int startup_image(void)
             I(i)->filename = "null";
             I(i)->texture  =      0;
             I(i)->state    =      0;
+            I(i)->count    =      1;
             I(i)->w        =    128;
             I(i)->h        =    128;
             I(i)->b        =      4;

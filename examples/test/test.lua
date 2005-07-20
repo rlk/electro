@@ -25,6 +25,7 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
+    image  = E.create_image("box_rgb.jpg")
     brush1 = E.create_brush()
     brush2 = E.create_brush()
 
@@ -35,6 +36,8 @@ function do_start()
     E.parent_entity(pivot, light)
     E.parent_entity(thing1, pivot)
 
+    E.set_brush_image(brush1, image)
+    E.set_brush_image(brush2, nil)
     E.set_brush_color(brush1, 1.0, 1.0, 0.0, 1.0)
     E.set_brush_color(brush2, 0.5, 0.5, 0.5, 1.0,
                               0.5, 0.5, 0.5, 1.0,

@@ -38,11 +38,12 @@
 
 /* Brush flags */
 
-#define BRUSH_TRANSPARENT 0x01
-#define BRUSH_DIFFUSE     0x02
-#define BRUSH_SPECULAR    0x04
-#define BRUSH_AMBIENT     0x08
-#define BRUSH_SHINY       0x10
+#define BRUSH_DIFFUSE     0x0001
+#define BRUSH_SPECULAR    0x0002
+#define BRUSH_AMBIENT     0x0004
+#define BRUSH_SHINY       0x0008
+#define BRUSH_TRANSPARENT 0x0010
+#define BRUSH_UNLIT       0x0020
 
 /*---------------------------------------------------------------------------*/
 
@@ -81,6 +82,11 @@ void free_brush(int);
 
 void init_brushes(void);
 void fini_brushes(void);
+
+/*---------------------------------------------------------------------------*/
+
+int  get_brush_w(int);
+int  get_brush_h(int);
 
 /*---------------------------------------------------------------------------*/
 

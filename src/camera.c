@@ -220,7 +220,7 @@ static void test_camera(int tile, int eye, int flag)
 }
 */
 
-static void test_camera(int eye, int flag)
+static void test_camera(int eye, int flags)
 {
     /* Map the tile onto the unit cube. */
 
@@ -240,7 +240,7 @@ static void test_camera(int eye, int flag)
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LESS);
 
-        if (flag & DRAW_VARRIER_TEXGEN)
+        if (flags & DRAW_VARRIER_TEXGEN)
             set_texture_coordinates();
 
         draw_image(0);
@@ -326,7 +326,7 @@ void draw_camera(int j, int i, int f, float a)
                 {
                     transform_camera(j);
 
-                    if (get_tile_flag(tile) & TILE_TEST)
+                    if (get_tile_flags(tile) & TILE_TEST)
                         test_camera(eye, flag);
                     else
                         draw_entity_tree(j, flag, a * get_entity_alpha(j));

@@ -107,7 +107,19 @@ will be reported as undefined.  </p>
 E.set_background(0.0, 0.5, 1.0)
 </pre>
 
-<h2> Entity API </h2>
+<p> These are the major functional sections of the Electro API: </p>
+
+<ul>
+<li><a href="#entity"> Entities </a>
+<li><a href="#image"> Images </a>
+<li><a href="#brush"> Brushes </a>
+<li><a href="#sound"> Sound </a>
+<li><a href="#console"> Console </a>
+<li><a href="#configuration"> Configuration </a>
+<li><a href="#miscellaneous"> Miscellaneous </a>
+</ul>
+
+<a name="entity"><h2> Entities </h2>
 
 <p> The core of any Electro application is the scene graph.  The scene
 graph is a very common organizing scheme in 3D graphics, and examples
@@ -165,33 +177,12 @@ curve specifiers appearing in OBJ files will be silently ignored.
 If curves are required, tesselate them using your favorite 3D
 modeller. </p>
 
-<p class="note"> The Electro OBJ loader allows one non-standard
-extension to the OBJ specification.  An MTL file may include a "Ke"
-specifier which behaves like a "Kd", "Ka", or "Ks" specifier but
-defines an emissive material property rather than a diffuse, ambient,
-or specular property.  Standard exporters do not produce this tag
-and importers simply ignore it, so it does not get in the way of
-normal OBJ file usage.</p>
-
-<dt><i>sprite</i> = <tt>create_sprite</tt>(<i>filename</i>)<dd><p>
-Load an image file and create a sprite entity.  A sprite consists of a
-single quadrilateral, textured using the given image.  Image files may
-be in JPG or PNG format.  The default size of the sprite object is
-equal to the size of the source image.  Commonly, sprite objects are
-used as billboards in 3D scenes, or are displayed as 2D overlays using
-an orthogonal camera.  </p>
-
-<p class="note"> Unextended OpenGL requires that the width and height
-of all texture map images be a power of two.  It can be inconvenient
-to satisfy this requirement, so Electro automatically rescales
-non-power-of-two textures up to the nearest power-of-two size.  This
-is only done internally, so a sprite's size and aspect ratio will
-reflect the <i>original</i> image attributes.  The scaling is done
-using the standard OpenGL utility method, but it can still result in
-image quality degradation.  If you are picky about image quality, or
-you desire pixel-for-pixel correctness, be sure to use only
-power-of-two source images.  The same applies to texture images loaded
-by <tt>create_object</tt>.</p>
+<dt><i>sprite</i> = <tt>create_sprite</tt>(<i>brush</i>)<dd><p> Create
+a sprite entity using the given brush.  A sprite consists of a single
+quadrilateral.  The default size of the sprite object is equal to the
+size of the brush's image.  Commonly, sprite objects are used as
+billboards in 3D scenes, or are displayed as 2D overlays using an
+orthogonal camera.  </p>
 
 <dt><i>string</i> = <tt>create_string</tt>(<i>text</i>)<dd><p> Create
 a string object using the current typeface and the given text.  A
@@ -344,7 +335,8 @@ the scale of the entity.  The 3 values give scale multipliers along
 the X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
 
-<dt><tt>set_entity_bound</tt>(<i>entity, x0, y0, z0, x1, y1, z1</i>)
+<dt><tt>set_entity_bound</tt>(<i>entity, x<sub>0</sub>, y<sub>0</sub>,
+z<sub>0</sub>, x<sub>1</sub>, y<sub>1</sub>, z<sub>1</sub></i>)
 <dd><p> Specify the axis-aligned bounding box of the entity.  The 6
 values give the minimum and maximum X, Y, and Z values in object
 coordinates.</p>
@@ -402,22 +394,6 @@ accumulate.  That is, if a parent and a child both specify
 <i>alpha</i>=0.5 then the child will appear with a transparency of
 0.25.</p>
 
-<dt><tt>set_entity_frag_prog</tt>(<i>entity, file</i>)<dd><p> Specify
-a fragment program to be applied to <i>entity</i> and its children.
-The <i>file</i> argument gives a text file in ARB fragment program
-syntax.</p>
-
-<dt><tt>set_entity_vert_prog</tt>(<i>entity, file</i>)<dd><p> Specify
-a vertex program to be applied to <i>entity</i> and its children.
-The <i>file</i> argument gives a text file in ARB vertex program
-syntax.</p>
-
-<p class="note"> ARB fragment and vertex program syntaxes were chosen
-because the standards are mature.  High-quality implementations are
-wide-spread and available on a nice array of hardware.  If you prefer
-a higher-level language, use one that can be compiled down to ARB_fp
-and ARB_vp, such as Cg. </p>
-
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -445,7 +421,8 @@ Return the vector pointing to the rear of entity in local coordinates.
 Return the scaling of the entity along the local X, Y, and Z axes.
 </p>
 
-<dt><i>x0, y0, z0, x1, y1, z1</i> =
+<dt><i>x<sub>0</sub>, y<sub>0</sub>, z<sub>0</sub>, x<sub>1</sub>,
+y<sub>1</sub>, z<sub>1</sub></i> =
 <tt>get_entity_bound</tt>(<i>entity</i>) <dd><p> Return the minimum
 and maximum X, Y, and Z values of the entity.  This may be used to
 determine the extent of an object or sprite.  This is useful when
@@ -463,7 +440,7 @@ the transparency value of the entity.
 <h4> Flags </h4>
 <dl>
 
-<dt><tt>set_entity_flag</tt>(<i>entity, flags, value</i>) <dd><p> Set
+<dt><tt>set_entity_flags</tt>(<i>entity, flags, value</i>) <dd><p> Set
 or clear flags on the given entity.  Entity flags enable and disable
 extra features in the entity hierarchy.  These flags act not only on
 the entity that carries them, but also on the children of that entity.
@@ -501,20 +478,6 @@ minor limitation in practice, as scaling is normally applied near the
 leaves of the scene hierarchy anyway.  The common case of an entity
 with local scaling <i>and</i> a local billboard flag will work
 properly, but when in doubt, scale below billboarding. </p>
-
-<li><tt> entity_flag_unlit </tt><p> Entities with the unlit flag are
-drawn with all lighting disabled.  They will appear fully bright.
-This is especially useful for sprite and wireframe objects which do
-not have lightable surfaces.  The unlit flag affects all sub entities
-and cannot be reversed lower in the hierarchy.</p>
-
-<li><tt> entity_flag_transparent </tt><p> Entities with the
-transparent flag are drawn to the color buffer but not the depth
-buffer.  This prevents transparent objects from occluding opaque
-objects during the depth test.  Sprites automatically have the
-transparent flag, though it may be removed if depth writing sprites
-are desired.  Objects with transparent diffuse colors do not have the
-transparent flag, but are not drawn to the depth buffer.</p>
 
 <li><tt> entity_flag_bounded </tt><p> Entities with the bounded flag
 are rendered only when their bounding box falls within the view
@@ -555,24 +518,18 @@ vice-versa. </p>
 <a name="sprite"><h3> Sprite </h3>
 <dl>
 
-<dt><tt>set_sprite_range</tt>(<i>sprite, s0, s1, t0, t1</i>)<dd><p>
-Set the texture coordinate rectangle used by a sprite.  By default,
-sprites use the entire texture.  This corresponds to texture
-coordinate rectangle (<i>0.0, 1.0, 0.0, 1.0</i>).  However it is
-frequently useful to display only a subset of a texture on a sprite.
-For example, a numerical display might use a single texture that
-contains images of all of the digits 0-9, and select the digit
-currently displayed simply by modifying the sprite bounds.  </p>
+<dt><tt>set_sprite_brush</tt>(<i>sprite, brush</i>)<dd><p> Set the
+brush used to display <i>sprite</i>. </p>
 
-<dt><i>r, g, b, a</i> = <tt>get_sprite_pixel</tt>(<i>sprite, x, y</i>)
-<dd><p> Return the color value of the (<i>x, y</i>) pixel of a sprite.
-This function always returns 4 color components.  If the source image
-does not include all four channels, then values are extrapolated:
-greyscale values are copied to all three color channels and opaque
-textures are assigned an alpha value of 1.</p>
-
-<dt><i>w, h</i> = <tt>get_sprite_size</tt>(<i>sprite</i>)<dd><p>
-Return the size of the sprite in pixels.</p>
+<dt><tt>set_sprite_range</tt>(<i>sprite, s<sub>0</sub>, s<sub>1</sub>,
+t<sub>0</sub>, t<sub>1</sub></i>)<dd><p> Set the texture coordinate
+rectangle used by <i>sprite</i>.  By default, a sprite uses its
+brush's entire image.  This corresponds to texture coordinate
+rectangle (<i>0.0, 1.0, 0.0, 1.0</i>).  However it is frequently
+useful to display only a subset of a texture on a sprite.  For
+example, a numerical display might use a single texture that contains
+images of all of the digits 0-9, and select the digit currently
+displayed simply by modifying the sprite bounds.  </p>
 
 </dl>
 
@@ -581,19 +538,19 @@ Return the size of the sprite in pixels.</p>
 <a name="string"><h3> String </h3>
 <dl>
 
-<dt><tt>set_string_value</tt>(<i>string, text</i>)<dd><p> Set the
+<dt><tt>set_string_text</tt>(<i>string, text</i>)<dd><p> Set the
 text displayed by the given string object. </p>
 
 <p class="note"> Modifying a string value is very cheap.  When an
 application requires that an on-screen text element change frequently,
-changes should be made using <tt>set_string_value</tt> rather than the
+changes should be made using <tt>set_string_text</tt> rather than the
 deletion and creation of string objects. </p>
 
-<dt><tt>set_string_fill</tt>(<i>string, r, g, b, a</i>)<dd> <p> Set the
-(<i>r, g, b, a</i>) fill color of the string entity.</p>
+<dt><tt>set_string_fill</tt>(<i>string, brush</i>)<dd> <p> Set the
+fill brush of the string entity.</p>
 
-<dt><tt>set_string_line</tt>(<i>string, r, g, b, a</i>)<dd> <p> Set the
-(<i>r, g, b, a</i>) outline color of the string entity.</p>
+<dt><tt>set_string_line</tt>(<i>string, brush</i>)<dd> <p> Set the
+outline brush of the string entity.</p>
 
 </dl>
 
@@ -602,11 +559,13 @@ deletion and creation of string objects. </p>
 <a name="camera"><h3> Camera </h3>
 <dl>
 
-<dt><tt>set_camera_stereo</tt>(<i>mode, lx, ly, lz, rx, ry,
-rz</i>)<dd><p> Set stereo options on the given camera.  The
-<i>mode</i> argument gives the stereo method, as described below.  The
-(<i>lx, ly, lz</i>) and (<i>rx, ry, rz</i>) arguments give the offsets
-from the camera to the user's left and right eyes.</p>
+<dt><tt>set_camera_stereo</tt>(<i>mode, x<sub>L</sub>, y<sub>L</sub>,
+z<sub>L</sub>, x<sub>R</sub>, y<sub>R</sub>, z<sub>R</sub></i>)<dd><p>
+Set stereo options on the given camera.  The <i>mode</i> argument
+gives the stereo method, as described below.  The (<i>x<sub>L</sub>,
+y<sub>L</sub>, z<sub>L</sub></i>) and (<i>x<sub>R</sub>,
+y<sub>R</sub>, z<sub>R</sub></i>) arguments give the offsets from the
+camera to the user's left and right eyes.</p>
 
 <p> The available stereo modes are as follows: </p>
 
@@ -667,12 +626,6 @@ linear scale of apparent star size.  For example, a magnitude value of
 100 will result in the very largest of stars being rendered
 approximately 100 pixels across.  </p>
 
-<!-- <p> Note that this is completely distinct from camera zoom.
-Tightening the view of a camera will not result in apparently brighter
-stars.  Commonly, any linear change applied to camera zoom should also
-be applied to galaxy magnitude in order to provide the illusion of
-increased magnification. </p> -->
-
 <dt><i>index</i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>
 Return the star "being pointed at" by the given entity.  That is, return
 the index of the closest to the forward vector of the entity.  This is
@@ -687,7 +640,133 @@ of <i>galaxy</i>.
 
 <!---------------------------------------------------------------------------->
 
-<h2> Sound API </h2>
+<a name="image"><h2> Images </h2>
+
+<p> Images are used as textures for objects, strings, and sprites. </p>
+
+<p> A default image of 128&times;128 white pixels is always available.
+It may be referenced using the symbol <tt>nil</tt> in any context
+where an image is required. </p>
+
+<dl>
+
+<dt><i>image</i> = <tt>create_image</tt>(<i>filename</i>)<dd><p> Load
+an image from the named PNG or JPEG file.  A given image file will
+only ever be loaded once.  Calling <tt>create_image</tt> a second time
+with the same filename will return the same image object.</p>
+
+<dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>)
+<dd><p> Return the color value of the (<i>x, y</i>) pixel of an image.
+This function always returns 4 color components.  If the source image
+does not include all four channels, then values are extrapolated:
+greyscale values are copied to all three color channels and opaque
+textures are assigned an alpha value of 1.</p>
+
+<dt><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>
+Return the size of the image in pixels.</p>
+
+<p class="note"> Unextended OpenGL requires that the width and height
+of all texture map images be a power of two.  It can be inconvenient
+to satisfy this requirement, so Electro automatically rescales
+non-power-of-two images up to the nearest power-of-two size.  This
+is only done internally, so an image's size and aspect ratio will
+reflect the <i>original</i> image attributes.  The scaling is done
+using the standard OpenGL utility method, but it can still result in
+image quality degradation.  If you are picky about image quality, or
+you desire pixel-for-pixel correctness, be sure to use only
+power-of-two source images.</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="brush"><h2> Brushes </h2>
+
+<p> Brushes describe the appearance of the surfaces of objects, strings,
+and sprites. </p>
+
+<p> A default brush is always available.  It has 80% grey opaque
+diffuse material, 0% specular, and 20% ambient material with a
+specular exponent of 0 (these coincide with the OpenGL defaults).  It
+references the default image.  The default brush may be referenced
+using the symbol <tt>nil</tt> in any context where a brush is
+required. </p>
+
+<dl>
+
+<dt><i>brush</i> = <tt>create_brush</tt>()<dd><p> Create a new brush
+object with the default material properties. </p>
+
+<dt><tt>set_brush_color</tt>(<i>brush,</i>
+[<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,
+    s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,
+    a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,
+    e</i>])<dd><p>
+Set the material color properties of <i>brush</i>.  All colors are optional
+and any not specified retain their existing values.
+The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>)
+arguments give the diffuse color, 
+    (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>)
+give the specular color,
+    (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>)
+give the ambient color, and <i>e</i> gives the specular exponent.</p>
+
+<dt><tt>set_brush_image</tt>(<i>brush, image</i>)<dd><p> Select
+<i>image</i> for use as the texture map of <i>brush</i>.</p>
+
+<dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p> Specify a
+fragment program to be applied to <i>brush</i>.  The <i>file</i>
+argument gives a text file in ARB fragment program syntax.  To remove
+a fragment program, specify <tt>nil</tt> for the <i>file</i>
+argument.</p>
+
+<dt><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)<dd><p> Specify a
+vertex program to be applied to <i>brush</i>.  The <i>file</i>
+argument gives a text file in ARB vertex program syntax.  to remove a
+vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+
+<p class="note"> ARB fragment and vertex program syntaxes were chosen
+because the standards are mature.  High-quality implementations are
+wide-spread and available on a nice array of hardware.  If you prefer
+a higher-level language, use one that can be compiled down to ARB_fp
+and ARB_vp, such as Cg. </p>
+
+<dt><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)<dd><p> Set or
+clear flags on the given brush.  Brush flags enable and disable the
+application of various material properties.  The <i>flag</i> argument
+gives the set of flags to be modified, and may be the sum of multiple
+flags.  The <i>value</i> argument is a boolean giving the desired
+state.  A value of <tt>true</tt> will set the given flags, and
+<tt>false</tt> will clear them. </p>
+
+<ul>
+<li><tt>brush_flag_diffuse</tt>
+<li><tt>brush_flag_specular</tt>
+<li><tt>brush_flag_ambient</tt>
+<li><tt>brush_flag_shiny</tt>
+<p> These flags control the application of each of the material color
+properties.  If any of these flags is <tt>false</tt> then the
+corresponding material is not applied at all.  This provides
+applications with a mechanism to control how material properties to
+trickle down the entity hierachy. </p>
+
+<li><tt>brush_flag_unlit</tt><p> Surfaces with an unlit brush are
+drawn with all lighting disabled.  They will appear fully bright.
+This is especially useful for sprite and wireframe objects which do
+not have lightable surfaces. </p>
+
+<li><tt>brush_flag_transparent</tt><p> Surfaces with a transparent
+brush are drawn to the color buffer but not the depth buffer.  This
+prevents transparent objects from occluding opaque objects during the
+depth test. </p>
+
+</ul>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="sound"><h2> Sound </h2>
 
 <p> Electro provides a basic audio API suitable for adding simple
 sounds to an application.  It supports streaming of arbitrary stereo
@@ -725,7 +804,7 @@ resources.  The stream may be restarted from the beginning.
 
 <!---------------------------------------------------------------------------->
 
-<h2> Console API </h2>
+<a name="console"><h2> Console </h2>
 
 <p> Electro uses a text console overlay to display error messages and enable
 run-time interaction with Lua state.  This console can be enabled and disabled
@@ -748,7 +827,7 @@ arguments via Lua's <tt>string.format</tt> function. </p>
 
 <!---------------------------------------------------------------------------->
 
-<h2> Configuration API </h2>
+<a name="configuration"><h2> Configuration </h2>
 
 <h3> Hosts </h3>
 <dl>
@@ -774,7 +853,7 @@ with MPI process initialization, so it must be performed immediately
 upon application startup, and cannot be modified later in an
 application's execution. </p>
 
-<dt><tt>set_host_flag</tt>(<i>host, flags, value</i>)<dd><p>Set or
+<dt><tt>set_host_flags</tt>(<i>host, flags, value</i>)<dd><p>Set or
 clear host flags on <i>host</i>.  The <i>flags</i> argument gives the
 set of flags to be modified and <i>value</i> gives the desired state.
 Like host window configurations, host flags must be specified at
@@ -819,14 +898,17 @@ Add a tile to a host, returning a tile index.  The <i>x, y, w, h</i>
 arguments give position and size of the area of the indexed host's
 render area to be used for display.
 
-<dt><tt>set_tile_position</tt>(<i>tile, ox, oy, oz, rx, ry, rz, ux,
-uy, uz</i>)<dd><p> Set the world-space position of <i>tile</i>.  The
-(<i>ox, oy, oz</i>) arguments give the position vector of the
-lower-left corner of the tile, usually the real-space lower-left
-corner of the display to which the tile is rendered.  The (<i>rx, ry,
-rz</i>) arguments give the "right" vector, from the lower-left corner
-to the lower-right corner.  The (<i>ux, uy, uz</i>) arguments give the
-"up" vector, from the lower-left corner to the upper-left corner.</p>
+<dt><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>,
+o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>,
+u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p> Set the
+world-space position of <i>tile</i>.  The (<i>o<sub>x</sub>,
+o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector
+of the origin of the tile, usually the real-space lower-left corner of
+the display to which the tile is rendered.  The (<i>r<sub>x</sub>,
+r<sub>y</sub>, r<sub>z</sub></i>) arguments give the "right" vector,
+from the origin to the lower-right corner.  The (<i>u<sub>x</sub>,
+u<sub>y</sub>, u<sub>z</sub></i>) arguments give the "up" vector, from
+the origin to the upper-left corner.</p>
 
 <p>These three vectors, with the view position vector, define the view
 frustum of the indexed tile's perspective projection.  The default
@@ -858,7 +940,7 @@ is dynamically tracked, but the reflection of a tile is viewed in a
 mirror.  Reflection must be enabled by setting the
 <tt>tile_flag_mirror</tt> option, below.</p>
 
-<dt><tt>set_tile_flag</tt>(<i>tile, flags, value</i>)<dd><p>Set or
+<dt><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)<dd><p>Set or
 clear tile flags on <i>tile</i>.  The <i>flags</i> argument gives the
 set of flags to be modified and <i>value</i> gives the desired
 state. </p>
@@ -896,22 +978,25 @@ This information is often useful when positioning entities in view of
 an orthogonal camera, or configuring a scene to match the aspect ratio
 of a display. </p>
 
-<dt><i>x0, y0, z0, x1, y1, z1</i> =
-<tt>get_display_bound</tt>()<dd><p> Return the axis-aligned bounding
-box of the entire display, in world coordinates.  This information is
-useful when positioning entities in view of a perspective camera. </p>
+<dt><i>x<sub>0</sub>, y<sub>0</sub>, z<sub>0</sub>, x<sub>1</sub>,
+y<sub>1</sub>, z<sub>1</sub></i> = <tt>get_display_bound</tt>()<dd><p>
+Return the axis-aligned bounding box of the entire display, in world
+coordinates.  This information is useful when positioning entities in
+view of a perspective camera. </p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<h2> Miscellaneous API </h2>
+<a name="miscellaneous"><h2> Miscellaneous API </h2>
 <dl>
 
-<dt><tt>set_background</tt>(<i>r0, g0, b0</i>, [<i>r1, g1,
-b1</i>])<dd><p> Set the backgound color of the display.  If only one
-color (<i>r0, g0, b0</i>) is specified, the background will appear a
-solid color.  If an optional second color (<i>r1, g1, b1</i>) is
+<dt><tt>set_background</tt>(<i>r<sub>0</sub>, g<sub>0</sub>,
+b<sub>0</sub></i>, [<i>r<sub>1</sub>, g<sub>1</sub>,
+b<sub>1</sub></i>])<dd><p> Set the backgound color of the display.  If
+only one color (<i>r<sub>0</sub>, g<sub>0</sub>, b<sub>0</sub></i>) is
+specified, the background will appear a solid color.  If an optional
+second color (<i>r<sub>1</sub>, g<sub>1</sub>, b<sub>1</sub></i>) is
 supplied, the background will be drawn with a top-to-bottom gradient.
 The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to
 (<i>0.1, 0.2, 0.4</i>). </p>
@@ -921,9 +1006,9 @@ outline</i>])<dd><p> Set the typeface to be used for all subsequently
 created string entities.  The filename gives a TrueType font file.</p>
 
 <p> The optional <i>epsilon</i> parameter gives an error bound in
-world units to which glyphs are tessalated.  This allows the
+world units to which glyphs are tesselated.  This allows the
 application to make a quality-speed trade-off, favoring finely
-tessalated text for magnified string entities, and coarse text for
+tesselated text for magnified string entities, and coarse text for
 minimized string entities.  The default <i>epsilon</i> value is
 <i>0.001</i>.</p>
 

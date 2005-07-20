@@ -21,17 +21,14 @@ struct entity_func *startup_sprite(void);
 
 /*---------------------------------------------------------------------------*/
 
-int  send_create_sprite(const char *);
+int  send_create_sprite(int);
 void recv_create_sprite(void);
+
+void send_set_sprite_brush(int, int);
+void recv_set_sprite_brush(void);
 
 void send_set_sprite_range(int, float, float, float, float);
 void recv_set_sprite_range(void);
-
-/*---------------------------------------------------------------------------*/
-
-void get_sprite_p(int, int, int, unsigned char[4]);
-int  get_sprite_w(int);
-int  get_sprite_h(int);
 
 /*---------------------------------------------------------------------------*/
 

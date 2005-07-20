@@ -27,6 +27,7 @@
 #include "utility.h"
 #include "sound.h"
 #include "image.h"
+#include "brush.h"
 #include "font.h"
 #include "event.h"
 #include "server.h"
