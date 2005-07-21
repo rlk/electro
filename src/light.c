@@ -34,14 +34,17 @@ static vector_t light;
 
 /*---------------------------------------------------------------------------*/
 
-#define L(i) ((struct light *) vecget(light, i))
+static struct light *get_light(int i)
+{
+    return (struct light *) vecget(light, i);
+}
 
 static int new_light(void)
 {
     int i, n = vecnum(light);
 
     for (i = 0; i < n; ++i)
-        if (L(i)->count == 0)
+        if (get_light(i)->count == 0)
             return i;
 
     return vecadd(light);
@@ -55,15 +58,17 @@ int send_create_light(int type)
 
     if ((i = new_light()) >= 0)
     {
+        struct light *l = get_light(i);
+
         send_event(EVENT_CREATE_LIGHT);
         send_index(type);
 
-        L(i)->count = 1;
-        L(i)->type  = type;
-        L(i)->d[0]  = 1.0f;
-        L(i)->d[1]  = 1.0f;
-        L(i)->d[2]  = 1.0f;
-        L(i)->d[3]  = 1.0f;
+        l->count = 1;
+        l->type  = type;
+        l->d[0]  = 1.0f;
+        l->d[1]  = 1.0f;
+        l->d[2]  = 1.0f;
+        l->d[3]  = 1.0f;
 
         return send_create_entity(TYPE_LIGHT, i);
     }
@@ -72,14 +77,14 @@ int send_create_light(int type)
 
 void recv_create_light(void)
 {
-    int i = new_light();
+    struct light *l = get_light(new_light());
 
-    L(i)->count = 1;
-    L(i)->type  = recv_index();
-    L(i)->d[0]  = 1.0f;
-    L(i)->d[1]  = 1.0f;
-    L(i)->d[2]  = 1.0f;
-    L(i)->d[3]  = 1.0f;
+    l->count = 1;
+    l->type  = recv_index();
+    l->d[0]  = 1.0f;
+    l->d[1]  = 1.0f;
+    l->d[2]  = 1.0f;
+    l->d[3]  = 1.0f;
 
     recv_create_entity();
 }
@@ -88,27 +93,31 @@ void recv_create_light(void)
 
 void send_set_light_color(int i, float r, float g, float b)
 {
+    struct light *l = get_light(i);
+
     send_event(EVENT_SET_LIGHT_COLOR);
     send_index(i);
 
-    send_float((L(i)->d[0] = r));
-    send_float((L(i)->d[1] = g));
-    send_float((L(i)->d[2] = b));
+    send_float((l->d[0] = r));
+    send_float((l->d[1] = g));
+    send_float((l->d[2] = b));
 }
 
 void recv_set_light_color(void)
 {
-    int i = recv_index();
+    struct light *l = get_light(recv_index());
 
-    L(i)->d[0] = recv_float();
-    L(i)->d[1] = recv_float();
-    L(i)->d[2] = recv_float();
+    l->d[0] = recv_float();
+    l->d[1] = recv_float();
+    l->d[2] = recv_float();
 }
 
 /*===========================================================================*/
 
 static void draw_light(int j, int i, int f, float a)
 {
+    struct light *l = get_light(i);
+
     glPushAttrib(GL_ENABLE_BIT);
     glPushMatrix();
     {
@@ -122,15 +131,15 @@ static void draw_light(int j, int i, int f, float a)
 
         get_entity_position(j, p);
 
-        if (L(i)->type == LIGHT_POSITIONAL)  p[3] = 1.0f;
-        if (L(i)->type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
+        if (l->type == LIGHT_POSITIONAL)  p[3] = 1.0f;
+        if (l->type == LIGHT_DIRECTIONAL) p[3] = 0.0f;
 
         /* Enable this light and render all child entities. */
 
         glEnable(GL_LIGHTING);
         glEnable(o);
         
-        glLightfv(o, GL_DIFFUSE,  L(i)->d);
+        glLightfv(o, GL_DIFFUSE,  l->d);
         glLightfv(o, GL_POSITION, p);
 
         draw_entity_tree(j, f, a * get_entity_alpha(j));
@@ -143,13 +152,15 @@ static void draw_light(int j, int i, int f, float a)
 
 static void dupe_light(int i)
 {
-    L(i)->count++;
+    get_light(i)->count++;
 }
 
 static void free_light(int i)
 {
-    if (--L(i)->count == 0)
-        memset(L(i), 0, sizeof (struct light));
+    struct light *l = get_light(i);
+
+    if (--l->count == 0)
+        memset(l, 0, sizeof (struct light));
 }
 
 /*===========================================================================*/

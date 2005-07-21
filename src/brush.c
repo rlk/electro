@@ -517,7 +517,15 @@ void fini_brush(int i)
 int draw_brush(int i, float a)
 {
     struct brush *b = get_brush(i);
-    int transparent = (b->flags & BRUSH_TRANSPARENT);
+    
+    float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    /* Modulate the diffuse color by the current value. */
+
+    d[0] = b->d[0];
+    d[1] = b->d[1];
+    d[2] = b->d[2];
+    d[3] = b->d[3] * a;
 
     /* Apply the texture. */
 
@@ -536,48 +544,42 @@ int draw_brush(int i, float a)
         glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
     }
 
-    /* Apply the material properties. */
-    
-    if (b->flags & BRUSH_DIFFUSE)
+    /* Disable lighting, if requested. */
+
+    if (b->flags & BRUSH_UNLIT)
     {
-        float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-        /* Modulate the diffuse color by the current value. */
-
-        d[0] = b->d[0];
-        d[1] = b->d[1];
-        d[2] = b->d[2];
-        d[3] = b->d[3] * a;
-
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,d);
-
-        transparent |= (d[3] < 1);
+        glDisable(GL_LIGHTING);
+        glColor4fv(d);
     }
-
-    if (b->flags & BRUSH_AMBIENT)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   b->a);
-    if (b->flags & BRUSH_SPECULAR)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  b->s);
-    if (b->flags & BRUSH_SHINY)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, b->x);
+    else
+    {
+        /* Apply the material properties. */
+    
+        if (b->flags & BRUSH_DIFFUSE)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   d);
+        if (b->flags & BRUSH_AMBIENT)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   b->a);
+        if (b->flags & BRUSH_SPECULAR)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  b->s);
+        if (b->flags & BRUSH_SHINY)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, b->x);
+    }
 
     /* Return an indication that this brush is transparent. */
 
-    return transparent;
+    return (d[3] < 1) | (b->flags & BRUSH_TRANSPARENT);
 }
 
 void dupe_brush(int i)
 {
-    struct brush *b = get_brush(i);
-
-    b->count++;
+    get_brush(i)->count++;
 }
 
 void free_brush(int i)
 {
     struct brush *b = get_brush(i);
 
-    if (--b->count == 0)
+    if (i > 0 && --b->count == 0)
     {
         fini_brush(i);
 
@@ -619,7 +621,7 @@ void fini_brushes(void)
 
     for (i = 0; i < n; ++i)
         if (get_brush(i)->count)
-            free_brush(i);
+            fini_brush(i);
 }
 
 /*===========================================================================*/
@@ -658,8 +660,9 @@ int startup_brush(void)
             b->a[3] = BRUSH_AMBIENT_A;
 
             b->x[0] = BRUSH_SHININESS;
+
+            return 1;
         }
-        return 1;
     }
     return 0;
 }

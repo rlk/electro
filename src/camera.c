@@ -48,14 +48,17 @@ static vector_t camera;
 
 /*---------------------------------------------------------------------------*/
 
-#define C(i) ((struct camera *) vecget(camera, i))
+static struct camera *get_camera(int i)
+{
+    return (struct camera *) vecget(camera, i);
+}
 
 static int new_camera(void)
 {
     int i, n = vecnum(camera);
 
     for (i = 0; i < n; ++i)
-        if (C(i)->count == 0)
+        if (get_camera(i)->count == 0)
             return i;
 
     return vecadd(camera);
@@ -69,15 +72,17 @@ int send_create_camera(int t)
 
     if ((i = new_camera()) >= 0)
     {
-        C(i)->count = 1;
-        C(i)->type  = t;
-        C(i)->n     = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
-        C(i)->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
+        struct camera *c = get_camera(i);
+
+        c->count = 1;
+        c->type  = t;
+        c->n     = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
+        c->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
 
         send_event(EVENT_CREATE_CAMERA);
         send_index(t);
-        send_float(C(i)->n);
-        send_float(C(i)->f);
+        send_float(c->n);
+        send_float(c->f);
 
         return send_create_entity(TYPE_CAMERA, i);
     }
@@ -89,10 +94,12 @@ void recv_create_camera(void)
     int i = new_camera();
     int t = recv_index();
 
-    C(i)->count = 1;
-    C(i)->type  = t;
-    C(i)->n     = recv_float();
-    C(i)->f     = recv_float();
+    struct camera *c = get_camera(i);
+
+    c->count = 1;
+    c->type  = t;
+    c->n     = recv_float();
+    c->f     = recv_float();
 
     recv_create_entity();
 }
@@ -101,45 +108,47 @@ void recv_create_camera(void)
 
 void send_set_camera_offset(int i, const float p[3], const float M[16])
 {
+    struct camera *c = get_camera(i);
+
     send_event(EVENT_SET_CAMERA_OFFSET);
     send_index(i);
 
-    send_float((C(i)->pos_offset[0]    = p[0]));
-    send_float((C(i)->pos_offset[1]    = p[1]));
-    send_float((C(i)->pos_offset[2]    = p[2]));
+    send_float((c->pos_offset[0]    = p[0]));
+    send_float((c->pos_offset[1]    = p[1]));
+    send_float((c->pos_offset[2]    = p[2]));
 
-    send_float((C(i)->view_basis[0][0] = M[0]));
-    send_float((C(i)->view_basis[0][1] = M[1]));
-    send_float((C(i)->view_basis[0][2] = M[2]));
+    send_float((c->view_basis[0][0] = M[0]));
+    send_float((c->view_basis[0][1] = M[1]));
+    send_float((c->view_basis[0][2] = M[2]));
 
-    send_float((C(i)->view_basis[1][0] = M[4]));
-    send_float((C(i)->view_basis[1][1] = M[5]));
-    send_float((C(i)->view_basis[1][2] = M[6]));
+    send_float((c->view_basis[1][0] = M[4]));
+    send_float((c->view_basis[1][1] = M[5]));
+    send_float((c->view_basis[1][2] = M[6]));
 
-    send_float((C(i)->view_basis[2][0] = M[8]));
-    send_float((C(i)->view_basis[2][1] = M[9]));
-    send_float((C(i)->view_basis[2][2] = M[10]));
+    send_float((c->view_basis[2][0] = M[8]));
+    send_float((c->view_basis[2][1] = M[9]));
+    send_float((c->view_basis[2][2] = M[10]));
 }
 
 void recv_set_camera_offset(void)
 {
-    int i = recv_index();
+    struct camera *c = get_camera(recv_index());
 
-    C(i)->pos_offset[0]    = recv_float();
-    C(i)->pos_offset[1]    = recv_float();
-    C(i)->pos_offset[2]    = recv_float();
+    c->pos_offset[0]    = recv_float();
+    c->pos_offset[1]    = recv_float();
+    c->pos_offset[2]    = recv_float();
 
-    C(i)->view_basis[0][0] = recv_float();
-    C(i)->view_basis[0][1] = recv_float();
-    C(i)->view_basis[0][2] = recv_float();
+    c->view_basis[0][0] = recv_float();
+    c->view_basis[0][1] = recv_float();
+    c->view_basis[0][2] = recv_float();
 
-    C(i)->view_basis[1][0] = recv_float();
-    C(i)->view_basis[1][1] = recv_float();
-    C(i)->view_basis[1][2] = recv_float();
+    c->view_basis[1][0] = recv_float();
+    c->view_basis[1][1] = recv_float();
+    c->view_basis[1][2] = recv_float();
 
-    C(i)->view_basis[2][0] = recv_float();
-    C(i)->view_basis[2][1] = recv_float();
-    C(i)->view_basis[2][2] = recv_float();
+    c->view_basis[2][0] = recv_float();
+    c->view_basis[2][1] = recv_float();
+    c->view_basis[2][2] = recv_float();
  }
 
 /*---------------------------------------------------------------------------*/
@@ -147,78 +156,34 @@ void recv_set_camera_offset(void)
 void send_set_camera_stereo(int i, const float L[3],
                                    const float R[3], int mode)
 {
+    struct camera *c = get_camera(i);
+
     send_event(EVENT_SET_CAMERA_STEREO);
     send_index(i);
 
-    send_index((C(i)->mode             = mode));
-    send_float((C(i)->eye_offset[0][0] = L[0]));
-    send_float((C(i)->eye_offset[0][1] = L[1]));
-    send_float((C(i)->eye_offset[0][2] = L[2]));
-    send_float((C(i)->eye_offset[1][0] = R[0]));
-    send_float((C(i)->eye_offset[1][1] = R[1]));
-    send_float((C(i)->eye_offset[1][2] = R[2]));
+    send_index((c->mode             = mode));
+    send_float((c->eye_offset[0][0] = L[0]));
+    send_float((c->eye_offset[0][1] = L[1]));
+    send_float((c->eye_offset[0][2] = L[2]));
+    send_float((c->eye_offset[1][0] = R[0]));
+    send_float((c->eye_offset[1][1] = R[1]));
+    send_float((c->eye_offset[1][2] = R[2]));
 }
 
 void recv_set_camera_stereo(void)
 {
-    int i = recv_index();
+    struct camera *c = get_camera(recv_index());
 
-    C(i)->mode             = recv_index();
-    C(i)->eye_offset[0][0] = recv_float();
-    C(i)->eye_offset[0][1] = recv_float();
-    C(i)->eye_offset[0][2] = recv_float();
-    C(i)->eye_offset[1][0] = recv_float();
-    C(i)->eye_offset[1][1] = recv_float();
-    C(i)->eye_offset[1][2] = recv_float();
+    c->mode             = recv_index();
+    c->eye_offset[0][0] = recv_float();
+    c->eye_offset[0][1] = recv_float();
+    c->eye_offset[0][2] = recv_float();
+    c->eye_offset[1][0] = recv_float();
+    c->eye_offset[1][1] = recv_float();
+    c->eye_offset[1][2] = recv_float();
 }
 
 /*===========================================================================*/
-/*
-static void test_camera(int tile, int eye, int flag)
-{
-    float o[3];
-    float r[3];
-    float u[3];
-
-    get_tile_o(tile, o);
-    get_tile_r(tile, r);
-    get_tile_u(tile, u);
-    
-    if (flag & DRAW_VARRIER_TEXGEN)
-        set_texture_coordinates();
-
-    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
-    {
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LESS);
-
-        draw_image(0);
-
-        glBegin(GL_POLYGON);
-        {
-            if (eye == 0)
-                glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-            else
-                glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-
-            glVertex3f(o[0],
-                       o[1],
-                       o[2]);
-            glVertex3f(o[0] + r[0],
-                       o[1] + r[1],
-                       o[2] + r[2]);
-            glVertex3f(o[0] + r[0] + u[0],
-                       o[1] + r[1] + u[1],
-                       o[2] + r[2] + u[2]);
-            glVertex3f(o[0] + u[0],
-                       o[1] + u[1],
-                       o[2] + u[2]);
-        }
-        glEnd();
-    }
-    glPopAttrib();
-}
-*/
 
 static void test_camera(int eye, int flags)
 {
@@ -270,20 +235,20 @@ static void test_camera(int eye, int flags)
 }
 
 
-static int draw_tile(int i, int tile, const float d[3])
+static int draw_tile(struct camera *c, int tile, const float d[3])
 {
-    if (C(i)->type == CAMERA_PERSP)
-        return draw_persp(tile, C(i)->n, C(i)->f, d);
+    if (c->type == CAMERA_PERSP)
+        return draw_persp(tile, c->n, c->f, d);
 
-    if (C(i)->type == CAMERA_ORTHO)
-        return draw_ortho(tile, C(i)->n, C(i)->f);
+    if (c->type == CAMERA_ORTHO)
+        return draw_ortho(tile, c->n, c->f);
 
     return 0;
 }
 
 void draw_camera(int j, int i, int f, float a)
 {
-    struct camera *c = C(i);
+    struct camera *c = get_camera(i);
 
     int flag = f | ((c->mode == STEREO_VARRIER_01) ? DRAW_VARRIER_TEXGEN : 0);
     int eye;
@@ -312,7 +277,7 @@ void draw_camera(int j, int i, int f, float a)
 
         /* Iterate over all tiles of this host. */
 
-        while ((next = draw_tile(i, tile, d)))
+        while ((next = draw_tile(c, tile, d)))
         {
             pass = 0;
 
@@ -343,13 +308,15 @@ void draw_camera(int j, int i, int f, float a)
 
 static void dupe_camera(int i)
 {
-    C(i)->count++;
+    get_camera(i)->count++;
 }
 
 static void free_camera(int i)
 {
-    if (--C(i)->count == 0)
-        memset(C(i), 0, sizeof (struct camera));
+    struct camera *c = get_camera(i);
+
+    if (--c->count == 0)
+        memset(c, 0, sizeof (struct camera));
 }
 
 /*===========================================================================*/

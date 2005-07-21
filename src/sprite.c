@@ -39,14 +39,17 @@ static vector_t sprite;
 
 /*---------------------------------------------------------------------------*/
 
-#define S(i) ((struct sprite *) vecget(sprite, i))
+static struct sprite *get_sprite(int i)
+{
+    return (struct sprite *) vecget(sprite, i);
+}
 
 static int new_sprite(void)
 {
     int i, n = vecnum(sprite);
 
     for (i = 0; i < n; ++i)
-        if (S(i)->count == 0)
+        if (get_sprite(i)->count == 0)
             return i;
 
     return vecadd(sprite);
@@ -60,15 +63,17 @@ int send_create_sprite(int j)
 
     if ((i = new_sprite()) >= 0)
     {
-        S(i)->brush = j;
-        S(i)->count = 1;
-        S(i)->s0 = 0.0f;
-        S(i)->t0 = 0.0f;
-        S(i)->s1 = 1.0f;
-        S(i)->t1 = 1.0f;
+        struct sprite *s = get_sprite(i);
+
+        s->brush = j;
+        s->count = 1;
+        s->s0 = 0.0f;
+        s->t0 = 0.0f;
+        s->s1 = 1.0f;
+        s->t1 = 1.0f;
 
         send_event(EVENT_CREATE_SPRITE);
-        send_index(S(i)->brush);
+        send_index(s->brush);
 
         return send_create_entity(TYPE_SPRITE, i);
     }
@@ -80,12 +85,14 @@ void recv_create_sprite(void)
     int i = new_sprite();
     int j = recv_index();
 
-    S(i)->brush = j;
-    S(i)->count = 1;
-    S(i)->s0 = 0.0f;
-    S(i)->t0 = 0.0f;
-    S(i)->s1 = 1.0f;
-    S(i)->t1 = 1.0f;
+    struct sprite *s = get_sprite(i);
+
+    s->brush = j;
+    s->count = 1;
+    s->s0 = 0.0f;
+    s->t0 = 0.0f;
+    s->s1 = 1.0f;
+    s->t1 = 1.0f;
 
     recv_create_entity();
 }
@@ -94,7 +101,7 @@ void recv_create_sprite(void)
 
 void send_set_sprite_brush(int i, int j)
 {
-    struct sprite *s = S(i);
+    struct sprite *s = get_sprite(i);
 
     dupe_brush(j);
     free_brush(s->brush);
@@ -109,7 +116,7 @@ void recv_set_sprite_brush(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct sprite *s = S(i);
+    struct sprite *s = get_sprite(i);
 
     dupe_brush(j);
     free_brush(s->brush);
@@ -121,32 +128,36 @@ void recv_set_sprite_brush(void)
 
 void send_set_sprite_range(int i, float s0, float s1, float t0, float t1)
 {
+    struct sprite *s = get_sprite(i);
+
     send_event(EVENT_SET_SPRITE_RANGE);
     send_index(i);
-    send_float((S(i)->s0 = s0));
-    send_float((S(i)->s1 = s1));
-    send_float((S(i)->t0 = t0));
-    send_float((S(i)->t1 = t1));
+    send_float((s->s0 = s0));
+    send_float((s->s1 = s1));
+    send_float((s->t0 = t0));
+    send_float((s->t1 = t1));
 }
 
 void recv_set_sprite_range(void)
 {
-    int i = recv_index();
+    struct sprite *s = get_sprite(recv_index());
 
-    S(i)->s0 = recv_float();
-    S(i)->s1 = recv_float();
-    S(i)->t0 = recv_float();
-    S(i)->t1 = recv_float();
+    s->s0 = recv_float();
+    s->s1 = recv_float();
+    s->t0 = recv_float();
+    s->t1 = recv_float();
 }
 
 /*===========================================================================*/
 
 static void draw_sprite(int j, int i, int f, float a)
 {
+    struct sprite *s = get_sprite(i);
+
     glPushMatrix();
     {
-        int dx = get_brush_w(S(i)->brush) / 2;
-        int dy = get_brush_h(S(i)->brush) / 2;
+        int dx = get_brush_w(s->brush) / 2;
+        int dy = get_brush_h(s->brush) / 2;
 
         /* Apply the local coordinate system transformation. */
 
@@ -156,16 +167,21 @@ static void draw_sprite(int j, int i, int f, float a)
         {
             /* Draw the sprite to the color buffer. */
 
-            draw_brush(S(i)->brush, a * get_entity_alpha(j));
-
-            glBegin(GL_QUADS);
+            glPushAttrib(GL_DEPTH_BUFFER_BIT);
             {
-                glTexCoord2f(S(i)->s0, S(i)->t0); glVertex2i(-dx, -dy);
-                glTexCoord2f(S(i)->s1, S(i)->t0); glVertex2i(+dx, -dy);
-                glTexCoord2f(S(i)->s1, S(i)->t1); glVertex2i(+dx, +dy);
-                glTexCoord2f(S(i)->s0, S(i)->t1); glVertex2i(-dx, +dy);
+                if (draw_brush(s->brush, a * get_entity_alpha(j)))
+                    glDepthMask(GL_FALSE);
+
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(s->s0, s->t0); glVertex2i(-dx, -dy);
+                    glTexCoord2f(s->s1, s->t0); glVertex2i(+dx, -dy);
+                    glTexCoord2f(s->s1, s->t1); glVertex2i(+dx, +dy);
+                    glTexCoord2f(s->s0, s->t1); glVertex2i(-dx, +dy);
+                }
+                glEnd();
             }
-            glEnd();
+            glPopAttrib();
 
             /* Render all child entities in this coordinate system. */
 
@@ -177,8 +193,10 @@ static void draw_sprite(int j, int i, int f, float a)
 
 static int bbox_sprite(int i, float bound[6])
 {
-    int dx = get_brush_w(S(i)->brush) / 2;
-    int dy = get_brush_h(S(i)->brush) / 2;
+    struct sprite *s = get_sprite(i);
+
+    int dx = get_brush_w(s->brush) / 2;
+    int dy = get_brush_h(s->brush) / 2;
 
     bound[0] = -dx;
     bound[1] = -dy;
@@ -194,15 +212,17 @@ static int bbox_sprite(int i, float bound[6])
 
 static void dupe_sprite(int i)
 {
-    S(i)->count++;
+    get_sprite(i)->count++;
 }
 
 static void free_sprite(int i)
 {
-    if (--S(i)->count == 0)
+    struct sprite *s = get_sprite(i);
+
+    if (--s->count == 0)
     {
-        free_brush(S(i)->brush);
-        memset(S(i), 0, sizeof (struct sprite));
+        free_brush(s->brush);
+        memset(s, 0, sizeof (struct sprite));
     }
 }
 

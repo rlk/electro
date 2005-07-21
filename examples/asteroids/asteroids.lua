@@ -105,7 +105,9 @@ function make_sprite(filename)
     local image = E.create_image(filename)
     local brush = E.create_brush()
 
-    E.set_brush_flags(brush, E.brush_flag_unlit, true)
+    E.set_brush_flags(brush, E.brush_flag_transparent, true)
+    E.set_brush_flags(brush, E.brush_flag_unlit,       true)
+    E.set_brush_color(brush, 1.0, 1.0, 1.0, 1.0)
     E.set_brush_image(brush, image)
 
     return E.create_sprite(brush)

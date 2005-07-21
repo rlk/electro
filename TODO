@@ -1,6 +1,6 @@
-struct foo *f = F(i)  /* makes for easier debugging */
 Object geometry create
 Bound recompute
+collision detection
 texture transform
 replace get_sprite_size with bound query
 new billboard transform

@@ -50,14 +50,17 @@ static vector_t galaxy;
 #define N_MAX   32768
 #define S_MAX 2621440
 
-#define G(i) ((struct galaxy *) vecget(galaxy, i))
+static struct galaxy *get_galaxy(int i)
+{
+    return (struct galaxy *) vecget(galaxy, i);
+}
 
 static int new_galaxy(void)
 {
     int i, n = vecnum(galaxy);
 
     for (i = 0; i < n; ++i)
-        if (G(i)->count == 0)
+        if (get_galaxy(i)->count == 0)
             return i;
 
     return vecadd(galaxy);
@@ -243,22 +246,24 @@ int send_create_galaxy(const char *filename)
 
     if ((i = new_galaxy()) >= 0)
     {
+        struct galaxy *g = get_galaxy(i);
+
         /* If the file exists and is successfully read... */
 
-        if ((parse_galaxy(filename, G(i))))
+        if ((parse_galaxy(filename, g)))
         {
-            G(i)->count = 1;
+            g->count = 1;
 
             /* Pack the object header. */
 
             send_event(EVENT_CREATE_GALAXY);
-            send_index(G(i)->S_num);
-            send_index(G(i)->N_num);
+            send_index(g->S_num);
+            send_index(g->N_num);
 
             /* Pack the stars and BSP nodes. */
 
-            send_array(G(i)->S, G(i)->S_num, sizeof (struct star));
-            send_array(G(i)->N, G(i)->N_num, sizeof (struct node));
+            send_array(g->S, g->S_num, sizeof (struct star));
+            send_array(g->N, g->N_num, sizeof (struct node));
 
             /* Encapsulate this object in an entity. */
 
@@ -270,22 +275,22 @@ int send_create_galaxy(const char *filename)
 
 void recv_create_galaxy(void)
 {
-    int i = new_galaxy();
+    struct galaxy *g = get_galaxy(new_galaxy());
 
-    G(i)->count = 1;
+    g->count = 1;
 
     /* Receive the object header. */
 
-    G(i)->S_num = recv_index();
-    G(i)->N_num = recv_index();
+    g->S_num = recv_index();
+    g->N_num = recv_index();
 
     /* Receive the stars and BSP nodes. */
 
-    G(i)->S = (struct star *) malloc(G(i)->S_num * sizeof (struct star));
-    G(i)->N = (struct node *) malloc(G(i)->N_num * sizeof (struct node));
+    g->S = (struct star *) malloc(g->S_num * sizeof (struct star));
+    g->N = (struct node *) malloc(g->N_num * sizeof (struct node));
 
-    recv_array(G(i)->S, G(i)->S_num, sizeof (struct star));
-    recv_array(G(i)->N, G(i)->N_num, sizeof (struct node));
+    recv_array(g->S, g->S_num, sizeof (struct star));
+    recv_array(g->N, g->N_num, sizeof (struct node));
 
     /* Encapsulate this object in an entity. */
 
@@ -300,14 +305,14 @@ void send_set_galaxy_magnitude(int i, float m)
     send_index(i);
     send_float(m);
 
-    G(i)->magnitude = m;
+    get_galaxy(i)->magnitude = m;
 }
 
 void recv_set_galaxy_magnitude(void)
 {
-    int i = recv_index();
+    struct galaxy *g = get_galaxy(recv_index());
 
-    G(i)->magnitude = recv_float();
+    g->magnitude = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -315,65 +320,72 @@ void recv_set_galaxy_magnitude(void)
 
 void get_star_position(int i, int j, float p[3])
 {
-    if (0 <= j && j < G(i)->S_num)
+    struct galaxy *g = get_galaxy(i);
+
+    if (0 <= j && j < g->S_num)
     {
-        p[0] = G(i)->S[j].pos[0];
-        p[1] = G(i)->S[j].pos[1];
-        p[2] = G(i)->S[j].pos[2];
+        p[0] = g->S[j].pos[0];
+        p[1] = g->S[j].pos[1];
+        p[2] = g->S[j].pos[2];
     }
     else p[0] = p[1] = p[2] = 0.0;
 }
 
 int pick_galaxy(int i, const float p[3], const float v[3])
 {
+    struct galaxy *g = get_galaxy(i);
     float d = 0;
 
-    return node_pick(G(i)->N, 0, G(i)->S, 0, p, v, &d);
+    return node_pick(g->N, 0, g->S, 0, p, v, &d);
 }
 
 /*===========================================================================*/
 
 static void init_galaxy(int i)
 {
-    if (G(i)->state == 0)
+    struct galaxy *g = get_galaxy(i);
+
+    if (g->state == 0)
     {
         /* Initialize the vertex buffer object. */
 
         if (GL_has_vertex_buffer_object)
         {
-            glGenBuffersARB(1, &G(i)->buffer);
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, G(i)->buffer);
+            glGenBuffersARB(1, &g->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, g->buffer);
 
             glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                            G(i)->S_num * sizeof (struct star),
-                            G(i)->S, GL_STATIC_DRAW_ARB);
+                            g->S_num * sizeof (struct star),
+                            g->S, GL_STATIC_DRAW_ARB);
         }
 
         /* Initialize the star texture. */
 
-        G(i)->texture = star_make_texture();
-        G(i)->state   = 1;
+        g->texture = star_make_texture();
+        g->state   = 1;
     }
 }
 
 static void fini_galaxy(int i)
 {
-    if (G(i)->state == 1)
+    struct galaxy *g = get_galaxy(i);
+
+    if (g->state == 1)
     {
         /* Free the star texture. */
 
-        if (glIsTexture(G(i)->texture))
-            glDeleteTextures(1, &G(i)->texture);
+        if (glIsTexture(g->texture))
+            glDeleteTextures(1, &g->texture);
 
         /* Free the vertex buffer object. */
 
         if (GL_has_vertex_buffer_object)
-            if (glIsBufferARB(G(i)->buffer))
-                glDeleteBuffersARB(1, &G(i)->buffer);
+            if (glIsBufferARB(g->buffer))
+                glDeleteBuffersARB(1, &g->buffer);
 
-        G(i)->texture = 0;
-        G(i)->buffer  = 0;
-        G(i)->state   = 0;
+        g->texture = 0;
+        g->buffer  = 0;
+        g->state   = 0;
     }
 }
 
@@ -381,11 +393,12 @@ static void fini_galaxy(int i)
 
 static void draw_arrays(int i)
 {
+    struct galaxy *g = get_galaxy(i);
     GLsizei sz = sizeof (struct star);
 
     if (GL_has_vertex_program)
         glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,
-                                   1, G(i)->magnitude, 0, 0, 0);
+                                   1, g->magnitude, 0, 0, 0);
 
     /* Enable the star arrays. */
 
@@ -397,7 +410,7 @@ static void draw_arrays(int i)
     if (GL_has_vertex_buffer_object)
     {
         glEnableVertexAttribArrayARB(6);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, G(i)->buffer);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, g->buffer);
 
         glColorPointer (3, GL_UNSIGNED_BYTE, sz, (GLvoid *) 0);
         glVertexPointer(3, GL_FLOAT,         sz, (GLvoid *) 4);
@@ -406,13 +419,14 @@ static void draw_arrays(int i)
     }
     else
     {
-        glColorPointer (3, GL_UNSIGNED_BYTE, sz, G(i)->S->col);
-        glVertexPointer(3, GL_FLOAT,         sz, G(i)->S->pos);
+        glColorPointer (3, GL_UNSIGNED_BYTE, sz, g->S->col);
+        glVertexPointer(3, GL_FLOAT,         sz, g->S->pos);
     }
 }
 
 static void draw_galaxy(int j, int i, int f, float a)
 {
+    struct galaxy *g = get_galaxy(i);
     struct frustum F;
 
     init_galaxy(i);
@@ -438,7 +452,7 @@ static void draw_galaxy(int j, int i, int f, float a)
         {
             /* Set up the GL state for star rendering. */
 
-            glBindTexture(GL_TEXTURE_2D, G(i)->texture);
+            glBindTexture(GL_TEXTURE_2D, g->texture);
 
             glDisable(GL_TEXTURE_2D);
             glDisable(GL_LIGHTING);
@@ -458,7 +472,7 @@ static void draw_galaxy(int j, int i, int f, float a)
 
             /* Render all stars. */
 
-            node_draw(G(i)->N, 0, 0, &F);
+            node_draw(g->N, 0, 0, &F);
         }
         glPopClientAttrib();
         glPopAttrib();
@@ -472,14 +486,16 @@ static void draw_galaxy(int j, int i, int f, float a)
 
 static int bbox_galaxy(int i, float bound[6])
 {
-    if (G(i)->N)
+    struct galaxy *g = get_galaxy(i);
+
+    if (g->N)
     {
-        bound[0] = G(i)->N->bound[0];
-        bound[1] = G(i)->N->bound[1];
-        bound[2] = G(i)->N->bound[2];
-        bound[3] = G(i)->N->bound[3];
-        bound[4] = G(i)->N->bound[4];
-        bound[5] = G(i)->N->bound[5];
+        bound[0] = g->N->bound[0];
+        bound[1] = g->N->bound[1];
+        bound[2] = g->N->bound[2];
+        bound[3] = g->N->bound[3];
+        bound[4] = g->N->bound[4];
+        bound[5] = g->N->bound[5];
 
         return 1;
     }
@@ -491,19 +507,21 @@ static int bbox_galaxy(int i, float bound[6])
 
 static void dupe_galaxy(int i)
 {
-    G(i)->count++;
+    get_galaxy(i)->count++;
 }
 
 static void free_galaxy(int i)
 {
-    if (--G(i)->count == 0)
+    struct galaxy *g = get_galaxy(i);
+
+    if (--g->count == 0)
     {
         fini_galaxy(i);
 
-        if (G(i)->S) free(G(i)->S);
-        if (G(i)->N) free(G(i)->N);
+        if (g->S) free(g->S);
+        if (g->N) free(g->N);
 
-        memset(G(i), 0, sizeof (struct galaxy));
+        memset(g, 0, sizeof (struct galaxy));
     }
 }
 

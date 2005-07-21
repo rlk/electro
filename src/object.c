@@ -94,21 +94,17 @@ static vector_t object;
 
 /*---------------------------------------------------------------------------*/
 
-#define O(i) ((struct object *) vecget(object, i))
-
-/*
-struct object *O(int i)
+static struct object *get_object(int i)
 {
     return (struct object *) vecget(object, i);
 }
-*/
 
 static int new_object(void)
 {
     int i, n = vecnum(object);
 
     for (i = 0; i < n; ++i)
-        if (O(i)->count == 0)
+        if (get_object(i)->count == 0)
             return i;
 
     return vecadd(object);
@@ -638,13 +634,15 @@ int send_create_object(const char *filename)
 
     if ((i = new_object()) >= 0)
     {
+        struct object *o = get_object(i);
+
         /* If the file exists and is successfully read... */
 
-        if ((read_obj(filename, O(i))))
+        if ((read_obj(filename, o)))
         {
-            int n = vecnum(O(i)->sv);
+            int n = vecnum(o->sv);
 
-            O(i)->count = 1;
+            o->count = 1;
 
             /* Send the object header. */
 
@@ -653,14 +651,14 @@ int send_create_object(const char *filename)
 
             /* Send the vertices and materials. */
 
-            send_vector(O(i)->vv);
-            send_vector(O(i)->mv);
+            send_vector(o->vv);
+            send_vector(o->mv);
 
             /* Send each of the surfaces. */
 
             for (j = 0; j < n; ++j)
             {
-                s = (struct object_surf *) vecget(O(i)->sv, j);
+                s = (struct object_surf *) vecget(o->sv, j);
 
                 send_index(s->mi);
 
@@ -686,21 +684,23 @@ void recv_create_object(void)
     int n = recv_index();
     int j, k;
 
-    O(i)->count = 1;
+    struct object *o = get_object(i);
+
+    o->count = 1;
 
     /* Unpack the vertices and materials. */
 
-    O(i)->vv = recv_vector();
-    O(i)->mv = recv_vector();
+    o->vv = recv_vector();
+    o->mv = recv_vector();
 
     /* Unpack each surface. */
 
-    O(i)->sv = vecnew(n, sizeof (struct object_surf));
+    o->sv = vecnew(n, sizeof (struct object_surf));
 
     for (j = 0; j < n; ++j)
-        if ((k = vecadd(O(i)->sv)) >= 0)
+        if ((k = vecadd(o->sv)) >= 0)
         {
-            s = (struct object_surf *) vecget(O(i)->sv, k);
+            s = (struct object_surf *) vecget(o->sv, k);
 
             s->mi = recv_index();
             s->fv = recv_vector();
@@ -716,36 +716,40 @@ void recv_create_object(void)
 
 static void init_object(int i)
 {
-    if (O(i)->state == 0)
+    struct object *o = get_object(i);
+
+    if (o->state == 0)
     {
         /* Initialize the buffer object. */
     
         if (GL_has_vertex_buffer_object)
         {
-            glGenBuffersARB(1, &O(i)->buffer);
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
+            glGenBuffersARB(1, &o->buffer);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, o->buffer);
 
             glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                            vecnum(O(i)->vv) * sizeof (struct object_vert),
-                            vecbuf(O(i)->vv), GL_STATIC_DRAW_ARB);
+                            vecnum(o->vv) * sizeof (struct object_vert),
+                            vecbuf(o->vv), GL_STATIC_DRAW_ARB);
         }
     
-        O(i)->state = 1;
+        o->state = 1;
     }
 }
 
 static void fini_object(int i)
 {
-    if (O(i)->state == 1)
+    struct object *o = get_object(i);
+
+    if (o->state == 1)
     {
         /* Free the vertex buffer object. */
 
         if (GL_has_vertex_buffer_object)
-            if (glIsBufferARB(O(i)->buffer))
-                glDeleteBuffersARB(1, &O(i)->buffer);
+            if (glIsBufferARB(o->buffer))
+                glDeleteBuffersARB(1, &o->buffer);
 
-        O(i)->buffer = 0;
-        O(i)->state  = 0;
+        o->buffer = 0;
+        o->state  = 0;
     }
 }
 
@@ -827,9 +831,11 @@ static void draw_surface(const struct object_surf *s, int transparent)
 
 static void draw_object(int j, int i, int f, float a)
 {
+    struct object *o = get_object(i);
+
     GLsizei stride = sizeof (struct object_vert);
 
-    int k, n = vecnum(O(i)->sv);
+    int k, n = vecnum(o->sv);
     struct object_surf *s;
     struct object_mtrl *m;
 
@@ -852,12 +858,12 @@ static void draw_object(int j, int i, int f, float a)
 
                 if (GL_has_vertex_buffer_object)
                 {
-                    glBindBufferARB(GL_ARRAY_BUFFER_ARB, O(i)->buffer);
+                    glBindBufferARB(GL_ARRAY_BUFFER_ARB, o->buffer);
                     glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
                 }
                 else
                     glInterleavedArrays(GL_T2F_N3F_V3F, stride,
-                                        vecget(O(i)->vv, 0));
+                                        vecget(o->vv, 0));
 
                 /* Clear the material cache. */
 
@@ -867,8 +873,8 @@ static void draw_object(int j, int i, int f, float a)
 
                 for (k = 0; k < n; ++k)
                 {
-                    s = (struct object_surf *) vecget(O(i)->sv, k);
-                    m = (struct object_mtrl *) vecget(O(i)->mv, s->mi);
+                    s = (struct object_surf *) vecget(o->sv, k);
+                    m = (struct object_mtrl *) vecget(o->mv, s->mi);
   
                     if (vecnum(s->fv) > 0 || vecnum(s->ev) > 0)
                     {
@@ -891,13 +897,15 @@ static void draw_object(int j, int i, int f, float a)
 
 static int bbox_object(int i, float bound[6])
 {
-    int j, n = vecnum(O(i)->vv);
+    struct object *o = get_object(i);
+
+    int j, n = vecnum(o->vv);
 
     /* Find the object's bounding box. */
 
     if (n > 0)
     {
-        const float *v = ((struct object_vert *) vecget(O(i)->vv, 0))->v;
+        const float *v = ((struct object_vert *) vecget(o->vv, 0))->v;
 
         bound[0] = bound[3] = v[0];
         bound[1] = bound[4] = v[1];
@@ -907,7 +915,7 @@ static int bbox_object(int i, float bound[6])
 
     for (j = 0; j < n; ++j)
     {
-        const float *v = ((struct object_vert *) vecget(O(i)->vv, j))->v;
+        const float *v = ((struct object_vert *) vecget(o->vv, j))->v;
 
         bound[0] = MIN(v[0], bound[0]);
         bound[1] = MIN(v[1], bound[1]);
@@ -924,31 +932,32 @@ static int bbox_object(int i, float bound[6])
 
 static void dupe_object(int i)
 {
-    O(i)->count++;
+    get_object(i)->count++;
 }
 
 static void free_object(int i)
 {
+    struct object *o = get_object(i);
     int j;
 
-    if (--O(i)->count == 0)
+    if (--o->count == 0)
     {
         fini_object(i);
 
-        for (j = 0; j < vecnum(O(i)->mv); ++j)
-            free_image(((struct object_mtrl *) vecget(O(i)->mv, j))->image);
+        for (j = 0; j < vecnum(o->mv); ++j)
+            free_image(((struct object_mtrl *) vecget(o->mv, j))->image);
 
-        for (j = 0; j < vecnum(O(i)->sv); ++j)
+        for (j = 0; j < vecnum(o->sv); ++j)
         {
-            vecdel(((struct object_surf *) vecget(O(i)->sv, j))->fv);
-            vecdel(((struct object_surf *) vecget(O(i)->sv, j))->ev);
+            vecdel(((struct object_surf *) vecget(o->sv, j))->fv);
+            vecdel(((struct object_surf *) vecget(o->sv, j))->ev);
         }
 
-        vecdel(O(i)->mv);
-        vecdel(O(i)->vv);
-        vecdel(O(i)->sv);
+        vecdel(o->mv);
+        vecdel(o->vv);
+        vecdel(o->sv);
 
-        memset(O(i), 0, sizeof (struct object));
+        memset(o, 0, sizeof (struct object));
     }
 }
 
