@@ -137,7 +137,7 @@ static void load_brush(struct brush *b, const char *file, const char *name)
                         sscanf(L + n, "%f %f %f", b->s, b->s + 1, b->s + 2);
                         b->flags |= BRUSH_SPECULAR;
                     }
-                    else if (strcmp(W, "Na") == 0)
+                    else if (strcmp(W, "Ns") == 0)
                     {
                         sscanf(L + n, "%f", b->x);
                         b->flags |= BRUSH_SHINY;
@@ -165,8 +165,8 @@ int send_create_brush(const char *file, const char *name)
     {
         struct brush *b = get_brush(i);
 
-        if (b->file && strcmp(b->file, file) &&
-            b->name && strcmp(b->name, name))
+        if (file && b->file && strcmp(b->file, file) == 0 &&
+            name && b->name && strcmp(b->name, name) == 0)
         {
             b->count++;
             return i;

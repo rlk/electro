@@ -2,6 +2,7 @@ Object geometry create
 Bound recompute
 collision detection
 texture transform
+sphere map brush flag
 replace get_sprite_size with bound query
 new billboard transform
 Uniform API
