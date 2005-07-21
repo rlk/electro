@@ -339,8 +339,6 @@ void recv_create_image(void)
     p->p = (GLubyte *) malloc(p->w * p->h * p->b);
 
     recv_array(p->p, p->w * p->h, p->b);
-
-    p->filename = "unknown";
 }
 
 /*---------------------------------------------------------------------------*/
@@ -436,7 +434,7 @@ void free_image(int i)
 {
     struct image *p = get_image(i);
 
-    if (--p->count == 0)
+    if (i > 0 && --p->count == 0)
     {
         fini_image(i);
 
@@ -479,13 +477,12 @@ int startup_image(void)
         {
             struct image *p = get_image(i);
 
-            p->filename = "null";
-            p->texture  =      0;
-            p->state    =      0;
-            p->count    =      1;
-            p->w        =    128;
-            p->h        =    128;
-            p->b        =      4;
+            p->texture  =    0;
+            p->state    =    0;
+            p->count    =    1;
+            p->w        =  128;
+            p->h        =  128;
+            p->b        =    4;
             p->p        = malloc(128 * 128 * 4);
 
             memset(p->p, 0xFF, 128 * 128 * 4);

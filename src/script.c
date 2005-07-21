@@ -208,9 +208,10 @@ static void E_type_error(const char *type, lua_State *L, int i)
         switch (E_tousertype(L, i))
         {
         case USERDATA_ENTITY: got = entity_name(E_toentity(L, i)); break;
-        case USERDATA_SOUND:  got = "sound"; break;
-        case USERDATA_IMAGE:  got = "image"; break;
-        case USERDATA_BRUSH:  got = "brush"; break;
+        case USERDATA_SOUND:  got = "sound";   break;
+        case USERDATA_IMAGE:  got = "image";   break;
+        case USERDATA_BRUSH:  got = "brush";   break;
+        default:              got = "unknown"; break;
         }
     else
         got = lua_typename(L, lua_type(L, i));
