@@ -25,7 +25,7 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
-    image  = E.create_image("texture.jpg")
+    image  = E.create_image("box_rgb.jpg")
     brush1 = E.create_brush()
     brush2 = E.create_brush()
 

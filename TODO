@@ -1,15 +1,16 @@
-glyph point cache resize invalidates vertex data
-Telnet to luasocket
 struct foo *f = F(i)  /* makes for easier debugging */
+Object geometry create
 Bound recompute
 texture transform
 replace get_sprite_size with bound query
-Object geometry create
 new billboard transform
 Uniform API
 Lua state flush / app switch
-profilers
+Telnet to luasocket
 Tracker buttons
+
+
+profilers
 display volume query / smart viewobj
 cooler vortex demo
 Varrier finalize

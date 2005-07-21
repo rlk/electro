@@ -237,7 +237,7 @@ static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
     funcs.shift    = 0;
     funcs.delta    = 0;
 
-    glyph->points = vecnew(100000, sizeof (struct point));
+    glyph->points = vecnew(16, sizeof (struct point));
     glyph->space  = TO_DBL(slot->advance.x);
 
     FT_Outline_Decompose(&slot->outline, &funcs, glyph->points);
@@ -351,23 +351,33 @@ int get_font(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Vertex list for points generated during tesselator combination            */
 
-static void vertex(void *vertex_data)
+struct combo
 {
-    struct point *P = (struct point *) vertex_data;
+    GLdouble      p[3];
+    struct combo *next;
+};
 
-    glVertex3d(P->p[0], P->p[1], P->p[2]);
-}
+static struct combo *combo = NULL;
 
-static void combine(GLdouble coords[3], void *vertex_data[3],
-                    GLfloat  weight[4], void **out_data, void *polygon_data)
+static void combine(GLdouble coords[3], void  *vertex_data[3],
+                    GLfloat  weight[4], void **output_data)
 {
-    vector_t points = (vector_t) polygon_data;
+    struct combo *c;
 
     /* Include the suggested combined vertex as a new vertex. */
 
-    add_point(points, coords);
-    *out_data = vecget(points, vecnum(points) - 1);
+    if ((c = (struct combo *) calloc(1, sizeof (struct combo))))
+    {
+        c->p[0] = coords[0];
+        c->p[1] = coords[1];
+        c->p[2] = coords[2];
+        c->next = combo;
+        combo   = c;
+
+        *output_data = c->p;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -389,6 +399,8 @@ static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
 {
     int b, i, n = vecnum(glyph->points);
 
+    /* Tesselate the glyph point list. */
+
     gluTessBeginPolygon(T, glyph->points);
     {
         for (b = 0, i = 1; i < n; ++i)
@@ -399,6 +411,15 @@ static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
             }
     }
     gluTessEndPolygon(T);
+
+    /* Release all combined vertices generated during tesselation. */
+
+    while (combo)
+    {
+        struct combo *temp = combo;
+        combo = combo->next;
+        free(temp);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -483,10 +504,10 @@ void init_font(int i, GLdouble O)
         {
             int j;
 
-            gluTessCallback(T, GLU_TESS_BEGIN,        (_GLUfuncptr) glBegin);
-            gluTessCallback(T, GLU_TESS_COMBINE_DATA, (_GLUfuncptr) combine);
-            gluTessCallback(T, GLU_TESS_VERTEX,       (_GLUfuncptr) vertex);
-            gluTessCallback(T, GLU_TESS_END,          (_GLUfuncptr) glEnd);
+            gluTessCallback(T, GLU_TESS_BEGIN,   (_GLUfuncptr) glBegin);
+            gluTessCallback(T, GLU_TESS_COMBINE, (_GLUfuncptr) combine);
+            gluTessCallback(T, GLU_TESS_VERTEX,  (_GLUfuncptr) glVertex3dv);
+            gluTessCallback(T, GLU_TESS_END,     (_GLUfuncptr) glEnd);
 
             /* Enumerate all glyphs. */
 
@@ -499,18 +520,18 @@ void init_font(int i, GLdouble O)
                     glyph->fill = fills + j - MINGLYPH;
                     glyph->line = lines + j - MINGLYPH;
 
-                    /* Tessalate the glyph to a display list. */
-
-                    glNewList(glyph->fill, GL_COMPILE);
-                    glNormal3f(0, 0, 1);
-                    tess_glyph(glyph, T);
-                    glEndList();
-
                     /* Tessalate the outline to a display list. */
 
                     glNewList(glyph->line, GL_COMPILE);
                     glNormal3f(0, 0, 1);
                     line_glyph(glyph, O);
+                    glEndList();
+
+                    /* Tessalate the glyph to a display list. */
+
+                    glNewList(glyph->fill, GL_COMPILE);
+                    glNormal3f(0, 0, 1);
+                    tess_glyph(glyph, T);
                     glEndList();
                 }
             }
