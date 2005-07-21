@@ -28,7 +28,7 @@ void recv_create_image(void);
 
 /*---------------------------------------------------------------------------*/
 
-void get_image_p(int, int, int, unsigned char[4]);
+void get_image_c(int, int, int, unsigned char[4]);
 int  get_image_w(int);
 int  get_image_h(int);
 

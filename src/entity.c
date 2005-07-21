@@ -61,21 +61,21 @@ static struct entity_func *entity_func[TYPE_COUNT];
 
 /*---------------------------------------------------------------------------*/
 
-#define E(i) ((struct entity *) vecget(entity, i))
+#define CAR(i) ((struct entity *) vecget(entity, (i)))->car
+#define CDR(i) ((struct entity *) vecget(entity, (i)))->cdr
+#define PAR(i) ((struct entity *) vecget(entity, (i)))->par
 
-/*
-struct entity *E(int i)
+static struct entity *get_entity(int i)
 {
     return (struct entity *) vecget(entity, i);
 }
-*/
 
 static int new_entity(void)
 {
     int i, n = vecnum(entity);
 
     for (i = 0; i < n; ++i)
-        if (E(i)->type == 0)
+        if (get_entity(i)->type == 0)
             return i;
 
     return vecadd(entity);
@@ -85,23 +85,25 @@ static int new_entity(void)
 
 int entity_data(int i)
 {
-    return E(i)->data;
+    return get_entity(i)->data;
 }
 
 int entity_type(int i)
 {
-    return E(i)->type;
+    return get_entity(i)->type;
 }
 
 int entity_flag(int i)
 {
-    return E(i)->flags;
+    return get_entity(i)->flags;
 }
 
 const char *entity_name(int i)
 {
-    if (entity_func[E(i)->type])
-        return entity_func[E(i)->type]->name;
+    struct entity *e = get_entity(i);
+
+    if (entity_func[e->type])
+        return entity_func[e->type]->name;
     else
         return "unknown";
 }
@@ -110,41 +112,45 @@ const char *entity_name(int i)
 
 void transform_camera(int i)
 {
+    struct entity *e = get_entity(i);
+
     float M[16];
 
     /* Inverse scale. */
 
-    glScalef(1 / E(i)->scale[0],
-             1 / E(i)->scale[1],
-             1 / E(i)->scale[2]);
+    glScalef(1 / e->scale[0],
+             1 / e->scale[1],
+             1 / e->scale[2]);
 
     /* Inverse (transposed) rotation. */
 
-    load_xps(M, E(i)->rotation);
+    load_xps(M, e->rotation);
     glMultMatrixf(M);
 
     /* Inverse translation. */
 
-    glTranslatef(-E(i)->position[0],
-                 -E(i)->position[1],
-                 -E(i)->position[2]);
+    glTranslatef(-e->position[0],
+                 -e->position[1],
+                 -e->position[2]);
 }
 
 void transform_entity(int i)
 {
+    struct entity *e = get_entity(i);
+
     /* Translation. */
 
-    glTranslatef(E(i)->position[0],
-                 E(i)->position[1],
-                 E(i)->position[2]);
+    glTranslatef(e->position[0],
+                 e->position[1],
+                 e->position[2]);
 
     /* Rotation. */
 
-    glMultMatrixf(E(i)->rotation);
+    glMultMatrixf(e->rotation);
 
     /* Billboard. */
 
-    if (E(i)->flags & FLAG_BILLBOARD)
+    if (e->flags & FLAG_BILLBOARD)
     {
         float M[16];
 
@@ -159,34 +165,38 @@ void transform_entity(int i)
 
     /* Scale. */
 
-    glScalef(E(i)->scale[0],
-             E(i)->scale[1],
-             E(i)->scale[2]);
+    glScalef(e->scale[0],
+             e->scale[1],
+             e->scale[2]);
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void init_entity(int i)
 {
-    if (E(i)->state == 0)
+    struct entity *e = get_entity(i);
+
+    if (e->state == 0)
     {
         /* Find the bounding box of this entity, if any. */
 
-        if (entity_func[E(i)->type]       &&
-            entity_func[E(i)->type]->bbox &&
-            entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
-            E(i)->flags |= FLAG_BOUNDED;
+        if (entity_func[e->type]       &&
+            entity_func[e->type]->bbox &&
+            entity_func[e->type]->bbox(e->data, e->bound))
+            e->flags |= FLAG_BOUNDED;
 
 
-        E(i)->state = 1;
+        e->state = 1;
     }
 }
 
 static void fini_entity(int i)
 {
-    if (E(i)->state == 1)
+    struct entity *e = get_entity(i);
+
+    if (e->state == 1)
     {
-        E(i)->state     = 0;
+        e->state = 0;
     }
 }
 
@@ -194,12 +204,13 @@ static void fini_entity(int i)
 
 int test_entity_bbox(int i)
 {
+    struct entity *e = get_entity(i);
     struct frustum F;
 
-    if (E(i)->flags & FLAG_BOUNDED)
+    if (e->flags & FLAG_BOUNDED)
     {
         get_frustum(&F);
-        return tst_frustum(&F, E(i)->bound);
+        return tst_frustum(&F, e->bound);
     }
 
     return 1;
@@ -211,23 +222,26 @@ void draw_entity_tree(int i, int f, float a)
 
     /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
-    for (j = E(i)->car; j; j = E(j)->cdr)
-        if ((E(j)->flags & FLAG_HIDDEN) == 0)
+    for (j = CAR(i); j; j = CDR(j))
+    {
+        struct entity *e = get_entity(j);
+
+        if ((e->flags & FLAG_HIDDEN) == 0)
         {
             init_entity(j);
 
-            glPushAttrib(GL_POLYGON_BIT |
-                         GL_ENABLE_BIT  |
+            glPushAttrib(GL_ENABLE_BIT  |
+                         GL_POLYGON_BIT |
                          GL_DEPTH_BUFFER_BIT);
             {
                 /* Enable wireframe if specified. */
 
-                if (E(j)->flags & FLAG_WIREFRAME)
+                if (e->flags & FLAG_WIREFRAME)
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
                 /* Enable line smoothing if requested. */
 
-                if (E(j)->flags & FLAG_LINE_SMOOTH)
+                if (e->flags & FLAG_LINE_SMOOTH)
                     glEnable(GL_LINE_SMOOTH);
 
                 /* Draw this entity. */
@@ -235,12 +249,13 @@ void draw_entity_tree(int i, int f, float a)
                 if (f & DRAW_VARRIER_TEXGEN)
                     set_texture_coordinates();
 
-                if (entity_func[E(j)->type] &&
-                    entity_func[E(j)->type]->draw)
-                    entity_func[E(j)->type]->draw(j, E(j)->data, f, a);
+                if (entity_func[e->type] &&
+                    entity_func[e->type]->draw)
+                    entity_func[e->type]->draw(j, e->data, f, a);
             }
             glPopAttrib();
         }
+    }
 }
 
 /*===========================================================================*/
@@ -251,17 +266,17 @@ static void detach_entity(int i)
 
     if (i)
     {
-        int j, k, p = E(i)->par;
+        int j, k, p = PAR(i);
 
         /* Remove the child from its parent's child list. */
 
-        for (j = 0, k = E(p)->car; k; j = k, k = E(k)->cdr)
+        for (j = 0, k = CAR(p); k; j = k, k = CDR(k))
             if (k == i)
             {
                 if (j)
-                    E(j)->cdr = E(k)->cdr;
+                    CDR(j) = CDR(k);
                 else
-                    E(p)->car = E(k)->cdr;
+                    CAR(p) = CDR(k);
             }
     }
 }
@@ -274,9 +289,9 @@ static void attach_entity(int i, int j)
     {
         /* Insert the child into the new parent's child list. */
 
-        E(i)->par = j;
-        E(i)->cdr = E(j)->car;
-        E(j)->car = i;
+        PAR(i) = j;
+        CDR(i) = CAR(j);
+        CAR(j) = i;
     }
 }
 
@@ -284,15 +299,17 @@ static void attach_entity(int i, int j)
 
 static void create_entity(int i, int type, int data)
 {
-    load_idt(E(i)->rotation);
+    struct entity *e = get_entity(i);
 
-    E(i)->type     = type;
-    E(i)->data     = data;
-    E(i)->flags    = 0;
-    E(i)->scale[0] = 1;
-    E(i)->scale[1] = 1;
-    E(i)->scale[2] = 1;
-    E(i)->alpha    = 1;
+    load_idt(e->rotation);
+
+    e->type     = type;
+    e->data     = data;
+    e->flags    = 0;
+    e->scale[0] = 1;
+    e->scale[1] = 1;
+    e->scale[2] = 1;
+    e->alpha    = 1;
 
     attach_entity(i, 0);
 }
@@ -349,7 +366,7 @@ void send_set_entity_rotation(int i, const float r[3])
 {
     float M[16];
 
-    if (E(i)->type == TYPE_CAMERA)
+    if (get_entity(i)->type == TYPE_CAMERA)
     {
         load_rot_mat(M, 0, 0, 1, r[2]);
         mult_rot_mat(M, 0, 1, 0, r[1]);
@@ -367,16 +384,20 @@ void send_set_entity_rotation(int i, const float r[3])
 
 void send_set_entity_position(int i, const float p[3])
 {
+    struct entity *e = get_entity(i);
+
     send_event(EVENT_SET_ENTITY_POSITION);
     send_index(i);
 
-    send_float((E(i)->position[0] = p[0]));
-    send_float((E(i)->position[1] = p[1]));
-    send_float((E(i)->position[2] = p[2]));
+    send_float((e->position[0] = p[0]));
+    send_float((e->position[1] = p[1]));
+    send_float((e->position[2] = p[2]));
 }
 
 void send_set_entity_basis(int i, const float M[16])
 {
+    struct entity *e = get_entity(i);
+
     send_event(EVENT_SET_ENTITY_BASIS);
     send_index(i);
 
@@ -392,95 +413,107 @@ void send_set_entity_basis(int i, const float M[16])
     send_float(M[9]);
     send_float(M[10]);
 
-    load_mat(E(i)->rotation, M);
+    load_mat(e->rotation, M);
 }
 
 void send_set_entity_scale(int i, const float v[3])
 {
+    struct entity *e = get_entity(i);
+
     send_event(EVENT_SET_ENTITY_SCALE);
     send_index(i);
 
-    send_float((E(i)->scale[0] = v[0]));
-    send_float((E(i)->scale[1] = v[1]));
-    send_float((E(i)->scale[2] = v[2]));
+    send_float((e->scale[0] = v[0]));
+    send_float((e->scale[1] = v[1]));
+    send_float((e->scale[2] = v[2]));
 }
 
 void send_set_entity_bound(int i, const float v[3])
 {
+    struct entity *e = get_entity(i);
+
     send_event(EVENT_SET_ENTITY_BOUND);
     send_index(i);
 
-    send_float((E(i)->bound[0] = v[0]));
-    send_float((E(i)->bound[1] = v[1]));
-    send_float((E(i)->bound[2] = v[2]));
-    send_float((E(i)->bound[3] = v[3]));
-    send_float((E(i)->bound[4] = v[4]));
-    send_float((E(i)->bound[5] = v[5]));
+    send_float((e->bound[0] = v[0]));
+    send_float((e->bound[1] = v[1]));
+    send_float((e->bound[2] = v[2]));
+    send_float((e->bound[3] = v[3]));
+    send_float((e->bound[4] = v[4]));
+    send_float((e->bound[5] = v[5]));
 }
 
 void send_set_entity_alpha(int i, float a)
 {
+    struct entity *e = get_entity(i);
+
     send_event(EVENT_SET_ENTITY_ALPHA);
     send_index(i);
 
-    send_float((E(i)->alpha = a));
+    send_float((e->alpha = a));
 }
 
 void send_set_entity_flags(int i, int flags, int state)
 {
+    struct entity *e = get_entity(i);
+
     send_event(EVENT_SET_ENTITY_FLAGS);
     send_index(i);
     send_index(flags);
     send_index(state);
 
     if (state)
-        E(i)->flags = E(i)->flags | ( flags);
+        e->flags = e->flags | ( flags);
     else
-        E(i)->flags = E(i)->flags & (~flags);
+        e->flags = e->flags & (~flags);
 }
 
 /*---------------------------------------------------------------------------*/
 
 void send_move_entity(int i, const float v[3])
 {
+    struct entity *e = get_entity(i);
+
     float p[3];
 
-    p[0] = E(i)->position[0] + (E(i)->rotation[0]  * v[0] +
-                                E(i)->rotation[4]  * v[1] +
-                                E(i)->rotation[8]  * v[2]);
-    p[1] = E(i)->position[1] + (E(i)->rotation[1]  * v[0] +
-                                E(i)->rotation[5]  * v[1] +
-                                E(i)->rotation[9]  * v[2]);
-    p[2] = E(i)->position[2] + (E(i)->rotation[2]  * v[0] +
-                                E(i)->rotation[6]  * v[1] +
-                                E(i)->rotation[10] * v[2]);
+    p[0] = e->position[0] + (e->rotation[0]  * v[0] +
+                             e->rotation[4]  * v[1] +
+                             e->rotation[8]  * v[2]);
+    p[1] = e->position[1] + (e->rotation[1]  * v[0] +
+                             e->rotation[5]  * v[1] +
+                             e->rotation[9]  * v[2]);
+    p[2] = e->position[2] + (e->rotation[2]  * v[0] +
+                             e->rotation[6]  * v[1] +
+                             e->rotation[10] * v[2]);
 
     send_set_entity_position(i, p);
 }
 
 void send_turn_entity(int i, const float r[3])
 {
+    struct entity *e = get_entity(i);
+
     float M[16], R[16];
 
     /* Compose a transformation matrix. */
 
-    load_rot_mat(M, E(i)->rotation[0],
-                    E(i)->rotation[1],
-                    E(i)->rotation[2], r[0]);
-    mult_rot_mat(M, E(i)->rotation[4],
-                    E(i)->rotation[5],
-                    E(i)->rotation[6], r[1]);
-    mult_rot_mat(M, E(i)->rotation[8],
-                    E(i)->rotation[9],
-                    E(i)->rotation[10], r[2]);
+    load_rot_mat(M, e->rotation[0],
+                    e->rotation[1],
+                    e->rotation[2], r[0]);
+    mult_rot_mat(M, e->rotation[4],
+                    e->rotation[5],
+                    e->rotation[6], r[1]);
+    mult_rot_mat(M, e->rotation[8],
+                    e->rotation[9],
+                    e->rotation[10], r[2]);
 
     /* Transform the entity's basis. */
 
     load_idt(R);
 
-    mult_mat_vec(R + 0, M, E(i)->rotation + 0);
-    mult_mat_vec(R + 4, M, E(i)->rotation + 4);
-    mult_mat_vec(R + 8, M, E(i)->rotation + 8);
+    mult_mat_vec(R + 0, M, e->rotation + 0);
+    mult_mat_vec(R + 4, M, e->rotation + 4);
+    mult_mat_vec(R + 8, M, e->rotation + 8);
 
     /* Re-orthogonalize the basis. */
 
@@ -501,143 +534,158 @@ void send_turn_entity(int i, const float r[3])
 
 void recv_set_entity_position(void)
 {
-    int i = recv_index();
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
 
-    E(i)->position[0] = recv_float();
-    E(i)->position[1] = recv_float();
-    E(i)->position[2] = recv_float();
+    e->position[0] = recv_float();
+    e->position[1] = recv_float();
+    e->position[2] = recv_float();
 }
 
 void recv_set_entity_basis(void)
 {
-    int i = recv_index();
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
 
-    load_idt(E(i)->rotation);
+    load_idt(e->rotation);
 
-    E(i)->rotation[0]  = recv_float();
-    E(i)->rotation[1]  = recv_float();
-    E(i)->rotation[2]  = recv_float();
+    e->rotation[0]  = recv_float();
+    e->rotation[1]  = recv_float();
+    e->rotation[2]  = recv_float();
 
-    E(i)->rotation[4]  = recv_float();
-    E(i)->rotation[5]  = recv_float();
-    E(i)->rotation[6]  = recv_float();
+    e->rotation[4]  = recv_float();
+    e->rotation[5]  = recv_float();
+    e->rotation[6]  = recv_float();
 
-    E(i)->rotation[8]  = recv_float();
-    E(i)->rotation[9]  = recv_float();
-    E(i)->rotation[10] = recv_float();
+    e->rotation[8]  = recv_float();
+    e->rotation[9]  = recv_float();
+    e->rotation[10] = recv_float();
 }
 
 void recv_set_entity_scale(void)
 {
-    int i = recv_index();
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
 
-    E(i)->scale[0] = recv_float();
-    E(i)->scale[1] = recv_float();
-    E(i)->scale[2] = recv_float();
+    e->scale[0] = recv_float();
+    e->scale[1] = recv_float();
+    e->scale[2] = recv_float();
 }
 
 void recv_set_entity_bound(void)
 {
-    int i = recv_index();
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
 
-    E(i)->bound[0] = recv_float();
-    E(i)->bound[1] = recv_float();
-    E(i)->bound[2] = recv_float();
-    E(i)->bound[3] = recv_float();
-    E(i)->bound[4] = recv_float();
-    E(i)->bound[5] = recv_float();
+    e->bound[0] = recv_float();
+    e->bound[1] = recv_float();
+    e->bound[2] = recv_float();
+    e->bound[3] = recv_float();
+    e->bound[4] = recv_float();
+    e->bound[5] = recv_float();
 }
 
 void recv_set_entity_alpha(void)
 {
-    int i = recv_index();
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
 
-    E(i)->alpha = recv_float();
+    e->alpha = recv_float();
 }
 
 void recv_set_entity_flags(void)
 {
-    int i     = recv_index();
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
+
     int flags = recv_index();
     int state = recv_index();
 
     if (state)
-        E(i)->flags = E(i)->flags | ( flags);
+        e->flags = e->flags | ( flags);
     else
-        E(i)->flags = E(i)->flags & (~flags);
+        e->flags = e->flags & (~flags);
 }
 
 /*---------------------------------------------------------------------------*/
 
 void get_entity_position(int i, float p[3])
 {
-    p[0] = E(i)->position[0];
-    p[1] = E(i)->position[1];
-    p[2] = E(i)->position[2];
+    struct entity *e = get_entity(i);
+
+    p[0] = e->position[0];
+    p[1] = e->position[1];
+    p[2] = e->position[2];
 }
 
 void get_entity_x_vector(int i, float v[3])
 {
-    v[0] = E(i)->rotation[0];
-    v[1] = E(i)->rotation[1];
-    v[2] = E(i)->rotation[2];
+    struct entity *e = get_entity(i);
+
+    v[0] = e->rotation[0];
+    v[1] = e->rotation[1];
+    v[2] = e->rotation[2];
 }
 
 void get_entity_y_vector(int i, float v[3])
 {
-    v[0] = E(i)->rotation[4];
-    v[1] = E(i)->rotation[5];
-    v[2] = E(i)->rotation[6];
+    struct entity *e = get_entity(i);
+
+    v[0] = e->rotation[4];
+    v[1] = e->rotation[5];
+    v[2] = e->rotation[6];
 }
 
 void get_entity_z_vector(int i, float v[3])
 {
-    v[0] = E(i)->rotation[8];
-    v[1] = E(i)->rotation[9];
-    v[2] = E(i)->rotation[10];
+    struct entity *e = get_entity(i);
+
+    v[0] = e->rotation[8];
+    v[1] = e->rotation[9];
+    v[2] = e->rotation[10];
 }
 
 void get_entity_scale(int i, float v[3])
 {
-    v[0] = E(i)->scale[0];
-    v[1] = E(i)->scale[1];
-    v[2] = E(i)->scale[2];
+    struct entity *e = get_entity(i);
+
+    v[0] = e->scale[0];
+    v[1] = e->scale[1];
+    v[2] = e->scale[2];
 }
 
 void get_entity_bound(int i, float v[6])
 {
-    if (entity_func[E(i)->type]       &&
-        entity_func[E(i)->type]->bbox &&
-        entity_func[E(i)->type]->bbox(E(i)->data, E(i)->bound))
-        E(i)->flags |= FLAG_BOUNDED;
+    struct entity *e = get_entity(i);
 
-    v[0] = E(i)->bound[0];
-    v[1] = E(i)->bound[1];
-    v[2] = E(i)->bound[2];
-    v[3] = E(i)->bound[3];
-    v[4] = E(i)->bound[4];
-    v[5] = E(i)->bound[5];
+    if (entity_func[e->type]       &&
+        entity_func[e->type]->bbox &&
+        entity_func[e->type]->bbox(e->data, e->bound))
+        e->flags |= FLAG_BOUNDED;
+
+    v[0] = e->bound[0];
+    v[1] = e->bound[1];
+    v[2] = e->bound[2];
+    v[3] = e->bound[3];
+    v[4] = e->bound[4];
+    v[5] = e->bound[5];
 }
 
 float get_entity_alpha(int i)
 {
-    return E(i)->alpha;
+    return get_entity(i)->alpha;
 }
 
 int get_entity_flags(int i)
 {
-    return E(i)->flags;
+    return get_entity(i)->flags;
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void create_clone(int i, int j)
 {
-    if (entity_func[E(i)->type] &&
-        entity_func[E(i)->type]->dupe)
-        entity_func[E(i)->type]->dupe(E(i)->data);
+    struct entity *e = get_entity(i);
 
-    create_entity(j, E(i)->type, E(i)->data);
+    if (entity_func[e->type] &&
+        entity_func[e->type]->dupe)
+        entity_func[e->type]->dupe(e->data);
+
+    create_entity(j, e->type, e->data);
 }
 
 int send_create_clone(int i)
@@ -663,29 +711,28 @@ void recv_create_clone(void)
 
 static void free_entity(int i)
 {
-    if (i)
-    {
-        fini_entity(i);
+    struct entity *e = get_entity(i);
 
-        /* Delete all child entities. */
+    fini_entity(i);
 
-        while (E(i)->car)
-            free_entity(E(i)->car);
+    /* Delete all child entities. */
 
-        /* Remove this entity from the parent's child list. */
+    while (e->car)
+        free_entity(e->car);
 
-        detach_entity(i);
+    /* Remove this entity from the parent's child list. */
 
-        /* Delete the type-specific data. */
+    detach_entity(i);
 
-        if (entity_func[E(i)->type] &&
-            entity_func[E(i)->type]->free)
-            entity_func[E(i)->type]->free(E(i)->data);
+    /* Delete the type-specific data. */
 
-        /* Pave it. */
+    if (entity_func[e->type] &&
+        entity_func[e->type]->free)
+        entity_func[e->type]->free(e->data);
 
-        memset(E(i), 0, sizeof (struct entity));
-    }
+    /* Pave it. */
+
+    memset(e, 0, sizeof (struct entity));
 }
 
 void send_delete_entity(int i)
@@ -705,14 +752,14 @@ void recv_delete_entity(void)
 
 int get_entity_parent(int i)
 {
-    return E(i)->par;
+    return PAR(i);
 }
 
 int get_entity_child(int i, int n)
 {
     int j, m;
 
-    for (m = 0, j = E(i)->car; j; m++, j = E(j)->cdr)
+    for (m = 0, j = CAR(i); j; m++, j = CDR(j))
         if (n == m)
             return j;
 
@@ -753,21 +800,25 @@ void step_entities(void)
     /* Distribute it to all cameras and tracked entities. */
 
     for (i = 0; i < n; ++i)
-        if (E(i)->type == TYPE_CAMERA)
-            send_set_camera_offset(E(i)->data, p[0], M);
+    {
+        struct entity *e = get_entity(i);
 
-        else if (E(i)->type)
+        if (e->type == TYPE_CAMERA)
+            send_set_camera_offset(e->data, p[0], M);
+
+        else if (e->type)
         {
-            if (E(i)->flags & FLAG_POS_TRACKED_0)
+            if (e->flags & FLAG_POS_TRACKED_0)
                 send_set_entity_position(i, p[0]);
-            if (E(i)->flags & FLAG_POS_TRACKED_1)
+            if (e->flags & FLAG_POS_TRACKED_1)
                 send_set_entity_position(i, p[1]);
 
-            if (E(i)->flags & FLAG_ROT_TRACKED_0)
+            if (e->flags & FLAG_ROT_TRACKED_0)
                 send_set_entity_rotation(i, r[0]);
-            if (E(i)->flags & FLAG_ROT_TRACKED_1)
+            if (e->flags & FLAG_ROT_TRACKED_1)
                 send_set_entity_rotation(i, r[1]);
         }
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -779,14 +830,18 @@ void init_entities(void)
     /* Ask all entities with GL state to initialize themselves. */
 
     for (i = 0; i < n; ++i)
-        if (E(i)->type)
+    {
+        struct entity *e = get_entity(i);
+
+        if (e->type)
         {
             init_entity(i);
 
-            if (entity_func[E(i)->type] &&
-                entity_func[E(i)->type]->init)
-                entity_func[E(i)->type]->init(E(i)->data);
+            if (entity_func[e->type] &&
+                entity_func[e->type]->init)
+                entity_func[e->type]->init(e->data);
         }
+    }
 }
 
 void fini_entities(void)
@@ -796,14 +851,18 @@ void fini_entities(void)
     /* Ask all entities with GL state to finalize themselves. */
 
     for (i = 0; i < n; ++i)
-        if (E(i)->type)
+    {
+        struct entity *e = get_entity(i);
+
+        if (e->type)
         {
             fini_entity(i);
 
-            if (entity_func[E(i)->type] &&
-                entity_func[E(i)->type]->fini)
-                entity_func[E(i)->type]->fini(E(i)->data);
+            if (entity_func[e->type] &&
+                entity_func[e->type]->fini)
+                entity_func[e->type]->fini(e->data);
         }
+    }
 }
 
 /*===========================================================================*/
@@ -812,7 +871,9 @@ int startup_entity(void)
 {
     if ((entity = vecnew(256, sizeof (struct entity))))
     {
-        E(vecadd(entity))->type = TYPE_ROOT;
+        struct entity *e = (struct entity *) vecget(entity, vecadd(entity));
+
+        e->type = TYPE_ROOT;
 
         entity_func[TYPE_NULL]   = NULL;
         entity_func[TYPE_ROOT]   = NULL;

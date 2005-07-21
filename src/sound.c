@@ -47,14 +47,17 @@ static vector_t sound;
 
 /*---------------------------------------------------------------------------*/
 
-#define S(i) ((struct sound *) vecget(sound, i))
+static struct sound *get_sound(int i)
+{
+    return (struct sound *) vecget(sound, i);
+}
 
 static int new_sound(void)
 {
     int i, n = vecnum(sound);
 
     for (i = 0; i < n; ++i)
-        if (S(i)->chan == 0)
+        if (get_sound(i)->chan == 0)
             return i;
 
     return vecadd(sound);
@@ -64,9 +67,11 @@ static int new_sound(void)
 
 static int mix_sound(int i, float *fbuf, short *sbuf, int max)
 {
+    struct sound *s = get_sound(i);
+
     char *buf = (char *) sbuf;
 
-    int j, k, d = (S(i)->chan == 2) ? 1 : 2;
+    int j, k, d = (s->chan == 2) ? 1 : 2;
 
     int siz = max / d;
     int tot = 0;
@@ -76,7 +81,7 @@ static int mix_sound(int i, float *fbuf, short *sbuf, int max)
     /* Try to fill the short buffer with Ogg.  Rewind loops as necessary. */
 
     while (siz > 0)
-        if ((len = ov_read(&S(i)->file, buf, siz, 0, 2, 1, &bit)) > 0)
+        if ((len = ov_read(&s->file, buf, siz, 0, 2, 1, &bit)) > 0)
         {
             tot += len;
             buf += len;
@@ -84,8 +89,8 @@ static int mix_sound(int i, float *fbuf, short *sbuf, int max)
         }
         else
         {
-            if (S(i)->mode == SOUND_LOOP)
-                ov_pcm_seek(&S(i)->file, 0);
+            if (s->mode == SOUND_LOOP)
+                ov_pcm_seek(&s->file, 0);
             else
                 break;
         }
@@ -115,12 +120,15 @@ static void step_sound(void *data, Uint8 *stream, int length)
     /* Sum the playing sounds (using the output buffer as temp space). */
 
     for (i = 0; i < n; ++i)
-        if (S(i)->mode == SOUND_PLAY ||
-            S(i)->mode == SOUND_LOOP)
+    {
+        struct sound *s = get_sound(i);
+
+        if (s->mode == SOUND_PLAY || s->mode == SOUND_LOOP)
         {
             if (mix_sound(i, buff, output, length))
-                S(i)->mode = SOUND_STOP;
+                s->mode = SOUND_STOP;
         }
+    }
 
     /* Copy the mix buffer to the output buffer, clamping as necessary. */
 
@@ -139,14 +147,16 @@ int load_sound(const char *filename)
 
     if ((i = new_sound()) >= 0)
     {
+        struct sound *s = get_sound(i);
+
         if ((fp = open_file(filename, FMODE_RB)))
         {
-            if (ov_open(fp, &S(i)->file, NULL, 0) == 0)
+            if (ov_open(fp, &s->file, NULL, 0) == 0)
             {
-                struct vorbis_info *I = ov_info(&S(i)->file, -1);
+                struct vorbis_info *I = ov_info(&s->file, -1);
 
-                S(i)->mode = SOUND_STOP;
-                S(i)->chan = I->channels;
+                s->mode = SOUND_STOP;
+                s->chan = I->channels;
 
                 return i;
             }
@@ -159,18 +169,22 @@ int load_sound(const char *filename)
 
 void free_sound(int i)
 {
-    ov_clear(&S(i)->file);
-    memset(S(i), 0, sizeof (struct sound));
+    struct sound *s = get_sound(i);
+
+    ov_clear(&s->file);
+    memset(s, 0, sizeof (struct sound));
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void set_sound_mode(int i, int mode)
 {
+    struct sound *s = get_sound(i);
+
     SDL_LockAudio();
     {
-        ov_pcm_seek(&S(i)->file, 0);
-        S(i)->mode = mode;
+        ov_pcm_seek(&s->file, 0);
+        s->mode = mode;
     }
     SDL_UnlockAudio();
 }

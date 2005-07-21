@@ -101,6 +101,16 @@ function init_viewport()
     viewport.R =  width / 2
 end
 
+function make_sprite(filename)
+    local image = E.create_image(filename)
+    local brush = E.create_brush()
+
+    E.set_brush_flags(brush, E.brush_flag_unlit, true)
+    E.set_brush_image(brush, image)
+
+    return E.create_sprite(brush)
+end
+
 function init_scene()
     local camera_2d = E.create_camera(E.camera_type_orthogonal)
     local camera_3d = E.create_camera(E.camera_type_orthogonal)
@@ -138,8 +148,8 @@ function init_scene()
 
     if galaxy then
        E.set_galaxy_magnitude(galaxy, 100.0 * viewport.k)
-       E.set_entity_vert_prog(galaxy, "../star.vp")
-       E.set_entity_frag_prog(galaxy, "../star.fp")
+--     E.set_entity_vert_prog(galaxy, "../star.vp")
+--     E.set_entity_frag_prog(galaxy, "../star.fp")
     end
 
     -- Configure the lights.
@@ -166,7 +176,7 @@ end
 -- Overlays are 2D image elements that lie in a plane before the 3D scene.
 
 function create_overlay(filename, scale, hidden)
-    sprite = E.create_sprite(filename)
+    sprite = make_sprite(filename)
 
     -- Add the new overlay sprite to the scene, hidden if requested.
 
@@ -198,10 +208,10 @@ function create_title(text, width, hidden)
     E.parent_entity      (string1, scene_2d)
     E.parent_entity      (string2, string1)
     E.set_entity_flag    (string1, E.entity_flag_hidden, hidden)
-    E.set_string_fill    (string1, 1.0, 1.0, 0.0, 0.25)
-    E.set_string_line    (string1, 1.0, 1.0, 0.8, 0.50)
-    E.set_string_fill    (string2, 1.0, 1.0, 0.0, 0.25)
-    E.set_string_line    (string2, 1.0, 1.0, 1.0, 1.00)
+--    E.set_string_fill    (string1, 1.0, 1.0, 0.0, 0.25)
+--    E.set_string_line    (string1, 1.0, 1.0, 0.8, 0.50)
+--    E.set_string_fill    (string2, 1.0, 1.0, 0.0, 0.25)
+--    E.set_string_line    (string2, 1.0, 1.0, 1.0, 1.00)
     E.set_entity_scale   (string1, scale, scale, scale)
     E.set_entity_position(string2, 0, 0, 0.001)
     E.set_entity_position(string1, -scale * (x1 - x0) / 2,
@@ -349,15 +359,16 @@ end
 function init_entity()
     entity.ship           = hide(E.create_object("ship.obj"))
     entity.rock           = hide(E.create_object("rock.obj"))
-    entity.thrust         = hide(E.create_sprite("thrust.png"))
-    entity.bullet         = hide(E.create_sprite("bullet.png"))
-    entity.score05        = hide(E.create_sprite("score05.png"))
-    entity.score10        = hide(E.create_sprite("score10.png"))
-    entity.score25        = hide(E.create_sprite("score25.png"))
-    entity.ship_explosion = hide(E.create_sprite("ship_explosion.png"))
-    entity.ship_shockwave = hide(E.create_sprite("ship_shockwave.png"))
-    entity.rock_explosion = hide(E.create_sprite("rock_explosion.png"))
-    entity.rock_shockwave = hide(E.create_sprite("rock_shockwave.png"))
+
+    entity.thrust         = hide(make_sprite("thrust.png"))
+    entity.bullet         = hide(make_sprite("bullet.png"))
+    entity.score05        = hide(make_sprite("score05.png"))
+    entity.score10        = hide(make_sprite("score10.png"))
+    entity.score25        = hide(make_sprite("score25.png"))
+    entity.ship_explosion = hide(make_sprite("ship_explosion.png"))
+    entity.ship_shockwave = hide(make_sprite("ship_shockwave.png"))
+    entity.rock_explosion = hide(make_sprite("rock_explosion.png"))
+    entity.rock_shockwave = hide(make_sprite("rock_shockwave.png"))
 end
 
 function create_ship(x, y, z)
@@ -389,7 +400,6 @@ function create_bullet(x, y, z)
     E.parent_entity      (object, scene_3d)
     E.set_entity_position(object, x, y, z)
     E.set_entity_scale   (object, s, s, s)
-    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
     return object
 end
@@ -401,7 +411,6 @@ function create_explosion(source, size, x, y, z)
     E.parent_entity      (object, scene_3d)
     E.set_entity_position(object, x, y, z)
     E.set_entity_scale   (object, s, s, s)
-    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
     return object
 end
@@ -413,7 +422,6 @@ function create_shockwave(source, size, x, y, z)
     E.parent_entity      (object, scene_3d)
     E.set_entity_position(object, x, y, z)
     E.set_entity_scale   (object, s, s, s)
-    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
     return object
 end
@@ -429,7 +437,6 @@ function create_score(value, x, y, z)
     E.parent_entity      (object, scene_3d)
     E.set_entity_position(object, x, y, z)
     E.set_entity_scale   (object, s, s, s)
-    E.set_entity_flag    (object, E.entity_flag_unlit, true)
 
     return object
 end
@@ -870,7 +877,6 @@ function init_player(new)
         E.parent_entity(entity.thrust, player.entity)
         E.set_entity_scale(entity.thrust, s, s, s)
 
-        E.set_entity_flag(entity.thrust, E.entity_flag_unlit,  true)
         E.set_entity_flag(entity.thrust, E.entity_flag_hidden, true)
     end
 

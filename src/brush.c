@@ -49,14 +49,17 @@ static vector_t brush;
 
 /*---------------------------------------------------------------------------*/
 
-#define B(i) ((struct brush *) vecget(brush, i))
+static struct brush *get_brush(int i)
+{
+    return (struct brush *) vecget(brush, i);
+}
 
 static int new_brush(void)
 {
     int i, n = vecnum(brush);
 
     for (i = 0; i < n; ++i)
-        if (B(i)->count == 0)
+        if (get_brush(i)->count == 0)
             return i;
 
     return vecadd(brush);
@@ -160,7 +163,7 @@ int send_create_brush(const char *file, const char *name)
 
     for (i = 0; i < n; ++i)
     {
-        struct brush *b = B(i);
+        struct brush *b = get_brush(i);
 
         if (b->file && strcmp(b->file, file) &&
             b->name && strcmp(b->name, name))
@@ -174,7 +177,7 @@ int send_create_brush(const char *file, const char *name)
 
     if ((i = new_brush()) >= 0)
     {
-        struct brush *b = B(i);
+        struct brush *b = get_brush(i);
 
         /* Note the file and material names. */
 
@@ -228,7 +231,7 @@ void recv_create_brush(void)
 {
     int i = new_brush();
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     b->image = recv_index();
     b->flags = recv_index();
@@ -243,7 +246,7 @@ void recv_create_brush(void)
 
 void send_set_brush_image(int i, int j)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     dupe_image(j);
     free_image(b->image);
@@ -258,7 +261,7 @@ void recv_set_brush_image(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     dupe_image(j);
     free_image(b->image);
@@ -270,7 +273,7 @@ void recv_set_brush_image(void)
 
 void send_set_brush_flags(int i, int flags, int state)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     send_event(EVENT_SET_BRUSH_FLAGS);
     send_index(i);
@@ -289,7 +292,7 @@ void recv_set_brush_flags(void)
     int flags = recv_index();
     int state = recv_index();
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     if (state)
         b->flags = b->flags | ( flags);
@@ -303,7 +306,7 @@ void send_set_brush_frag_prog(int i, const char *text)
 {
     int n = text ? (strlen(text) + 1) : 0;
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     send_event(EVENT_SET_BRUSH_FRAG_PROG);
     send_index(i);
@@ -333,7 +336,7 @@ void recv_set_brush_frag_prog(void)
     int i = recv_index();
     int n = recv_index();
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     fini_brush(i);
 
@@ -360,7 +363,7 @@ void send_set_brush_vert_prog(int i, const char *text)
 {
     int n = text ? (strlen(text) + 1) : 0;
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     send_event(EVENT_SET_BRUSH_VERT_PROG);
     send_index(i);
@@ -390,7 +393,7 @@ void recv_set_brush_vert_prog(void)
     int i = recv_index();
     int n = recv_index();
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     fini_brush(i);
 
@@ -418,7 +421,7 @@ void send_set_brush_color(int i, const float d[4],
                                  const float a[4],
                                  const float x[1], int f)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     b->flags |= f;
 
@@ -459,7 +462,7 @@ void recv_set_brush_color(void)
 {
     int i = recv_index();
 
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     recv_array(b->d, 4, sizeof (float));
     recv_array(b->s, 4, sizeof (float));
@@ -473,7 +476,7 @@ void recv_set_brush_color(void)
 
 void init_brush(int i)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     if (b->state == 0)
     {
@@ -491,7 +494,7 @@ void init_brush(int i)
 
 void fini_brush(int i)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     if (b->state == 1)
     {
@@ -513,7 +516,7 @@ void fini_brush(int i)
 
 int draw_brush(int i, float a)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
     int transparent = (b->flags & BRUSH_TRANSPARENT);
 
     /* Apply the texture. */
@@ -565,14 +568,14 @@ int draw_brush(int i, float a)
 
 void dupe_brush(int i)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     b->count++;
 }
 
 void free_brush(int i)
 {
-    struct brush *b = B(i);
+    struct brush *b = get_brush(i);
 
     if (--b->count == 0)
     {
@@ -591,12 +594,12 @@ void free_brush(int i)
 
 int get_brush_w(int i)
 {
-    return get_image_w(B(i)->image);
+    return get_image_w(get_brush(i)->image);
 }
 
 int get_brush_h(int i)
 {
-    return get_image_h(B(i)->image);
+    return get_image_h(get_brush(i)->image);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -606,7 +609,7 @@ void init_brushes(void)
     int i, n = vecnum(brush);
 
     for (i = 0; i < n; ++i)
-        if (B(i)->count)
+        if (get_brush(i)->count)
             init_brush(i);
 }
 
@@ -615,7 +618,7 @@ void fini_brushes(void)
     int i, n = vecnum(brush);
 
     for (i = 0; i < n; ++i)
-        if (B(i)->count)
+        if (get_brush(i)->count)
             free_brush(i);
 }
 
@@ -631,7 +634,7 @@ int startup_brush(void)
 
         if ((i = new_brush()) >= 0)
         {
-            struct brush *b = B(i);
+            struct brush *b = get_brush(i);
 
             b->count = 1;
             b->image = 0;

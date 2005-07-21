@@ -205,7 +205,13 @@ static void E_type_error(const char *type, lua_State *L, int i)
     const char *got;
 
     if (lua_isuserdata(L, i))
-        got = entity_name(E_toentity(L, i));
+        switch (E_tousertype(L, i))
+        {
+        case USERDATA_ENTITY: got = entity_name(E_toentity(L, i)); break;
+        case USERDATA_SOUND:  got = "sound"; break;
+        case USERDATA_IMAGE:  got = "image"; break;
+        case USERDATA_BRUSH:  got = "brush"; break;
+        }
     else
         got = lua_typename(L, lua_type(L, i));
 
@@ -421,8 +427,9 @@ static int E_getimage(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_isnil (L, i))
+        if (lua_isnil(L, i))
             return 0;
+
         if (E_isimage(L, i))
             return E_toimage(L, i);
         else
@@ -435,8 +442,9 @@ static int E_getbrush(lua_State *L, int i)
 {
     if (1 <= -i && -i <= lua_gettop(L))
     {
-        if (lua_isnil (L, i))
+        if (lua_isnil(L, i))
             return 0;
+
         if (E_isbrush(L, i))
             return E_tobrush(L, i);
         else
@@ -1140,16 +1148,16 @@ static int E_create_image(lua_State *L)
 
 static int E_get_image_pixel(lua_State *L)
 {
-    unsigned char p[4];
+    unsigned char c[4];
 
-    get_image_p(E_getimage  (L, -3),
+    get_image_c(E_getimage  (L, -3),
                 L_getinteger(L, -2),
-                L_getinteger(L, -1), p);
+                L_getinteger(L, -1), c);
 
-    lua_pushnumber(L, (double) p[0] / 255.0);
-    lua_pushnumber(L, (double) p[1] / 255.0);
-    lua_pushnumber(L, (double) p[2] / 255.0);
-    lua_pushnumber(L, (double) p[3] / 255.0);
+    lua_pushnumber(L, (double) c[0] / 255.0);
+    lua_pushnumber(L, (double) c[1] / 255.0);
+    lua_pushnumber(L, (double) c[2] / 255.0);
+    lua_pushnumber(L, (double) c[3] / 255.0);
 
     return 4;
 }

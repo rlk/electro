@@ -237,7 +237,7 @@ static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
     funcs.shift    = 0;
     funcs.delta    = 0;
 
-    glyph->points = vecnew(16, sizeof (struct point));
+    glyph->points = vecnew(100000, sizeof (struct point));
     glyph->space  = TO_DBL(slot->advance.x);
 
     FT_Outline_Decompose(&slot->outline, &funcs, glyph->points);

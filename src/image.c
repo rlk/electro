@@ -40,14 +40,17 @@ static vector_t image;
 
 /*---------------------------------------------------------------------------*/
 
-#define I(i) ((struct image *) vecget(image, i))
+static struct image *get_image(int i)
+{
+    return (struct image *) vecget(image, i);
+}
 
 static int new_image(void)
 {
     int i, n = vecnum(image);
 
     for (i = 0; i < n; ++i)
-        if (I(i)->count == 0)
+        if (get_image(i)->count == 0)
             return i;
 
     return vecadd(image);
@@ -286,31 +289,37 @@ int send_create_image(const char *filename)
     /* Scan the current images for an existing instance of the named file. */
 
     for (i = 0; i < n; ++i)
-        if (I(i)->filename && strcmp(I(i)->filename, filename) == 0)
+    {
+        struct image *p = get_image(i);
+
+        if (p->filename && strcmp(p->filename, filename) == 0)
         {
-            I(i)->count++;
+            p->count++;
             return i;
         }
+    }
 
     /* Didn't find it.  It's new. */
 
     if ((i = new_image()) >= 0)
     {
-        I(i)->count = 1;
+        struct image *p = get_image(i);
+
+        p->count = 1;
 
         /* Note the file name. */
 
-        I(i)->filename = memdup(filename, strlen(filename) + 1, 1);
+        p->filename = memdup(filename, strlen(filename) + 1, 1);
 
         /* Load and pack the image. */
 
-        if ((I(i)->p = load_image(filename, &I(i)->w, &I(i)->h, &I(i)->b)))
+        if ((p->p = load_image(filename, &p->w, &p->h, &p->b)))
         {
             send_event(EVENT_CREATE_IMAGE);
-            send_index(I(i)->w);
-            send_index(I(i)->h);
-            send_index(I(i)->b);
-            send_array(I(i)->p, I(i)->w * I(i)->h, I(i)->b);
+            send_index(p->w);
+            send_index(p->h);
+            send_index(p->b);
+            send_array(p->p, p->w * p->h, p->b);
 
             return i;
         }
@@ -322,111 +331,119 @@ void recv_create_image(void)
 {
     int i = new_image();
 
-    I(i)->w = recv_index();
-    I(i)->h = recv_index();
-    I(i)->b = recv_index();
-    I(i)->p = (GLubyte *) malloc(I(i)->w * I(i)->h * I(i)->b);
+    struct image *p = get_image(i);
 
-    recv_array(I(i)->p, I(i)->w * I(i)->h, I(i)->b);
+    p->w = recv_index();
+    p->h = recv_index();
+    p->b = recv_index();
+    p->p = (GLubyte *) malloc(p->w * p->h * p->b);
 
-    I(i)->filename = "unknown";
+    recv_array(p->p, p->w * p->h, p->b);
+
+    p->filename = "unknown";
 }
 
 /*---------------------------------------------------------------------------*/
 
-void get_image_p(int i, int x, int y, unsigned char p[4])
+void get_image_c(int i, int x, int y, unsigned char c[4])
 {
-    unsigned char *pixels = (unsigned char *) I(i)->p;
-    int w = I(i)->w;
+    struct image  *p      = get_image(i);
+    unsigned char *pixels = (unsigned char *) p->p;
 
     /* Return a pixel in any format as RGBA format. */
 
     if (pixels)
-        switch (I(i)->b)
+        switch (p->b)
         {
         case 1:
-            p[0] = pixels[w * y + x];
-            p[1] = pixels[w * y + x];
-            p[2] = pixels[w * y + x];
-            p[3] = 0xff;
+            c[0] = pixels[p->w * y + x];
+            c[1] = pixels[p->w * y + x];
+            c[2] = pixels[p->w * y + x];
+            c[3] = 0xff;
             break;
         case 2:
-            p[0] = pixels[(w * y + x) * 2 + 0];
-            p[1] = pixels[(w * y + x) * 2 + 0];
-            p[2] = pixels[(w * y + x) * 2 + 0];
-            p[3] = pixels[(w * y + x) * 2 + 1];
+            c[0] = pixels[(p->w * y + x) * 2 + 0];
+            c[1] = pixels[(p->w * y + x) * 2 + 0];
+            c[2] = pixels[(p->w * y + x) * 2 + 0];
+            c[3] = pixels[(p->w * y + x) * 2 + 1];
             break;
         case 3:
-            p[0] = pixels[(w * y + x) * 3 + 0];
-            p[1] = pixels[(w * y + x) * 3 + 1];
-            p[2] = pixels[(w * y + x) * 3 + 2];
-            p[3] = 0xff;
+            c[0] = pixels[(p->w * y + x) * 3 + 0];
+            c[1] = pixels[(p->w * y + x) * 3 + 1];
+            c[2] = pixels[(p->w * y + x) * 3 + 2];
+            c[3] = 0xff;
             break;
         case 4:
-            p[0] = pixels[(w * y + x) * 3 + 0];
-            p[1] = pixels[(w * y + x) * 3 + 1];
-            p[2] = pixels[(w * y + x) * 3 + 2];
-            p[3] = pixels[(w * y + x) * 3 + 3];
+            c[0] = pixels[(p->w * y + x) * 3 + 0];
+            c[1] = pixels[(p->w * y + x) * 3 + 1];
+            c[2] = pixels[(p->w * y + x) * 3 + 2];
+            c[3] = pixels[(p->w * y + x) * 3 + 3];
             break;
         }
     else
-        p[0] = p[1] = p[2] = p[3] = 0xFF;
+        c[0] = c[1] = c[2] = c[3] = 0xFF;
 }
 
 int get_image_w(int i)
 {
-    return I(i)->w;
+    return get_image(i)->w;
 }
 
 int get_image_h(int i)
 {
-    return I(i)->h;
+    return get_image(i)->h;
 }
 
 /*===========================================================================*/
 
 void init_image(int i)
 {
-    if (I(i)->state == 0)
+    struct image *p = get_image(i);
+
+    if (p->state == 0)
     {
-        I(i)->texture = make_texture(I(i)->p, I(i)->w, I(i)->h, I(i)->b);
-        I(i)->state   = 1;
+        p->texture = make_texture(p->p, p->w, p->h, p->b);
+        p->state   = 1;
     }
 }
 
 void fini_image(int i)
 {
-    if (I(i)->state == 1)
-    {
-        if (glIsTexture(I(i)->texture))
-            glDeleteTextures(1, &I(i)->texture);
+    struct image *p = get_image(i);
 
-        I(i)->texture = 0;
-        I(i)->state   = 0;
+    if (p->state == 1)
+    {
+        if (glIsTexture(p->texture))
+            glDeleteTextures(1, &p->texture);
+
+        p->texture = 0;
+        p->state   = 0;
     }
 }
 
 void draw_image(int i)
 {
     init_image(i);
-    glBindTexture(GL_TEXTURE_2D, I(i)->texture);
+    glBindTexture(GL_TEXTURE_2D, get_image(i)->texture);
 }
 
 void dupe_image(int i)
 {
-    I(i)->count++;
+    get_image(i)->count++;
 }
 
 void free_image(int i)
 {
-    if (i && --I(i)->count == 0)
+    struct image *p = get_image(i);
+
+    if (--p->count == 0)
     {
         fini_image(i);
 
-        if (I(i)->filename) free(I(i)->filename);
-        if (I(i)->p)        free(I(i)->p);
+        if (p->filename) free(p->filename);
+        if (p->p)        free(p->p);
 
-        memset(I(i), 0, sizeof (struct image));
+        memset(p, 0, sizeof (struct image));
     }
 }
 
@@ -437,7 +454,7 @@ void init_images(void)
     int i, n = vecnum(image);
 
     for (i = 0; i < n; ++i)
-        if (I(i)->count)
+        if (get_image(i)->count)
             init_image(i);
 }
 
@@ -446,7 +463,7 @@ void fini_images(void)
     int i, n = vecnum(image);
 
     for (i = 0; i < n; ++i)
-        if (I(i)->count)
+        if (get_image(i)->count)
             fini_image(i);
 }
 
@@ -460,16 +477,18 @@ int startup_image(void)
     {
         if ((i = new_image()) >= 0)
         {
-            I(i)->filename = "null";
-            I(i)->texture  =      0;
-            I(i)->state    =      0;
-            I(i)->count    =      1;
-            I(i)->w        =    128;
-            I(i)->h        =    128;
-            I(i)->b        =      4;
-            I(i)->p        = malloc(128 * 128 * 4);
+            struct image *p = get_image(i);
 
-            memset(I(i)->p, 0xFF, 128 * 128 * 4);
+            p->filename = "null";
+            p->texture  =      0;
+            p->state    =      0;
+            p->count    =      1;
+            p->w        =    128;
+            p->h        =    128;
+            p->b        =      4;
+            p->p        = malloc(128 * 128 * 4);
+
+            memset(p->p, 0xFF, 128 * 128 * 4);
         }
         return 1;
     }
