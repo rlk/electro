@@ -206,14 +206,18 @@ function create_title(text, width, hidden)
     x0, y0, z0, x1, y1, z1 = E.get_entity_bound(string1)
 
     local scale = width / (x1 - x0)
+    local brush = E.create_brush()
+
+    E.set_brush_color(brush, 1.0, 1.0, 1.0, 0.25)
+    E.set_brush_flags(brush, E.brush_flag_unlit, true)
 
     E.parent_entity      (string1, scene_2d)
     E.parent_entity      (string2, string1)
     E.set_entity_flag    (string1, E.entity_flag_hidden, hidden)
---    E.set_string_fill    (string1, 1.0, 1.0, 0.0, 0.25)
---    E.set_string_line    (string1, 1.0, 1.0, 0.8, 0.50)
---    E.set_string_fill    (string2, 1.0, 1.0, 0.0, 0.25)
---    E.set_string_line    (string2, 1.0, 1.0, 1.0, 1.00)
+    E.set_string_fill    (string1, brush)
+    E.set_string_line    (string1, brush)
+    E.set_string_fill    (string2, brush)
+    E.set_string_line    (string2, brush)
     E.set_entity_scale   (string1, scale, scale, scale)
     E.set_entity_position(string2, 0, 0, 0.001)
     E.set_entity_position(string1, -scale * (x1 - x0) / 2,

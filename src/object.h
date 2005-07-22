@@ -19,8 +19,44 @@ struct entity_func *startup_object(void);
 
 /*---------------------------------------------------------------------------*/
 
+int  create_mesh(int, int);
+int  create_vert(int, float[3], float[3], float[2]);
+int  create_face(int, int, int[3]);
+int  create_edge(int, int, int[2]);
+
+int  set_mesh(int, int, int);
+int  set_vert(int, int, float[3], float[3], float[2]);
+int  set_face(int, int, int, int[3]);
+int  set_edge(int, int, int, int[2]);
+
+int  get_mesh(int, int);
+void get_vert(int, int, float[3], float[3], float[2]);
+void get_face(int, int, int, int[3]);
+void get_edge(int, int, int, int[2]);
+
+int  get_mesh_count(int);
+int  get_vert_count(int);
+int  get_face_count(int, int);
+int  get_edge_count(int, int);
+
+void delete_mesh(int, int);
+void delete_vert(int, int);
+void delete_face(int, int, int);
+void delete_edge(int, int, int);
+
+/*---------------------------------------------------------------------------*/
+
 int  send_create_object(const char *);
 void recv_create_object(void);
+
+int  send_create_object_elem(int, int);
+void recv_create_object_elem(void);
+
+int  send_delete_object_elem(int, int, int);
+void recv_delete_object_elem(void);
+
+int  send_modify_object_elem(int, int, int, int *, int, float *);
+void recv_modify_object_elem(void);
 
 /*---------------------------------------------------------------------------*/
 

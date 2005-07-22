@@ -30,6 +30,7 @@ typedef struct vector *vector_t;
 vector_t vecnew(int, int);
 void     vecdel(vector_t);
 void     vecclr(vector_t);
+void     vecpop(vector_t);
 int      vecadd(vector_t);
 void    *vecget(vector_t, int);
 

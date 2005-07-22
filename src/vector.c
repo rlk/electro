@@ -22,14 +22,12 @@ vector_t vecnew(int max, int siz)
 {
     vector_t V;
 
-    assert(max > 0);
     assert(siz > 0);
 
-    if ((V = (vector_t) malloc(sizeof (struct vector))))
+    if ((V = (vector_t) calloc(1, sizeof (struct vector))))
     {
-        if ((V->buf = malloc(max * siz)))
+        if ((max == 0) || (V->buf = malloc(max * siz)))
         {
-            V->num =   0;
             V->max = max;
             V->siz = siz;
 
@@ -46,6 +44,14 @@ void vecdel(vector_t V)
 
     free(V->buf);
     free(V);
+}
+
+void vecpop(vector_t V)
+{
+    assert(V);
+    assert(V->num > 0);
+
+    V->num--;
 }
 
 void vecclr(vector_t V)
@@ -66,10 +72,12 @@ int vecadd(vector_t V)
 
     if (V->num == V->max)
     {
-        if ((buf = realloc(V->buf, 2 * V->max * V->siz)))
+        int max = (V->max == 0) ? 1 : 2 * V->max;
+
+        if ((buf = realloc(V->buf, V->siz * max)))
         {
-            V->buf  = buf;
-            V->max *=   2;
+            V->max = max;
+            V->buf = buf;
         }
         else return -1;
     }
@@ -84,11 +92,9 @@ int vecadd(vector_t V)
 void *vecget(vector_t V, int i)
 {
     assert(V);
+    assert(0 <= i && i < V->num);
 
-    if (i >= 0)
-        return ((char *) (V)->buf) + ((V)->siz * (i));
-    else
-        return NULL;
+    return ((char *) (V)->buf) + ((V)->siz * (i));
 }
 
 /*---------------------------------------------------------------------------*/

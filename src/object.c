@@ -86,6 +86,26 @@ static struct object *get_object(int i)
     return (struct object *) vecget(object, i);
 }
 
+static struct object_mesh *get_object_mesh(int i, int j)
+{
+    return (struct object_mesh *) vecget(get_object(i)->mv, j);
+}
+
+static struct object_vert *get_object_vert(int i, int j)
+{
+    return (struct object_vert *) vecget(get_object(i)->vv, j);
+}
+
+static struct object_face *get_object_face(int i, int j, int k)
+{
+    return (struct object_face *) vecget(get_object_mesh(i, j)->fv, k);
+}
+
+static struct object_edge *get_object_edge(int i, int j, int k)
+{
+    return (struct object_edge *) vecget(get_object_mesh(i, j)->ev, k);
+}
+
 static int new_object(void)
 {
     int i, n = vecnum(object);
@@ -312,8 +332,8 @@ static struct object_mesh *read_usemtl(vector_t mv, const char *line,
 
         if (line) m->brush = send_create_brush(file, parse_name(line));
 
-        m->fv = vecnew(1, sizeof (struct object_face));
-        m->ev = vecnew(1, sizeof (struct object_edge));
+        m->fv = vecnew(0, sizeof (struct object_face));
+        m->ev = vecnew(0, sizeof (struct object_edge));
 
         return m;
     }
@@ -372,8 +392,8 @@ static int read_obj(const char *filename, struct object *o)
 
     /* Initialize the object element vectors. */
 
-    o->vv = vecnew(1, sizeof (struct object_vert));
-    o->mv = vecnew(1, sizeof (struct object_mesh));
+    o->vv = vecnew(0, sizeof (struct object_vert));
+    o->mv = vecnew(0, sizeof (struct object_mesh));
 
     if ((fin = open_file(filename, "r")))
     {
@@ -415,7 +435,237 @@ static int read_obj(const char *filename, struct object *o)
     return r;
 }
 
+/*===========================================================================*/
+/* Object accessors and modifiers                                            */
+
+int create_mesh(int i, int brush)
+{
+    return set_mesh(i, vecadd(get_object(i)->mv), brush);
+}
+
+int create_vert(int i, float v[3], float n[3], float t[2])
+{
+    return set_vert(i, vecadd(get_object(i)->vv), v, n, t);
+}
+
+int create_face(int i, int j, int vi[3])
+{
+    return set_face(i, j, vecadd(get_object_mesh(i, j)->fv), vi);
+}
+
+int create_edge(int i, int j, int vi[2])
+{
+    return set_edge(i, j, vecadd(get_object_mesh(i, j)->ev), vi);
+}
+
 /*---------------------------------------------------------------------------*/
+
+int set_mesh(int i, int j, int brush)
+{
+    struct object_mesh *m = get_object_mesh(i, j);
+
+    m->brush = brush;
+
+    return j;
+}
+
+int set_vert(int i, int j, float v[3], float n[3], float t[2])
+{
+    struct object_vert *p = get_object_vert(i, j);
+
+    p->v[0] = v[0];
+    p->v[1] = v[1];
+    p->v[2] = v[2];
+
+    p->n[0] = n[0];
+    p->n[1] = n[1];
+    p->n[2] = n[2];
+
+    p->t[0] = t[0];
+    p->t[1] = t[1];
+
+    return j;
+}
+
+int set_face(int i, int j, int k, int vi[3])
+{
+    struct object_face *f = get_object_face(i, j, k);
+
+    f->vi[0] = vi[0];
+    f->vi[1] = vi[1];
+    f->vi[2] = vi[2];
+
+    return k;
+}
+
+int set_edge(int i, int j, int k, int vi[2])
+{
+    struct object_edge *e = get_object_edge(i, j, k);
+
+    e->vi[0] = vi[0];
+    e->vi[1] = vi[1];
+
+    return k;
+}
+
+/*---------------------------------------------------------------------------*/
+
+int get_mesh(int i, int j)
+{
+    return get_object_mesh(i, j)->brush;
+}
+
+void get_vert(int i, int j, float v[3], float n[3], float t[2])
+{
+    struct object_vert *p = get_object_vert(i, j);
+
+    v[0] = p->v[0];
+    v[1] = p->v[1];
+    v[2] = p->v[2];
+
+    n[0] = p->n[0];
+    n[1] = p->n[1];
+    n[2] = p->n[2];
+
+    t[0] = p->t[0];
+    t[1] = p->t[1];
+}
+
+void get_face(int i, int j, int k, int vi[3])
+{
+    struct object_face *f = get_object_face(i, j, k);
+
+    vi[0] = f->vi[0];
+    vi[1] = f->vi[1];
+    vi[2] = f->vi[2];
+}
+
+void get_edge(int i, int j, int k, int vi[2])
+{
+    struct object_edge *e = get_object_edge(i, j, k);
+
+    vi[0] = e->vi[0];
+    vi[1] = e->vi[1];
+}
+
+/*---------------------------------------------------------------------------*/
+
+int get_mesh_count(int i)
+{
+    return vecnum(get_object(i)->mv);
+}
+
+int get_vert_count(int i)
+{
+    return vecnum(get_object(i)->vv);
+}
+
+int get_face_count(int i, int j)
+{
+    return vecnum(get_object_mesh(i, j)->fv);
+}
+
+int get_edge_count(int i, int j)
+{
+    return vecnum(get_object_mesh(i, j)->ev);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void delete_mesh(int i, int j)
+{
+    struct object      *o = get_object(i);
+    struct object_mesh *m = get_object_mesh(i, j);
+
+    /* Release this mesh's resources. */
+
+    vecdel(m->fv);
+    vecdel(m->ev);
+
+    /* Remove this mesh from the mesh vector. */
+
+    memmove(vecget(o->mv, j),
+            vecget(o->mv, j + 1), vecsiz(o->mv) * (vecnum(o->mv) - j - 1));
+
+    vecpop(o->mv);
+}
+
+void delete_vert(int i, int j)
+{
+    struct object *o = get_object(i);
+
+    int k;
+    int l;
+
+    /* Remove this vertex from the vertex vector. */
+
+    memmove(vecget(o->vv, j),
+            vecget(o->vv, j + 1), vecsiz(o->vv) * (vecnum(o->mv) - j - 1));
+
+    vecpop(o->vv);
+
+    /* Remove all references to this vertex from all meshes. */
+
+    for (k = 0; k < get_mesh_count(i); ++k)
+    {
+        /* Delete all referencing faces.  Move later references down. */
+
+        for (l = 0; l < get_face_count(i, k); ++l)
+        {
+            struct object_face *f = get_object_face(i, k, l);
+
+            if (f->vi[0] == j || f->vi[1] == j || f->vi[2] == j)
+                delete_face(i, k, l);
+            else
+            {
+                if (f->vi[0] > j) f->vi[0]--;
+                if (f->vi[1] > j) f->vi[1]--;
+                if (f->vi[2] > j) f->vi[2]--;
+            }
+        }
+
+        /* Delete all referencing edges.  Move later references down. */
+
+        for (l = 0; l < get_edge_count(i, k); ++l)
+        {
+            struct object_edge *e = get_object_edge(i, k, l);
+
+            if (e->vi[0] == j || e->vi[1] == j)
+                delete_edge(i, k, l);
+            else
+            {
+                if (e->vi[0] > j) e->vi[0]--;
+                if (e->vi[1] > j) e->vi[1]--;
+            }
+        }
+    }
+}
+
+void delete_face(int i, int j, int k)
+{
+    struct object_mesh *m = get_object_mesh(i, j);
+
+    /* Remove this face from the face vector. */
+
+    memmove(vecget(m->fv, k),
+            vecget(m->fv, k + 1), vecsiz(m->fv) * (vecnum(m->fv) - k - 1));
+
+    vecpop(m->fv);
+}
+
+void delete_edge(int i, int j, int k)
+{
+    struct object_mesh *m = get_object_mesh(i, j);
+
+    /* Remove this edge from the edge vector. */
+
+    memmove(vecget(m->ev, k),
+            vecget(m->ev, k + 1), vecsiz(m->fv) * (vecnum(m->ev) - k - 1));
+
+    vecpop(m->ev);
+}
+
+/*===========================================================================*/
 
 int send_create_object(const char *filename)
 {
@@ -426,9 +676,9 @@ int send_create_object(const char *filename)
         struct object      *o = get_object(i);
         struct object_mesh *m = NULL;
 
-        /* If the file exists and is successfully read... */
+        /* If we want an empty object, or we successfully read an OBJ... */
 
-        if ((read_obj(filename, o)))
+        if ((filename == NULL) || (read_obj(filename, o)))
         {
             int j, n = vecnum(o->mv);
 

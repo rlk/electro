@@ -1,4 +1,5 @@
 Object geometry create
+delete image / brush
 Bound recompute
 collision detection
 texture transform
