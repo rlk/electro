@@ -31,10 +31,10 @@ graphics, audio, networking, and input handling, Electro provides an
 easy-to-use scripting system for interactive applications spanning
 multiple hosts and a variety of displays. </p>
 
-<h1> This Document </h1>
+<h1> 0. This Document </h1>
 
 <p> This document details the functions and data types of the Electro
-API.  A knowledge of the Lua Programming Language, version 5.0, is
+API.  A knowledge of the Lua Programming Language version 5.0 is
 prerequisite.  Lua documentation and tutorials may be found at <a
 href="http://www.lua.org/docs.html"> the official Lua site</a>. A
 tutorial example of the use of the Electro API with Lua is <a
@@ -42,8 +42,10 @@ href="example.html">included here</a>.</p>
 
 <p> Electro API function definitions appear here as follows:
 
-<dl><dt><i>value</i> = <tt>function</tt>(<i>arguments</i>)<dd></p>
-Invoke <tt>function</tt> with <i>arguments</i> giving a <i>value</i>.
+<dl><dt><i>baz</i> = <tt>function</tt>(<i>foo</i>,
+[<i>bar</i>])<dd></p> Invoke <tt>function</tt> with arguments
+<i>foo</i>, and optionally <i>bar</i>, giving
+<i>baz</i>.
 </p></dl>
 
 <p> This document includes a number of Lua code examples.  These
@@ -66,7 +68,7 @@ efficiency.</p>
 
 <!---------------------------------------------------------------------------->
 
-<h1> Command Line Arguments </h1>
+<h1> 1. Command Line Arguments </h1>
 
 <p> Electro accepts the following command line arguments.  All
 unrecognized arguments are copied to a table in the Electro Lua
@@ -95,7 +97,7 @@ Process the given Tycho stellar catalog into an Electro galaxy file. </p>
 
 <!---------------------------------------------------------------------------->
 
-<h1> API </h1>
+<h1> 2. API </h1>
 
 <p> The Electro API is encapsulated in a Lua namespace "<tt>E</tt>".
 The namespace specifier is omitted in this documentation, though it is
@@ -109,7 +111,7 @@ E.set_background(0.0, 0.5, 1.0)
 
 <p> These are the major functional sections of the Electro API: </p>
 
-<ul>
+<ol>
 <li><a href="#entity"> Entities </a>
 <li><a href="#image"> Images </a>
 <li><a href="#brush"> Brushes </a>
@@ -117,9 +119,9 @@ E.set_background(0.0, 0.5, 1.0)
 <li><a href="#console"> Console </a>
 <li><a href="#configuration"> Configuration </a>
 <li><a href="#miscellaneous"> Miscellaneous </a>
-</ul>
+</ol>
 
-<a name="entity"><h2> Entities </h2>
+<a name="entity"><h2> 2.1. Entities </h2>
 
 <p> The core of any Electro application is the scene graph.  The scene
 graph is a very common organizing scheme in 3D graphics, and examples
@@ -141,9 +143,9 @@ hierarchy together.  The subclasses handle the specifics of
 controlling the view and lighting, drawing 3D and 2D geometry, etc.
 The class hierarchy is as follows: </p>
 
-<ul>
+<ol start="0">
 <a href="#entity"> Entity </a>
-<ul>
+<ol>
 <li><a href="#object"> Object </a>
 <li><a href="#sprite"> Sprite </a>
 <li><a href="#string"> String </a>
@@ -151,12 +153,8 @@ The class hierarchy is as follows: </p>
 <li><a href="#light">  Light  </a>
 <li><a href="#pivot">  Pivot  </a>
 <li><a href="#galaxy"> Galaxy </a>
-</ul>
-</ul>
-
-<!---------------------------------------------------------------------------->
-
-<h3> Constructors </h3>
+</ol>
+</ol>
 
 <p> Constructor functions instantiate scene graph objects. </p>
 
@@ -280,13 +278,13 @@ changed, all instances of the original string will change. </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="entity"><h3> Entity </h3>
+<a name="entity"><h3> 2.1.0. Entity </h3>
 
 <p> The following functions act on entities.  The entity argument of
 each function may take any entity value, including object, sprite,
 camera, light, and pivot. </p>
 
-<h4> Hierarchy Management </h4>
+<h4> 2.1.0.1. Hierarchy Management </h4>
 <dl>
 
 <dt><tt>parent_entity</tt>(<i>entity, parent</i>)<dd><p> Include
@@ -318,7 +316,7 @@ referenced as children of <tt>nil</tt>.  The first child is at index
 
 <!---------------------------------------------------------------------------->
 
-<h4> Absolute Transformation </h4>
+<h4> 2.1.0.2. Absolute Transformation </h4>
 <dl>
 
 <dt><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p>
@@ -335,11 +333,11 @@ the scale of the entity.  The 3 values give scale multipliers along
 the X, Y, and Z axes.  Scale is given in the coordinate system of the
 entity's parent. </p>
 
-<dt><tt>set_entity_bound</tt>(<i>entity, x<sub>0</sub>, y<sub>0</sub>,
-z<sub>0</sub>, x<sub>1</sub>, y<sub>1</sub>, z<sub>1</sub></i>)
-<dd><p> Specify the axis-aligned bounding box of the entity.  The 6
-values give the minimum and maximum X, Y, and Z values in object
-coordinates.</p>
+<dt><tt>set_entity_bound</tt>(<i>entity, min<sub>x</sub>,
+min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>,
+max<sub>z</sub></i>) <dd><p> Specify the axis-aligned bounding box of
+the entity.  The 6 values give the minimum and maximum X, Y, and Z
+values in object coordinates.</p>
 
 <p> To enable view culling based on the given bound, set
 <tt>entity_flag_bounded</tt>.  Keep in mind that object, sprite, and
@@ -352,7 +350,7 @@ hierarchical view culling. </p>
 
 <!---------------------------------------------------------------------------->
 
-<h4> Relative Transformation </h4>
+<h4> 2.1.0.3. Relative Transformation </h4>
 
 <p class="note"> Strictly speaking, to provide both absolute and
 relative transformation functions is to violate the principle of
@@ -383,7 +381,7 @@ and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
 
 <!---------------------------------------------------------------------------->
 
-<h4> Rendering properties </h4>
+<h4> 2.1.0.4. Rendering properties </h4>
 <dl>
 
 <dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify the
@@ -398,7 +396,7 @@ accumulate.  That is, if a parent and a child both specify
 
 <!---------------------------------------------------------------------------->
 
-<h4> Query </h4>
+<h4> 2.1.0.5. Query </h4>
 <dl>
 
 <dt><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)<dd><p>
@@ -421,8 +419,8 @@ Return the vector pointing to the rear of entity in local coordinates.
 Return the scaling of the entity along the local X, Y, and Z axes.
 </p>
 
-<dt><i>x<sub>0</sub>, y<sub>0</sub>, z<sub>0</sub>, x<sub>1</sub>,
-y<sub>1</sub>, z<sub>1</sub></i> =
+<dt><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>,
+max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> =
 <tt>get_entity_bound</tt>(<i>entity</i>) <dd><p> Return the minimum
 and maximum X, Y, and Z values of the entity.  This may be used to
 determine the extent of an object or sprite.  This is useful when
@@ -437,7 +435,7 @@ the transparency value of the entity.
 
 <!---------------------------------------------------------------------------->
 
-<h4> Flags </h4>
+<h4> 2.1.0.6. Flags </h4>
 <dl>
 
 <dt><tt>set_entity_flags</tt>(<i>entity, flags, value</i>) <dd><p> Set
@@ -515,7 +513,164 @@ vice-versa. </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="sprite"><h3> Sprite </h3>
+<a name="object"><h3> 2.1.1. Object </h3>
+
+<p> An object is a collection of vertices and meshes.  A mesh is a
+collection of faces and edges.  Faces and edges are represented as
+sets of indices into the object's vertex list.  Brushes are applied
+per-mesh. </p>
+
+<p> The following functions allow objects to be created, destroyed,
+modified, and queried throught the manipulation of mesh, vertex, face,
+and edge indices. </p>
+
+<h4> 2.1.1.1. Constructors </h4> <!------------------------------------------->
+<dl>
+
+<dt><i>mesh-index</i> = <tt>create_mesh</tt>(<i>object,</i>
+[<i>brush</i>])<dd><p> Create a new mesh within <i>object</i> and
+return its index.  A brush may be applied to the new mesh at creation
+time, but if none is provided then the default brush will be
+used. </p>
+
+<dt><i>vert-index</i> = <tt>create_vert</tt>(<i>object,</i>
+[<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i>
+[<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i>
+[<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p> Create a new vertex
+within <i>object</i> and return its index.  The vertex's position
+(<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal
+(<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture
+coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specifed.  If
+any of these are not provided, default values of (<i>0, 0, 0</i>),
+(<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
+
+
+<dt><i>face-index</i> = <tt>create_face</tt>(<i>object, mesh-index,
+vert-index<sub>0</sub>, vert-index<sub>1</sub>,
+vert-index<sub>2</sub></i>)<dd><p> Create a new trianglular face
+within mesh <i>mesh-index</i> of <i>object</i> defined by the vertices
+(<i>vert-index<sub>0</sub>, vert-index<sub>1</sub>,
+vert-index<sub>2</sub></i>). </p>
+
+<dt><i>edge-index</i> = <tt>create_edge</tt>(<i>object, mesh-index,
+vert-index<sub>0</sub>, vert-index<sub>1</sub></i>)<dd><p> Create a
+new edge within mesh <i>mesh-index</i> of <i>object</i> defined by the
+vertices (<i>vert-index<sub>0</sub>, vert-index<sub>1</sub></i>)</p>
+
+</dl>
+
+<h4> 2.1.1.2. Destructors </h4> <!-------------------------------------------->
+
+<p class="note"> Object elements are stored in vectors.  The addition
+of a new element is usually a constant-time append operation, but the
+deletion of an element requires a linear-time traversal of the vector.
+In addition, a vertex removal necessitates the traversal of the all
+edge and face vectors, potentially causing removals there.  Vertex
+removal also triggers the recomputation of the object bound and the
+reloading of the OpenGL vertex buffer.  For these reasons, object
+element deletion can be very expensive.  Applications should avoid
+creating and deleting geometry on a per-frame basis. </p>
+
+<dl>
+
+<dt><tt>delete_mesh</tt>(<i>object, mesh-index</i>)<dd><p> Remove mesh
+<i>mesh-index</i> from <i>object</i>.  All faces and edges contained
+by the mesh are deleted as well.
+
+<dt><tt>delete_vert</tt>(<i>object, vert-index</i>)<dd><p> Remove
+vertex <i>vert-index</i> from <i>object</i>.  The vertex is deleted
+from the object's vertex vector and all following vertices are moved
+to fill in the remaining space.  Vertex references in the object's
+face and edge vectors are updated, but any vertex indices held in Lua
+variables will be off by one.  All faces and edges referencing the
+vertex are also deleted. </p>
+
+<dt><tt>delete_face</tt>(<i>object, mesh-index, face-index</i>)<dd><p>
+Remove face <i>face-index</i> from mesh <i>mesh-index</i> of
+<i>object</i>.  This function does not remove referenced vertices,
+regardless of whether they are left unreferenced by other faces or
+edges. </p>
+
+<dt><tt>delete_edge</tt>(<i>object, mesh-index, edge-index</i>)<dd><p>
+Remove edge <i>edge-index</i> from mesh <i>mesh-index</i> of
+<i>object</i>.  As with faces, this function does not alter the
+object's vertex vector. </p>
+
+<p class="note"> The deletion of faces and edges can result in unused
+vertices within an object.  This is sometimes desired, but often not.
+It is left to the application to do the right thing.</p>
+
+</dl>
+
+<h4> 2.1.1.3. Modifiers </h4> <!---------------------------------------------->
+<dl>
+
+<dt><tt>set_mesh</tt>(<i>object, mesh-index, brush</i>)<dd><p> Change
+the <i>brush</i> used to render mesh <i>mesh-index</i> of
+<i>object</i>. </p>
+
+<dt><tt>set_vert</tt>(<i>object, vert-index, v<sub>x</sub>,
+v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>,
+n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>
+Modify the value of vertex <i>vert-index</i>.  The normal and texture
+coordinate are option and, if not specified, the existing vertex
+values are retained. </p>
+
+<p class="note"> Like vertex deletion, vertex modification can trigger
+object bound recomputation and modification to the OpenGL vertex
+buffer object.  Modifying a large batch of vertices has nearly the
+same overhead as modifying a single vertex, so make all necessary
+changes at the same time. </p>
+
+<dt><tt>set_face</tt>(<i>object, mesh-index, face-index,
+vert-index<sub>0</sub>, vert-index<sub>1</sub>,
+vert-index<sub>2</sub></i>)<dd><p> Change the set of vertices defining
+face <i>face-index</i>.</p>
+
+<dt><tt>set_edge</tt>(<i>object, mesh-index, edge-index,
+vert-index<sub>0</sub>, vert-index<sub>1</sub></i>)<dd><p> Change the
+set of vertices defining edge <i>edge-index</i>.</p>
+
+</dl>
+
+<h4> 2.1.1.4. Value Queries </h4> <!------------------------------------------>
+<dl>
+
+<dt><i>brush</i> = <tt>get_mesh</tt>(<i>object, mesh-index</i>)<dd><p></p>
+
+<dt>
+<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>, 
+n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,
+t<sub>u</sub>, t<sub>v</sub></i> = 
+<tt>get_vert</tt>(<i>object, vert-index</i>)<dd><p></p>
+
+<dt><i>vert-index<sub>0</sub>, vert-index<sub>1</sub>,
+vert-index<sub>2</sub></i> = <tt>get_face</tt>(<i>object, mesh-index,
+face-index</i>)<dd><p></p>
+
+<dt><i>vert-index<sub>0</sub>, vert-index<sub>1</sub></i> =
+<tt>get_edge</tt>(<i>object, mesh-index, face-index</i>)<dd><p></p>
+
+</dl>
+
+
+<h4> 2.1.1.5. Number queries </h4> <!----------------------------------------->
+<dl>
+
+<dt><i>n</i> = <tt>get_mesh_count</tt>(<i>object</i>)<dd><p></p>
+
+<dt><i>n</i> = <tt>get_vert_count</tt>(<i>object</i>)<dd><p></p>
+
+<dt><i>n</i> = <tt>get_face_count</tt>(<i>object, mesh-index</i>)<dd><p></p>
+
+<dt><i>n</i> = <tt>get_edge_count</tt>(<i>object, mesh-index</i>)<dd><p></p>
+
+</dl>
+
+
+<!---------------------------------------------------------------------------->
+
+<a name="sprite"><h3> 2.1.2. Sprite </h3>
 <dl>
 
 <dt><tt>set_sprite_brush</tt>(<i>sprite, brush</i>)<dd><p> Set the
@@ -535,7 +690,7 @@ displayed simply by modifying the sprite bounds.  </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="string"><h3> String </h3>
+<a name="string"><h3> 2.1.3. String </h3>
 <dl>
 
 <dt><tt>set_string_text</tt>(<i>string, text</i>)<dd><p> Set the
@@ -556,15 +711,15 @@ outline brush of the string entity.</p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="camera"><h3> Camera </h3>
+<a name="camera"><h3> 2.1.4. Camera </h3>
 <dl>
 
-<dt><tt>set_camera_stereo</tt>(<i>mode, x<sub>L</sub>, y<sub>L</sub>,
-z<sub>L</sub>, x<sub>R</sub>, y<sub>R</sub>, z<sub>R</sub></i>)<dd><p>
+<dt><tt>set_camera_stereo</tt>(<i>mode, L<sub>x</sub>, L<sub>y</sub>,
+L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)<dd><p>
 Set stereo options on the given camera.  The <i>mode</i> argument
-gives the stereo method, as described below.  The (<i>x<sub>L</sub>,
-y<sub>L</sub>, z<sub>L</sub></i>) and (<i>x<sub>R</sub>,
-y<sub>R</sub>, z<sub>R</sub></i>) arguments give the offsets from the
+gives the stereo method, as described below.  The (<i>L<sub>x</sub>,
+L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>,
+R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the
 camera to the user's left and right eyes.</p>
 
 <p> The available stereo modes are as follows: </p>
@@ -605,7 +760,7 @@ algorithm. </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="light"><h3> Light </h3>
+<a name="light"><h3> 2.1.5. Light </h3>
 <dl>
 
 <dt><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p> Set the
@@ -615,7 +770,13 @@ diffuse color of a light source.  </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="galaxy"><h3> Galaxy </h3>
+<a name="galaxy"><h3> 2.1.6. Pivot </h3>
+
+<p> Pivots have no type-specific functionality. </p>
+
+<!---------------------------------------------------------------------------->
+
+<a name="galaxy"><h3> 2.1.7. Galaxy </h3>
 <dl>
 
 <dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p> Set the
@@ -640,7 +801,7 @@ of <i>galaxy</i>.
 
 <!---------------------------------------------------------------------------->
 
-<a name="image"><h2> Images </h2>
+<a name="image"><h2> 2.2. Images </h2>
 
 <p> Images are used as textures for objects, strings, and sprites. </p>
 
@@ -680,7 +841,7 @@ power-of-two source images.</p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="brush"><h2> Brushes </h2>
+<a name="brush"><h2> 2.3. Brushes </h2>
 
 <p> Brushes describe the appearance of the surfaces of objects, strings,
 and sprites. </p>
@@ -766,7 +927,7 @@ depth test. </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="sound"><h2> Sound </h2>
+<a name="sound"><h2> 2.4. Sound </h2>
 
 <p> Electro provides a basic audio API suitable for adding simple
 sounds to an application.  It supports streaming of arbitrary stereo
@@ -804,7 +965,7 @@ resources.  The stream may be restarted from the beginning.
 
 <!---------------------------------------------------------------------------->
 
-<a name="console"><h2> Console </h2>
+<a name="console"><h2> 2.5. Console </h2>
 
 <p> Electro uses a text console overlay to display error messages and enable
 run-time interaction with Lua state.  This console can be enabled and disabled
@@ -827,9 +988,9 @@ arguments via Lua's <tt>string.format</tt> function. </p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="configuration"><h2> Configuration </h2>
+<a name="configuration"><h2> 2.6. Configuration </h2>
 
-<h3> Hosts </h3>
+<h3> 2.6.1. Hosts </h3>
 <dl>
 
 <dt><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>
@@ -890,7 +1051,7 @@ experimentation. </p>
 
 </dl>
 
-<h3> Tiles </h3>
+<h3> 2.6.2. Tiles </h3>
 <dl>
 
 <dt><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>
@@ -967,7 +1128,7 @@ duty cycle (percentage of black).</p>
 
 </dl>
 
-<h3> Query </h3>
+<h3> 2.6.3. Query </h3>
 <dl>
 
 <dt><i>x, y, w, h</i> = <tt>get_display_union</tt>()<dd><p> Return the
@@ -978,25 +1139,25 @@ This information is often useful when positioning entities in view of
 an orthogonal camera, or configuring a scene to match the aspect ratio
 of a display. </p>
 
-<dt><i>x<sub>0</sub>, y<sub>0</sub>, z<sub>0</sub>, x<sub>1</sub>,
-y<sub>1</sub>, z<sub>1</sub></i> = <tt>get_display_bound</tt>()<dd><p>
-Return the axis-aligned bounding box of the entire display, in world
-coordinates.  This information is useful when positioning entities in
-view of a perspective camera. </p>
+<dt><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>,
+max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> =
+<tt>get_display_bound</tt>()<dd><p> Return the axis-aligned bounding
+box of the entire display, in world coordinates.  This information is
+useful when positioning entities in view of a perspective camera. </p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="miscellaneous"><h2> Miscellaneous API </h2>
+<a name="miscellaneous"><h2> 2.7. Miscellaneous API </h2>
 <dl>
 
-<dt><tt>set_background</tt>(<i>r<sub>0</sub>, g<sub>0</sub>,
-b<sub>0</sub></i>, [<i>r<sub>1</sub>, g<sub>1</sub>,
-b<sub>1</sub></i>])<dd><p> Set the backgound color of the display.  If
-only one color (<i>r<sub>0</sub>, g<sub>0</sub>, b<sub>0</sub></i>) is
+<dt><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>,
+T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>,
+B<sub>b</sub></i>])<dd><p> Set the backgound color of the display.  If
+only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is
 specified, the background will appear a solid color.  If an optional
-second color (<i>r<sub>1</sub>, g<sub>1</sub>, b<sub>1</sub></i>) is
+second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is
 supplied, the background will be drawn with a top-to-bottom gradient.
 The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to
 (<i>0.1, 0.2, 0.4</i>). </p>
@@ -1055,7 +1216,7 @@ Start on each.</p>
 
 <!---------------------------------------------------------------------------->
 
-<h1> Callbacks </h1>
+<h1> 3. Callbacks </h1>
 
 <p> Callback functions are the mechanism by which Electro Lua
 applications respond to user interface events.  An application may

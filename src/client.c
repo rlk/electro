@@ -87,6 +87,21 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
         case EVENT_SET_ENTITY_FLAGS:     recv_set_entity_flags();     break;
 
+        case EVENT_CREATE_MESH:          recv_create_mesh();          break;
+        case EVENT_CREATE_VERT:          recv_create_vert();          break;
+        case EVENT_CREATE_FACE:          recv_create_face();          break;
+        case EVENT_CREATE_EDGE:          recv_create_edge();          break;
+
+        case EVENT_DELETE_MESH:          recv_delete_mesh();          break;
+        case EVENT_DELETE_VERT:          recv_delete_vert();          break;
+        case EVENT_DELETE_FACE:          recv_delete_face();          break;
+        case EVENT_DELETE_EDGE:          recv_delete_edge();          break;
+
+        case EVENT_SET_MESH:             recv_set_mesh();             break;
+        case EVENT_SET_VERT:             recv_set_vert();             break;
+        case EVENT_SET_FACE:             recv_set_face();             break;
+        case EVENT_SET_EDGE:             recv_set_edge();             break;
+
         case EVENT_SET_BRUSH_IMAGE:      recv_set_brush_image();      break;
         case EVENT_SET_BRUSH_COLOR:      recv_set_brush_color();      break;
         case EVENT_SET_BRUSH_FLAGS:      recv_set_brush_flags();      break;

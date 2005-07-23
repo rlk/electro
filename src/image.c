@@ -286,13 +286,18 @@ int send_create_image(const char *filename)
 {
     int i, n = vecnum(image);
 
+    /* Return the default texture on NULL. */
+
+    if (filename == NULL)
+        return 0;
+
     /* Scan the current images for an existing instance of the named file. */
 
     for (i = 0; i < n; ++i)
     {
         struct image *p = get_image(i);
 
-        if (p->filename && strcmp(p->filename, filename) == 0)
+        if (filename && p->filename && strcmp(p->filename, filename) == 0)
         {
             p->count++;
             return i;

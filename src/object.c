@@ -24,6 +24,9 @@
 #include "utility.h"
 #include "object.h"
 
+static void init_object(int);
+static void fini_object(int);
+
 /*===========================================================================*/
 
 struct vec2
@@ -382,133 +385,202 @@ static int read_obj(const char *filename, struct object *o)
     FILE *fin;
 
     int n = 0;
-    int r = 0;
-
-    /* Initialize the loader vector caches. */
-
-    _tv = vecnew(1024, sizeof (struct vec2));
-    _nv = vecnew(1024, sizeof (struct vec3));
-    _vv = vecnew(1024, sizeof (struct vec3));
 
     /* Initialize the object element vectors. */
 
-    o->vv = vecnew(0, sizeof (struct object_vert));
-    o->mv = vecnew(0, sizeof (struct object_mesh));
+    vector_t vv = o->vv = vecnew(0, sizeof (struct object_vert));
+    vector_t mv = o->mv = vecnew(0, sizeof (struct object_mesh));
 
-    if ((fin = open_file(filename, "r")))
+    if (filename)
     {
-        /* Create a default catch-all group using the default material. */
+        /* Initialize the loader vector caches. */
 
-        struct object_mesh *m = read_usemtl(o->mv, NULL, NULL);
-        const char         *F = NULL;
+        _tv = vecnew(1024, sizeof (struct vec2));
+        _nv = vecnew(1024, sizeof (struct vec3));
+        _vv = vecnew(1024, sizeof (struct vec3));
+
+        if ((fin = open_file(filename, "r")))
+        {
+            /* Create a default catch-all group using the default material. */
+
+            struct object_mesh *m = read_usemtl(mv, NULL, NULL);
+            const char         *F = NULL;
         
-        /* Process each line, invoking the handler for each keyword. */
+            /* Process each line, invoking the handler for each keyword. */
 
-        while (fgets(L, MAXSTR, fin))
-            if (sscanf(L, "%s%n", W, &n) >= 1)
-            {
-                char *V = L + n;
+            while (fgets(L, MAXSTR, fin))
+                if (sscanf(L, "%s%n", W, &n) >= 1)
+                {
+                    char *V = L + n;
 
-                if      (!strcmp(W, "mtllib")) F = read_mtllib(o->mv, V);
-                else if (!strcmp(W, "usemtl")) m = read_usemtl(o->mv, V, F);
+                    if      (!strcmp(W, "mtllib")) F = read_mtllib(mv, V);
+                    else if (!strcmp(W, "usemtl")) m = read_usemtl(mv, V, F);
 
-                else if (!strcmp(W, "f"))  read_f(o->vv, m->fv, V);
-                else if (!strcmp(W, "l"))  read_l(o->vv, m->ev, V);
+                    else if (!strcmp(W, "f"))  read_f(vv, m->fv, V);
+                    else if (!strcmp(W, "l"))  read_l(vv, m->ev, V);
 
-                else if (!strcmp(W, "vt")) read_vt(V);
-                else if (!strcmp(W, "vn")) read_vn(V);
-                else if (!strcmp(W, "v" )) read_v (V);
+                    else if (!strcmp(W, "vt")) read_vt(V);
+                    else if (!strcmp(W, "vn")) read_vn(V);
+                    else if (!strcmp(W, "v" )) read_v (V);
+                }
+            
+            fclose(fin);
+        }
+        else error("OBJ file '%s': %s", filename, system_error());
 
-                r++;
-            }
+        /* Release the loader caches. */
 
-        fclose(fin);
+        vecdel(_vv);
+        vecdel(_nv);
+        vecdel(_tv);
     }
-    else error("OBJ file '%s': %s", filename, system_error());
-
-    /* Release the loader caches. */
-
-    vecdel(_vv);
-    vecdel(_nv);
-    vecdel(_tv);
-
-    return r;
+    return 1;
 }
 
 /*===========================================================================*/
-/* Object accessors and modifiers                                            */
+/* Object constructors                                                       */
 
-int create_mesh(int i, int brush)
+int create_mesh(int i)
 {
-    return set_mesh(i, vecadd(get_object(i)->mv), brush);
+    int j;
+
+    if ((j = vecadd(get_object(i)->mv)) >= 0)
+    {
+        struct object_mesh *m = get_object_mesh(i, j);
+
+        m->fv = vecnew(0, sizeof (struct object_face));
+        m->ev = vecnew(0, sizeof (struct object_edge));
+    }
+    return j;
 }
 
-int create_vert(int i, float v[3], float n[3], float t[2])
+int create_vert(int i)
 {
-    return set_vert(i, vecadd(get_object(i)->vv), v, n, t);
+    int j;
+
+    if ((j = vecadd(get_object(i)->vv)) >= 0)
+    {
+        struct object_vert *p = get_object_vert(i, j);
+
+        p->n[0] = 0.0;
+        p->n[0] = 0.0;
+        p->n[1] = 1.0;
+    }
+    return j;
 }
 
-int create_face(int i, int j, int vi[3])
+int create_face(int i, int j)
 {
-    return set_face(i, j, vecadd(get_object_mesh(i, j)->fv), vi);
+    return vecadd(get_object_mesh(i, j)->fv);
 }
 
-int create_edge(int i, int j, int vi[2])
+int create_edge(int i, int j)
 {
-    return set_edge(i, j, vecadd(get_object_mesh(i, j)->ev), vi);
+    return vecadd(get_object_mesh(i, j)->ev);
 }
 
 /*---------------------------------------------------------------------------*/
+/* Object destructors                                                        */
 
-int set_mesh(int i, int j, int brush)
+void delete_edge(int i, int j, int k)
 {
     struct object_mesh *m = get_object_mesh(i, j);
 
-    m->brush = brush;
+    /* Remove this edge from the edge vector. */
 
-    return j;
+    memmove(vecget(m->ev, k),
+            vecget(m->ev, k + 1), vecsiz(m->ev) * (vecnum(m->ev) - k - 1));
+
+    vecpop(m->ev);
 }
 
-int set_vert(int i, int j, float v[3], float n[3], float t[2])
+void delete_face(int i, int j, int k)
 {
-    struct object_vert *p = get_object_vert(i, j);
+    struct object_mesh *m = get_object_mesh(i, j);
 
-    p->v[0] = v[0];
-    p->v[1] = v[1];
-    p->v[2] = v[2];
+    /* Remove this face from the face vector. */
 
-    p->n[0] = n[0];
-    p->n[1] = n[1];
-    p->n[2] = n[2];
+    memmove(vecget(m->fv, k),
+            vecget(m->fv, k + 1), vecsiz(m->fv) * (vecnum(m->fv) - k - 1));
 
-    p->t[0] = t[0];
-    p->t[1] = t[1];
-
-    return j;
+    vecpop(m->fv);
 }
 
-int set_face(int i, int j, int k, int vi[3])
+void delete_vert(int i, int j)
 {
-    struct object_face *f = get_object_face(i, j, k);
+    struct object *o = get_object(i);
 
-    f->vi[0] = vi[0];
-    f->vi[1] = vi[1];
-    f->vi[2] = vi[2];
+    int k;
+    int l;
 
-    return k;
+    /* Remove this vertex from the vertex vector. */
+
+    memmove(vecget(o->vv, j),
+            vecget(o->vv, j + 1), vecsiz(o->vv) * (vecnum(o->vv) - j - 1));
+
+    vecpop(o->vv);
+
+    /* Remove all references to this vertex from all meshes. */
+
+    for (k = 0; k < get_mesh_count(i); ++k)
+    {
+        /* Delete all referencing faces.  Move later references down. */
+
+        for (l = 0; l < get_face_count(i, k); ++l)
+        {
+            struct object_face *f = get_object_face(i, k, l);
+
+            if (f->vi[0] == j || f->vi[1] == j || f->vi[2] == j)
+                delete_face(i, k, l--);
+            else
+            {
+                if (f->vi[0] > j) f->vi[0]--;
+                if (f->vi[1] > j) f->vi[1]--;
+                if (f->vi[2] > j) f->vi[2]--;
+            }
+        }
+
+        /* Delete all referencing edges.  Move later references down. */
+
+        for (l = 0; l < get_edge_count(i, k); ++l)
+        {
+            struct object_edge *e = get_object_edge(i, k, l);
+
+            if (e->vi[0] == j || e->vi[1] == j)
+                delete_edge(i, k, l--);
+            else
+            {
+                if (e->vi[0] > j) e->vi[0]--;
+                if (e->vi[1] > j) e->vi[1]--;
+            }
+        }
+    }
+
+    /* Invalidate the object's vertex buffer and bounding volume. */
+
+    fini_object(i);
 }
 
-int set_edge(int i, int j, int k, int vi[2])
+void delete_mesh(int i, int j)
 {
-    struct object_edge *e = get_object_edge(i, j, k);
+    struct object      *o = get_object(i);
+    struct object_mesh *m = get_object_mesh(i, j);
 
-    e->vi[0] = vi[0];
-    e->vi[1] = vi[1];
+    /* Release this mesh's resources. */
 
-    return k;
+    vecdel(m->fv);
+    vecdel(m->ev);
+
+    /* Remove this mesh from the mesh vector. */
+
+    memmove(vecget(o->mv, j),
+            vecget(o->mv, j + 1), vecsiz(o->mv) * (vecnum(o->mv) - j - 1));
+
+    vecpop(o->mv);
 }
 
 /*---------------------------------------------------------------------------*/
+/* Object query                                                              */
 
 int get_mesh(int i, int j)
 {
@@ -549,6 +621,7 @@ void get_edge(int i, int j, int k, int vi[2])
 }
 
 /*---------------------------------------------------------------------------*/
+/* Object counters                                                           */
 
 int get_mesh_count(int i)
 {
@@ -570,101 +643,6 @@ int get_edge_count(int i, int j)
     return vecnum(get_object_mesh(i, j)->ev);
 }
 
-/*---------------------------------------------------------------------------*/
-
-void delete_mesh(int i, int j)
-{
-    struct object      *o = get_object(i);
-    struct object_mesh *m = get_object_mesh(i, j);
-
-    /* Release this mesh's resources. */
-
-    vecdel(m->fv);
-    vecdel(m->ev);
-
-    /* Remove this mesh from the mesh vector. */
-
-    memmove(vecget(o->mv, j),
-            vecget(o->mv, j + 1), vecsiz(o->mv) * (vecnum(o->mv) - j - 1));
-
-    vecpop(o->mv);
-}
-
-void delete_vert(int i, int j)
-{
-    struct object *o = get_object(i);
-
-    int k;
-    int l;
-
-    /* Remove this vertex from the vertex vector. */
-
-    memmove(vecget(o->vv, j),
-            vecget(o->vv, j + 1), vecsiz(o->vv) * (vecnum(o->mv) - j - 1));
-
-    vecpop(o->vv);
-
-    /* Remove all references to this vertex from all meshes. */
-
-    for (k = 0; k < get_mesh_count(i); ++k)
-    {
-        /* Delete all referencing faces.  Move later references down. */
-
-        for (l = 0; l < get_face_count(i, k); ++l)
-        {
-            struct object_face *f = get_object_face(i, k, l);
-
-            if (f->vi[0] == j || f->vi[1] == j || f->vi[2] == j)
-                delete_face(i, k, l);
-            else
-            {
-                if (f->vi[0] > j) f->vi[0]--;
-                if (f->vi[1] > j) f->vi[1]--;
-                if (f->vi[2] > j) f->vi[2]--;
-            }
-        }
-
-        /* Delete all referencing edges.  Move later references down. */
-
-        for (l = 0; l < get_edge_count(i, k); ++l)
-        {
-            struct object_edge *e = get_object_edge(i, k, l);
-
-            if (e->vi[0] == j || e->vi[1] == j)
-                delete_edge(i, k, l);
-            else
-            {
-                if (e->vi[0] > j) e->vi[0]--;
-                if (e->vi[1] > j) e->vi[1]--;
-            }
-        }
-    }
-}
-
-void delete_face(int i, int j, int k)
-{
-    struct object_mesh *m = get_object_mesh(i, j);
-
-    /* Remove this face from the face vector. */
-
-    memmove(vecget(m->fv, k),
-            vecget(m->fv, k + 1), vecsiz(m->fv) * (vecnum(m->fv) - k - 1));
-
-    vecpop(m->fv);
-}
-
-void delete_edge(int i, int j, int k)
-{
-    struct object_mesh *m = get_object_mesh(i, j);
-
-    /* Remove this edge from the edge vector. */
-
-    memmove(vecget(m->ev, k),
-            vecget(m->ev, k + 1), vecsiz(m->fv) * (vecnum(m->ev) - k - 1));
-
-    vecpop(m->ev);
-}
-
 /*===========================================================================*/
 
 int send_create_object(const char *filename)
@@ -676,9 +654,7 @@ int send_create_object(const char *filename)
         struct object      *o = get_object(i);
         struct object_mesh *m = NULL;
 
-        /* If we want an empty object, or we successfully read an OBJ... */
-
-        if ((filename == NULL) || (read_obj(filename, o)))
+        if (read_obj(filename, o))
         {
             int j, n = vecnum(o->mv);
 
@@ -742,6 +718,272 @@ void recv_create_object(void)
     /* Encapsulate this object in an entity. */
 
     recv_create_entity();
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_mesh(int i)
+{
+    send_event(EVENT_CREATE_MESH);
+    send_index(i);
+
+    return create_mesh(i);
+}
+
+void recv_create_mesh(void)
+{
+    int i = recv_index();
+
+    create_mesh(i);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_vert(int i)
+{
+    send_event(EVENT_CREATE_VERT);
+    send_index(i);
+
+    return create_vert(i);
+}
+
+void recv_create_vert(void)
+{
+    int i = recv_index();
+
+    create_vert(i);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_face(int i, int j)
+{
+    send_event(EVENT_CREATE_FACE);
+    send_index(i);
+    send_index(j);
+
+    return create_face(i, j);
+}
+
+void recv_create_face(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+
+    create_face(i, j);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_edge(int i, int j)
+{
+    send_event(EVENT_CREATE_EDGE);
+    send_index(i);
+    send_index(j);
+
+    return create_edge(i, j);
+}
+
+void recv_create_edge(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+
+    create_edge(i, j);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_delete_mesh(int i, int j)
+{
+    send_event(EVENT_DELETE_MESH);
+    send_index(i);
+    send_index(j);
+
+    delete_mesh(i, j);
+}
+
+void recv_delete_mesh(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+
+    delete_mesh(i, j);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_delete_vert(int i, int j)
+{
+    send_event(EVENT_DELETE_VERT);
+    send_index(i);
+    send_index(j);
+
+    delete_vert(i, j);
+}
+
+void recv_delete_vert(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+
+    delete_vert(i, j);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_delete_face(int i, int j, int k)
+{
+    send_event(EVENT_DELETE_FACE);
+    send_index(i);
+    send_index(j);
+    send_index(k);
+
+    delete_face(i, j, k);
+}
+
+void recv_delete_face(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+    int k = recv_index();
+
+    delete_face(i, j, k);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_delete_edge(int i, int j, int k)
+{
+    send_event(EVENT_DELETE_EDGE);
+    send_index(i);
+    send_index(j);
+    send_index(k);
+
+    delete_edge(i, j, k);
+}
+
+void recv_delete_edge(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+    int k = recv_index();
+
+    delete_edge(i, j, k);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_mesh(int i, int j, int brush)
+{
+    send_event(EVENT_SET_MESH);
+    send_index(i);
+    send_index(j);
+    send_index(brush);
+
+    get_object_mesh(i, j)->brush = brush;
+}
+
+void recv_set_mesh(void)
+{
+    int i     = recv_index();
+    int j     = recv_index();
+    int brush = recv_index();
+
+    get_object_mesh(i, j)->brush = brush;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_vert(int i, int j, float v[3], float n[3], float t[2])
+{
+    struct object_vert *p = get_object_vert(i, j);
+
+    p->v[0] = v[0];
+    p->v[1] = v[1];
+    p->v[2] = v[2];
+
+    p->n[0] = n[0];
+    p->n[1] = n[1];
+    p->n[2] = n[2];
+
+    p->t[0] = t[0];
+    p->t[1] = t[1];
+
+    send_event(EVENT_SET_VERT);
+    send_index(i);
+    send_index(j);
+    send_array(p->v, 3, sizeof (float));
+    send_array(p->n, 3, sizeof (float));
+    send_array(p->t, 2, sizeof (float));
+
+    fini_object(i);
+}
+
+void recv_set_vert(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+
+    struct object_vert *p = get_object_vert(i, j);
+
+    recv_array(p->v, 3, sizeof (float));
+    recv_array(p->n, 3, sizeof (float));
+    recv_array(p->t, 2, sizeof (float));
+
+    fini_object(i);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_face(int i, int j, int k, int vi[3])
+{
+    struct object_face *f = get_object_face(i, j, k);
+
+    f->vi[0] = vi[0];
+    f->vi[1] = vi[1];
+    f->vi[2] = vi[2];
+
+    send_event(EVENT_SET_FACE);
+    send_index(i);
+    send_index(j);
+    send_index(k);
+    send_array(f->vi, 3, sizeof (int));
+}
+
+void recv_set_face(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+    int k = recv_index();
+
+    recv_array(get_object_face(i, j, k)->vi, 3, sizeof (int));
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_edge(int i, int j, int k, int vi[3])
+{
+    struct object_edge *e = get_object_edge(i, j, k);
+
+    e->vi[0] = vi[0];
+    e->vi[1] = vi[1];
+    e->vi[2] = vi[2];
+
+    send_event(EVENT_SET_EDGE);
+    send_index(i);
+    send_index(j);
+    send_index(k);
+    send_array(e->vi, 2, sizeof (int));
+}
+
+void recv_set_edge(void)
+{
+    int i = recv_index();
+    int j = recv_index();
+    int k = recv_index();
+
+    recv_array(get_object_edge(i, j, k)->vi, 2, sizeof (int));
 }
 
 /*===========================================================================*/

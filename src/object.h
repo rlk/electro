@@ -18,16 +18,17 @@
 struct entity_func *startup_object(void);
 
 /*---------------------------------------------------------------------------*/
+/*
+int  create_mesh(int);
+int  create_vert(int);
+int  create_face(int, int);
+int  create_edge(int, int);
 
-int  create_mesh(int, int);
-int  create_vert(int, float[3], float[3], float[2]);
-int  create_face(int, int, int[3]);
-int  create_edge(int, int, int[2]);
-
-int  set_mesh(int, int, int);
-int  set_vert(int, int, float[3], float[3], float[2]);
-int  set_face(int, int, int, int[3]);
-int  set_edge(int, int, int, int[2]);
+void delete_mesh(int, int);
+void delete_vert(int, int);
+void delete_face(int, int, int);
+void delete_edge(int, int, int);
+*/
 
 int  get_mesh(int, int);
 void get_vert(int, int, float[3], float[3], float[2]);
@@ -39,24 +40,44 @@ int  get_vert_count(int);
 int  get_face_count(int, int);
 int  get_edge_count(int, int);
 
-void delete_mesh(int, int);
-void delete_vert(int, int);
-void delete_face(int, int, int);
-void delete_edge(int, int, int);
-
 /*---------------------------------------------------------------------------*/
 
 int  send_create_object(const char *);
 void recv_create_object(void);
 
-int  send_create_object_elem(int, int);
-void recv_create_object_elem(void);
+/*---------------------------------------------------------------------------*/
 
-int  send_delete_object_elem(int, int, int);
-void recv_delete_object_elem(void);
+int  send_create_mesh(int);
+int  send_create_vert(int);
+int  send_create_face(int, int);
+int  send_create_edge(int, int);
 
-int  send_modify_object_elem(int, int, int, int *, int, float *);
-void recv_modify_object_elem(void);
+void send_delete_mesh(int, int);
+void send_delete_vert(int, int);
+void send_delete_face(int, int, int);
+void send_delete_edge(int, int, int);
+
+void send_set_mesh(int, int, int);
+void send_set_vert(int, int, float[3], float[3], float[2]);
+void send_set_face(int, int, int, int[3]);
+void send_set_edge(int, int, int, int[2]);
+
+/*---------------------------------------------------------------------------*/
+
+void recv_create_mesh(void);
+void recv_create_vert(void);
+void recv_create_face(void);
+void recv_create_edge(void);
+
+void recv_delete_mesh(void);
+void recv_delete_vert(void);
+void recv_delete_face(void);
+void recv_delete_edge(void);
+
+void recv_set_mesh(void);
+void recv_set_vert(void);
+void recv_set_face(void);
+void recv_set_edge(void);
 
 /*---------------------------------------------------------------------------*/
 

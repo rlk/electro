@@ -40,35 +40,46 @@
 #define EVENT_SET_ENTITY_ALPHA     19
 #define EVENT_SET_ENTITY_FLAGS     20
 
-#define EVENT_CREATE_OBJECT_ELEM   21
-#define EVENT_DELETE_OBJECT_ELEM   22
-#define EVENT_MODIFY_OBJECT_ELEM   23
+#define EVENT_CREATE_MESH          21
+#define EVENT_CREATE_VERT          22
+#define EVENT_CREATE_FACE          23
+#define EVENT_CREATE_EDGE          24
 
-#define EVENT_SET_BRUSH_IMAGE      24
-#define EVENT_SET_BRUSH_COLOR      25
-#define EVENT_SET_BRUSH_FLAGS      26
-#define EVENT_SET_BRUSH_FRAG_PROG  27
-#define EVENT_SET_BRUSH_VERT_PROG  28
+#define EVENT_DELETE_MESH          25
+#define EVENT_DELETE_VERT          26
+#define EVENT_DELETE_FACE          27
+#define EVENT_DELETE_EDGE          28
 
-#define EVENT_SET_GALAXY_MAGNITUDE 29
-#define EVENT_SET_CAMERA_OFFSET    30
-#define EVENT_SET_CAMERA_STEREO    31
-#define EVENT_SET_SPRITE_RANGE     32
-#define EVENT_SET_SPRITE_BRUSH     33
-#define EVENT_SET_STRING_FILL      34
-#define EVENT_SET_STRING_LINE      35
-#define EVENT_SET_STRING_TEXT      36
-#define EVENT_SET_LIGHT_COLOR      37
-#define EVENT_SET_BACKGROUND       38
-#define EVENT_SET_FONT             39
+#define EVENT_SET_MESH             29
+#define EVENT_SET_VERT             30
+#define EVENT_SET_FACE             31
+#define EVENT_SET_EDGE             32
 
-#define EVENT_ADD_TILE             40
-#define EVENT_SET_TILE_FLAGS       41
-#define EVENT_SET_TILE_POSITION    42
-#define EVENT_SET_TILE_VIEWPORT    43
-#define EVENT_SET_TILE_LINE_SCREEN 44
-#define EVENT_SET_TILE_VIEW_MIRROR 45
-#define EVENT_SET_TILE_VIEW_OFFSET 46
+#define EVENT_SET_BRUSH_IMAGE      33
+#define EVENT_SET_BRUSH_COLOR      34
+#define EVENT_SET_BRUSH_FLAGS      35
+#define EVENT_SET_BRUSH_FRAG_PROG  36
+#define EVENT_SET_BRUSH_VERT_PROG  37
+
+#define EVENT_SET_GALAXY_MAGNITUDE 38
+#define EVENT_SET_CAMERA_OFFSET    39
+#define EVENT_SET_CAMERA_STEREO    40
+#define EVENT_SET_SPRITE_RANGE     41
+#define EVENT_SET_SPRITE_BRUSH     42
+#define EVENT_SET_STRING_FILL      43
+#define EVENT_SET_STRING_LINE      44
+#define EVENT_SET_STRING_TEXT      45
+#define EVENT_SET_LIGHT_COLOR      46
+#define EVENT_SET_BACKGROUND       47
+#define EVENT_SET_FONT             48
+
+#define EVENT_ADD_TILE             49
+#define EVENT_SET_TILE_FLAGS       50
+#define EVENT_SET_TILE_POSITION    51
+#define EVENT_SET_TILE_VIEWPORT    52
+#define EVENT_SET_TILE_LINE_SCREEN 53
+#define EVENT_SET_TILE_VIEW_MIRROR 54
+#define EVENT_SET_TILE_VIEW_OFFSET 55
 
 /*---------------------------------------------------------------------------*/
 
