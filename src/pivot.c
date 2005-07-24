@@ -38,13 +38,7 @@ static void draw_pivot(int j, int i, int f, float a)
     glPushMatrix();
     {
         transform_entity(j);
-
-        if (entity_flag(j) & FLAG_BOUNDED)
-        {
-            if (test_entity_bbox(j) >= 0)
-                draw_entity_tree(j, f, a * get_entity_alpha(j));
-        }
-        else draw_entity_tree(j, f, a * get_entity_alpha(j));
+        draw_entity_tree(j, f, a * get_entity_alpha(j));
     }
     glPopMatrix();
 }

@@ -78,6 +78,9 @@ struct object
     vector_t mv;
 
     GLuint buffer;
+
+    float origin[3];
+    float radius;
 };
 
 static vector_t object;
@@ -333,7 +336,10 @@ static struct object_mesh *read_usemtl(vector_t mv, const char *line,
     {
         struct object_mesh *m = (struct object_mesh *) vecget(mv, i);
 
-        if (line) m->brush = send_create_brush(file, parse_name(line));
+        if (line)
+            m->brush = send_create_brush(file, parse_name(line));
+        else
+            m->brush = 0;
 
         m->fv = vecnew(0, sizeof (struct object_face));
         m->ev = vecnew(0, sizeof (struct object_edge));

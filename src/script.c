@@ -1255,14 +1255,12 @@ static int E_set_brush_color(lua_State *L)
     int N = lua_gettop(L);
     int f = 0;
 
-    if (N >= 5)
-    {
-        d[0] = L_getnumber(L, -N + 1);
-        d[1] = L_getnumber(L, -N + 2);
-        d[2] = L_getnumber(L, -N + 3);
-        d[3] = L_getnumber(L, -N + 4);
-        f   |= BRUSH_DIFFUSE;
-    }
+    d[0] = L_getnumber(L, -N + 1);
+    d[1] = L_getnumber(L, -N + 2);
+    d[2] = L_getnumber(L, -N + 3);
+    d[3] = L_getnumber(L, -N + 4);
+    f   |= BRUSH_DIFFUSE;
+
     if (N >= 9)
     {
         s[0] = L_getnumber(L, -N + 5);

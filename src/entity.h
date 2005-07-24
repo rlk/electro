@@ -55,12 +55,14 @@
 
 /* Entity virtual function table. */
 
-typedef void (*init_func)(int);
-typedef void (*fini_func)(int);
-typedef void (*dupe_func)(int);
-typedef void (*free_func)(int);
-typedef void (*draw_func)(int, int, int, float);
-typedef int  (*bbox_func)(int, float[6]);
+typedef void  (*init_func)(int);
+typedef void  (*fini_func)(int);
+typedef int   (*bbox_func)(int, float[6]);
+typedef void  (*draw_func)(int, int, int, float);
+typedef void  (*dupe_func)(int);
+typedef void  (*free_func)(int);
+typedef float (*find_func)(float[3]);
+typedef float (*test_func)(float[3], float, const float[3]);
 
 struct entity_func
 {
@@ -77,7 +79,6 @@ struct entity_func
 
 int         entity_data(int);
 int         entity_type(int);
-int         entity_flag(int);
 const char *entity_name(int);
 
 /*---------------------------------------------------------------------------*/

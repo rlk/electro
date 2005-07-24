@@ -49,6 +49,11 @@ struct entity
     float bound[6];
     float alpha;
 
+    /* Entity bound. */
+
+    float origin[3];
+    float radius;
+
     /* Entity hierarchy. */
 
     int car;
@@ -93,10 +98,6 @@ int entity_type(int i)
     return get_entity(i)->type;
 }
 
-int entity_flag(int i)
-{
-    return get_entity(i)->flags;
-}
 
 const char *entity_name(int i)
 {
@@ -184,7 +185,6 @@ static void init_entity(int i)
             entity_func[e->type]->bbox &&
             entity_func[e->type]->bbox(e->data, e->bound))
             e->flags |= FLAG_BOUNDED;
-
 
         e->state = 1;
     }

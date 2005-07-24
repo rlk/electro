@@ -159,11 +159,6 @@ int send_create_brush(const char *file, const char *name)
 {
     int i, n = vecnum(brush);
 
-    /* Return the default brush on NULL. */
-
-    if (file == NULL || name == NULL)
-        return 0;
-
     /* Scan the current brushes for an existing instance. */
 
     for (i = 0; i < n; ++i)

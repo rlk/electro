@@ -23,75 +23,41 @@
    -
 </pre>
 
-<p> Electro is an application development environment designed for use
-on cluster-driven tiled displays, virtual reality systems, and desktop
-workstations.  Electro is based on the MPI process model and is bound
-to the Lua programming language.  With support for 3D graphics, 2D
-graphics, audio, networking, and input handling, Electro provides an
-easy-to-use scripting system for interactive applications spanning
-multiple hosts and a variety of displays. </p>
+<p>Electro is an application development environment designed for use on cluster-driven tiled displays, virtual reality systems, and desktop workstations. Electro is based on the MPI process model and is bound to the Lua programming language. With support for 3D graphics, 2D graphics, audio, networking, and input handling, Electro provides an easy-to-use scripting system for interactive applications spanning multiple hosts and a variety of displays.</p>
 
 <h1> 0. This Document </h1>
 
-<p> This document details the functions and data types of the Electro
-API.  A knowledge of the Lua Programming Language version 5.0 is
-prerequisite.  Lua documentation and tutorials may be found at <a
-href="http://www.lua.org/docs.html"> the official Lua site</a>. A
-tutorial example of the use of the Electro API with Lua is <a
-href="example.html">included here</a>.</p>
+<p>This document details the functions and data types of the Electro API. A knowledge of the Lua Programming Language version 5.0 is prerequisite. Lua documentation and tutorials may be found at <a href="http://www.lua.org/docs.html"> the official Lua site</a>. A tutorial example of the use of the Electro API with Lua is <a href="example.html">included here</a>.</p>
 
-<p> Electro API function definitions appear here as follows:
+<p>Electro API function definitions appear here as follows:
 
-<dl><dt><i>baz</i> = <tt>function</tt>(<i>foo</i>,
-[<i>bar</i>])<dd></p> Invoke <tt>function</tt> with arguments
-<i>foo</i>, and optionally <i>bar</i>, giving
-<i>baz</i>.
-</p></dl>
+<dl><dt><i>baz</i> = <tt>function</tt>(<i>foo</i>, [<i>bar</i>])<dd></p> Invoke <tt>function</tt> with arguments <i>foo</i>, and optionally <i>bar</i>, giving <i>baz</i>.</p></dl>
 
-<p> This document includes a number of Lua code examples.  These
-examples are distinguished from the main text as follows: </p>
+<p>This document includes a number of Lua code examples. These examples are distinguished from the main text as follows:</p>
 
 <pre>
 print("Hello, World!")
 </pre>
 
-<p> This document also includes a number of paragraphs giving design
-rationale.  These describe some of the trade-offs and design decisions
-made during the development of Electro.  They are presented here in
-the hope that they will provide the reader with a more thorough
-understanding of the details of the implementation.  Rationale
-paragraphs are distinguished from the main text as follows: </p>
+<p>This document also includes a number of paragraphs giving design rationale. These describe some of the trade-offs and design decisions made during the development of Electro. They are presented here in the hope that they will provide the reader with a more thorough understanding of the details of the implementation. Rationale paragraphs are distinguished from the main text as follows:</p>
 
-<p class="note"> The implementation of Electro adheres to a number
-of closely-held design principles: simplicity, orthogonality, and
-efficiency.</p>
+<p class="note">The implementation of Electro adheres to a number of closely-held design principles: simplicity, orthogonality, and efficiency.</p>
 
 <!---------------------------------------------------------------------------->
 
 <h1> 1. Command Line Arguments </h1>
 
-<p> Electro accepts the following command line arguments.  All
-unrecognized arguments are copied to a table in the Electro Lua
-environment called <tt>E.arguments</tt>.  Scripts are free to
-access them there. </p>
+<p>Electro accepts the following command line arguments. All unrecognized arguments are copied to a table in the Electro Lua environment called <tt>E.arguments</tt>. Scripts are free to access them there.</p>
 
 <dl>
 <dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>
-Execute the named Lua script. </p>
+Execute the named Lua script.</p>
 
-<dt><tt>-m</tt><dd><p> Grab the mouse pointer.  Normally, mouse motion
-events are only detected while the pointer is within the Electro
-window.  This limits the useful range of mouse motion to the size of
-the window.  When the mouse pointer is grabbed, an application can
-track mouse motion over unlimited distances.  This is useful to
-applications that implement a pointer that spans a large tiled
-display. </p>
+<dt><tt>-m</tt><dd><p>Grab the mouse pointer. Normally, mouse motion events are only detected while the pointer is within the Electro window. This limits the useful range of mouse motion to the size of the window. When the mouse pointer is grabbed, an application can track mouse motion over unlimited distances. This is useful to applications that implement a pointer that spans a large tiled display.</p>
 
-<dt><tt>-H</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p> 
-Process the given Hipparcos stellar catalog into an Electro galaxy file. </p>
+<dt><tt>-H</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p>Process the given Hipparcos stellar catalog into an Electro galaxy file.</p>
 
-<dt><tt>-T</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p> 
-Process the given Tycho stellar catalog into an Electro galaxy file. </p>
+<dt><tt>-T</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p>Process the given Tycho stellar catalog into an Electro galaxy file.</p>
 
 </dl>
 
@@ -99,17 +65,13 @@ Process the given Tycho stellar catalog into an Electro galaxy file. </p>
 
 <h1> 2. API </h1>
 
-<p> The Electro API is encapsulated in a Lua namespace "<tt>E</tt>".
-The namespace specifier is omitted in this documentation, though it is
-included in the examples.  Be sure to precede all Lua function and
-constant references with the "<tt>E</tt>" namespace specifier, or they
-will be reported as undefined.  </p>
+<p>The Electro API is encapsulated in a Lua namespace "<tt>E</tt>". The namespace specifier is omitted in this documentation, though it is included in the examples. Be sure to precede all Lua function and constant references with the "<tt>E</tt>" namespace specifier, or they will be reported as undefined.</p>
 
 <pre>
 E.set_background(0.0, 0.5, 1.0)
 </pre>
 
-<p> These are the major functional sections of the Electro API: </p>
+<p>These are the major functional sections of the Electro API:</p>
 
 <ol>
 <li><a href="#entity"> Entities </a>
@@ -123,25 +85,16 @@ E.set_background(0.0, 0.5, 1.0)
 
 <a name="entity"><h2> 2.1. Entities </h2>
 
-<p> The core of any Electro application is the scene graph.  The scene
-graph is a very common organizing scheme in 3D graphics, and examples
-of its use abound.  Other scene graph libraries include
+<p>The core of any Electro application is the scene graph. The scene graph is a very common organizing scheme in 3D graphics, and examples of its use abound. Other scene graph libraries include
 
 <a href="http://oss.sgi.com/projects/inventor/">Open Inventor</a>,
 <a href="http://www.blitzbasic.com/">Blitz3D</a>,
 <a href="http://www.openscenegraph.org/">Open Scene Graph</a>,
 <a href="http://www.opensg.org/">OpenSG</a>,
 
-and many others.  Users of other scene-graph-based libraries should
-find the Electro API unsurprising. </p>
+and many others. Users of other scene-graph-based libraries should find the Electro API unsurprising.</p>
 
-<p> Scene graph functionality is organized into a small class
-hierarchy.  The entity base class handles all of the common properties
-and behaviours of scene graph elements, most notably 3D
-transformation, and the parent-child relationships that hold a scene
-hierarchy together.  The subclasses handle the specifics of
-controlling the view and lighting, drawing 3D and 2D geometry, etc.
-The class hierarchy is as follows: </p>
+<p>Scene graph functionality is organized into a small class hierarchy. The entity base class handles all of the common properties and behaviours of scene graph elements, most notably 3D transformation, and the parent-child relationships that hold a scene hierarchy together. The subclasses handle the specifics of controlling the view and lighting, drawing 3D and 2D geometry, etc. The class hierarchy is as follows:</p>
 
 <ol start="0">
 <a href="#entity"> Entity </a>
@@ -156,123 +109,53 @@ The class hierarchy is as follows: </p>
 </ol>
 </ol>
 
-<p> Constructor functions instantiate scene graph objects. </p>
+<p>Constructor functions instantiate scene graph objects.</p>
 
 <dl>
 
-<dt><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>
-Load an OBJ format 3D object and return an Electro object entity.
-This is the normal means of importing 3D geometry into an Electro
-application.  It supports polygonal geometry in OBJ file format,
-including material files and texture maps.  The OBJ export capabilities
-of Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.
-</p>
+<dt><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>Load an OBJ format 3D object and return an Electro object entity. This is the normal means of importing 3D geometry into an Electro application. It supports polygonal geometry in OBJ file format, including material files and texture maps. The OBJ export capabilities of Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.</p>
 
-<p class="note"> The Electro OBJ loader lacks support for freeform
-curve specification.  This is actually due to the fact that the
-Electro renderer lacks the ability to render freeform curves.  Any
-curve specifiers appearing in OBJ files will be silently ignored.
-If curves are required, tesselate them using your favorite 3D
-modeller. </p>
+<p class="note">The Electro OBJ loader lacks support for freeform curve specification. This is actually due to the fact that the Electro renderer lacks the ability to render freeform curves. Any curve specifiers appearing in OBJ files will be silently ignored. If curves are required, tesselate them using your favorite 3D modeller.</p>
 
-<dt><i>sprite</i> = <tt>create_sprite</tt>(<i>brush</i>)<dd><p> Create
-a sprite entity using the given brush.  A sprite consists of a single
-quadrilateral.  The default size of the sprite object is equal to the
-size of the brush's image.  Commonly, sprite objects are used as
-billboards in 3D scenes, or are displayed as 2D overlays using an
-orthogonal camera.  </p>
+<dt><i>sprite</i> = <tt>create_sprite</tt>(<i>brush</i>)<dd><p>Create a sprite entity using the given brush. A sprite consists of a single quadrilateral. The default size of the sprite object is equal to the size of the brush's image. Commonly, sprite objects are used as billboards in 3D scenes, or are displayed as 2D overlays using an orthogonal camera.</p>
 
-<dt><i>string</i> = <tt>create_string</tt>(<i>text</i>)<dd><p> Create
-a string object using the current typeface and the given text.  A
-string object is a polygonal model one unit in height.  It sits in the
-XY-plane, with its lower-left corner at the origin.  See
-<tt>set_typeface</tt> for font selection and configuration. </p>
+<dt><i>string</i> = <tt>create_string</tt>(<i>text</i>)<dd><p>Create a string object using the current typeface and the given text. A string object is a polygonal model one unit in height. It sits in the XY-plane, with its lower-left corner at the origin. See <tt>set_typeface</tt> for font selection and configuration.</p>
 
-<dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p> Create
-a camera of the given type.  To be visible in a scene, all entities
-must be descendants of a camera entity.  Because of this, cameras are
-commonly left unparented and allowed to remain at the root.  Here are
-the defined camera types:</p>
+<dt><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p>Create a camera of the given type. To be visible in a scene, all entities must be descendants of a camera entity. Because of this, cameras are commonly left unparented and allowed to remain at the root. Here are the defined camera types:</p>
 
 <ul>
 
-<li><tt>camera_type_orthogonal</tt><p> An orthogonal camera uses an
-orthogonal projection.  By default, the aperture of an orthogonal
-camera matches the total size of the current display, which is
-appropriate for pixel-correct 2D overlays.</p>
+<li><tt>camera_type_orthogonal</tt><p>An orthogonal camera uses an orthogonal projection. By default, the aperture of an orthogonal camera matches the total size of the current display, which is appropriate for pixel-correct 2D overlays.</p>
 
-<li><tt>camera_type_perspective</tt><p>A perspective camera uses a
-perspective projection.  By default the aperture of a perspective
-camera is one unit high, with width determined by the aspect ratio of
-the total display. </p>
+<li><tt>camera_type_perspective</tt><p>A perspective camera uses a perspective projection. By default the aperture of a perspective camera is one unit high, with width determined by the aspect ratio of the total display.</p>
 
 </ul>
 
-<p>A scene is allowed to include any number of cameras.  One
-reasonable configuration is to include one perspective camera for the
-display of 3D objects, and one orthogonal camera for the display of 2D
-overlays.  </p>
+<p>A scene is allowed to include any number of cameras. One reasonable configuration is to include one perspective camera for the display of 3D objects, and one orthogonal camera for the display of 2D overlays.</p>
 
-<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p> Create a
-light source of the given type.  To be illuminated, all entities must
-be descendants of a light entity.  Conversely, entities which should
-appear unshaded and fully-bright should not descend from a light
-entity.  Here are the defined light types: </p>
+<dt><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p>Create a light source of the given type. To be illuminated, all entities must be descendants of a light entity. Conversely, entities which should appear unshaded and fully-bright should not descend from a light entity. Here are the defined light types:</p>
 
 <ul>
 
-<li><tt>light_type_positional</tt><p> A positional light provides a
-localized light from within the scene.</p>
+<li><tt>light_type_positional</tt><p>A positional light provides a localized light from within the scene.</p>
 
-<li><tt>light_type_directional</tt><p> A directional light source
-provides a parallel light from infinitely far away.  Light is directed
-along the vector from the position of a directional light source to
-the origin of the light's coordinate system (determined by any
-transformations defined by parent entities).</p>
+<li><tt>light_type_directional</tt><p>A directional light source provides a parallel light from infinitely far away. Light is directed along the vector from the position of a directional light source to the origin of the light's coordinate system (determined by any transformations defined by parent entities).</p>
 
 </ul>
 
-<p class="note"> In the implementation, the only difference between
-positional and directional light sources is the value of the <i>w</i>
-component of the homogeneous position of the light.  A positional
-light has <i>w=1</i> and a directional light has <i>w=0</i>, thus the
-homogeneous position vector is finite or infinite in length,
-respectively. </p>
+<p class="note">In the implementation, the only difference between positional and directional light sources is the value of the <i>w</i> component of the homogeneous position of the light. A positional light has <i>w=1</i> and a directional light has <i>w=0</i>, thus the homogeneous position vector is finite or infinite in length, respectively.</p>
 
-<dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p> Create a pivot
-entity.  A pivot does nothing, but is useful as a grouping entity.  As
-it has all the properties of an entity, including transformation and
-render flags, It provides a mechanism by which the transform hierarchy
-may be extended and controlled.  </p>
+<dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p>Create a pivot entity. A pivot does nothing, but is useful as a grouping entity. As it has all the properties of an entity, including transformation and render flags, It provides a mechanism by which the transform hierarchy may be extended and controlled.</p>
 
-<dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename</i>)<dd><p>
-Load a galaxy definition from the named file and return a galaxy
-entity.  A galaxy entity is a static 3D collection of particles,
-organized into a BSP structure for efficient rendering.</p>
+<dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename</i>)<dd><p>Load a galaxy definition from the named file and return a galaxy entity. A galaxy entity is a static 3D collection of particles, organized into a BSP structure for efficient rendering.</p>
 
-<p class="note"> A galaxy object must have the
-<tt>examples/star.fp</tt> and <tt>examples/star.vp</tt> fragment and
-vertex programs applied to it before it will render correctly.  See
-<tt>set_entity_frag_prog</tt> and <tt>set_entity_vert_prog</tt>.</p>
+<p class="note">A galaxy object must have the <tt>examples/star.fp</tt> and <tt>examples/star.vp</tt> fragment and vertex programs applied to it before it will render correctly. See <tt>set_brush_frag_prog</tt> and <tt>set_brush_vert_prog</tt>.</p>
 
-<p class="note"> The galaxy object should be considered a hack.  It
-has only a very specific use.  It will probably be removed in a future
-revision of the Electro API, or possibly abstracted into a general
-particle system.  </p>
+<p class="note">The galaxy object should be considered a hack. It has only a very specific use. It will probably be removed in a future revision of the Electro API, or possibly abstracted into a general particle system.</p>
 
-<dt><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>
-Duplicate the given entity.  Cloning allows entities to be instanced
-within a scene graph.  Cloning an entity is more efficient than
-recreating an entity from scratch, so cloning is often useful in
-circumstances where large numbers of similar entities are frequently
-created and destroyed.</p>
+<dt><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>Duplicate the given entity. Cloning allows entities to be instanced within a scene graph. Cloning an entity is more efficient than recreating an entity from scratch, so cloning is often useful in circumstances where large numbers of similar entities are frequently created and destroyed.</p>
 
-<p> Note, however, that a clone is a <i>shallow</i> copy of the
-original.  A clone has all of the attributes of a distinct entity, but
-it shares the attributes specific to its derived type.  For example,
-if a scaling operation is applied to a cloned entity, only that entity
-will be scaled.  However if the text value of a string entity is
-changed, all instances of the original string will change. </p>
+<p>Note, however, that a clone is a <i>shallow</i> copy of the original. A clone has all of the attributes of a distinct entity, but it shares the attributes specific to its derived type. For example, if a scaling operation is applied to a cloned entity, only that entity will be scaled. However if the text value of a string entity is changed, all instances of the original string will change.</p>
 
 </dl>
 
@@ -280,37 +163,18 @@ changed, all instances of the original string will change. </p>
 
 <a name="entity"><h3> 2.1.0. Entity </h3>
 
-<p> The following functions act on entities.  The entity argument of
-each function may take any entity value, including object, sprite,
-camera, light, and pivot. </p>
+<p>The following functions act on entities. The entity argument of each function may take any entity value, including object, sprite, camera, light, and pivot.</p>
 
 <h4> 2.1.0.1. Hierarchy Management </h4>
 <dl>
 
-<dt><tt>parent_entity</tt>(<i>entity, parent</i>)<dd><p> Include
-<i>entity</i> as a child of <i>parent</i>.  This will cause
-<i>entity</i> to be drawn in the coordinate system of <i>parent</i>,
-using its graphics state.  If <i>entity</i> is already the child of
-some parent entity prior to the call, it is cleanly removed from that
-parent's child list.  An entity may be unparented by specifying a
-<i>parent</i> entity of <tt>nil</tt>.
+<dt><tt>parent_entity</tt>(<i>entity, parent</i>)<dd><p>Include <i>entity</i> as a child of <i>parent</i>. This will cause <i>entity</i> to be drawn in the coordinate system of <i>parent</i>, using its graphics state. If <i>entity</i> is already the child of some parent entity prior to the call, it is cleanly removed from that parent's child list. An entity may be unparented by specifying a <i>parent</i> entity of <tt>nil</tt>.
 
-<dt><tt>delete_entity</tt>(<i>entity</i>)<dd><p> Remove <i>entity</i>
-from the scene hierarchy and release all resources associated with it.
-Any children of <i>entity</i> will be recursively deleted as well.  If
-<i>entity</i> is a clone, then the entity itself will be removed, but
-any resources shared by other instances of the same entity will
-remain.
+<dt><tt>delete_entity</tt>(<i>entity</i>)<dd><p>Remove <i>entity</i> from the scene hierarchy and release all resources associated with it. Any children of <i>entity</i> will be recursively deleted as well. If <i>entity</i> is a clone, then the entity itself will be removed, but any resources shared by other instances of the same entity will remain.
 
-<dt><i>parent</i> = <tt>get_entity_parent</tt>(<i>entity</i>)<dd><p>
-Return the parent of <i>entity</i>, or <tt>nil</tt> if it is
-unparented.</p>
+<dt><i>parent</i> = <tt>get_entity_parent</tt>(<i>entity</i>)<dd><p>Return the parent of <i>entity</i>, or <tt>nil</tt> if it is unparented.</p>
 
-<dt><i>child</i> = <tt>get_entity_child</tt>(<i>entity</i>,
-<i>n</i>)<dd><p> Return the <tt>n</tt>th child of <i>entity</i>, or
-<tt>nil</tt> if it has no such child.  Unparented entities may be
-referenced as children of <tt>nil</tt>.  The first child is at index
-<i>0</i>.</p>
+<dt><i>child</i> = <tt>get_entity_child</tt>(<i>entity</i>, <i>n</i>)<dd><p>Return the <tt>n</tt>th child of <i>entity</i>, or <tt>nil</tt> if it has no such child. Unparented entities may be referenced as children of <tt>nil</tt>. The first child is at index <i>0</i>.</p>
 
 </dl>
 
@@ -319,32 +183,15 @@ referenced as children of <tt>nil</tt>.  The first child is at index
 <h4> 2.1.0.2. Absolute Transformation </h4>
 <dl>
 
-<dt><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p>
-Specify the position of the entity.  Position is given in the
-coordinate system of the entity's parent. </p>
+<dt><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p>Specify the position of the entity. Position is given in the coordinate system of the entity's parent.</p>
 
-<dt><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)<dd><p>
-Specify the rotation of the entity.  The 3 values give the angles of
-rotation in degrees about the X, Y, and Z axes.  Rotation is given in
-the coordinate system of the entity's parent. </p>
+<dt><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)<dd><p>Specify the rotation of the entity. The 3 values give the angles of rotation in degrees about the X, Y, and Z axes. Rotation is given in the coordinate system of the entity's parent.</p>
 
-<dt><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)<dd><p> Specify
-the scale of the entity.  The 3 values give scale multipliers along
-the X, Y, and Z axes.  Scale is given in the coordinate system of the
-entity's parent. </p>
+<dt><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)<dd><p>Specify the scale of the entity. The 3 values give scale multipliers along the X, Y, and Z axes. Scale is given in the coordinate system of the entity's parent.</p>
 
-<dt><tt>set_entity_bound</tt>(<i>entity, min<sub>x</sub>,
-min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>,
-max<sub>z</sub></i>) <dd><p> Specify the axis-aligned bounding box of
-the entity.  The 6 values give the minimum and maximum X, Y, and Z
-values in object coordinates.</p>
+<dt><tt>set_entity_bound</tt>(<i>entity, min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i>) <dd><p>Specify the axis-aligned bounding box of the entity. The 6 values give the minimum and maximum X, Y, and Z values in object coordinates.</p>
 
-<p> To enable view culling based on the given bound, set
-<tt>entity_flag_bounded</tt>.  Keep in mind that object, sprite, and
-string bounds are computed automatically, and manually-set boundries
-are not likely to be used.  The intended use of
-<tt>set_entity_bound</tt> is the specification of pivot bounds for
-hierarchical view culling. </p>
+<p>To enable view culling based on the given bound, set <tt>entity_flag_bounded</tt>. Keep in mind that object, sprite, and string bounds are computed automatically, and manually-set boundries are not likely to be used. The intended use of <tt>set_entity_bound</tt> is the specification of pivot bounds for hierarchical view culling.</p>
 
 </dl>
 
@@ -352,30 +199,15 @@ hierarchical view culling. </p>
 
 <h4> 2.1.0.3. Relative Transformation </h4>
 
-<p class="note"> Strictly speaking, to provide both absolute and
-relative transformation functions is to violate the principle of
-orthogonality.  In this case, I just couldn't resist.  Inspiration for
-this feature is drawn from Blitz3D, which showed that relative
-transform is very beginner-friendly, leading to a very intuitive
-turtle-style system of entity control.  Unlike Blitz3D however,
-Electro's relative transform is not susceptible to gimbal lock. </p>
+<p class="note">Strictly speaking, to provide both absolute and relative transformation functions is to violate the principle of orthogonality. In this case, I just couldn't resist. Inspiration for this feature is drawn from Blitz3D, which showed that relative transform is very beginner-friendly, leading to a very intuitive turtle-style system of entity control.</p>
 
 <dl>
 
-<dt><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Move the
-entity relative to its current position.  X is to the right, Y is up,
-and Z is to the rear, as defined by the entity's current
-orientation. </p>
+<dt><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p>Move the entity relative to its current position. X is to the right, Y is up, and Z is to the rear, as defined by the entity's current orientation.</p>
 
-<p class="note"> It might be more clear to the beginner if the Z axis
-to pointed forward rather than back.  However, this would be in
-conflict with the normal right-handed coordinate system, and would
-only lead to inconsistency and confusion for the experienced 3D
-user. </p>
+<p class="note">It might be more clear to the beginner if the Z axis to pointed forward rather than back. However, this would be in conflict with the normal right-handed coordinate system, and would only lead to inconsistency and confusion for the experienced 3D user.</p>
 
-<dt><tt>turn_entity</tt>(<i>entity, x, y, z</i>)<dd><p> Rotate the
-entity relative to its current orientation.  Rotation about the X, Y,
-and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
+<dt><tt>turn_entity</tt>(<i>entity, x, y, z</i>)<dd><p>Rotate the entity relative to its current orientation. Rotation about the X, Y, and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
 
 </dl>
 
@@ -384,13 +216,7 @@ and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
 <h4> 2.1.0.4. Rendering properties </h4>
 <dl>
 
-<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p> Specify the
-transparency of the entity.  A value of 1.0 is fully opaque and 0.0 is
-fully invisible.  This transparency value propagates down the
-hierarchy.  Transparency values specified by child nodes will
-accumulate.  That is, if a parent and a child both specify
-<i>alpha</i>=0.5 then the child will appear with a transparency of
-0.25.</p>
+<dt><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p>Specify the transparency of the entity. A value of <i>1.0</i> is fully opaque and <i>0.0</i> is fully invisible. This transparency value propagates down the hierarchy. Transparency values specified by child nodes will accumulate. That is, if a parent and a child both specify <i>alpha=0.5</i> then the child will appear with a transparency of <i>0.25</i>.</p>
 
 </dl>
 
@@ -399,37 +225,19 @@ accumulate.  That is, if a parent and a child both specify
 <h4> 2.1.0.5. Query </h4>
 <dl>
 
-<dt><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)<dd><p>
-Return the position (<i>x, y, z</i>) of the entity in local coordinates.
-</p>
+<dt><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)<dd><p>Return the position (<i>x, y, z</i>) of the entity in local coordinates.</p>
 
-<dt><i>x, y, z</i> = <tt>get_entity_x_vector</tt>(<i>entity</i>)<dd><p>
-Return the vector pointing to the right from the entity in local coordinates.
-</p>
+<dt><i>x, y, z</i> = <tt>get_entity_x_vector</tt>(<i>entity</i>)<dd><p>Return the vector pointing to the right from the entity in local coordinates.</p>
 
-<dt><i>x, y, z</i> = <tt>get_entity_y_vector</tt>(<i>entity</i>)<dd><p>
-Return the vector pointing up from the entity in local coordinates.
-</p>
+<dt><i>x, y, z</i> = <tt>get_entity_y_vector</tt>(<i>entity</i>)<dd><p>Return the vector pointing up from the entity in local coordinates.</p>
 
-<dt><i>x, y, z</i> = <tt>get_entity_z_vector</tt>(<i>entity</i>)<dd><p>
-Return the vector pointing to the rear of entity in local coordinates.
-</p>
+<dt><i>x, y, z</i> = <tt>get_entity_z_vector</tt>(<i>entity</i>)<dd><p>Return the vector pointing to the rear of entity in local coordinates.</p>
 
-<dt><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>
-Return the scaling of the entity along the local X, Y, and Z axes.
-</p>
+<dt><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>Return the scaling of the entity along the local X, Y, and Z axes.</p>
 
-<dt><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>,
-max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> =
-<tt>get_entity_bound</tt>(<i>entity</i>) <dd><p> Return the minimum
-and maximum X, Y, and Z values of the entity.  This may be used to
-determine the extent of an object or sprite.  This is useful when
-computing pivot bounds for hierarchical view culling, or when
-positioning entities on-screen. </p>
+<dt><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_entity_bound</tt>(<i>entity</i>) <dd><p>Return the minimum and maximum X, Y, and Z values of the entity. This may be used to determine the extent of an object or sprite. This is useful when computing pivot bounds for hierarchical view culling, or when positioning entities on-screen.</p>
 
-<dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p> Return
-the transparency value of the entity.
-</p>
+<dt><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p>Return the transparency value of the entity.</p>
 
 </dl>
 
@@ -438,75 +246,26 @@ the transparency value of the entity.
 <h4> 2.1.0.6. Flags </h4>
 <dl>
 
-<dt><tt>set_entity_flags</tt>(<i>entity, flags, value</i>) <dd><p> Set
-or clear flags on the given entity.  Entity flags enable and disable
-extra features in the entity hierarchy.  These flags act not only on
-the entity that carries them, but also on the children of that entity.
-The <i>flag</i> parameter gives the set of flags to be modified, and
-may be the sum of multiple flags.  The <i>value</i> parameter is a
-boolean giving the desired state.  A value of <tt>true</tt> will set
-the given flags, and <tt>false</tt> will clear them. </p>
+<dt><tt>set_entity_flags</tt>(<i>entity, flags, value</i>) <dd><p>Set or clear flags on the given entity. Entity flags enable and disable extra features in the entity hierarchy. These flags act not only on the entity that carries them, but also on the children of that entity. The <i>flag</i> parameter gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> parameter is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
 
 <ul>
 
-<li><tt> entity_flag_wireframe </tt><p> The wireframe flag causes
-an entity and its descendants to be rendered in wireframe.  An entire
-scene may be rendered in wireframe by setting the wireframe flag on a
-camera or light. The application is free to set or clear a wireframe
-flag value at one point in the hierarchy and set an opposite value at
-a lower point.  Entities will appear as expected. </p>
+<li><tt> entity_flag_wireframe </tt><p>The wireframe flag causes an entity and its descendants to be rendered in wireframe. An entire scene may be rendered in wireframe by setting the wireframe flag on a camera or light. The application is free to set or clear a wireframe flag value at one point in the hierarchy and set an opposite value at a lower point. Entities will appear as expected.</p>
 
-<li><tt> entity_flag_hidden </tt><p> The hidden flag causes an
-entity and its descendants to be omitted from rendering.  Unlike the
-wireframe flag, the hidden state <i>cannot</i> be reversed lower in the
-hierarchy, as it actually causes traversal of the hierarchy to be
-pruned. </p>
+<li><tt> entity_flag_hidden </tt><p>The hidden flag causes an entity and its descendants to be omitted from rendering. Unlike the wireframe flag, the hidden state <i>cannot</i> be reversed lower in the hierarchy, as it actually causes traversal of the hierarchy to be pruned.</p>
 
-<li><tt> entity_flag_billboard </tt><p> Entities with the
-billboard flag are drawn facing the camera, regardless of their actual
-orientation.  In effect, all rotations and translations are applied as
-usual, so the entity will be positioned in space as expected, but an
-extra rotation is applied in order to re-aim the entity's Z axis
-toward the camera. </p>
+<li><tt> entity_flag_billboard </tt><p>Entities with the billboard flag are drawn facing the camera, regardless of their actual orientation. In effect, all rotations and translations are applied as usual, so the entity will be positioned in space as expected, but an extra rotation is applied in order to re-aim the entity's Z axis toward the camera.</p>
 
-<p class="note"> Due to the manner in which the billboard
-transformation is implemented, scaling operations will <i>not</i>
-transform billboard entities below them in the hierarchy.  This is a
-minor limitation in practice, as scaling is normally applied near the
-leaves of the scene hierarchy anyway.  The common case of an entity
-with local scaling <i>and</i> a local billboard flag will work
-properly, but when in doubt, scale below billboarding. </p>
+<p class="note">Due to the manner in which the billboard transformation is implemented, scaling operations will <i>not</i> transform billboard entities below them in the hierarchy. This is a minor limitation in practice, as scaling is normally applied near the leaves of the scene hierarchy anyway. The common case of an entity with local scaling <i>and</i> a local billboard flag will work properly, but when in doubt, scale below billboarding.</p>
 
-<li><tt> entity_flag_bounded </tt><p> Entities with the bounded flag
-are rendered only when their bounding box falls within the view
-frustum of the current camera.  Objects, sprites, and strings have
-automatically computed bounding boxes, so they are automatically given
-the bounded flag.  Other entities may be assigned a bounding box using
-<tt>set_entity_bound</tt>.  When an entity is culled it behaves is
-though it is hidden and traversal of the hierarchy is pruned. </p>
+<li><tt> entity_flag_bounded </tt><p>Entities with the bounded flag are rendered only when their bounding box falls within the view frustum of the current camera. Objects, sprites, and strings have automatically computed bounding boxes, so they are automatically given the bounded flag. Other entities may be assigned a bounding box using <tt>set_entity_bound</tt>. When an entity is culled it behaves is though it is hidden and traversal of the hierarchy is pruned.</p>
 
-<li><tt> entity_flag_pos_tracked_0 </tt><p> Entities with the
-position-tracked flag have their positions updated each frame to match
-the position of tracker 0, if it is available.  This is useful for
-implementing head or wand tracking in an immersive VR environment.  If
-an application requires the position of the tracker without reference
-to any visible entity, the position-tracked flag should be set on a
-pivot entity and the pivot's position queried with
-<tt>get_entity_position</tt>.</p>
+<li><tt> entity_flag_pos_tracked_0 </tt><p>Entities with the position-tracked flag have their positions updated each frame to match the position of tracker 0, if it is available. This is useful for implementing head or wand tracking in an immersive VR environment. If an application requires the position of the tracker without reference to any visible entity, the position-tracked flag should be set on a pivot entity and the pivot's position queried with <tt>get_entity_position</tt>.</p>
 
-<li><tt> entity_flag_rot_tracked_0 </tt><p> Entities with the
-rotation-tracked flag have their orientations updated to match that of
-tracker 0, if it is available.  Again, this is useful in immersive VR
-applications.  The orientation of a tracker may be queried by setting
-the rotation-tracked flag on a pivot and calling
-<tt>get_entity_x_vector</tt>, etc. </p>
+<li><tt> entity_flag_rot_tracked_0 </tt><p>Entities with the rotation-tracked flag have their orientations updated to match that of tracker 0, if it is available. Again, this is useful in immersive VR applications. The orientation of a tracker may be queried by setting the rotation-tracked flag on a pivot and calling <tt>get_entity_x_vector</tt>, etc.</p>
 
 <li><tt> entity_flag_pos_tracked_1 </tt>
-<li><tt> entity_flag_rot_tracked_1 </tt>
-
-<p> These flags behave as above, using tracker 1.  In many
-configurations, trackers 0 and 1 will be head and wand, or
-vice-versa. </p>
+<li><tt> entity_flag_rot_tracked_1 </tt><p>These flags behave as above, using tracker 1. In many configurations, trackers 0 and 1 will be head and wand, or vice-versa.</p>
 
 </ul>
 </dl>
@@ -515,155 +274,82 @@ vice-versa. </p>
 
 <a name="object"><h3> 2.1.1. Object </h3>
 
-<p> An object is a collection of vertices and meshes.  A mesh is a
-collection of faces and edges.  Faces and edges are represented as
-sets of indices into the object's vertex list.  Brushes are applied
-per-mesh. </p>
+<p>An object is a collection of vertices and meshes. A mesh is a collection of faces and edges. Faces and edges are defined by sets of indices into the object's vertex list. Brushes are applied per-mesh.</p>
 
-<p> The following functions allow objects to be created, destroyed,
-modified, and queried throught the manipulation of mesh, vertex, face,
-and edge indices. </p>
+<p>All vertices, meshes, faces, and edges are indexed beginning with zero, and all element indices in [<i>0, n-1</i>] are valid, where <i>n</i> is the respective element count.</p>
 
-<h4> 2.1.1.1. Constructors </h4> <!------------------------------------------->
+<p>The following functions allow objects to be created, destroyed, modified, and queried throught the manipulation of object element indices.</p>
+
+<h4> 2.1.1.1. Constructors </h4>
 <dl>
 
-<dt><i>mesh-index</i> = <tt>create_mesh</tt>(<i>object,</i>
-[<i>brush</i>])<dd><p> Create a new mesh within <i>object</i> and
-return its index.  A brush may be applied to the new mesh at creation
-time, but if none is provided then the default brush will be
-used. </p>
+<dt><i>i<sub>M</sub></i> = <tt>create_mesh</tt>(<i>object,</i> [<i>brush</i>])<dd><p>Add a new mesh to <i>object</i> and return its index. A brush may be applied to the new mesh at creation time, but if none is provided then the default brush will be used.</p>
 
-<dt><i>vert-index</i> = <tt>create_vert</tt>(<i>object,</i>
-[<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i>
-[<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i>
-[<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p> Create a new vertex
-within <i>object</i> and return its index.  The vertex's position
-(<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal
-(<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture
-coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specifed.  If
-any of these are not provided, default values of (<i>0, 0, 0</i>),
-(<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
+<dt><i>i<sub>V</sub></i> = <tt>create_vert</tt>(<i>object,</i> [<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Add a new vertex to <i>object</i> and return its index. The vertex's position (<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specifed. If any of these are not provided, default values of (<i>0, 0, 0</i>), (<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
 
+<dt><i>i<sub>F</sub></i> = <tt>create_face</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Add a new trianglular face to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>). Vertex order distinguishes the front of a face from the back. Vertices should be appear counter-clockwise when the face is viewed from the front.
 
-<dt><i>face-index</i> = <tt>create_face</tt>(<i>object, mesh-index,
-vert-index<sub>0</sub>, vert-index<sub>1</sub>,
-vert-index<sub>2</sub></i>)<dd><p> Create a new trianglular face
-within mesh <i>mesh-index</i> of <i>object</i> defined by the vertices
-(<i>vert-index<sub>0</sub>, vert-index<sub>1</sub>,
-vert-index<sub>2</sub></i>). </p>
-
-<dt><i>edge-index</i> = <tt>create_edge</tt>(<i>object, mesh-index,
-vert-index<sub>0</sub>, vert-index<sub>1</sub></i>)<dd><p> Create a
-new edge within mesh <i>mesh-index</i> of <i>object</i> defined by the
-vertices (<i>vert-index<sub>0</sub>, vert-index<sub>1</sub></i>)</p>
+<dt><i>i<sub>E</sub></i> = <tt>create_edge</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub></i>)<dd><p>Add a new edge to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub></i>)</p>
 
 </dl>
 
-<h4> 2.1.1.2. Destructors </h4> <!-------------------------------------------->
+<h4> 2.1.1.2. Destructors </h4>
 
-<p class="note"> Object elements are stored in vectors.  The addition
-of a new element is usually a constant-time append operation, but the
-deletion of an element requires a linear-time traversal of the vector.
-In addition, a vertex removal necessitates the traversal of the all
-edge and face vectors, potentially causing removals there.  Vertex
-removal also triggers the recomputation of the object bound and the
-reloading of the OpenGL vertex buffer.  For these reasons, object
-element deletion can be very expensive.  Applications should avoid
-creating and deleting geometry on a per-frame basis. </p>
+<p class="note">Object elements are stored in vectors. The addition of a new element is usually a constant-time append operation, but the deletion of an element requires a linear-time traversal of the vector. In addition, a vertex removal necessitates the traversal of the all edge and face vectors, potentially causing removals there. Vertex removal also triggers the recomputation of the object bound. For these reasons, object element deletion can be expensive. Applications should avoid creating and deleting geometry on a per-frame basis.</p>
 
 <dl>
 
-<dt><tt>delete_mesh</tt>(<i>object, mesh-index</i>)<dd><p> Remove mesh
-<i>mesh-index</i> from <i>object</i>.  All faces and edges contained
-by the mesh are deleted as well.
+<dt><tt>delete_mesh</tt>(<i>object, i<sub>M</sub></i>)<dd><p>Remove mesh <i>i<sub>M</sub></i> from <i>object</i>. All faces and edges contained by the mesh are deleted as well.
 
-<dt><tt>delete_vert</tt>(<i>object, vert-index</i>)<dd><p> Remove
-vertex <i>vert-index</i> from <i>object</i>.  The vertex is deleted
-from the object's vertex vector and all following vertices are moved
-to fill in the remaining space.  Vertex references in the object's
-face and edge vectors are updated, but any vertex indices held in Lua
-variables will be off by one.  All faces and edges referencing the
-vertex are also deleted. </p>
+<dt><tt>delete_vert</tt>(<i>object, i<sub>V</sub></i>)<dd><p>Remove vertex <i>i<sub>V</sub></i> from <i>object</i>. The vertex is deleted from the object's vertex vector and all following vertices are shifted to fill in the remaining space. Vertex references in the object's face and edge vectors are updated accordingly, but vertex indices held in Lua variables may be off by one. To ensure the internal correctness of the object and all its indices, any faces and edges referencing the missing vertex are also deleted.</p>
 
-<dt><tt>delete_face</tt>(<i>object, mesh-index, face-index</i>)<dd><p>
-Remove face <i>face-index</i> from mesh <i>mesh-index</i> of
-<i>object</i>.  This function does not remove referenced vertices,
-regardless of whether they are left unreferenced by other faces or
-edges. </p>
+<dt><tt>delete_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)<dd><p>Remove face <i>i<sub>F</sub></i> from mesh <i>i<sub>M</sub></i> of <i>object</i>. This function does not remove the vertices referenced by the face.</p>
 
-<dt><tt>delete_edge</tt>(<i>object, mesh-index, edge-index</i>)<dd><p>
-Remove edge <i>edge-index</i> from mesh <i>mesh-index</i> of
-<i>object</i>.  As with faces, this function does not alter the
-object's vertex vector. </p>
+<dt><tt>delete_edge</tt>(<i>object, i<sub>M</sub>, i<sub>E</sub></i>)<dd><p>Remove edge <i>i<sub>E</sub></i> from mesh <i>i<sub>M</sub></i> of <i>object</i>. As with faces, this function does not alter the object's vertex vector.</p>
 
-<p class="note"> The deletion of faces and edges can result in unused
-vertices within an object.  This is sometimes desired, but often not.
-It is left to the application to do the right thing.</p>
+<p class="note">The deletion of faces and edges can result in unused vertices within an object. This is sometimes desired, but often not. It is left to the application to do the right thing.</p>
 
 </dl>
 
-<h4> 2.1.1.3. Modifiers </h4> <!---------------------------------------------->
+<h4> 2.1.1.3. Modifiers </h4>
 <dl>
 
-<dt><tt>set_mesh</tt>(<i>object, mesh-index, brush</i>)<dd><p> Change
-the <i>brush</i> used to render mesh <i>mesh-index</i> of
-<i>object</i>. </p>
+<dt><tt>set_mesh</tt>(<i>object, i<sub>M</sub>, brush</i>)<dd><p>Set the brush used to render mesh <i>i<sub>M</sub></i> of <i>object</i>.</p>
 
-<dt><tt>set_vert</tt>(<i>object, vert-index, v<sub>x</sub>,
-v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>,
-n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>
-Modify the value of vertex <i>vert-index</i>.  The normal and texture
-coordinate are option and, if not specified, the existing vertex
-values are retained. </p>
+<dt><tt>set_vert</tt>(<i>object, i<sub>V</sub>, v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Set the vector values of vertex <i>i<sub>V</sub></i>. The normal and texture coordinate are optional and, if not specified, the existing values are retained.</p>
 
-<p class="note"> Like vertex deletion, vertex modification can trigger
-object bound recomputation and modification to the OpenGL vertex
-buffer object.  Modifying a large batch of vertices has nearly the
-same overhead as modifying a single vertex, so make all necessary
-changes at the same time. </p>
+<p class="note">Like vertex deletion, vertex modification can trigger object bound recomputation. This computation is done only when the bound becomes necessary, so modifying a large batch of vertices at once has the same overhead as modifying a single vertex.</p>
 
-<dt><tt>set_face</tt>(<i>object, mesh-index, face-index,
-vert-index<sub>0</sub>, vert-index<sub>1</sub>,
-vert-index<sub>2</sub></i>)<dd><p> Change the set of vertices defining
-face <i>face-index</i>.</p>
+<dt><tt>set_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Specify the set of vertices defining face <i>i<sub>F</sub></i>. Again, vertices should be listed in counter-clockwise order.</p>
 
-<dt><tt>set_edge</tt>(<i>object, mesh-index, edge-index,
-vert-index<sub>0</sub>, vert-index<sub>1</sub></i>)<dd><p> Change the
-set of vertices defining edge <i>edge-index</i>.</p>
+<dt><tt>set_edge</tt>(<i>object, i<sub>M</sub>, i<sub>E</sub>, i<sub>V</sub>, j<sub>V</sub></i>)<dd><p>Specify the set of vertices defining edge <i>i<sub>E</sub></i>.</p>
 
 </dl>
 
-<h4> 2.1.1.4. Value Queries </h4> <!------------------------------------------>
+<h4> 2.1.1.4. Value Queries </h4>
 <dl>
 
-<dt><i>brush</i> = <tt>get_mesh</tt>(<i>object, mesh-index</i>)<dd><p></p>
+<dt><i>brush</i> = <tt>get_mesh</tt>(<i>object, i<sub>M</sub></i>)<dd><p>Return the brush used by a mesh.</p>
 
-<dt>
-<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>, 
-n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,
-t<sub>u</sub>, t<sub>v</sub></i> = 
-<tt>get_vert</tt>(<i>object, vert-index</i>)<dd><p></p>
+<dt><i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, t<sub>u</sub>, t<sub>v</sub></i> = <tt>get_vert</tt>(<i>object, i<sub>V</sub></i>)<dd><p>Return the position, normal, and texture coordinate of a vertex.</p>
 
-<dt><i>vert-index<sub>0</sub>, vert-index<sub>1</sub>,
-vert-index<sub>2</sub></i> = <tt>get_face</tt>(<i>object, mesh-index,
-face-index</i>)<dd><p></p>
+<dt><i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i> = <tt>get_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)<dd><p>Return the set of vertex indices that define a face.</p>
 
-<dt><i>vert-index<sub>0</sub>, vert-index<sub>1</sub></i> =
-<tt>get_edge</tt>(<i>object, mesh-index, face-index</i>)<dd><p></p>
+<dt><i>i<sub>V</sub>, j<sub>V</sub></i> = <tt>get_edge</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)<dd><p>Return the set of vertex indices that define an edge.</p>
 
 </dl>
 
 
-<h4> 2.1.1.5. Number queries </h4> <!----------------------------------------->
+<h4> 2.1.1.5. Number queries </h4>
 <dl>
 
-<dt><i>n</i> = <tt>get_mesh_count</tt>(<i>object</i>)<dd><p></p>
+<dt><i>n</i> = <tt>get_mesh_count</tt>(<i>object</i>)
 
-<dt><i>n</i> = <tt>get_vert_count</tt>(<i>object</i>)<dd><p></p>
+<dt><i>n</i> = <tt>get_vert_count</tt>(<i>object</i>)
 
-<dt><i>n</i> = <tt>get_face_count</tt>(<i>object, mesh-index</i>)<dd><p></p>
+<dt><i>n</i> = <tt>get_face_count</tt>(<i>object, i<sub>M</sub></i>)
 
-<dt><i>n</i> = <tt>get_edge_count</tt>(<i>object, mesh-index</i>)<dd><p></p>
+<dt><i>n</i> = <tt>get_edge_count</tt>(<i>object, i<sub>M</sub></i>)<dd><p>Return the number of meshes or vertices in an object, or the number of faces or edges in a mesh. All element indices in [<i>0, n-1</i>] are valid.</p>
 
 </dl>
 
@@ -673,18 +359,9 @@ face-index</i>)<dd><p></p>
 <a name="sprite"><h3> 2.1.2. Sprite </h3>
 <dl>
 
-<dt><tt>set_sprite_brush</tt>(<i>sprite, brush</i>)<dd><p> Set the
-brush used to display <i>sprite</i>. </p>
+<dt><tt>set_sprite_brush</tt>(<i>sprite, brush</i>)<dd><p>Set the brush used to display <i>sprite</i>.</p>
 
-<dt><tt>set_sprite_range</tt>(<i>sprite, s<sub>0</sub>, s<sub>1</sub>,
-t<sub>0</sub>, t<sub>1</sub></i>)<dd><p> Set the texture coordinate
-rectangle used by <i>sprite</i>.  By default, a sprite uses its
-brush's entire image.  This corresponds to texture coordinate
-rectangle (<i>0.0, 1.0, 0.0, 1.0</i>).  However it is frequently
-useful to display only a subset of a texture on a sprite.  For
-example, a numerical display might use a single texture that contains
-images of all of the digits 0-9, and select the digit currently
-displayed simply by modifying the sprite bounds.  </p>
+<dt><tt>set_sprite_range</tt>(<i>sprite, s<sub>0</sub>, s<sub>1</sub>, t<sub>0</sub>, t<sub>1</sub></i>)<dd><p>Set the texture coordinate rectangle used by <i>sprite</i>. By default, a sprite uses its brush's entire image. This corresponds to texture coordinate rectangle (<i>0.0, 1.0, 0.0, 1.0</i>). However it is frequently useful to display only a subset of a texture on a sprite. For example, a numerical display might use a single texture that contains images of all of the digits 0-9, and select the digit currently displayed simply by modifying the sprite bounds.</p>
 
 </dl>
 
@@ -693,19 +370,13 @@ displayed simply by modifying the sprite bounds.  </p>
 <a name="string"><h3> 2.1.3. String </h3>
 <dl>
 
-<dt><tt>set_string_text</tt>(<i>string, text</i>)<dd><p> Set the
-text displayed by the given string object. </p>
+<dt><tt>set_string_text</tt>(<i>string, text</i>)<dd><p>Set the text displayed by the given string object.</p>
 
-<p class="note"> Modifying a string value is very cheap.  When an
-application requires that an on-screen text element change frequently,
-changes should be made using <tt>set_string_text</tt> rather than the
-deletion and creation of string objects. </p>
+<p class="note">Modifying a string value is very cheap. When an application requires that an on-screen text element change frequently, changes should be made using <tt>set_string_text</tt> rather than the deletion and creation of string objects.</p>
 
-<dt><tt>set_string_fill</tt>(<i>string, brush</i>)<dd> <p> Set the
-fill brush of the string entity.</p>
+<dt><tt>set_string_fill</tt>(<i>string, brush</i>)<dd> <p>Set the fill brush of the string entity.</p>
 
-<dt><tt>set_string_line</tt>(<i>string, brush</i>)<dd> <p> Set the
-outline brush of the string entity.</p>
+<dt><tt>set_string_line</tt>(<i>string, brush</i>)<dd> <p>Set the outline brush of the string entity.</p>
 
 </dl>
 
@@ -714,47 +385,31 @@ outline brush of the string entity.</p>
 <a name="camera"><h3> 2.1.4. Camera </h3>
 <dl>
 
-<dt><tt>set_camera_stereo</tt>(<i>mode, L<sub>x</sub>, L<sub>y</sub>,
-L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)<dd><p>
-Set stereo options on the given camera.  The <i>mode</i> argument
-gives the stereo method, as described below.  The (<i>L<sub>x</sub>,
-L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>,
-R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the
-camera to the user's left and right eyes.</p>
+<dt><tt>set_camera_stereo</tt>(<i>mode, L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)<dd><p>Set stereo options on the given camera. The <i>mode</i> argument gives the stereo method, as described below. The (<i>L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the camera to the user's left and right eyes.</p>
 
-<p> The available stereo modes are as follows: </p>
+<p>The available stereo modes are as follows:</p>
 
 <ul>
 <li><tt>stereo_mode_none</tt>
 
-<p> This mode disables stereo rendering.  This is the default. </p>
+<p>This mode disables stereo rendering. This is the default.</p>
 
 <li><tt>stereo_mode_quad</tt>
 
-<p> This mode enables quad-buffered stereo viewing.  This is
-appropriate for active stereo viewing using LCD flicker glasses, or
-passive stereo viewing using dual-output video hardware in "clone"
-mode.  To function correctly, the underlying graphics hardware must
-support quad-buffered stereo, and <tt>host_flag_stereo</tt> must be
-enabled on the rendering host at application startup.  See
-<tt>set_host_flag</tt> below. </p>
+<p>This mode enables quad-buffered stereo viewing. This is appropriate for active stereo viewing using LCD flicker glasses, or passive stereo viewing using dual-output video hardware in "clone" mode. To function correctly, the underlying graphics hardware must support quad-buffered stereo, and <tt>host_flag_stereo</tt> must be enabled on the rendering host at application startup. See <tt>set_host_flag</tt> below.</p>
 
 <li><tt>stereo_mode_red_blue</tt>
 
-<p> This mode enables red-blue anaglyphic stereo. </p>
+<p>This mode enables red-blue anaglyphic stereo.</p>
 
 <li><tt>stereo_mode_varrier_11</tt>
 
-<p> This mode enables
-<a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
-stereo viewing using the 1-line-pass/1-scene-pass Varrier algorithm. </p>
+<p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 1-line-pass/1-scene-pass Varrier algorithm.</p>
 
 <li><tt>stereo_mode_varrier_33</tt>
 
-<p> This mode enables
-<a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a>
-stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering
-algorithm. </p>
+<p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering algorithm.</p>
+
 </ul>
 </dl>
 
@@ -763,8 +418,7 @@ algorithm. </p>
 <a name="light"><h3> 2.1.5. Light </h3>
 <dl>
 
-<dt><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p> Set the
-diffuse color of a light source.  </p>
+<dt><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p>Set the diffuse color of a light source.</p>
 
 </dl>
 
@@ -772,30 +426,18 @@ diffuse color of a light source.  </p>
 
 <a name="galaxy"><h3> 2.1.6. Pivot </h3>
 
-<p> Pivots have no type-specific functionality. </p>
+<p>Pivots have no type-specific functionality.</p>
 
 <!---------------------------------------------------------------------------->
 
 <a name="galaxy"><h3> 2.1.7. Galaxy </h3>
 <dl>
 
-<dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p> Set the
-magnitude multiplier of a galaxy.  By default, stars are rendered
-using their computed luminosity.  For all but a few stars, this is far
-too dim to be visible.  The magnitude multiplier can be treated as a
-linear scale of apparent star size.  For example, a magnitude value of
-100 will result in the very largest of stars being rendered
-approximately 100 pixels across.  </p>
+<dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p>Set the magnitude multiplier of a galaxy. By default, stars are rendered using their computed luminosity. For all but a few stars, this is far too dim to be visible. The magnitude multiplier can be treated as a linear scale of apparent star size. For example, a magnitude value of 100 will result in the very largest of stars being rendered approximately 100 pixels across.</p>
 
-<dt><i>index</i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>
-Return the star "being pointed at" by the given entity.  That is, return
-the index of the closest to the forward vector of the entity.  This is
-useful for star selection and galaxy navigation, and is particularly
-well applied to cameras and tracked entities. </p>
+<dt><i>i<sub>S</sub></i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>Return the star "being pointed at" by the given entity. That is, return the index of the star closest to the forward vector of the entity. This is useful for star selection and galaxy navigation, and is particularly well applied to cameras and tracked entities.</p>
 
-<dt><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy,
-index</i>)<dd><p> Return the 3D position of the star at <i>index</i>
-of <i>galaxy</i>.
+<dt><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy, i<sub>S</sub></i>)<dd><p>Return the 3D position of the star at index <i>i<sub>S</sub></i> of <i>galaxy</i>.
 
 </dl>
 
@@ -803,39 +445,19 @@ of <i>galaxy</i>.
 
 <a name="image"><h2> 2.2. Images </h2>
 
-<p> Images are used as textures for objects, strings, and sprites. </p>
+<p>Images are used as textures for objects, strings, and sprites.</p>
 
-<p> A default image of 128&times;128 white pixels is always available.
-It may be referenced using the symbol <tt>nil</tt> in any context
-where an image is required. </p>
+<p>A default image of 128&times;128 white pixels is always available. It may be referenced using the symbol <tt>nil</tt> in any context where an image is required.</p>
 
 <dl>
 
-<dt><i>image</i> = <tt>create_image</tt>(<i>filename</i>)<dd><p> Load
-an image from the named PNG or JPEG file.  A given image file will
-only ever be loaded once.  Calling <tt>create_image</tt> a second time
-with the same filename will return the same image object.</p>
+<dt><i>image</i> = <tt>create_image</tt>(<i>filename</i>)<dd><p>Load an image from the named PNG or JPEG file. A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filename will return the same image object.</p>
 
-<dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>)
-<dd><p> Return the color value of the (<i>x, y</i>) pixel of an image.
-This function always returns 4 color components.  If the source image
-does not include all four channels, then values are extrapolated:
-greyscale values are copied to all three color channels and opaque
-textures are assigned an alpha value of 1.</p>
+<dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>) <dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: greyscale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
 
-<dt><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>
-Return the size of the image in pixels.</p>
+<dt><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>Return the size of the image in pixels.</p>
 
-<p class="note"> Unextended OpenGL requires that the width and height
-of all texture map images be a power of two.  It can be inconvenient
-to satisfy this requirement, so Electro automatically rescales
-non-power-of-two images up to the nearest power-of-two size.  This
-is only done internally, so an image's size and aspect ratio will
-reflect the <i>original</i> image attributes.  The scaling is done
-using the standard OpenGL utility method, but it can still result in
-image quality degradation.  If you are picky about image quality, or
-you desire pixel-for-pixel correctness, be sure to use only
-power-of-two source images.</p>
+<p class="note">Unextended OpenGL requires that the width and height of all texture map images be a power of two. It can be inconvenient to satisfy this requirement, so Electro automatically rescales non-power-of-two images up to the nearest power-of-two size. This is only done internally, so an image's size and aspect ratio will reflect the <i>original</i> image attributes. The scaling is done using the standard OpenGL utility method, but it can still result in image quality degradation. If you are picky about image quality, or you desire pixel-for-pixel correctness, be sure to use only power-of-two source images.</p>
 
 </dl>
 
@@ -843,122 +465,59 @@ power-of-two source images.</p>
 
 <a name="brush"><h2> 2.3. Brushes </h2>
 
-<p> Brushes describe the appearance of the surfaces of objects, strings,
-and sprites. </p>
+<p>Brushes describe the appearance of the surfaces of objects, strings,
+and sprites.</p>
 
-<p> A default brush is always available.  It has 80% grey opaque
-diffuse material, 0% specular, and 20% ambient material with a
-specular exponent of 0 (these coincide with the OpenGL defaults).  It
-references the default image.  The default brush may be referenced
-using the symbol <tt>nil</tt> in any context where a brush is
-required. </p>
+<p>A default brush is always available. It has 80% grey opaque diffuse material, 0% specular, and 20% grey ambient material with a specular exponent of 0. These coincide with the OpenGL defaults. It references the default image. The default brush may be referenced using the symbol <tt>nil</tt> in any context where a brush is required.</p>
 
 <dl>
 
-<dt><i>brush</i> = <tt>create_brush</tt>()<dd><p> Create a new brush
-object with the default material properties. </p>
+<dt><i>brush</i> = <tt>create_brush</tt>()<dd><p>Create a new brush object with the default material properties.</p>
 
-<dt><tt>set_brush_color</tt>(<i>brush,</i>
-[<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,
-    s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,
-    a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,
-    e</i>])<dd><p>
-Set the material color properties of <i>brush</i>.  All colors are optional
-and any not specified retain their existing values.
-The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>)
-arguments give the diffuse color, 
-    (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>)
-give the specular color,
-    (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>)
-give the ambient color, and <i>e</i> gives the specular exponent.</p>
+<dt><tt>set_brush_color</tt>(<i>brush, d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,</i> [<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,</i> [<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,</i> [<i>e</i>]]])<dd><p>Set the material color properties of <i>brush</i>. The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>) arguments give the diffuse color, (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>) gives the specular color, (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>) gives the ambient color, and <i>e</i> gives the specular exponent. Specular, ambient, and specular exponent properties are optional and any not specified retain their existing values.</p>
 
-<dt><tt>set_brush_image</tt>(<i>brush, image</i>)<dd><p> Select
-<i>image</i> for use as the texture map of <i>brush</i>.</p>
+<dt><tt>set_brush_image</tt>(<i>brush, image</i>)<dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>.</p>
 
-<dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p> Specify a
-fragment program to be applied to <i>brush</i>.  The <i>file</i>
-argument gives a text file in ARB fragment program syntax.  To remove
-a fragment program, specify <tt>nil</tt> for the <i>file</i>
-argument.</p>
+<dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<dt><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)<dd><p> Specify a
-vertex program to be applied to <i>brush</i>.  The <i>file</i>
-argument gives a text file in ARB vertex program syntax.  to remove a
-vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+<dt><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)<dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB vertex program syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<p class="note"> ARB fragment and vertex program syntaxes were chosen
-because the standards are mature.  High-quality implementations are
-wide-spread and available on a nice array of hardware.  If you prefer
-a higher-level language, use one that can be compiled down to ARB_fp
-and ARB_vp, such as Cg. </p>
+<p class="note">ARB fragment and vertex program syntaxes were chosen because the standards are mature. High-quality implementations are wide-spread and available on a nice array of hardware. If you prefer a higher-level language, use one that can be compiled down to ARB_fp and ARB_vp, such as Cg.</p>
 
-<dt><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)<dd><p> Set or
-clear flags on the given brush.  Brush flags enable and disable the
-application of various material properties.  The <i>flag</i> argument
-gives the set of flags to be modified, and may be the sum of multiple
-flags.  The <i>value</i> argument is a boolean giving the desired
-state.  A value of <tt>true</tt> will set the given flags, and
-<tt>false</tt> will clear them. </p>
+<dt><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)<dd><p>Set or clear flags on the given brush. Brush flags enable and disable the application of various material properties. The <i>flag</i> argument gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> argument is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
 
 <ul>
 <li><tt>brush_flag_diffuse</tt>
 <li><tt>brush_flag_specular</tt>
 <li><tt>brush_flag_ambient</tt>
 <li><tt>brush_flag_shiny</tt>
-<p> These flags control the application of each of the material color
-properties.  If any of these flags is <tt>false</tt> then the
-corresponding material is not applied at all.  This provides
-applications with a mechanism to control how material properties to
-trickle down the entity hierachy. </p>
+<p>These flags control the application of each of the material color properties. If any of these flags is <tt>false</tt> then the corresponding material is not applied at all. This provides applications with a mechanism to control how material properties to trickle down the entity hierachy.</p>
 
-<li><tt>brush_flag_unlit</tt><p> Surfaces with an unlit brush are
-drawn with all lighting disabled.  They will appear fully bright.
-This is especially useful for sprite and wireframe objects which do
-not have lightable surfaces. </p>
+<li><tt>brush_flag_unlit</tt><p>Surfaces with an unlit brush are drawn with all lighting disabled. They will appear fully bright. This is especially useful for sprite and wireframe objects which do not have lightable surfaces.</p>
 
-<li><tt>brush_flag_transparent</tt><p> Surfaces with a transparent
-brush are drawn to the color buffer but not the depth buffer.  This
-prevents transparent objects from occluding opaque objects during the
-depth test. </p>
+<li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
 
 </ul>
-
 </dl>
 
 <!---------------------------------------------------------------------------->
 
 <a name="sound"><h2> 2.4. Sound </h2>
 
-<p> Electro provides a basic audio API suitable for adding simple
-sounds to an application.  It supports streaming of arbitrary stereo
-or mono Ogg Vorbis audio sources.  Any number of audio streams may
-play simultaneously. </p>
+<p>Electro provides a basic audio API suitable for adding simple sounds to an application. It supports streaming of arbitrary stereo or mono Ogg Vorbis audio sources. Any number of audio streams may play simultaneously.</p>
 
 <dl>
 
-<dt><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p> Open a
-reference to the named Ogg Vorbis audio stream.  This is the normal
-means by which audio is imported into an Electro application.  This
-function initializes a sound for playback, but does not start
-playback.</p>
+<dt><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p>Open a reference to the named Ogg Vorbis audio stream. This is the normal means by which audio is imported into an Electro application. This function initializes a sound for playback, but does not start playback.</p>
 
-<dt><tt>free_sound</tt>(<i>stream</i>)<dd><p> Close an audio stream
-and release all resources associated with it.
+<dt><tt>free_sound</tt>(<i>stream</i>)<dd><p>Close an audio stream and release all resources associated with it.
 </p>
 
-<dt><tt>play_sound</tt>(<i>stream</i>)<dd><p> Start playback of an
-audio stream.  If <i>stream</i> is already playing when this function
-is called, then the original playback will stop and the stream will be
-rewound to the beginning before being restarted.  If it is necessary
-to mix multiple instances of one specific sound, then multiple sound
-objects must be used.  </p>
+<dt><tt>play_sound</tt>(<i>stream</i>)<dd><p>Start playback of an audio stream. If <i>stream</i> is already playing when this function is called, then the original playback will stop and the stream will be rewound to the beginning before being restarted. If it is necessary to mix multiple instances of one specific sound, then multiple sound objects must be used.</p>
 
-<dt><tt>loop_sound</tt>(<i>stream</i>)<dd><p> Begin playing an audio
-stream, but automatically rewind it when the end is reached.  </p>
+<dt><tt>loop_sound</tt>(<i>stream</i>)<dd><p>Begin playing an audio stream, but automatically rewind it when the end is reached.</p>
 
-<dt><tt>stop_sound</tt>(<i>stream</i>)<dd><p> Stop a playing audio
-stream.  This function merely stops playback, and does not release any
-resources.  The stream may be restarted from the beginning.
+<dt><tt>stop_sound</tt>(<i>stream</i>)<dd><p>Stop a playing audio stream. This function merely stops playback, and does not release any resources. The stream may be restarted from the beginning.
 </p>
 
 </dl>
@@ -967,22 +526,15 @@ resources.  The stream may be restarted from the beginning.
 
 <a name="console"><h2> 2.5. Console </h2>
 
-<p> Electro uses a text console overlay to display error messages and enable
-run-time interaction with Lua state.  This console can be enabled and disabled
-by pressing F1. It also appears automatically whenever anything is printed to
-it.  Applications are free to use this console for their own purposes as well.
-For example, debugging information may be sent there. </p>
+<p>Electro uses a text console overlay to display error messages and enable run-time interaction with Lua state. This console can be enabled and disabled by pressing F1. It also appears automatically whenever anything is printed to it. Applications are free to use this console for their own purposes as well. For example, debugging information may be sent there.</p>
 
 <dl>
 
-<dt><tt>print_console</tt>(<i>...</i>)<dd></p> Print all string and
-number arguments to the console.  To print formatted output, pass
-arguments via Lua's <tt>string.format</tt> function. </p>
+<dt><tt>print_console</tt>(<i>...</i>)<dd></p> Print all string and number arguments to the console. To print formatted output, pass arguments via Lua's <tt>string.format</tt> function.</p>
 
-<dt><tt>clear_console</tt>()<dd><p> Clear the console to blank. </p>
+<dt><tt>clear_console</tt>()<dd><p>Clear the console to blank.</p>
 
-<dt><tt>color_console</tt>(<i>r, g, b</i>)<dd><p> Set the console text color to
-(<i>r, g, b</i>). </p>
+<dt><tt>color_console</tt>(<i>r, g, b</i>)<dd><p>Set the console text color to (<i>r, g, b</i>).</p>
 
 </dl>
 
@@ -993,157 +545,62 @@ arguments via Lua's <tt>string.format</tt> function. </p>
 <h3> 2.6.1. Hosts </h3>
 <dl>
 
-<dt><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>
-Add a host, returning a host index.  This function is used by
-configuration scripts to define the structure of the cluster driving a
-tiled display.</p>
+<dt><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>Add a host, returning a host index. This function is used by configuration scripts to define the structure of the cluster driving a tiled display.</p>
 
-<p> The <i>name</i> argument gives the Internet hostname of the
-rendering node to be used.  The <i>x, y, w, h</i> arguments give the
-position and size of the area of that host's desktop to be used for
-OpenGL rendering.  A given render node can only support one Electro
-host.  If the same <i>name</i> argument is reused for multiple
-configurations, only the first will be used.  If <i>name</i> is
-<tt>"default"</tt> then the given host configuration will be applied
-to all hosts not specifically named in another configuration.  If a
-render node is to handle multiple displays, they must be defined as
-Electro tiles.</p>
+<p>The <i>name</i> argument gives the Internet hostname of the rendering node to be used. The <i>x, y, w, h</i> arguments give the position and size of the area of that host's desktop to be used for OpenGL rendering. A given render node can only support one Electro host. If the same <i>name</i> argument is reused for multiple configurations, only the first will be used. If <i>name</i> is <tt>"default"</tt> then the given host configuration will be applied to all hosts not specifically named in another configuration. If a render node is to handle multiple displays, they must be defined as Electro tiles.</p>
 
-<p> Host configuration and rendering context creation is closely bound
-with MPI process initialization, so it must be performed immediately
-upon application startup, and cannot be modified later in an
-application's execution. </p>
+<p>Host configuration and rendering context creation is closely bound with MPI process initialization, so it must be performed immediately upon application startup, and cannot be modified later in an application's execution.</p>
 
-<dt><tt>set_host_flags</tt>(<i>host, flags, value</i>)<dd><p>Set or
-clear host flags on <i>host</i>.  The <i>flags</i> argument gives the
-set of flags to be modified and <i>value</i> gives the desired state.
-Like host window configurations, host flags must be specified at
-application startup and later modification will have no effect.  The
-default value for all flags is <tt>false</tt>.</p>
+<dt><tt>set_host_flags</tt>(<i>host, flags, value</i>)<dd><p>Set or clear host flags on <i>host</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state. Like host window configurations, host flags must be specified at application startup and later modification will have no effect. The default value for all flags is <tt>false</tt>.</p>
 
 <ul>
-<li><tt>host_flag_full</tt><p> The full flag sets a full-screen flag
-on the host's render window, causing it to fill the display, possibly
-switching the resolution of the display to match the configuration.
-This flag may be necessary to remove window decoration or other
-operating system screen clutter.</p>
+<li><tt>host_flag_full</tt><p>The full flag sets a full-screen flag on the host's render window, causing it to fill the display, possibly switching the resolution of the display to match the configuration. This flag may be necessary to remove window decoration or other operating system screen clutter.</p>
 
-<li><tt>host_flag_stereo</tt><p> The stereo flag enables quad-buffered
-stereo rendering on a host's render window.  If this flag is not
-specified at startup, later use of <tt>stereo_mode_quad</tt> will
-fail. </p>
+<li><tt>host_flag_stereo</tt><p>The stereo flag enables quad-buffered stereo rendering on a host's render window. If this flag is not specified at startup, later use of <tt>stereo_mode_quad</tt> will fail.</p>
 
-<li><tt>host_flag_framed</tt><p> The framed flag enables window
-decoration on a host's render window.  Unconfigured host windows are
-framed by default, but configured host windows are not. </p>
-
-<p class="note"> This framing policy fails in the case of a
-specially-configured non-full server window, so don't be suprised when
-Electro display an undecorated window in response to a custom server
-configuration.</p>
+<li><tt>host_flag_framed</tt><p>The framed flag enables window decoration on a host's render window. Unconfigured host windows are framed by default, but configured host windows are not.</p>
 
 </ul>
 
-<p class="note"> Full-screen and frame handling are notoriously
-unpredictable.  Both are subject to the whim of the operating system,
-the window manager, and the display.  Getting this right may take some
-experimentation. </p>
+<p class="note">Full-screen and frame handling are notoriously unpredictable. Both are subject to the whim of the operating system, the window manager, and the display. Getting this right may take some experimentation.</p>
 
 </dl>
 
 <h3> 2.6.2. Tiles </h3>
 <dl>
 
-<dt><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>
-Add a tile to a host, returning a tile index.  The <i>x, y, w, h</i>
-arguments give position and size of the area of the indexed host's
-render area to be used for display.
+<dt><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>Add a tile to a host, returning a tile index. The <i>x, y, w, h</i> arguments give position and size of the area of the indexed host's render area to be used for display.</p>
 
-<dt><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>,
-o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>,
-u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p> Set the
-world-space position of <i>tile</i>.  The (<i>o<sub>x</sub>,
-o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector
-of the origin of the tile, usually the real-space lower-left corner of
-the display to which the tile is rendered.  The (<i>r<sub>x</sub>,
-r<sub>y</sub>, r<sub>z</sub></i>) arguments give the "right" vector,
-from the origin to the lower-right corner.  The (<i>u<sub>x</sub>,
-u<sub>y</sub>, u<sub>z</sub></i>) arguments give the "up" vector, from
-the origin to the upper-left corner.</p>
+<dt><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>, u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p>Set the world-space position of <i>tile</i>. The (<i>o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector of the origin of the tile, usually the real-space lower-left corner of the display to which the tile is rendered. The (<i>r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub></i>) arguments give the "right" vector, from the origin to the lower-right corner. The (<i>u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>) arguments give the "up" vector, from the origin to the upper-left corner.</p>
 
-<p>These three vectors, with the view position vector, define the view
-frustum of the indexed tile's perspective projection.  The default
-view position vector is (<i>0, 0, 0</i>), though this is subject to
-the motion-tracked offset of any perspective camera used during
-rendering.</p>
+<p>These three vectors, with the view position vector, define the view frustum of the indexed tile's perspective projection. The default view position vector is (<i>0, 0, 0</i>), though this is subject to the motion-tracked offset of any perspective camera used during rendering.</p>
 
-<dt><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)<dd><p> Set the
-pixel area of <i>tile</i>.  This defines the range of any orthogonal
-camera used during rendering.</p>
+<dt><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)<dd><p>Set the pixel area of <i>tile</i>. This defines the range of any orthogonal camera used during rendering.</p>
 
-<dt><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)<dd><p> Set a
-world-space eye offset vector to be used when rendering to
-<i>tile</i>.  Tile view offset behaves just as camera view offset, but
-is applied on a per-tile basis rather than a per-camera basis.  This
-may be used to specify a non-default view position vector, but it is
-especially useful with an untracked stereo display such as a
-side-by-side Geowall configuration, where the stereo effect depends
-not upon a stereo camera mode, but upon a pair of tiles rendered from
-distinct viewpoints. </p>
+<dt><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)<dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as camera view offset, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side Geowall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
 
-<dt><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)<dd><p> Specify a
-world-space plane of reflection to be applied to the view position
-vector when rendering to <i>tile</i>.  The (<i>x, y, z</i>) arguments
-give the plane normal, and <i>d</i> gives the plane offset from the
-origin along the normal.  This allows a correct view frustem to be
-computed on PARIS and IDesk4 systems, where the view position vector
-is dynamically tracked, but the reflection of a tile is viewed in a
-mirror.  Reflection must be enabled by setting the
-<tt>tile_flag_mirror</tt> option, below.</p>
+<dt><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)<dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustem to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <tt>tile_flag_mirror</tt> option, below.</p>
 
-<dt><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)<dd><p>Set or
-clear tile flags on <i>tile</i>.  The <i>flags</i> argument gives the
-set of flags to be modified and <i>value</i> gives the desired
-state. </p>
+<dt><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)<dd><p>Set or clear tile flags on <i>tile</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state.</p>
 
 <ul>
-<li><tt>tile_flag_mirror</tt><p> The mirror flag enables projection of
-the view position vector across the plane given by
-<tt>set_tile_mirror</tt>.</p>
 
-<li><tt>tile_flag_flip_x</tt><li><tt>tile_flag_flip_y</tt><p> The flip
-flags cause the scene rendered to the tile to be flipped horizontally
-or vertically, respectively.  This may be used to correct tiles viewed
-by reflection in a mirror. </p>
+<li><tt>tile_flag_mirror</tt><p>The mirror flag enables projection of the view position vector across the plane given by <tt>set_tile_mirror</tt>.</p>
+
+<li><tt>tile_flag_flip_x</tt><li><tt>tile_flag_flip_y</tt><p>The flip flags cause the scene rendered to the tile to be flipped horizontally or vertically, respectively. This may be used to correct tiles viewed by reflection in a mirror.</p>
 
 </ul>
 
-<dt><tt>set_tile_linescreen</tt>(<i>tile, pitch, angle, thickness,
-shift, cycle</i>)<dd><p> Set the Varrier line screen parameters for
-<i>tile</i>.  These are only significant for
-<tt>stereo_mode_varrier</tt> camera modes.  They give the line screen
-pitch, angle of rotation about the tile's Z axis, optical thickness
-(shift along the tile's Z axis), shift along the tile's X axis, and
-duty cycle (percentage of black).</p>
+<dt><tt>set_tile_linescreen</tt>(<i>tile, pitch, angle, thickness, shift, cycle</i>)<dd><p>Set the Varrier line screen parameters for <i>tile</i>. These are only significant for <tt>stereo_mode_varrier</tt> camera modes. They give the line screen pitch, angle of rotation about the tile's Z axis, optical thickness (shift along the tile's Z axis), shift along the tile's X axis, and duty cycle (percentage of black).</p>
 
 </dl>
 
 <h3> 2.6.3. Query </h3>
 <dl>
 
-<dt><i>x, y, w, h</i> = <tt>get_display_union</tt>()<dd><p> Return the
-total pixel size of the display.  The return values <i>x, y, w, h</i>
-give the position, width, and height of the rectangle of available
-pixels.  This is the union of the viewports of all tile definitions.
-This information is often useful when positioning entities in view of
-an orthogonal camera, or configuring a scene to match the aspect ratio
-of a display. </p>
+<dt><i>x, y, w, h</i> = <tt>get_display_union</tt>()<dd><p>Return the total pixel size of the display. The return values <i>x, y, w, h</i> give the position, width, and height of the rectangle of available pixels. This is the union of the viewports of all tile definitions. This information is often useful when positioning entities in view of an orthogonal camera, or configuring a scene to match the aspect ratio of a display.</p>
 
-<dt><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>,
-max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> =
-<tt>get_display_bound</tt>()<dd><p> Return the axis-aligned bounding
-box of the entire display, in world coordinates.  This information is
-useful when positioning entities in view of a perspective camera. </p>
+<dt><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_display_bound</tt>()<dd><p>Return the axis-aligned bounding box of the entire display, in world coordinates. This information is useful when positioning entities in view of a perspective camera.</p>
 
 </dl>
 
@@ -1152,47 +609,19 @@ useful when positioning entities in view of a perspective camera. </p>
 <a name="miscellaneous"><h2> 2.7. Miscellaneous API </h2>
 <dl>
 
-<dt><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>,
-T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>,
-B<sub>b</sub></i>])<dd><p> Set the backgound color of the display.  If
-only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is
-specified, the background will appear a solid color.  If an optional
-second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is
-supplied, the background will be drawn with a top-to-bottom gradient.
-The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to
-(<i>0.1, 0.2, 0.4</i>). </p>
+<dt><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>])<dd><p>Set the backgound color of the display. If only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is specified, the background will appear a solid color. If an optional second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is supplied, the background will be drawn with a top-to-bottom gradient. The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>0.1, 0.2, 0.4</i>).</p>
 
-<dt><tt>set_typeface</tt>(<i>filename</i>, [<i>epsilon,
-outline</i>])<dd><p> Set the typeface to be used for all subsequently
-created string entities.  The filename gives a TrueType font file.</p>
+<dt><tt>set_typeface</tt>(<i>filename</i>, [<i>epsilon, outline</i>])<dd><p>Set the typeface to be used for all subsequently created string entities. The filename gives a TrueType font file.</p>
 
-<p> The optional <i>epsilon</i> parameter gives an error bound in
-world units to which glyphs are tesselated.  This allows the
-application to make a quality-speed trade-off, favoring finely
-tesselated text for magnified string entities, and coarse text for
-minimized string entities.  The default <i>epsilon</i> value is
-<i>0.001</i>.</p>
+<p>The optional <i>epsilon</i> parameter gives an error bound in world units to which glyphs are tesselated. This allows the application to make a quality-speed trade-off, favoring finely tesselated text for magnified string entities, and coarse text for minimized string entities. The default <i>epsilon</i> value is <i>0.001</i>.</p>
 
-<p> The optional <i>outline</i> parameter gives the width of the glyph
-outline.  The default value is <i>0.0</i> and glyphs are rendered
-without outline.</p>
+<p>The optional <i>outline</i> parameter gives the width of the glyph outline. The default value is <i>0.0</i> and glyphs are rendered without outline.</p>
 
-<p class="note">Applications that use multiple typefaces need not be
-concerned about the cost of switching typefaces.  The overhead of
-loading a new typeface is incurred only the first time.  Applications
-are free to switch from one typeface to another and back again without
-penalty.  Note, however that two typefaces with different
-<i>epsilon</i> or <i>outline</i> values are distinct even when loaded
-from the same TrueType font file.</p>
+<p class="note">Applications that use multiple typefaces need not be concerned about the cost of switching typefaces. The overhead of loading a new typeface is incurred only the first time. Applications are free to switch from one typeface to another and back again without penalty. Note, however that two typefaces with different <i>epsilon</i> or <i>outline</i> values are distinct even when loaded from the same TrueType font file.</p>
 
-<dt><tt>enable_timer</tt>(<i>enabled</i>)<dd><p> Enable or disable the
-<tt>do_timer</tt> callback.  If <i>enabled</i> has value <tt>true</tt>
-then callback will occur.  </p>
+<dt><tt>enable_timer</tt>(<i>enabled</i>)<dd><p>Enable or disable the <tt>do_timer</tt> callback. If <i>enabled</i> has value <tt>true</tt> then callback will occur.</p>
 
-<dt><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>
-Return the current state of a keyboard modifier.  The return value is
-<tt>true</tt> if the modifier key is down.  The queryable modifiers
-are:
+<dt><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>Return the current state of a keyboard modifier. The return value is <tt>true</tt> if the modifier key is down. The queryable modifiers are:
 
 <ul>
 <li><tt>key_modifier_shift</tt>
@@ -1201,16 +630,9 @@ are:
 </ul>
 </p>
 
-<dt><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>
-Return the current value of the X and Y axes of joystick <i>number</i>.</p>
+<dt><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>Return the current value of the X and Y axes of joystick <i>number</i>.</p>
 
-<p class="note"> There is no direct mechanism provided to determine
-the number of joysticks connected to the system.  The capability
-exists in SDL, but it isn't really necessary in Electro.  If an
-application needs to count joysticks, it should observe the device
-numbers recieved by the <tt>do_joystick</tt> callback.  For example,
-allow the user to select the number of active joysticks by pressing
-Start on each.</p>
+<p class="note">There is no direct mechanism provided to determine the number of joysticks connected to the system. The capability exists in SDL, but it isn't really necessary in Electro. If an application needs to count joysticks, it should observe the device numbers recieved by the <tt>do_joystick</tt> callback. For example, allow the user to select the number of active joysticks by pressing Start on each.</p>
 
 </dl>
 
@@ -1218,22 +640,11 @@ Start on each.</p>
 
 <h1> 3. Callbacks </h1>
 
-<p> Callback functions are the mechanism by which Electro Lua
-applications respond to user interface events.  An application may
-define these functions as needed.  If a function exists then it is
-invoked when the corresponding event occurs.  Callback functions
-should return a boolean value to indicate whether the event resulted
-in a dirty screen.  Returning <tt>true</tt> schedules a screen update
-to occur at the next opportunity. </p>
+<p>Callback functions are the mechanism by which Electro Lua applications respond to user interface events. An application may define these functions as needed. If a function exists then it is invoked when the corresponding event occurs. Callback functions should return a boolean value to indicate whether the event resulted in a dirty screen. Returning <tt>true</tt> schedules a screen update to occur at the next opportunity.</p>
 
 <dl>
 
-<dt><tt> do_point(dx, dy) </tt> <dd><p> This callback is invoked
-whenever the mouse pointer moves within the Electro main window.
-Motion is reported relatively, so the pointer may move an unlimited
-distance in any direction.  Absolute position is not reported.  If
-absolute mouse position is necessary, then it must be tracked
-manually, as follows: </p>
+<dt><tt>do_point(dx, dy)</tt><dd><p>This callback is invoked whenever the mouse pointer moves within the Electro main window. Motion is reported relatively, so the pointer may move an unlimited distance in any direction. Absolute position is not reported. If absolute mouse position is necessary, then it must be tracked manually, as follows:</p>
 
 <pre>
 mouse_x = 0
@@ -1246,27 +657,11 @@ function do_point(dx, dy)
 end
 </pre>
 
-<dt><tt> do_click(b, s) </tt><dd><p> This callback is invoked whenever
-a mouse button is pressed or released.  The <tt>b</tt> argument gives
-the button number, 1, 2, 3, etc.  The <tt>s</tt> argument is a boolean
-giving button state.  A value of <tt>true</tt> indicates the button
-has been pressed, and <tt>false</tt> indicates it has been released.
-Note, on most modern systems mouse wheel up and down are reported as
-presses of buttons 4 and 5.  Button press events on wheel buttons do
-not have accompanying release events. </p>
+<dt><tt>do_click(b, s)</tt><dd><p>This callback is invoked whenever a mouse button is pressed or released. The <tt>b</tt> argument gives the button number, 1, 2, 3, etc. The <tt>s</tt> argument is a boolean giving button state. A value of <tt>true</tt> indicates the button has been pressed, and <tt>false</tt> indicates it has been released. Note, on most modern systems mouse wheel up and down are reported as presses of buttons 4 and 5. Button press events on wheel buttons do not have accompanying release events.</p>
 
-<dt><tt> do_timer(dt) </tt><dd><p> The <tt>do_timer</tt> callback is
-invoked regularly while idling is enabled.  The <tt>dt</tt> argument
-gives the amount of time, in seconds, that has passed since the last
-time the callback was invoked.  The rate of callback is not defined,
-but it will happen as often as is possible.  The <tt>do_timer</tt>
-function is intended to be used to update animations and other
-background processes.  Applications should be sure to return
-<tt>true</tt> in order to force an update to the display.</p>
+<dt><tt>do_timer(dt)</tt><dd><p>The <tt>do_timer</tt> callback is invoked regularly while idling is enabled. The <tt>dt</tt> argument gives the amount of time, in seconds, that has passed since the last time the callback was invoked. The rate of callback is not defined, but it will happen as often as is possible. The <tt>do_timer</tt> function is intended to be used to update animations and other background processes. Applications should be sure to return <tt>true</tt> in order to force an update to the display.</p>
 
-<p> If an absolute measure of time is necessary, applications should
-accumulate  the <tt>dt</tt> parameter, just as they would accumulate
-relative mouse motion. </p>
+<p>If an absolute measure of time is necessary, applications should accumulate  the <tt>dt</tt> parameter, just as they would accumulate relative mouse motion.</p>
 
 <pre>
 time = 0
@@ -1279,37 +674,15 @@ function do_timer(dt)
 end
 </pre>
 
-<p class="note"> The update rate of the <tt>do_timer</tt> callback is
-deliberately obscured because it is nearly impossible to guarantee.
-While it might make sense to allow an application to request a
-callback rate, this request can only be precisely filled in a limited
-number of cases.  Just trust the <tt>dt</tt>.</p>
+<p class="note">The update rate of the <tt>do_timer</tt> callback is deliberately obscured because it is nearly impossible to guarantee. While it might make sense to allow an application to request a callback rate, this request can only be precisely filled in a limited number of cases. Just trust the <tt>dt</tt>.</p>
 
-<dt><tt> do_frame() </tt><dd><p> This callback is invoked immediately
-before a frame is rendered.  This is useful for operations that should
-be performed exactly once per frame. </p>
+<dt><tt> do_frame() </tt><dd><p>This callback is invoked immediately before a frame is rendered. This is useful for operations that should be performed exactly once per frame.</p>
 
-<p> In general, events are queued and several events are handled
-during each frame period.  This is necessary because rendering is
-usually more expensive than event handling, and re-rendering after
-each event leads to sluggish performance.  Often, the most efficient
-event-handling organization is to accumulate events as they arrive (as
-in the <tt>do_timer</tt> and <tt>do_point</tt> examples) and use the
-resulting totals to update the scene at the last moment. </p>
+<p>In general, events are queued and several events are handled during each frame period. This is necessary because rendering is usually more expensive than event handling, and re-rendering after each event leads to sluggish performance. Often, the most efficient event-handling organization is to accumulate events as they arrive (as in the <tt>do_timer</tt> and <tt>do_point</tt> examples) and use the resulting totals to update the scene at the last moment.</p>
 
-<p> Unlike other callbacks, the "dirty" flag return value from
-<tt>do_frame</tt> is ignored, as a redraw has already been
-scheduled. </p>
+<p>Unlike other callbacks, the "dirty" flag return value from <tt>do_frame</tt> is ignored, as a redraw has already been scheduled.</p>
 
-<dt><tt> do_keyboard(k, s) </tt><dd><p> This callback is invoked
-whenever a key is pressed or released.  The <tt>s</tt> argument is a
-boolean giving the key state.  The <tt>k</tt> argument gives a key
-identifier.  For most keys, this gives the ASCII value of the
-unshifted character.  For non-ASCII keys and modifiers it is a unique
-identifier outside of the range of ASCII.  A full listing of keys and
-their associated values would be lengthy and uninteresting.  When in
-doubt about the value of a key, query it interactively as follows:
-</p>
+<dt><tt>do_keyboard(k, s)</tt><dd><p>This callback is invoked whenever a key is pressed or released. The <tt>s</tt> argument is a boolean giving the key state. The <tt>k</tt> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. A full listing of keys and their associated values would be lengthy and uninteresting. When in doubt about the value of a key, query it interactively as follows:</p>
 
 <pre>
 function do_keyboard(k, s)
@@ -1322,14 +695,7 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<dt><tt> do_joystick(n, b, s) </tt><dd><p> This callback is invoked
-whenever a joystick button is pressed or released.  The <tt>n</tt>
-argument gives the joystick device number.  The <tt>b</tt> argument
-gives the button number.  The <tt>s</tt> argument is a boolean giving
-button state.  Applications respond to button presses in an
-event-driven fashion, but they should read joystick axis input more
-continuously.  Usually joystick axes are aquired by calling
-<tt>joystick_axis</tt> in a <tt>do_timer</tt> callback. </p>
+<dt><tt>do_joystick(n, b, s)</tt><dd><p>This callback is invoked whenever a joystick button is pressed or released. The <tt>n</tt> argument gives the joystick device number. The <tt>b</tt> argument gives the button number. The <tt>s</tt> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are aquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt> callback.</p>
 
 </dl>
 

@@ -1,15 +1,14 @@
-Object geometry create
-delete image / brush
 Bound recompute
 collision detection
+delete image / brush
 texture transform
 sphere map brush flag
 replace get_sprite_size with bound query
 new billboard transform
-Uniform API
 Lua state flush / app switch
 Telnet to luasocket
 Tracker buttons
+Uniform API
 
 
 profilers
