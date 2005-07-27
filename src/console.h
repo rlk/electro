@@ -31,6 +31,7 @@ int  input_console(int, int);
 void clear_console(void);
 void color_console(float, float, float);
 void print_console(const char *);
+void debug_console(const char *);
 void error_console(const char *);
 
 /*---------------------------------------------------------------------------*/

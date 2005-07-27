@@ -60,17 +60,26 @@ void recv_set_brush_flags(void);
 void send_set_brush_image(int, int);
 void recv_set_brush_image(void);
 
-void send_set_brush_frag_prog(int, const char *);
-void recv_set_brush_frag_prog(void);
+void send_set_brush_rotation(int, float);
+void recv_set_brush_rotation(void);
 
-void send_set_brush_vert_prog(int, const char *);
-void recv_set_brush_vert_prog(void);
+void send_set_brush_position(int, const float[2]);
+void recv_set_brush_position(void);
+
+void send_set_brush_scale(int, const float[2]);
+void revc_set_brush_scale(void);
 
 void send_set_brush_color(int, const float[4],
                                const float[4],
                                const float[4],
                                const float[1], int);
 void recv_set_brush_color(void);
+
+void send_set_brush_frag_prog(int, const char *);
+void recv_set_brush_frag_prog(void);
+
+void send_set_brush_vert_prog(int, const char *);
+void recv_set_brush_vert_prog(void);
 
 /*---------------------------------------------------------------------------*/
 

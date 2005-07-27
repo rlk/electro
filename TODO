@@ -1,8 +1,12 @@
+network optional
 Bound recompute
 collision detection
 delete image / brush
 texture transform
-sphere map brush flag
+brush flags
+    cube map
+    object space texgen
+    eye space texgen
 replace get_sprite_size with bound query
 new billboard transform
 Lua state flush / app switch
@@ -15,6 +19,7 @@ profilers
 display volume query / smart viewobj
 cooler vortex demo
 Varrier finalize
+debug dump?
 
 
 App

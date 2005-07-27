@@ -3,6 +3,8 @@ scale  = false
 test   = false
 scene  = nil
 
+objects = { }
+
 zoom  = 1
 rot_x = 0
 rot_y = 0
@@ -24,6 +26,7 @@ end
 function add_object(i, s)
     local object = E.create_object(s)
     E.parent_entity(object, scene)
+    table.insert(objects, object)
 end
 
 function do_start()
@@ -44,7 +47,7 @@ function do_start()
 
     table.foreach(E.argument, add_object)
 
---  E.enable_timer(true)
+    E.enable_timer(true)
 end
 
 function do_timer(dt)
@@ -137,6 +140,19 @@ function do_keyboard(k, s)
             return true
         end
 
+        if k == 287 then
+            table.foreach(objects, function (id, object)
+                E.set_entity_flag(object, E.entity_flag_wireframe, true)
+            end)
+            return true
+        end
+        if k == 288 then
+            table.foreach(objects, function (id, object)
+                E.set_entity_flag(object, E.entity_flag_wireframe, false)
+            end)
+            return true
+        end
+
 	if k == 277 then
             rot_dy = rot_dy + 1
 	end
@@ -166,7 +182,7 @@ function do_keyboard(k, s)
     return false
 end
 
-help()
+--help()
 do_start()
 
-E.set_background(0, 0, 0)
+--E.set_background(0, 0, 0)

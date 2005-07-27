@@ -197,6 +197,23 @@ static void E_pushsound(lua_State *L, int id)
 /*===========================================================================*/
 /* Function argument error reporters                                         */
 
+static void E_dump_stack(lua_State *L)
+{
+    struct lua_Debug ar;
+    int i;
+
+    for (i = 1; lua_getstack(L, i, &ar); ++i)
+        if (lua_getinfo(L, "Snl", &ar))
+        {
+            int line = ar.currentline;
+
+            if (ar.name)
+                debug("%5d: %s() %s:%d", i, ar.name, ar.source, line);
+            else
+                debug("%5d: toplevel %s:%d", i, ar.source, line);
+        }
+}
+
 static void E_type_error(const char *type, lua_State *L, int i)
 {
     const char *name = lua_tostring(L, lua_upvalueindex(1));
@@ -215,6 +232,7 @@ static void E_type_error(const char *type, lua_State *L, int i)
         got = lua_typename(L, lua_type(L, i));
 
     error("'%s' expected %s, got %s", name, type, got);
+    E_dump_stack(L);
 }
 
 static void E_arity_error(lua_State *L, int i)
@@ -222,6 +240,7 @@ static void E_arity_error(lua_State *L, int i)
     const char *name = lua_tostring(L, lua_upvalueindex(1));
 
     error("'%s' expected %d parameters, got %d", name, -i, lua_gettop(L));
+    E_dump_stack(L);
 }
 
 /*---------------------------------------------------------------------------*/

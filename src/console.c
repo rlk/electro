@@ -567,4 +567,26 @@ void error_console(const char *str)
     image_dirty    = 1;
 }
 
+void debug_console(const char *str)
+{
+    unsigned char r = console_r;
+    unsigned char g = console_g;
+    unsigned char b = console_b;
+
+    color_console(1.0f, 0.5f, 0.0f);
+
+    write_console(str);
+    write_console("\n");
+    
+#ifndef NDEBUG
+    fprintf(stderr, "%s\n", str);
+#endif
+
+    console_r = r;
+    console_g = g;
+    console_b = b;
+    console_enable = 1;
+    image_dirty    = 1;
+}
+
 /*---------------------------------------------------------------------------*/
