@@ -67,8 +67,9 @@ FT2LIB  = $(shell $(FT2_CONFIG) --libs)
 LUALIB  = -llua -llualib -lluasocket
 IMGLIB  = -ljpeg -lpng -lz -lm
 OGGLIB  = -lvorbisfile
+ODELIB  = -lode -lstdc++
 
-LIBS += $(SDLLIB) $(FT2LIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+LIBS += $(ODELIB) $(SDLLIB) $(FT2LIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
 OBJS =	src/version.o  \
 	src/opengl.o   \
@@ -82,6 +83,7 @@ OBJS =	src/version.o  \
 	src/frustum.o  \
 	src/display.o  \
 	src/console.o  \
+	src/physics.o  \
 	src/buffer.o   \
 	src/server.o   \
 	src/client.o   \

@@ -1,11 +1,11 @@
-dofile("examples/cube.lua")
+dofile("examples/box.lua")
 
 tumble = false
 scale  = false
 
-zoom  = 1
-rot_x = 0
-rot_y = 0
+zoom  = 0.25
+rot_x = 45
+rot_y = 45
 
 typeface = "../VeraBd.ttf"
 
@@ -18,21 +18,24 @@ function do_start()
     pivot  = E.create_pivot()
 
     E.set_typeface(typeface, 0.001, 0.04)
-    thing = make_cube("shiny.jpg")
+    thing1 = make_box("../green.jpg", 16, 1, 16)
+    thing2 = make_box("../grey.jpg", 1, 1, 1)
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
-    E.parent_entity(thing, pivot)
+    E.parent_entity(thing1, pivot)
+    E.parent_entity(thing2, pivot)
 
     E.set_entity_flag(thing, E.entity_flag_line_smooth, true)
 
-    x0, y0, z0, x1, y1, z1 = E.get_entity_bound(thing)
+    E.set_entity_position(light, 0.0,  8.0,   8.0)
+    E.set_entity_position(pivot, 0.0, -8.0, -20.0)
+    E.set_entity_rotation(pivot, rot_x, rot_y, 0)
+    E.set_entity_scale   (pivot, zoom, zoom, zoom)
 
-    E.set_entity_position(light, 0.0,  10.0,   0.0)
-    E.set_entity_position(pivot, 0.0, -10.0, -10.0)
---    E.set_entity_position(thing, -(x1 - x0) / 2,
---                                 -(y1 - y0) / 2,
---                                 -(z1 - z0) / 2)
+    E.set_entity_position(thing2, 0.0, 4.0, 0.0)
+
+    E.enable_timer(true)
 end
 
 function do_keyboard(k, s)
@@ -41,16 +44,11 @@ function do_keyboard(k, s)
 
     if s then
         if k == 287 then
-            E.set_entity_flag(thing, E.entity_flag_wireframe, true)
+            E.set_entity_flag(camera, E.entity_flag_wireframe, true)
             return true
         end
         if k == 288 then
-            E.set_entity_flag(thing, E.entity_flag_wireframe, false)
-            return true
-        end
-        if k == string.byte("v") then
-            local v = math.random(E.get_vert_count(thing)) - 1
-            E.delete_vert(thing, v)
+            E.set_entity_flag(camera, E.entity_flag_wireframe, false)
             return true
         end
     end
@@ -93,4 +91,5 @@ function do_point(dx, dy)
     return false
 end
 
+E.set_background(0.8, 0.8, 1.0, 0.2, 0.4, 1.0)
 do_start()

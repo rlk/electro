@@ -10,6 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -18,6 +19,7 @@
 #include "vector.h"
 #include "frustum.h"
 #include "display.h"
+#include "physics.h"
 #include "matrix.h"
 #include "buffer.h"
 #include "entity.h"
@@ -49,16 +51,16 @@ struct entity
     float bound[6];
     float alpha;
 
-    /* Entity bound. */
-
-    float origin[3];
-    float radius;
-
     /* Entity hierarchy. */
 
     int car;
     int cdr;
     int par;
+
+    /* Physical representations. */
+
+    dBodyID body;
+    dGeomID geom;
 };
 
 static vector_t            entity;
@@ -312,6 +314,11 @@ static void create_entity(int i, int type, int data)
     e->alpha    = 1;
 
     attach_entity(i, 0);
+
+    if (entity_func[type]       &&
+        entity_func[type]->bbox &&
+        entity_func[type]->bbox(data, e->bound))
+        e->flags |= FLAG_BOUNDED;
 }
 
 int send_create_entity(int type, int data)
@@ -320,10 +327,18 @@ int send_create_entity(int type, int data)
 
     if ((i = new_entity()) >= 0)
     {
+        struct entity *e = get_entity(i);
+
         send_index(type);
         send_index(data);
     
         create_entity(i, type, data);
+
+        if (type == TYPE_OBJECT)
+        {
+            e->body = create_physics_body();
+            e->geom = create_physics_box(e->body, e->bound);
+        }
 
         return i;
     }
@@ -392,6 +407,8 @@ void send_set_entity_position(int i, const float p[3])
     send_float((e->position[0] = p[0]));
     send_float((e->position[1] = p[1]));
     send_float((e->position[2] = p[2]));
+
+    set_physics_position(e->geom, e->position);
 }
 
 void send_set_entity_basis(int i, const float M[16])
@@ -414,6 +431,7 @@ void send_set_entity_basis(int i, const float M[16])
     send_float(M[10]);
 
     load_mat(e->rotation, M);
+    set_physics_rotation(e->geom, e->rotation);
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -652,11 +670,6 @@ void get_entity_bound(int i, float v[6])
 {
     struct entity *e = get_entity(i);
 
-    if (entity_func[e->type]       &&
-        entity_func[e->type]->bbox &&
-        entity_func[e->type]->bbox(e->data, e->bound))
-        e->flags |= FLAG_BOUNDED;
-
     v[0] = e->bound[0];
     v[1] = e->bound[1];
     v[2] = e->bound[2];
@@ -778,7 +791,7 @@ void draw_entities(void)
     opengl_check("draw_entities");
 }
 
-void step_entities(void)
+void step_entities(float dt)
 {
     float r[2][3];
     float p[2][3];
@@ -817,6 +830,30 @@ void step_entities(void)
                 send_set_entity_rotation(i, r[0]);
             if (e->flags & FLAG_ROT_TRACKED_1)
                 send_set_entity_rotation(i, r[1]);
+        }
+    }
+
+    /* Run the physical simulation and update all entity states. */
+
+    physics_step(dt);
+
+    for (i = 0; i < n; ++i)
+    {
+        struct entity *e = get_entity(i);
+
+        if (e->type)
+        {
+            get_physics_position(e->geom, e->position);
+            get_physics_rotation(e->geom, e->rotation);
+/*
+            float p[3], R[16];
+
+            get_physics_position(e->geom, p);
+            get_physics_rotation(e->geom, R);
+
+            send_set_entity_position(i, p);
+            send_set_entity_basis   (i, R);
+*/
         }
     }
 }

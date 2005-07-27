@@ -10,18 +10,28 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef PHYSICS_H
+#define PHYSICS_H
+
+#include <ode/ode.h>
 
 /*---------------------------------------------------------------------------*/
 
-#define TITLE "Electro"
+void physics_step(float);
 
 /*---------------------------------------------------------------------------*/
 
-void enable_timer(int);
+dBodyID create_physics_body(void);
+dGeomID create_physics_box(dBodyID, const float[6]);
 
-void server(int, char **);
+void    set_physics_position(dGeomID, const float[3]);
+void    get_physics_position(dGeomID,       float[3]);
+void    set_physics_rotation(dGeomID, const float[16]);
+void    get_physics_rotation(dGeomID,       float[16]);
+
+/*---------------------------------------------------------------------------*/
+
+int startup_physics();
 
 /*---------------------------------------------------------------------------*/
 

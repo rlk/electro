@@ -20,6 +20,7 @@
 #include "joystick.h"
 #include "console.h"
 #include "display.h"
+#include "physics.h"
 #include "buffer.h"
 #include "script.h"
 #include "entity.h"
@@ -112,7 +113,7 @@ static void server_draw(void)
 
 static void server_step(void)
 {
-    step_entities();
+    step_entities((float) (SDL_GetTicks() - server_time) / 1000.0);
 }
 
 static void server_perf(void)
@@ -258,21 +259,16 @@ static int server_loop(void)
     {
         do_frame_script();
 
-        if (dirty)
-            send_event(EVENT_DRAW);
-
+        send_event(EVENT_DRAW);
         send_event(EVENT_NULL);
         sync_buffer();
 
-        if (dirty)
-        {
-            server_draw();
-            server_perf();
-            server_step();
+        server_draw();
+        server_perf();
+        server_step();
 
-            dirty = 0;
-            count = count + 1;
-        }
+        dirty = 0;
+        count = count + 1;
     }
 
     if (timer_on)
@@ -343,6 +339,7 @@ void server(int argc, char *argv[])
         
             if (startup_console(CONSOLE_COLS, CONSOLE_ROWS) &&
                 startup_joystick() &&
+                startup_physics()  &&
                 startup_buffer()   &&
                 startup_display()  &&
                 startup_tracker()  &&

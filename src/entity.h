@@ -146,8 +146,8 @@ int   get_entity_child(int, int);
 
 /*===========================================================================*/
 
+void step_entities(float);
 void draw_entities(void);
-void step_entities(void);
 void init_entities(void);
 void fini_entities(void);
 

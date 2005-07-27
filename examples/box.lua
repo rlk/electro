@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 -- This is an example use of the object creation API.  It creates and returns
--- a cube textured using the named image file.
+-- a box textured using the named image file and extents.
 
 function make_side(O, m, p1, p2, p3, p4, n)
     local v1 = E.create_vert(O, p1[1], p1[2], p1[3], n[1], n[2], n[3], 0, 0)
@@ -12,19 +12,19 @@ function make_side(O, m, p1, p2, p3, p4, n)
     E.create_face(O, m, v3, v4, v1)
 end
 
-function make_cube(file)
-    local v000 = { -1, -1, -1 }
-    local v001 = { -1, -1,  1 }
-    local v010 = { -1,  1, -1 }
-    local v011 = { -1,  1,  1 }
-    local v100 = {  1, -1, -1 }
-    local v101 = {  1, -1,  1 }
-    local v110 = {  1,  1, -1 }
-    local v111 = {  1,  1,  1 }
+function make_box(file, x, y, z)
+    local v000 = { -x, -y, -z }
+    local v001 = { -x, -y,  z }
+    local v010 = { -x,  y, -z }
+    local v011 = { -x,  y,  z }
+    local v100 = {  x, -y, -z }
+    local v101 = {  x, -y,  z }
+    local v110 = {  x,  y, -z }
+    local v111 = {  x,  y,  z }
 
     local O = E.create_object()
-    local i = E.create_image(file)
     local b = E.create_brush()
+    local i = E.create_image(file)
     local m = E.create_mesh(O, b)
 
     E.set_brush_image(b, i)

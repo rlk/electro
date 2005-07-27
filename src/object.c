@@ -78,9 +78,6 @@ struct object
     vector_t mv;
 
     GLuint buffer;
-
-    float origin[3];
-    float radius;
 };
 
 static vector_t object;
