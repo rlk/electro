@@ -35,6 +35,7 @@
 #include "galaxy.h"
 #include "light.h"
 #include "pivot.h"
+#include "physics.h"
 #include "utility.h"
 #include "entity.h"
 #include "sound.h"
@@ -590,16 +591,94 @@ static int E_set_entity_flags(lua_State *L)
 static int E_set_entity_solid(lua_State *L)
 {
     int n = lua_gettop  (L);
-    int t = L_getinteger(L, -n + 1);
+    int i = E_getentity (L, -n + 0);
+    int o = L_getinteger(L, -n + 1);
 
-    float v[4];
+    switch (o)
+    {
+    case SOLID_TYPE:
+        send_set_entity_solid(i, o,
+                              L_getinteger(L, -n + 2), 0, 0, 0, 0);  break;
+    case SOLID_BOX_PARAM:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2),
+                              L_getnumber (L, -n + 3),
+                              L_getnumber (L, -n + 4), 0);           break;
+    case SOLID_PLANE_PARAM:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2),
+                              L_getnumber (L, -n + 3),
+                              L_getnumber (L, -n + 4),
+                              L_getnumber (L, -n + 5));              break;
+    case SOLID_SPHERE_PARAM:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
+    case SOLID_CAPSULE_PARAM:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2),
+                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case SOLID_CATEGORY_BITS:
+        send_set_entity_solid(i, o,
+                              L_getinteger(L, -n + 2), 0, 0, 0, 0);  break;
+    case SOLID_COLLIDER_BITS:
+        send_set_entity_solid(i, o,
+                              L_getinteger(L, -n + 2), 0, 0, 0, 0);  break;
+    case SOLID_DENSITY:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
+    case SOLID_FRICTION:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
+    case SOLID_RESTITUTION:
+        send_set_entity_solid(i, o, 0,
+                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
+    }
+    return 0;
+}
 
-    v[0] = (t >= SOLID_SPHERE)  ? L_getnumber(L, -n + 2) : 0;
-    v[1] = (t >= SOLID_CAPSULE) ? L_getnumber(L, -n + 3) : 0;
-    v[2] = (t >= SOLID_BOX)     ? L_getnumber(L, -n + 4) : 0;
-    v[3] = (t >= SOLID_PLANE)   ? L_getnumber(L, -n + 5) : 0;
+static int E_set_entity_joint(lua_State *L)
+{
+    int n = lua_gettop  (L);
+    int i = E_getentity (L, -n + 0);
+    int j = E_getentity (L, -n + 1);
+    int o = L_getinteger(L, -n + 2);
 
-    send_set_entity_solid(E_getentity(L, -n), t, v);
+    switch (o)
+    {
+    case JOINT_TYPE:
+        send_set_entity_joint(i, j, o,
+                              L_getinteger(L, -n + 3), 0, 0, 0);     break;
+    case JOINT_ANCHOR:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3),
+                              L_getnumber (L, -n + 4),
+                              L_getnumber (L, -n + 5));              break;
+    case JOINT_AXIS_1:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3),
+                              L_getnumber (L, -n + 4),
+                              L_getnumber (L, -n + 5));              break;
+    case JOINT_AXIS_2:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3),
+                              L_getnumber (L, -n + 4),
+                              L_getnumber (L, -n + 5));              break;
+    case JOINT_MIN_VALUE:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case JOINT_MAX_VALUE:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case JOINT_VELOCITY:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case JOINT_FORCE:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case JOINT_RESTITUTION:
+        send_set_entity_joint(i, j, o, 0,
+                              L_getnumber (L, -n + 3), 0, 0);        break;
+    }
     return 0;
 }
 
@@ -1798,13 +1877,20 @@ void add_argument(int i, const char *arg)
 /*===========================================================================*/
 /* Script setup/shutdown                                                     */
 
-#define lua_function(L, n, f) (lua_pushstring(L, n),      \
-                               lua_pushstring(L, n),      \
-                               lua_pushcclosure(L, f, 1), \
-                               lua_settable(L, -3))
-#define lua_constant(L, n, v) (lua_pushstring(L, n), \
-                               lua_pushnumber(L, v), \
-                               lua_settable(L, -3))
+static void lua_function(lua_State *L, const char *n, lua_CFunction f)
+{
+    lua_pushstring(L, n);
+    lua_pushstring(L, n);
+    lua_pushcclosure(L, f, 1);
+    lua_settable(L, -3);
+}
+
+static void lua_constant(lua_State *L, const char *n, int v)
+{
+    lua_pushstring(L, n);
+    lua_pushnumber(L, v);
+    lua_settable(L, -3);
+}
 
 void luaopen_electro(lua_State *L)
 {
@@ -1813,7 +1899,7 @@ void luaopen_electro(lua_State *L)
     lua_pushstring(L, "E");
     lua_newtable(L);
 
-    /* Entity contructors and destructor. */
+    /* Entity contructors and destructors */
 
     lua_function(L, "create_camera",         E_create_camera);
     lua_function(L, "create_sprite",         E_create_sprite);
@@ -1824,7 +1910,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "create_pivot",          E_create_pivot);
     lua_function(L, "create_clone",          E_create_clone);
 
-    /* Entity functions. */
+    /* Entity functions */
 
     lua_function(L, "parent_entity",         E_parent_entity);
     lua_function(L, "delete_entity",         E_delete_entity);
@@ -1838,6 +1924,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
     lua_function(L, "set_entity_flags",      E_set_entity_flags);
     lua_function(L, "set_entity_solid",      E_set_entity_solid);
+    lua_function(L, "set_entity_joint",      E_set_entity_joint);
 
     lua_function(L, "get_entity_position",   E_get_entity_position);
     lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
@@ -1850,7 +1937,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "move_entity",           E_move_entity);
     lua_function(L, "turn_entity",           E_turn_entity);
 
-    /* Object functions. */
+    /* Object functions */
 
     lua_function(L, "create_mesh",           E_create_mesh);
     lua_function(L, "create_vert",           E_create_vert);
@@ -1877,40 +1964,40 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "delete_face",           E_delete_face);
     lua_function(L, "delete_edge",           E_delete_edge);
 
-    /* Sprite functions. */
+    /* Sprite functions */
 
     lua_function(L, "set_sprite_brush",      E_set_sprite_brush);
     lua_function(L, "set_sprite_range",      E_set_sprite_range);
 
-    /* String functions. */
+    /* String functions */
 
     lua_function(L, "set_string_fill",       E_set_string_fill);
     lua_function(L, "set_string_line",       E_set_string_line);
     lua_function(L, "set_string_text",       E_set_string_text);
 
-    /* Camera functions. */
+    /* Camera functions */
 
     lua_function(L, "set_camera_offset",     E_set_camera_offset);
     lua_function(L, "set_camera_stereo",     E_set_camera_stereo);
 
-    /* Light functions. */
+    /* Light functions */
 
     lua_function(L, "set_light_color",       E_set_light_color);
 
-    /* Galaxy functions. */
+    /* Galaxy functions */
 
     lua_function(L, "set_galaxy_magnitude",  E_set_galaxy_magnitude);
     lua_function(L, "get_star_index",        E_get_star_index);
     lua_function(L, "get_star_position",     E_get_star_position);
 
-    /* Image functions. */
+    /* Image functions */
 
     lua_function(L, "create_image",          E_create_image);
     lua_function(L, "delete_image",          E_delete_image);
     lua_function(L, "get_image_pixel",       E_get_image_pixel);
     lua_function(L, "get_image_size",        E_get_image_size);
 
-    /* Brush functions. */
+    /* Brush functions */
 
     lua_function(L, "create_brush",          E_create_brush);
     lua_function(L, "delete_brush",          E_delete_brush);
@@ -1920,7 +2007,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_brush_frag_prog",   E_set_brush_frag_prog);
     lua_function(L, "set_brush_vert_prog",   E_set_brush_vert_prog);
 
-    /* Sound functions. */
+    /* Sound functions */
 
     lua_function(L, "load_sound",            E_load_sound);
     lua_function(L, "free_sound",            E_free_sound);
@@ -1928,7 +2015,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "play_sound",            E_play_sound);
     lua_function(L, "loop_sound",            E_loop_sound);
 
-    /* Console */
+    /* Console functions */
 
     lua_function(L, "clear_console",         E_clear_console);
     lua_function(L, "color_console",         E_color_console);
@@ -1957,7 +2044,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_background",        E_set_background);
     lua_function(L, "exit",                  E_exit);
 
-    /* Constants. */
+    /* Entity Constants */
 
     lua_constant(L, "entity_flag_hidden",        FLAG_HIDDEN);
     lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
@@ -1967,13 +2054,46 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0);
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
-    lua_constant(L, "entity_flag_weightless",    FLAG_WEIGHTLESS);
 
-    lua_constant(L, "entity_solid_box",          SOLID_BOX);
-    lua_constant(L, "entity_solid_none",         SOLID_NONE);
-    lua_constant(L, "entity_solid_plane",        SOLID_PLANE);
-    lua_constant(L, "entity_solid_sphere",       SOLID_SPHERE);
-    lua_constant(L, "entity_solid_capsule",      SOLID_CAPSULE);
+    /* Solid constants */
+
+    lua_constant(L, "solid_type",                SOLID_TYPE);
+    lua_constant(L, "solid_box_param",           SOLID_BOX_PARAM);
+    lua_constant(L, "solid_plane_param",         SOLID_PLANE_PARAM);
+    lua_constant(L, "solid_sphere_param",        SOLID_SPHERE_PARAM);
+    lua_constant(L, "solid_capsule_param",       SOLID_CAPSULE_PARAM);
+    lua_constant(L, "solid_category_bits",       SOLID_CATEGORY_BITS);
+    lua_constant(L, "solid_collider_bits",       SOLID_COLLIDER_BITS);
+    lua_constant(L, "solid_density",             SOLID_DENSITY);
+    lua_constant(L, "solid_friction",            SOLID_FRICTION);
+    lua_constant(L, "solid_restitution",         SOLID_RESTITUTION);
+
+    lua_constant(L, "solid_type_none",           SOLID_TYPE_NONE);
+    lua_constant(L, "solid_type_box",            SOLID_TYPE_BOX);
+    lua_constant(L, "solid_type_plane",          SOLID_TYPE_PLANE);
+    lua_constant(L, "solid_type_sphere",         SOLID_TYPE_SPHERE);
+    lua_constant(L, "solid_type_capsule",        SOLID_TYPE_CAPSULE);
+
+    /* Joint constants */
+
+    lua_constant(L, "joint_type",                JOINT_TYPE);
+    lua_constant(L, "joint_anchor",              JOINT_ANCHOR);
+    lua_constant(L, "joint_axis_1",              JOINT_AXIS_1);
+    lua_constant(L, "joint_axis_2",              JOINT_AXIS_2);
+    lua_constant(L, "joint_min_value",           JOINT_MIN_VALUE);
+    lua_constant(L, "joint_max_value",           JOINT_MAX_VALUE);
+    lua_constant(L, "joint_velocity",            JOINT_VELOCITY);
+    lua_constant(L, "joint_force",               JOINT_FORCE);
+    lua_constant(L, "joint_restitution",         JOINT_RESTITUTION);
+
+    lua_constant(L, "joint_type_none",           JOINT_TYPE_NONE);
+    lua_constant(L, "joint_type_ball",           JOINT_TYPE_BALL);
+    lua_constant(L, "joint_type_hinge",          JOINT_TYPE_HINGE);
+    lua_constant(L, "joint_type_slider",         JOINT_TYPE_SLIDER);
+    lua_constant(L, "joint_type_universal",      JOINT_TYPE_UNIVERSAL);
+    lua_constant(L, "joint_type_hinge_2",        JOINT_TYPE_HINGE_2);
+
+    /* Brush constants */
 
     lua_constant(L, "brush_flag_diffuse",        BRUSH_DIFFUSE);
     lua_constant(L, "brush_flag_specular",       BRUSH_SPECULAR);
@@ -1981,6 +2101,8 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "brush_flag_shiny",          BRUSH_SHINY);
     lua_constant(L, "brush_flag_transparent",    BRUSH_TRANSPARENT);
     lua_constant(L, "brush_flag_unlit",          BRUSH_UNLIT);
+
+    /* Configuration constants */
 
     lua_constant(L, "host_flag_full",            HOST_FULL);
     lua_constant(L, "host_flag_stereo",          HOST_STEREO);
@@ -1991,6 +2113,8 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "tile_flag_offset",          TILE_OFFSET);
     lua_constant(L, "tile_flag_mirror",          TILE_MIRROR);
     lua_constant(L, "tile_flag_test",            TILE_TEST);
+
+    /* Camera constants */
 
     lua_constant(L, "camera_type_orthogonal",    CAMERA_ORTHO);
     lua_constant(L, "camera_type_perspective",   CAMERA_PERSP);
@@ -2003,8 +2127,12 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "stereo_mode_varrier_33",    STEREO_VARRIER_33);
     lua_constant(L, "stereo_mode_varrier_41",    STEREO_VARRIER_41);
 
+    /* Light constants */
+
     lua_constant(L, "light_type_positional",     LIGHT_POSITIONAL);
     lua_constant(L, "light_type_directional",    LIGHT_DIRECTIONAL);
+
+    /* Miscellaneous constants */
 
     lua_constant(L, "key_modifier_shift",        KMOD_SHIFT);
     lua_constant(L, "key_modifier_control",      KMOD_CTRL);

@@ -9,7 +9,8 @@ solid
    capsule r l
 
 category
-    0..31
+    category 0..31
+    collides 0..32
 
 contact
     mu

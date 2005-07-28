@@ -56,9 +56,8 @@ struct entity
     int cdr;
     int par;
 
-    /* Physical representations. */
+    /* Physical representation. */
 
-    dBodyID body;
     dGeomID geom;
 };
 
@@ -454,21 +453,23 @@ void send_set_entity_flags(int i, int flags, int state)
         e->flags = e->flags | ( flags);
     else
         e->flags = e->flags & (~flags);
-
-    if (e->body) set_physics_flags(e->body, e->flags);
 }
 
-void send_set_entity_solid(int i, int solid, const float v[4])
+void send_set_entity_solid(int i, int o, int f, float a,
+                           float b, float c, float d)
 {
     struct entity *e = get_entity(i);
 
-    if (e->geom) dGeomDestroy(e->geom);
-    if (e->body) dBodyDestroy(e->body);
+    e->geom = set_physics_solid(e->geom, o, f, a, b, c, d);
+}
 
-    e->body = create_physics_body(solid);
-    e->geom = create_physics_geom(solid, e->body, v);;
+void send_set_entity_joint(int i, int j, int o, int f,
+                           float a, float b, float c)
+{
+    struct entity *e1 = get_entity(i);
+    struct entity *e2 = get_entity(j);
 
-    if (e->body) set_physics_flags(e->body, e->flags);
+    set_physics_joint(e1->geom, e2->geom, o, f, a, b, c);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -814,7 +815,7 @@ void step_entities(float dt)
     {
         struct entity *e = get_entity(i);
 
-        if (e->type && e->body && e->geom)
+        if (e->type && e->geom)
         {
             set_physics_position(e->geom, e->position);
             set_physics_rotation(e->geom, e->rotation);
@@ -827,7 +828,7 @@ void step_entities(float dt)
     {
         struct entity *e = get_entity(i);
 
-        if (e->type && e->body && e->geom)
+        if (e->type && e->geom)
         {
             get_physics_position(e->geom, e->position);
             get_physics_rotation(e->geom, e->rotation);

@@ -14,7 +14,10 @@ function add_box()
     local object = E.create_object("lil_box.obj")
     E.parent_entity(object, pivot)
 
-    E.set_entity_solid   (object, E.entity_solid_box, 2, 2, 2)
+    E.set_entity_solid(object, E.solid_type, E.solid_type_box)
+    E.set_entity_solid(object, E.solid_box_param, 2, 2, 2)
+    E.set_entity_solid(object, E.solid_restitution, 0.0)
+
     E.set_entity_position(object, 0.0, 20.0, 0.0)
     E.set_entity_rotation(object, math.random(-180, 180),
                                   math.random(-180, 180),
@@ -27,7 +30,10 @@ function add_ball()
     local object = E.create_object("ball.obj")
     E.parent_entity(object, pivot)
 
-    E.set_entity_solid   (object, E.entity_solid_sphere, 1)
+    E.set_entity_solid(object, E.solid_type, E.solid_type_sphere)
+    E.set_entity_solid(object, E.solid_sphere_param, 1)
+    E.set_entity_solid(object, E.solid_restitution, 0.8)
+
     E.set_entity_position(object, 0.0, 20.0, 0.0)
     E.set_entity_rotation(object, math.random(-180, 180),
                                   math.random(-180, 180),
@@ -51,7 +57,8 @@ function do_start()
     E.parent_entity(pivot, light)
     E.parent_entity(plane, pivot)
 
-    E.set_entity_solid(plane, E.entity_solid_plane, 0, 1, 0, 0)
+    E.set_entity_solid(plane, E.solid_type, E.solid_type_plane)
+    E.set_entity_solid(plane, E.solid_restitution, 0.0)
     E.set_entity_scale(plane, 8, 8, 8)
 
     E.set_entity_position(light, 0.0,  8.0,   8.0)

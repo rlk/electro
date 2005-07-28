@@ -40,15 +40,6 @@
 #define FLAG_ROT_TRACKED_0 0x0040
 #define FLAG_POS_TRACKED_1 0x0080
 #define FLAG_ROT_TRACKED_1 0x0100
-#define FLAG_WEIGHTLESS    0x0200
-
-/* Entity solid types. */
-
-#define SOLID_NONE     0
-#define SOLID_SPHERE   1
-#define SOLID_CAPSULE  2
-#define SOLID_BOX      3
-#define SOLID_PLANE    4
 
 /* Initial entity vector sizes. */
 
@@ -121,19 +112,20 @@ void  send_set_entity_bound    (int, const float[6]);
 void  send_set_entity_basis    (int, const float[16]);
 void  send_set_entity_alpha    (int, float);
 void  send_set_entity_flags    (int, int, int);
-void  send_set_entity_solid    (int, int, const float[4]);
+void  send_set_entity_solid    (int, int, int, float, float, float, float);
+void  send_set_entity_joint    (int, int, int, int,   float, float, float);
 
 void  send_move_entity(int, const float[3]);
 void  send_turn_entity(int, const float[3]);
 
 /*---------------------------------------------------------------------------*/
 
-void  recv_set_entity_position (void);
-void  recv_set_entity_basis    (void);
-void  recv_set_entity_scale    (void);
-void  recv_set_entity_bound    (void);
-void  recv_set_entity_alpha    (void);
-void  recv_set_entity_flags    (void);
+void  recv_set_entity_position(void);
+void  recv_set_entity_basis   (void);
+void  recv_set_entity_scale   (void);
+void  recv_set_entity_bound   (void);
+void  recv_set_entity_alpha   (void);
+void  recv_set_entity_flags   (void);
 
 /*---------------------------------------------------------------------------*/
 
