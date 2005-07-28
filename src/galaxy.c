@@ -484,22 +484,20 @@ static void draw_galaxy(int j, int i, int f, float a)
     glPopMatrix();
 }
 
-static int bbox_galaxy(int i, float bound[6])
+static void aabb_galaxy(int i, float aabb[6])
 {
     struct galaxy *g = get_galaxy(i);
 
     if (g->N)
     {
-        bound[0] = g->N->bound[0];
-        bound[1] = g->N->bound[1];
-        bound[2] = g->N->bound[2];
-        bound[3] = g->N->bound[3];
-        bound[4] = g->N->bound[4];
-        bound[5] = g->N->bound[5];
-
-        return 1;
+        aabb[0] = g->N->bound[0];
+        aabb[1] = g->N->bound[1];
+        aabb[2] = g->N->bound[2];
+        aabb[3] = g->N->bound[3];
+        aabb[4] = g->N->bound[4];
+        aabb[5] = g->N->bound[5];
     }
-    return 0;
+    else memset(aabb, 0, 6 * sizeof (float));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -531,7 +529,7 @@ static struct entity_func galaxy_func = {
     "galaxy",
     init_galaxy,
     fini_galaxy,
-    bbox_galaxy,
+    aabb_galaxy,
     draw_galaxy,
     dupe_galaxy,
     free_galaxy,

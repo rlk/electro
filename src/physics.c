@@ -12,6 +12,8 @@
 
 #include <ode/ode.h>
 
+#include "entity.h"
+
 /*---------------------------------------------------------------------------*/
 
 static dWorldID      world;
@@ -19,6 +21,7 @@ static dSpaceID      space;
 static dJointGroupID group;
 
 #define MAX_CONTACTS 4
+#define DENSITY      5.0
 
 /*---------------------------------------------------------------------------*/
 
@@ -40,10 +43,10 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
 
     for (i=0; i<MAX_CONTACTS; ++i)
     {
-        contact[i].surface.mode       = dContactBounce | dContactSoftCFM;
+        contact[i].surface.mode       = dContactBounce;
         contact[i].surface.mu         = dInfinity;
         contact[i].surface.mu2        = 0.00;
-        contact[i].surface.bounce     = 0.10;
+        contact[i].surface.bounce     = 0.50;
         contact[i].surface.bounce_vel = 0.10;
         contact[i].surface.soft_cfm   = 0.01;
     }
@@ -61,7 +64,8 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
 void physics_step(float dt)
 {
     dSpaceCollide(space, 0, callback);
-    dWorldQuickStep(world, 0.005);
+    dWorldQuickStep(world, dt);
+    dJointGroupEmpty(group);
 }
 
 /*===========================================================================*/
@@ -83,22 +87,44 @@ static void get_rotation(float D[16], const dMatrix3 S)
 
 /*---------------------------------------------------------------------------*/
 
-dBodyID create_physics_body(void)
+static dGeomID create_physics_box(dBodyID body, const float v[3])
 {
-    return dBodyCreate(world);
-}
-
-dGeomID create_physics_box(dBodyID body, const float bound[6])
-{
-    float dx = bound[3] - bound[0];
-    float dy = bound[4] - bound[1];
-    float dz = bound[5] - bound[2];
+    dGeomID geom = dCreateBox(space, v[0], v[1], v[2]);
     dMass m;
 
-    dGeomID geom = dCreateBox(space, dx, dy, dz);
+    dMassSetBox(&m, DENSITY, v[0], v[1], v[2]);
+    dBodySetMass(body, &m);
+    dGeomSetBody(geom, body);
 
-    dMassSetBox(&m, 5, dx, dy, dz);
+    return geom;
+}
 
+static dGeomID create_physics_plane(dBodyID body, const float v[4])
+{
+    dGeomID geom = dCreatePlane(space, v[0], v[1], v[2], v[3]);
+    dGeomSetBody(geom, body);
+
+    return geom;
+}
+
+static dGeomID create_physics_sphere(dBodyID body, const float v[1])
+{
+    dGeomID geom = dCreateSphere(space, v[0]);
+    dMass m;
+
+    dMassSetSphere(&m, DENSITY, v[0]);
+    dBodySetMass(body, &m);
+    dGeomSetBody(geom, body);
+
+    return geom;
+}
+
+static dGeomID create_physics_capsule(dBodyID body, const float v[2])
+{
+    dGeomID geom = dCreateCCylinder(space, v[0], v[1]);
+    dMass m;
+
+    dMassSetCappedCylinder(&m, DENSITY, 3, v[0], v[1]);
     dBodySetMass(body, &m);
     dGeomSetBody(geom, body);
 
@@ -107,20 +133,44 @@ dGeomID create_physics_box(dBodyID body, const float bound[6])
 
 /*---------------------------------------------------------------------------*/
 
+dBodyID create_physics_body(int solid)
+{
+    switch (solid)
+    {
+    case SOLID_BOX:     return dBodyCreate(world);
+    case SOLID_SPHERE:  return dBodyCreate(world);
+    case SOLID_CAPSULE: return dBodyCreate(world);
+    }
+    return 0;
+}
+
+dGeomID create_physics_geom(int solid, dBodyID body, const float v[4])
+{
+    switch (solid)
+    {
+    case SOLID_BOX:     return create_physics_box    (body, v);
+    case SOLID_PLANE:   return create_physics_plane  (body, v);
+    case SOLID_SPHERE:  return create_physics_sphere (body, v);
+    case SOLID_CAPSULE: return create_physics_capsule(body, v);
+    }
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
 void set_physics_position(dGeomID geom, const float p[3])
 {
-    if (geom) dGeomSetPosition(geom, p[0], p[1], p[2]);
+    if (dGeomGetClass(geom) != dPlaneClass)
+        dGeomSetPosition(geom, p[0], p[1], p[2]);
 }
 
 void get_physics_position(dGeomID geom, float p[3])
 {
-    if (geom)
+    if (dGeomGetClass(geom) != dPlaneClass)
     {
         p[0] = dGeomGetPosition(geom)[0];
         p[1] = dGeomGetPosition(geom)[1];
         p[2] = dGeomGetPosition(geom)[2];
-
-        printf("%f %f %f\n", p[0], p[1], p[2]);
     }
 }
 
@@ -130,7 +180,7 @@ void set_physics_rotation(dGeomID geom, const float r[16])
 {
     dMatrix3 R;
 
-    if (geom)
+    if (dGeomGetClass(geom) != dPlaneClass)
     {
         set_rotation(R, r);
         dGeomSetRotation(geom, R);
@@ -139,7 +189,18 @@ void set_physics_rotation(dGeomID geom, const float r[16])
 
 void get_physics_rotation(dGeomID geom, float r[16])
 {
-    if (geom) get_rotation(r, dGeomGetRotation(geom));
+    if (dGeomGetClass(geom) != dPlaneClass)
+        get_rotation(r, dGeomGetRotation(geom));
+}
+
+/*---------------------------------------------------------------------------*/
+
+void set_physics_flags(dBodyID body, int flags)
+{
+    if (flags & FLAG_WEIGHTLESS)
+        dBodySetGravityMode(body, 0);
+    else
+        dBodySetGravityMode(body, 1);
 }
 
 /*===========================================================================*/
@@ -148,9 +209,15 @@ int startup_physics(void)
 {
     world = dWorldCreate();
     space = dHashSpaceCreate(0);
+    group = dJointGroupCreate(0);
 
-    dWorldSetGravity(world, 0, -9.0, 0);
+    dWorldSetGravity(world, 0, -9.8, 0);
     dWorldSetAutoDisableFlag(world, 1);
+    /*
+    dWorldSetCFM(world, 1e-5);
+    dWorldSetContactMaxCorrectingVel(world, 0.1);
+    dWorldSetContactSurfaceLayer(world, 0.001);
+    */
 
     return 1;
 }

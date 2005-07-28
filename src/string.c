@@ -32,20 +32,26 @@ struct string
     char *text;
     int   fill;
     int   line;
+
+    float aabb_cache[6];
+    int   aabb_state;
 };
 
 static vector_t string;
 
 /*---------------------------------------------------------------------------*/
 
-#define S(i) ((struct string *) vecget(string, i))
+static struct string *get_string(int i)
+{
+    return (struct string *) vecget(string, i);
+}
 
 static int new_string(void)
 {
     int i, n = vecnum(string);
 
     for (i = 0; i < n; ++i)
-        if (S(i)->count == 0)
+        if (get_string(i)->count == 0)
             return i;
 
     return vecadd(string);
@@ -59,17 +65,19 @@ int send_create_string(const char *text)
 
     if ((i = new_string()) >= 0)
     {
+        struct string *s = get_string(i);
+
         send_event(EVENT_CREATE_STRING);
 
-        S(i)->text  = memdup(text, n, 1);
-        S(i)->font  = get_font();
-        S(i)->count = 1;
-        S(i)->fill  = 0;
-        S(i)->line  = 0;
+        s->text  = memdup(text, n, 1);
+        s->font  = get_font();
+        s->count = 1;
+        s->fill  = 0;
+        s->line  = 0;
 
         send_index(n);
         send_array(text, n, 1);
-        send_index(S(i)->font);
+        send_index(s->font);
 
         return send_create_entity(TYPE_STRING, i);
     }
@@ -81,13 +89,15 @@ void recv_create_string(void)
     int i = new_string();
     int n = recv_index();
 
-    S(i)->text = (char *) malloc(n);
-    recv_array(S(i)->text, n, 1);
+    struct string *s = get_string(i);
 
-    S(i)->font  = recv_index();
-    S(i)->count = 1;
-    S(i)->fill  = 0;
-    S(i)->line  = 0;
+    s->text = (char *) malloc(n);
+    recv_array(s->text, n, 1);
+
+    s->font  = recv_index();
+    s->count = 1;
+    s->fill  = 0;
+    s->line  = 0;
 
     recv_create_entity();
 }
@@ -96,7 +106,7 @@ void recv_create_string(void)
 
 void send_set_string_fill(int i, int j)
 {
-    struct string *s = S(i);
+    struct string *s = get_string(i);
 
     dupe_brush(j);
     free_brush(s->fill);
@@ -111,7 +121,7 @@ void recv_set_string_fill(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct string *s = S(i);
+    struct string *s = get_string(i);
 
     dupe_brush(j);
     free_brush(s->fill);
@@ -123,7 +133,7 @@ void recv_set_string_fill(void)
 
 void send_set_string_line(int i, int j)
 {
-    struct string *s = S(i);
+    struct string *s = get_string(i);
 
     dupe_brush(j);
     free_brush(s->line);
@@ -138,7 +148,7 @@ void recv_set_string_line(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct string *s = S(i);
+    struct string *s = get_string(i);
 
     dupe_brush(j);
     free_brush(s->line);
@@ -150,6 +160,7 @@ void recv_set_string_line(void)
 
 void send_set_string_text(int i, const char *text)
 {
+    struct string *s = get_string(i);
     int n = strlen(text) + 1;
 
     send_event(EVENT_SET_STRING_TEXT);
@@ -157,11 +168,11 @@ void send_set_string_text(int i, const char *text)
     send_index(n);
     send_array(text, n, 1);
 
-    if (S(i)->text)
-        free(S(i)->text);
+    if (s->text)
+        free(s->text);
 
-    if ((S(i)->text = (char *) malloc(n)))
-        strcpy(S(i)->text, text);
+    if ((s->text = (char *) malloc(n)))
+        strcpy(s->text, text);
 }
 
 void recv_set_string_text(void)
@@ -169,23 +180,39 @@ void recv_set_string_text(void)
     int i = recv_index();
     int n = recv_index();
 
-    if (S(i)->text)
-        free(S(i)->text);
+    struct string *s = get_string(i);
 
-    if ((S(i)->text = (char *) malloc(n)))
-        recv_array(S(i)->text, n, 1);
+    if (s->text)
+        free(s->text);
+
+    if ((s->text = (char *) malloc(n)))
+        recv_array(s->text, n, 1);
 }
 
 /*===========================================================================*/
 
-static int bbox_string(int i, float bound[6])
+static void aabb_string(int i, float aabb[6])
 {
-    bbox_font(S(i)->font, S(i)->text, bound);
-    return 1;
+    struct string *s = get_string(i);
+
+    if (s->aabb_state == 0)
+    {
+        aabb_font(s->font, s->text, s->aabb_cache);
+        s->aabb_state = 1;
+    }
+
+    aabb[0] = s->aabb_cache[0];
+    aabb[1] = s->aabb_cache[1];
+    aabb[2] = s->aabb_cache[2];
+    aabb[3] = s->aabb_cache[3];
+    aabb[4] = s->aabb_cache[4];
+    aabb[5] = s->aabb_cache[5];
 }
 
 static void draw_string(int j, int i, int f, float a)
 {
+    struct string *s = get_string(i);
+
     glPushMatrix();
     {
         transform_entity(j);
@@ -200,11 +227,11 @@ static void draw_string(int j, int i, int f, float a)
             glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
             glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
 
-            draw_brush(S(i)->fill, a * get_entity_alpha(j));
-            draw_font (S(i)->font, S(i)->text, 0);
+            draw_brush(s->fill, a * get_entity_alpha(j));
+            draw_font (s->font, s->text, 0);
 
-            draw_brush(S(i)->line, a * get_entity_alpha(j));
-            draw_font (S(i)->font, S(i)->text, 1);
+            draw_brush(s->line, a * get_entity_alpha(j));
+            draw_font (s->font, s->text, 1);
         }
         glPopAttrib();
 
@@ -217,13 +244,15 @@ static void draw_string(int j, int i, int f, float a)
 
 static void dupe_string(int i)
 {
-    S(i)->count++;
+    get_string(i)->count++;
 }
 
 static void free_string(int i)
 {
-    if (--S(i)->count == 0)
-        memset(S(i), 0, sizeof (struct string));
+    struct string *s = get_string(i);
+
+    if (--s->count == 0)
+        memset(s, 0, sizeof (struct string));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -232,7 +261,7 @@ static struct entity_func string_func = {
     "string",
     NULL,
     NULL,
-    bbox_string,
+    aabb_string,
     draw_string,
     dupe_string,
     free_string,

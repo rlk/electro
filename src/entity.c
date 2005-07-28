@@ -48,7 +48,6 @@ struct entity
     float rotation[16];
     float position[3];
     float scale[3];
-    float bound[6];
     float alpha;
 
     /* Entity hierarchy. */
@@ -181,13 +180,6 @@ static void init_entity(int i)
 
     if (e->state == 0)
     {
-        /* Find the bounding box of this entity, if any. */
-
-        if (entity_func[e->type]       &&
-            entity_func[e->type]->bbox &&
-            entity_func[e->type]->bbox(e->data, e->bound))
-            e->flags |= FLAG_BOUNDED;
-
         e->state = 1;
     }
 }
@@ -204,17 +196,22 @@ static void fini_entity(int i)
 
 /*---------------------------------------------------------------------------*/
 
-int test_entity_bbox(int i)
+int test_entity_aabb(int i)
 {
     struct entity *e = get_entity(i);
     struct frustum F;
 
-    if (e->flags & FLAG_BOUNDED)
-    {
-        get_frustum(&F);
-        return tst_frustum(&F, e->bound);
-    }
 
+    if (entity_func[e->type] &&
+        entity_func[e->type]->aabb)
+    {
+        float aabb[6];
+
+        entity_func[e->type]->aabb(e->data, aabb);
+        get_frustum(&F);
+
+        return tst_frustum(&F, aabb);
+    }
     return 1;
 }
 
@@ -314,11 +311,6 @@ static void create_entity(int i, int type, int data)
     e->alpha    = 1;
 
     attach_entity(i, 0);
-
-    if (entity_func[type]       &&
-        entity_func[type]->bbox &&
-        entity_func[type]->bbox(data, e->bound))
-        e->flags |= FLAG_BOUNDED;
 }
 
 int send_create_entity(int type, int data)
@@ -327,18 +319,10 @@ int send_create_entity(int type, int data)
 
     if ((i = new_entity()) >= 0)
     {
-        struct entity *e = get_entity(i);
-
         send_index(type);
         send_index(data);
     
         create_entity(i, type, data);
-
-        if (type == TYPE_OBJECT)
-        {
-            e->body = create_physics_body();
-            e->geom = create_physics_box(e->body, e->bound);
-        }
 
         return i;
     }
@@ -408,7 +392,7 @@ void send_set_entity_position(int i, const float p[3])
     send_float((e->position[1] = p[1]));
     send_float((e->position[2] = p[2]));
 
-    set_physics_position(e->geom, e->position);
+    if (e->geom) set_physics_position(e->geom, e->position);
 }
 
 void send_set_entity_basis(int i, const float M[16])
@@ -431,7 +415,8 @@ void send_set_entity_basis(int i, const float M[16])
     send_float(M[10]);
 
     load_mat(e->rotation, M);
-    set_physics_rotation(e->geom, e->rotation);
+
+    if (e->geom) set_physics_rotation(e->geom, e->rotation);
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -444,21 +429,6 @@ void send_set_entity_scale(int i, const float v[3])
     send_float((e->scale[0] = v[0]));
     send_float((e->scale[1] = v[1]));
     send_float((e->scale[2] = v[2]));
-}
-
-void send_set_entity_bound(int i, const float v[3])
-{
-    struct entity *e = get_entity(i);
-
-    send_event(EVENT_SET_ENTITY_BOUND);
-    send_index(i);
-
-    send_float((e->bound[0] = v[0]));
-    send_float((e->bound[1] = v[1]));
-    send_float((e->bound[2] = v[2]));
-    send_float((e->bound[3] = v[3]));
-    send_float((e->bound[4] = v[4]));
-    send_float((e->bound[5] = v[5]));
 }
 
 void send_set_entity_alpha(int i, float a)
@@ -484,6 +454,21 @@ void send_set_entity_flags(int i, int flags, int state)
         e->flags = e->flags | ( flags);
     else
         e->flags = e->flags & (~flags);
+
+    if (e->body) set_physics_flags(e->body, e->flags);
+}
+
+void send_set_entity_solid(int i, int solid, const float v[4])
+{
+    struct entity *e = get_entity(i);
+
+    if (e->geom) dGeomDestroy(e->geom);
+    if (e->body) dBodyDestroy(e->body);
+
+    e->body = create_physics_body(solid);
+    e->geom = create_physics_geom(solid, e->body, v);;
+
+    if (e->body) set_physics_flags(e->body, e->flags);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -587,18 +572,6 @@ void recv_set_entity_scale(void)
     e->scale[2] = recv_float();
 }
 
-void recv_set_entity_bound(void)
-{
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
-
-    e->bound[0] = recv_float();
-    e->bound[1] = recv_float();
-    e->bound[2] = recv_float();
-    e->bound[3] = recv_float();
-    e->bound[4] = recv_float();
-    e->bound[5] = recv_float();
-}
-
 void recv_set_entity_alpha(void)
 {
     struct entity *e = (struct entity *) vecget(entity, recv_index());
@@ -670,12 +643,11 @@ void get_entity_bound(int i, float v[6])
 {
     struct entity *e = get_entity(i);
 
-    v[0] = e->bound[0];
-    v[1] = e->bound[1];
-    v[2] = e->bound[2];
-    v[3] = e->bound[3];
-    v[4] = e->bound[4];
-    v[5] = e->bound[5];
+    if (entity_func[e->type] &&
+        entity_func[e->type]->aabb)
+        entity_func[e->type]->aabb(e->data, v);
+    else
+        memset(v, 0, 6 * sizeof (float));
 }
 
 float get_entity_alpha(int i)
@@ -793,47 +765,61 @@ void draw_entities(void)
 
 void step_entities(float dt)
 {
-    float r[2][3];
-    float p[2][3];
-    float M[16];
-
     int i, n = vecnum(entity);
 
-    /* Acquire tracking info. */
-
-    get_tracker_position(0, p[0]);
-    get_tracker_position(1, p[1]);
-    get_tracker_rotation(0, r[0]);
-    get_tracker_rotation(1, r[1]);
-
-    load_rot_mat(M, 1, 0, 0, r[0][0]);
-    mult_rot_mat(M, 0, 1, 0, r[0][1]);
-    mult_rot_mat(M, 0, 0, 1, r[0][2]);
-
-    /* Distribute it to all cameras and tracked entities. */
-
-    for (i = 0; i < n; ++i)
+    if (get_tracker_status())
     {
-        struct entity *e = get_entity(i);
+        /* Acquire tracking info. */
 
-        if (e->type == TYPE_CAMERA)
-            send_set_camera_offset(e->data, p[0], M);
+        float r[2][3];
+        float p[2][3];
+        float M[16];
 
-        else if (e->type)
+        get_tracker_position(0, p[0]);
+        get_tracker_position(1, p[1]);
+        get_tracker_rotation(0, r[0]);
+        get_tracker_rotation(1, r[1]);
+
+        load_rot_mat(M, 1, 0, 0, r[0][0]);
+        mult_rot_mat(M, 0, 1, 0, r[0][1]);
+        mult_rot_mat(M, 0, 0, 1, r[0][2]);
+
+        /* Distribute it to all cameras and tracked entities. */
+
+        for (i = 0; i < n; ++i)
         {
-            if (e->flags & FLAG_POS_TRACKED_0)
-                send_set_entity_position(i, p[0]);
-            if (e->flags & FLAG_POS_TRACKED_1)
-                send_set_entity_position(i, p[1]);
+            struct entity *e = get_entity(i);
 
-            if (e->flags & FLAG_ROT_TRACKED_0)
-                send_set_entity_rotation(i, r[0]);
-            if (e->flags & FLAG_ROT_TRACKED_1)
-                send_set_entity_rotation(i, r[1]);
+            if (e->type == TYPE_CAMERA)
+                send_set_camera_offset(e->data, p[0], M);
+
+            else if (e->type)
+            {
+                if (e->flags & FLAG_POS_TRACKED_0)
+                    send_set_entity_position(i, p[0]);
+                if (e->flags & FLAG_POS_TRACKED_1)
+                    send_set_entity_position(i, p[1]);
+
+                if (e->flags & FLAG_ROT_TRACKED_0)
+                    send_set_entity_rotation(i, r[0]);
+                if (e->flags & FLAG_ROT_TRACKED_1)
+                    send_set_entity_rotation(i, r[1]);
+            }
         }
     }
 
     /* Run the physical simulation and update all entity states. */
+
+    for (i= 0; i < n; ++i)
+    {
+        struct entity *e = get_entity(i);
+
+        if (e->type && e->body && e->geom)
+        {
+            set_physics_position(e->geom, e->position);
+            set_physics_rotation(e->geom, e->rotation);
+        }
+    }
 
     physics_step(dt);
 
@@ -841,21 +827,22 @@ void step_entities(float dt)
     {
         struct entity *e = get_entity(i);
 
-        if (e->type)
+        if (e->type && e->body && e->geom)
         {
             get_physics_position(e->geom, e->position);
             get_physics_rotation(e->geom, e->rotation);
-/*
-            float p[3], R[16];
-
-            get_physics_position(e->geom, p);
-            get_physics_rotation(e->geom, R);
-
-            send_set_entity_position(i, p);
-            send_set_entity_basis   (i, R);
-*/
         }
     }
+
+/*
+  float p[3], R[16];
+
+  get_physics_position(e->geom, p);
+  get_physics_rotation(e->geom, R);
+
+  send_set_entity_position(i, p);
+  send_set_entity_basis   (i, R);
+*/
 }
 
 /*---------------------------------------------------------------------------*/

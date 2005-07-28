@@ -21,13 +21,15 @@ void physics_step(float);
 
 /*---------------------------------------------------------------------------*/
 
-dBodyID create_physics_body(void);
-dGeomID create_physics_box(dBodyID, const float[6]);
+dBodyID create_physics_body(int);
+dGeomID create_physics_geom(int, dBodyID, const float[4]);
 
 void    set_physics_position(dGeomID, const float[3]);
 void    get_physics_position(dGeomID,       float[3]);
 void    set_physics_rotation(dGeomID, const float[16]);
 void    get_physics_rotation(dGeomID,       float[16]);
+
+void    set_physics_flags(dBodyID, int);
 
 /*---------------------------------------------------------------------------*/
 

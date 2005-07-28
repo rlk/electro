@@ -35,12 +35,20 @@
 #define FLAG_HIDDEN        0x0001
 #define FLAG_WIREFRAME     0x0002
 #define FLAG_BILLBOARD     0x0004
-#define FLAG_BOUNDED       0x0008
 #define FLAG_LINE_SMOOTH   0x0010
 #define FLAG_POS_TRACKED_0 0x0020
 #define FLAG_ROT_TRACKED_0 0x0040
 #define FLAG_POS_TRACKED_1 0x0080
 #define FLAG_ROT_TRACKED_1 0x0100
+#define FLAG_WEIGHTLESS    0x0200
+
+/* Entity solid types. */
+
+#define SOLID_NONE     0
+#define SOLID_SPHERE   1
+#define SOLID_CAPSULE  2
+#define SOLID_BOX      3
+#define SOLID_PLANE    4
 
 /* Initial entity vector sizes. */
 
@@ -55,21 +63,19 @@
 
 /* Entity virtual function table. */
 
-typedef void  (*init_func)(int);
-typedef void  (*fini_func)(int);
-typedef int   (*bbox_func)(int, float[6]);
-typedef void  (*draw_func)(int, int, int, float);
-typedef void  (*dupe_func)(int);
-typedef void  (*free_func)(int);
-typedef float (*find_func)(float[3]);
-typedef float (*test_func)(float[3], float, const float[3]);
+typedef void (*init_func)(int);
+typedef void (*fini_func)(int);
+typedef void (*aabb_func)(int, float[6]);
+typedef void (*draw_func)(int, int, int, float);
+typedef void (*dupe_func)(int);
+typedef void (*free_func)(int);
 
 struct entity_func
 {
     const char *name;
     init_func   init;
     fini_func   fini;
-    bbox_func   bbox;
+    aabb_func   aabb;
     draw_func   draw;
     dupe_func   dupe;
     free_func   free;
@@ -86,7 +92,7 @@ const char *entity_name(int);
 void transform_camera(int);
 void transform_entity(int);
 void draw_entity_tree(int, int, float);
-int  test_entity_bbox(int);
+int  test_entity_aabb(int);
 
 /*---------------------------------------------------------------------------*/
 
@@ -115,6 +121,7 @@ void  send_set_entity_bound    (int, const float[6]);
 void  send_set_entity_basis    (int, const float[16]);
 void  send_set_entity_alpha    (int, float);
 void  send_set_entity_flags    (int, int, int);
+void  send_set_entity_solid    (int, int, const float[4]);
 
 void  send_move_entity(int, const float[3]);
 void  send_turn_entity(int, const float[3]);

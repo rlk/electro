@@ -572,21 +572,6 @@ static int E_set_entity_scale(lua_State *L)
     return 0;
 }
 
-static int E_set_entity_bound(lua_State *L)
-{
-    float b[6];
-
-    b[0] = L_getnumber(L, -6);
-    b[0] = L_getnumber(L, -5);
-    b[0] = L_getnumber(L, -4);
-    b[0] = L_getnumber(L, -3);
-    b[1] = L_getnumber(L, -2);
-    b[2] = L_getnumber(L, -1);
-
-    send_set_entity_bound(E_getentity(L, -7), b);
-    return 0;
-}
-
 static int E_set_entity_alpha(lua_State *L)
 {
     send_set_entity_alpha(E_getentity(L, -2),
@@ -594,11 +579,27 @@ static int E_set_entity_alpha(lua_State *L)
     return 0;
 }
 
-static int E_set_entity_flag(lua_State *L)
+static int E_set_entity_flags(lua_State *L)
 {
     send_set_entity_flags(E_getentity (L, -3),
                           L_getinteger(L, -2),
                           L_getboolean(L, -1));
+    return 0;
+}
+
+static int E_set_entity_solid(lua_State *L)
+{
+    int n = lua_gettop  (L);
+    int t = L_getinteger(L, -n + 1);
+
+    float v[4];
+
+    v[0] = (t >= SOLID_SPHERE)  ? L_getnumber(L, -n + 2) : 0;
+    v[1] = (t >= SOLID_CAPSULE) ? L_getnumber(L, -n + 3) : 0;
+    v[2] = (t >= SOLID_BOX)     ? L_getnumber(L, -n + 4) : 0;
+    v[3] = (t >= SOLID_PLANE)   ? L_getnumber(L, -n + 5) : 0;
+
+    send_set_entity_solid(E_getentity(L, -n), t, v);
     return 0;
 }
 
@@ -1419,7 +1420,7 @@ static int E_add_host(lua_State *L)
     return 1;
 }
 
-static int E_set_host_flag(lua_State *L)
+static int E_set_host_flags(lua_State *L)
 {
     send_set_host_flags(L_getinteger(L, -3),
                         L_getinteger(L, -2),
@@ -1438,7 +1439,7 @@ static int E_add_tile(lua_State *L)
     return 1;
 }
 
-static int E_set_tile_flag(lua_State *L)
+static int E_set_tile_flags(lua_State *L)
 {
     send_set_tile_flags(L_getinteger(L, -3),
                         L_getinteger(L, -2),
@@ -1834,9 +1835,9 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_position",   E_set_entity_position);
     lua_function(L, "set_entity_rotation",   E_set_entity_rotation);
     lua_function(L, "set_entity_scale",      E_set_entity_scale);
-    lua_function(L, "set_entity_bound",      E_set_entity_bound);
     lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
-    lua_function(L, "set_entity_flag",       E_set_entity_flag);
+    lua_function(L, "set_entity_flags",      E_set_entity_flags);
+    lua_function(L, "set_entity_solid",      E_set_entity_solid);
 
     lua_function(L, "get_entity_position",   E_get_entity_position);
     lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
@@ -1937,8 +1938,8 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "add_host",              E_add_host);
     lua_function(L, "add_tile",              E_add_tile);
-    lua_function(L, "set_host_flag",         E_set_host_flag);
-    lua_function(L, "set_tile_flag",         E_set_tile_flag);
+    lua_function(L, "set_host_flags",        E_set_host_flags);
+    lua_function(L, "set_tile_flags",        E_set_tile_flags);
     lua_function(L, "set_tile_position",     E_set_tile_position);
     lua_function(L, "set_tile_viewport",     E_set_tile_viewport);
     lua_function(L, "set_tile_line_screen",  E_set_tile_line_screen);
@@ -1961,12 +1962,18 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_hidden",        FLAG_HIDDEN);
     lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
     lua_constant(L, "entity_flag_billboard",     FLAG_BILLBOARD);
-    lua_constant(L, "entity_flag_bounded",       FLAG_BOUNDED);
     lua_constant(L, "entity_flag_line_smooth",   FLAG_LINE_SMOOTH);
     lua_constant(L, "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0);
     lua_constant(L, "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0);
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
+    lua_constant(L, "entity_flag_weightless",    FLAG_WEIGHTLESS);
+
+    lua_constant(L, "entity_solid_box",          SOLID_BOX);
+    lua_constant(L, "entity_solid_none",         SOLID_NONE);
+    lua_constant(L, "entity_solid_plane",        SOLID_PLANE);
+    lua_constant(L, "entity_solid_sphere",       SOLID_SPHERE);
+    lua_constant(L, "entity_solid_capsule",      SOLID_CAPSULE);
 
     lua_constant(L, "brush_flag_diffuse",        BRUSH_DIFFUSE);
     lua_constant(L, "brush_flag_specular",       BRUSH_SPECULAR);

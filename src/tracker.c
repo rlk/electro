@@ -47,6 +47,15 @@ int startup_tracker(void)
 
 /*---------------------------------------------------------------------------*/
 
+int get_tracker_status(void)
+{
+#ifdef TRACKD
+    return (tracker && controller);
+#else
+    return 0;
+#endif
+}
+
 int get_tracker_rotation(int id, float r[3])
 {
 #ifdef TRACKD

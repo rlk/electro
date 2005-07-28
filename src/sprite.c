@@ -163,7 +163,7 @@ static void draw_sprite(int j, int i, int f, float a)
 
         transform_entity(j);
 
-        if (test_entity_bbox(j) >= 0)
+        if (test_entity_aabb(j) >= 0)
         {
             /* Draw the sprite to the color buffer. */
 
@@ -191,21 +191,19 @@ static void draw_sprite(int j, int i, int f, float a)
     glPopMatrix();
 }
 
-static int bbox_sprite(int i, float bound[6])
+static void aabb_sprite(int i, float aabb[6])
 {
     struct sprite *s = get_sprite(i);
 
     int dx = get_brush_w(s->brush) / 2;
     int dy = get_brush_h(s->brush) / 2;
 
-    bound[0] = -dx;
-    bound[1] = -dy;
-    bound[2] =   0;
-    bound[3] = +dx;
-    bound[4] = +dy;
-    bound[5] =   0;
-
-    return 1;
+    aabb[0] = -dx;
+    aabb[1] = -dy;
+    aabb[2] =   0;
+    aabb[3] = +dx;
+    aabb[4] = +dy;
+    aabb[5] =   0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -232,7 +230,7 @@ static struct entity_func sprite_func = {
     "sprite",
     NULL,
     NULL,
-    bbox_sprite,
+    aabb_sprite,
     draw_sprite,
     dupe_sprite,
     free_sprite,

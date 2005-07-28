@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <values.h>
 
 #include "opengl.h"
 #include "vector.h"
@@ -78,6 +79,9 @@ struct object
     vector_t mv;
 
     GLuint buffer;
+
+    float aabb_cache[6];
+    int   aabb_state;
 };
 
 static vector_t object;
@@ -1083,7 +1087,7 @@ static void draw_object(int j, int i, int f, float a)
 
         /* Render this object. */
 
-        if (test_entity_bbox(j) >= 0)
+        if (test_entity_aabb(j) >= 0)
         {
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
@@ -1124,36 +1128,48 @@ static void draw_object(int j, int i, int f, float a)
     glPopMatrix();
 }
 
-static int bbox_object(int i, float bound[6])
+static void aabb_object(int i, float aabb[6])
 {
     struct object *o = get_object(i);
 
-    int j, n = vecnum(o->vv);
+    /* If the bounding box cache is invalid... */
 
-    /* Find the object's bounding box. */
-
-    if (n > 0)
+    if (o->aabb_state == 0)
     {
-        const float *v = ((struct object_vert *) vecget(o->vv, 0))->v;
+        int j, n = vecnum(o->vv);
 
-        bound[0] = bound[3] = v[0];
-        bound[1] = bound[4] = v[1];
-        bound[2] = bound[5] = v[2];
+        /* Find the object's bounding box. */
+
+        o->aabb_cache[0] = FLT_MAX;
+        o->aabb_cache[1] = FLT_MAX;
+        o->aabb_cache[2] = FLT_MAX;
+        o->aabb_cache[3] = FLT_MIN;
+        o->aabb_cache[4] = FLT_MIN;
+        o->aabb_cache[2] = FLT_MIN;
+
+        for (j = 0; j < n; ++j)
+        {
+            const float *v = ((struct object_vert *) vecget(o->vv, j))->v;
+
+            o->aabb_cache[0] = MIN(v[0], o->aabb_cache[0]);
+            o->aabb_cache[1] = MIN(v[1], o->aabb_cache[1]);
+            o->aabb_cache[2] = MIN(v[2], o->aabb_cache[2]);
+            o->aabb_cache[3] = MAX(v[0], o->aabb_cache[3]);
+            o->aabb_cache[4] = MAX(v[1], o->aabb_cache[4]);
+            o->aabb_cache[5] = MAX(v[2], o->aabb_cache[5]);
+        }
+
+        o->aabb_state = 1;
     }
-    else return 0;
 
-    for (j = 0; j < n; ++j)
-    {
-        const float *v = ((struct object_vert *) vecget(o->vv, j))->v;
+    /* Return the current bounding box. */
 
-        bound[0] = MIN(v[0], bound[0]);
-        bound[1] = MIN(v[1], bound[1]);
-        bound[2] = MIN(v[2], bound[2]);
-        bound[3] = MAX(v[0], bound[3]);
-        bound[4] = MAX(v[1], bound[4]);
-        bound[5] = MAX(v[2], bound[5]);
-    }
-    return 1;
+    aabb[0] = o->aabb_cache[0];
+    aabb[1] = o->aabb_cache[1];
+    aabb[2] = o->aabb_cache[2];
+    aabb[3] = o->aabb_cache[3];
+    aabb[4] = o->aabb_cache[4];
+    aabb[5] = o->aabb_cache[5];
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1195,7 +1211,7 @@ static struct entity_func object_func = {
     "object",
     init_object,
     fini_object,
-    bbox_object,
+    aabb_object,
     draw_object,
     dupe_object,
     free_object,

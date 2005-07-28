@@ -609,15 +609,15 @@ void draw_font(int i, const char *text, int line)
     glPopMatrix();
 }
 
-void bbox_font(int i, const char *text, float bound[6])
+void aabb_font(int i, const char *text, float aabb[6])
 {
     int j, n = strlen(text);
 
     GLdouble x = 0.0;
 
-    bound[0] = bound[3] = 0;
-    bound[1] = bound[4] = 0;
-    bound[2] = bound[5] = 0;
+    aabb[0] = aabb[3] = 0;
+    aabb[1] = aabb[4] = 0;
+    aabb[2] = aabb[5] = 0;
 
     for (j = 0; j < n; ++j)
     {
@@ -644,12 +644,12 @@ void bbox_font(int i, const char *text, float bound[6])
             {
                 GLdouble *p = ((struct point *) vecget(glyph->points, k))->p;
 
-                bound[0] = MIN(bound[0], (float) (p[0] + x));
-                bound[1] = MIN(bound[1], (float)  p[1]);
-                bound[2] = MIN(bound[2], (float)  p[2]);
-                bound[3] = MAX(bound[3], (float) (p[0] + x));
-                bound[4] = MAX(bound[4], (float)  p[1]);
-                bound[5] = MAX(bound[5], (float)  p[2]);
+                aabb[0] = MIN(aabb[0], (float) (p[0] + x));
+                aabb[1] = MIN(aabb[1], (float)  p[1]);
+                aabb[2] = MIN(aabb[2], (float)  p[2]);
+                aabb[3] = MAX(aabb[3], (float) (p[0] + x));
+                aabb[4] = MAX(aabb[4], (float)  p[1]);
+                aabb[5] = MAX(aabb[5], (float)  p[2]);
             }
         }
 

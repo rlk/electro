@@ -18,22 +18,26 @@ function do_start()
     pivot  = E.create_pivot()
 
     E.set_typeface(typeface, 0.001, 0.04)
-    thing1 = make_box("../green.jpg", 16, 1, 16)
-    thing2 = make_box("../grey.jpg", 1, 1, 1)
+    thing1 = E.create_object("checker.obj")
+    thing2 = E.create_object("lil_box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(thing1, pivot)
     E.parent_entity(thing2, pivot)
 
-    E.set_entity_flag(thing, E.entity_flag_line_smooth, true)
+    E.set_entity_solid(thing1, E.entity_solid_plane, 0, 1, 0, 0)
+--  E.set_entity_solid(thing1, E.entity_solid_box, 16, 2, 16)
+    E.set_entity_solid(thing2, E.entity_solid_box,   2, 2, 2)
+--  E.set_entity_solid(thing2, E.entity_solid_sphere, 1)
 
     E.set_entity_position(light, 0.0,  8.0,   8.0)
     E.set_entity_position(pivot, 0.0, -8.0, -20.0)
     E.set_entity_rotation(pivot, rot_x, rot_y, 0)
     E.set_entity_scale   (pivot, zoom, zoom, zoom)
 
-    E.set_entity_position(thing2, 0.0, 4.0, 0.0)
+    E.set_entity_position(thing2, 0.0, 20.0, 0.0)
+    E.set_entity_rotation(thing2, 15.0, 15.0, 0.0)
 
     E.enable_timer(true)
 end
@@ -44,11 +48,11 @@ function do_keyboard(k, s)
 
     if s then
         if k == 287 then
-            E.set_entity_flag(camera, E.entity_flag_wireframe, true)
+            E.set_entity_flags(camera, E.entity_flag_wireframe, true)
             return true
         end
         if k == 288 then
-            E.set_entity_flag(camera, E.entity_flag_wireframe, false)
+            E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
         end
     end

@@ -28,7 +28,7 @@ int  get_font(void);
 void fini_font(int);
 
 void draw_font(int, const char *, int);
-void bbox_font(int, const char *, float[6]);
+void aabb_font(int, const char *, float[6]);
 
 /*---------------------------------------------------------------------------*/
 

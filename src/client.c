@@ -83,7 +83,6 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_POSITION:  recv_set_entity_position();  break;
         case EVENT_SET_ENTITY_BASIS:     recv_set_entity_basis();     break;
         case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
-        case EVENT_SET_ENTITY_BOUND:     recv_set_entity_bound();     break;
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
         case EVENT_SET_ENTITY_FLAGS:     recv_set_entity_flags();     break;
 
