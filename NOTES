@@ -1,42 +1,37 @@
 
-i = create_object_vert(o, x, y, z, nx, ny, nz, u, v)
-i = create_object_face(s, i, j, k)
-i = create_object_edge(s, i, j)
-i = create_object_mesh(o, i)
+set_entity_solid(entity,         parameter, ...)
+set_entity_joint(entity, entity, parameter, ...)
 
-    delete_object_vert(o, i)
-    delete_object_face(o, i)
-    delete_object_edge(o, i)
-    delete_object_mesh(o, i)
+solid
+   box     x y z
+   plane   a b c d
+   sphere  r
+   capsule r l
 
-      set_object_vert(o, x, y, z, nx, ny, nz, u, v)
-      set_object_face(s, i, j, k)
-      set_object_edge(s, i, j)
-      set_object_mesh(o, i)
+category
+    0..31
 
-... = get_object_vert(o, i)
-... = get_object_face(o, i)
-... = get_object_edge(o, i)
-... = get_object_mesh(o, i)
+contact
+    mu
+    bounce
 
-n = get_object_vert_count(o, i)
-n = get_object_face_count(o, i)
-n = get_object_edge_count(o, i)
-n = get_object_surf_count(o, i)
+joint
+    type
+        ball and socket = point x y z
+        hinge           = axis  x y z
+        slider          = axis  x y z
+        universal       = point x y z
+                        = axis1 x y z 
+                        = axis2 x y z
+        hinge2          = point x y z
+                        = axis1 x y z 
+                        = axis2  x y z
+    param
+        lo stop
+        hi stop
+        velocity
+        force
+        bounce
 
-
-set_brush_image
-set_brush_color
-
-set_sprite_brush
-set_string_fill_brush
-set_string_line_brush
-
-brush has
-     image
-     materials
-     transform
-     flags
-
-sprites and strings create objects
-several entity flags become brush flags
+add_force
+add_torque

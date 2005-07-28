@@ -1,6 +1,8 @@
+joint/motor
+collision category
+collision report
+intersection report
 network optional
-Bound recompute
-collision detection
 delete image / brush
 texture transform
 brush flags

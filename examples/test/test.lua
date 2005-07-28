@@ -1,13 +1,40 @@
 dofile("examples/box.lua")
 
-tumble = false
-scale  = false
+tumble  = false
+scale   = false
+objects = { }
 
 zoom  = 0.25
 rot_x = 45
 rot_y = 45
 
 typeface = "../VeraBd.ttf"
+
+function add_box()
+    local object = E.create_object("lil_box.obj")
+    E.parent_entity(object, pivot)
+
+    E.set_entity_solid   (object, E.entity_solid_box, 2, 2, 2)
+    E.set_entity_position(object, 0.0, 20.0, 0.0)
+    E.set_entity_rotation(object, math.random(-180, 180),
+                                  math.random(-180, 180),
+                                  math.random(-180, 180))
+
+    table.insert(objects, object)
+end
+
+function add_ball()
+    local object = E.create_object("ball.obj")
+    E.parent_entity(object, pivot)
+
+    E.set_entity_solid   (object, E.entity_solid_sphere, 1)
+    E.set_entity_position(object, 0.0, 20.0, 0.0)
+    E.set_entity_rotation(object, math.random(-180, 180),
+                                  math.random(-180, 180),
+                                  math.random(-180, 180))
+
+    table.insert(objects, object)
+end
 
 function do_start()
     local L = -0.2083 / 2
@@ -18,26 +45,19 @@ function do_start()
     pivot  = E.create_pivot()
 
     E.set_typeface(typeface, 0.001, 0.04)
-    thing1 = E.create_object("checker.obj")
-    thing2 = E.create_object("lil_box.obj")
+    plane = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
-    E.parent_entity(thing1, pivot)
-    E.parent_entity(thing2, pivot)
+    E.parent_entity(plane, pivot)
 
-    E.set_entity_solid(thing1, E.entity_solid_plane, 0, 1, 0, 0)
---  E.set_entity_solid(thing1, E.entity_solid_box, 16, 2, 16)
-    E.set_entity_solid(thing2, E.entity_solid_box,   2, 2, 2)
---  E.set_entity_solid(thing2, E.entity_solid_sphere, 1)
+    E.set_entity_solid(plane, E.entity_solid_plane, 0, 1, 0, 0)
+    E.set_entity_scale(plane, 8, 8, 8)
 
     E.set_entity_position(light, 0.0,  8.0,   8.0)
     E.set_entity_position(pivot, 0.0, -8.0, -20.0)
     E.set_entity_rotation(pivot, rot_x, rot_y, 0)
     E.set_entity_scale   (pivot, zoom, zoom, zoom)
-
-    E.set_entity_position(thing2, 0.0, 20.0, 0.0)
-    E.set_entity_rotation(thing2, 15.0, 15.0, 0.0)
 
     E.enable_timer(true)
 end
@@ -47,6 +67,12 @@ function do_keyboard(k, s)
     local R =  0.20833 / 2
 
     if s then
+        if k == string.byte("1") then
+            add_box()
+        end
+        if k == string.byte("2") then
+            add_ball()
+        end
         if k == 287 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, true)
             return true
