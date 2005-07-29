@@ -71,9 +71,9 @@ dGeomID set_physics_solid(dGeomID, int, int, float, float, float, float);
 void    set_physics_joint(dGeomID, dGeomID, int, int, float, float, float);
 
 void    set_physics_position(dGeomID, const float[3]);
-void    get_physics_position(dGeomID,       float[3]);
+int     get_physics_position(dGeomID,       float[3]);
 void    set_physics_rotation(dGeomID, const float[16]);
-void    get_physics_rotation(dGeomID,       float[16]);
+int     get_physics_rotation(dGeomID,       float[16]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -830,20 +830,14 @@ void step_entities(float dt)
 
         if (e->type && e->geom)
         {
-            get_physics_position(e->geom, e->position);
-            get_physics_rotation(e->geom, e->rotation);
+            float p[3], R[16];
+
+            if (get_physics_position(e->geom, p))
+                send_set_entity_position(i, p);
+            if (get_physics_rotation(e->geom, R))
+                send_set_entity_basis   (i, R);
         }
     }
-
-/*
-  float p[3], R[16];
-
-  get_physics_position(e->geom, p);
-  get_physics_rotation(e->geom, R);
-
-  send_set_entity_position(i, p);
-  send_set_entity_basis   (i, R);
-*/
 }
 
 /*---------------------------------------------------------------------------*/

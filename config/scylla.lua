@@ -23,8 +23,8 @@ host[16] = E.add_host("scylla16-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[17] = E.add_host("scylla17-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
 
-E.set_host_flag(host[0], E.host_flag_full,   true);
-E.set_host_flag(host[0], E.host_flag_framed, false);
+E.set_host_flags(host[0], E.host_flag_full,   true);
+E.set_host_flags(host[0], E.host_flag_framed, false);
 
 -- Tile host numbers.
 
@@ -170,6 +170,7 @@ p = {
 
 pitch = 271.945865
 
+--[[ Original config
 l = {
     { pitch, -7.860000, 0.034800,  0.0066, 0.777777 }, -- 1
     { pitch, -7.800000, 0.035800, -0.0014, 0.777777 }, -- 2
@@ -208,6 +209,45 @@ l = {
     { pitch, -7.810000, 0.036400,  0.0012, 0.777777 }  -- 35
 --    pitch     angle   thickness   shift    cycle
 }
+--]]
+
+l = {
+    { 271.945865, -7.86, 0.0328, 0.0058, 0.777777 }, -- 1
+    { 271.945865, -7.8, 0.0348, 0.0003, 0.777777 }, -- 2
+    { 271.945865, -7.83, 0.0339, 0.0038, 0.777777 }, -- 3
+    { 271.945865, -7.77, 0.0336, 0.0044, 0.777777 }, -- 4
+    { 271.945865, -7.73, 0.0343, 0.0031, 0.777777 }, -- 5
+    { 271.945865, -7.83, 0.0344, 0.0011, 0.777777 }, -- 6
+    { 271.945865, -7.69, 0.0352, 0.004, 0.777777 }, -- 7
+    { 271.945865, -7.77, 0.0347, 0.0039, 0.777777 }, -- 8
+    { 271.945865, -7.75, 0.034, 0.0022, 0.777777 }, -- 9
+    { 271.945865, -7.741, 0.035, 0.0012, 0.777777 }, -- 10
+    { 271.945865, -7.77, 0.0351, 0.0032, 0.777777 }, -- 11
+    { 271.945865, -7.85, 0.037, 0.0037, 0.777777 }, -- 12
+    { 271.945865, -7.8, 0.037, 0.0049, 0.777777 }, -- 13
+    { 271.945865, -7.77, 0.037, 0.0025, 0.777777 }, -- 14
+    { 271.945865, -7.83, 0.0357, 0.0026, 0.777777 }, -- 15
+    { 271.945865, -7.79, 0.0338, 0.0012, 0.777777 }, -- 16
+    { 271.945865, -7.83, 0.0354, 0.0046, 0.777777 }, -- 17
+    { 271.945865, -7.75, 0.0347, 0.0069, 0.777777 }, -- 18
+    { 271.945865, -7.845, 0.03762, 0.003, 0.777777 }, -- 19
+    { 271.945865, -7.782, 0.0362, 0.0071, 0.777777 }, -- 20
+    { 271.945865, -7.89, 0.0357, 0.0035, 0.777777 }, -- 21
+    { 271.945865, -7.88, 0.036, 0.0061, 0.777777 }, -- 22
+    { 271.945865, -7.8, 0.0355, 0.0017, 0.777777 }, -- 23
+    { 271.945865, -7.83, 0.0347, 0.0048, 0.777777 }, -- 24
+    { 271.945865, -7.801, 0.0354, 0.0013, 0.777777 }, -- 25
+    { 271.945865, -7.82, 0.0352, 0.0053, 0.777777 }, -- 26
+    { 271.945865, -7.77, 0.035, 0.0044, 0.777777 }, -- 27
+    { 271.945865, -7.83, 0.035, 0.0058, 0.777777 }, -- 28
+    { 271.945865, -7.88, 0.036, 0.0041, 0.777777 }, -- 29
+    { 271.945865, -7.78, 0.035, -0.0012, 0.777777 }, -- 30
+    { 271.945865, -7.73, 0.0338, 0.0045, 0.777777 }, -- 31
+    { 271.945865, -7.76, 0.036, -0.0015, 0.777777 }, -- 32
+    { 271.945865, -7.74, 0.0348, 0.0068, 0.777777 }, -- 33
+    { 271.945865, -7.89, 0.0369, 0.0036, 0.777777 }, -- 34
+    { 271.945865, -7.81, 0.0354, 0.0043, 0.777777 }, -- 35
+}
 
 -- Mirror the center tile on the server.
 
@@ -220,10 +260,10 @@ v[0] = v[18]
 p[0] = p[18]
 
 for i = 0, 35 do
-    l[i][1] = 1
-    l[i][2] = 0
-    l[i][3] = 0
-    l[i][4] = 0
+--    l[i][1] = 1
+--    l[i][2] = 0
+--    l[i][3] = 0
+--    l[i][4] = 0
 end
 
 -------------------------------------------------------------------------------
@@ -246,11 +286,12 @@ end
 -------------------------------------------------------------------------------
 
 function varrier_dump()
+    print("l = {")
     for i = 1, 35 do
-        local k = map[i]
-        print("{ "..l[k][1]..", "..l[k][2]..", "..l[k][3]..
-               ","..l[k][4]..", "..l[k][5].." }, -- "..k)
+        print("    { "..l[i][1]..", "..l[i][2]..", "..l[i][3]..
+                  ", "..l[i][4]..", "..l[i][5].." }, -- "..i)
     end
+    print("}")
 end
 
 function varrier_pitch(d, i)
@@ -332,10 +373,10 @@ function tog_varrier_test()
     varrier_test = not varrier_test
 
     if varrier_tile > 0 then
-        E.set_tile_flag(tile[varrier_tile], E.tile_flag_test, varrier_test)
+        E.set_tile_flags(tile[varrier_tile], E.tile_flag_test, varrier_test)
     else
         for i = 0, 35 do
-            E.set_tile_flag(tile[i], E.tile_flag_test, varrier_test)
+            E.set_tile_flags(tile[i], E.tile_flag_test, varrier_test)
         end
     end
 end
@@ -388,15 +429,15 @@ function varrier_keyboard(k, s, camera)
         end
 
         if k == 286 then -- F5
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
+--            E.set_entity_frag_prog(scene, nil)
+--            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
         end
         if k == 287 then -- F6
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
+--            E.set_entity_frag_prog(scene, nil)
+--            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
@@ -430,15 +471,15 @@ function varrier_keyboard(k, s, camera)
             return true
         end
         if k == 292 then -- F11
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
+--            E.set_entity_frag_prog(scene, nil)
+--            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == 293 then -- F12
-            E.set_entity_frag_prog(scene, nil)
-            E.set_entity_vert_prog(scene, nil)
+--            E.set_entity_frag_prog(scene, nil)
+--            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
                                 -dx, dy, dz, dx, dy, dz)
             return true

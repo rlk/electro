@@ -8,8 +8,6 @@ zoom  = 0.25
 rot_x = 45
 rot_y = 45
 
-typeface = "../VeraBd.ttf"
-
 function add_box()
     local object = E.create_object("lil_box.obj")
     E.parent_entity(object, pivot)
@@ -50,7 +48,6 @@ function do_start()
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
 
-    E.set_typeface(typeface, 0.001, 0.04)
     plane = E.create_object("checker.obj")
 
     E.parent_entity(light, camera)
@@ -72,6 +69,12 @@ end
 function do_keyboard(k, s)
     local L = -0.20833 / 2
     local R =  0.20833 / 2
+
+    if varrier_keyboard then
+        if varrier_keyboard(k, s, camera) then
+            return true
+        end
+    end
 
     if s then
         if k == string.byte("1") then

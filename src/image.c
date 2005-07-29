@@ -334,9 +334,7 @@ int send_create_image(const char *filename)
 
 void recv_create_image(void)
 {
-    int i = new_image();
-
-    struct image *p = get_image(i);
+    struct image *p = get_image(new_image());
 
     p->w = recv_index();
     p->h = recv_index();
@@ -344,6 +342,8 @@ void recv_create_image(void)
     p->p = (GLubyte *) malloc(p->w * p->h * p->b);
 
     recv_array(p->p, p->w * p->h, p->b);
+
+    p->count = 1;
 }
 
 /*---------------------------------------------------------------------------*/

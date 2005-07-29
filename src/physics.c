@@ -280,14 +280,16 @@ void set_physics_position(dGeomID geom, const float p[3])
         dGeomSetPosition(geom, p[0], p[1], p[2]);
 }
 
-void get_physics_position(dGeomID geom, float p[3])
+int get_physics_position(dGeomID geom, float p[3])
 {
     if (dGeomGetClass(geom) != dPlaneClass)
     {
         p[0] = dGeomGetPosition(geom)[0];
         p[1] = dGeomGetPosition(geom)[1];
         p[2] = dGeomGetPosition(geom)[2];
+        return 1;
     }
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -303,10 +305,14 @@ void set_physics_rotation(dGeomID geom, const float r[16])
     }
 }
 
-void get_physics_rotation(dGeomID geom, float r[16])
+int get_physics_rotation(dGeomID geom, float r[16])
 {
     if (dGeomGetClass(geom) != dPlaneClass)
+    {
         get_rotation(r, dGeomGetRotation(geom));
+        return 1;
+    }
+    return 0;
 }
 
 /*===========================================================================*/

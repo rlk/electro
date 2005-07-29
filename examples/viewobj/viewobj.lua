@@ -42,8 +42,8 @@ function do_start()
     E.set_entity_position(light,  0.0,  8.0,   8.0)
     E.set_entity_position(scene,  0.0, -8.0, -20.0)
 
-    E.set_entity_flag(hand, E.entity_flag_pos_tracked_1, true)
-    E.set_entity_flag(hand, E.entity_flag_rot_tracked_1, true)
+    E.set_entity_flags(hand, E.entity_flag_pos_tracked_1, true)
+    E.set_entity_flags(hand, E.entity_flag_rot_tracked_1, true)
 
     table.foreach(E.argument, add_object)
 

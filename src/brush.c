@@ -229,13 +229,12 @@ int send_create_brush(const char *file, const char *name)
 
 void recv_create_brush(void)
 {
-    int i = new_brush();
-
-    struct brush *b = get_brush(i);
+    struct brush *b = get_brush(new_brush());
 
     b->image = recv_index();
     b->flags = recv_index();
-    
+    b->count = 1;
+
     recv_array(b->d, 4, sizeof (float));
     recv_array(b->s, 4, sizeof (float));
     recv_array(b->a, 4, sizeof (float));

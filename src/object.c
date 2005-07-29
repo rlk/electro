@@ -1145,7 +1145,7 @@ static void aabb_object(int i, float aabb[6])
         o->aabb_cache[2] = FLT_MAX;
         o->aabb_cache[3] = FLT_MIN;
         o->aabb_cache[4] = FLT_MIN;
-        o->aabb_cache[2] = FLT_MIN;
+        o->aabb_cache[5] = FLT_MIN;
 
         for (j = 0; j < n; ++j)
         {
