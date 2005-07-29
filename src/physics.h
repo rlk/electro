@@ -19,16 +19,16 @@
 
 /* Solid parameters. */
 
-#define SOLID_TYPE            1  /*  i */
-#define SOLID_BOX_PARAM       2  /* 3f */
-#define SOLID_PLANE_PARAM     3  /* 4f */
-#define SOLID_SPHERE_PARAM    4  /*  f */
-#define SOLID_CAPSULE_PARAM   5  /* 2f */
-#define SOLID_CATEGORY_BITS   6  /*  i */
-#define SOLID_COLLIDER_BITS   7  /*  i */
-#define SOLID_DENSITY         8  /*  f */
-#define SOLID_FRICTION        9  /*  f */
-#define SOLID_RESTITUTION    10  /*  f */
+#define SOLID_TYPE            1
+#define SOLID_BOX_PARAM       2
+#define SOLID_PLANE_PARAM     3
+#define SOLID_SPHERE_PARAM    4
+#define SOLID_CAPSULE_PARAM   5
+#define SOLID_CATEGORY_BITS   6
+#define SOLID_COLLIDER_BITS   7
+#define SOLID_DENSITY         8
+#define SOLID_FRICTION        9
+#define SOLID_RESTITUTION    10
 
 /* Solid types. */
 
@@ -42,15 +42,19 @@
 
 /* Joint parameters. */
 
-#define JOINT_TYPE            1  /*  i */
-#define JOINT_ANCHOR          2  /* 3f */
-#define JOINT_AXIS_1          3  /* 3f */
-#define JOINT_AXIS_2          4  /* 3f */
-#define JOINT_MIN_VALUE       5  /*  f */
-#define JOINT_MAX_VALUE       6  /*  f */
-#define JOINT_VELOCITY        7  /*  f */
-#define JOINT_FORCE           8  /*  f */
-#define JOINT_RESTITUTION     9  /*  f */
+#define JOINT_TYPE            1
+#define JOINT_ANCHOR          2
+#define JOINT_AXIS_1          3
+#define JOINT_AXIS_2          4
+#define JOINT_MIN_VALUE       5
+#define JOINT_MAX_VALUE       6
+#define JOINT_VELOCITY        7
+#define JOINT_VELOCITY_2      8
+#define JOINT_FORCE           9
+#define JOINT_FORCE_2        10
+#define JOINT_RESTITUTION    11
+#define JOINT_SUSPENSION_ERP 12
+#define JOINT_SUSPENSION_CFM 13
 
 /* Joint types. */
 
@@ -60,6 +64,7 @@
 #define JOINT_TYPE_SLIDER     3
 #define JOINT_TYPE_UNIVERSAL  4
 #define JOINT_TYPE_HINGE_2    5
+#define JOINT_TYPE_FIXED      6
 
 /*---------------------------------------------------------------------------*/
 

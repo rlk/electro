@@ -3,8 +3,13 @@ dofile("examples/box.lua")
 tumble  = false
 scale   = false
 objects = { }
+speed   = 0
+steer   = 0
 
-zoom  = 0.25
+body = nil
+tire = { }
+
+zoom  = 1
 rot_x = 45
 rot_y = 45
 
@@ -22,6 +27,7 @@ function add_box()
                                   math.random(-180, 180))
 
     table.insert(objects, object)
+    return object
 end
 
 function add_ball()
@@ -38,6 +44,77 @@ function add_ball()
                                   math.random(-180, 180))
 
     table.insert(objects, object)
+    return object
+end
+
+function add_car()
+    body = E.create_object("body.obj")
+
+    local height = 3
+
+    local pos = {
+        {  0.85, 0.35,  1.30 },
+        {  0.85, 0.35, -1.25 },
+        { -0.85, 0.35, -1.25 },
+        { -0.85, 0.35,  1.30 }
+    }
+
+    E.parent_entity      (body, pivot)
+    E.set_entity_solid   (body, E.solid_type, E.solid_type_box)
+    E.set_entity_solid   (body, E.solid_box_param, 2, 1.25, 4)
+    E.set_entity_position(body, 0.00, 1.10 + height, 0.00)
+    E.set_entity_solid(body, E.solid_category_bits, 2)
+    E.set_entity_solid(body, E.solid_collider_bits, 2)
+
+    for i = 1, 4 do
+        local x = pos[i][1]
+        local y = pos[i][2] + height
+        local z = pos[i][3]
+
+        tire[i] = E.create_object("tire.obj")
+        E.parent_entity(tire[i], pivot)
+
+        E.set_entity_solid(tire[i], E.solid_type, E.solid_type_sphere)
+        E.set_entity_solid(tire[i], E.solid_sphere_param, 0.35)
+        E.set_entity_solid(tire[i], E.solid_category_bits, 4)
+        E.set_entity_solid(tire[i], E.solid_collider_bits, 4)
+
+        E.set_entity_position(tire[i], x, y, z)
+
+        E.set_entity_joint(body, tire[i], E.joint_type, E.joint_type_hinge_2)
+        E.set_entity_joint(body, tire[i], E.joint_anchor, x, y, z)
+        E.set_entity_joint(body, tire[i], E.joint_axis_1, 0, 1, 0)
+        E.set_entity_joint(body, tire[i], E.joint_axis_2, 1, 0, 0)
+        E.set_entity_joint(body, tire[i], E.joint_min_value, 0)
+        E.set_entity_joint(body, tire[i], E.joint_max_value, 0)
+        E.set_entity_joint(body, tire[i], E.joint_suspension_erp, 0.4)
+        E.set_entity_joint(body, tire[i], E.joint_suspension_cfm, 0.8)
+    end
+
+    E.set_entity_joint(body, tire[2], E.joint_min_value, -0.3)
+    E.set_entity_joint(body, tire[2], E.joint_max_value,  0.3)
+    E.set_entity_joint(body, tire[3], E.joint_min_value, -0.3)
+    E.set_entity_joint(body, tire[3], E.joint_max_value,  0.3)
+end
+
+function change_speed(d)
+    speed = speed + d
+
+    E.set_entity_joint(body, tire[1], E.joint_velocity_2, 20 * speed)
+    E.set_entity_joint(body, tire[1], E.joint_force_2, 100.0)
+
+    E.set_entity_joint(body, tire[4], E.joint_velocity_2, 20 * speed)
+    E.set_entity_joint(body, tire[4], E.joint_force_2, 100.0)
+end
+
+function change_steer(d)
+    steer = steer + d
+
+    E.set_entity_joint(body, tire[2], E.joint_velocity, steer)
+    E.set_entity_joint(body, tire[2], E.joint_force, 100.0)
+
+    E.set_entity_joint(body, tire[3], E.joint_velocity, steer)
+    E.set_entity_joint(body, tire[3], E.joint_force, 100.0)
 end
 
 function do_start()
@@ -83,6 +160,10 @@ function do_keyboard(k, s)
         if k == string.byte("2") then
             add_ball()
         end
+        if k == string.byte("3") then
+            add_car()
+        end
+
         if k == 287 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, true)
             return true
@@ -91,6 +172,16 @@ function do_keyboard(k, s)
             E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
         end
+
+        if k == 273 then change_speed(1) end
+        if k == 274 then change_speed(-1) end
+        if k == 275 then change_steer(1) end
+        if k == 276 then change_steer(-1) end
+    else
+        if k == 273 then change_speed(-1) end
+        if k == 274 then change_speed(1) end
+        if k == 275 then change_steer(-1) end
+        if k == 276 then change_steer(1) end
     end
     return false
 end

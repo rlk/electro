@@ -810,7 +810,7 @@ void step_entities(float dt)
     }
 
     /* Run the physical simulation and update all entity states. */
-
+/*
     for (i= 0; i < n; ++i)
     {
         struct entity *e = get_entity(i);
@@ -821,7 +821,7 @@ void step_entities(float dt)
             set_physics_rotation(e->geom, e->rotation);
         }
     }
-
+*/
     physics_step(dt);
 
     for (i = 0; i < n; ++i)

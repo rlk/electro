@@ -215,6 +215,64 @@ static dGeomID create_physics_capsule(void)
 
 /*---------------------------------------------------------------------------*/
 
+static dJointID find_shared_joint(dBodyID body1, dBodyID body2)
+{
+    int i, n = dBodyGetNumJoints(body1);
+    int j, m = dBodyGetNumJoints(body2);
+
+    for (i = 0; i < n; ++i)
+        for (j = 0; j < m; ++j)
+            if (dBodyGetJoint(body1, i) ==
+                dBodyGetJoint(body2, j))
+                return dBodyGetJoint(body1, i);
+
+    return 0;
+}
+
+static void set_physics_joint_anchor(dJointID joint, float x, float y, float z)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeBall:      dJointSetBallAnchor     (joint, x, y, z); break;
+    case dJointTypeHinge:     dJointSetHingeAnchor    (joint, x, y, z); break;
+    case dJointTypeHinge2:    dJointSetHinge2Anchor   (joint, x, y, z); break;
+    case dJointTypeUniversal: dJointSetUniversalAnchor(joint, x, y, z); break;
+    }
+}
+
+static void set_physics_joint_axis_1(dJointID joint, float x, float y, float z)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge:     dJointSetHingeAxis     (joint, x, y, z); break;
+    case dJointTypeSlider:    dJointSetSliderAxis    (joint, x, y, z); break;
+    case dJointTypeHinge2:    dJointSetHinge2Axis1   (joint, x, y, z); break;
+    case dJointTypeUniversal: dJointSetUniversalAxis1(joint, x, y, z); break;
+    }
+}
+
+static void set_physics_joint_axis_2(dJointID joint, float x, float y, float z)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge2:    dJointSetHinge2Axis2   (joint, x, y, z); break;
+    case dJointTypeUniversal: dJointSetUniversalAxis2(joint, x, y, z); break;
+    }
+}
+
+static void set_physics_joint_param(dJointID joint, int p, float v)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge:     dJointSetHingeParam    (joint, p, v); break;
+    case dJointTypeSlider:    dJointSetSliderParam   (joint, p, v); break;
+    case dJointTypeHinge2:    dJointSetHinge2Param   (joint, p, v); break;
+    case dJointTypeUniversal: dJointSetUniversalParam(joint, p, v); break;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 dGeomID set_physics_solid(dGeomID geom, int o, int f,
                           float a, float b, float c, float d)
 {
@@ -270,6 +328,70 @@ dGeomID set_physics_solid(dGeomID geom, int o, int f,
 void set_physics_joint(dGeomID geom1, dGeomID geom2, int o,
                        int f, float a, float b, float c)
 {
+    dBodyID  body1 = dGeomGetBody(geom1);
+    dBodyID  body2 = dGeomGetBody(geom2);
+    dJointID joint = find_shared_joint(body1, body2);
+
+    switch (o)
+    {
+    case JOINT_TYPE:
+        if (joint) dJointDestroy(joint);
+
+        switch (f)
+        {
+        case JOINT_TYPE_BALL:
+            joint = dJointCreateBall     (world, 0); break;
+        case JOINT_TYPE_HINGE:
+            joint = dJointCreateHinge    (world, 0); break;
+        case JOINT_TYPE_SLIDER:
+            joint = dJointCreateSlider   (world, 0); break;
+        case JOINT_TYPE_UNIVERSAL:
+            joint = dJointCreateUniversal(world, 0); break;
+        case JOINT_TYPE_HINGE_2:
+            joint = dJointCreateHinge2   (world, 0); break;
+        case JOINT_TYPE_FIXED:
+            joint = dJointCreateFixed    (world, 0); break;
+        }
+
+        if (joint) dJointAttach(joint, body1, body2);
+        break;
+    case JOINT_ANCHOR:
+        if (joint) set_physics_joint_anchor(joint, a, b, c);
+        break;
+    case JOINT_AXIS_1:
+        if (joint) set_physics_joint_axis_1(joint, a, b, c);
+        break;
+    case JOINT_AXIS_2:
+        if (joint) set_physics_joint_axis_2(joint, a, b, c);
+        break;
+    case JOINT_MIN_VALUE:
+        if (joint) set_physics_joint_param(joint, dParamLoStop, a);
+        break;
+    case JOINT_MAX_VALUE:
+        if (joint) set_physics_joint_param(joint, dParamHiStop, a);
+        break;
+    case JOINT_VELOCITY:
+        if (joint) set_physics_joint_param(joint, dParamVel, a);
+        break;
+    case JOINT_VELOCITY_2:
+        if (joint) set_physics_joint_param(joint, dParamVel2, a);
+        break;
+    case JOINT_FORCE:
+        if (joint) set_physics_joint_param(joint, dParamFMax, a);
+        break;
+    case JOINT_FORCE_2:
+        if (joint) set_physics_joint_param(joint, dParamFMax2, a);
+        break;
+    case JOINT_RESTITUTION:
+        if (joint) set_physics_joint_param(joint, dParamBounce, a);
+        break;
+    case JOINT_SUSPENSION_ERP:
+        if (joint) set_physics_joint_param(joint, dParamSuspensionERP, a);
+        break;
+    case JOINT_SUSPENSION_CFM:
+        if (joint) set_physics_joint_param(joint, dParamSuspensionCFM, a);
+        break;
+    }
 }
 
 /*---------------------------------------------------------------------------*/

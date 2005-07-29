@@ -649,32 +649,18 @@ static int E_set_entity_joint(lua_State *L)
         send_set_entity_joint(i, j, o,
                               L_getinteger(L, -n + 3), 0, 0, 0);     break;
     case JOINT_ANCHOR:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3),
-                              L_getnumber (L, -n + 4),
-                              L_getnumber (L, -n + 5));              break;
     case JOINT_AXIS_1:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3),
-                              L_getnumber (L, -n + 4),
-                              L_getnumber (L, -n + 5));              break;
     case JOINT_AXIS_2:
         send_set_entity_joint(i, j, o, 0,
                               L_getnumber (L, -n + 3),
                               L_getnumber (L, -n + 4),
                               L_getnumber (L, -n + 5));              break;
     case JOINT_MIN_VALUE:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3), 0, 0);        break;
     case JOINT_MAX_VALUE:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3), 0, 0);        break;
     case JOINT_VELOCITY:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case JOINT_VELOCITY_2:
     case JOINT_FORCE:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3), 0, 0);        break;
+    case JOINT_FORCE_2:
     case JOINT_RESTITUTION:
         send_set_entity_joint(i, j, o, 0,
                               L_getnumber (L, -n + 3), 0, 0);        break;
@@ -2083,8 +2069,12 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "joint_min_value",           JOINT_MIN_VALUE);
     lua_constant(L, "joint_max_value",           JOINT_MAX_VALUE);
     lua_constant(L, "joint_velocity",            JOINT_VELOCITY);
+    lua_constant(L, "joint_velocity_2",          JOINT_VELOCITY_2);
     lua_constant(L, "joint_force",               JOINT_FORCE);
+    lua_constant(L, "joint_force_2",             JOINT_FORCE_2);
     lua_constant(L, "joint_restitution",         JOINT_RESTITUTION);
+    lua_constant(L, "joint_suspension_erp",      JOINT_SUSPENSION_ERP);
+    lua_constant(L, "joint_suspension_cfm",      JOINT_SUSPENSION_CFM);
 
     lua_constant(L, "joint_type_none",           JOINT_TYPE_NONE);
     lua_constant(L, "joint_type_ball",           JOINT_TYPE_BALL);
