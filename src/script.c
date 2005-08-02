@@ -588,86 +588,6 @@ static int E_set_entity_flags(lua_State *L)
     return 0;
 }
 
-static int E_set_entity_solid(lua_State *L)
-{
-    int n = lua_gettop  (L);
-    int i = E_getentity (L, -n + 0);
-    int o = L_getinteger(L, -n + 1);
-
-    switch (o)
-    {
-    case SOLID_TYPE:
-        send_set_entity_solid(i, o,
-                              L_getinteger(L, -n + 2), 0, 0, 0, 0);  break;
-    case SOLID_BOX_PARAM:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2),
-                              L_getnumber (L, -n + 3),
-                              L_getnumber (L, -n + 4), 0);           break;
-    case SOLID_PLANE_PARAM:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2),
-                              L_getnumber (L, -n + 3),
-                              L_getnumber (L, -n + 4),
-                              L_getnumber (L, -n + 5));              break;
-    case SOLID_SPHERE_PARAM:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
-    case SOLID_CAPSULE_PARAM:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2),
-                              L_getnumber (L, -n + 3), 0, 0);        break;
-    case SOLID_CATEGORY_BITS:
-        send_set_entity_solid(i, o,
-                              L_getinteger(L, -n + 2), 0, 0, 0, 0);  break;
-    case SOLID_COLLIDER_BITS:
-        send_set_entity_solid(i, o,
-                              L_getinteger(L, -n + 2), 0, 0, 0, 0);  break;
-    case SOLID_DENSITY:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
-    case SOLID_FRICTION:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
-    case SOLID_RESTITUTION:
-        send_set_entity_solid(i, o, 0,
-                              L_getnumber (L, -n + 2), 0, 0, 0);     break;
-    }
-    return 0;
-}
-
-static int E_set_entity_joint(lua_State *L)
-{
-    int n = lua_gettop  (L);
-    int i = E_getentity (L, -n + 0);
-    int j = E_getentity (L, -n + 1);
-    int o = L_getinteger(L, -n + 2);
-
-    switch (o)
-    {
-    case JOINT_TYPE:
-        send_set_entity_joint(i, j, o,
-                              L_getinteger(L, -n + 3), 0, 0, 0);     break;
-    case JOINT_ANCHOR:
-    case JOINT_AXIS_1:
-    case JOINT_AXIS_2:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3),
-                              L_getnumber (L, -n + 4),
-                              L_getnumber (L, -n + 5));              break;
-    case JOINT_MIN_VALUE:
-    case JOINT_MAX_VALUE:
-    case JOINT_VELOCITY:
-    case JOINT_VELOCITY_2:
-    case JOINT_FORCE:
-    case JOINT_FORCE_2:
-    case JOINT_RESTITUTION:
-        send_set_entity_joint(i, j, o, 0,
-                              L_getnumber (L, -n + 3), 0, 0);        break;
-    }
-    return 0;
-}
-
 /*---------------------------------------------------------------------------*/
 /* Entity relative transform                                                 */
 
@@ -793,6 +713,122 @@ static int E_get_entity_bound(lua_State *L)
     lua_pushnumber(L, b[5]);
 
     return 6;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int E_set_entity_body_type(lua_State *L)
+{
+    set_entity_body_type(E_getentity (L, -2),
+                         L_getboolean(L, -1));
+    return 0;
+}
+
+static int E_set_entity_body_attr(lua_State *L)
+{
+    set_entity_body_attr_f(E_getentity (L, -3),
+                           L_getinteger(L, -2),
+                           L_getnumber (L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int E_set_entity_geom_type(lua_State *L)
+{
+    int n = lua_gettop  (L);
+    int i = E_getentity (L, -n + 0);
+    int t = L_getinteger(L, -n + 1);
+
+    float v[4] = { 0, 0, 0, 0 };
+
+    switch (t)
+    {
+    case dSphereClass:
+        v[0] = L_getnumber(L, -n + 2);
+        break;
+    case dCCylinderClass:
+        v[0] = L_getnumber(L, -n + 2);
+        v[1] = L_getnumber(L, -n + 3);
+        break;
+    case dBoxClass:
+        v[0] = L_getnumber(L, -n + 2);
+        v[1] = L_getnumber(L, -n + 3);
+        v[2] = L_getnumber(L, -n + 4);
+        break;
+    case dPlaneClass:
+        v[0] = L_getnumber(L, -n + 2);
+        v[1] = L_getnumber(L, -n + 3);
+        v[2] = L_getnumber(L, -n + 4);
+        v[3] = L_getnumber(L, -n + 5);
+        break;
+    }
+
+    set_entity_geom_type(i, t, v);
+    return 0;
+}
+
+static int E_set_entity_geom_attr(lua_State *L)
+{
+    int n = lua_gettop  (L);
+    int i = E_getentity (L, -n + 0);
+    int p = L_getinteger(L, -n + 1);
+
+    switch (p)
+    {
+    case GEOM_ATTR_CATEGORY:
+    case GEOM_ATTR_COLLIDES:
+        set_entity_geom_attr_i(i, p, L_getinteger(L, -n + 2));
+        break;
+
+    case GEOM_ATTR_MASS:
+    case GEOM_ATTR_BOUNCE:
+    case GEOM_ATTR_FRICTION:
+    case GEOM_ATTR_SOFT_ERP:
+    case GEOM_ATTR_SOFT_CFM:
+        set_entity_geom_attr_f(i, p, L_getnumber(L, -n + 2));
+        break;
+    }
+
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int E_set_entity_joint_type(lua_State *L)
+{
+    set_entity_join_type(E_getentity (L, -3),
+                         E_getentity (L, -2),
+                         L_getinteger(L, -1));
+    return 0;
+}
+
+static int E_set_entity_joint_attr(lua_State *L)
+{
+    int n = lua_gettop  (L);
+    int i = E_getentity (L, -n + 0);
+    int j = E_getentity (L, -n + 1);
+    int p = L_getinteger(L, -n + 2);
+
+    float v[3] = { 0, 0, 0 };
+
+    switch (p)
+    {
+    case JOINT_ATTR_ANCHOR:
+    case JOINT_ATTR_AXIS_1:
+    case JOINT_ATTR_AXIS_2:
+        v[0] = L_getnumber(L, -n + 3);
+        v[1] = L_getnumber(L, -n + 4);
+        v[2] = L_getnumber(L, -n + 5);
+        set_entity_join_attr_v(i, j, p, v);
+        break;
+
+    default:
+        set_entity_join_attr_f(i, j, p, L_getnumber(L, -n + 3));
+        break;
+    }
+
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1909,8 +1945,6 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_scale",      E_set_entity_scale);
     lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
     lua_function(L, "set_entity_flags",      E_set_entity_flags);
-    lua_function(L, "set_entity_solid",      E_set_entity_solid);
-    lua_function(L, "set_entity_joint",      E_set_entity_joint);
 
     lua_function(L, "get_entity_position",   E_get_entity_position);
     lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
@@ -1922,6 +1956,14 @@ void luaopen_electro(lua_State *L)
 
     lua_function(L, "move_entity",           E_move_entity);
     lua_function(L, "turn_entity",           E_turn_entity);
+
+    lua_function(L, "set_entity_body_type",  E_set_entity_body_type);
+    lua_function(L, "set_entity_geom_type",  E_set_entity_geom_type);
+    lua_function(L, "set_entity_joint_type", E_set_entity_joint_type);
+
+    lua_function(L, "set_entity_body_attr",  E_set_entity_body_attr);
+    lua_function(L, "set_entity_geom_attr",  E_set_entity_geom_attr);
+    lua_function(L, "set_entity_joint_attr", E_set_entity_joint_attr);
 
     /* Object functions */
 
@@ -2030,7 +2072,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_background",        E_set_background);
     lua_function(L, "exit",                  E_exit);
 
-    /* Entity Constants */
+    /* Entity constants */
 
     lua_constant(L, "entity_flag_hidden",        FLAG_HIDDEN);
     lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
@@ -2041,47 +2083,62 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
     lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
 
-    /* Solid constants */
+    /* Body constants */
 
-    lua_constant(L, "solid_type",                SOLID_TYPE);
-    lua_constant(L, "solid_box_param",           SOLID_BOX_PARAM);
-    lua_constant(L, "solid_plane_param",         SOLID_PLANE_PARAM);
-    lua_constant(L, "solid_sphere_param",        SOLID_SPHERE_PARAM);
-    lua_constant(L, "solid_capsule_param",       SOLID_CAPSULE_PARAM);
-    lua_constant(L, "solid_category_bits",       SOLID_CATEGORY_BITS);
-    lua_constant(L, "solid_collider_bits",       SOLID_COLLIDER_BITS);
-    lua_constant(L, "solid_density",             SOLID_DENSITY);
-    lua_constant(L, "solid_friction",            SOLID_FRICTION);
-    lua_constant(L, "solid_restitution",         SOLID_RESTITUTION);
+    lua_constant(L, "body_attr_gravity",         BODY_ATTR_GRAVITY);
 
-    lua_constant(L, "solid_type_none",           SOLID_TYPE_NONE);
-    lua_constant(L, "solid_type_box",            SOLID_TYPE_BOX);
-    lua_constant(L, "solid_type_plane",          SOLID_TYPE_PLANE);
-    lua_constant(L, "solid_type_sphere",         SOLID_TYPE_SPHERE);
-    lua_constant(L, "solid_type_capsule",        SOLID_TYPE_CAPSULE);
+    /* Geom constants */
+
+    lua_constant(L, "geom_type_box",             dBoxClass);
+    lua_constant(L, "geom_type_plane",           dPlaneClass);
+    lua_constant(L, "geom_type_sphere",          dSphereClass);
+    lua_constant(L, "geom_type_capsule",         dCCylinderClass);
+
+    lua_constant(L, "geom_attr_category",        GEOM_ATTR_CATEGORY);
+    lua_constant(L, "geom_attr_collides",        GEOM_ATTR_COLLIDES);
+    lua_constant(L, "geom_attr_mass",            GEOM_ATTR_MASS);
+    lua_constant(L, "geom_attr_bounce",          GEOM_ATTR_BOUNCE);
+    lua_constant(L, "geom_attr_friction",        GEOM_ATTR_FRICTION);
+    lua_constant(L, "geom_attr_soft_erp",        GEOM_ATTR_SOFT_ERP);
+    lua_constant(L, "geom_attr_soft_cfm",        GEOM_ATTR_SOFT_CFM);
 
     /* Joint constants */
 
-    lua_constant(L, "joint_type",                JOINT_TYPE);
-    lua_constant(L, "joint_anchor",              JOINT_ANCHOR);
-    lua_constant(L, "joint_axis_1",              JOINT_AXIS_1);
-    lua_constant(L, "joint_axis_2",              JOINT_AXIS_2);
-    lua_constant(L, "joint_min_value",           JOINT_MIN_VALUE);
-    lua_constant(L, "joint_max_value",           JOINT_MAX_VALUE);
-    lua_constant(L, "joint_velocity",            JOINT_VELOCITY);
-    lua_constant(L, "joint_velocity_2",          JOINT_VELOCITY_2);
-    lua_constant(L, "joint_force",               JOINT_FORCE);
-    lua_constant(L, "joint_force_2",             JOINT_FORCE_2);
-    lua_constant(L, "joint_restitution",         JOINT_RESTITUTION);
-    lua_constant(L, "joint_suspension_erp",      JOINT_SUSPENSION_ERP);
-    lua_constant(L, "joint_suspension_cfm",      JOINT_SUSPENSION_CFM);
+    lua_constant(L, "joint_type_ball",           dJointTypeBall);
+    lua_constant(L, "joint_type_hinge",          dJointTypeHinge);
+    lua_constant(L, "joint_type_slider",         dJointTypeSlider);
+    lua_constant(L, "joint_type_universal",      dJointTypeUniversal);
+    lua_constant(L, "joint_type_hinge_2",        dJointTypeHinge2);
 
-    lua_constant(L, "joint_type_none",           JOINT_TYPE_NONE);
-    lua_constant(L, "joint_type_ball",           JOINT_TYPE_BALL);
-    lua_constant(L, "joint_type_hinge",          JOINT_TYPE_HINGE);
-    lua_constant(L, "joint_type_slider",         JOINT_TYPE_SLIDER);
-    lua_constant(L, "joint_type_universal",      JOINT_TYPE_UNIVERSAL);
-    lua_constant(L, "joint_type_hinge_2",        JOINT_TYPE_HINGE_2);
+    lua_constant(L, "joint_attr_anchor",         JOINT_ATTR_ANCHOR);
+    lua_constant(L, "joint_attr_axis_1",         JOINT_ATTR_AXIS_1);
+    lua_constant(L, "joint_attr_axis_2",         JOINT_ATTR_AXIS_2);
+    lua_constant(L, "joint_attr_lo_stop",        dParamLoStop);
+    lua_constant(L, "joint_attr_lo_stop_2",      dParamLoStop2);
+    lua_constant(L, "joint_attr_lo_stop_3",      dParamLoStop3);
+    lua_constant(L, "joint_attr_hi_stop",        dParamHiStop);
+    lua_constant(L, "joint_attr_hi_stop_2",      dParamHiStop2);
+    lua_constant(L, "joint_attr_hi_stop_3",      dParamHiStop3);
+    lua_constant(L, "joint_attr_velocity",       dParamVel);
+    lua_constant(L, "joint_attr_velocity_2",     dParamVel2);
+    lua_constant(L, "joint_attr_velocity_3",     dParamVel3);
+    lua_constant(L, "joint_attr_force_max",      dParamFMax);
+    lua_constant(L, "joint_attr_force_max_2",    dParamFMax2);
+    lua_constant(L, "joint_attr_force_max_3",    dParamFMax3);
+    lua_constant(L, "joint_attr_bounce",         dParamBounce);
+    lua_constant(L, "joint_attr_bounce_2",       dParamBounce2);
+    lua_constant(L, "joint_attr_bounce_3",       dParamBounce3);
+    lua_constant(L, "joint_attr_cfm",            dParamCFM);
+    lua_constant(L, "joint_attr_cfm_2",          dParamCFM2);
+    lua_constant(L, "joint_attr_cfm_3",          dParamCFM3);
+    lua_constant(L, "joint_attr_stop_erp",       dParamStopERP);
+    lua_constant(L, "joint_attr_stop_erp_2",     dParamStopERP2);
+    lua_constant(L, "joint_attr_stop_erp_3",     dParamStopERP3);
+    lua_constant(L, "joint_attr_stop_cfm",       dParamStopCFM);
+    lua_constant(L, "joint_attr_stop_cfm_2",     dParamStopCFM2);
+    lua_constant(L, "joint_attr_stop_cfm_3",     dParamStopCFM3);
+    lua_constant(L, "joint_attr_susp_erp",       dParamSuspensionERP);
+    lua_constant(L, "joint_attr_susp_cfm",       dParamSuspensionCFM);
 
     /* Brush constants */
 

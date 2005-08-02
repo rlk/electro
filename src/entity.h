@@ -112,8 +112,6 @@ void  send_set_entity_bound    (int, const float[6]);
 void  send_set_entity_basis    (int, const float[16]);
 void  send_set_entity_alpha    (int, float);
 void  send_set_entity_flags    (int, int, int);
-void  send_set_entity_solid    (int, int, int, float, float, float, float);
-void  send_set_entity_joint    (int, int, int, int,   float, float, float);
 
 void  send_move_entity(int, const float[3]);
 void  send_turn_entity(int, const float[3]);
@@ -137,6 +135,18 @@ void  get_entity_scale   (int, float[3]);
 void  get_entity_bound   (int, float[6]);
 float get_entity_alpha   (int);
 int   get_entity_flags   (int);
+
+/*---------------------------------------------------------------------------*/
+
+void set_entity_body_type(int,      int);
+void set_entity_geom_type(int,      int, const float *);
+void set_entity_join_type(int, int, int);
+
+void set_entity_body_attr_f(int,      int, float);
+void set_entity_geom_attr_i(int,      int, int);
+void set_entity_geom_attr_f(int,      int, float);
+void set_entity_join_attr_f(int, int, int, float);
+void set_entity_join_attr_v(int, int, int, const float *);
 
 /*---------------------------------------------------------------------------*/
 

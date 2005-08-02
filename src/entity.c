@@ -58,6 +58,8 @@ struct entity
 
     /* Physical representation. */
 
+    float   center[3];
+    dBodyID body;
     dGeomID geom;
 };
 
@@ -169,6 +171,12 @@ void transform_entity(int i)
     glScalef(e->scale[0],
              e->scale[1],
              e->scale[2]);
+
+    /* Center of mass. */
+
+    glTranslatef(-e->center[0],
+                 -e->center[1],
+                 -e->center[2]);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -199,7 +207,6 @@ int test_entity_aabb(int i)
 {
     struct entity *e = get_entity(i);
     struct frustum F;
-
 
     if (entity_func[e->type] &&
         entity_func[e->type]->aabb)
@@ -294,6 +301,74 @@ static void attach_entity(int i, int j)
 }
 
 /*===========================================================================*/
+
+static void center_geom_entity(dBodyID body, int i, int d)
+{
+    struct entity *e = get_entity(i);
+    int j;
+
+    /* Move the body's center of mass to the origin. */
+
+    if (e->geom && d)
+        mov_phys_mass(body, e->geom, e->position, e->rotation);
+
+    /* Continue traversing the hierarchy. */
+
+    for (j = CAR(i); j; j = CDR(j))
+        center_geom_entity(body, j, d + 1);
+}
+
+static void remass_geom_entity(dBodyID body, int i, int d)
+{
+    struct entity *e = get_entity(i);
+    int j;
+
+    /* Accumulate this geom's mass. */
+
+    if (e->geom)
+    {
+        if (d)
+            add_phys_mass(body, e->geom, e->position, e->rotation);
+        else
+            add_phys_mass(body, e->geom, NULL, NULL);
+    }
+
+    /* Continue traversing the hierarchy. */
+
+    for (j = CAR(i); j; j = CDR(j))
+        remass_geom_entity(body, j, d + 1);
+}
+
+static void remass_body_entity(int i)
+{
+    /* Compute a body's moment of inertia by adding all child geom masses. */
+
+    if (i)
+    {
+        struct entity *e = get_entity(i);
+
+        new_phys_mass(e->body, e->center);
+        remass_geom_entity(e->body, i, 0);
+        center_geom_entity(e->body, i, 0);
+        end_phys_mass(e->body, e->center);
+    }
+}
+
+static int find_body_entity(int i)
+{
+    /* Search up the tree for an entity with a rigid body strucure. */
+
+    if (i)
+    {
+        if (get_entity(i)->body)
+            return i;
+        else
+            return find_body_entity(PAR(i));
+    }
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
 
 static void create_entity(int i, int type, int data)
 {
@@ -391,7 +466,8 @@ void send_set_entity_position(int i, const float p[3])
     send_float((e->position[1] = p[1]));
     send_float((e->position[2] = p[2]));
 
-    if (e->geom) set_physics_position(e->geom, e->position);
+    if (e->body) set_phys_position(e->body, e->position);
+    if (e->geom) remass_body_entity(find_body_entity(i));
 }
 
 void send_set_entity_basis(int i, const float M[16])
@@ -415,7 +491,8 @@ void send_set_entity_basis(int i, const float M[16])
 
     load_mat(e->rotation, M);
 
-    if (e->geom) set_physics_rotation(e->geom, e->rotation);
+    if (e->body) set_phys_rotation(e->body, e->rotation);
+    if (e->geom) remass_body_entity(find_body_entity(i));
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -455,21 +532,76 @@ void send_set_entity_flags(int i, int flags, int state)
         e->flags = e->flags & (~flags);
 }
 
-void send_set_entity_solid(int i, int o, int f, float a,
-                           float b, float c, float d)
-{
-    struct entity *e = get_entity(i);
+/*---------------------------------------------------------------------------*/
 
-    e->geom = set_physics_solid(e->geom, o, f, a, b, c, d);
+void set_entity_body_type(int i, int t)
+{
+    get_entity(i)->body = set_phys_body_type(get_entity(i)->body, t);
 }
 
-void send_set_entity_joint(int i, int j, int o, int f,
-                           float a, float b, float c)
+void set_entity_geom_type(int i, int t, const float *v)
 {
-    struct entity *e1 = get_entity(i);
-    struct entity *e2 = get_entity(j);
+    struct entity *e = get_entity(i);
+    int j = find_body_entity(i);
 
-    set_physics_joint(e1->geom, e2->geom, o, f, a, b, c);
+    if (j)
+        e->geom = set_phys_geom_type(get_entity(i)->geom,
+                                     get_entity(j)->body, t, v);
+    else
+        e->geom = set_phys_geom_type(get_entity(i)->geom, 0, t, v);
+}
+
+void set_entity_join_type(int i, int j, int t)
+{
+    if (j)
+        set_phys_join_type(get_entity(i)->body,
+                           get_entity(j)->body, t);
+    else
+        set_phys_join_type(get_entity(i)->body, 0, t);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void set_entity_body_attr_f(int i, int p, float f)
+{
+    if (get_entity(i)->body)
+        set_phys_body_attr_f(get_entity(i)->body, p, f);
+}
+
+void set_entity_geom_attr_f(int i, int p, float f)
+{
+    if (get_entity(i)->geom)
+        set_phys_geom_attr_f(get_entity(i)->geom, p, f);
+}
+
+void set_entity_geom_attr_i(int i, int p, int d)
+{
+    if (get_entity(i)->geom)
+        set_phys_geom_attr_f(get_entity(i)->geom, p, d);
+}
+
+void set_entity_join_attr_f(int i, int j, int p, float f)
+{
+    if (get_entity(i)->body)
+    {
+        if (j)
+            set_phys_join_attr_f(get_entity(i)->body,
+                                 get_entity(j)->body, p, f);
+        else
+            set_phys_join_attr_f(get_entity(i)->body, 0, p, f);
+    }
+}
+
+void set_entity_join_attr_v(int i, int j, int p, const float *v)
+{
+    if (get_entity(i)->body)
+    {
+        if (j)
+            set_phys_join_attr_v(get_entity(i)->body,
+                                 get_entity(j)->body, p, v);
+        else
+            set_phys_join_attr_v(get_entity(i)->body, 0, p, v);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -810,32 +942,21 @@ void step_entities(float dt)
     }
 
     /* Run the physical simulation and update all entity states. */
-/*
-    for (i= 0; i < n; ++i)
-    {
-        struct entity *e = get_entity(i);
 
-        if (e->type && e->geom)
-        {
-            set_physics_position(e->geom, e->position);
-            set_physics_rotation(e->geom, e->rotation);
-        }
-    }
-*/
     physics_step(dt);
 
     for (i = 0; i < n; ++i)
     {
         struct entity *e = get_entity(i);
 
-        if (e->type && e->geom)
+        if (e->type && e->body)
         {
             float p[3], R[16];
 
-            if (get_physics_position(e->geom, p))
-                send_set_entity_position(i, p);
-            if (get_physics_rotation(e->geom, R))
-                send_set_entity_basis   (i, R);
+            get_phys_position(e->body, p);
+            send_set_entity_position(i, p);
+            get_phys_rotation(e->body, R);
+            send_set_entity_basis   (i, R);
         }
     }
 }

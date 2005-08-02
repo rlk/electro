@@ -27,22 +27,26 @@ static dJointGroupID group;
 
 struct geom_data
 {
-    float density;
-    float friction;
-    float restitution;
+    dReal mass;
+    dReal bounce;
+    dReal friction;
+    dReal soft_erp;
+    dReal soft_cfm;
 };
 
 static struct geom_data *create_data(void)
 {
     struct geom_data *data;
 
-    /* Allocate a geom data structure with default. */
+    /* Allocate a geom data structure with default values. */
 
     if ((data = (struct geom_data *) calloc(1, sizeof (struct geom_data))))
     {
-        data->density     = 5.0;
-        data->friction    = dInfinity;
-        data->restitution = 0.5;
+        data->mass     = 1.00;
+        data->bounce   = 0.50;
+        data->friction = dInfinity;
+        data->soft_erp = 0.20;
+        data->soft_cfm = 0.01;
     }
 
     return data;
@@ -57,43 +61,55 @@ static struct geom_data *get_data(dGeomID geom)
 
 static void callback(void *data, dGeomID o1, dGeomID o2)
 {
-    dContact contact[MAX_CONTACTS];
-    size_t sz = sizeof (dContact);
-    int i, n;
-
-    float friction    = MIN(get_data(o1)->friction,
-                            get_data(o2)->friction);
-    float restitution = MAX(get_data(o1)->restitution,
-                            get_data(o2)->restitution);
-
     dBodyID b1 = dGeomGetBody(o1);
     dBodyID b2 = dGeomGetBody(o2);
 
-    /* If the two bodies are connected, do nothing. */
-
-    if (b1 && b2 && dAreConnectedExcluding(b1, b1, dJointTypeContact))
+    if (b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeContact))
         return;
-    
-    /* Initialize the surface properties for each contact. */
 
-    for (i=0; i<MAX_CONTACTS; ++i)
+    /* Two geoms associated with the same body do not collide. */
+
+    if (b1 != b2)
     {
-        contact[i].surface.mode       = dContactBounce;
-        contact[i].surface.mu         = friction;
-        contact[i].surface.mu2        = 0.00;
-        contact[i].surface.bounce     = restitution;
-        contact[i].surface.bounce_vel = 0.10;
-        contact[i].surface.soft_cfm   = 0.01;
-    }
+        dContact contact[MAX_CONTACTS];
+        size_t sz = sizeof (dContact);
+        int i, n;
 
-    /* Enumerate the collision points, creating a contact joint for each. */
+        /* Find and enumerate all collision points. */
 
-    if ((n = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sz)))
-        for (i = 0; i < n; ++i)
+        if ((n = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sz)))
         {
-            dJointID c = dJointCreateContact(world, group, contact + i);
-            dJointAttach(c, b1, b2);
+            struct geom_data *d1 = get_data(o1);
+            struct geom_data *d2 = get_data(o2);
+
+            /* Compute collision parameters from geom parameters. */
+
+            float bounce   = MAX(d1->bounce,   d2->bounce);
+            float friction = MIN(d1->friction, d2->friction);
+            float soft_erp = MIN(d1->soft_erp, d2->soft_erp);
+            float soft_cfm = MAX(d1->soft_cfm, d2->soft_cfm);
+
+            /* Create a contact joint for each collision. */
+
+            for (i = 0; i < n; ++i)
+            {
+                dJointID c;
+
+                contact[i].surface.mode = dContactBounce
+                                        | dContactSoftCFM
+                                        | dContactSoftERP;
+
+                contact[i].surface.mu         = friction;
+                contact[i].surface.bounce     = bounce;
+                contact[i].surface.soft_cfm   = soft_cfm;
+                contact[i].surface.soft_erp   = soft_erp;
+                contact[i].surface.bounce_vel = 0.10;
+
+                c = dJointCreateContact(world, group, contact + i);
+                dJointAttach(c, b1, b2);
+            }
         }
+    }
 }
 
 void physics_step(float dt)
@@ -104,6 +120,7 @@ void physics_step(float dt)
 }
 
 /*===========================================================================*/
+/* OpenGL <-> ODE rotation matrix conversions                                */
 
 static void set_rotation(dMatrix3 D, const float S[16])
 {
@@ -121,146 +138,168 @@ static void get_rotation(float D[16], const dMatrix3 S)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Body mass accumulation functions                                          */
 
-static dGeomID set_physics_plane(dGeomID geom,
-                                 float a, float b, float c, float d)
+void new_phys_mass(dBodyID body, float v[3])
 {
-    dGeomPlaneSetParams(geom, a, b, c, d);
-    return geom;
+    dMass mass;
+
+    /* Zero the body's mass in preparation for mass accumulation. */
+
+    dMassSetZero(&mass);
+    dBodySetMass(body, &mass);
+
+    v[0] = v[1] = v[2] = 0;
 }
 
-static dGeomID set_physics_box(dGeomID geom, float x, float y, float z)
+void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
+                                               const float r[16])
 {
-    float d = get_data(geom)->density;
-    dMass m;
+    dVector3  v;
+    dMatrix3  M;
+    dReal   rad;
+    dReal   len;
+    dMass mass1;
+    dMass mass2;
 
-    dGeomBoxSetLengths(geom, x, y, z);
-    dMassSetBox(&m, d, x, y, z);
-    dBodySetMass(dGeomGetBody(geom), &m);
+    dGeomID object = dGeomTransformGetGeom(geom);
 
-    return geom;
+    /* Create a new mass for the given geom. */
+
+    switch (dGeomGetClass(object))
+    {
+    case dBoxClass:
+        dGeomBoxGetLengths(object, v);
+        dMassSetBoxTotal(&mass2, get_data(geom)->mass, v[0], v[1], v[2]);
+        break;
+
+    case dSphereClass:
+        rad = dGeomSphereGetRadius(object);
+        dMassSetSphereTotal(&mass2, get_data(geom)->mass, rad);
+        break;
+
+    case dCCylinderClass:
+        dGeomCCylinderGetParams(object, &rad, &len);
+        dMassSetCappedCylinderTotal(&mass2, get_data(geom)->mass, 3, rad, len);
+        break;
+
+    default:
+        dMassSetZero(&mass2);
+        break;
+    }
+
+    /* Transform the geom mass to the given position and rotation. */
+
+    if (p)
+        dMassTranslate(&mass2, p[0], p[1], p[2]);
+    if (r)
+    {
+        set_rotation(M, r);
+        dMassRotate(&mass2, M);
+    }
+
+    /* Accumulate the new mass with the body's existing mass. */
+
+    dBodyGetMass(body, &mass1);
+    dMassAdd(&mass1, &mass2);
+    dBodySetMass(body, &mass1);
 }
 
-static dGeomID set_physics_sphere(dGeomID geom, float r)
+void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
+                                               const float r[16])
 {
-    float d = get_data(geom)->density;
-    dMass m;
+    dMatrix3 M;
+    dMass mass;
 
-    dGeomSphereSetRadius(geom, r);
-    dMassSetSphere(&m, d, r);
-    dBodySetMass(dGeomGetBody(geom), &m);
+    dGeomID object = dGeomTransformGetGeom(geom);
 
-    return geom;
+    /* Move the geom so that the body's center of mass is at the origin. */
+
+    dBodyGetMass(body, &mass);
+    dGeomSetPosition(object, p[0] - mass.c[0],
+                             p[1] - mass.c[1],
+                             p[2] - mass.c[2]);
+
+    /* Apply the geom's rotation. */
+
+    set_rotation(M, r);
+    dGeomSetRotation(object, M);
 }
 
-static dGeomID set_physics_capsule(dGeomID geom, float r, float l)
+void end_phys_mass(dBodyID body, float v[3])
 {
-    float d = get_data(geom)->density;
-    dMass m;
+    dMass mass;
 
-    dGeomCCylinderSetParams(geom, r, l);
-    dMassSetCappedCylinder(&m, d, 3, r, l);
-    dBodySetMass(dGeomGetBody(geom), &m);
+    /* Translate the center of mass to the origin. */
 
-    return geom;
+    dBodyGetMass(body, &mass);
+
+    v[0] = mass.c[0];
+    v[1] = mass.c[1];
+    v[2] = mass.c[2];
+
+    dMassTranslate(&mass, -mass.c[0], -mass.c[1], -mass.c[2]);
+    dBodySetMass(body, &mass);
 }
 
 /*---------------------------------------------------------------------------*/
+/* Joint operation type switchers                                            */
 
-static dGeomID create_physics_plane(void)
+static dJointID create_phys_joint(int t)
 {
-    dGeomID geom = dCreatePlane(space, 0, 1, 0, 0);
-    void   *data = create_data();
-
-    dGeomSetData(geom, data);
-
-    return set_physics_plane(geom, 0, 1, 0, 0);
-}
-
-static dGeomID create_physics_box(void)
-{
-    dBodyID body = dBodyCreate(world);
-    dGeomID geom = dCreateBox(space, 1, 1, 1);
-    void   *data = create_data();
-
-    dGeomSetBody(geom, body);
-    dGeomSetData(geom, data);
-
-    return set_physics_box(geom, 1, 1, 1);
-}
-
-static dGeomID create_physics_sphere(void)
-{
-    dBodyID body = dBodyCreate(world);
-    dGeomID geom = dCreateSphere(space, 1);
-    void   *data = create_data();
-
-    dGeomSetBody(geom, body);
-    dGeomSetData(geom, data);
-
-    return set_physics_sphere(geom, 1);
-}
-
-static dGeomID create_physics_capsule(void)
-{
-    dBodyID body = dBodyCreate(world);
-    dGeomID geom = dCreateCCylinder(space, 1, 1);
-    void   *data = create_data();
-
-    dGeomSetBody(geom, body);
-    dGeomSetData(geom, data);
-
-    return set_physics_capsule(geom, 1, 1);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static dJointID find_shared_joint(dBodyID body1, dBodyID body2)
-{
-    int i, n = dBodyGetNumJoints(body1);
-    int j, m = dBodyGetNumJoints(body2);
-
-    for (i = 0; i < n; ++i)
-        for (j = 0; j < m; ++j)
-            if (dBodyGetJoint(body1, i) ==
-                dBodyGetJoint(body2, j))
-                return dBodyGetJoint(body1, i);
-
+    switch (t)
+    {
+    case dJointTypeBall:      return dJointCreateBall     (world, 0);
+    case dJointTypeHinge:     return dJointCreateHinge    (world, 0);
+    case dJointTypeSlider:    return dJointCreateSlider   (world, 0);
+    case dJointTypeUniversal: return dJointCreateUniversal(world, 0);
+    case dJointTypeHinge2:    return dJointCreateHinge2   (world, 0);
+    }
     return 0;
 }
 
-static void set_physics_joint_anchor(dJointID joint, float x, float y, float z)
+static void set_phys_joint_anchor(dJointID joint, const float v[3])
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeBall:      dJointSetBallAnchor     (joint, x, y, z); break;
-    case dJointTypeHinge:     dJointSetHingeAnchor    (joint, x, y, z); break;
-    case dJointTypeHinge2:    dJointSetHinge2Anchor   (joint, x, y, z); break;
-    case dJointTypeUniversal: dJointSetUniversalAnchor(joint, x, y, z); break;
+    case dJointTypeBall:
+        dJointSetBallAnchor     (joint, v[0], v[1], v[2]); break;
+    case dJointTypeHinge:
+        dJointSetHingeAnchor    (joint, v[0], v[1], v[2]); break;
+    case dJointTypeHinge2:
+        dJointSetHinge2Anchor   (joint, v[0], v[1], v[2]); break;
+    case dJointTypeUniversal:
+        dJointSetUniversalAnchor(joint, v[0], v[1], v[2]); break;
     }
 }
 
-static void set_physics_joint_axis_1(dJointID joint, float x, float y, float z)
+static void set_phys_joint_axis_1(dJointID joint, const float v[3])
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge:     dJointSetHingeAxis     (joint, x, y, z); break;
-    case dJointTypeSlider:    dJointSetSliderAxis    (joint, x, y, z); break;
-    case dJointTypeHinge2:    dJointSetHinge2Axis1   (joint, x, y, z); break;
-    case dJointTypeUniversal: dJointSetUniversalAxis1(joint, x, y, z); break;
+    case dJointTypeHinge:
+        dJointSetHingeAxis     (joint, v[0], v[1], v[2]); break;
+    case dJointTypeSlider:
+        dJointSetSliderAxis    (joint, v[0], v[1], v[2]); break;
+    case dJointTypeHinge2:
+        dJointSetHinge2Axis1   (joint, v[0], v[1], v[2]); break;
+    case dJointTypeUniversal:
+        dJointSetUniversalAxis1(joint, v[0], v[1], v[2]); break;
     }
 }
 
-static void set_physics_joint_axis_2(dJointID joint, float x, float y, float z)
+static void set_phys_joint_axis_2(dJointID joint, const float v[3])
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge2:    dJointSetHinge2Axis2   (joint, x, y, z); break;
-    case dJointTypeUniversal: dJointSetUniversalAxis2(joint, x, y, z); break;
+    case dJointTypeHinge2:
+        dJointSetHinge2Axis2   (joint, v[0], v[1], v[2]); break;
+    case dJointTypeUniversal:
+        dJointSetUniversalAxis2(joint, v[0], v[1], v[2]); break;
     }
 }
 
-static void set_physics_joint_param(dJointID joint, int p, float v)
+static void set_phys_joint_attr(dJointID joint, int p, float v)
 {
     switch (dJointGetType(joint))
     {
@@ -272,169 +311,196 @@ static void set_physics_joint_param(dJointID joint, int p, float v)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Body functions                                                            */
 
-dGeomID set_physics_solid(dGeomID geom, int o, int f,
-                          float a, float b, float c, float d)
+dBodyID set_phys_body_type(dBodyID body, int b)
 {
-    dBodyID body = geom ? dGeomGetBody(geom) : 0;
+    if (body) dBodyDestroy(body);
 
-    switch (o)
-    {
-    case SOLID_TYPE:
-        if (geom) free(dGeomGetData(geom));
-
-        if (body) dBodyDestroy(body);
-        if (geom) dGeomDestroy(geom);
-
-        switch (f)
-        {
-        case SOLID_TYPE_BOX:     return create_physics_box();
-        case SOLID_TYPE_PLANE:   return create_physics_plane();
-        case SOLID_TYPE_SPHERE:  return create_physics_sphere();
-        case SOLID_TYPE_CAPSULE: return create_physics_capsule();
-        }
+    if (b)
+        return dBodyCreate(world);
+    else
         return 0;
-
-    case SOLID_BOX_PARAM:
-        return set_physics_box(geom, a, b, c);
-    case SOLID_PLANE_PARAM:
-        return set_physics_plane(geom, a, b, c, d);
-    case SOLID_SPHERE_PARAM:
-        return set_physics_sphere(geom, a);
-    case SOLID_CAPSULE_PARAM:
-        return set_physics_capsule(geom, a, b);
-
-    case SOLID_CATEGORY_BITS:
-        dGeomSetCategoryBits(geom, f);
-        break;
-    case SOLID_COLLIDER_BITS:
-        dGeomSetCollideBits(geom, f);
-        break;
-
-    case SOLID_DENSITY:
-        get_data(geom)->density = a;
-        break;
-    case SOLID_FRICTION:
-        get_data(geom)->friction = a;
-        break;
-    case SOLID_RESTITUTION:
-        get_data(geom)->restitution = a;
-        break;
-    }
-
-    return geom;
 }
 
-void set_physics_joint(dGeomID geom1, dGeomID geom2, int o,
-                       int f, float a, float b, float c)
+void set_phys_body_attr_f(dBodyID body, int p, float f)
 {
-    dBodyID  body1 = dGeomGetBody(geom1);
-    dBodyID  body2 = dGeomGetBody(geom2);
-    dJointID joint = find_shared_joint(body1, body2);
-
-    switch (o)
+    switch (p)
     {
-    case JOINT_TYPE:
-        if (joint) dJointDestroy(joint);
-
-        switch (f)
-        {
-        case JOINT_TYPE_BALL:
-            joint = dJointCreateBall     (world, 0); break;
-        case JOINT_TYPE_HINGE:
-            joint = dJointCreateHinge    (world, 0); break;
-        case JOINT_TYPE_SLIDER:
-            joint = dJointCreateSlider   (world, 0); break;
-        case JOINT_TYPE_UNIVERSAL:
-            joint = dJointCreateUniversal(world, 0); break;
-        case JOINT_TYPE_HINGE_2:
-            joint = dJointCreateHinge2   (world, 0); break;
-        case JOINT_TYPE_FIXED:
-            joint = dJointCreateFixed    (world, 0); break;
-        }
-
-        if (joint) dJointAttach(joint, body1, body2);
-        break;
-    case JOINT_ANCHOR:
-        if (joint) set_physics_joint_anchor(joint, a, b, c);
-        break;
-    case JOINT_AXIS_1:
-        if (joint) set_physics_joint_axis_1(joint, a, b, c);
-        break;
-    case JOINT_AXIS_2:
-        if (joint) set_physics_joint_axis_2(joint, a, b, c);
-        break;
-    case JOINT_MIN_VALUE:
-        if (joint) set_physics_joint_param(joint, dParamLoStop, a);
-        break;
-    case JOINT_MAX_VALUE:
-        if (joint) set_physics_joint_param(joint, dParamHiStop, a);
-        break;
-    case JOINT_VELOCITY:
-        if (joint) set_physics_joint_param(joint, dParamVel, a);
-        break;
-    case JOINT_VELOCITY_2:
-        if (joint) set_physics_joint_param(joint, dParamVel2, a);
-        break;
-    case JOINT_FORCE:
-        if (joint) set_physics_joint_param(joint, dParamFMax, a);
-        break;
-    case JOINT_FORCE_2:
-        if (joint) set_physics_joint_param(joint, dParamFMax2, a);
-        break;
-    case JOINT_RESTITUTION:
-        if (joint) set_physics_joint_param(joint, dParamBounce, a);
-        break;
-    case JOINT_SUSPENSION_ERP:
-        if (joint) set_physics_joint_param(joint, dParamSuspensionERP, a);
-        break;
-    case JOINT_SUSPENSION_CFM:
-        if (joint) set_physics_joint_param(joint, dParamSuspensionCFM, a);
+    case BODY_ATTR_GRAVITY:
+        dBodySetGravityMode(body, f);
         break;
     }
 }
 
 /*---------------------------------------------------------------------------*/
+/* Geom functions                                                            */
 
-void set_physics_position(dGeomID geom, const float p[3])
+dGeomID set_phys_geom_type(dGeomID geom, dBodyID body, int t, const float *v)
 {
-    if (dGeomGetClass(geom) != dPlaneClass)
-        dGeomSetPosition(geom, p[0], p[1], p[2]);
+    dGeomID transform = 0;
+    dGeomID object    = 0;
+
+    /* Destroy the old geom, its transform, and its data. */
+
+    if (geom)
+    {
+        free(dGeomGetData(geom));
+        dGeomDestroy(geom);
+    }
+
+    /* Create a new geom of the required type. */
+
+    switch (t)
+    {
+    case dSphereClass:
+        transform = dCreateGeomTransform(space);
+        object    = dCreateSphere(0, v[0]);
+        break;
+    case dCCylinderClass:
+        transform = dCreateGeomTransform(space);
+        object    = dCreateCCylinder(0, v[0], v[1]);
+        break;
+    case dBoxClass:
+        transform = dCreateGeomTransform(space);
+        object    = dCreateBox(0, v[0], v[1], v[2]);
+        break;
+    case dPlaneClass:
+        object    = dCreatePlane(space, v[0], v[1], v[2], v[3]);
+        break;
+    }
+
+    /* Assign geom data and encapsulate the new geom in a transform. */
+
+    if (object)
+        dGeomSetData(object, create_data());
+
+    if (transform && object)
+    {
+        dGeomTransformSetCleanup(transform, 1);
+        dGeomTransformSetGeom(transform, object);
+        dGeomSetData(transform, dGeomGetData(object));
+    }
+
+    if (transform && body)
+        dGeomSetBody(transform, body);
+
+    return transform;
 }
 
-int get_physics_position(dGeomID geom, float p[3])
+void set_phys_geom_attr_i(dGeomID geom, int p, int i)
 {
-    if (dGeomGetClass(geom) != dPlaneClass)
+    dGeomID object = dGeomTransformGetGeom(geom);
+
+    switch (p)
     {
-        p[0] = dGeomGetPosition(geom)[0];
-        p[1] = dGeomGetPosition(geom)[1];
-        p[2] = dGeomGetPosition(geom)[2];
-        return 1;
+    case GEOM_ATTR_CATEGORY:
+        dGeomSetCategoryBits(object, i);
+        break;
+    case GEOM_ATTR_COLLIDES:
+        dGeomSetCollideBits(object, i);
+        break;
     }
+}
+
+void set_phys_geom_attr_f(dGeomID geom, int p, float f)
+{
+    dGeomID object = dGeomTransformGetGeom(geom);
+
+    switch (p)
+    {
+    case GEOM_ATTR_MASS:
+        get_data(object)->mass = f;
+        break;
+    case GEOM_ATTR_BOUNCE:
+        get_data(object)->bounce = f;
+        break;
+    case GEOM_ATTR_FRICTION:
+        get_data(object)->friction = f;
+        break;
+    case GEOM_ATTR_SOFT_ERP:
+        get_data(object)->soft_erp = f;
+        break;
+    case GEOM_ATTR_SOFT_CFM:
+        get_data(object)->soft_cfm = f;
+        break;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+/* Joint functions                                                           */
+
+dJointID find_shared_joint(dBodyID body1, dBodyID body2)
+{
+    int i1, n1 = dBodyGetNumJoints(body1);
+    int i2, n2 = dBodyGetNumJoints(body2);
+
+    for (i1 = 0; i1 < n1; ++i1)
+        for (i2 = 0; i2 < n2; ++i2)
+            if (dBodyGetJoint(body1, i1) ==
+                dBodyGetJoint(body2, i2)) return dBodyGetJoint(body1, i1);
+
     return 0;
 }
 
-/*---------------------------------------------------------------------------*/
+void set_phys_join_type(dBodyID body1, dBodyID body2, int t)
+{
+    dJointID joint = find_shared_joint(body1, body2);
 
-void set_physics_rotation(dGeomID geom, const float r[16])
+    if (joint)
+        dJointDestroy(joint);
+
+    if ((joint = create_phys_joint(t)))
+        dJointAttach(joint, body1, body2);
+}
+
+void set_phys_join_attr_f(dBodyID body1, dBodyID body2, int p, float f)
+{
+    dJointID joint = find_shared_joint(body1, body2);
+
+    if (joint)
+        set_phys_joint_attr(joint, p, f);
+}
+
+void set_phys_join_attr_v(dBodyID body1, dBodyID body2, int p, const float *v)
+{
+    dJointID joint = find_shared_joint(body1, body2);
+
+    if (joint)
+        switch (p)
+        {
+        case JOINT_ATTR_ANCHOR: set_phys_joint_anchor(joint, v); break;
+        case JOINT_ATTR_AXIS_1: set_phys_joint_axis_1(joint, v); break;
+        case JOINT_ATTR_AXIS_2: set_phys_joint_axis_2(joint, v); break;
+        }
+}
+
+/*---------------------------------------------------------------------------*/
+/* Position and rotation accessors                                           */
+
+void set_phys_position(dBodyID body, const float p[3])
+{
+    dBodySetPosition(body, p[0], p[1], p[2]);
+}
+
+void get_phys_position(dBodyID body, float p[3])
+{
+    p[0] = dBodyGetPosition(body)[0];
+    p[1] = dBodyGetPosition(body)[1];
+    p[2] = dBodyGetPosition(body)[2];
+}
+
+void set_phys_rotation(dBodyID body, const float r[16])
 {
     dMatrix3 R;
 
-    if (dGeomGetClass(geom) != dPlaneClass)
-    {
-        set_rotation(R, r);
-        dGeomSetRotation(geom, R);
-    }
+    set_rotation(R, r);
+    dBodySetRotation(body, R);
 }
 
-int get_physics_rotation(dGeomID geom, float r[16])
+void get_phys_rotation(dBodyID body, float r[16])
 {
-    if (dGeomGetClass(geom) != dPlaneClass)
-    {
-        get_rotation(r, dGeomGetRotation(geom));
-        return 1;
-    }
-    return 0;
+    get_rotation(r, dBodyGetRotation(body));
 }
 
 /*===========================================================================*/
