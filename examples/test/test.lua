@@ -9,6 +9,8 @@ rot_y   = 0
 pos_x   = 0
 pos_y   = 5
 pos_z   = 0
+key_x   = 0
+key_y   = 0
 
 body = nil
 tire = { }
@@ -105,10 +107,10 @@ function add_car()
     local height = 3
 
     local pos = {
-        {  0.85, 0.6,  1.30 },
-        {  0.85, 0.6, -1.25 },
-        { -0.85, 0.6, -1.25 },
-        { -0.85, 0.6,  1.30 }
+        {  0.85, 0.55,  1.30 },
+        {  0.85, 0.55, -1.25 },
+        { -0.85, 0.55, -1.25 },
+        { -0.85, 0.55,  1.30 }
     }
 
     part1 = E.create_pivot()
@@ -158,34 +160,18 @@ function add_car()
         E.set_entity_joint_attr(body, tire[i], E.joint_attr_axis_2, 1, 0, 0)
         E.set_entity_joint_attr(body, tire[i], E.joint_attr_lo_stop, 0)
         E.set_entity_joint_attr(body, tire[i], E.joint_attr_hi_stop, 0)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_erp, 0.05)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_cfm, 0.03)
+        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_erp, 0.10)
+        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_cfm, 0.02)
     end
 
-    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_cfm, 0.2)
-    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_erp, 0.1)
-    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_cfm, 0.2)
-    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_erp, 0.1)
-end
-
-function change_speed(d)
-    if math.abs(speed + d) > math.abs(speed) then
-        force = 100
-    else
-        force = 10
-    end
-
-    speed = speed + d
-
-    E.set_entity_joint_attr(body, tire[1], E.joint_attr_velocity_2, 30 * speed)
-    E.set_entity_joint_attr(body, tire[4], E.joint_attr_velocity_2, 30 * speed)
-
-    E.set_entity_joint_attr(body, tire[1], E.joint_attr_force_max_2, force)
-    E.set_entity_joint_attr(body, tire[4], E.joint_attr_force_max_2, force)
-end
-
-function change_steer(d)
-    steer = steer + d
+    E.set_entity_joint_attr(body, tire[1], E.joint_attr_stop_cfm, 0.00)
+    E.set_entity_joint_attr(body, tire[1], E.joint_attr_stop_erp, 0.80)
+    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_cfm, 0.01)
+    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_erp, 0.10)
+    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_cfm, 0.01)
+    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_erp, 0.10)
+    E.set_entity_joint_attr(body, tire[4], E.joint_attr_stop_cfm, 0.00)
+    E.set_entity_joint_attr(body, tire[4], E.joint_attr_stop_erp, 0.80)
 end
 
 function do_start()
@@ -217,10 +203,30 @@ function do_start()
     E.enable_timer(true)
 end
 
+--[[
 function do_contact(object1, object2, px, py, pz, nx, ny, nz, d)
     if object1 == part2 or object2 == part2 then
         print(object1, object2, px, py, pz, nx, ny, nz, d)
     end
+end
+]]--
+
+function do_joystick(d, b, s)
+    if d == 0 and s then
+        if b == 0 then
+            add_box()
+        end
+        if b == 1 then
+            add_ball()
+        end
+        if b == 2 then
+            add_thing()
+        end
+        if b == 3 then
+            add_car()
+        end
+    end
+    return true
 end
 
 function do_keyboard(k, s)
@@ -246,9 +252,6 @@ function do_keyboard(k, s)
         if k == string.byte("4") then
             add_car()
         end
-        if k == string.byte("5") then
-            add_ramp(0, 20, 0)
-        end
 
         if k == 287 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, true)
@@ -258,21 +261,21 @@ function do_keyboard(k, s)
             E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
         end
---[[
-        if k == 273 then change_speed(1) end
-        if k == 274 then change_speed(-1) end
-        if k == 275 then change_steer(1) end
-        if k == 276 then change_steer(-1) end
 
+        if k == 273 then key_y = key_y - 1 end
+        if k == 274 then key_y = key_y + 1 end
+        if k == 275 then key_x = key_x + 1 end
+        if k == 276 then key_x = key_x - 1 end
     else
-        if k == 273 then change_speed(-1) end
-        if k == 274 then change_speed(1) end
-        if k == 275 then change_steer(-1) end
-        if k == 276 then change_steer(1) end
-]]--
+        if k == 273 then key_y = key_y + 1 end
+        if k == 274 then key_y = key_y - 1 end
+        if k == 275 then key_x = key_x - 1 end
+        if k == 276 then key_x = key_x + 1 end
     end
     return false
 end
+
+total_dt = 0
 
 function do_timer(dt)
     if body then
@@ -283,9 +286,9 @@ function do_timer(dt)
         local yx, yy, yz = E.get_entity_y_vector(body)
         local zx, zy, zz = E.get_entity_z_vector(body)
 
-        local kx = 0
+        local kx = 10
         local ky = 5
-        local kz = 10
+        local kz = 5
 
         local x = px + xx * kx + yx * ky + zx * kz
         local y = py + xy * ky + yy * ky + zy * ky
@@ -295,6 +298,9 @@ function do_timer(dt)
         local k = 50
 
         if y < 1 then y = 1 end
+
+        jx = jx + key_x
+        jy = jy + key_y
 
         pos_x = ((k - 1) * pos_x + x) / k
         pos_y = ((k - 1) * pos_y + y) / k
@@ -307,21 +313,14 @@ function do_timer(dt)
         E.add_entity_torque(tire[2], yx, -yy * 20 * jx, yz)
         E.add_entity_torque(tire[3], yx, -yy * 20 * jx, yz)
 
-    E.set_entity_joint_attr(body, tire[1], E.joint_attr_velocity_2, -100 * jy)
-    E.set_entity_joint_attr(body, tire[4], E.joint_attr_velocity_2, -100 * jy)
+        E.set_entity_joint_attr(body, tire[1], E.joint_attr_velocity_2, -100 * jy)
+        E.set_entity_joint_attr(body, tire[4], E.joint_attr_velocity_2, -100 * jy)
 
-    E.set_entity_joint_attr(body, tire[1], E.joint_attr_force_max_2, 15)
-    E.set_entity_joint_attr(body, tire[4], E.joint_attr_force_max_2, 15)
+        E.set_entity_joint_attr(body, tire[1], E.joint_attr_force_max_2, 15)
+        E.set_entity_joint_attr(body, tire[4], E.joint_attr_force_max_2, 15)
 
+        return true
     end
-    return true
-end
-
-function do_click(b, s)
-    return false
-end
-
-function do_point(dx, dy)
     return false
 end
 

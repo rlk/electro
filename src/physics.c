@@ -146,11 +146,23 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
     }
 }
 
-void physics_step(float dt)
+int physics_step(float dt)
 {
-    dSpaceCollide(space, 0, callback);
-    dWorldQuickStep(world, dt);
-    dJointGroupEmpty(group);
+    static float total_dt = 0;
+    int c;
+
+    total_dt += dt;
+
+    for (c = 0; total_dt > PHYSICS_TIME_STEP; ++c)
+    {
+        dSpaceCollide(space, 0, callback);
+        dWorldQuickStep(world, PHYSICS_TIME_STEP);
+        dJointGroupEmpty(group);
+
+        total_dt -= PHYSICS_TIME_STEP;
+    }
+
+    return c;
 }
 
 /*===========================================================================*/

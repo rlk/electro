@@ -111,16 +111,9 @@ static void server_draw(void)
     server_swap();
 }
 
-static void server_step(void)
+static int server_step(void)
 {
-    static float at = 0.05;
-    float dt = (float) (SDL_GetTicks() - server_time) / 1000.0;
-
-    if (dt < 1)
-    {
-        at = (127 * at + dt) / 128;
-        step_entities(at);
-    }
+    return step_entities((float) (SDL_GetTicks() - server_time) / 1000.0f);
 }
 
 static void server_perf(void)
@@ -270,9 +263,9 @@ static int server_loop(void)
         send_event(EVENT_NULL);
         sync_buffer();
 
+        server_step();
         server_draw();
         server_perf();
-        server_step();
 
         dirty = 0;
         count = count + 1;

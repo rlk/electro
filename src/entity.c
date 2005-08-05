@@ -942,9 +942,9 @@ void draw_entities(void)
     opengl_check("draw_entities");
 }
 
-void step_entities(float dt)
+int step_entities(float dt)
 {
-    int i, n = vecnum(entity);
+    int dirty = 0, i, n = vecnum(entity);
 
     if (get_tracker_status())
     {
@@ -985,26 +985,31 @@ void step_entities(float dt)
                     send_set_entity_rotation(i, r[1]);
             }
         }
+        dirty++;
     }
 
     /* Run the physical simulation and update all entity states. */
 
-    physics_step(dt);
-
-    for (i = 0; i < n; ++i)
+    if (physics_step(dt))
     {
-        struct entity *e = get_entity(i);
-
-        if (e->type && e->body)
+        for (i = 0; i < n; ++i)
         {
-            float p[3], R[16];
+            struct entity *e = get_entity(i);
 
-            get_phys_position(e->body, p);
-            send_set_entity_position(i, p);
-            get_phys_rotation(e->body, R);
-            send_set_entity_basis   (i, R);
+            if (e->type && e->body)
+            {
+                float p[3], R[16];
+
+                get_phys_position(e->body, p);
+                send_set_entity_position(i, p);
+                get_phys_rotation(e->body, R);
+                send_set_entity_basis   (i, R);
+            }
         }
+        dirty++;
     }
+
+    return dirty;
 }
 
 /*---------------------------------------------------------------------------*/
