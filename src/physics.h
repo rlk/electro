@@ -38,6 +38,9 @@
 #define JOINT_ATTR_ANCHOR   (dParamGroup * 4 + 1)
 #define JOINT_ATTR_AXIS_1   (dParamGroup * 4 + 2)
 #define JOINT_ATTR_AXIS_2   (dParamGroup * 4 + 3)
+#define JOINT_ATTR_VALUE    (dParamGroup * 4 + 4)
+#define JOINT_ATTR_RATE_1   (dParamGroup * 4 + 5)
+#define JOINT_ATTR_RATE_2   (dParamGroup * 4 + 6)
 
 /*---------------------------------------------------------------------------*/
 
@@ -54,6 +57,10 @@ void    set_phys_geom_attr_i(dGeomID,          int, int);
 void    set_phys_geom_attr_f(dGeomID,          int, float);
 void    set_phys_join_attr_f(dBodyID, dBodyID, int, float);
 void    set_phys_join_attr_v(dBodyID, dBodyID, int, const float *);
+
+int     get_phys_geom_attr_i(dGeomID,          int);
+float   get_phys_geom_attr_f(dGeomID,          int);
+float   get_phys_join_attr_f(dBodyID, dBodyID, int);
 
 /*---------------------------------------------------------------------------*/
 

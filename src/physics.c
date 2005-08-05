@@ -48,7 +48,8 @@ static struct geom_data *create_data(int entity)
     if ((data = (struct geom_data *) calloc(1, sizeof (struct geom_data))))
     {
         data->entity   = entity;
-        data->callback = 0;
+        data->callback = 0x00000000;
+        data->response = 0xFFFFFFFF;
         data->mass     = 1.00;
         data->bounce   = 0.50;
         data->friction = dInfinity;
@@ -348,6 +349,44 @@ static void set_phys_joint_attr(dJointID joint, int p, float v)
     }
 }
 
+static float get_phys_joint_attr(dJointID joint, int p)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge:     return dJointGetHingeParam    (joint, p);
+    case dJointTypeSlider:    return dJointGetSliderParam   (joint, p);
+    case dJointTypeHinge2:    return dJointGetHinge2Param   (joint, p);
+    case dJointTypeUniversal: return dJointGetUniversalParam(joint, p);
+    }
+    return 0;
+}
+
+static float get_phys_joint_value(dJointID joint)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge:  return dJointGetHingeAngle    (joint);
+    case dJointTypeSlider: return dJointGetSliderPosition(joint);
+    case dJointTypeHinge2: return dJointGetHinge2Angle1  (joint);
+    }
+    return 0;
+}
+
+static float get_phys_joint_rate(dJointID joint, int n)
+{
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge:  return dJointGetHingeAngleRate    (joint);
+    case dJointTypeSlider: return dJointGetSliderPositionRate(joint);
+    case dJointTypeHinge2:
+        if (n == 1)
+            return dJointGetHinge2Angle1Rate(joint);
+        else
+            return dJointGetHinge2Angle2Rate(joint);
+    }
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Body functions                                                            */
 
@@ -430,18 +469,10 @@ void set_phys_geom_attr_i(dGeomID geom, int p, int i)
 {
     switch (p)
     {
-    case GEOM_ATTR_CATEGORY:
-        dGeomSetCategoryBits(geom,   i);
-        break;
-    case GEOM_ATTR_COLLIDER:
-        dGeomSetCollideBits(geom,   i);
-        break;
-    case GEOM_ATTR_RESPONSE:
-        get_data(geom)->response = i;
-        break;
-    case GEOM_ATTR_CALLBACK:
-        get_data(geom)->callback = i;
-        break;
+    case GEOM_ATTR_CATEGORY: dGeomSetCategoryBits(geom, i); break;
+    case GEOM_ATTR_COLLIDER: dGeomSetCollideBits (geom, i); break;
+    case GEOM_ATTR_RESPONSE: get_data(geom)->response = i;  break;
+    case GEOM_ATTR_CALLBACK: get_data(geom)->callback = i;  break;
     }
 }
 
@@ -451,22 +482,39 @@ void set_phys_geom_attr_f(dGeomID geom, int p, float f)
 
     switch (p)
     {
-    case GEOM_ATTR_MASS:
-        get_data(object)->mass = f;
-        break;
-    case GEOM_ATTR_BOUNCE:
-        get_data(object)->bounce = f;
-        break;
-    case GEOM_ATTR_FRICTION:
-        get_data(object)->friction = f;
-        break;
-    case GEOM_ATTR_SOFT_ERP:
-        get_data(object)->soft_erp = f;
-        break;
-    case GEOM_ATTR_SOFT_CFM:
-        get_data(object)->soft_cfm = f;
-        break;
+    case GEOM_ATTR_MASS:     get_data(object)->mass     = f; break;
+    case GEOM_ATTR_BOUNCE:   get_data(object)->bounce   = f; break;
+    case GEOM_ATTR_FRICTION: get_data(object)->friction = f; break;
+    case GEOM_ATTR_SOFT_ERP: get_data(object)->soft_erp = f; break;
+    case GEOM_ATTR_SOFT_CFM: get_data(object)->soft_cfm = f; break;
     }
+}
+
+int get_phys_geom_attr_i(dGeomID geom, int p)
+{
+    switch (p)
+    {
+    case GEOM_ATTR_CATEGORY: return dGeomGetCategoryBits(geom); break;
+    case GEOM_ATTR_COLLIDER: return dGeomGetCollideBits (geom); break;
+    case GEOM_ATTR_RESPONSE: return get_data(geom)->response;   break;
+    case GEOM_ATTR_CALLBACK: return get_data(geom)->callback;   break;
+    }
+    return 0;
+}
+
+float get_phys_geom_attr_f(dGeomID geom, int p)
+{
+    dGeomID object = dGeomTransformGetGeom(geom);
+
+    switch (p)
+    {
+    case GEOM_ATTR_MASS:     return get_data(object)->mass;
+    case GEOM_ATTR_BOUNCE:   return get_data(object)->bounce;
+    case GEOM_ATTR_FRICTION: return get_data(object)->friction;
+    case GEOM_ATTR_SOFT_ERP: return get_data(object)->soft_erp;
+    case GEOM_ATTR_SOFT_CFM: return get_data(object)->soft_cfm;
+    }
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -515,6 +563,22 @@ void set_phys_join_attr_v(dBodyID body1, dBodyID body2, int p, const float *v)
         case JOINT_ATTR_AXIS_1: set_phys_joint_axis_1(joint, v); break;
         case JOINT_ATTR_AXIS_2: set_phys_joint_axis_2(joint, v); break;
         }
+}
+
+float get_phys_join_attr_f(dBodyID body1, dBodyID body2, int p)
+{
+    dJointID joint = find_shared_joint(body1, body2);
+
+    if (joint)
+        switch (p)
+        {
+        case JOINT_ATTR_VALUE:  return get_phys_joint_value(joint);
+        case JOINT_ATTR_RATE_1: return get_phys_joint_rate(joint, 1);
+        case JOINT_ATTR_RATE_2: return get_phys_joint_rate(joint, 2);
+        default:                return get_phys_joint_attr(joint, p);
+        }
+
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/

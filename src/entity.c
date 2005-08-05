@@ -606,6 +606,38 @@ void set_entity_join_attr_v(int i, int j, int p, const float *v)
 
 /*---------------------------------------------------------------------------*/
 
+int get_entity_geom_attr_i(int i, int p)
+{
+    if (get_entity(i)->geom)
+        return get_phys_geom_attr_i(get_entity(i)->geom, p);
+    else
+        return 0;
+}
+
+float get_entity_geom_attr_f(int i, int p)
+{
+    if (get_entity(i)->geom)
+        return get_phys_geom_attr_f(get_entity(i)->geom, p);
+    else
+        return 0;
+}
+
+float get_entity_join_attr_f(int i, int j, int p)
+{
+    if (get_entity(i)->body)
+    {
+        if (j)
+            return get_phys_join_attr_f(get_entity(i)->body,
+                                        get_entity(j)->body, p);
+        else
+            return get_phys_join_attr_f(get_entity(i)->body, 0, p);
+    }
+    else
+        return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
 void add_entity_force(int i, float x, float y, float z)
 {
     if (get_entity(i)->body)

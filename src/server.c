@@ -143,22 +143,22 @@ static void server_perf(void)
 
 static int server_keydn(SDL_KeyboardEvent *k)
 {
-    if (do_keyboard_script(k->keysym.sym, 1))
-        return 1;
-
     if (console_is_enabled())
         return input_console(k->keysym.sym, k->keysym.unicode);
+
+    if (do_keyboard_script(k->keysym.sym, 1))
+        return 1;
 
     return 0;
 }
 
 static int server_keyup(SDL_KeyboardEvent *k)
 {
-    if (do_keyboard_script(k->keysym.sym, 0))
-        return 1;
-
     if (console_is_enabled())
         return input_console(0, 0);
+
+    if (do_keyboard_script(k->keysym.sym, 0))
+        return 1;
 
     return 0;
 }

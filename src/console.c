@@ -127,10 +127,8 @@ static void write_console(const char *str)
 
 int set_console_enable(int b)
 {
-    /*
     SDL_EnableKeyRepeat(b ? SDL_DEFAULT_REPEAT_DELAY    : 0,
                         b ? SDL_DEFAULT_REPEAT_INTERVAL : 0);
-    */
     console_enable = b;
     return 1;
 }

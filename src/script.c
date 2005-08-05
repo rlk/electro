@@ -831,6 +831,33 @@ static int E_set_entity_geom_attr(lua_State *L)
     return 0;
 }
 
+static int E_get_entity_geom_attr(lua_State *L)
+{
+    switch (L_getinteger(L, -1))
+    {
+    case GEOM_ATTR_CATEGORY:
+    case GEOM_ATTR_COLLIDER:
+    case GEOM_ATTR_RESPONSE:
+    case GEOM_ATTR_CALLBACK:
+        lua_pushnumber(L, get_entity_geom_attr_i(E_getentity (L, -2),
+                                                 L_getinteger(L, -1)));
+        break;
+
+    case GEOM_ATTR_MASS:
+    case GEOM_ATTR_BOUNCE:
+    case GEOM_ATTR_FRICTION:
+    case GEOM_ATTR_SOFT_ERP:
+    case GEOM_ATTR_SOFT_CFM:
+        lua_pushnumber(L, get_entity_geom_attr_f(E_getentity (L, -2),
+                                                 L_getinteger(L, -1)));
+        break;
+
+    default:
+        lua_pushnumber(L, 0);
+    }
+    return 1;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int E_set_entity_joint_type(lua_State *L)
@@ -867,6 +894,14 @@ static int E_set_entity_joint_attr(lua_State *L)
     }
 
     return 0;
+}
+
+static int E_get_entity_joint_attr(lua_State *L)
+{
+    lua_pushnumber(L, get_entity_join_attr_f(E_getentity (L, -3),
+                                             E_getentity (L, -2),
+                                             L_getinteger(L, -1)));
+    return 1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -2032,6 +2067,8 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_body_attr",  E_set_entity_body_attr);
     lua_function(L, "set_entity_geom_attr",  E_set_entity_geom_attr);
     lua_function(L, "set_entity_joint_attr", E_set_entity_joint_attr);
+    lua_function(L, "get_entity_geom_attr",  E_get_entity_geom_attr);
+    lua_function(L, "get_entity_joint_attr", E_get_entity_joint_attr);
 
     /* Object functions */
 
@@ -2183,6 +2220,9 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "joint_attr_anchor",         JOINT_ATTR_ANCHOR);
     lua_constant(L, "joint_attr_axis_1",         JOINT_ATTR_AXIS_1);
     lua_constant(L, "joint_attr_axis_2",         JOINT_ATTR_AXIS_2);
+    lua_constant(L, "joint_attr_value",          JOINT_ATTR_VALUE);
+    lua_constant(L, "joint_attr_rate_1",         JOINT_ATTR_RATE_1);
+    lua_constant(L, "joint_attr_rate_2",         JOINT_ATTR_RATE_2);
     lua_constant(L, "joint_attr_lo_stop",        dParamLoStop);
     lua_constant(L, "joint_attr_lo_stop_2",      dParamLoStop2);
     lua_constant(L, "joint_attr_lo_stop_3",      dParamLoStop3);
