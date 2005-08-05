@@ -148,6 +148,9 @@ void set_entity_geom_attr_f(int,      int, float);
 void set_entity_join_attr_f(int, int, int, float);
 void set_entity_join_attr_v(int, int, int, const float *);
 
+void add_entity_force (int, float, float, float);
+void add_entity_torque(int, float, float, float);
+
 /*---------------------------------------------------------------------------*/
 
 int   get_entity_parent(int);

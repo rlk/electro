@@ -24,12 +24,14 @@
 /* Geom parameters */
 
 #define GEOM_ATTR_CATEGORY  1
-#define GEOM_ATTR_COLLIDES  2
-#define GEOM_ATTR_MASS      3
-#define GEOM_ATTR_BOUNCE    4
-#define GEOM_ATTR_FRICTION  5
-#define GEOM_ATTR_SOFT_ERP  6
-#define GEOM_ATTR_SOFT_CFM  7
+#define GEOM_ATTR_COLLIDER  2
+#define GEOM_ATTR_RESPONSE  3
+#define GEOM_ATTR_CALLBACK  4
+#define GEOM_ATTR_MASS      5
+#define GEOM_ATTR_BOUNCE    6
+#define GEOM_ATTR_FRICTION  7
+#define GEOM_ATTR_SOFT_ERP  8
+#define GEOM_ATTR_SOFT_CFM  9
 
 /* Joint parameters */
 
@@ -44,7 +46,7 @@ void physics_step(float);
 /*---------------------------------------------------------------------------*/
 
 dBodyID set_phys_body_type(dBodyID,          int);
-dGeomID set_phys_geom_type(dGeomID, dBodyID, int, const float *);
+dGeomID set_phys_geom_type(dGeomID, dBodyID, int, int, const float *);
 void    set_phys_join_type(dBodyID, dBodyID, int);
 
 void    set_phys_body_attr_f(dBodyID,          int, float);
@@ -61,6 +63,9 @@ void mov_phys_mass(dBodyID, dGeomID, const float[3], const float[16]);
 void end_phys_mass(dBodyID, float[3]);
 
 /*---------------------------------------------------------------------------*/
+
+void add_phys_force (dBodyID, float, float, float);
+void add_phys_torque(dBodyID, float, float, float);
 
 void set_phys_position(dBodyID, const float[3]);
 void set_phys_rotation(dBodyID, const float[16]);

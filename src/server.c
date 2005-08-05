@@ -113,12 +113,12 @@ static void server_draw(void)
 
 static void server_step(void)
 {
-    static float at = 0;
+    static float at = 0.05;
     float dt = (float) (SDL_GetTicks() - server_time) / 1000.0;
 
     if (dt < 1)
     {
-        at = (7 * at + dt) / 8;
+        at = (127 * at + dt) / 128;
         step_entities(at);
     }
 }

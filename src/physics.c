@@ -14,6 +14,7 @@
 
 #include "utility.h"
 #include "physics.h"
+#include "script.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -27,6 +28,10 @@ static dJointGroupID group;
 
 struct geom_data
 {
+    int           entity;
+    unsigned long response;
+    unsigned long callback;
+
     dReal mass;
     dReal bounce;
     dReal friction;
@@ -34,7 +39,7 @@ struct geom_data
     dReal soft_cfm;
 };
 
-static struct geom_data *create_data(void)
+static struct geom_data *create_data(int entity)
 {
     struct geom_data *data;
 
@@ -42,6 +47,8 @@ static struct geom_data *create_data(void)
 
     if ((data = (struct geom_data *) calloc(1, sizeof (struct geom_data))))
     {
+        data->entity   = entity;
+        data->callback = 0;
         data->mass     = 1.00;
         data->bounce   = 0.50;
         data->friction = dInfinity;
@@ -84,30 +91,56 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
 
             /* Compute collision parameters from geom parameters. */
 
-            float bounce   = MAX(d1->bounce,   d2->bounce);
-            float friction = MIN(d1->friction, d2->friction);
-            float soft_erp = MIN(d1->soft_erp, d2->soft_erp);
-            float soft_cfm = MAX(d1->soft_cfm, d2->soft_cfm);
+            float bounce    = MAX(d1->bounce,   d2->bounce);
+            float friction  = MIN(d1->friction, d2->friction);
+            float soft_erp  = MIN(d1->soft_erp, d2->soft_erp);
+            float soft_cfm  = MAX(d1->soft_cfm, d2->soft_cfm);
 
-            /* Create a contact joint for each collision. */
+            unsigned long category1 = dGeomGetCategoryBits(o1);
+            unsigned long category2 = dGeomGetCategoryBits(o2);
 
-            for (i = 0; i < n; ++i)
-            {
-                dJointID c;
+            /* Create a contact joint for each collision, if requsted. */
 
-                contact[i].surface.mode = dContactBounce
-                                        | dContactSoftCFM
-                                        | dContactSoftERP;
+            if ((category1 & d2->response) ||
+                (category2 & d1->response))
+                for (i = 0; i < n; ++i)
+                {
+                    dJointID c;
+                
+                    contact[i].surface.mode = dContactBounce
+                                            | dContactSoftCFM
+                                            | dContactSoftERP;
 
-                contact[i].surface.mu         = friction;
-                contact[i].surface.bounce     = bounce;
-                contact[i].surface.soft_cfm   = soft_cfm;
-                contact[i].surface.soft_erp   = soft_erp;
-                contact[i].surface.bounce_vel = 0.10;
+                    contact[i].surface.mu         = friction;
+                    contact[i].surface.bounce     = bounce;
+                    contact[i].surface.soft_cfm   = soft_cfm;
+                    contact[i].surface.soft_erp   = soft_erp;
+                    contact[i].surface.bounce_vel = 0.10;
 
-                c = dJointCreateContact(world, group, contact + i);
-                dJointAttach(c, b1, b2);
-            }
+                    c = dJointCreateContact(world, group, contact + i);
+                    dJointAttach(c, b1, b2);
+                }
+
+            /* Report contacts to the Lua script, if requested. */
+
+            if ((category1 & d2->callback) ||
+                (category2 & d1->callback))
+                for (i = 0; i < n; ++i)
+                {
+                    float p[3];
+                    float n[3];
+
+                    p[0] = (float) contact[i].geom.pos[0];
+                    p[1] = (float) contact[i].geom.pos[1];
+                    p[2] = (float) contact[i].geom.pos[2];
+
+                    n[0] = (float) contact[i].geom.normal[0];
+                    n[1] = (float) contact[i].geom.normal[1];
+                    n[2] = (float) contact[i].geom.normal[2];
+
+                    do_contact_script(d1->entity, d2->entity,
+                                      p, n, contact[i].geom.depth);
+                }
         }
     }
 }
@@ -215,10 +248,15 @@ void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
 
     /* Move the geom so that the body's center of mass is at the origin. */
 
-    dBodyGetMass(body, &mass);
-    dGeomSetPosition(object, p[0] - mass.c[0],
-                             p[1] - mass.c[1],
-                             p[2] - mass.c[2]);
+    if (body)
+    {
+        dBodyGetMass(body, &mass);
+        dGeomSetPosition(object, p[0] - mass.c[0],
+                                 p[1] - mass.c[1],
+                                 p[2] - mass.c[2]);
+    }
+    else
+        dGeomSetPosition(object, p[0], p[1], p[2]);
 
     /* Apply the geom's rotation. */
 
@@ -315,12 +353,13 @@ static void set_phys_joint_attr(dJointID joint, int p, float v)
 
 dBodyID set_phys_body_type(dBodyID body, int b)
 {
-    if (body) dBodyDestroy(body);
+    if (body)
+        dBodyDestroy(body);
 
     if (b)
         return dBodyCreate(world);
-    else
-        return 0;
+
+    return 0;
 }
 
 void set_phys_body_attr_f(dBodyID body, int p, float f)
@@ -336,7 +375,8 @@ void set_phys_body_attr_f(dBodyID body, int p, float f)
 /*---------------------------------------------------------------------------*/
 /* Geom functions                                                            */
 
-dGeomID set_phys_geom_type(dGeomID geom, dBodyID body, int t, const float *v)
+dGeomID set_phys_geom_type(dGeomID geom, dBodyID body,
+                           int i, int t, const float *v)
 {
     dGeomID transform = 0;
     dGeomID object    = 0;
@@ -373,32 +413,34 @@ dGeomID set_phys_geom_type(dGeomID geom, dBodyID body, int t, const float *v)
     /* Assign geom data and encapsulate the new geom in a transform. */
 
     if (object)
-        dGeomSetData(object, create_data());
+        dGeomSetData(object, create_data(i));
 
     if (transform && object)
     {
         dGeomTransformSetCleanup(transform, 1);
         dGeomTransformSetGeom(transform, object);
         dGeomSetData(transform, dGeomGetData(object));
+        dGeomSetBody(transform, body);
     }
 
-    if (transform && body)
-        dGeomSetBody(transform, body);
-
-    return transform;
+    return transform ? transform : object;
 }
 
 void set_phys_geom_attr_i(dGeomID geom, int p, int i)
 {
-    dGeomID object = dGeomTransformGetGeom(geom);
-
     switch (p)
     {
     case GEOM_ATTR_CATEGORY:
-        dGeomSetCategoryBits(object, i);
+        dGeomSetCategoryBits(geom,   i);
         break;
-    case GEOM_ATTR_COLLIDES:
-        dGeomSetCollideBits(object, i);
+    case GEOM_ATTR_COLLIDER:
+        dGeomSetCollideBits(geom,   i);
+        break;
+    case GEOM_ATTR_RESPONSE:
+        get_data(geom)->response = i;
+        break;
+    case GEOM_ATTR_CALLBACK:
+        get_data(geom)->callback = i;
         break;
     }
 }
@@ -473,6 +515,20 @@ void set_phys_join_attr_v(dBodyID body1, dBodyID body2, int p, const float *v)
         case JOINT_ATTR_AXIS_1: set_phys_joint_axis_1(joint, v); break;
         case JOINT_ATTR_AXIS_2: set_phys_joint_axis_2(joint, v); break;
         }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void add_phys_force(dBodyID body, float x, float y, float z)
+{
+    dBodyEnable(body);
+    dBodyAddForce(body, x, y, z);
+}
+
+void add_phys_torque(dBodyID body, float x, float y, float z)
+{
+    dBodyEnable(body);
+    dBodyAddTorque(body, x, y, z);
 }
 
 /*---------------------------------------------------------------------------*/

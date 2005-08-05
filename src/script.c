@@ -46,6 +46,8 @@
 
 static lua_State *L;
 
+#define METATABLE_KEY "__Edatamt"
+
 /*===========================================================================*/
 /* Script readers                                                            */
 
@@ -95,12 +97,26 @@ static int E_touserdata(lua_State *L, int i)
     return ((int *) lua_touserdata(L, i))[1];
 }
 
+static int E_equserdata(lua_State *L)
+{
+    lua_pushboolean(L, ((E_tousertype(L, -2) == E_tousertype(L, -1)) &&
+                        (E_touserdata(L, -2) == E_touserdata(L, -1))));
+    return 1;
+}
+
 static void E_pushuserdata(lua_State *L, int type, int data)
 {
+    /* Create and initialize a new userdata object. */
+
     int *p = (int *) lua_newuserdata(L, 2 * sizeof (int));
 
     p[0] = type;
     p[1] = data;
+
+    /* Attach the userdata metatable. */
+
+    lua_getglobal(L, METATABLE_KEY);
+    lua_setmetatable(L, -2);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -589,6 +605,26 @@ static int E_set_entity_flags(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+
+static int E_add_entity_force(lua_State *L)
+{
+    add_entity_force(E_getentity(L, -4),
+                     L_getnumber(L, -3),
+                     L_getnumber(L, -2),
+                     L_getnumber(L, -1));
+    return 0;
+}
+
+static int E_add_entity_torque(lua_State *L)
+{
+    add_entity_torque(E_getentity(L, -4),
+                      L_getnumber(L, -3),
+                      L_getnumber(L, -2),
+                      L_getnumber(L, -1));
+    return 0;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Entity relative transform                                                 */
 
 static int E_move_entity(lua_State *L)
@@ -777,7 +813,9 @@ static int E_set_entity_geom_attr(lua_State *L)
     switch (p)
     {
     case GEOM_ATTR_CATEGORY:
-    case GEOM_ATTR_COLLIDES:
+    case GEOM_ATTR_COLLIDER:
+    case GEOM_ATTR_RESPONSE:
+    case GEOM_ATTR_CALLBACK:
         set_entity_geom_attr_i(i, p, L_getinteger(L, -n + 2));
         break;
 
@@ -1741,7 +1779,7 @@ static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
     int r = 0;
 
     if (lua_pcall(L, nin, nout, 0) == LUA_ERRRUN)
-        error("%s: %s\n", name, lua_tostring(L, -1));
+        error("%s: %s", name, lua_tostring(L, -1));
     else
         r = lua_toboolean(L, -1);
 
@@ -1854,6 +1892,33 @@ int do_joystick_script(int n, int b, int s)
     return 0;
 }
 
+int do_contact_script(int i, int j, const float p[3],
+                                    const float n[3], float d)
+{
+    const char *name = "do_contact";
+
+    lua_getglobal(L, name);
+
+    if (lua_isfunction(L, -1))
+    {
+        E_pushentity(L, i);
+        E_pushentity(L, j);
+
+        lua_pushnumber (L, (lua_Number) p[0]);
+        lua_pushnumber (L, (lua_Number) p[1]);
+        lua_pushnumber (L, (lua_Number) p[2]);
+        lua_pushnumber (L, (lua_Number) n[0]);
+        lua_pushnumber (L, (lua_Number) n[1]);
+        lua_pushnumber (L, (lua_Number) n[2]);
+        lua_pushnumber (L, (lua_Number) d);
+
+        return lua_callassert(L, 9, 1, name);
+    }
+    else lua_pop(L, 1);
+
+    return 0;
+}
+
 void do_command(const char *command)
 {
     char buffer[MAXSTR];
@@ -1945,6 +2010,9 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_scale",      E_set_entity_scale);
     lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
     lua_function(L, "set_entity_flags",      E_set_entity_flags);
+
+    lua_function(L, "add_entity_force",      E_add_entity_force);
+    lua_function(L, "add_entity_torque",     E_add_entity_torque);
 
     lua_function(L, "get_entity_position",   E_get_entity_position);
     lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
@@ -2095,7 +2163,9 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "geom_type_capsule",         dCCylinderClass);
 
     lua_constant(L, "geom_attr_category",        GEOM_ATTR_CATEGORY);
-    lua_constant(L, "geom_attr_collides",        GEOM_ATTR_COLLIDES);
+    lua_constant(L, "geom_attr_collider",        GEOM_ATTR_COLLIDER);
+    lua_constant(L, "geom_attr_response",        GEOM_ATTR_RESPONSE);
+    lua_constant(L, "geom_attr_callback",        GEOM_ATTR_CALLBACK);
     lua_constant(L, "geom_attr_mass",            GEOM_ATTR_MASS);
     lua_constant(L, "geom_attr_bounce",          GEOM_ATTR_BOUNCE);
     lua_constant(L, "geom_attr_friction",        GEOM_ATTR_FRICTION);
@@ -2191,8 +2261,15 @@ void luaopen_electro(lua_State *L)
     lua_newtable(L);
     lua_settable(L, -3);
 
-    /* Register the "electro" environment table globally. */
+    /* Register the "E" environment table globally. */
 
+    lua_settable(L, LUA_GLOBALSINDEX);
+
+    /* Create a global metatable for all userdata objects to reference. */
+
+    lua_pushstring(L, METATABLE_KEY);
+    lua_newtable(L);
+    lua_function(L, "__eq", E_equserdata);
     lua_settable(L, LUA_GLOBALSINDEX);
 }
 

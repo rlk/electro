@@ -100,7 +100,6 @@ int entity_type(int i)
     return get_entity(i)->type;
 }
 
-
 const char *entity_name(int i)
 {
     struct entity *e = get_entity(i);
@@ -339,7 +338,7 @@ static void remass_geom_entity(dBodyID body, int i, int d)
         remass_geom_entity(body, j, d + 1);
 }
 
-static void remass_body_entity(int i)
+static void remass_body_entity(int i, int j)
 {
     /* Compute a body's moment of inertia by adding all child geom masses. */
 
@@ -352,6 +351,7 @@ static void remass_body_entity(int i)
         center_geom_entity(e->body, i, 0);
         end_phys_mass(e->body, e->center);
     }
+    else center_geom_entity(0, j, 1);
 }
 
 static int find_body_entity(int i)
@@ -467,7 +467,7 @@ void send_set_entity_position(int i, const float p[3])
     send_float((e->position[2] = p[2]));
 
     if (e->body) set_phys_position(e->body, e->position);
-    if (e->geom) remass_body_entity(find_body_entity(i));
+    if (e->geom) remass_body_entity(find_body_entity(i), i);
 }
 
 void send_set_entity_basis(int i, const float M[16])
@@ -492,7 +492,7 @@ void send_set_entity_basis(int i, const float M[16])
     load_mat(e->rotation, M);
 
     if (e->body) set_phys_rotation(e->body, e->rotation);
-    if (e->geom) remass_body_entity(find_body_entity(i));
+    if (e->geom) remass_body_entity(find_body_entity(i), i);
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -546,9 +546,9 @@ void set_entity_geom_type(int i, int t, const float *v)
 
     if (j)
         e->geom = set_phys_geom_type(get_entity(i)->geom,
-                                     get_entity(j)->body, t, v);
+                                     get_entity(j)->body, i, t, v);
     else
-        e->geom = set_phys_geom_type(get_entity(i)->geom, 0, t, v);
+        e->geom = set_phys_geom_type(get_entity(i)->geom, 0, i, t, v);
 }
 
 void set_entity_join_type(int i, int j, int t)
@@ -577,7 +577,7 @@ void set_entity_geom_attr_f(int i, int p, float f)
 void set_entity_geom_attr_i(int i, int p, int d)
 {
     if (get_entity(i)->geom)
-        set_phys_geom_attr_f(get_entity(i)->geom, p, d);
+        set_phys_geom_attr_i(get_entity(i)->geom, p, d);
 }
 
 void set_entity_join_attr_f(int i, int j, int p, float f)
@@ -602,6 +602,20 @@ void set_entity_join_attr_v(int i, int j, int p, const float *v)
         else
             set_phys_join_attr_v(get_entity(i)->body, 0, p, v);
     }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void add_entity_force(int i, float x, float y, float z)
+{
+    if (get_entity(i)->body)
+        add_phys_force(get_entity(i)->body, x, y, z);
+}
+
+void add_entity_torque(int i, float x, float y, float z)
+{
+    if (get_entity(i)->body)
+        add_phys_torque(get_entity(i)->body, x, y, z);
 }
 
 /*---------------------------------------------------------------------------*/

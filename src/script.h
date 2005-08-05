@@ -27,6 +27,7 @@ int  do_timer_script(int);
 int  do_frame_script(void);
 int  do_keyboard_script(int, int);
 int  do_joystick_script(int, int, int);
+int  do_contact_script(int, int, const float[3], const float[3], float);
 
 void do_command(const char *);
 

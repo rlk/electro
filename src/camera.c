@@ -78,6 +78,7 @@ int send_create_camera(int t)
         c->type  = t;
         c->n     = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
         c->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
+        c->f = 1000;
 
         send_event(EVENT_CREATE_CAMERA);
         send_index(t);
