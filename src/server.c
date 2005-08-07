@@ -35,15 +35,34 @@
 
 /*---------------------------------------------------------------------------*/
 
+/* A consistent time step is necessary to ensure reliable physics.  It       */
+/* not only helps achieve stable integration, it ensures constent CFM        */
+/* and ERP across hardware of varying power (this is an ODE issue).          */
+/*                                                                           */
+/* The proper time step is difficult to choose.  It must be greater          */
+/* than 30Hz to be believable.  It should be less than 100Hz, as more is     */
+/* unnecessary.  Ideally, it would match the refresh rate of the display.    */
+/* However, not all displays run at the same rate.                           */
+/*                                                                           */
+/* 60Hz is chosen as it best fits these criteria.  Some stuttering may be    */
+/* evident when the real frame rate is near to but not equal to 60.  For     */
+/* example, on a 72Hz display, 1 out of 5 updates will include 2 time        */
+/* steps.  This is unfortunate, but difficult to work around.                */
+
+#define TIME_STEP (1.0 / 60.0)
+
+/*---------------------------------------------------------------------------*/
+
 static void server_draw(void);
 
-static int server_time   = 0;
-static int server_mirror = 1;
-static int server_grab   = 0;
+static int server_mirror  = 1;
+static int server_grab    = 0;
 
-static int timer_on = 0;
+static int    timer_on    = 0;
+static double timer_last  = 0;
+static double timer_value = 0;
 
-static float average_fps = 0.0f;
+static float average_fps  = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -64,29 +83,39 @@ void grab(int b)
     }
 }
 
-/*---------------------------------------------------------------------------*/
-
-static void timer_callback(void)
-{
-    Uint32 t = SDL_GetTicks();
-    SDL_Event e;
-
-    /* On callback, push a user event giving time passed since last timer. */
-
-    e.type      = SDL_USEREVENT;
-    e.user.code = t - server_time;
-    server_time = t;
-
-    SDL_PushEvent(&e);
-}
-
 void enable_timer(int b)
 {
     timer_on    = b;
-    server_time = SDL_GetTicks();
+    timer_last  = (double) SDL_GetTicks() / 1000.0;
+    timer_value = 0;
 }
 
 /*---------------------------------------------------------------------------*/
+
+static int server_tick(void)
+{
+    int dirty = 0;
+
+    if (timer_on)
+    {
+        double now = (double) SDL_GetTicks() / 1000.0;
+
+        if (now - timer_last > TIME_STEP)
+        {
+            timer_value += now - timer_last;
+            timer_last   = now;
+
+            while (timer_value > TIME_STEP)
+            {
+                dirty |= do_timer_script(TIME_STEP);
+                dirty |= step_entities(TIME_STEP);
+
+                timer_value -= TIME_STEP;
+            }
+        }
+    }
+    return dirty;
+}
 
 static void server_swap(void)
 {
@@ -109,11 +138,6 @@ static void server_draw(void)
 
     draw_console();
     server_swap();
-}
-
-static int server_step(void)
-{
-    return step_entities((float) (SDL_GetTicks() - server_time) / 1000.0f);
 }
 
 static void server_perf(void)
@@ -166,6 +190,8 @@ static int server_loop(void)
     static int count = 0;
 
     SDL_Event e;
+
+    /* Service all queued events. */
 
     while (SDL_PollEvent(&e))
     {
@@ -233,7 +259,7 @@ static int server_loop(void)
             dirty |= server_keyup(&e.key);
             break;
         case SDL_USEREVENT:
-            dirty |= do_timer_script(e.user.code);
+            dirty |= 1;
             break;
         case SDL_VIDEOEXPOSE:
             dirty |= 1;
@@ -263,7 +289,7 @@ static int server_loop(void)
         send_event(EVENT_NULL);
         sync_buffer();
 
-        server_step();
+        server_tick();
         server_draw();
         server_perf();
 
@@ -272,7 +298,10 @@ static int server_loop(void)
     }
 
     if (timer_on)
-        timer_callback();
+    {
+        e.type = SDL_USEREVENT;
+        SDL_PushEvent(&e);
+    }
 
     return 1;
 }
@@ -363,8 +392,6 @@ void server(int argc, char *argv[])
                     SDL_PauseAudio(0);
 
                     grab(1);
-
-                    /* Block on SDL events.  Service them as they arrive. */
 
                     while (SDL_WaitEvent(NULL))
                         if (server_loop() == 0)

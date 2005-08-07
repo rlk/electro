@@ -193,8 +193,6 @@ GLfloat opengl_perf(GLfloat *all)
 
     GLint now = (GLint) SDL_GetTicks();
 
-    count++;
-
     /* Compute the average FPS over 1000 milliseconds. */
 
     count++;

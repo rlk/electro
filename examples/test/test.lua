@@ -203,14 +203,6 @@ function do_start()
     E.enable_timer(true)
 end
 
---[[
-function do_contact(object1, object2, px, py, pz, nx, ny, nz, d)
-    if object1 == part2 or object2 == part2 then
-        print(object1, object2, px, py, pz, nx, ny, nz, d)
-    end
-end
-]]--
-
 function do_joystick(d, b, s)
     if d == 0 and s then
         if b == 0 then
@@ -310,8 +302,8 @@ function do_timer(dt)
         E.set_entity_rotation(camera, -20, a, 0)
 
 
-        E.add_entity_torque(tire[2], yx, -yy * 20 * jx, yz)
-        E.add_entity_torque(tire[3], yx, -yy * 20 * jx, yz)
+        E.add_entity_torque(tire[2], yx, -yy * 100 * jx, yz)
+        E.add_entity_torque(tire[3], yx, -yy * 100 * jx, yz)
 
         E.set_entity_joint_attr(body, tire[1], E.joint_attr_velocity_2, -100 * jy)
         E.set_entity_joint_attr(body, tire[4], E.joint_attr_velocity_2, -100 * jy)

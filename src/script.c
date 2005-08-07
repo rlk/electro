@@ -1873,7 +1873,7 @@ int do_frame_script(void)
     return 0;
 }
 
-int do_timer_script(int t)
+int do_timer_script(float dt)
 {
     const char *name = "do_timer";
 
@@ -1881,7 +1881,7 @@ int do_timer_script(int t)
 
     if (lua_isfunction(L, -1))
     {
-        lua_pushnumber(L, (lua_Number) (t / 1000.0f));
+        lua_pushnumber(L, dt);
 
         return lua_callassert(L, 1, 1, name);
     }

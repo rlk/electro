@@ -190,10 +190,10 @@ void client(void)
             sync_display();
 
             if (init_video(get_window_w(),
-				           get_window_h(),
+                           get_window_h(),
                            get_window_full(),
-						   get_window_framed(),
-						   get_window_stereo()))
+                           get_window_framed(),
+                           get_window_stereo()))
             {
                 /* Handle any SDL events. Block on server messages. */
 
