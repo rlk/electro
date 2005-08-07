@@ -2194,6 +2194,7 @@ void luaopen_electro(lua_State *L)
 
     /* Geom constants */
 
+    lua_constant(L, "geom_type_none",            -1);
     lua_constant(L, "geom_type_box",             dBoxClass);
     lua_constant(L, "geom_type_plane",           dPlaneClass);
     lua_constant(L, "geom_type_sphere",          dSphereClass);
@@ -2225,28 +2226,20 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "joint_attr_rate_2",         JOINT_ATTR_RATE_2);
     lua_constant(L, "joint_attr_lo_stop",        dParamLoStop);
     lua_constant(L, "joint_attr_lo_stop_2",      dParamLoStop2);
-    lua_constant(L, "joint_attr_lo_stop_3",      dParamLoStop3);
     lua_constant(L, "joint_attr_hi_stop",        dParamHiStop);
     lua_constant(L, "joint_attr_hi_stop_2",      dParamHiStop2);
-    lua_constant(L, "joint_attr_hi_stop_3",      dParamHiStop3);
     lua_constant(L, "joint_attr_velocity",       dParamVel);
     lua_constant(L, "joint_attr_velocity_2",     dParamVel2);
-    lua_constant(L, "joint_attr_velocity_3",     dParamVel3);
     lua_constant(L, "joint_attr_force_max",      dParamFMax);
     lua_constant(L, "joint_attr_force_max_2",    dParamFMax2);
-    lua_constant(L, "joint_attr_force_max_3",    dParamFMax3);
     lua_constant(L, "joint_attr_bounce",         dParamBounce);
     lua_constant(L, "joint_attr_bounce_2",       dParamBounce2);
-    lua_constant(L, "joint_attr_bounce_3",       dParamBounce3);
     lua_constant(L, "joint_attr_cfm",            dParamCFM);
     lua_constant(L, "joint_attr_cfm_2",          dParamCFM2);
-    lua_constant(L, "joint_attr_cfm_3",          dParamCFM3);
     lua_constant(L, "joint_attr_stop_erp",       dParamStopERP);
     lua_constant(L, "joint_attr_stop_erp_2",     dParamStopERP2);
-    lua_constant(L, "joint_attr_stop_erp_3",     dParamStopERP3);
     lua_constant(L, "joint_attr_stop_cfm",       dParamStopCFM);
     lua_constant(L, "joint_attr_stop_cfm_2",     dParamStopCFM2);
-    lua_constant(L, "joint_attr_stop_cfm_3",     dParamStopCFM3);
     lua_constant(L, "joint_attr_susp_erp",       dParamSuspensionERP);
     lua_constant(L, "joint_attr_susp_cfm",       dParamSuspensionCFM);
 

@@ -8,6 +8,7 @@
     h2     { margin-left:  -9%; }
     h3     { margin-left:  -6%; }
     h4     { margin-left:  -3%; }
+    h5     { margin-left:  -0%; }
     dt     { background: #EEEEEE; padding: 0.5em; }
     pre    { background: #FFFFCC; padding: 1.0em; }
     p.note { background: #CCFFFF; padding: 1.0em; }
@@ -65,7 +66,7 @@ Execute the named Lua script.</p>
 
 <h1> 2. API </h1>
 
-<p>The Electro API is encapsulated in a Lua namespace "<tt>E</tt>". The namespace specifier is omitted in this documentation, though it is included in the examples. Be sure to precede all Lua function and constant references with the "<tt>E</tt>" namespace specifier, or they will be reported as undefined.</p>
+<p>The Electro API is encapsulated in a Lua namespace &ldquo;<tt>E</tt>&rdquo;. The namespace specifier is omitted in this documentation, though it is included in the examples. Be sure to precede all Lua function and constant references with the &ldquo;<tt>E</tt>&rdquo; namespace specifier, or they will be reported as undefined.</p>
 
 <pre>
 E.set_background(0.0, 0.5, 1.0)
@@ -273,7 +274,155 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <!---------------------------------------------------------------------------->
 
 <h4> 2.1.0.7. Collision Detection and Response </h4>
+
+<p>Electro uses the <a href="http://www.ode.org">Open Dynamics Engine</a> for collision detection and rigid body dynamics. These are broad topics, and ODE is a complex library. To fully document Electro's dynamics support would be to fully reproduce the ODE documentation. So, in the interest of brevity, only Electro's interface to ODE is presented here. Interested readers should consult <a href="http://www.ode.org/ode-latest-userguide.html">the full ODE documentation</a>. Electro exposes most, but not all, of ODE's functionality. The API is simplified and heavily reduced, but the concepts are the same. Any ODE types and parameters not defined here are not supported by Electro.</p>
+
+<p>In short, a rigid body system is composed of &ldquo;geoms&rdquo;, &ldquo;bodies&rdquo; and &ldquo;joints&rdquo;. A geom is a simple solid: a sphere, box, cylinder, or plane. A body is a compound solid: a rigid arrangement of one or more geoms. A joint is a non-rigid connection between bodies. Geoms define the collision characteristics of an object. Bodies define the physics characteristics of an object. Joints define the behaviors of articulated objects.</p>
+
+<p>Bodies and geoms are defined using the normal Electro hierarchy. An entity may be marked as a body, as a geom, or as both. All geom-entities within the hierarchy of a body-entity become geoms of that body. Child entity positions and rotations define the arrangements of geoms within bodies.</p>
+
+<b>Types</b>
+
 <dl>
+
+<dt><tt>set_entity_body_type</tt>(<i>entity, type</i>)<dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the its position and rotation will be updated each frame according to parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
+
+<dt><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)<dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy, and will move along with it. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of intertia of the body.</p>
+
+<p>If no enclosing body exists, then the geom will be rigidly attached to the environment. It will act in collision, but will not respond physically. This is the normal mechanism for creating solid scene geometry.</p>
+
+<p>The following geom types and shape parameters are allowed:</p>
+<ul>
+
+<li><tt>geom_type_none</tt><p>No physical representation. This is the default.</p>
+
+<li><tt>geom_type_box</tt><i>, x, y, z</i><p>A box with lengths <i>x, y, z</i> centered at the origin.</p>
+
+<li><tt>geom_type_sphere</tt><i>, r</i><p>A sphere of radius <i>r</i>.</p>
+
+<li><tt>geom_type_capsule</tt><i>, l, r</i><p>A cylinder with spherical end caps, oriented along the Z axis. The length of the cylinder is <i>l</i> and its radius is <i>r</i>.</p>
+
+<li><tt>geom_type_plane</tt><i>, a, b, c, d</i></p>A plane satisfying the equation <i>ax + by + cz = d</i>.</p>
+
+<p><b>Note</b>: the plane is a degenerate geom type. It <i>cannot</i> act as part of a body and must be attached to the environment. It is defined only by the parameters given at creation time and does not respond to entity transformation. Planes are commonly used to define floors or walls to contain the physical system.</p>
+
+</ul>
+
+<dt><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)<dd><p>Define a joint between the two given body-entities. If a given entity is not a body entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of all joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0"> the ODE documentation</a>.</p>
+
+<ul>
+<li><tt>joint_type_ball</tt>
+<li><tt>joint_type_hinge</tt>
+<li><tt>joint_type_slider</tt>
+<li><tt>joint_type_universal</tt>
+<li><tt>joint_type_hinge_2</tt>
+</ul>
+</dl>
+
+<b>Attributes</b>
+
+<p>Bodies, geoms, and joints have a variety of attributes defining their behavior. The following enumerations define these attributes and the functions provided to manipulate them. The functions take arguments of varying number and type, but all numbers and types are checked for correctness against the named attribute.</p>
+
+<dl>
+
+<dt><tt>set_entity_body_attr</tt>(<i>entity, attr, value</i>)<dd><p>Set one of the following attributes on the given body-entity.</p>
+<ul>
+
+<li><tt>body_attr_gravity</tt><p>If <tt>true</tt>, the force of gravity will act on this body. If <tt>false</tt>, this body will behave weightlessly. The default is <tt>true</tt>.
+
+</ul>
+
+<dt><tt>set_entity_geom_attr</tt>(<i>entity, attr, value</i>)<dd><p>Set one of the following attributes on the given geom-entity.</p>
+<ul>
+
+<li><tt>geom_attr_category</tt><p>The category value is a 32-bit field allowing geoms to be classified. 32 categories are defined and geoms may be assigned to these categories as the application demands. If a bit in the category bitfield is set then the geom belongs to that category. The default is <tt>0xFFFFFFFF</tt> and all geoms belong to all categories.</p>
+
+<li><tt>geom_attr_collider</tt><p>The collider bit field uses the category bit field to determine if two geoms should be tested for collision. Given geoms A and B, if (<i>category<sub>A</sub></i> &and; <i>collider<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>collider<sub>A</sub></i>) then collision will be tested. The default is <tt>0xFFFFFFFF</tt> and all geoms are tested against all others.</p>
+
+<li><tt>geom_attr_response</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should respond physically in any way. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the geoms will impact or bounce as their attributes define. The default is <tt>0xFFFFFFFF</tt> and all collisions respond physically.</p>
+
+<li><tt>geom_attr_callback</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the <tt>do_contact</tt> callback will be invoked. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
+
+<p class="note">These bit fields define 4 useful combinations:  1) Non-interacting objects might include the particles of an explosion or cloud effect. 2) Unreported colliding objects might include a car's tires rolling on a road. 3) Reported colliding objects might include a bullet hitting a target. 4) Reported non-colliding objects might include a car crossing a finish line. The bit field defaults produce combination 2 for all geoms.</p>
+
+<li><tt>geom_attr_mass</tt><p>The mass of the entity</p>
+
+<li><tt>geom_attr_bounce</tt><p>The coefficient of restitution, or bounciness of an entity. This determines the amount of energy before a collision that remains in the system after it. When two geoms of differing bounce collide, the maximum of the two values is used. This value should be between <i>0</i> and <i>1</i>. The default is <i>0.5</i></p>
+
+<li><tt>geom_attr_friction</tt><p>The coefficient of friction of an entity. This determines the ease of sliding along the surface of an entity. When two geoms of differing friction collide, the minimum of the two values is used. This value should be between <i>0</i> and infinity. The default is infinity.</p>
+
+<li><tt>geom_attr_soft_erp</tt>
+<li><tt>geom_attr_soft_cfm</tt><p>The Error Reduction Parameter and Constraint Force Mixing value determing the sponginess and springiness of a surface, respectively. For details, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_3_7_0">the ODE documentation's discussion</a>. When two geoms of differing values collide, the minimum ERP and maximum CFM are used. ERP should be between <i>0</i> and <i>1</i>. The default is <i>0.2</i>. CFM should be positive but small. The default is <i>0.01</i>.</p>
+
+</ul>
+
+<dt><tt>set_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr, value</i>)<dd><p></p>
+
+<p>Set one of the following attributes on the joint between the given bodies. Most of these attributes are scalar values, but a few are vectors.</p>
+
+<ul>
+<li><tt>joint_attr_anchor</tt><p>The point (<i>x, y, z</i>) of a ball, hinge, hinge2, or universal joint.</p>
+
+<li><tt>joint_attr_axis_1</tt><p>The primary axis vector (<i>x, y, z</i>) of a hinge, slider, hinge2, or universal joint.</p>
+
+<li><tt>joint_attr_axis_2</tt><p>The secondary axis vector (<i>x, y, z</i>) of a hinge2 or universal joint.</p>
+
+<li><tt>joint_attr_lo_stop</tt>
+<li><tt>joint_attr_hi_stop</tt>
+<li><tt>joint_attr_lo_stop_2</tt>
+<li><tt>joint_attr_hi_stop_2</tt><p>The minimum and maximum values of the primary and secondary joint attributes. For a rotating joint such as a hinge, these values define the minimum and maximum angles, in radians. For a moving joint such as a slider, these define the minimum and maximum linear extensions.</p>
+
+<li><tt>joint_attr_velocity</tt>
+<li><tt>joint_attr_velocity_2</tt>
+<li><tt>joint_attr_force_max</tt>
+<li><tt>joint_attr_force_max_2</tt><p>The velocity and force applied by a joint motor. These enable the animation of bodies through the application of articulating forces at joints. The <tt>velocity</tt> attributes give the desired linear or angular rate of change for the joint and the <tt>force</tt> attributes give the maximum force or torque to applied attempting to meet this goal. These attributes can also simulate joint friction when given a zero desired velocity and a non-zero maximum force.</p>
+
+<li><tt>joint_attr_bounce</tt>
+<li><tt>joint_attr_bounce_2</tt>
+<li><tt>joint_attr_cfm</tt>
+<li><tt>joint_attr_cfm_2</tt><p>The bounciness and CFM of the joint between stops.</p>
+
+<li><tt>joint_attr_stop_erp</tt>
+<li><tt>joint_attr_stop_erp_2</tt>
+<li><tt>joint_attr_stop_cfm</tt>
+<li><tt>joint_attr_stop_cfm_2</tt><p>The ERP and CFM of a joint's <tt>lo_stop</tt> and <tt>hi_stop</tt>. These define the sponginess and springiness of the limits of the joint.</p>
+
+<li><tt>joint_attr_susp_erp</tt>
+<li><tt>joint_attr_susp_cfm</tt></p>The ERP and CFM of a suspension joint. Currently, only the hinge2 joint defines suspension along its axis.</p>
+
+</ul>
+</dl>
+
+<b>Query</b>
+
+<p>The following functions allow a few of the attributes of the physical system to be queried. </p>
+
+<dl>
+
+<dt><i>value</i> = <tt>get_entity_geom_attr</tt>(<i>entity, attr</i>)<dd><p>Return the value of the corresponding geom attribute. All of the geom attributes defined above may be queried.</p>
+
+<dt><i>value</i> = <tt>get_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr</i>)<dd><p>Return the value of the corresponding joint attribute. All of the joint attributes defined above may be queried, with the exception of the vector entities (<tt>joint_attr_anchor</tt>, <tt>joint_attr_axis_1</tt>, and <tt>joint_attr_axis_2</tt>). In addition, the following attributes may be queried but may not be directly set:</p>
+
+<ul>
+<li><tt>joint_attr_value</tt><p>The angle of rotation (in radians) or distance of extension of a joint. </p>
+
+<p class="note">It is not possible to query all of the axes of rotation of multi-axis joints. This is an unexplained limitation in ODE.</p>
+
+<li><tt>joint_attr_rate_1</tt>
+<li><tt>joint_attr_rate_2</tt><p>The angular velocity of a rotating joint, or the linear velocity of an extension joint.</p>
+
+</ul>
+</dl>
+
+<b>Direct Force Application</b>
+
+<p>Joint motors are an incredibly powerful and flexible means of initiating action in a physical system.  However, they do not always suffice.  The following functions may be used to apply external forces on arbitrary body-entities.  These forces accumulate, but are reset each frame.  So, if a persistent force is to be applied to a body then it must be reapplied during each update.</p>
+
+<dl>
+<dt><tt>add_entity_force</tt>(<i>entity, x, y, z</i>)<dd><p>Apply force to <i>entity</i> with the magnitude and direction of vector (<i>x, y, z</i>).
+
+<dt><tt>add_entity_torque</tt>(<i>entity, x, y, z</i>)<dd><p>Apply torque to <i>entity</i> with the magnitude and axis of vector (<i>x, y, z</i>).
+
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -402,7 +551,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <li><tt>stereo_mode_quad</tt>
 
-<p>This mode enables quad-buffered stereo viewing. This is appropriate for active stereo viewing using LCD flicker glasses, or passive stereo viewing using dual-output video hardware in "clone" mode. To function correctly, the underlying graphics hardware must support quad-buffered stereo, and <tt>host_flag_stereo</tt> must be enabled on the rendering host at application startup. See <tt>set_host_flag</tt> below.</p>
+<p>This mode enables quad-buffered stereo viewing. This is appropriate for active stereo viewing using LCD flicker glasses, or passive stereo viewing using dual-output video hardware in &ldquo;clone&rdquo; mode. To function correctly, the underlying graphics hardware must support quad-buffered stereo, and <tt>host_flag_stereo</tt> must be enabled on the rendering host at application startup. See <tt>set_host_flag</tt> below.</p>
 
 <li><tt>stereo_mode_red_blue</tt>
 
@@ -441,7 +590,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p>Set the magnitude multiplier of a galaxy. By default, stars are rendered using their computed luminosity. For all but a few stars, this is far too dim to be visible. The magnitude multiplier can be treated as a linear scale of apparent star size. For example, a magnitude value of 100 will result in the very largest of stars being rendered approximately 100 pixels across.</p>
 
-<dt><i>i<sub>S</sub></i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>Return the star "being pointed at" by the given entity. That is, return the index of the star closest to the forward vector of the entity. This is useful for star selection and galaxy navigation, and is particularly well applied to cameras and tracked entities.</p>
+<dt><i>i<sub>S</sub></i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>Return the star &ldquo;being pointed at&rdquo; by the given entity. That is, return the index of the star closest to the forward vector of the entity. This is useful for star selection and galaxy navigation, and is particularly well applied to cameras and tracked entities.</p>
 
 <dt><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy, i<sub>S</sub></i>)<dd><p>Return the 3D position of the star at index <i>i<sub>S</sub></i> of <i>galaxy</i>.
 
@@ -553,7 +702,7 @@ and sprites.</p>
 
 <dt><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>Add a host, returning a host index. This function is used by configuration scripts to define the structure of the cluster driving a tiled display.</p>
 
-<p>The <i>name</i> argument gives the Internet hostname of the rendering node to be used. The <i>x, y, w, h</i> arguments give the position and size of the area of that host's desktop to be used for OpenGL rendering. A given render node can only support one Electro host. If the same <i>name</i> argument is reused for multiple configurations, only the first will be used. If <i>name</i> is <tt>"default"</tt> then the given host configuration will be applied to all hosts not specifically named in another configuration. If a render node is to handle multiple displays, they must be defined as Electro tiles.</p>
+<p>The <i>name</i> argument gives the Internet hostname of the rendering node to be used. The <i>x, y, w, h</i> arguments give the position and size of the area of that host's desktop to be used for OpenGL rendering. A given render node can only support one Electro host. If the same <i>name</i> argument is reused for multiple configurations, only the first will be used. If <i>name</i> is &ldquo;<tt>default</tt>&rdquo; then the given host configuration will be applied to all hosts not specifically named in another configuration. If a render node is to handle multiple displays, they must be defined as Electro tiles.</p>
 
 <p>Host configuration and rendering context creation is closely bound with MPI process initialization, so it must be performed immediately upon application startup, and cannot be modified later in an application's execution.</p>
 
@@ -577,7 +726,7 @@ and sprites.</p>
 
 <dt><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>Add a tile to a host, returning a tile index. The <i>x, y, w, h</i> arguments give position and size of the area of the indexed host's render area to be used for display.</p>
 
-<dt><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>, u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p>Set the world-space position of <i>tile</i>. The (<i>o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector of the origin of the tile, usually the real-space lower-left corner of the display to which the tile is rendered. The (<i>r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub></i>) arguments give the "right" vector, from the origin to the lower-right corner. The (<i>u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>) arguments give the "up" vector, from the origin to the upper-left corner.</p>
+<dt><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>, u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p>Set the world-space position of <i>tile</i>. The (<i>o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector of the origin of the tile, usually the real-space lower-left corner of the display to which the tile is rendered. The (<i>r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub></i>) arguments give the &ldquo;right&rdquo; vector, from the origin to the lower-right corner. The (<i>u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>) arguments give the &ldquo;up&rdquo; vector, from the origin to the upper-left corner.</p>
 
 <p>These three vectors, with the view position vector, define the view frustum of the indexed tile's perspective projection. The default view position vector is (<i>0, 0, 0</i>), though this is subject to the motion-tracked offset of any perspective camera used during rendering.</p>
 
@@ -686,7 +835,7 @@ end
 
 <p>In general, events are queued and several events are handled during each frame period. This is necessary because rendering is usually more expensive than event handling, and re-rendering after each event leads to sluggish performance. Often, the most efficient event-handling organization is to accumulate events as they arrive (as in the <tt>do_timer</tt> and <tt>do_point</tt> examples) and use the resulting totals to update the scene at the last moment.</p>
 
-<p>Unlike other callbacks, the "dirty" flag return value from <tt>do_frame</tt> is ignored, as a redraw has already been scheduled.</p>
+<p>Unlike other callbacks, the &ldquo;dirty&rdquo; flag return value from <tt>do_frame</tt> is ignored, as a redraw has already been scheduled.</p>
 
 <dt><tt>do_keyboard(k, s)</tt><dd><p>This callback is invoked whenever a key is pressed or released. The <tt>s</tt> argument is a boolean giving the key state. The <tt>k</tt> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. A full listing of keys and their associated values would be lengthy and uninteresting. When in doubt about the value of a key, query it interactively as follows:</p>
 
