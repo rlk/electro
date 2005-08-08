@@ -341,7 +341,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <li><tt>geom_attr_response</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should respond physically in any way. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the geoms will impact or bounce as their attributes define. The default is <tt>0xFFFFFFFF</tt> and all collisions respond physically.</p>
 
-<li><tt>geom_attr_callback</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the <tt>do_contact</tt> callback will be invoked. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
+<li><tt>geom_attr_callback</tt><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the <tt>do_contact</tt> callback will be invoked. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
 
 <p class="note">These bit fields define 4 useful combinations:  1) Non-interacting objects might include the particles of an explosion or cloud effect. 2) Unreported colliding objects might include a car's tires rolling on a road. 3) Reported colliding objects might include a bullet hitting a target. 4) Reported non-colliding objects might include a car crossing a finish line. The bit field defaults produce combination 2 for all geoms.</p>
 
@@ -799,7 +799,7 @@ and sprites.</p>
 
 <dl>
 
-<dt><tt>do_point(dx, dy)</tt><dd><p>This callback is invoked whenever the mouse pointer moves within the Electro main window. Motion is reported relatively, so the pointer may move an unlimited distance in any direction. Absolute position is not reported. If absolute mouse position is necessary, then it must be tracked manually, as follows:</p>
+<dt><tt>do_point</tt>(<i>dx, dy</i>)<dd><p>This callback is invoked whenever the mouse pointer moves within the Electro main window. Motion is reported relatively, so the pointer may move an unlimited distance in any direction. Absolute position is not reported. If absolute mouse position is necessary, then it must be tracked manually, as follows:</p>
 
 <pre>
 mouse_x = 0
@@ -812,11 +812,11 @@ function do_point(dx, dy)
 end
 </pre>
 
-<dt><tt>do_click(b, s)</tt><dd><p>This callback is invoked whenever a mouse button is pressed or released. The <tt>b</tt> argument gives the button number, 1, 2, 3, etc. The <tt>s</tt> argument is a boolean giving button state. A value of <tt>true</tt> indicates the button has been pressed, and <tt>false</tt> indicates it has been released. Note, on most modern systems mouse wheel up and down are reported as presses of buttons 4 and 5. Button press events on wheel buttons do not have accompanying release events.</p>
+<dt><tt>do_click</tt>(<i>b, s</i>)<dd><p>This callback is invoked whenever a mouse button is pressed or released. The <i>b</i> argument gives the button number, 1, 2, 3, etc. The <i>s</i> argument is a boolean giving button state. A value of <tt>true</tt> indicates the button has been pressed, and <tt>false</tt> indicates it has been released. Note, on most modern systems mouse wheel up and down are reported as presses of buttons 4 and 5. Button press events on wheel buttons do not have accompanying release events.</p>
 
-<dt><tt>do_timer(dt)</tt><dd><p>The <tt>do_timer</tt> callback is invoked regularly while idling is enabled. The <tt>dt</tt> argument gives the amount of time, in seconds, that has passed since the last time the callback was invoked. The rate of callback is not defined, but it will happen as often as is possible. The <tt>do_timer</tt> function is intended to be used to update animations and other background processes. Applications should be sure to return <tt>true</tt> in order to force an update to the display.</p>
+<dt><tt>do_timer</tt>(<i>dt</i>)<dd><p>The <tt>do_timer</tt> callback is invoked regularly while idling is enabled. The <i>dt</i> argument gives the amount of time, in seconds, that has passed since the last time the callback was invoked. The rate of callback is not defined, but it will happen as often as is possible. The <tt>do_timer</tt> function is intended to be used to update animations and other background processes. Applications should be sure to return <tt>true</tt> in order to force an update to the display.</p>
 
-<p>If an absolute measure of time is necessary, applications should accumulate  the <tt>dt</tt> parameter, just as they would accumulate relative mouse motion.</p>
+<p>If an absolute measure of time is necessary, applications should accumulate  the <i>dt</i> parameter, just as they would accumulate relative mouse motion.</p>
 
 <pre>
 time = 0
@@ -829,15 +829,15 @@ function do_timer(dt)
 end
 </pre>
 
-<p class="note">The update rate of the <tt>do_timer</tt> callback is deliberately obscured because it is nearly impossible to guarantee. While it might make sense to allow an application to request a callback rate, this request can only be precisely filled in a limited number of cases. Just trust the <tt>dt</tt>.</p>
+<p class="note">The update rate of the <tt>do_timer</tt> callback is deliberately obscured because it is nearly impossible to guarantee. While it might make sense to allow an application to request a callback rate, this request can only be precisely filled in a limited number of cases. Just trust the <i>dt</i>.</p>
 
-<dt><tt> do_frame() </tt><dd><p>This callback is invoked immediately before a frame is rendered. This is useful for operations that should be performed exactly once per frame.</p>
+<dt><tt>do_frame</tt>()<dd><p>This callback is invoked immediately before a frame is rendered. This is useful for operations that should be performed exactly once per frame.</p>
 
 <p>In general, events are queued and several events are handled during each frame period. This is necessary because rendering is usually more expensive than event handling, and re-rendering after each event leads to sluggish performance. Often, the most efficient event-handling organization is to accumulate events as they arrive (as in the <tt>do_timer</tt> and <tt>do_point</tt> examples) and use the resulting totals to update the scene at the last moment.</p>
 
 <p>Unlike other callbacks, the &ldquo;dirty&rdquo; flag return value from <tt>do_frame</tt> is ignored, as a redraw has already been scheduled.</p>
 
-<dt><tt>do_keyboard(k, s)</tt><dd><p>This callback is invoked whenever a key is pressed or released. The <tt>s</tt> argument is a boolean giving the key state. The <tt>k</tt> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. A full listing of keys and their associated values would be lengthy and uninteresting. When in doubt about the value of a key, query it interactively as follows:</p>
+<dt><tt>do_keyboard</tt>(<i>k, s</i>)<dd><p>This callback is invoked whenever a key is pressed or released. The <i>s</i> argument is a boolean giving the key state. The <i>k</i> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. A full listing of keys and their associated values would be lengthy and uninteresting. When in doubt about the value of a key, query it interactively as follows:</p>
 
 <pre>
 function do_keyboard(k, s)
@@ -850,7 +850,11 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<dt><tt>do_joystick(n, b, s)</tt><dd><p>This callback is invoked whenever a joystick button is pressed or released. The <tt>n</tt> argument gives the joystick device number. The <tt>b</tt> argument gives the button number. The <tt>s</tt> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are aquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt> callback.</p>
+<dt><tt>do_joystick</tt>(<i>n, b, s</i>)<dd><p>This callback is invoked whenever a joystick button is pressed or released. The <i>n</i> argument gives the joystick device number. The <i>b</i> argument gives the button number. The <i>s</i> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are aquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt> callback.</p>
+
+<dt><tt>do_contact</tt>(<i>entity<sub>A</sub>, entity<sub>B</sub>, p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, d</i>)<dd><p>This callback is invoked when a rigid body collision has been detected between two bodies with a <tt>geom_attr_callback</tt> category bit set. The <i>entity<sub>A</sub></i> and <i>entity<sub>B</sub></i> arguments give the entities (in no specific order), (<i>p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub></i>) gives the point of collision, (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>) gives the normal vector of the collision, and <i>d</i> gives the depth of penetration of the two geoms (assuming their CFM values permit penetration.)</p>
+
+<p>Keep in mind that a collision can produce multiple contacts, so more than one may be reported.  For example, a box sitting flat on a floor makes contact across an area larger than a point.  This may be reported as multiple point contacts.  Similarly, a soft or non-responding collision will be reported multiple times.  Soft impacting bodies remain in contact for several frames, and contact will be reported each frame.  Non-responding colliding bodies are allowed to pass through each other, and contact will be reported every frame during which they intersect.</p>
 
 </dl>
 
