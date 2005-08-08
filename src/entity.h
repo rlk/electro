@@ -142,15 +142,18 @@ void  set_entity_body_type(int,      int);
 void  set_entity_geom_type(int,      int, const float *);
 void  set_entity_join_type(int, int, int);
 
-void  set_entity_body_attr_f(int,      int, float);
+void  set_entity_body_attr_i(int,      int, int);
 void  set_entity_geom_attr_i(int,      int, int);
 void  set_entity_geom_attr_f(int,      int, float);
 void  set_entity_join_attr_f(int, int, int, float);
 void  set_entity_join_attr_v(int, int, int, const float *);
 
+int   get_entity_body_attr_i(int, int);
+void  get_entity_body_attr_v(int, int, float *);
 int   get_entity_geom_attr_i(int, int);
 float get_entity_geom_attr_f(int, int);
 float get_entity_join_attr_f(int, int, int);
+void  get_entity_join_attr_v(int, int, int, float *);
 
 void  add_entity_force (int, float, float, float);
 void  add_entity_torque(int, float, float, float);

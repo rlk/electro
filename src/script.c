@@ -762,10 +762,35 @@ static int E_set_entity_body_type(lua_State *L)
 
 static int E_set_entity_body_attr(lua_State *L)
 {
-    set_entity_body_attr_f(E_getentity (L, -3),
+    set_entity_body_attr_i(E_getentity (L, -3),
                            L_getinteger(L, -2),
                            L_getnumber (L, -1));
     return 0;
+}
+
+static int E_get_entity_body_attr(lua_State *L)
+{
+    float v[3];
+
+    switch (L_getinteger(L, -1))
+    {
+    case BODY_ATTR_GRAVITY:
+        lua_pushnumber(L, get_entity_body_attr_i(E_getentity (L, -2),
+                                                 L_getinteger(L, -1)));
+        return 1;
+
+    case BODY_ATTR_CENTER:
+        get_entity_body_attr_v(E_getentity (L, -2),
+                               L_getinteger(L, -1), v);
+        lua_pushnumber(L, v[0]);
+        lua_pushnumber(L, v[1]);
+        lua_pushnumber(L, v[2]);
+        return 3;
+
+    default:
+        lua_pushnumber(L, 0);
+        return 1;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -898,10 +923,28 @@ static int E_set_entity_joint_attr(lua_State *L)
 
 static int E_get_entity_joint_attr(lua_State *L)
 {
-    lua_pushnumber(L, get_entity_join_attr_f(E_getentity (L, -3),
-                                             E_getentity (L, -2),
-                                             L_getinteger(L, -1)));
-    return 1;
+    int n = lua_gettop  (L);
+    int i = E_getentity (L, -n + 0);
+    int j = E_getentity (L, -n + 1);
+    int p = L_getinteger(L, -n + 2);
+
+    float v[3] = { 0, 0, 0 };
+
+    switch (p)
+    {
+    case JOINT_ATTR_ANCHOR:
+    case JOINT_ATTR_AXIS_1:
+    case JOINT_ATTR_AXIS_2:
+        get_entity_join_attr_v(i, j, p, v);
+        lua_pushnumber(L, v[0]);
+        lua_pushnumber(L, v[1]);
+        lua_pushnumber(L, v[2]);
+        return 3;
+
+    default:
+        lua_pushnumber(L, get_entity_join_attr_f(i, j, p));
+        return 1;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -2067,6 +2110,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_entity_body_attr",  E_set_entity_body_attr);
     lua_function(L, "set_entity_geom_attr",  E_set_entity_geom_attr);
     lua_function(L, "set_entity_joint_attr", E_set_entity_joint_attr);
+    lua_function(L, "get_entity_body_attr",  E_get_entity_body_attr);
     lua_function(L, "get_entity_geom_attr",  E_get_entity_geom_attr);
     lua_function(L, "get_entity_joint_attr", E_get_entity_joint_attr);
 

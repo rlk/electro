@@ -14,6 +14,7 @@
 
 #include "utility.h"
 #include "physics.h"
+#include "matrix.h"
 #include "script.h"
 
 /*---------------------------------------------------------------------------*/
@@ -389,6 +390,65 @@ static float get_phys_joint_rate(dJointID joint, int n)
     return 0;
 }
 
+static void get_phys_joint_anchor(dJointID joint, float *v)
+{
+    dVector3 V = { 0, 0, 0 };
+
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeBall:
+        dJointGetBallAnchor     (joint, V); break;
+    case dJointTypeHinge:
+        dJointGetHingeAnchor    (joint, V); break;
+    case dJointTypeHinge2:
+        dJointGetHinge2Anchor   (joint, V); break;
+    case dJointTypeUniversal:
+        dJointGetUniversalAnchor(joint, V); break;
+    }
+
+    v[0] = (float) V[0];
+    v[1] = (float) V[1];
+    v[2] = (float) V[2];
+}
+
+static void get_phys_joint_axis_1(dJointID joint, float *v)
+{
+    dVector3 V = { 0, 0, 0 };
+
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge:
+        dJointGetHingeAxis     (joint, V); break;
+    case dJointTypeSlider:
+        dJointGetSliderAxis    (joint, V); break;
+    case dJointTypeHinge2:
+        dJointGetHinge2Axis1   (joint, V); break;
+    case dJointTypeUniversal:
+        dJointGetUniversalAxis1(joint, V); break;
+    }
+
+    v[0] = (float) V[0];
+    v[1] = (float) V[1];
+    v[2] = (float) V[2];
+}
+
+static void get_phys_joint_axis_2(dJointID joint, float *v)
+{
+    dVector3 V = { 0, 0, 0 };
+
+    switch (dJointGetType(joint))
+    {
+    case dJointTypeHinge2:
+        dJointGetHinge2Axis2   (joint, V); break;
+    case dJointTypeUniversal:
+        dJointGetUniversalAxis2(joint, V); break;
+    }
+
+    v[0] = (float) V[0];
+    v[1] = (float) V[1];
+    v[2] = (float) V[2];
+}
+
 /*---------------------------------------------------------------------------*/
 /* Body functions                                                            */
 
@@ -403,14 +463,23 @@ dBodyID set_phys_body_type(dBodyID body, int b)
     return 0;
 }
 
-void set_phys_body_attr_f(dBodyID body, int p, float f)
+void set_phys_body_attr_i(dBodyID body, int p, int i)
 {
     switch (p)
     {
     case BODY_ATTR_GRAVITY:
-        dBodySetGravityMode(body, f);
+        dBodySetGravityMode(body, i);
         break;
     }
+}
+
+int get_phys_body_attr_i(dBodyID body, int p)
+{
+    switch (p)
+    {
+    case BODY_ATTR_GRAVITY: return dBodyGetGravityMode(body); break;
+    }
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -550,8 +619,18 @@ void set_phys_join_attr_f(dBodyID body1, dBodyID body2, int p, float f)
 {
     dJointID joint = find_shared_joint(body1, body2);
 
-    if (joint)
+    switch (p)
+    {
+    case dParamLoStop:
+    case dParamHiStop:
+    case dParamLoStop2:
+    case dParamHiStop2:
+        set_phys_joint_attr(joint, p, TO_RAD(f));
+        break;
+    default:
         set_phys_joint_attr(joint, p, f);
+        break;
+    }
 }
 
 void set_phys_join_attr_v(dBodyID body1, dBodyID body2, int p, const float *v)
@@ -577,10 +656,31 @@ float get_phys_join_attr_f(dBodyID body1, dBodyID body2, int p)
         case JOINT_ATTR_VALUE:  return get_phys_joint_value(joint);
         case JOINT_ATTR_RATE_1: return get_phys_joint_rate(joint, 1);
         case JOINT_ATTR_RATE_2: return get_phys_joint_rate(joint, 2);
-        default:                return get_phys_joint_attr(joint, p);
+        case dParamLoStop:
+        case dParamHiStop:
+        case dParamLoStop2:
+        case dParamHiStop2:
+            return TO_DEG(get_phys_joint_attr(joint, p));
+            break;
+        default:
+            return get_phys_joint_attr(joint, p);
+            break;
         }
 
     return 0;
+}
+
+void get_phys_join_attr_v(dBodyID body1, dBodyID body2, int p, float *v)
+{
+    dJointID joint = find_shared_joint(body1, body2);
+
+    if (joint)
+        switch (p)
+        {
+        case JOINT_ATTR_ANCHOR: get_phys_joint_anchor(joint, v); break;
+        case JOINT_ATTR_AXIS_1: get_phys_joint_axis_1(joint, v); break;
+        case JOINT_ATTR_AXIS_2: get_phys_joint_axis_2(joint, v); break;
+        }
 }
 
 /*---------------------------------------------------------------------------*/

@@ -275,21 +275,21 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <h4> 2.1.0.7. Collision Detection and Response </h4>
 
-<p>Electro uses the <a href="http://www.ode.org">Open Dynamics Engine</a> for collision detection and rigid body dynamics. These are broad topics, and ODE is a complex library. To fully document Electro's dynamics support would be to fully reproduce the ODE documentation. So, in the interest of brevity, only Electro's interface to ODE is presented here. Interested readers should consult <a href="http://www.ode.org/ode-latest-userguide.html">the full ODE documentation</a>. Electro exposes most, but not all, of ODE's functionality. The API is simplified and heavily reduced, but the concepts are the same. Any ODE types and parameters not defined here are not supported by Electro.</p>
+<p>Electro uses the <a href="http://www.ode.org">Open Dynamics Engine</a> for collision detection and rigid body dynamics. These are broad topics, and ODE is a complex library. To fully document Electro's dynamics support would be to fully reproduce the ODE documentation. So in the interest of brevity, only Electro's interface to ODE is presented here. Interested readers should consult <a href="http://www.ode.org/ode-latest-userguide.html">the full ODE documentation</a>. Electro exposes most, but not all, of ODE's functionality. The API is simplified and heavily reduced, but the concepts are the same. Any ODE types and parameters not defined here are not supported by Electro.</p>
 
 <p>In short, a rigid body system is composed of &ldquo;geoms&rdquo;, &ldquo;bodies&rdquo; and &ldquo;joints&rdquo;. A geom is a simple solid: a sphere, box, cylinder, or plane. A body is a compound solid: a rigid arrangement of one or more geoms. A joint is a non-rigid connection between bodies. Geoms define the collision characteristics of an object. Bodies define the physics characteristics of an object. Joints define the behaviors of articulated objects.</p>
 
-<p>Bodies and geoms are defined using the normal Electro hierarchy. An entity may be marked as a body, as a geom, or as both. All geom-entities within the hierarchy of a body-entity become geoms of that body. Child entity positions and rotations define the arrangements of geoms within bodies.</p>
+<p>Bodies and geoms are defined using the normal Electro hierarchy. An entity may be marked as a body, as a geom, or as both. All geom-entities within the hierarchy of a body-entity are geoms of that body. Child entity positions and rotations define the arrangements of geoms within bodies.</p>
 
 <b>Types</b>
 
 <dl>
 
-<dt><tt>set_entity_body_type</tt>(<i>entity, type</i>)<dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the its position and rotation will be updated each frame according to parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
+<dt><tt>set_entity_body_type</tt>(<i>entity, type</i>)<dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the its position and rotation will be updated each frame according to the parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
 
-<dt><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)<dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy, and will move along with it. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of intertia of the body.</p>
+<dt><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)<dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of intertia of the body.</p>
 
-<p>If no enclosing body exists, then the geom will be rigidly attached to the environment. It will act in collision, but will not respond physically. This is the normal mechanism for creating solid scene geometry.</p>
+<p>If no enclosing body exists, then the geom is rigidly attached to the environment. It will act in collision, but will not respond physically. This is the normal mechanism for creating solid scene geometry.</p>
 
 <p>The following geom types and shape parameters are allowed:</p>
 <ul>
@@ -308,7 +308,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 </ul>
 
-<dt><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)<dd><p>Define a joint between the two given body-entities. If a given entity is not a body entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of all joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0"> the ODE documentation</a>.</p>
+<dt><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)<dd><p>Define a joint between the two given body-entities. If a given entity is not a body entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of these joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0"> the ODE documentation</a>.</p>
 
 <ul>
 <li><tt>joint_type_ball</tt>
@@ -321,7 +321,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <b>Attributes</b>
 
-<p>Bodies, geoms, and joints have a variety of attributes defining their behavior. The following enumerations define these attributes and the functions provided to manipulate them. The functions take arguments of varying number and type, but all numbers and types are checked for correctness against the named attribute.</p>
+<p>Bodies, geoms, and joints have a variety of attributes defining their behavior. The following enumerations define these attributes and the functions provided to manipulate them. The functions take arguments of varying number and type, and all numbers and types are checked for correctness against the named attribute.</p>
 
 <dl>
 
@@ -335,13 +335,13 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <dt><tt>set_entity_geom_attr</tt>(<i>entity, attr, value</i>)<dd><p>Set one of the following attributes on the given geom-entity.</p>
 <ul>
 
-<li><tt>geom_attr_category</tt><p>The category value is a 32-bit field allowing geoms to be classified. 32 categories are defined and geoms may be assigned to these categories as the application demands. If a bit in the category bitfield is set then the geom belongs to that category. The default is <tt>0xFFFFFFFF</tt> and all geoms belong to all categories.</p>
+<li><tt>geom_attr_category</tt><p>The category value is a 32-bit field allowing geoms to be classified. 32 categories are defined and geoms may be assigned to these categories as the application demands. If a bit in the category bit field is set then the geom belongs to that category. The default is <tt>0xFFFFFFFF</tt> and all geoms belong to all categories.</p>
 
 <li><tt>geom_attr_collider</tt><p>The collider bit field uses the category bit field to determine if two geoms should be tested for collision. Given geoms A and B, if (<i>category<sub>A</sub></i> &and; <i>collider<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>collider<sub>A</sub></i>) then collision will be tested. The default is <tt>0xFFFFFFFF</tt> and all geoms are tested against all others.</p>
 
 <li><tt>geom_attr_response</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should respond physically in any way. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the geoms will impact or bounce as their attributes define. The default is <tt>0xFFFFFFFF</tt> and all collisions respond physically.</p>
 
-<li><tt>geom_attr_callback</tt><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the <tt>do_contact</tt> callback will be invoked. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
+<li><tt>geom_attr_callback</tt><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the <tt>do_contact</tt> callback will be invoked with arguments describing the collision. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
 
 <p class="note">These bit fields define 4 useful combinations:  1) Non-interacting objects might include the particles of an explosion or cloud effect. 2) Unreported colliding objects might include a car's tires rolling on a road. 3) Reported colliding objects might include a bullet hitting a target. 4) Reported non-colliding objects might include a car crossing a finish line. The bit field defaults produce combination 2 for all geoms.</p>
 
@@ -352,7 +352,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <li><tt>geom_attr_friction</tt><p>The coefficient of friction of an entity. This determines the ease of sliding along the surface of an entity. When two geoms of differing friction collide, the minimum of the two values is used. This value should be between <i>0</i> and infinity. The default is infinity.</p>
 
 <li><tt>geom_attr_soft_erp</tt>
-<li><tt>geom_attr_soft_cfm</tt><p>The Error Reduction Parameter and Constraint Force Mixing value determing the sponginess and springiness of a surface, respectively. For details, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_3_7_0">the ODE documentation's discussion</a>. When two geoms of differing values collide, the minimum ERP and maximum CFM are used. ERP should be between <i>0</i> and <i>1</i>. The default is <i>0.2</i>. CFM should be positive but small. The default is <i>0.01</i>.</p>
+<li><tt>geom_attr_soft_cfm</tt><p>The Error Reduction Parameter and Constraint Force Mixing value determine the sponginess and springiness of a surface, respectively. For details, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_3_7_0">the ODE documentation's discussion</a>. When two geoms of differing values collide, the minimum ERP and maximum CFM are used. ERP should be between <i>0</i> and <i>1</i>. The default is <i>0.2</i>. CFM should be positive but small. The default is <i>0.01</i>.</p>
 
 </ul>
 
@@ -370,7 +370,9 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <li><tt>joint_attr_lo_stop</tt>
 <li><tt>joint_attr_hi_stop</tt>
 <li><tt>joint_attr_lo_stop_2</tt>
-<li><tt>joint_attr_hi_stop_2</tt><p>The minimum and maximum values of the primary and secondary joint attributes. For a rotating joint such as a hinge, these values define the minimum and maximum angles, in radians. For a moving joint such as a slider, these define the minimum and maximum linear extensions.</p>
+<li><tt>joint_attr_hi_stop_2</tt><p>The minimum and maximum values of the primary and secondary joint attributes. For a rotating joint such as a hinge, these values define the minimum and maximum angles, in degrees. For a moving joint such as a slider, these define the minimum and maximum linear extensions.</p>
+
+<p class="note">Note, ODE requires that these angles be specified in radians, but Electro generally requires that angles be specified in degrees. Degrees are converted to radians here in order to ensure consistancy across the Electro API.</p>
 
 <li><tt>joint_attr_velocity</tt>
 <li><tt>joint_attr_velocity_2</tt>
@@ -395,16 +397,25 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <b>Query</b>
 
-<p>The following functions allow a few of the attributes of the physical system to be queried. </p>
+<p>The following functions allow the attributes of the physical system to be queried. Most queried attributes are scalars, but a few are vectors. These query functions will return 1 or 3 values depending on the attribute.</p>
 
 <dl>
 
-<dt><i>value</i> = <tt>get_entity_geom_attr</tt>(<i>entity, attr</i>)<dd><p>Return the value of the corresponding geom attribute. All of the geom attributes defined above may be queried.</p>
-
-<dt><i>value</i> = <tt>get_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr</i>)<dd><p>Return the value of the corresponding joint attribute. All of the joint attributes defined above may be queried, with the exception of the vector entities (<tt>joint_attr_anchor</tt>, <tt>joint_attr_axis_1</tt>, and <tt>joint_attr_axis_2</tt>). In addition, the following attributes may be queried but may not be directly set:</p>
+<dt><i>value</i> = <tt>get_entity_body_attr</tt>(<i>entity, attr</i>)<dd><p>Return the value of the corresponding body attribute. All of the settable body attributes defined above may be queried. In addition, the following attribute may be queried but not directly set:</p>
 
 <ul>
-<li><tt>joint_attr_value</tt><p>The angle of rotation (in radians) or distance of extension of a joint. </p>
+<li><tt>body_attr_center</tt><p>The offset (<i>x, y, z</i>) of the center of mass of a body.</p>
+
+<p class="note">The center of mass of a body is a slightly sticky issue. ODE requires that the center of mass be at the origin of a body's local coordinate system. However, applications are free to distribute collision geoms and visible geometry arbitrarily in this coordinate system. To compensate, Electro translates a body, its geoms, and all local visible entities to center the body's mass. This means that an asymetric rigid body might not appear where the application places it, and it therefore might not rotate about its intended center. Applications can query this center of mass offset in order to work around this limitation.</p>
+
+</ul>
+
+<dt><i>value</i> = <tt>get_entity_geom_attr</tt>(<i>entity, attr</i>)<dd><p>Return the value of the corresponding geom attribute. All of the geom attributes defined above may be queried.</p>
+
+<dt><i>value</i> = <tt>get_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr</i>)<dd><p>Return the value of the corresponding joint attribute. All of the joint attributes defined above may be queried. In addition, the following attributes may be queried but not directly set:</p>
+
+<ul>
+<li><tt>joint_attr_value</tt><p>The angle of rotation (in degrees) or distance of extension of a joint. </p>
 
 <p class="note">It is not possible to query all of the axes of rotation of multi-axis joints. This is an unexplained limitation in ODE.</p>
 
@@ -416,7 +427,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <b>Direct Force Application</b>
 
-<p>Joint motors are an incredibly powerful and flexible means of initiating action in a physical system.  However, they do not always suffice.  The following functions may be used to apply external forces on arbitrary body-entities.  These forces accumulate, but are reset each frame.  So, if a persistent force is to be applied to a body then it must be reapplied during each update.</p>
+<p>Joint motors are an incredibly powerful and flexible means of initiating action in a physical system. However, they do not always suffice. The following functions may be used to apply external forces on arbitrary body-entities. These forces accumulate, but are reset each frame. So, if a persistent force is to be applied to a body then it must be reapplied during each update.</p>
 
 <dl>
 <dt><tt>add_entity_force</tt>(<i>entity, x, y, z</i>)<dd><p>Apply force to <i>entity</i> with the magnitude and direction of vector (<i>x, y, z</i>).
@@ -854,7 +865,7 @@ end
 
 <dt><tt>do_contact</tt>(<i>entity<sub>A</sub>, entity<sub>B</sub>, p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, d</i>)<dd><p>This callback is invoked when a rigid body collision has been detected between two bodies with a <tt>geom_attr_callback</tt> category bit set. The <i>entity<sub>A</sub></i> and <i>entity<sub>B</sub></i> arguments give the entities (in no specific order), (<i>p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub></i>) gives the point of collision, (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>) gives the normal vector of the collision, and <i>d</i> gives the depth of penetration of the two geoms (assuming their CFM values permit penetration.)</p>
 
-<p>Keep in mind that a collision can produce multiple contacts, so more than one may be reported.  For example, a box sitting flat on a floor makes contact across an area larger than a point.  This may be reported as multiple point contacts.  Similarly, a soft or non-responding collision will be reported multiple times.  Soft impacting bodies remain in contact for several frames, and contact will be reported each frame.  Non-responding colliding bodies are allowed to pass through each other, and contact will be reported every frame during which they intersect.</p>
+<p>Keep in mind that a collision can produce multiple contacts, so more than one may be reported. For example, a box sitting flat on a floor makes contact across an area larger than a point. This may be reported as multiple point contacts. Similarly, a soft or non-responding collision will be reported multiple times. Soft impacting bodies remain in contact for several frames, and contact will be reported each frame. Non-responding colliding bodies are allowed to pass through each other, and contact will be reported every frame during which they intersect.</p>
 
 </dl>
 

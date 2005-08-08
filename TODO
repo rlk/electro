@@ -1,12 +1,12 @@
-network optional
-delete image / brush
 texture transform
 brush flags
     cube map
     object space texgen
     eye space texgen
-replace get_sprite_size with bound query
 new billboard transform
+replace get_sprite_size with bound query
+network optional
+delete image / brush
 Lua state flush / app switch
 Telnet to luasocket
 Tracker buttons
@@ -14,10 +14,8 @@ Uniform API
 
 
 profilers
-display volume query / smart viewobj
 cooler vortex demo
 Varrier finalize
-debug dump?
 
 
 App
@@ -27,4 +25,3 @@ Test total queue throughput.
 Test re-texture throughput on all clusters.
     (subimage/buffer reuse)
 consider killing fragments
-Particle system

@@ -55,7 +55,7 @@ space_z    = 0
 -- Miscellaneous handy utility functions...
 
 function hide(entity)
-    E.set_entity_flag(entity, E.entity_flag_hidden, true)
+    E.set_entity_flags(entity, E.entity_flag_hidden, true)
 
     return entity
 end
@@ -182,8 +182,8 @@ function create_overlay(filename, scale, hidden)
 
     -- Add the new overlay sprite to the scene, hidden if requested.
 
-    E.parent_entity  (sprite, scene_2d)
-    E.set_entity_flag(sprite, E.entity_flag_hidden, hidden)
+    E.parent_entity   (sprite, scene_2d)
+    E.set_entity_flags(sprite, E.entity_flag_hidden, hidden)
 
     -- Marginal hack: the aspect ratio of the alphabet sprite is 2:1.
 
@@ -213,12 +213,12 @@ function create_title(text, width, hidden)
 
     E.parent_entity      (string1, scene_2d)
     E.parent_entity      (string2, string1)
-    E.set_entity_flag    (string1, E.entity_flag_hidden, hidden)
     E.set_string_fill    (string1, brush)
     E.set_string_line    (string1, brush)
     E.set_string_fill    (string2, brush)
     E.set_string_line    (string2, brush)
     E.set_entity_scale   (string1, scale, scale, scale)
+    E.set_entity_flags   (string1, E.entity_flag_hidden, hidden)
     E.set_entity_position(string2, 0, 0, 0.001)
     E.set_entity_position(string1, -scale * (x1 - x0) / 2,
                                    -scale * (y1 - y0) / 2, 0.0)
@@ -264,7 +264,7 @@ function init_overlay()
         E.set_entity_position(overlay.curr_ships[i], viewport.R - 48 * i,
                                                      viewport.B + 32, 0)
 
-        E.set_entity_flag(overlay.curr_ships[i], E.entity_flag_hidden, true)
+        E.set_entity_flags(overlay.curr_ships[i], E.entity_flag_hidden, true)
     end
 end
 
@@ -356,7 +356,7 @@ end
 
 function set_overlay_curr_ships(n)
     for i = 1, 5 do
-        E.set_entity_flag(overlay.curr_ships[i], E.entity_flag_hidden, i > n)
+        E.set_entity_flags(overlay.curr_ships[i], E.entity_flag_hidden, i > n)
     end
 end
 
@@ -851,7 +851,7 @@ end
 function set_thrust(b)
     player.thrusting = b
 
-    E.set_entity_flag(entity.thrust, E.entity_flag_hidden, not b)
+    E.set_entity_flags(entity.thrust, E.entity_flag_hidden, not b)
 
     if b then
         E.play_sound(sound.thrust1)
@@ -883,7 +883,7 @@ function init_player(new)
         E.parent_entity(entity.thrust, player.entity)
         E.set_entity_scale(entity.thrust, s, s, s)
 
-        E.set_entity_flag(entity.thrust, E.entity_flag_hidden, true)
+        E.set_entity_flags(entity.thrust, E.entity_flag_hidden, true)
     end
 
     -- If any ships remain, initialize one of them.
@@ -897,8 +897,8 @@ function init_player(new)
 
         E.set_entity_position(player.entity, 0, 0, 0)
         E.set_entity_rotation(player.entity, 0, 0, 0)
-        E.set_entity_flag    (player.entity, E.entity_flag_hidden, false)
-        E.set_entity_flag    (entity.thrust, E.entity_flag_hidden, true)
+        E.set_entity_flags   (player.entity, E.entity_flag_hidden, false)
+        E.set_entity_flags   (entity.thrust, E.entity_flag_hidden, true)
 
         set_thrust(false)
 
@@ -973,7 +973,7 @@ function kill_player()
     player.dx        = 0
     player.dy        = 0
 
-    E.set_entity_flag(player.entity, E.entity_flag_hidden, true)
+    E.set_entity_flags(player.entity, E.entity_flag_hidden, true)
 
     if sound_on then
         E.stop_sound(sound.thrust2)
@@ -1017,7 +1017,7 @@ end
 state.title = { }
 
 function state.title.enter()
-    E.set_entity_flag(overlay.title, E.entity_flag_hidden, false)
+    E.set_entity_flags(overlay.title, E.entity_flag_hidden, false)
 end
 
 function state.title.leave()
@@ -1030,7 +1030,7 @@ function state.title.leave()
     set_overlay_curr_score(curr_score)
     set_overlay_curr_ships(curr_ships)
 
-    E.set_entity_flag(overlay.title, E.entity_flag_hidden, true)
+    E.set_entity_flags(overlay.title, E.entity_flag_hidden, true)
 end
 
 function state.title.timer(dt)
@@ -1053,8 +1053,8 @@ end
 state.ready = { }
 
 function state.ready.enter()
-    E.set_entity_flag(overlay.ready, E.entity_flag_hidden, false)
-    E.set_entity_flag(overlay.level, E.entity_flag_hidden, false)
+    E.set_entity_flags(overlay.ready, E.entity_flag_hidden, false)
+    E.set_entity_flags(overlay.level, E.entity_flag_hidden, false)
 
     curr_level = curr_level + 1
 
@@ -1066,8 +1066,8 @@ function state.ready.enter()
 end
 
 function state.ready.leave()
-    E.set_entity_flag(overlay.ready, E.entity_flag_hidden, true)
-    E.set_entity_flag(overlay.level, E.entity_flag_hidden, true)
+    E.set_entity_flags(overlay.ready, E.entity_flag_hidden, true)
+    E.set_entity_flags(overlay.level, E.entity_flag_hidden, true)
 end
 
 function state.ready.timer(dt)
@@ -1149,12 +1149,12 @@ end
 state.clear = { }
 
 function state.clear.enter()
-    E.set_entity_flag(overlay.clear, E.entity_flag_hidden, false)
+    E.set_entity_flags(overlay.clear, E.entity_flag_hidden, false)
 end
 
 function state.clear.leave()
     curr_speed = curr_speed * 1.25
-    E.set_entity_flag(overlay.clear, E.entity_flag_hidden, true)
+    E.set_entity_flags(overlay.clear, E.entity_flag_hidden, true)
 end
 
 function state.clear.timer(dt)
@@ -1177,7 +1177,7 @@ end
 state.high = { }
 
 function state.high.enter()
-    E.set_entity_flag(overlay.high, E.entity_flag_hidden, false)
+    E.set_entity_flags(overlay.high, E.entity_flag_hidden, false)
 
     high_score = curr_score
     init_ready = true
@@ -1195,7 +1195,7 @@ function state.high.leave()
     E.set_entity_scale(overlay.high_inits[2], k / 2, k, k)
     E.set_entity_scale(overlay.high_inits[3], k / 2, k, k)
 
-    E.set_entity_flag(overlay.high, E.entity_flag_hidden, true)
+    E.set_entity_flags(overlay.high, E.entity_flag_hidden, true)
 end
 
 function state.high.timer(dt)
@@ -1268,11 +1268,11 @@ end
 state.over = { }
 
 function state.over.enter()
-    E.set_entity_flag(overlay.over, E.entity_flag_hidden, false)
+    E.set_entity_flags(overlay.over, E.entity_flag_hidden, false)
 end
 
 function state.over.leave()
-    E.set_entity_flag(overlay.over, E.entity_flag_hidden, true)
+    E.set_entity_flags(overlay.over, E.entity_flag_hidden, true)
 end
 
 function state.over.timer(dt)

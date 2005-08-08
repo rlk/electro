@@ -20,6 +20,7 @@
 /* Body parameters */
 
 #define BODY_ATTR_GRAVITY   1
+#define BODY_ATTR_CENTER    2
 
 /* Geom parameters */
 
@@ -52,15 +53,17 @@ dBodyID set_phys_body_type(dBodyID,          int);
 dGeomID set_phys_geom_type(dGeomID, dBodyID, int, int, const float *);
 void    set_phys_join_type(dBodyID, dBodyID, int);
 
-void    set_phys_body_attr_f(dBodyID,          int, float);
+void    set_phys_body_attr_i(dBodyID,          int, int);
 void    set_phys_geom_attr_i(dGeomID,          int, int);
 void    set_phys_geom_attr_f(dGeomID,          int, float);
 void    set_phys_join_attr_f(dBodyID, dBodyID, int, float);
 void    set_phys_join_attr_v(dBodyID, dBodyID, int, const float *);
 
+int     get_phys_body_attr_i(dBodyID,          int);
 int     get_phys_geom_attr_i(dGeomID,          int);
 float   get_phys_geom_attr_f(dGeomID,          int);
 float   get_phys_join_attr_f(dBodyID, dBodyID, int);
+void    get_phys_join_attr_v(dBodyID, dBodyID, int, float *);
 
 /*---------------------------------------------------------------------------*/
 

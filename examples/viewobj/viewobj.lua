@@ -142,13 +142,13 @@ function do_keyboard(k, s)
 
         if k == 287 then
             table.foreach(objects, function (id, object)
-                E.set_entity_flag(object, E.entity_flag_wireframe, true)
+                E.set_entity_flags(object, E.entity_flag_wireframe, true)
             end)
             return true
         end
         if k == 288 then
             table.foreach(objects, function (id, object)
-                E.set_entity_flag(object, E.entity_flag_wireframe, false)
+                E.set_entity_flags(object, E.entity_flag_wireframe, false)
             end)
             return true
         end
