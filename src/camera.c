@@ -80,6 +80,16 @@ int send_create_camera(int t)
         c->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
         c->f = 1000;
 
+        c->view_basis[0][0] = 1.0f;
+        c->view_basis[0][1] = 0.0f;
+        c->view_basis[0][2] = 0.0f;
+        c->view_basis[1][0] = 0.0f;
+        c->view_basis[1][1] = 1.0f;
+        c->view_basis[1][2] = 0.0f;
+        c->view_basis[2][0] = 0.0f;
+        c->view_basis[2][1] = 0.0f;
+        c->view_basis[2][2] = 1.0f;
+
         send_event(EVENT_CREATE_CAMERA);
         send_index(t);
         send_float(c->n);

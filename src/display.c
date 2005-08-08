@@ -557,53 +557,65 @@ void get_display_bound(float b[6])
 {
     int i;
 
-    b[0] = FLT_MAX;
-    b[1] = FLT_MAX;
-    b[2] = FLT_MAX;
-    b[3] = FLT_MIN;
-    b[4] = FLT_MIN;
-    b[5] = FLT_MIN;
-
-    for (i = 0; i < vecnum(tile); ++i)
+    if (vecnum(tile) > 0)
     {
-        struct tile *T = (struct tile *) vecget(tile, i);
+        b[0] =  1e10f;
+        b[1] =  1e10f;
+        b[2] =  1e10f;
+        b[3] = -1e10f;
+        b[4] = -1e10f;
+        b[5] = -1e10f;
 
-        /* Lower left corner. */
+        for (i = 0; i < vecnum(tile); ++i)
+        {
+            struct tile *T = (struct tile *) vecget(tile, i);
 
-        b[0] = MIN(b[0], T->o[0]);
-        b[1] = MIN(b[1], T->o[1]);
-        b[2] = MIN(b[2], T->o[2]);
-        b[3] = MAX(b[3], T->o[0]);
-        b[4] = MAX(b[4], T->o[1]);
-        b[5] = MAX(b[5], T->o[2]);
+            /* Lower left corner. */
 
-        /* Lower right corner. */
+            b[0] = MIN(b[0], T->o[0]);
+            b[1] = MIN(b[1], T->o[1]);
+            b[2] = MIN(b[2], T->o[2]);
+            b[3] = MAX(b[3], T->o[0]);
+            b[4] = MAX(b[4], T->o[1]);
+            b[5] = MAX(b[5], T->o[2]);
 
-        b[0] = MIN(b[0], T->o[0] + T->r[0]);
-        b[1] = MIN(b[1], T->o[1] + T->r[1]);
-        b[2] = MIN(b[2], T->o[2] + T->r[2]);
-        b[3] = MAX(b[3], T->o[0] + T->r[0]);
-        b[4] = MAX(b[4], T->o[1] + T->r[1]);
-        b[5] = MAX(b[5], T->o[2] + T->r[2]);
+            /* Lower right corner. */
 
-        /* Upper left corner. */
+            b[0] = MIN(b[0], T->o[0] + T->r[0]);
+            b[1] = MIN(b[1], T->o[1] + T->r[1]);
+            b[2] = MIN(b[2], T->o[2] + T->r[2]);
+            b[3] = MAX(b[3], T->o[0] + T->r[0]);
+            b[4] = MAX(b[4], T->o[1] + T->r[1]);
+            b[5] = MAX(b[5], T->o[2] + T->r[2]);
 
-        b[0] = MIN(b[0], T->o[0]           + T->u[0]);
-        b[1] = MIN(b[1], T->o[1]           + T->u[1]);
-        b[2] = MIN(b[2], T->o[2]           + T->u[2]);
-        b[3] = MAX(b[3], T->o[0]           + T->u[0]);
-        b[4] = MAX(b[4], T->o[1]           + T->u[1]);
-        b[5] = MAX(b[5], T->o[2]           + T->u[2]);
+            /* Upper left corner. */
 
-        /* Upper right corner. */
+            b[0] = MIN(b[0], T->o[0]           + T->u[0]);
+            b[1] = MIN(b[1], T->o[1]           + T->u[1]);
+            b[2] = MIN(b[2], T->o[2]           + T->u[2]);
+            b[3] = MAX(b[3], T->o[0]           + T->u[0]);
+            b[4] = MAX(b[4], T->o[1]           + T->u[1]);
+            b[5] = MAX(b[5], T->o[2]           + T->u[2]);
 
-        b[0] = MIN(b[0], T->o[0] + T->r[0] + T->u[0]);
-        b[1] = MIN(b[1], T->o[1] + T->r[1] + T->u[1]);
-        b[2] = MIN(b[2], T->o[2] + T->r[2] + T->u[2]);
-        b[3] = MAX(b[3], T->o[0] + T->r[0] + T->u[0]);
-        b[4] = MAX(b[4], T->o[1] + T->r[1] + T->u[1]);
-        b[5] = MAX(b[5], T->o[2] + T->r[2] + T->u[2]);
+            /* Upper right corner. */
+
+            b[0] = MIN(b[0], T->o[0] + T->r[0] + T->u[0]);
+            b[1] = MIN(b[1], T->o[1] + T->r[1] + T->u[1]);
+            b[2] = MIN(b[2], T->o[2] + T->r[2] + T->u[2]);
+            b[3] = MAX(b[3], T->o[0] + T->r[0] + T->u[0]);
+            b[4] = MAX(b[4], T->o[1] + T->r[1] + T->u[1]);
+            b[5] = MAX(b[5], T->o[2] + T->r[2] + T->u[2]);
+        }
     }
+    else
+    {
+        b[0] = DEFAULT_OX;
+        b[1] = DEFAULT_OY;
+        b[2] = DEFAULT_OZ;
+        b[3] = DEFAULT_OX + DEFAULT_RX + DEFAULT_UX;
+        b[4] = DEFAULT_OY + DEFAULT_RY + DEFAULT_UY;
+        b[5] = DEFAULT_OZ + DEFAULT_RZ + DEFAULT_UZ;
+   }
 }
 
 void get_tile_o(int i, float o[3])
