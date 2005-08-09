@@ -161,14 +161,14 @@ function add_car()
         E.set_entity_joint_attr(body, tire[i], E.joint_attr_lo_stop, 0)
         E.set_entity_joint_attr(body, tire[i], E.joint_attr_hi_stop, 0)
         E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_erp, 0.10)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_cfm, 0.02)
+        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_cfm, 0.04)
     end
 
     E.set_entity_joint_attr(body, tire[1], E.joint_attr_stop_cfm, 0.00)
     E.set_entity_joint_attr(body, tire[1], E.joint_attr_stop_erp, 0.80)
-    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_cfm, 0.01)
+    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_cfm, 0.02)
     E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_erp, 0.10)
-    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_cfm, 0.01)
+    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_cfm, 0.02)
     E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_erp, 0.10)
     E.set_entity_joint_attr(body, tire[4], E.joint_attr_stop_cfm, 0.00)
     E.set_entity_joint_attr(body, tire[4], E.joint_attr_stop_erp, 0.80)
@@ -280,7 +280,7 @@ function do_timer(dt)
 
         local kx = 10
         local ky = 5
-        local kz = 5
+        local kz = 10
 
         local x = px + xx * kx + yx * ky + zx * kz
         local y = py + xy * ky + yy * ky + zy * ky

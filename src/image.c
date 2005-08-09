@@ -15,6 +15,9 @@
 #include <jpeglib.h>
 #include <png.h>
 
+#include <sys/sem.h>
+#include <sys/shm.h>
+
 #include "opengl.h"
 #include "vector.h"
 #include "buffer.h"
@@ -28,8 +31,13 @@ struct image
 {
     int    count;
     int    state;
+    int    frame;
+    int    shmid;
+    int    semid;
+
     GLuint texture;
     char  *filename;
+
     void  *p;
     int    w;
     int    h;
@@ -37,6 +45,14 @@ struct image
 };
 
 static vector_t image;
+
+static GLenum format[5] = {
+    0,
+    GL_LUMINANCE,
+    GL_LUMINANCE_ALPHA,
+    GL_RGB,
+    GL_RGBA,
+};
 
 /*---------------------------------------------------------------------------*/
 
@@ -70,8 +86,6 @@ static int power_of_two(int n)
 
 GLuint make_texture(const void *p, int w, int h, int b)
 {
-    GLenum i = GL_RGB;
-    GLenum f = GL_RGB;
     GLuint o = 0;
 
     int W = power_of_two(w);
@@ -82,28 +96,7 @@ GLuint make_texture(const void *p, int w, int h, int b)
     glGenTextures(1, &o);
     glBindTexture(GL_TEXTURE_2D, o);
 
-    /* Determine the GL texture format from the byte count. */
-
-    switch (b)
-    {
-    case 1: f = i = GL_LUMINANCE;       break;
-    case 2: f = i = GL_LUMINANCE_ALPHA; break;
-    case 3: f = i = GL_RGB;             break;
-    case 4: f = i = GL_RGBA;            break;
-    }
-
-/*
-    if (GL_has_texture_compression)
-        switch (b)
-        {
-        case 1: i = GL_COMPRESSED_LUMINANCE_ARB;       break;
-        case 2: i = GL_COMPRESSED_LUMINANCE_ALPHA_ARB; break;
-        case 3: i = GL_COMPRESSED_RGB_ARB;             break;
-        case 4: i = GL_COMPRESSED_RGBA_ARB;            break;
-        }
-*/
-
-    /* Ensure that the image is power-of-two in size.  Generate mipmaps. */
+    /* Ensure that the image is power-of-two in size. */
 
     if (W != w || H != h)
     {
@@ -111,23 +104,21 @@ GLuint make_texture(const void *p, int w, int h, int b)
 
         if ((P = malloc(W * H * b)))
         {
-            gluScaleImage(f, w, h, GL_UNSIGNED_BYTE, p,
-                             W, H, GL_UNSIGNED_BYTE, P);
-            gluBuild2DMipmaps(GL_TEXTURE_2D, i, W, H, f, GL_UNSIGNED_BYTE, P);
-
+            gluScaleImage(format[b], w, h, GL_UNSIGNED_BYTE, p,
+                                     W, H, GL_UNSIGNED_BYTE, P);
+            glTexImage2D(GL_TEXTURE_2D, 0, format[b], W, H, 0,
+                         format[b], GL_UNSIGNED_BYTE, P);
             free(P);
         }
     }
     else
-        gluBuild2DMipmaps(GL_TEXTURE_2D, i, w, h, f, GL_UNSIGNED_BYTE, p);
+        glTexImage2D(GL_TEXTURE_2D, 0, format[b], W, H, 0,
+                     format[b], GL_UNSIGNED_BYTE, p);
 
+    /* Enable filtering on it. */
 
-    /* Enable mipmapping on it. */
-
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     return o;
 }
@@ -310,7 +301,9 @@ int send_create_image(const char *filename)
     {
         struct image *p = get_image(i);
 
-        p->count = 1;
+        p->count =  1;
+        p->semid = -1;
+        p->shmid = -1;
 
         /* Note the file name. */
 
@@ -332,6 +325,44 @@ int send_create_image(const char *filename)
     return -1;
 }
 
+int send_create_movie(int key, int w, int h, int b)
+{
+    int i;
+
+    if ((i = new_image()) >= 0)
+    {
+        struct image *p = get_image(i);
+
+        p->count = 1;
+        p->w     = w;
+        p->h     = h;
+        p->b     = b;
+
+        /* Acquire the semaphore and shared memory buffers.  Pack the image. */
+
+        if ((p->shmid = shmget(key, w * h * b + 4, 0666 | IPC_CREAT)) >=0 )
+        {
+            if ((p->p = shmat(p->shmid, NULL, SHM_RDONLY)))
+            {
+                if ((p->semid = semget(key, 1, 0666 | IPC_CREAT)) >= 0)
+                {
+                    send_event(EVENT_CREATE_IMAGE);
+                    send_index(p->w);
+                    send_index(p->h);
+                    send_index(p->b);
+                    send_array(p->p, p->w * p->h, p->b);
+
+                    return i;
+                }
+                else error("Shared image mutex %d: %s", key, system_error());
+            }
+            else error("Shared image attach %d: %s", key, system_error());
+        }
+        else error("Shared image buffer %d: %s", key, system_error());
+    }
+    return -1;
+}
+
 void recv_create_image(void)
 {
     struct image *p = get_image(new_image());
@@ -344,6 +375,13 @@ void recv_create_image(void)
     recv_array(p->p, p->w * p->h, p->b);
 
     p->count = 1;
+}
+
+void recv_set_image_pixels(void)
+{
+    struct image *p = get_image(recv_index());
+
+    recv_array(p->p, p->w * p->h, p->b);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -443,8 +481,17 @@ void free_image(int i)
     {
         fini_image(i);
 
-        if (p->filename) free(p->filename);
-        if (p->p)        free(p->p);
+        if (p->semid >= 0)
+        {
+            shmdt(p->p);
+            semctl(p->semid, 0, IPC_RMID, NULL);
+            shmctl(p->shmid,    IPC_RMID, NULL);
+        }
+        else
+        {
+            if (p->filename) free(p->filename);
+            if (p->p)        free(p->p);
+        }
 
         memset(p, 0, sizeof (struct image));
     }
@@ -468,6 +515,54 @@ void fini_images(void)
     for (i = 0; i < n; ++i)
         if (get_image(i)->count)
             fini_image(i);
+}
+
+void step_images(void)
+{
+    int i, n = vecnum(image);
+
+    for (i = 0; i < n; ++i)
+    {
+        struct image *p = get_image(i);
+
+        /* If this is a shared image... */
+
+        if (p->count && p->semid >= 0)
+        {
+            struct sembuf s;
+
+            /* Acquire the buffer. */
+
+            s.sem_num =  0;
+            s.sem_op  = -1;
+            s.sem_flg =  0;
+            semop(p->semid, &s, 1);
+
+            /* If the frame has changed... */
+
+            if (p->frame < *((int *) p->p))
+            {
+                /* Update the texture object. */
+
+                glBindTexture(GL_TEXTURE_2D, p->texture);
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, p->w, p->h,
+                                format[p->b], GL_UNSIGNED_BYTE, p->p);
+
+                /* Push the new image to all clients. */
+
+                send_event(EVENT_SET_IMAGE_PIXELS);
+                send_index(i);
+                send_array(p->p, p->w * p->h, p->b);
+            }
+
+            /* Release the buffer. */
+
+            s.sem_num =  0;
+            s.sem_op  =  1;
+            s.sem_flg =  0;
+            semop(p->semid, &s, 1);
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------*/

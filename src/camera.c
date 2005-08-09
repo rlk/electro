@@ -45,6 +45,7 @@ struct camera
 };
 
 static vector_t camera;
+static int      curreye = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -62,6 +63,11 @@ static int new_camera(void)
             return i;
 
     return vecadd(camera);
+}
+
+int get_curr_eye(void)
+{
+    return curreye;
 }
 
 /*===========================================================================*/
@@ -273,6 +279,8 @@ void draw_camera(int j, int i, int f, float a)
         int pass = 0;
 
         float d[3];
+
+        curreye = eye;
 
         /* Compute the world-space eye position. */
 

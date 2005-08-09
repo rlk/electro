@@ -283,6 +283,7 @@ static int server_loop(void)
 
     if (dirty)
     {
+        step_images();
         do_frame_script();
 
         send_event(EVENT_DRAW);

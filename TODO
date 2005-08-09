@@ -1,8 +1,10 @@
 texture transform
+galaxy brush
 brush flags
     cube map
     object space texgen
     eye space texgen
+    generalized texture count
 new billboard transform
 replace get_sprite_size with bound query
 network optional

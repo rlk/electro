@@ -1426,7 +1426,13 @@ static int E_get_star_position(lua_State *L)
 
 static int E_create_image(lua_State *L)
 {
-    E_pushimage(L, send_create_image(L_getstring(L, -1)));
+    if (lua_isstring(L, -1))
+        E_pushimage(L, send_create_image(L_getstring(L, -1)));
+    else
+        E_pushimage(L, send_create_movie(L_getinteger(L, -4),
+                                         L_getinteger(L, -3),
+                                         L_getinteger(L, -2),
+                                         L_getinteger(L, -1)));
     return 1;
 }
 

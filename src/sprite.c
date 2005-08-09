@@ -18,6 +18,7 @@
 #include "frustum.h"
 #include "buffer.h"
 #include "entity.h"
+#include "camera.h"
 #include "brush.h"
 #include "event.h"
 #include "sprite.h"
@@ -169,15 +170,30 @@ static void draw_sprite(int j, int i, int f, float a)
 
             glPushAttrib(GL_DEPTH_BUFFER_BIT);
             {
+                float s0 = s->s0;
+                float s1 = s->s1;
+                float t0 = s->t0;
+                float t1 = s->t1;
+
                 if (draw_brush(s->brush, a * get_entity_alpha(j)))
                     glDepthMask(GL_FALSE);
 
+                /* HACK: Stereo sprites show half their texture to each eye. */
+
+                if (get_entity_flags(j) & FLAG_STEREO)
+                {
+                    if (get_curr_eye())
+                        s0 = (s0 + s1) / 2;
+                    else
+                        s1 = (s0 + s1) / 2;
+                }
+
                 glBegin(GL_QUADS);
                 {
-                    glTexCoord2f(s->s0, s->t0); glVertex2i(-dx, -dy);
-                    glTexCoord2f(s->s1, s->t0); glVertex2i(+dx, -dy);
-                    glTexCoord2f(s->s1, s->t1); glVertex2i(+dx, +dy);
-                    glTexCoord2f(s->s0, s->t1); glVertex2i(-dx, +dy);
+                    glTexCoord2f(s0, t0); glVertex2i(-dx, -dy);
+                    glTexCoord2f(s1, t0); glVertex2i(+dx, -dy);
+                    glTexCoord2f(s1, t1); glVertex2i(+dx, +dy);
+                    glTexCoord2f(s0, t1); glVertex2i(-dx, +dy);
                 }
                 glEnd();
             }

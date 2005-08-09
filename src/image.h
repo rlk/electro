@@ -23,8 +23,11 @@ GLuint make_texture(const void *, int, int, int);
 
 /*---------------------------------------------------------------------------*/
 
+int  send_create_movie(int, int, int, int);
 int  send_create_image(const char *);
 void recv_create_image(void);
+
+void recv_set_image_pixels(void);
 
 /*---------------------------------------------------------------------------*/
 
@@ -42,6 +45,7 @@ void  free_image(int);
 
 void  init_images(void);
 void  fini_images(void);
+void  step_images(void);
 
 /*---------------------------------------------------------------------------*/
 

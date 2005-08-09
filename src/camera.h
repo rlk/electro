@@ -26,6 +26,10 @@ struct entity_func *startup_camera(void);
 
 /*---------------------------------------------------------------------------*/
 
+int get_curr_eye(void);
+
+/*---------------------------------------------------------------------------*/
+
 int  send_create_camera(int);
 void recv_create_camera(void);
 

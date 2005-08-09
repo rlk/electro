@@ -285,9 +285,9 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dl>
 
-<dt><tt>set_entity_body_type</tt>(<i>entity, type</i>)<dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the its position and rotation will be updated each frame according to the parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
+<dt><tt>set_entity_body_type</tt>(<i>entity, type</i>)<dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the position and rotation will be updated each frame according to the parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
 
-<dt><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)<dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of intertia of the body.</p>
+<dt><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)<dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of inertia of the body.</p>
 
 <p>If no enclosing body exists, then the geom is rigidly attached to the environment. It will act in collision, but will not respond physically. This is the normal mechanism for creating solid scene geometry.</p>
 
@@ -304,11 +304,11 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <li><tt>geom_type_plane</tt><i>, a, b, c, d</i></p>A plane satisfying the equation <i>ax + by + cz = d</i>.</p>
 
-<p><b>Note</b>: the plane is a degenerate geom type. It <i>cannot</i> act as part of a body and must be attached to the environment. It is defined only by the parameters given at creation time and does not respond to entity transformation. Planes are commonly used to define floors or walls to contain the physical system.</p>
+<p><b>Note</b>: the plane is a degenerate geom type. It cannot act as part of a body and <i>must</i> be attached to the environment. It is defined only by the parameters given at creation time and does not respond to entity transformation. Planes are commonly used to define floors or walls to contain the physical system.</p>
 
 </ul>
 
-<dt><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)<dd><p>Define a joint between the two given body-entities. If a given entity is not a body entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of these joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0"> the ODE documentation</a>.</p>
+<dt><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)<dd><p>Define a joint between the two given body-entities. If a given entity is not a body-entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of these joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0"> the ODE documentation</a>.</p>
 
 <ul>
 <li><tt>joint_type_ball</tt>
@@ -345,9 +345,9 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p class="note">These bit fields define 4 useful combinations:  1) Non-interacting objects might include the particles of an explosion or cloud effect. 2) Unreported colliding objects might include a car's tires rolling on a road. 3) Reported colliding objects might include a bullet hitting a target. 4) Reported non-colliding objects might include a car crossing a finish line. The bit field defaults produce combination 2 for all geoms.</p>
 
-<li><tt>geom_attr_mass</tt><p>The mass of the entity</p>
+<li><tt>geom_attr_mass</tt><p>The mass of the entity.</p>
 
-<li><tt>geom_attr_bounce</tt><p>The coefficient of restitution, or bounciness of an entity. This determines the amount of energy before a collision that remains in the system after it. When two geoms of differing bounce collide, the maximum of the two values is used. This value should be between <i>0</i> and <i>1</i>. The default is <i>0.5</i></p>
+<li><tt>geom_attr_bounce</tt><p>The coefficient of restitution, or bounciness of an entity. This determines the fraction of the energy entering a collision that remains in the system leaving it. When two geoms of differing bounce collide, the maximum of the two values is used. This value should be between <i>0</i> and <i>1</i>. The default is <i>0.5</i></p>
 
 <li><tt>geom_attr_friction</tt><p>The coefficient of friction of an entity. This determines the ease of sliding along the surface of an entity. When two geoms of differing friction collide, the minimum of the two values is used. This value should be between <i>0</i> and infinity. The default is infinity.</p>
 
@@ -375,13 +375,13 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <p class="note">Note, ODE requires that these angles be specified in radians, but Electro generally requires that angles be specified in degrees. Degrees are converted to radians here in order to ensure consistancy across the Electro API.</p>
 
 <li><tt>joint_attr_velocity</tt>
-<li><tt>joint_attr_velocity_2</tt>
 <li><tt>joint_attr_force_max</tt>
-<li><tt>joint_attr_force_max_2</tt><p>The velocity and force applied by a joint motor. These enable the animation of bodies through the application of articulating forces at joints. The <tt>velocity</tt> attributes give the desired linear or angular rate of change for the joint and the <tt>force</tt> attributes give the maximum force or torque to applied attempting to meet this goal. These attributes can also simulate joint friction when given a zero desired velocity and a non-zero maximum force.</p>
+<li><tt>joint_attr_velocity_2</tt>
+<li><tt>joint_attr_force_max_2</tt><p>The velocity and force applied by a joint motor. These enable the animation of bodies through the application of articulating forces at joints. The <tt>velocity</tt> attribute gives the desired linear or angular rate of change for the joint and the <tt>force</tt> attribute gives the maximum force or torque to applied attempting to meet this goal. These attributes can also simulate joint friction when given a zero desired velocity and a non-zero maximum force.</p>
 
 <li><tt>joint_attr_bounce</tt>
-<li><tt>joint_attr_bounce_2</tt>
 <li><tt>joint_attr_cfm</tt>
+<li><tt>joint_attr_bounce_2</tt>
 <li><tt>joint_attr_cfm_2</tt><p>The bounciness and CFM of the joint between stops.</p>
 
 <li><tt>joint_attr_stop_erp</tt>

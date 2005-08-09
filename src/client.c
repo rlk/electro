@@ -101,6 +101,7 @@ static void client_recv(void)
         case EVENT_SET_FACE:             recv_set_face();             break;
         case EVENT_SET_EDGE:             recv_set_edge();             break;
 
+        case EVENT_SET_IMAGE_PIXELS:     recv_set_image_pixels();     break;
         case EVENT_SET_BRUSH_IMAGE:      recv_set_brush_image();      break;
         case EVENT_SET_BRUSH_COLOR:      recv_set_brush_color();      break;
         case EVENT_SET_BRUSH_FLAGS:      recv_set_brush_flags();      break;
