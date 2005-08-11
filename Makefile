@@ -27,6 +27,14 @@ ifdef NAUDIO
 	CFLAGS += -DNAUDIO
 endif
 
+# To build without networking: "make NSOCKET=1"
+
+ifdef NSOCKET
+	CFLAGS += -DNSOCKET
+else
+	LIBS += -lluasocket
+endif
+
 #------------------------------------------------------------------------------
 
 # Assume the Fink tree is available under OSX and GL is in a framework.
@@ -63,12 +71,12 @@ endif
 CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
 SDLLIB  = $(shell $(SDL_CONFIG) --libs) -lSDLmain
 FT2LIB  = $(shell $(FT2_CONFIG) --libs)
-LUALIB  = -llua -llualib -lluasocket
+LUALIB  = -llua -llualib
 IMGLIB  = -ljpeg -lpng -lz -lm
 OGGLIB  = -lvorbisfile
 ODELIB  = -lode -lstdc++
 
-LIBS += $(ODELIB) $(SDLLIB) $(FT2LIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+LIBS += $(LUALIB) $(ODELIB) $(SDLLIB) $(FT2LIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
 VERS =	src/version.o
 OBJS =	src/opengl.o   \

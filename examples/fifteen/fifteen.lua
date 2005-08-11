@@ -61,7 +61,7 @@ function move_piece(di, dj)
 
         -- Set the visibility of the 16th piece to indicate solution.
 
-        E.set_entity_flag(sprites[16], E.entity_flag_hidden, not solved())
+        E.set_entity_flags(sprites[16], E.entity_flag_hidden, not solved())
 
         return true
     else
@@ -92,7 +92,25 @@ function do_start()
     view_x, view_y, view_w, view_h = E.get_display_union()
 
     camera = E.create_camera(E.camera_type_orthogonal)
-    E.set_entity_flag(camera, E.entity_flag_unlit, true);
+    image  = E.create_image(image_file)
+    brush  = E.create_brush()
+
+    E.set_background(0, 0, 0)
+
+    E.set_brush_image(brush, image)
+    E.set_brush_flags(brush, E.brush_flag_unlit, true)
+
+    -- Add 16 sprites and scale each to 1/16th the size of the display.
+
+    for i = 1, 16 do
+        sprites[i] = E.create_sprite(brush)
+
+        local x0, y0, z0, x1, y1, z1 = E.get_entity_bound(sprites[i])
+
+        E.parent_entity(sprites[i], camera)
+        E.set_entity_scale(sprites[i], 0.25 * view_w / (x1 - x0),
+                                       0.25 * view_h / (y1 - y0), 1.0)
+    end
 
     -- Initialize an array that maps rows and columns onto puzzle pieces.
 
@@ -100,18 +118,6 @@ function do_start()
     numbers[2] = {  5,  6,  7,  8 }
     numbers[3] = {  9, 10, 11, 12 }
     numbers[4] = { 13, 14, 15, 16 }
-
-    -- Add 16 sprites and scale each to 1/16th the size of the display.
-
-    for i = 1, 16 do
-        sprites[i] = E.create_sprite(image_file)
-
-        local sw, sh = E.get_sprite_size(sprites[i])
-
-        E.parent_entity(sprites[i], camera)
-        E.set_entity_scale(sprites[i], 0.25 * view_w / sw,
-                                       0.25 * view_h / sh, 1.0)
-    end
 
     -- Assign 1/16th of the image to each sprite.
 
@@ -123,7 +129,7 @@ function do_start()
             local y1 = (5 - i) / 4
 
             move_sprite(sprites[numbers[i][j]], i, j)
-            E.set_sprite_bounds(sprites[numbers[i][j]], x0, x1, y0, y1)
+            E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
     end
 
