@@ -144,11 +144,11 @@ int node_sort(struct node *N, int n0, int n1,
 
 /*---------------------------------------------------------------------------*/
 
-int node_draw(const struct node *N, int n, int i, const struct frustum *F)
+int node_draw(const struct node *N, int n, int i, float V[6][4])
 {
     if (N)
     {
-        int r = tst_frustum(F, N[n].bound);
+        int r = test_frustum(V, N[n].bound);
 
         /* If this node is entirely invisible, prune the tree. */
 
@@ -162,8 +162,8 @@ int node_draw(const struct node *N, int n, int i, const struct frustum *F)
             return N[n].starc;
         }
         else
-            return (node_draw(N, N[n].nodeL, (i + 1) % 3, F) +
-                    node_draw(N, N[n].nodeR, (i + 1) % 3, F));
+            return (node_draw(N, N[n].nodeL, (i + 1) % 3, V) +
+                    node_draw(N, N[n].nodeR, (i + 1) % 3, V));
     }
     return 0;
 }

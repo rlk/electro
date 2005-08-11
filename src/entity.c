@@ -204,7 +204,7 @@ static void fini_entity(int i)
 int test_entity_aabb(int i)
 {
     struct entity *e = get_entity(i);
-    struct frustum F;
+    float V[6][4];
 
     if (entity_func[e->type] &&
         entity_func[e->type]->aabb)
@@ -212,9 +212,9 @@ int test_entity_aabb(int i)
         float aabb[6];
 
         entity_func[e->type]->aabb(e->data, aabb);
-        get_frustum(&F);
+        get_viewfrust(V);
 
-        return tst_frustum(&F, aabb);
+        return test_frustum(V, aabb);
     }
     return 1;
 }

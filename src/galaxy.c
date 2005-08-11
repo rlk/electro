@@ -432,7 +432,8 @@ static void draw_arrays(int i)
 static void draw_galaxy(int j, int i, int f, float a)
 {
     struct galaxy *g = get_galaxy(i);
-    struct frustum F;
+    float V[6][4];
+    float p[4];
 
     init_galaxy(i);
 
@@ -441,13 +442,14 @@ static void draw_galaxy(int j, int i, int f, float a)
         /* Apply the local coordinate system transformation. */
 
         transform_entity(j);
-        get_frustum(&F);
+        get_viewfrust(V);
+        get_viewpoint(p);
 
         /* Supply the view position as a vertex program parameter. */
 
         if (GL_has_vertex_program)
             glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,
-                                       F.p[0], F.p[1], F.p[2], F.p[3]);
+                                       p[0], p[1], p[2], p[3]);
 
         glPushAttrib(GL_ENABLE_BIT       |
                      GL_TEXTURE_BIT      |
@@ -482,7 +484,7 @@ static void draw_galaxy(int j, int i, int f, float a)
 
             /* Render all stars. */
 
-            node_draw(g->N, 0, 0, &F);
+            node_draw(g->N, 0, 0, V);
         }
         glPopClientAttrib();
         glPopAttrib();

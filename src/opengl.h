@@ -45,6 +45,7 @@ typedef GLvoid (*_GLUfuncptr)(void);
 #else
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
+extern PFNGLPROGRAMLOCALPARAMETER4FVARBPROC glProgramLocalParameter4fvARB;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 extern PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;

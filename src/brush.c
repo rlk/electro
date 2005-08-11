@@ -24,6 +24,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define MAX_PARAM 96
+
 struct brush
 {
     int  count;
@@ -41,8 +43,11 @@ struct brush
     float a[4];
     float x[1];
 
-    GLuint frag_prog;
-    GLuint vert_prog;
+    GLuint  frag_prog;
+    GLuint  vert_prog;
+
+    float  frag_param[MAX_PARAM][4];
+    float  vert_param[MAX_PARAM][4];
 };
 
 static vector_t brush;
@@ -453,6 +458,84 @@ void recv_set_brush_vert_prog(void)
 
 /*---------------------------------------------------------------------------*/
 
+void send_set_brush_frag_param(int i, int p, const float v[4])
+{
+    struct brush *b = get_brush(i);
+
+    b->frag_param[p][0] = v[0];
+    b->frag_param[p][1] = v[1];
+    b->frag_param[p][2] = v[2];
+    b->frag_param[p][3] = v[3];
+
+    send_event(EVENT_SET_BRUSH_FRAG_PARAM);
+    send_index(i);
+    send_index(p);
+    send_array(b->frag_param[p], 4, sizeof (float));
+
+    if (b->frag_prog && GL_has_fragment_program)
+    {
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, b->frag_prog);
+        glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB,
+                                      p, b->frag_param[p]);
+    }
+}
+
+void recv_set_brush_frag_param(void)
+{
+    struct brush *b = get_brush(recv_index());
+    int           p = recv_index();
+
+    recv_array(b->frag_param[p], 4, sizeof (float));
+
+    if (b->frag_prog && GL_has_fragment_program)
+    {
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, b->frag_prog);
+        glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB,
+                                      p, b->frag_param[p]);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_brush_vert_param(int i, int p, const float v[4])
+{
+    struct brush *b = get_brush(i);
+
+    b->vert_param[p][0] = v[0];
+    b->vert_param[p][1] = v[1];
+    b->vert_param[p][2] = v[2];
+    b->vert_param[p][3] = v[3];
+
+    send_event(EVENT_SET_BRUSH_VERT_PARAM);
+    send_index(i);
+    send_index(p);
+    send_array(b->vert_param[p], 4, sizeof (float));
+
+    if (b->vert_prog && GL_has_vertex_program)
+    {
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, b->vert_prog);
+        glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB,
+                                      p, b->vert_param[p]);
+    }
+}
+
+void recv_set_brush_vert_param(void)
+{
+    struct brush *b = get_brush(recv_index());
+    int           p = recv_index();
+
+    recv_array(b->vert_param[p], 4, sizeof (float));
+
+    if (b->vert_prog && GL_has_vertex_program)
+    {
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, b->vert_prog);
+        glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB,
+                                      p, b->vert_param[p]);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 void send_set_brush_color(int i, const float d[4],
                                  const float s[4],
                                  const float a[4],
@@ -517,13 +600,29 @@ void init_brush(int i)
 
     if (b->state == 0)
     {
-        /* Initialize any vertex and fragment programs. */
+        int p;
+
+        /* Initialize any vertex program and parameters. */
 
         if (b->vert && GL_has_vertex_program)
+        {
             b->vert_prog = opengl_vert_prog(b->vert);
-    
+
+            for (p = 0; p < MAX_PARAM; ++p)
+                glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB,
+                                              p, b->vert_param[p]);
+        }
+
+        /* Initialize any fragment program and parameters. */
+
         if (b->frag && GL_has_fragment_program)
+        {
             b->frag_prog = opengl_frag_prog(b->frag);
+
+            for (p = 0; p < MAX_PARAM; ++p)
+                glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB,
+                                              p, b->vert_param[p]);
+        }
 
         b->state = 1;
     }

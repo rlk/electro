@@ -651,12 +651,6 @@ and sprites.</p>
 
 <dt><tt>set_brush_image</tt>(<i>brush, image</i>)<dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>.</p>
 
-<dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
-
-<dt><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)<dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB vertex program syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
-
-<p class="note">ARB fragment and vertex program syntaxes were chosen because the standards are mature. High-quality implementations are wide-spread and available on a nice array of hardware. If you prefer a higher-level language, use one that can be compiled down to ARB_fp and ARB_vp, such as Cg.</p>
-
 <dt><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)<dd><p>Set or clear flags on the given brush. Brush flags enable and disable the application of various material properties. The <i>flag</i> argument gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> argument is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
 
 <ul>
@@ -671,6 +665,16 @@ and sprites.</p>
 <li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
 
 </ul>
+<dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+
+<dt><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)<dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB vertex program syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+
+<p class="note">ARB fragment and vertex program syntaxes were chosen because the standards are mature. High-quality implementations are wide-spread and available on a nice array of hardware. If you prefer a higher-level language, use one that can be compiled down to ARB_fp and ARB_vp, such as Cg.</p>
+
+<dt><tt>set_brush_frag_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])<dd><p>Specify a local parameter to be accessible to <i>brush</i>'s fragment program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+
+<dt><tt>set_brush_vert_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])<dd><p>Specify a local parameter to be accessible to <i>brush</i>'s vertex program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+
 </dl>
 
 <!---------------------------------------------------------------------------->

@@ -1,4 +1,3 @@
-texture transform
 brush flags
     cube map
     object space texgen
@@ -8,7 +7,6 @@ new billboard transform
     
 Telnet to luasocket
 Tracker buttons
-Uniform API
 
 
 profilers

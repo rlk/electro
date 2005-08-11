@@ -91,6 +91,7 @@ void init_opengl(void)
 
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
+PFNGLPROGRAMLOCALPARAMETER4FVARBPROC glProgramLocalParameter4fvARB;
 PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
 PFNGLPROGRAMSTRINGARBPROC            glProgramStringARB;
@@ -117,6 +118,8 @@ void init_opengl(void)
         opengl_proc("glIsProgramARB");
     glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)
         opengl_proc("glDeleteProgramsARB");
+    glProgramLocalParameter4fvARB = (PFNGLPROGRAMLOCALPARAMETER4FVARBPROC)
+        opengl_proc("glProgramLocalParameter4fvARB");
     glProgramEnvParameter4fARB = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
         opengl_proc("glProgramEnvParameter4fARB");
 

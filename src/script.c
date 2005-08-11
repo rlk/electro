@@ -1565,6 +1565,36 @@ static int E_set_brush_vert_prog(lua_State *L)
     return 0;
 }
 
+static int E_set_brush_frag_param(lua_State *L)
+{
+    int   N = lua_gettop(L);
+    float v[4];
+
+    v[0] = (N >= 3) ? L_getnumber(L, -N + 2) : 0;
+    v[1] = (N >= 4) ? L_getnumber(L, -N + 3) : 0;
+    v[2] = (N >= 5) ? L_getnumber(L, -N + 4) : 0;
+    v[3] = (N >= 6) ? L_getnumber(L, -N + 5) : 0;
+
+    send_set_brush_frag_param(E_getbrush  (L, -N + 0),
+                              L_getinteger(L, -N + 1), v);
+    return 0;
+}
+
+static int E_set_brush_vert_param(lua_State *L)
+{
+    int   N = lua_gettop(L);
+    float v[4];
+
+    v[0] = (N >= 3) ? L_getnumber(L, -N + 2) : 0;
+    v[1] = (N >= 4) ? L_getnumber(L, -N + 3) : 0;
+    v[2] = (N >= 5) ? L_getnumber(L, -N + 4) : 0;
+    v[3] = (N >= 6) ? L_getnumber(L, -N + 5) : 0;
+
+    send_set_brush_vert_param(E_getbrush  (L, -N + 0),
+                              L_getinteger(L, -N + 1), v);
+    return 0;
+}
+
 /*===========================================================================*/
 /* Sound functions                                                           */
 
@@ -2198,6 +2228,8 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_brush_color",       E_set_brush_color);
     lua_function(L, "set_brush_frag_prog",   E_set_brush_frag_prog);
     lua_function(L, "set_brush_vert_prog",   E_set_brush_vert_prog);
+    lua_function(L, "set_brush_frag_param",  E_set_brush_frag_param);
+    lua_function(L, "set_brush_vert_param",  E_set_brush_vert_param);
 
     /* Sound functions */
 
