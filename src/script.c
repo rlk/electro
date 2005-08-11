@@ -1437,6 +1437,12 @@ static int E_create_image(lua_State *L)
     return 1;
 }
 
+static int E_delete_image(lua_State *L)
+{
+    send_delete_image(E_getimage(L, -1));
+    return 0;
+}
+
 static int E_get_image_pixel(lua_State *L)
 {
     unsigned char c[4];
@@ -1463,11 +1469,6 @@ static int E_get_image_size(lua_State *L)
     return 2;
 }
 
-static int E_delete_image(lua_State *L)
-{
-    return 0;
-}
-
 /*===========================================================================*/
 /* Brush functions                                                           */
 
@@ -1475,6 +1476,12 @@ static int E_create_brush(lua_State *L)
 {
     E_pushbrush(L, send_create_brush(NULL, NULL));
     return 1;
+}
+
+static int E_delete_brush(lua_State *L)
+{
+    send_delete_brush(E_getbrush(L, -1));
+    return 0;
 }
 
 static int E_set_brush_flags(lua_State *L)
@@ -1555,11 +1562,6 @@ static int E_set_brush_vert_prog(lua_State *L)
     send_set_brush_vert_prog(id, text);
     if (text) free(text);
 
-    return 0;
-}
-
-static int E_delete_brush(lua_State *L)
-{
     return 0;
 }
 
@@ -1853,6 +1855,12 @@ static int E_exit(lua_State *L)
     e.type = SDL_QUIT;
     SDL_PushEvent(&e);
 
+    return 0;
+}
+
+static int E_exec(lua_State *L)
+{
+    load_script(L_getstring(L, -1));
     return 0;
 }
 
@@ -2227,6 +2235,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_typeface",          E_set_typeface);
     lua_function(L, "set_background",        E_set_background);
     lua_function(L, "exit",                  E_exit);
+    lua_function(L, "exec",                  E_exec);
 
     /* Entity constants */
 

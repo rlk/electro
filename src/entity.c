@@ -929,7 +929,7 @@ static void free_entity(int i)
 
     /* Pave it. */
 
-    memset(e, 0, sizeof (struct entity));
+    if (i) memset(e, 0, sizeof (struct entity));
 }
 
 void send_delete_entity(int i)

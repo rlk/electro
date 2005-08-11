@@ -104,8 +104,8 @@ void send_set_sprite_brush(int i, int j)
 {
     struct sprite *s = get_sprite(i);
 
-    dupe_brush(j);
-    free_brush(s->brush);
+    dupe_create_brush(j);
+    send_delete_brush(s->brush);
 
     send_event(EVENT_SET_SPRITE_BRUSH);
     send_index(i);
@@ -117,12 +117,7 @@ void recv_set_sprite_brush(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct sprite *s = get_sprite(i);
-
-    dupe_brush(j);
-    free_brush(s->brush);
-
-    s->brush = j;
+    get_sprite(i)->brush = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -235,7 +230,7 @@ static void free_sprite(int i)
 
     if (--s->count == 0)
     {
-        free_brush(s->brush);
+        send_delete_brush(s->brush);
         memset(s, 0, sizeof (struct sprite));
     }
 }

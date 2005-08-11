@@ -108,8 +108,8 @@ void send_set_string_fill(int i, int j)
 {
     struct string *s = get_string(i);
 
-    dupe_brush(j);
-    free_brush(s->fill);
+    dupe_create_brush(j);
+    send_delete_brush(s->fill);
 
     send_event(EVENT_SET_STRING_FILL);
     send_index(i);
@@ -121,12 +121,7 @@ void recv_set_string_fill(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct string *s = get_string(i);
-
-    dupe_brush(j);
-    free_brush(s->fill);
-
-    s->fill = j;
+    get_string(i)->fill = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -135,8 +130,8 @@ void send_set_string_line(int i, int j)
 {
     struct string *s = get_string(i);
 
-    dupe_brush(j);
-    free_brush(s->line);
+    dupe_create_brush(j);
+    send_delete_brush(s->line);
 
     send_event(EVENT_SET_STRING_LINE);
     send_index(i);
@@ -148,12 +143,7 @@ void recv_set_string_line(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct string *s = get_string(i);
-
-    dupe_brush(j);
-    free_brush(s->line);
-
-    s->line = j;
+    get_string(i)->line = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -252,7 +242,12 @@ static void free_string(int i)
     struct string *s = get_string(i);
 
     if (--s->count == 0)
+    {
+        send_delete_brush(s->fill);
+        send_delete_brush(s->line);
+
         memset(s, 0, sizeof (struct string));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

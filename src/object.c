@@ -881,23 +881,26 @@ void recv_delete_edge(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_mesh(int i, int j, int brush)
+void send_set_mesh(int i, int j, int k)
 {
+    struct object_mesh *m = get_object_mesh(i, j);
+
+    dupe_create_brush(k);
+    send_delete_brush(m->brush);
+
     send_event(EVENT_SET_MESH);
     send_index(i);
     send_index(j);
-    send_index(brush);
-
-    get_object_mesh(i, j)->brush = brush;
+    send_index((m->brush = k));
 }
 
 void recv_set_mesh(void)
 {
-    int i     = recv_index();
-    int j     = recv_index();
-    int brush = recv_index();
+    int i = recv_index();
+    int j = recv_index();
+    int k = recv_index();
 
-    get_object_mesh(i, j)->brush = brush;
+    get_object_mesh(i, j)->brush = k;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1193,7 +1196,7 @@ static void free_object(int i)
         {
             struct object_mesh *m = vecget(o->mv, j);
 
-            free_brush(m->brush);
+            send_delete_brush(m->brush);
 
             vecdel(m->fv);
             vecdel(m->ev);

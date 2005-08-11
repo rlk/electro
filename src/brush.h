@@ -51,8 +51,12 @@ int startup_brush(void);
 
 /*---------------------------------------------------------------------------*/
 
+int  dupe_create_brush(int);
 int  send_create_brush(const char *, const char *);
 void recv_create_brush(void);
+
+void send_delete_brush(int);
+void recv_delete_brush(void);
 
 void send_set_brush_flags(int, int, int);
 void recv_set_brush_flags(void);
@@ -86,8 +90,6 @@ void recv_set_brush_vert_prog(void);
 void init_brush(int);
 void fini_brush(int);
 int  draw_brush(int, float);
-void dupe_brush(int);
-void free_brush(int);
 
 void init_brushes(void);
 void fini_brushes(void);

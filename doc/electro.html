@@ -619,6 +619,10 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><i>image</i> = <tt>create_image</tt>(<i>filename</i>)<dd><p>Load an image from the named PNG or JPEG file. A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filename will return the same image object.</p>
 
+<dt><tt>delete_image</tt>(<i>image</i>)<dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
+
+<p class="note">In general, applications should explicitly delete any images that they explicitly create. This includes the circumstance where an image is created and assigned to a brush which is subsequently deleted. In that case, the image is not automatically released because it is presumed to be directly referenced by the application. The same create/delete policy applies to brushes.</p>
+
 <dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>) <dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: greyscale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>Return the size of the image in pixels.</p>
@@ -639,6 +643,9 @@ and sprites.</p>
 <dl>
 
 <dt><i>brush</i> = <tt>create_brush</tt>()<dd><p>Create a new brush object with the default material properties.</p>
+
+<dt><tt>delete_brush</tt>(<i>brush</i>)<dd><p>Delete a brush and release all resources associated with it. The brush may not be deleted immediately if it is referenced by an existing entity.</p>
+
 
 <dt><tt>set_brush_color</tt>(<i>brush, d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,</i> [<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,</i> [<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,</i> [<i>e</i>]]])<dd><p>Set the material color properties of <i>brush</i>. The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>) arguments give the diffuse color, (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>) gives the specular color, (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>) gives the ambient color, and <i>e</i> gives the specular exponent. Specular, ambient, and specular exponent properties are optional and any not specified retain their existing values.</p>
 

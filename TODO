@@ -5,8 +5,7 @@ brush flags
     eye space texgen
     generalized texture count
 new billboard transform
-delete image / brush
-Lua state flush / app switch
+    
 Telnet to luasocket
 Tracker buttons
 Uniform API

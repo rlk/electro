@@ -529,6 +529,8 @@ static void free_galaxy(int i)
         if (g->S) free(g->S);
         if (g->N) free(g->N);
 
+        send_delete_brush(g->brush);
+
         memset(g, 0, sizeof (struct galaxy));
     }
 }

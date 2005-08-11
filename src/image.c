@@ -29,11 +29,11 @@
 
 struct image
 {
-    int    count;
-    int    state;
-    int    frame;
-    int    shmid;
-    int    semid;
+    int count;
+    int state;
+    int frame;
+    int shmid;
+    int semid;
 
     GLuint texture;
     char  *filename;
@@ -274,6 +274,12 @@ static void *load_image(const char *filename, int *width,
 
 /*===========================================================================*/
 
+int dupe_create_image(int i)
+{
+    get_image(i)->count++;
+    return i;
+}
+
 int send_create_image(const char *filename)
 {
     int i, n = vecnum(image);
@@ -290,10 +296,7 @@ int send_create_image(const char *filename)
         struct image *p = get_image(i);
 
         if (filename && p->filename && strcmp(p->filename, filename) == 0)
-        {
-            p->count++;
-            return i;
-        }
+            return dupe_create_image(i);
     }
 
     /* Didn't find it.  It's new. */
@@ -302,6 +305,7 @@ int send_create_image(const char *filename)
     {
         struct image *p = get_image(i);
 
+        p->state =  0;
         p->count =  1;
         p->semid = -1;
         p->shmid = -1;
@@ -334,6 +338,7 @@ int send_create_movie(int key, int w, int h, int b)
     {
         struct image *p = get_image(i);
 
+        p->state = 1;
         p->count = 1;
         p->w     = w;
         p->h     = h;
@@ -375,6 +380,7 @@ void recv_create_image(void)
 
     recv_array(p->p, p->w * p->h, p->b);
 
+    p->state = 0;
     p->count = 1;
 }
 
@@ -383,6 +389,49 @@ void recv_set_image_pixels(void)
     struct image *p = get_image(recv_index());
 
     recv_array(p->p, p->w * p->h, p->b);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int free_image(int i)
+{
+    struct image *p = get_image(i);
+
+    if (i > 0 && --p->count == 0)
+    {
+        fini_image(i);
+
+        if (p->semid >= 0)
+        {
+            shmdt(p->p);
+            semctl(p->semid, 0, IPC_RMID, NULL);
+            shmctl(p->shmid,    IPC_RMID, NULL);
+        }
+        else
+        {
+            if (p->filename) free(p->filename);
+            if (p->p)        free(p->p);
+        }
+
+        memset(p, 0, sizeof (struct image));
+
+        return 1;
+    }
+    return 0;
+}
+
+void send_delete_image(int i)
+{
+    if (free_image(i))
+    {
+        send_event(EVENT_DELETE_IMAGE);
+        send_index(i);
+    }
+}
+
+void recv_delete_image(void)
+{
+    free_image(recv_index());
 }
 
 /*---------------------------------------------------------------------------*/
@@ -465,36 +514,10 @@ void fini_image(int i)
 
 void draw_image(int i)
 {
-    init_image(i);
-    glBindTexture(GL_TEXTURE_2D, get_image(i)->texture);
-}
-
-void dupe_image(int i)
-{
-    get_image(i)->count++;
-}
-
-void free_image(int i)
-{
-    struct image *p = get_image(i);
-
-    if (i > 0 && --p->count == 0)
+    if (get_image(i)->count)
     {
-        fini_image(i);
-
-        if (p->semid >= 0)
-        {
-            shmdt(p->p);
-            semctl(p->semid, 0, IPC_RMID, NULL);
-            shmctl(p->shmid,    IPC_RMID, NULL);
-        }
-        else
-        {
-            if (p->filename) free(p->filename);
-            if (p->p)        free(p->p);
-        }
-
-        memset(p, 0, sizeof (struct image));
+        init_image(i);
+        glBindTexture(GL_TEXTURE_2D, get_image(i)->texture);
     }
 }
 
@@ -578,9 +601,9 @@ int startup_image(void)
         {
             struct image *p = get_image(i);
 
-            p->texture  =    0;
-            p->state    =    0;
             p->count    =    1;
+            p->state    =    0;
+            p->texture  =    0;
             p->w        =  128;
             p->h        =  128;
             p->b        =    4;

@@ -26,15 +26,15 @@
 
 struct brush
 {
-    char *file;
-    char *name;
-    char *frag;
-    char *vert;
-
     int  count;
     int  state;
     int  flags;
     int  image;
+
+    char *file;
+    char *name;
+    char *frag;
+    char *vert;
 
     float d[4];
     float s[4];
@@ -155,6 +155,14 @@ static void load_brush(struct brush *b, const char *file, const char *name)
     else error("MTL file '%s': %s", file, system_error());
 }
 
+/*---------------------------------------------------------------------------*/
+
+int dupe_create_brush(int i)
+{
+    get_brush(i)->count++;
+    return i;
+}
+
 int send_create_brush(const char *file, const char *name)
 {
     int i, n = vecnum(brush);
@@ -167,10 +175,7 @@ int send_create_brush(const char *file, const char *name)
 
         if (file && b->file && strcmp(b->file, file) == 0 &&
             name && b->name && strcmp(b->name, name) == 0)
-        {
-            b->count++;
-            return i;
-        }
+            return dupe_create_brush(i);
     }
 
     /* Didn't find it.  It's new. */
@@ -187,8 +192,8 @@ int send_create_brush(const char *file, const char *name)
         /* Set some default values. */
 
         b->count = 1;
-        b->image = 0;
         b->state = 0;
+        b->image = 0;
         b->flags = BRUSH_DIFFUSE | BRUSH_SPECULAR |
                    BRUSH_AMBIENT | BRUSH_SHINY;
 
@@ -243,12 +248,50 @@ void recv_create_brush(void)
 
 /*---------------------------------------------------------------------------*/
 
+static int free_brush(int i)
+{
+    struct brush *b = get_brush(i);
+
+    if (i > 0 && --b->count == 0)
+    {
+        fini_brush(i);
+
+        if (b->file) free(b->file);
+        if (b->name) free(b->name);
+        if (b->frag) free(b->frag);
+        if (b->vert) free(b->vert);
+
+        send_delete_image(b->image);
+
+        memset(b, 0, sizeof (struct brush));
+
+        return 1;
+    }
+    return 0;
+}
+
+void send_delete_brush(int i)
+{
+    if (free_brush(i))
+    {
+        send_event(EVENT_DELETE_BRUSH);
+        send_index(i);
+    }
+}
+
+void recv_delete_brush(void)
+{
+    free_brush(recv_index());
+}
+
+/*---------------------------------------------------------------------------*/
+
 void send_set_brush_image(int i, int j)
 {
     struct brush *b = get_brush(i);
 
-    dupe_image(j);
-    free_image(b->image);
+    dupe_create_image(j);
+    send_delete_image(b->image);
 
     send_event(EVENT_SET_BRUSH_IMAGE);
     send_index(i);
@@ -260,12 +303,7 @@ void recv_set_brush_image(void)
     int i = recv_index();
     int j = recv_index();
 
-    struct brush *b = get_brush(i);
-
-    dupe_image(j);
-    free_image(b->image);
-
-    b->image = j;
+    get_brush(i)->image = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -515,82 +553,63 @@ void fini_brush(int i)
 
 int draw_brush(int i, float a)
 {
-    struct brush *b = get_brush(i);
-    
     float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    init_brush(i);
-
-    /* Modulate the diffuse color by the current value. */
-
-    d[0] = b->d[0];
-    d[1] = b->d[1];
-    d[2] = b->d[2];
-    d[3] = b->d[3] * a;
-
-    /* Apply the texture. */
-
-    draw_image(b->image);
-
-    /* Enable vertex and fragment programs if specified. */
-
-    if (b->frag_prog && GL_has_fragment_program)
-    {
-        glEnable(GL_FRAGMENT_PROGRAM_ARB);
-        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, b->frag_prog);
-    }
-    if (b->vert_prog && GL_has_vertex_program)
-    {
-        glEnable(GL_VERTEX_PROGRAM_ARB);
-        glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
-    }
-
-    /* Disable lighting, if requested. */
-
-    if (b->flags & BRUSH_UNLIT)
-    {
-        glDisable(GL_LIGHTING);
-        glColor4fv(d);
-    }
-    else
-    {
-        /* Apply the material properties. */
+    struct brush *b = get_brush(i);
     
-        if (b->flags & BRUSH_DIFFUSE)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   d);
-        if (b->flags & BRUSH_AMBIENT)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   b->a);
-        if (b->flags & BRUSH_SPECULAR)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  b->s);
-        if (b->flags & BRUSH_SHINY)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, b->x);
+    if (b->count)
+    {
+        init_brush(i);
+
+        /* Modulate the diffuse color by the current value. */
+
+        d[0] = b->d[0];
+        d[1] = b->d[1];
+        d[2] = b->d[2];
+        d[3] = b->d[3] * a;
+
+        /* Apply the texture. */
+
+        draw_image(b->image);
+
+        /* Enable vertex and fragment programs if specified. */
+
+        if (b->frag_prog && GL_has_fragment_program)
+        {
+            glEnable(GL_FRAGMENT_PROGRAM_ARB);
+            glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, b->frag_prog);
+        }
+        if (b->vert_prog && GL_has_vertex_program)
+        {
+            glEnable(GL_VERTEX_PROGRAM_ARB);
+            glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
+        }
+
+        /* Disable lighting, if requested. */
+
+        if (b->flags & BRUSH_UNLIT)
+        {
+            glDisable(GL_LIGHTING);
+            glColor4fv(d);
+        }
+        else
+        {
+            /* Apply the material properties. */
+    
+            if (b->flags & BRUSH_DIFFUSE)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   d);
+            if (b->flags & BRUSH_AMBIENT)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   b->a);
+            if (b->flags & BRUSH_SPECULAR)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  b->s);
+            if (b->flags & BRUSH_SHINY)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, b->x);
+        }
     }
 
     /* Return an indication that this brush is transparent. */
 
     return (d[3] < 1) | (b->flags & BRUSH_TRANSPARENT);
-}
-
-void dupe_brush(int i)
-{
-    get_brush(i)->count++;
-}
-
-void free_brush(int i)
-{
-    struct brush *b = get_brush(i);
-
-    if (i > 0 && --b->count == 0)
-    {
-        fini_brush(i);
-
-        if (b->file) free(b->file);
-        if (b->name) free(b->name);
-        if (b->frag) free(b->frag);
-        if (b->vert) free(b->vert);
-
-        memset(b, 0, sizeof (struct brush));
-    }
 }
 
 /*---------------------------------------------------------------------------*/

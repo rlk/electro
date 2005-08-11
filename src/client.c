@@ -79,6 +79,8 @@ static void client_recv(void)
 
         case EVENT_PARENT_ENTITY:        recv_parent_entity();        break;
         case EVENT_DELETE_ENTITY:        recv_delete_entity();        break;
+        case EVENT_DELETE_IMAGE:         recv_delete_image();         break;
+        case EVENT_DELETE_BRUSH:         recv_delete_brush();         break;
 
         case EVENT_SET_ENTITY_POSITION:  recv_set_entity_position();  break;
         case EVENT_SET_ENTITY_BASIS:     recv_set_entity_basis();     break;
