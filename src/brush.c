@@ -519,6 +519,8 @@ int draw_brush(int i, float a)
     
     float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
+    init_brush(i);
+
     /* Modulate the diffuse color by the current value. */
 
     d[0] = b->d[0];

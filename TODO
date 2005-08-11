@@ -1,5 +1,4 @@
 texture transform
-galaxy brush
 brush flags
     cube map
     object space texgen

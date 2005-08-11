@@ -21,6 +21,7 @@
 #include "matrix.h"
 #include "buffer.h"
 #include "entity.h"
+#include "brush.h"
 #include "event.h"
 #include "utility.h"
 #include "galaxy.h"
@@ -33,6 +34,7 @@ struct galaxy
 {
     int    count;
     int    state;
+    int    brush;
     int    S_num;
     int    N_num;
     GLuint buffer;
@@ -240,7 +242,7 @@ void prep_hip_galaxy(const char *dat_name,
 
 /*===========================================================================*/
 
-int send_create_galaxy(const char *filename)
+int send_create_galaxy(const char *filename, int j)
 {
     int i;
 
@@ -253,10 +255,12 @@ int send_create_galaxy(const char *filename)
         if ((parse_galaxy(filename, g)))
         {
             g->count = 1;
+            g->brush = j;
 
             /* Pack the object header. */
 
             send_event(EVENT_CREATE_GALAXY);
+            send_index(g->brush);
             send_index(g->S_num);
             send_index(g->N_num);
 
@@ -281,6 +285,7 @@ void recv_create_galaxy(void)
 
     /* Receive the object header. */
 
+    g->brush = recv_index();
     g->S_num = recv_index();
     g->N_num = recv_index();
 
@@ -452,6 +457,8 @@ static void draw_galaxy(int j, int i, int f, float a)
         {
             /* Set up the GL state for star rendering. */
 
+            draw_brush(g->brush, a * get_entity_alpha(j));
+
             glBindTexture(GL_TEXTURE_2D, g->texture);
 
             glDisable(GL_TEXTURE_2D);
@@ -460,6 +467,9 @@ static void draw_galaxy(int j, int i, int f, float a)
 
             glDepthMask(GL_FALSE);
             glBlendFunc(GL_ONE, GL_ONE);
+
+            if (GL_has_vertex_program)
+                glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
             if (GL_has_point_sprite)
             {

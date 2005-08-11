@@ -7,11 +7,11 @@ PREFIX = /DEMO/evl/Electro
 ifdef MPI
 	CC     = mpicc
 	TARG   = electro-mpi
-	CFLAGS = -O2 -Wall -DMPI -DNDEBUG
+	CFLAGS = -O2 -Wall -DNDEBUG -DMPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -g -Wall -ansi -pedantic -DNDEBUG
+	CFLAGS = -g -Wall
 endif
 
 # To build with trackdAPI: "make TRACKD=1"
@@ -37,7 +37,6 @@ ifeq ($(shell uname), Darwin)
 	OGLLIB =
 	SDL_CONFIG = /sw/bin/sdl-config
 	FT2_CONFIG = /sw/lib/freetype2/bin/freetype-config
-#	FT2_CONFIG = /usr/X11R6/bin/freetype-config
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
@@ -71,8 +70,8 @@ ODELIB  = -lode -lstdc++
 
 LIBS += $(ODELIB) $(SDLLIB) $(FT2LIB) $(LUALIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
-OBJS =	src/version.o  \
-	src/opengl.o   \
+VERS =	src/version.o
+OBJS =	src/opengl.o   \
 	src/video.o    \
 	src/glyph.o    \
 	src/matrix.o   \
@@ -105,16 +104,22 @@ OBJS =	src/version.o  \
 	src/star.o     \
 	src/main.o
 
+SRCS= $(OBJS:.o=.c)
+DEPS= $(OBJS:.o=.d)
+
 #------------------------------------------------------------------------------
 
-.c.o :
+%.d : %.c
+	$(CC) $(CFLAGS) $(INCDIR) -MM -MF $@ -MT $*.o $<
+
+%.o : %.c
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
-$(TARG) : $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
+$(TARG) : $(OBJS) $(VERS)
+	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(VERS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS)
+	rm -f $(TARG) $(OBJS) $(DEPS)
 
 install : $(TARG)
 	cp $(TARG) $(PREFIX)/bin
@@ -125,17 +130,17 @@ install : $(TARG)
 
 ifneq ($(shell which svnversion),)
 
-src/version.c : FORCE
+src/version.c : $(OBJS)
 	echo -n 'const char *version(void) { const char *str = "' \
 	                              > src/version.c
 	svnversion -n . | tr -d '\n' >> src/version.c
 	echo '"; return str; }'      >> src/version.c
 else
 
-src/version.c : FORCE
+src/version.c : $(OBJS)
 	echo 'const char *version(void) { return ""; }' > src/version.c
 endif
 
 #------------------------------------------------------------------------------
 
-FORCE :
+-include $(DEPS)

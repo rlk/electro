@@ -125,7 +125,11 @@ function init_scene()
     scene_3d = E.create_pivot()
 
     if stars_on then
-        galaxy = E.create_galaxy("../galaxy_hip.gal")
+        local brush = E.create_brush()
+        
+        E.set_brush_frag_prog(brush, "../star.fp")
+        E.set_brush_vert_prog(brush, "../star.vp")
+        galaxy = E.create_galaxy("../galaxy_hip.gal", brush)
     end
 
     E.parent_entity(scene_2d, camera_2d)

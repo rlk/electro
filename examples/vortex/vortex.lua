@@ -32,17 +32,17 @@ setdist = false
 -------------------------------------------------------------------------------
 
 function do_start()
+    local brush = E.create_brush()
+        
+    E.set_brush_frag_prog(brush, "../star.fp")
+    E.set_brush_vert_prog(brush, "../star.vp")
+
     E.set_background(0, 0, 0, 0, 0, 0)
 
     camera_tyc = E.create_camera(E.camera_type_perspective)
     camera_hip = E.create_camera(E.camera_type_perspective)
-    galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal")
-    galaxy_hip = E.create_galaxy("../galaxy_hip.gal")
-
-    E.set_entity_vert_prog(galaxy_hip, "../star.vp");
-    E.set_entity_frag_prog(galaxy_hip, "../star.fp");
-    E.set_entity_vert_prog(galaxy_tyc, "../star.vp");
-    E.set_entity_frag_prog(galaxy_tyc, "../star.fp");
+    galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal", brush)
+    galaxy_hip = E.create_galaxy("../galaxy_hip.gal", brush)
 
     E.parent_entity(galaxy_hip, camera_hip)
     E.parent_entity(galaxy_tyc, camera_tyc)
@@ -111,11 +111,11 @@ end
 function do_keyboard(k, s)
     if s and k == 49 then
         hide_hip = not hide_hip
-        E.set_entity_flag(galaxy_hip, E.entity_flag_hidden, hide_hip)
+        E.set_entity_flags(galaxy_hip, E.entity_flag_hidden, hide_hip)
     end
     if s and k == 50 then
         hide_tyc = not hide_tyc
-        E.set_entity_flag(galaxy_tyc, E.entity_flag_hidden, hide_tyc)
+        E.set_entity_flags(galaxy_tyc, E.entity_flag_hidden, hide_tyc)
     end
 
     if s and k == 32 then

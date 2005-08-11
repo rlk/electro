@@ -148,9 +148,9 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><i>pivot</i> = <tt>create_pivot</tt>()<dd><p>Create a pivot entity. A pivot does nothing, but is useful as a grouping entity. As it has all the properties of an entity, including transformation and render flags, It provides a mechanism by which the transform hierarchy may be extended and controlled.</p>
 
-<dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename</i>)<dd><p>Load a galaxy definition from the named file and return a galaxy entity. A galaxy entity is a static 3D collection of particles, organized into a BSP structure for efficient rendering.</p>
+<dt><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename, brush</i>)<dd><p>Load a galaxy definition from the named file and return a galaxy entity. A galaxy entity is a static 3D collection of particles, organized into a BSP structure for efficient rendering.</p>
 
-<p class="note">A galaxy object must have the <tt>examples/star.fp</tt> and <tt>examples/star.vp</tt> fragment and vertex programs applied to it before it will render correctly. See <tt>set_brush_frag_prog</tt> and <tt>set_brush_vert_prog</tt>.</p>
+<p>A galaxy object must have a brush with the <tt>examples/star.fp</tt> and <tt>examples/star.vp</tt> fragment and vertex programs applied to it to render correctly. See <tt>set_brush_frag_prog</tt> and <tt>set_brush_vert_prog</tt>.</p>
 
 <p class="note">The galaxy object should be considered a hack. It has only a very specific use. It will probably be removed in a future revision of the Electro API, or possibly abstracted into a general particle system.</p>
 

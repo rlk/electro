@@ -106,20 +106,21 @@ GLuint make_texture(const void *p, int w, int h, int b)
         {
             gluScaleImage(format[b], w, h, GL_UNSIGNED_BYTE, p,
                                      W, H, GL_UNSIGNED_BYTE, P);
-            glTexImage2D(GL_TEXTURE_2D, 0, format[b], W, H, 0,
-                         format[b], GL_UNSIGNED_BYTE, P);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, format[b], W, H,
+                              format[b], GL_UNSIGNED_BYTE, P);
             free(P);
         }
     }
     else
-        glTexImage2D(GL_TEXTURE_2D, 0, format[b], W, H, 0,
-                     format[b], GL_UNSIGNED_BYTE, p);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, format[b], w, h,
+                          format[b], GL_UNSIGNED_BYTE, p);
 
     /* Enable filtering on it. */
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     return o;
 }
 

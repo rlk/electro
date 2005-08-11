@@ -6,9 +6,6 @@ rot_y = 0
 
 camera   = nil
 galaxy   = nil
-hilite   = nil
-marker   = nil
-asterism = nil
 
 magn = 100.0
 dist =   0.0
@@ -32,9 +29,8 @@ function add_constellation(name)
     constellation[serial] = E.create_object(name)
 
     E.set_entity_alpha(constellation[serial], 0.8)
-    E.set_entity_flag(constellation[serial], E.entity_flag_unlit,       true)
-    E.set_entity_flag(constellation[serial], E.entity_flag_line_smooth, true)
-    E.parent_entity  (constellation[serial], camera)
+    E.set_entity_flags(constellation[serial], E.entity_flag_line_smooth, true)
+    E.parent_entity   (constellation[serial], camera)
 
     serial = serial + 1
 end
@@ -54,29 +50,22 @@ end
 -------------------------------------------------------------------------------
 
 function do_start()
+    local brush = E.create_brush()
+        
+    E.set_brush_frag_prog(brush, "../star.fp")
+    E.set_brush_vert_prog(brush, "../star.vp")
+
     E.set_background(0, 0, 0, 0, 0, 0)
 
     camera = E.create_camera(E.camera_type_perspective)
-    galaxy = E.create_galaxy("../galaxy_hip.gal")
-    hilite = E.create_sprite("hilite.png")
-    marker = E.create_sprite("here.png")
-
-    E.set_entity_vert_prog(galaxy, "../star.vp");
-    E.set_entity_frag_prog(galaxy, "../star.fp");
+    galaxy = E.create_galaxy("../galaxy_hip.gal", brush)
 
     E.parent_entity(galaxy, camera)
-    E.parent_entity(hilite, camera)
-    E.parent_entity(marker, camera)
 
     add_constellation("cassiopeia.obj")
     add_constellation("orion.obj")
     
     E.set_galaxy_magnitude(galaxy, magn)
-
-    E.set_entity_flag(hilite, E.entity_flag_billboard, true)
-    E.set_entity_flag(marker, E.entity_flag_billboard, true)
-    E.set_entity_scale(hilite, 1 / 256, 1 / 256, 1 / 256)
-    E.set_entity_scale(marker, 1 / 128, 1 / 128, 1 / 128)
 
     E.enable_timer(true)        
 
@@ -110,21 +99,6 @@ function do_keyboard(k, s)
 end
 
 function do_frame()
-    vert_point = E.get_star_index(galaxy, camera)
-
-    local pnt_x, pnt_y, pnt_z = E.get_star_position(galaxy, vert_point)
-    local pos_x, pos_y, pos_z = E.get_entity_position(camera)
-
-    local dx = pnt_x - pos_x
-    local dy = pnt_y - pos_y
-    local dz = pnt_z - pos_z
-    local k  = math.sqrt(dx * dx + dy * dy + dz * dz)
-
-    dx = 20 * dx / k
-    dy = 20 * dy / k
-    dz = 20 * dz / k
-
-    E.set_entity_position(hilite, pos_x + dx, pos_y + dy, pos_z + dz)
 end
 
 function do_point(dx, dy)

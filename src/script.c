@@ -990,7 +990,8 @@ static int E_create_string(lua_State *L)
 
 static int E_create_galaxy(lua_State *L)
 {
-    int id = send_create_galaxy(L_getstring(L, -1));
+    int id = send_create_galaxy(L_getstring(L, -2),
+                                E_getbrush (L, -1));
 
     E_pushentity(L, id);
     return 1;

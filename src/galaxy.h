@@ -21,7 +21,7 @@ struct entity_func *startup_galaxy(void);
 
 /*---------------------------------------------------------------------------*/
 
-int  send_create_galaxy(const char *);
+int  send_create_galaxy(const char *, int);
 void recv_create_galaxy(void);
 
 void send_set_galaxy_magnitude(int, float);
