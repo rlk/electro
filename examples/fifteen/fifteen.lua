@@ -14,6 +14,8 @@ curr_i  = 4
 curr_j  = 4
 time    = 0
 
+random  = false
+
 -------------------------------------------------------------------------------
 
 function move_sprite(sprite, i, j)
@@ -133,6 +135,12 @@ function do_start()
         end
     end
 
+    -- Scramble the tiles.
+
+    for i = 1, 500 do
+        move_random()
+    end
+
     return true
 end
 
@@ -147,8 +155,10 @@ function do_keyboard(k, s)
 
         -- If autoplay has been switched, toggle the idle function.
 
-        if k == 283 then E.enable_timer(true)  end
-        if k == 284 then E.enable_timer(false) end
+        if k == 32 then
+            random = not random
+            E.enable_timer(random)
+        end
     end
     return true
 end

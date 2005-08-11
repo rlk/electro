@@ -41,13 +41,15 @@ sprites = { }
 curr_i = 4
 curr_j = 4
 time   = 0
+
+random  = false
 </pre>
 
 <p>These are the global variables. The image filename at the top allows the image to be changed easily. The <tt>camera</tt> and <tt>sprites</tt> variables hold the Electro objects that make up the scene graph. The graph consists of a single orthogonal camera with 16 sprite objects as children. This hierarchy is constructed at startup, described below.</p>
 
 <p>The <tt>numbers</tt> variable will be initialized to a 4x4 table of tables that indicate which tile appears at each row and column. Each element <tt>numbers[i][j]</tt> will give an index into the <tt>sprites</tt> table. By moving indices around in the <tt>numbers</tt> table, we move tiles around in the puzzle.</p>
 
-<p>The <tt>curr_i</tt> and <tt>curr_j</tt> globals track the current location of the blank spot. The <tt>time</tt> variable allows the total amount of time passed to be tracked by the <tt>do_timer</tt> function.</p>
+<p>The <tt>curr_i</tt> and <tt>curr_j</tt> globals track the current location of the blank spot. The <tt>time</tt> variable allows the total amount of time passed to be tracked by the <tt>do_timer</tt> function. The <tt>random</tt> variable indicates whether the <tt>do_timer</tt> function is randomizing the puzzle.</p>
 
 <pre>
 function solved()
@@ -152,14 +154,16 @@ function do_keyboard(k, s)
         if k == 273 then move_piece( 1,  0) end
         if k == 274 then move_piece(-1,  0) end
 
-        if k == 282 then E.enable_timer(true)  end
-        if k == 283 then E.enable_timer(false) end
+        if k == 32 then
+            random = not random
+            E.enable_timer(random)
+        end
     end
     return true
 end
 </pre>
 
-<p>The <tt>do_keyboard</tt> callback is where interactive motions are generated. Arrow-key-presses trigger moves. The F1 and F2 keys enable and disable the <tt>do_timer</tt> callback, in effect putting the puzzle into non-interactive mode. For simplicity, all keypresses trigger a screen update. This is unnecessary, but brief.</p>
+<p>The <tt>do_keyboard</tt> callback is where interactive motions are generated. Arrow-key-presses trigger moves. The space bar toggles the <tt>do_timer</tt> callback, in effect putting the puzzle into non-interactive mode. For simplicity, all keypresses trigger a screen update. This is unnecessary, but brief.</p>
 
 <pre>
 function do_start()
@@ -201,6 +205,10 @@ function do_start()
         end
     end
 
+    for i = 1, 500 do
+        move_random()
+    end
+
     return true
 end
 </pre>
@@ -209,7 +217,7 @@ end
 
 <p>Then, we create the <tt>numbers</tt> table. It is simply a 4x4 table of tables initialized to a solved configuration. We use the row and column numbers of this table to position our 16 sprites on screen. We also use each sprite's initial row and column number to specify the sprite bounds, that is, we determine what subset of the image should be mapped onto each sprite.</p>
 
-<p>That is all there is to it.</p>
+<p>Finally, we initialize the puzzle to an unknown state by calling the random move generator several times. That is all there is to it.</p>
 
 <!---------------------------------------------------------------------------->
 
@@ -230,6 +238,8 @@ sprites = { }
 curr_i  = 4
 curr_j  = 4
 time    = 0
+
+random  = false
 
 function move_sprite(sprite, i, j)
     E.set_entity_position(sprite, view_x + view_w * (j - 1) / 4 + view_w / 8,
@@ -311,8 +321,10 @@ function do_keyboard(k, s)
 
         -- If autoplay has been switched, toggle the idle function.
 
-        if k == 283 then E.enable_timer(true)  end
-        if k == 284 then E.enable_timer(false) end
+        if k == 32 then
+            random = not random
+            E.enable_timer(random)
+        end
     end
     return true
 end
@@ -374,6 +386,12 @@ function do_start()
             move_sprite(sprites[numbers[i][j]], i, j)
             E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
         end
+    end
+
+    -- Scramble the tiles.
+
+    for i = 1, 500 do
+        move_random()
     end
 
     return true
