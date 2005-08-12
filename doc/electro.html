@@ -95,7 +95,7 @@ E.set_background(0.0, 0.5, 1.0)
 
 and many others. Users of other scene-graph-based libraries should find the Electro API unsurprising.</p>
 
-<p>Scene graph functionality is organized into a small class hierarchy. The entity base class handles all of the common properties and behaviours of scene graph elements, most notably 3D transformation, and the parent-child relationships that hold a scene hierarchy together. The subclasses handle the specifics of controlling the view and lighting, drawing 3D and 2D geometry, etc. The class hierarchy is as follows:</p>
+<p>Scene graph functionality is organized into a small class hierarchy. The entity base class handles all of the common properties and behaviors of scene graph elements, most notably 3D transformation, and the parent-child relationships that hold a scene hierarchy together. The subclasses handle the specifics of controlling the view and lighting, drawing 3D and 2D geometry, etc. The class hierarchy is as follows:</p>
 
 <ol start="0">
 <a href="#entity"> Entity </a>
@@ -116,7 +116,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>Load an OBJ format 3D object and return an Electro object entity. This is the normal means of importing 3D geometry into an Electro application. It supports polygonal geometry in OBJ file format, including material files and texture maps. The OBJ export capabilities of Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.</p>
 
-<p class="note">The Electro OBJ loader lacks support for freeform curve specification. This is actually due to the fact that the Electro renderer lacks the ability to render freeform curves. Any curve specifiers appearing in OBJ files will be silently ignored. If curves are required, tesselate them using your favorite 3D modeller.</p>
+<p class="note">The Electro OBJ loader lacks support for free-form curve specification. This is actually due to the fact that the Electro renderer lacks the ability to render free-form curves. Any curve specifiers appearing in OBJ files will be silently ignored. If curves are required, tessellate them using your favorite 3D modeler.</p>
 
 <dt><i>sprite</i> = <tt>create_sprite</tt>(<i>brush</i>)<dd><p>Create a sprite entity using the given brush. A sprite consists of a single quadrilateral. The default size of the sprite object is equal to the size of the brush's image. Commonly, sprite objects are used as billboards in 3D scenes, or are displayed as 2D overlays using an orthogonal camera.</p>
 
@@ -192,7 +192,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><tt>set_entity_bound</tt>(<i>entity, min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i>) <dd><p>Specify the axis-aligned bounding box of the entity. The 6 values give the minimum and maximum X, Y, and Z values in object coordinates.</p>
 
-<p>To enable view culling based on the given bound, set <tt>entity_flag_bounded</tt>. Keep in mind that object, sprite, and string bounds are computed automatically, and manually-set boundries are not likely to be used. The intended use of <tt>set_entity_bound</tt> is the specification of pivot bounds for hierarchical view culling.</p>
+<p>To enable view culling based on the given bound, set <tt>entity_flag_bounded</tt>. Keep in mind that object, sprite, and string bounds are computed automatically, and manually-set boundaries are not likely to be used. The intended use of <tt>set_entity_bound</tt> is the specification of pivot bounds for hierarchical view culling.</p>
 
 </dl>
 
@@ -251,13 +251,13 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <ul>
 
-<li><tt> entity_flag_wireframe </tt><p>The wireframe flag causes an entity and its descendants to be rendered in wireframe. An entire scene may be rendered in wireframe by setting the wireframe flag on a camera or light. The application is free to set or clear a wireframe flag value at one point in the hierarchy and set an opposite value at a lower point. Entities will appear as expected.</p>
+<li><tt> entity_flag_wireframe </tt><p>The wire-frame flag causes an entity and its descendants to be rendered in wire-frame. An entire scene may be rendered in wire-frame by setting the wire-frame flag on a camera or light. The application is free to set or clear a wire-frame flag value at one point in the hierarchy and set an opposite value at a lower point. Entities will appear as expected.</p>
 
-<li><tt> entity_flag_hidden </tt><p>The hidden flag causes an entity and its descendants to be omitted from rendering. Unlike the wireframe flag, the hidden state <i>cannot</i> be reversed lower in the hierarchy, as it actually causes traversal of the hierarchy to be pruned.</p>
+<li><tt> entity_flag_hidden </tt><p>The hidden flag causes an entity and its descendants to be omitted from rendering. Unlike the wire-frame flag, the hidden state <i>cannot</i> be reversed lower in the hierarchy, as it actually causes traversal of the hierarchy to be pruned.</p>
 
 <li><tt> entity_flag_billboard </tt><p>Entities with the billboard flag are drawn facing the camera, regardless of their actual orientation. In effect, all rotations and translations are applied as usual, so the entity will be positioned in space as expected, but an extra rotation is applied in order to re-aim the entity's Z axis toward the camera.</p>
 
-<p class="note">Due to the manner in which the billboard transformation is implemented, scaling operations will <i>not</i> transform billboard entities below them in the hierarchy. This is a minor limitation in practice, as scaling is normally applied near the leaves of the scene hierarchy anyway. The common case of an entity with local scaling <i>and</i> a local billboard flag will work properly, but when in doubt, scale below billboarding.</p>
+<p class="note">Due to the manner in which the billboard transformation is implemented, scaling operations will <i>not</i> transform billboard entities below them in the hierarchy. This is a minor limitation in practice, as scaling is normally applied near the leaves of the scene hierarchy anyway. The common case of an entity with local scaling <i>and</i> a local billboard flag will work properly, but when in doubt, scale below bill-boarding.</p>
 
 <li><tt> entity_flag_bounded </tt><p>Entities with the bounded flag are rendered only when their bounding box falls within the view frustum of the current camera. Objects, sprites, and strings have automatically computed bounding boxes, so they are automatically given the bounded flag. Other entities may be assigned a bounding box using <tt>set_entity_bound</tt>. When an entity is culled it behaves is though it is hidden and traversal of the hierarchy is pruned.</p>
 
@@ -372,7 +372,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <li><tt>joint_attr_lo_stop_2</tt>
 <li><tt>joint_attr_hi_stop_2</tt><p>The minimum and maximum values of the primary and secondary joint attributes. For a rotating joint such as a hinge, these values define the minimum and maximum angles, in degrees. For a moving joint such as a slider, these define the minimum and maximum linear extensions.</p>
 
-<p class="note">Note, ODE requires that these angles be specified in radians, but Electro generally requires that angles be specified in degrees. Degrees are converted to radians here in order to ensure consistancy across the Electro API.</p>
+<p class="note">Note, ODE requires that these angles be specified in radians, but Electro generally requires that angles be specified in degrees. Degrees are converted to radians here in order to ensure consistency across the Electro API.</p>
 
 <li><tt>joint_attr_velocity</tt>
 <li><tt>joint_attr_force_max</tt>
@@ -406,7 +406,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <ul>
 <li><tt>body_attr_center</tt><p>The offset (<i>x, y, z</i>) of the center of mass of a body.</p>
 
-<p class="note">The center of mass of a body is a slightly sticky issue. ODE requires that the center of mass be at the origin of a body's local coordinate system. However, applications are free to distribute collision geoms and visible geometry arbitrarily in this coordinate system. To compensate, Electro translates a body, its geoms, and all local visible entities to center the body's mass. This means that an asymetric rigid body might not appear where the application places it, and it therefore might not rotate about its intended center. Applications can query this center of mass offset in order to work around this limitation.</p>
+<p class="note">The center of mass of a body is a slightly sticky issue. ODE requires that the center of mass be at the origin of a body's local coordinate system. However, applications are free to distribute collision geoms and visible geometry arbitrarily in this coordinate system. To compensate, Electro translates a body, its geoms, and all local visible entities to center the body's mass. This means that an asymmetric rigid body might not appear where the application places it, and it therefore might not rotate about its intended center. Applications can query this center of mass offset in order to work around this limitation.</p>
 
 </ul>
 
@@ -444,16 +444,16 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>All vertices, meshes, faces, and edges are indexed beginning with zero, and all element indices in [<i>0, n-1</i>] are valid, where <i>n</i> is the respective element count.</p>
 
-<p>The following functions allow objects to be created, destroyed, modified, and queried throught the manipulation of object element indices.</p>
+<p>The following functions allow objects to be created, destroyed, modified, and queried through the manipulation of object element indices.</p>
 
 <h4> 2.1.1.1. Constructors </h4>
 <dl>
 
 <dt><i>i<sub>M</sub></i> = <tt>create_mesh</tt>(<i>object,</i> [<i>brush</i>])<dd><p>Add a new mesh to <i>object</i> and return its index. A brush may be applied to the new mesh at creation time, but if none is provided then the default brush will be used.</p>
 
-<dt><i>i<sub>V</sub></i> = <tt>create_vert</tt>(<i>object,</i> [<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Add a new vertex to <i>object</i> and return its index. The vertex's position (<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specifed. If any of these are not provided, default values of (<i>0, 0, 0</i>), (<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
+<dt><i>i<sub>V</sub></i> = <tt>create_vert</tt>(<i>object,</i> [<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Add a new vertex to <i>object</i> and return its index. The vertex's position (<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specified. If any of these are not provided, default values of (<i>0, 0, 0</i>), (<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
 
-<dt><i>i<sub>F</sub></i> = <tt>create_face</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Add a new trianglular face to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>). Vertex order distinguishes the front of a face from the back. Vertices should be appear counter-clockwise when the face is viewed from the front.
+<dt><i>i<sub>F</sub></i> = <tt>create_face</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Add a new triangular face to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>). Vertex order distinguishes the front of a face from the back. Vertices should be appear counter-clockwise when the face is viewed from the front.
 
 <dt><i>i<sub>E</sub></i> = <tt>create_edge</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub></i>)<dd><p>Add a new edge to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub></i>)</p>
 
@@ -461,7 +461,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <h4> 2.1.1.2. Destructors </h4>
 
-<p class="note">Object elements are stored in vectors. The addition of a new element is usually a constant-time append operation, but the deletion of an element requires a linear-time traversal of the vector. In addition, a vertex removal necessitates the traversal of the all edge and face vectors, potentially causing removals there. Vertex removal also triggers the recomputation of the object bound. For these reasons, object element deletion can be expensive. Applications should avoid creating and deleting geometry on a per-frame basis.</p>
+<p class="note">Object elements are stored in vectors. The addition of a new element is usually a constant-time append operation, but the deletion of an element requires a linear-time traversal of the vector. In addition, a vertex removal necessitates the traversal of the all edge and face vectors, potentially causing removals there. Vertex removal also triggers the re-computation of the object bound. For these reasons, object element deletion can be expensive. Applications should avoid creating and deleting geometry on a per-frame basis.</p>
 
 <dl>
 
@@ -484,7 +484,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><tt>set_vert</tt>(<i>object, i<sub>V</sub>, v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Set the vector values of vertex <i>i<sub>V</sub></i>. The normal and texture coordinate are optional and, if not specified, the existing values are retained.</p>
 
-<p class="note">Like vertex deletion, vertex modification can trigger object bound recomputation. This computation is done only when the bound becomes necessary, so modifying a large batch of vertices at once has the same overhead as modifying a single vertex.</p>
+<p class="note">Like vertex deletion, vertex modification can trigger object bound re-computation. This computation is done only when the bound becomes necessary, so modifying a large batch of vertices at once has the same overhead as modifying a single vertex.</p>
 
 <dt><tt>set_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Specify the set of vertices defining face <i>i<sub>F</sub></i>. Again, vertices should be listed in counter-clockwise order.</p>
 
@@ -623,7 +623,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p class="note">In general, applications should explicitly delete any images that they explicitly create. This includes the circumstance where an image is created and assigned to a brush which is subsequently deleted. In that case, the image is not automatically released because it is presumed to be directly referenced by the application. The same create/delete policy applies to brushes.</p>
 
-<dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>) <dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: greyscale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
+<dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>) <dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: grey-scale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>Return the size of the image in pixels.</p>
 
@@ -658,9 +658,9 @@ and sprites.</p>
 <li><tt>brush_flag_specular</tt>
 <li><tt>brush_flag_ambient</tt>
 <li><tt>brush_flag_shiny</tt>
-<p>These flags control the application of each of the material color properties. If any of these flags is <tt>false</tt> then the corresponding material is not applied at all. This provides applications with a mechanism to control how material properties to trickle down the entity hierachy.</p>
+<p>These flags control the application of each of the material color properties. If any of these flags is <tt>false</tt> then the corresponding material is not applied at all. This provides applications with a mechanism to control how material properties to trickle down the entity hierarchy.</p>
 
-<li><tt>brush_flag_unlit</tt><p>Surfaces with an unlit brush are drawn with all lighting disabled. They will appear fully bright. This is especially useful for sprite and wireframe objects which do not have lightable surfaces.</p>
+<li><tt>brush_flag_unlit</tt><p>Surfaces with an unlit brush are drawn with all lighting disabled. They will appear fully bright. This is especially useful for sprite and wire-frame objects which do not have light-able surfaces.</p>
 
 <li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
 
@@ -724,7 +724,7 @@ and sprites.</p>
 
 <dt><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>Add a host, returning a host index. This function is used by configuration scripts to define the structure of the cluster driving a tiled display.</p>
 
-<p>The <i>name</i> argument gives the Internet hostname of the rendering node to be used. The <i>x, y, w, h</i> arguments give the position and size of the area of that host's desktop to be used for OpenGL rendering. A given render node can only support one Electro host. If the same <i>name</i> argument is reused for multiple configurations, only the first will be used. If <i>name</i> is &ldquo;<tt>default</tt>&rdquo; then the given host configuration will be applied to all hosts not specifically named in another configuration. If a render node is to handle multiple displays, they must be defined as Electro tiles.</p>
+<p>The <i>name</i> argument gives the Internet host name of the rendering node to be used. The <i>x, y, w, h</i> arguments give the position and size of the area of that host's desktop to be used for OpenGL rendering. A given render node can only support one Electro host. If the same <i>name</i> argument is reused for multiple configurations, only the first will be used. If <i>name</i> is &ldquo;<tt>default</tt>&rdquo; then the given host configuration will be applied to all hosts not specifically named in another configuration. If a render node is to handle multiple displays, they must be defined as Electro tiles.</p>
 
 <p>Host configuration and rendering context creation is closely bound with MPI process initialization, so it must be performed immediately upon application startup, and cannot be modified later in an application's execution.</p>
 
@@ -756,7 +756,7 @@ and sprites.</p>
 
 <dt><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)<dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as camera view offset, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side Geowall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
 
-<dt><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)<dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustem to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <tt>tile_flag_mirror</tt> option, below.</p>
+<dt><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)<dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustum to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <tt>tile_flag_mirror</tt> option, below.</p>
 
 <dt><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)<dd><p>Set or clear tile flags on <i>tile</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state.</p>
 
@@ -786,11 +786,11 @@ and sprites.</p>
 <a name="miscellaneous"><h2> 2.7. Miscellaneous API </h2>
 <dl>
 
-<dt><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>])<dd><p>Set the backgound color of the display. If only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is specified, the background will appear a solid color. If an optional second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is supplied, the background will be drawn with a top-to-bottom gradient. The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>0.1, 0.2, 0.4</i>).</p>
+<dt><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>])<dd><p>Set the background color of the display. If only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is specified, the background will appear a solid color. If an optional second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is supplied, the background will be drawn with a top-to-bottom gradient. The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>0.1, 0.2, 0.4</i>).</p>
 
 <dt><tt>set_typeface</tt>(<i>filename</i>, [<i>epsilon, outline</i>])<dd><p>Set the typeface to be used for all subsequently created string entities. The filename gives a TrueType font file.</p>
 
-<p>The optional <i>epsilon</i> parameter gives an error bound in world units to which glyphs are tesselated. This allows the application to make a quality-speed trade-off, favoring finely tesselated text for magnified string entities, and coarse text for minimized string entities. The default <i>epsilon</i> value is <i>0.001</i>.</p>
+<p>The optional <i>epsilon</i> parameter gives an error bound in world units to which glyphs are tessellated. This allows the application to make a quality-speed trade-off, favoring finely tessellated text for magnified string entities, and coarse text for minimized string entities. The default <i>epsilon</i> value is <i>0.001</i>.</p>
 
 <p>The optional <i>outline</i> parameter gives the width of the glyph outline. The default value is <i>0.0</i> and glyphs are rendered without outline.</p>
 
@@ -798,7 +798,7 @@ and sprites.</p>
 
 <dt><tt>enable_timer</tt>(<i>enabled</i>)<dd><p>Enable or disable the <tt>do_timer</tt> callback. If <i>enabled</i> has value <tt>true</tt> then callback will occur.</p>
 
-<dt><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>Return the current state of a keyboard modifier. The return value is <tt>true</tt> if the modifier key is down. The queryable modifiers are:
+<dt><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>Return the current state of a keyboard modifier. The return value is <tt>true</tt> if the modifier key is down. The queriable modifiers are:
 
 <ul>
 <li><tt>key_modifier_shift</tt>
@@ -809,7 +809,7 @@ and sprites.</p>
 
 <dt><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>Return the current value of the X and Y axes of joystick <i>number</i>.</p>
 
-<p class="note">There is no direct mechanism provided to determine the number of joysticks connected to the system. The capability exists in SDL, but it isn't really necessary in Electro. If an application needs to count joysticks, it should observe the device numbers recieved by the <tt>do_joystick</tt> callback. For example, allow the user to select the number of active joysticks by pressing Start on each.</p>
+<p class="note">There is no direct mechanism provided to determine the number of joysticks connected to the system. The capability exists in SDL, but it isn't really necessary in Electro. If an application needs to count joysticks, it should observe the device numbers received by the <tt>do_joystick</tt> callback. For example, allow the user to select the number of active joysticks by pressing Start on each.</p>
 
 </dl>
 
@@ -872,7 +872,7 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<dt><tt>do_joystick</tt>(<i>n, b, s</i>)<dd><p>This callback is invoked whenever a joystick button is pressed or released. The <i>n</i> argument gives the joystick device number. The <i>b</i> argument gives the button number. The <i>s</i> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are aquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt> callback.</p>
+<dt><tt>do_joystick</tt>(<i>n, b, s</i>)<dd><p>This callback is invoked whenever a joystick button is pressed or released. The <i>n</i> argument gives the joystick device number. The <i>b</i> argument gives the button number. The <i>s</i> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are acquired by calling <tt>joystick_axis</tt> in a <tt>do_timer</tt> callback.</p>
 
 <dt><tt>do_contact</tt>(<i>entity<sub>A</sub>, entity<sub>B</sub>, p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, d</i>)<dd><p>This callback is invoked when a rigid body collision has been detected between two bodies with a <tt>geom_attr_callback</tt> category bit set. The <i>entity<sub>A</sub></i> and <i>entity<sub>B</sub></i> arguments give the entities (in no specific order), (<i>p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub></i>) gives the point of collision, (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>) gives the normal vector of the collision, and <i>d</i> gives the depth of penetration of the two geoms (assuming their CFM values permit penetration.)</p>
 

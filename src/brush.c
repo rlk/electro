@@ -621,7 +621,7 @@ void init_brush(int i)
 
             for (p = 0; p < MAX_PARAM; ++p)
                 glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB,
-                                              p, b->vert_param[p]);
+                                              p, b->frag_param[p]);
         }
 
         b->state = 1;
