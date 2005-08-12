@@ -97,6 +97,7 @@ void init_brush(int);
 void fini_brush(int);
 int  draw_brush(int, float);
 
+void free_brushes(void);
 void init_brushes(void);
 void fini_brushes(void);
 

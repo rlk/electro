@@ -10,31 +10,30 @@
     The run scripts take a list of Lua files as parameters.  Each file
     is executed in turn.  Here, Asteroids is used as an example
 
-    To run Asteroids under Linux or OS X:
+    To run the demos under Linux or OS X:
 
-        $ ./electro -f examples/asteroids/asteroids.lua
+        $ ./electro -f examples/demo.lua
 
-    To run Asteroids under Windows, drag and drop the asteroids.lua icon
-    onto the electro.bat file, or type:
+    To run the demos under Windows, drag and drop the demo.lua icon onto
+    the electro.bat file, or type:
 
-        C:\> electro.exe -f examples\asteroids\asteroids.lua
+        C:\> electro.exe -f examples\demo.lua
 
 
 * Running on clusters
 
-    Each cluster has an associated run script.  To run Asteroids on nico,
+    Each cluster has an associated run script.  To run the demos on nico,
     change to the Electro DEMO directory and run it as follows:
 
         $ cd /DEMO/evl/Electro
-        $ bin/electro-nico11x5 -f examples/asteroids/asteroids.lua
+        $ bin/electro-nico11x5 -f examples/demo.lua
 
     On yorda:
 
         $ cd /DEMO/evl/Electro
-        $ bin/electro-yorda11x5 -f examples/asteroids/asteroids.lua
+        $ bin/electro-yorda11x5 -f examples/demo.lua
 
-    Running Vortex on nico and yorda is similar, but Vortex works best
-    when Electro is allowed to capture the mouse pointer:
+    Vortex works best when Electro is allowed to capture the mouse pointer:
 
         $ bin/electro-nico11x5 -m -f examples/vortex/vortex.lua
     or

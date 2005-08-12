@@ -128,10 +128,10 @@ function add_car()
     E.set_entity_geom_attr(part2, E.geom_attr_mass, 0.1)
     E.set_entity_geom_attr(part1, E.geom_attr_category, category_body)
     E.set_entity_geom_attr(part2, E.geom_attr_category, category_body)
-    E.set_entity_geom_attr(part1, E.geom_attr_collider, category_world)
-    E.set_entity_geom_attr(part2, E.geom_attr_collider, category_world)
-    E.set_entity_geom_attr(part1, E.geom_attr_callback, category_world)
-    E.set_entity_geom_attr(part2, E.geom_attr_callback, category_world)
+    E.set_entity_geom_attr(part1, E.geom_attr_collider, category_all)
+    E.set_entity_geom_attr(part2, E.geom_attr_collider, category_all)
+    E.set_entity_geom_attr(part1, E.geom_attr_callback, category_all)
+    E.set_entity_geom_attr(part2, E.geom_attr_callback, category_all)
     E.set_entity_position (body, 0.00, 1.10 + height, 0.00)
     E.set_entity_position (part1, 0, -0.3125, 0)
     E.set_entity_position (part2, 0,  0.3125, 0)
@@ -201,6 +201,7 @@ function do_start()
     add_ramp(-32, 0, -10, -15, 180)
 
     E.enable_timer(true)
+    add_car()
 end
 
 function do_joystick(d, b, s)
@@ -252,6 +253,10 @@ function do_keyboard(k, s)
         if k == 288 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
+        end
+
+        if k == 293 then
+            E.exec("examples/demo.lua")
         end
 
         if k == 273 then key_y = key_y - 1 end

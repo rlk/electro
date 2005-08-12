@@ -257,7 +257,7 @@ static int free_brush(int i)
 {
     struct brush *b = get_brush(i);
 
-    if (i > 0 && --b->count == 0)
+    if (i > 0 && --b->count <= 0)
     {
         fini_brush(i);
 
@@ -724,6 +724,15 @@ int get_brush_h(int i)
 }
 
 /*---------------------------------------------------------------------------*/
+
+void free_brushes(void)
+{
+    int i, n = vecnum(brush);
+
+    for (i = 1; i < n; ++i)
+        while (get_brush(i)->count)
+            free_brush(i);
+}
 
 void init_brushes(void)
 {

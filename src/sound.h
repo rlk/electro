@@ -30,6 +30,8 @@ void stop_sound(int);
 void play_sound(int);
 void loop_sound(int);
 
+void free_sounds(void);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

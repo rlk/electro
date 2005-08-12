@@ -159,6 +159,12 @@ function do_keyboard(k, s)
             random = not random
             E.enable_timer(random)
         end
+
+        -- Jump to the demo selector on F12.
+        
+        if k == 293 then
+            E.exec("examples/demo.lua")
+        end
     end
     return true
 end

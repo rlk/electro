@@ -136,6 +136,10 @@ function do_keyboard(k, s)
         E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
     end
 
+    if s and k == 293 then
+        E.exec("examples/demo.lua")
+    end
+
     return true
 end
 

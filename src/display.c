@@ -31,11 +31,6 @@
 #include "event.h"
 #include "video.h"
 
-/* TODO: -ansi -pedantic does not permit these to be defined in the headers. */
-
-int setenv(const char *, const char *, int);
-int gethostname(char *, size_t);
-
 /*---------------------------------------------------------------------------*/
 
 #define swap(a, b) { double t; t = (a); (a) = (b); (b) = t; }

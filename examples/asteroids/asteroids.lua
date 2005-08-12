@@ -154,8 +154,6 @@ function init_scene()
 
     if galaxy then
        E.set_galaxy_magnitude(galaxy, 100.0 * viewport.k)
---     E.set_entity_vert_prog(galaxy, "../star.vp")
---     E.set_entity_frag_prog(galaxy, "../star.fp")
     end
 
     -- Configure the lights.
@@ -1373,6 +1371,10 @@ function do_keyboard(key, down)
     end
     if key == 276 then
         player.turning_L = down
+    end
+
+    if key == 293 then
+        E.exec("examples/demo.lua")
     end
 
     return false

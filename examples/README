@@ -1,0 +1,39 @@
+
+
+                           |||
+                           O o    Electro Examples
+                            _
+
+
+- demo.lua
+
+    The Demo script displays a menu allows the various Electro examples to
+    be launched interactively.
+
+- assets
+
+    The assets directory contains objects, textures, and materials used by
+    multiple Electro apps.
+
+- asteroids
+
+    Asteroids is an example of a full-fledged game implemented in Electro
+    using objects, textures, sounds, collision, and high scores storage.
+
+- driving
+
+    The driving example uses the full rigid body dynamics system to define
+    a drivable vehicle.
+
+- fifteen
+
+    The Fifteen Puzzle is the example described in the Electro tutorial
+    documentation.
+
+- viewobj
+
+    ViewOBJ is a generic OBJ model viewer application.
+
+- vortex
+
+    Total Perspective Vortex demonstrates an interactive galaxy fly-through.

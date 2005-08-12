@@ -1894,6 +1894,18 @@ static int E_exec(lua_State *L)
     return 0;
 }
 
+static int E_nuke(lua_State *L)
+{
+    enable_timer(0);
+
+    free_entities();
+    free_brushes();
+    free_images();
+    free_sounds();
+
+    return 0;
+}
+
 /*===========================================================================*/
 /* Script callback backcallers                                               */
 
@@ -2268,6 +2280,7 @@ void luaopen_electro(lua_State *L)
     lua_function(L, "set_background",        E_set_background);
     lua_function(L, "exit",                  E_exit);
     lua_function(L, "exec",                  E_exec);
+    lua_function(L, "nuke",                  E_nuke);
 
     /* Entity constants */
 

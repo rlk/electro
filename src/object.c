@@ -1186,7 +1186,7 @@ static void free_object(int i)
 {
     struct object *o = get_object(i);
 
-    if (--o->count == 0)
+    if (--o->count <= 0)
     {
         int j;
 

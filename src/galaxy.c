@@ -255,7 +255,7 @@ int send_create_galaxy(const char *filename, int j)
         if ((parse_galaxy(filename, g)))
         {
             g->count = 1;
-            g->brush = j;
+            g->brush = dupe_create_brush(j);
 
             /* Pack the object header. */
 
@@ -524,7 +524,7 @@ static void free_galaxy(int i)
 {
     struct galaxy *g = get_galaxy(i);
 
-    if (--g->count == 0)
+    if (--g->count <= 0)
     {
         fini_galaxy(i);
 

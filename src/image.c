@@ -397,7 +397,7 @@ static int free_image(int i)
 {
     struct image *p = get_image(i);
 
-    if (i > 0 && --p->count == 0)
+    if (i > 0 && --p->count <= 0)
     {
         fini_image(i);
 
@@ -522,6 +522,15 @@ void draw_image(int i)
 }
 
 /*---------------------------------------------------------------------------*/
+
+void free_images(void)
+{
+    int i, n = vecnum(image);
+
+    for (i = 1; i < n; ++i)
+        while (get_image(i)->count)
+            free_image(i);
+}
 
 void init_images(void)
 {

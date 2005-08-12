@@ -206,6 +206,15 @@ void loop_sound(int i)
 
 /*---------------------------------------------------------------------------*/
 
+void free_sounds(void)
+{
+    int i, n = vecnum(sound);
+
+    for (i = 0; i < n; ++i)
+        if (get_sound(i)->chan)
+            free_sound(i);
+}
+
 int startup_sound(void)
 {
     spec.callback = step_sound;

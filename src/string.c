@@ -241,7 +241,7 @@ static void free_string(int i)
 {
     struct string *s = get_string(i);
 
-    if (--s->count == 0)
+    if (--s->count <= 0)
     {
         send_delete_brush(s->fill);
         send_delete_brush(s->line);
