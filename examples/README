@@ -10,9 +10,9 @@
     The Demo script displays a menu allows the various Electro examples to
     be launched interactively.
 
-- assets
+- data
 
-    The assets directory contains objects, textures, and materials used by
+    The data directory contains objects, textures, and materials used by
     multiple Electro apps.
 
 - asteroids

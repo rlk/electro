@@ -34,15 +34,15 @@ setdist = false
 function do_start()
     local brush = E.create_brush()
         
-    E.set_brush_frag_prog(brush, "../star.fp")
-    E.set_brush_vert_prog(brush, "../star.vp")
+    E.set_brush_frag_prog(brush, "../data/star.fp")
+    E.set_brush_vert_prog(brush, "../data/star.vp")
 
     E.set_background(0, 0, 0, 0, 0, 0)
 
     camera_tyc = E.create_camera(E.camera_type_perspective)
     camera_hip = E.create_camera(E.camera_type_perspective)
-    galaxy_tyc = E.create_galaxy("../galaxy_tyc.gal", brush)
-    galaxy_hip = E.create_galaxy("../galaxy_hip.gal", brush)
+    galaxy_tyc = E.create_galaxy("../data/galaxy_tyc.gal", brush)
+    galaxy_hip = E.create_galaxy("../data/galaxy_hip.gal", brush)
 
     E.parent_entity(galaxy_hip, camera_hip)
     E.parent_entity(galaxy_tyc, camera_tyc)
@@ -137,7 +137,7 @@ function do_keyboard(k, s)
     end
 
     if s and k == 293 then
-        E.exec("examples/demo.lua")
+        E.exec("../demo.lua")
     end
 
     return true

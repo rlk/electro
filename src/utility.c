@@ -118,9 +118,15 @@ void path_pop(void)
 const char *make_path(const char *filename, int i)
 {
     static char pathname[MAXSTR];
+    int j;
 
-    strncpy(pathname, path_stack[i], MAXSTR);
-    strncat(pathname, FILESEP,       MAXSTR);
+    strcpy(pathname, "");
+
+    for (j = 0; j <= i; ++j)
+    {
+        strncat(pathname, path_stack[j], MAXSTR);
+        strncat(pathname, FILESEP,       MAXSTR);
+    }
     strncat(pathname, filename,      MAXSTR);
 
     return pathname;

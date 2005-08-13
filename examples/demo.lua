@@ -5,10 +5,10 @@ name_text = "Electro Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
-    { "Asteroids",                "examples/asteroids/asteroids.lua" },
-    { "Driving",                  "examples/driving/driving.lua"     },
-    { "Total Perspective Vortex", "examples/vortex/vortex.lua"       },
-    { "Fifteen Puzzle",           "examples/fifteen/fifteen.lua"     },
+    { "Asteroids",                "asteroids/asteroids.lua" },
+    { "Driving",                  "driving/driving.lua"     },
+    { "Total Perspective Vortex", "vortex/vortex.lua"       },
+    { "Fifteen Puzzle",           "fifteen/fifteen.lua"     },
 }
 
 item = { }
@@ -91,7 +91,7 @@ function do_start()
     E.set_brush_color(item_brush, 1.0, 0.6, 0.0, 0.8, 1, 1, 1, 1, 0, 0, 0, 0, 10)
 
     E.set_background(0, 0, 0, 0, 0.5, 0)
-    E.set_typeface("VeraBd.ttf", 0.0001, 0.03125)
+    E.set_typeface("data/VeraBd.ttf", 0.0001, 0.03125)
 
     camera = E.create_camera(E.camera_type_orthogonal)
     light  = E.create_light(E.light_type_positional)
@@ -146,7 +146,7 @@ function do_start()
 
     -- Create the background logo.
 
-    E.set_typeface("Electro.ttf", 0.0001, 1 / 256)
+    E.set_typeface("data/Electro.ttf", 0.0001, 1 / 256)
     logo, w, h = centered_string("E", line_brush, logo_brush)
 
     E.set_entity_position(logo, 0, -N * H / 2, 0)

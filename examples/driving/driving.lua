@@ -1,5 +1,3 @@
-dofile("examples/box.lua")
-
 tumble  = false
 scale   = false
 objects = { }
@@ -21,7 +19,7 @@ category_world = 4
 category_all = category_body + category_tire + category_world
 
 function add_ramp(x, y, z, a, r)
-    local ramp = E.create_object("ramp.obj")
+    local ramp = E.create_object("../data/ramp.obj")
 
     E.parent_entity(ramp, pivot)
 
@@ -33,7 +31,7 @@ function add_ramp(x, y, z, a, r)
 end
 
 function add_box()
-    local object = E.create_object("lil_box.obj")
+    local object = E.create_object("../data/box.obj")
     E.parent_entity(object, pivot)
 
     E.set_entity_body_type(object, true)
@@ -51,7 +49,7 @@ function add_box()
 end
 
 function add_ball()
-    local object = E.create_object("ball.obj")
+    local object = E.create_object("../data/ball.obj")
     E.parent_entity(object, pivot)
 
     E.set_entity_body_type(object, true)
@@ -74,7 +72,7 @@ function add_ball()
 end
 
 function add_thing()
-    local object = E.create_object("thing.obj")
+    local object = E.create_object("../data/thing.obj")
     local part1  = E.create_pivot()
     local part2  = E.create_pivot()
     local part3  = E.create_pivot()
@@ -107,7 +105,7 @@ function add_thing()
 end
 
 function add_car()
-    body = E.create_object("body.obj")
+    body = E.create_object("../data/body.obj")
 
     local height = 3
 
@@ -156,7 +154,7 @@ function add_car()
         local y = pos[i][2] + height
         local z = pos[i][3]
 
-        tire[i] = E.create_object("tire.obj")
+        tire[i] = E.create_object("../data/tire.obj")
         E.parent_entity(tire[i], pivot)
 
         E.set_entity_body_type(tire[i], true)
@@ -195,13 +193,13 @@ function do_start()
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
 
-    plane = E.create_object("checker.obj")
-    envmap = E.create_image("../assets/flood_nx.jpg",
-                            "../assets/flood_px.jpg",
-                            "../assets/flood_ny.jpg",
-                            "../assets/flood_py.jpg",
-                            "../assets/flood_nz.jpg",
-                            "../assets/flood_pz.jpg")
+    plane = E.create_object("../data/checker.obj")
+    envmap = E.create_image("../data/flood_nx.jpg",
+                            "../data/flood_px.jpg",
+                            "../data/flood_ny.jpg",
+                            "../data/flood_py.jpg",
+                            "../data/flood_nz.jpg",
+                            "../data/flood_pz.jpg")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
@@ -275,7 +273,7 @@ function do_keyboard(k, s)
         end
 
         if k == 293 then
-            E.exec("examples/demo.lua")
+            E.exec("../demo.lua")
         end
 
         if k == 273 then key_y = key_y - 1 end

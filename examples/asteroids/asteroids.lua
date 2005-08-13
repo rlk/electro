@@ -18,7 +18,7 @@ stars_on = true
 -- Global variables, game state, and scene graph entities:
 
 high_score_file = "asteroids.dat"
-typeface        = "../VeraBd.ttf"
+typeface        = "../data/VeraBd.ttf"
 
 state      = { }
 sound      = { }
@@ -127,9 +127,9 @@ function init_scene()
     if stars_on then
         local brush = E.create_brush()
         
-        E.set_brush_frag_prog(brush, "../star.fp")
-        E.set_brush_vert_prog(brush, "../star.vp")
-        galaxy = E.create_galaxy("../galaxy_hip.gal", brush)
+        E.set_brush_frag_prog(brush, "../data/star.fp")
+        E.set_brush_vert_prog(brush, "../data/star.vp")
+        galaxy = E.create_galaxy("../data/galaxy_hip.gal", brush)
     end
 
     E.parent_entity(scene_2d, camera_2d)
@@ -1374,7 +1374,7 @@ function do_keyboard(key, down)
     end
 
     if key == 293 then
-        E.exec("examples/demo.lua")
+        E.exec("../demo.lua")
     end
 
     return false
