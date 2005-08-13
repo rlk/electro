@@ -617,7 +617,11 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dl>
 
-<dt><i>image</i> = <tt>create_image</tt>(<i>filename</i>)<dd><p>Load an image from the named PNG or JPEG file. A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filename will return the same image object.</p>
+<dt><i>image</i> = <tt>create_image</tt>(<i>filename,</i> [<i>filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>])<dd><p>Load an image from the named PNG or JPEG file. Images <i>must</i> be powers-of-two in size.</p>
+
+<p>If 6 image files are named then a cube map is defined. All 6 cube map images must be the same size. If the image is to applied as a cubic environment map, applications must set <tt>brush_flag_environment</tt> on any brush referencing it. Pixel queries act only on the first image of a cube map.</p>
+
+<p>A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filenames will result in the same image object.</p>
 
 <dt><tt>delete_image</tt>(<i>image</i>)<dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
 
@@ -626,8 +630,6 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <dt><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>) <dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: grey-scale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
 
 <dt><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>Return the size of the image in pixels.</p>
-
-<p class="note">Unextended OpenGL requires that the width and height of all texture map images be a power of two. It can be inconvenient to satisfy this requirement, so Electro automatically rescales non-power-of-two images up to the nearest power-of-two size. This is only done internally, so an image's size and aspect ratio will reflect the <i>original</i> image attributes. The scaling is done using the standard OpenGL utility method, but it can still result in image quality degradation. If you are picky about image quality, or you desire pixel-for-pixel correctness, be sure to use only power-of-two source images.</p>
 
 </dl>
 
@@ -663,6 +665,8 @@ and sprites.</p>
 <li><tt>brush_flag_unlit</tt><p>Surfaces with an unlit brush are drawn with all lighting disabled. They will appear fully bright. This is especially useful for sprite and wire-frame objects which do not have light-able surfaces.</p>
 
 <li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
+
+<li><tt>brush_flag_environment</tt><p>Surfaces with an environmental brush are given generated texture coordinates appropriate for a cubic environment reflection map. The referenced image object must be a cube map.</p>
 
 </ul>
 <dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>

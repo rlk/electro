@@ -248,24 +248,32 @@ void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
     dMatrix3 M;
     dMass mass;
 
-    dGeomID object = dGeomTransformGetGeom(geom);
+    set_rotation(M, r);
 
-    /* Move the geom so that the body's center of mass is at the origin. */
+    /* If the geom has a body, assume it is a geom transform. */
 
     if (body)
     {
+        dGeomID object = dGeomTransformGetGeom(geom);
+
+        /* Move the geom so that the body's center of mass is at the origin. */
+
         dBodyGetMass(body, &mass);
+        dGeomSetRotation(object, M);
         dGeomSetPosition(object, p[0] - mass.c[0],
                                  p[1] - mass.c[1],
                                  p[2] - mass.c[2]);
     }
     else
-        dGeomSetPosition(object, p[0], p[1], p[2]);
+    {
+        /* If the geom has no body, make sure we don't try to move a plane. */
 
-    /* Apply the geom's rotation. */
-
-    set_rotation(M, r);
-    dGeomSetRotation(object, M);
+        if (dGeomGetClass(geom) != dPlaneClass)
+        {
+            dGeomSetRotation(geom, M);
+            dGeomSetPosition(geom, p[0], p[1], p[2]);
+        }
+    }
 }
 
 void end_phys_mass(dBodyID body, float v[3])
@@ -368,9 +376,9 @@ static float get_phys_joint_value(dJointID joint)
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge:  return dJointGetHingeAngle    (joint);
-    case dJointTypeSlider: return dJointGetSliderPosition(joint);
-    case dJointTypeHinge2: return dJointGetHinge2Angle1  (joint);
+    case dJointTypeHinge:  return TO_DEG(dJointGetHingeAngle    (joint));
+    case dJointTypeSlider: return        dJointGetSliderPosition(joint);
+    case dJointTypeHinge2: return TO_DEG(dJointGetHinge2Angle1  (joint));
     }
     return 0;
 }
@@ -379,13 +387,13 @@ static float get_phys_joint_rate(dJointID joint, int n)
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge:  return dJointGetHingeAngleRate    (joint);
-    case dJointTypeSlider: return dJointGetSliderPositionRate(joint);
+    case dJointTypeHinge:  return TO_DEG(dJointGetHingeAngleRate    (joint));
+    case dJointTypeSlider: return        dJointGetSliderPositionRate(joint);
     case dJointTypeHinge2:
         if (n == 1)
-            return dJointGetHinge2Angle1Rate(joint);
+            return TO_DEG(dJointGetHinge2Angle1Rate(joint));
         else
-            return dJointGetHinge2Angle2Rate(joint);
+            return TO_DEG(dJointGetHinge2Angle2Rate(joint));
     }
     return 0;
 }
@@ -619,17 +627,23 @@ void set_phys_join_attr_f(dBodyID body1, dBodyID body2, int p, float f)
 {
     dJointID joint = find_shared_joint(body1, body2);
 
-    switch (p)
+    if (joint)
     {
-    case dParamLoStop:
-    case dParamHiStop:
-    case dParamLoStop2:
-    case dParamHiStop2:
-        set_phys_joint_attr(joint, p, TO_RAD(f));
-        break;
-    default:
-        set_phys_joint_attr(joint, p, f);
-        break;
+        dBodyEnable(body1);
+        dBodyEnable(body2);
+
+        switch (p)
+        {
+        case dParamLoStop:
+        case dParamHiStop:
+        case dParamLoStop2:
+        case dParamHiStop2:
+            set_phys_joint_attr(joint, p, TO_RAD(f));
+            break;
+        default:
+            set_phys_joint_attr(joint, p, f);
+            break;
+        }
     }
 }
 

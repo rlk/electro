@@ -434,6 +434,28 @@ void recv_parent_entity(void)
 
 /*---------------------------------------------------------------------------*/
 
+static void update_entity_position(int i)
+{
+    struct entity *e = get_entity(i);
+
+    if (e->body)
+        set_phys_position(e->body, e->position);
+    if (e->geom)
+        remass_body_entity(find_body_entity(i), i);
+}
+
+static void update_entity_rotation(int i)
+{
+    struct entity *e = get_entity(i);
+
+    if (e->body)
+        set_phys_rotation(e->body, e->rotation);
+    if (e->geom)
+        remass_body_entity(find_body_entity(i), i);
+}
+
+/*---------------------------------------------------------------------------*/
+
 void send_set_entity_rotation(int i, const float r[3])
 {
     float M[16];
@@ -465,8 +487,7 @@ void send_set_entity_position(int i, const float p[3])
     send_float((e->position[1] = p[1]));
     send_float((e->position[2] = p[2]));
 
-    if (e->body) set_phys_position(e->body, e->position);
-    if (e->geom) remass_body_entity(find_body_entity(i), i);
+    update_entity_position(i);
 }
 
 void send_set_entity_basis(int i, const float M[16])
@@ -490,8 +511,7 @@ void send_set_entity_basis(int i, const float M[16])
 
     load_mat(e->rotation, M);
 
-    if (e->body) set_phys_rotation(e->body, e->rotation);
-    if (e->geom) remass_body_entity(find_body_entity(i), i);
+    update_entity_rotation(i);
 }
 
 void send_set_entity_scale(int i, const float v[3])
@@ -535,7 +555,12 @@ void send_set_entity_flags(int i, int flags, int state)
 
 void set_entity_body_type(int i, int t)
 {
-    get_entity(i)->body = set_phys_body_type(get_entity(i)->body, t);
+    struct entity *e = get_entity(i);
+
+    e->body = set_phys_body_type(e->body, t);
+
+    update_entity_position(i);
+    update_entity_rotation(i);
 }
 
 void set_entity_geom_type(int i, int t, const float *v)
@@ -548,6 +573,9 @@ void set_entity_geom_type(int i, int t, const float *v)
                                      get_entity(j)->body, i, t, v);
     else
         e->geom = set_phys_geom_type(get_entity(i)->geom, 0, i, t, v);
+
+    update_entity_position(i);
+    update_entity_rotation(i);
 }
 
 void set_entity_join_type(int i, int j, int t)

@@ -10,6 +10,8 @@ pos_z   = 0
 key_x   = 0
 key_y   = 0
 
+max_angle = 30
+
 body = nil
 tire = { }
 
@@ -62,11 +64,6 @@ function add_ball()
                                   math.random(-180, 180),
                                   math.random(-180, 180))
 
-    E.set_brush_image(E.get_mesh(object, 1), envmap)
-    E.set_brush_image(E.get_mesh(object, 2), envmap)
-    E.set_brush_flags(E.get_mesh(object, 1), E.brush_flag_environment, true)
-    E.set_brush_flags(E.get_mesh(object, 2), E.brush_flag_environment, true)
-
     table.insert(objects, object)
     return object
 end
@@ -105,16 +102,31 @@ function add_thing()
 end
 
 function add_car()
-    body = E.create_object("../data/body.obj")
+    W = { }
 
-    local height = 3
+    local alt = 5.00
+    local len = 0.50
+    local rad = 0.35
 
     local pos = {
-        {  0.85, 0.55,  1.30 },
-        {  0.85, 0.55, -1.25 },
-        { -0.85, 0.55, -1.25 },
-        { -0.85, 0.55,  1.30 }
+        { -0.85, -0.75 + alt, -1.25 },
+        {  0.85, -0.75 + alt, -1.25 },
+        { -0.85, -0.75 + alt,  1.30 },
+        {  0.85, -0.75 + alt,  1.30 },
     }
+
+    -- Create entities for all car parts.
+
+    body = E.create_object("../data/body.obj")
+    W[1] = E.create_object("../data/tire.obj")
+    W[2] = E.create_clone(W[1])
+    W[3] = E.create_clone(W[1])
+    W[4] = E.create_clone(W[1])
+    Lbar = E.create_pivot()
+    Rbar = E.create_pivot()
+    Cbar = E.create_pivot()
+
+    -- Swap some of the body materials to add a chrome effect.
 
     E.set_brush_image(E.get_mesh(body, 1), envmap)
     E.set_brush_image(E.get_mesh(body, 2), envmap)
@@ -124,65 +136,169 @@ function add_car()
     E.set_brush_flags(E.get_mesh(body, 2), E.brush_flag_environment, true)
     E.set_brush_flags(E.get_mesh(body, 4), E.brush_flag_environment, true)
 
-    part1 = E.create_pivot()
-    part2 = E.create_pivot()
+    -- Parent all car entities to the same coordinate system.
 
     E.parent_entity(body, pivot)
-    E.parent_entity(part1, body)
-    E.parent_entity(part2, body)
-    E.parent_entity(part3, body)
+    E.parent_entity(W[1], pivot)
+    E.parent_entity(W[2], pivot)
+    E.parent_entity(W[3], pivot)
+    E.parent_entity(W[4], pivot)
+    E.parent_entity(Lbar, pivot)
+    E.parent_entity(Rbar, pivot)
+    E.parent_entity(Cbar, pivot)
+
+    -- Position all car entities.
+
+    E.set_entity_position(body, 0,  alt, 0)
+    E.set_entity_position(W[1], pos[1][1], pos[1][2], pos[1][3])
+    E.set_entity_position(W[2], pos[2][1], pos[2][2], pos[2][3])
+    E.set_entity_position(W[3], pos[3][1], pos[3][2], pos[3][3])
+    E.set_entity_position(W[4], pos[4][1], pos[4][2], pos[4][3])
+    E.set_entity_position(Lbar, pos[1][1], pos[1][2], pos[1][3])
+    E.set_entity_position(Rbar, pos[2][1], pos[2][2], pos[2][3])
+    E.set_entity_position(Cbar, 0,         pos[1][2], pos[1][3] - len)
+
+    -- Mark all entities as rigid bodies.
 
     E.set_entity_body_type(body, true)
-    E.set_entity_geom_type(part1, E.geom_type_box, 2,    0.625, 4)
-    E.set_entity_geom_type(part2, E.geom_type_box, 1.35, 0.625, 1)
-    E.set_entity_geom_attr(part1, E.geom_attr_mass, 4.0)
-    E.set_entity_geom_attr(part2, E.geom_attr_mass, 0.1)
-    E.set_entity_geom_attr(part1, E.geom_attr_category, category_body)
-    E.set_entity_geom_attr(part2, E.geom_attr_category, category_body)
-    E.set_entity_geom_attr(part1, E.geom_attr_collider, category_all)
-    E.set_entity_geom_attr(part2, E.geom_attr_collider, category_all)
-    E.set_entity_geom_attr(part1, E.geom_attr_callback, category_all)
-    E.set_entity_geom_attr(part2, E.geom_attr_callback, category_all)
-    E.set_entity_position (body, 0.00, 1.10 + height, 0.00)
-    E.set_entity_position (part1, 0, -0.3125, 0)
-    E.set_entity_position (part2, 0,  0.3125, 0)
-    E.set_entity_geom_attr(part1, E.geom_attr_friction, 100)
-    E.set_entity_geom_attr(part2, E.geom_attr_friction, 100)
+    E.set_entity_body_type(Lbar, true)
+    E.set_entity_body_type(Rbar, true)
+    E.set_entity_body_type(Cbar, true)
+    E.set_entity_body_type(W[1], true)
+    E.set_entity_body_type(W[2], true)
+    E.set_entity_body_type(W[3], true)
+    E.set_entity_body_type(W[4], true)
 
-    for i = 1, 4 do
-        local x = pos[i][1]
-        local y = pos[i][2] + height
-        local z = pos[i][3]
+    -- Define the geoms of all colliding bodies.
 
-        tire[i] = E.create_object("../data/tire.obj")
-        E.parent_entity(tire[i], pivot)
+    E.set_entity_geom_type(body, E.geom_type_box, 2, 1.125, 4)
+    E.set_entity_geom_type(W[1], E.geom_type_sphere, rad)
+    E.set_entity_geom_type(W[2], E.geom_type_sphere, rad)
+    E.set_entity_geom_type(W[3], E.geom_type_sphere, rad)
+    E.set_entity_geom_type(W[4], E.geom_type_sphere, rad)
 
-        E.set_entity_body_type(tire[i], true)
-        E.set_entity_geom_type(tire[i], E.geom_type_sphere, 0.35)
-        E.set_entity_geom_attr(tire[i], E.geom_attr_category, category_tire)
-        E.set_entity_geom_attr(tire[i], E.geom_attr_collider, category_world)
-        E.set_entity_geom_attr(tire[i], E.geom_attr_friction, 50)
+    -- Define the joints of the steering mechanism.
 
-        E.set_entity_position(tire[i], x, y, z)
+    E.set_entity_joint_type(body, Lbar, E.joint_type_hinge);
+    E.set_entity_joint_type(body, Rbar, E.joint_type_hinge);
+    E.set_entity_joint_type(Lbar, Cbar, E.joint_type_hinge);
+    E.set_entity_joint_type(Rbar, Cbar, E.joint_type_hinge);
 
-        E.set_entity_joint_type(body, tire[i], E.joint_type_hinge_2)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_anchor, x, y, z)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_axis_1, 0, 1, 0)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_axis_2, 1, 0, 0)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_lo_stop, 0)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_hi_stop, 0)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_erp, 0.10)
-        E.set_entity_joint_attr(body, tire[i], E.joint_attr_susp_cfm, 0.04)
-    end
+    E.set_entity_joint_attr(body, Lbar, E.joint_attr_anchor,
+                            pos[1][1], pos[1][2], pos[1][3])
+    E.set_entity_joint_attr(body, Rbar, E.joint_attr_anchor,
+                            pos[2][1], pos[2][2], pos[2][3])
+    E.set_entity_joint_attr(Lbar, Cbar, E.joint_attr_anchor,
+                            pos[1][1], pos[1][2], pos[1][3] - len)
+    E.set_entity_joint_attr(Rbar, Cbar, E.joint_attr_anchor,
+                            pos[2][1], pos[2][2], pos[2][3] - len)
 
-    E.set_entity_joint_attr(body, tire[1], E.joint_attr_stop_cfm, 0.00)
-    E.set_entity_joint_attr(body, tire[1], E.joint_attr_stop_erp, 0.80)
-    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_cfm, 0.02)
-    E.set_entity_joint_attr(body, tire[2], E.joint_attr_stop_erp, 0.10)
-    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_cfm, 0.02)
-    E.set_entity_joint_attr(body, tire[3], E.joint_attr_stop_erp, 0.10)
-    E.set_entity_joint_attr(body, tire[4], E.joint_attr_stop_cfm, 0.00)
-    E.set_entity_joint_attr(body, tire[4], E.joint_attr_stop_erp, 0.80)
+    E.set_entity_joint_attr(body, Lbar, E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(body, Rbar, E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(Lbar, Cbar, E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(Rbar, Cbar, E.joint_attr_axis_1, 0, 1, 0)
+
+    -- Attach the wheels.
+
+    E.set_entity_joint_type(Lbar, W[1], E.joint_type_hinge_2)
+    E.set_entity_joint_type(Rbar, W[2], E.joint_type_hinge_2)
+    E.set_entity_joint_type(body, W[3], E.joint_type_hinge_2)
+    E.set_entity_joint_type(body, W[4], E.joint_type_hinge_2)
+
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_anchor,
+                            pos[1][1], pos[1][2], pos[1][3])
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_anchor,
+                            pos[2][1], pos[2][2], pos[2][3])
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_anchor,
+                            pos[3][1], pos[3][2], pos[3][3])
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_anchor,
+                            pos[4][1], pos[4][2], pos[4][3])
+
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_axis_1, 0, 1, 0)
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_axis_2, 1, 0, 0)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_axis_2, 1, 0, 0)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_axis_2, 1, 0, 0)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_axis_2, 1, 0, 0)
+
+    -- Soften the suspension a little.
+    
+    local erp = 0.10
+    local cfm = 0.04
+
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_susp_erp, erp)
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_susp_cfm, cfm)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_susp_erp, erp)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_susp_cfm, cfm)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_susp_erp, erp)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_susp_cfm, cfm)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_susp_erp, erp)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_susp_cfm, cfm)
+
+    -- Prevent the wheels from steering on their own.
+
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_lo_stop,  0.00)
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_hi_stop,  0.00)
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_stop_cfm, 0.05)
+    E.set_entity_joint_attr(Lbar, W[1], E.joint_attr_stop_erp, 0.50)
+
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_lo_stop,  0.00)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_hi_stop,  0.00)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_stop_cfm, 0.05)
+    E.set_entity_joint_attr(Rbar, W[2], E.joint_attr_stop_erp, 0.50)
+
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_lo_stop,  0.00)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_hi_stop,  0.00)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_stop_cfm, 0.00)
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_stop_erp, 0.80)
+
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_lo_stop,  0.00)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_hi_stop,  0.00)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_stop_cfm, 0.00)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_stop_erp, 0.80)
+
+    -- Assign categories to prevent the wheel from fouling in the body.
+
+    E.set_entity_geom_attr(body, E.geom_attr_category, category_body)
+    E.set_entity_geom_attr(W[1], E.geom_attr_category, category_tire)
+    E.set_entity_geom_attr(W[2], E.geom_attr_category, category_tire)
+    E.set_entity_geom_attr(W[3], E.geom_attr_category, category_tire)
+    E.set_entity_geom_attr(W[4], E.geom_attr_category, category_tire)
+
+    E.set_entity_geom_attr(body, E.geom_attr_collider, category_world +
+                                                       category_body)
+    E.set_entity_geom_attr(W[1], E.geom_attr_collider, category_world)
+    E.set_entity_geom_attr(W[2], E.geom_attr_collider, category_world)
+    E.set_entity_geom_attr(W[3], E.geom_attr_collider, category_world)
+    E.set_entity_geom_attr(W[4], E.geom_attr_collider, category_world)
+
+    -- Let everything slide a little on the road.
+
+    E.set_entity_geom_attr(body, E.geom_attr_friction, 10)
+    E.set_entity_geom_attr(W[1], E.geom_attr_friction, 50)
+    E.set_entity_geom_attr(W[2], E.geom_attr_friction, 50)
+    E.set_entity_geom_attr(W[3], E.geom_attr_friction, 50)
+    E.set_entity_geom_attr(W[4], E.geom_attr_friction, 50)
+end
+
+function go_car(x, y)
+
+    -- Turn the front wheels to match the joystick.
+
+    E.set_entity_joint_attr(body, Lbar, E.joint_attr_lo_stop, max_angle * x)
+    E.set_entity_joint_attr(body, Lbar, E.joint_attr_hi_stop, max_angle * x)
+    E.set_entity_joint_attr(body, Rbar, E.joint_attr_lo_stop, max_angle * x)
+    E.set_entity_joint_attr(body, Rbar, E.joint_attr_hi_stop, max_angle * x)
+
+    -- Apply power to the rear wheels.
+
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_velocity_2, -100 * y)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_velocity_2, -100 * y)
+
+    E.set_entity_joint_attr(body, W[3], E.joint_attr_force_max_2, 15)
+    E.set_entity_joint_attr(body, W[4], E.joint_attr_force_max_2, 15)
 end
 
 function do_start()
@@ -300,38 +416,33 @@ function do_timer(dt)
         local yx, yy, yz = E.get_entity_y_vector(body)
         local zx, zy, zz = E.get_entity_z_vector(body)
 
-        local kx = 0
-        local ky = 3
-        local kz = 8
+        local kx =  0
+        local ky =  3
+        local kz =  8
 
         local x = px + xx * kx + yx * ky + zx * kz
         local y = py + xy * ky + yy * ky + zy * ky
         local z = pz + xz * kx + yz * ky + zz * kz
 
+        local d = math.sqrt((pos_x - px) * (pos_x - px) +
+                            (pos_z - pz) * (pos_z - pz));
+
         local a = math.atan2(pos_x - px, pos_z - pz) * 180 / math.pi
-        local k = 50
+        local b = math.atan2(pos_y - py, d)          * 180 / math.pi
+        local k = 25
 
-        if y < 1 then y = 1 end
-
-        jx = jx + key_x
-        jy = jy + key_y
+--      if y < 1 then y = 1 end
 
         pos_x = ((k - 1) * pos_x + x) / k
         pos_y = ((k - 1) * pos_y + y) / k
         pos_z = ((k - 1) * pos_z + z) / k
 
+        pos_y = math.abs(pos_y)
+
         E.set_entity_position(camera, pos_x, pos_y, pos_z)
-        E.set_entity_rotation(camera, -20, a, 0)
+        E.set_entity_rotation(camera, -b, a, 0)
 
-
-        E.add_entity_torque(tire[2], yx, -yy * 100 * jx, yz)
-        E.add_entity_torque(tire[3], yx, -yy * 100 * jx, yz)
-
-        E.set_entity_joint_attr(body, tire[1], E.joint_attr_velocity_2, -100 * jy)
-        E.set_entity_joint_attr(body, tire[4], E.joint_attr_velocity_2, -100 * jy)
-
-        E.set_entity_joint_attr(body, tire[1], E.joint_attr_force_max_2, 15)
-        E.set_entity_joint_attr(body, tire[4], E.joint_attr_force_max_2, 15)
+        go_car(jx + key_x, jy + key_y)
 
         return true
     end
