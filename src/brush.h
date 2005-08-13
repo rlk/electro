@@ -43,7 +43,8 @@
 #define BRUSH_AMBIENT     0x0004
 #define BRUSH_SHINY       0x0008
 #define BRUSH_TRANSPARENT 0x0010
-#define BRUSH_UNLIT       0x0020
+#define BRUSH_ENVIRONMENT 0x0020
+#define BRUSH_UNLIT       0x0040
 
 /*---------------------------------------------------------------------------*/
 

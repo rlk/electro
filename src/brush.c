@@ -125,7 +125,8 @@ static void load_brush(struct brush *b, const char *file, const char *name)
 
                     else if (strcmp(W, "map_Kd") == 0)
                     {
-                        b->image = send_create_image(parse_name(L + n));
+                        b->image = send_create_image(parse_name(L + n), NULL,
+                                                      NULL, NULL, NULL, NULL);
                     }
                     else if (strcmp(W, "Kd") == 0)
                     {
@@ -671,7 +672,7 @@ int draw_brush(int i, float a)
 
         draw_image(b->image);
 
-        /* Enable vertex and fragment programs if specified. */
+        /* Enable vertex and fragment programs, if specified. */
 
         if (b->frag_prog && GL_has_fragment_program)
         {
@@ -682,6 +683,19 @@ int draw_brush(int i, float a)
         {
             glEnable(GL_VERTEX_PROGRAM_ARB);
             glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
+        }
+
+        /* Enable reflection mapping, if requested. */
+
+        if (b->flags & BRUSH_ENVIRONMENT)
+        {
+            glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+            glEnable(GL_TEXTURE_GEN_R);
+
+            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+            glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
         }
 
         /* Disable lighting, if requested. */

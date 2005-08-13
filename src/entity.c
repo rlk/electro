@@ -912,6 +912,11 @@ static void free_entity(int i)
 
     fini_entity(i);
 
+    /* Delete all physical objects. */
+
+    if (e->geom) dGeomDestroy(e->geom);
+    if (e->body) dBodyDestroy(e->body);
+
     /* Delete all child entities. */
 
     while (e->car)

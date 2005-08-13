@@ -105,6 +105,13 @@ function add_car()
     body = E.create_object("body.obj")
 
     local height = 3
+    local image = E.create_image("../assets/flood_nx.jpg",
+                                 "../assets/flood_px.jpg",
+                                 "../assets/flood_ny.jpg",
+                                 "../assets/flood_py.jpg",
+                                 "../assets/flood_nz.jpg",
+                                 "../assets/flood_pz.jpg")
+
 
     local pos = {
         {  0.85, 0.55,  1.30 },
@@ -112,6 +119,16 @@ function add_car()
         { -0.85, 0.55, -1.25 },
         { -0.85, 0.55,  1.30 }
     }
+
+    E.set_brush_image(E.get_mesh(body, 1), image)
+    E.set_brush_image(E.get_mesh(body, 2), image)
+    E.set_brush_image(E.get_mesh(body, 3), image)
+    E.set_brush_image(E.get_mesh(body, 4), image)
+
+    E.set_brush_flags(E.get_mesh(body, 1), E.brush_flag_environment, true)
+    E.set_brush_flags(E.get_mesh(body, 2), E.brush_flag_environment, true)
+    E.set_brush_flags(E.get_mesh(body, 3), E.brush_flag_environment, true)
+    E.set_brush_flags(E.get_mesh(body, 4), E.brush_flag_environment, true)
 
     part1 = E.create_pivot()
     part2 = E.create_pivot()
@@ -283,9 +300,9 @@ function do_timer(dt)
         local yx, yy, yz = E.get_entity_y_vector(body)
         local zx, zy, zz = E.get_entity_z_vector(body)
 
-        local kx = 10
-        local ky = 5
-        local kz = 10
+        local kx = 0
+        local ky = 3
+        local kz = 8
 
         local x = px + xx * kx + yx * ky + zx * kz
         local y = py + xy * ky + yy * ky + zy * ky

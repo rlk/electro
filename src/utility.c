@@ -36,7 +36,7 @@ void *memdup(const void *src, size_t num, size_t len)
 {
     void *dst = NULL;
 
-    if ((num * len > 0) && (dst = malloc(num * len)))
+    if (src && (num * len > 0) && (dst = malloc(num * len)))
         memcpy(dst, src, num * len);
 
     return dst;

@@ -1174,7 +1174,7 @@ static int E_set_edge(lua_State *L)
 
 static int E_get_mesh(lua_State *L)
 {
-    lua_pushnumber(L, get_mesh(E_getobject(L, -2), L_getinteger(L, -1)));
+    E_pushbrush(L, get_mesh(E_getobject(L, -2), L_getinteger(L, -1)));
     return 1;
 }
 
@@ -1427,13 +1427,17 @@ static int E_get_star_position(lua_State *L)
 
 static int E_create_image(lua_State *L)
 {
-    if (lua_isstring(L, -1))
-        E_pushimage(L, send_create_image(L_getstring(L, -1)));
+    if (lua_gettop(L) >= 6)
+        E_pushimage(L, send_create_image(L_getstring(L, -6),
+                                         L_getstring(L, -5),
+                                         L_getstring(L, -4),
+                                         L_getstring(L, -3),
+                                         L_getstring(L, -2),
+                                         L_getstring(L, -1)));
     else
-        E_pushimage(L, send_create_movie(L_getinteger(L, -4),
-                                         L_getinteger(L, -3),
-                                         L_getinteger(L, -2),
-                                         L_getinteger(L, -1)));
+        E_pushimage(L, send_create_image(L_getstring(L, -1),
+                                         NULL, NULL, NULL, NULL, NULL));
+ 
     return 1;
 }
 
@@ -2355,6 +2359,7 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "brush_flag_ambient",        BRUSH_AMBIENT);
     lua_constant(L, "brush_flag_shiny",          BRUSH_SHINY);
     lua_constant(L, "brush_flag_transparent",    BRUSH_TRANSPARENT);
+    lua_constant(L, "brush_flag_environment",    BRUSH_ENVIRONMENT);
     lua_constant(L, "brush_flag_unlit",          BRUSH_UNLIT);
 
     /* Configuration constants */

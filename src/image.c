@@ -27,21 +27,25 @@
 
 /*---------------------------------------------------------------------------*/
 
+#define MAX_FILE 6
+
 struct image
 {
     int count;
     int state;
+
     int frame;
     int shmid;
     int semid;
 
     GLuint texture;
-    char  *filename;
 
-    void  *p;
-    int    w;
-    int    h;
-    int    b;
+    int   n;
+    int   w;
+    int   h;
+    int   b;
+    void *p[MAX_FILE];
+    char *s[MAX_FILE];
 };
 
 static vector_t image;
@@ -73,7 +77,7 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
-
+/*
 static int power_of_two(int n)
 {
     int i = 1;
@@ -83,44 +87,55 @@ static int power_of_two(int n)
 
     return i;
 }
+*/
 
-GLuint make_texture(const void *p, int w, int h, int b)
+GLuint make_texture(void *p[6], int n, int w, int h, int b)
 {
     GLuint o = 0;
-
-    int W = power_of_two(w);
-    int H = power_of_two(h);
 
     /* Create a GL texture object. */
 
     glGenTextures(1, &o);
-    glBindTexture(GL_TEXTURE_2D, o);
 
-    /* Ensure that the image is power-of-two in size. */
-
-    if (W != w || H != h)
+    if (n > 1)
     {
-        void *P;
+        /* Several images comprise a cube map. */
 
-        if ((P = malloc(W * H * b)))
-        {
-            gluScaleImage(format[b], w, h, GL_UNSIGNED_BYTE, p,
-                                     W, H, GL_UNSIGNED_BYTE, P);
-            gluBuild2DMipmaps(GL_TEXTURE_2D, format[b], W, H,
-                              format[b], GL_UNSIGNED_BYTE, P);
-            free(P);
-        }
+        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, o);
+
+        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, format[b],
+                          w, h, format[b], GL_UNSIGNED_BYTE, p[0]);
+        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, format[b],
+                          w, h, format[b], GL_UNSIGNED_BYTE, p[1]);
+        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, format[b],
+                          w, h, format[b], GL_UNSIGNED_BYTE, p[2]);
+        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, format[b],
+                          w, h, format[b], GL_UNSIGNED_BYTE, p[3]);
+        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, format[b],
+                          w, h, format[b], GL_UNSIGNED_BYTE, p[4]);
+        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, format[b],
+                          w, h, format[b], GL_UNSIGNED_BYTE, p[5]);
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
     else
+    {
+        /* A single image comprises a 2D texture map. */
+
+        glBindTexture(GL_TEXTURE_2D, o);
+
         gluBuild2DMipmaps(GL_TEXTURE_2D, format[b], w, h,
-                          format[b], GL_UNSIGNED_BYTE, p);
+                          format[b], GL_UNSIGNED_BYTE, p[0]);
 
-    /* Enable filtering on it. */
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
 
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     return o;
 }
 
@@ -262,17 +277,32 @@ static void *load_image(const char *filename, int *width,
                                               int *height,
                                               int *bytes)
 {
-    const char *extension = filename + strlen(filename) - 4;
+    if (filename)
+    {
+        const char *ext = filename + strlen(filename) - 4;
     
-    if      (strcmp(extension, ".png") == 0 || strcmp(extension, ".PNG") == 0)
-        return load_png_image(filename, width, height, bytes);
-    else if (strcmp(extension, ".jpg") == 0 || strcmp(extension, ".JPG") == 0)
-        return load_jpg_image(filename, width, height, bytes);
-    else
-        return error("Unsupported image format for '%s'", filename);
+        if      (strcmp(ext, ".png") == 0 || strcmp(ext, ".PNG") == 0)
+            return load_png_image(filename, width, height, bytes);
+        else if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".JPG") == 0)
+            return load_jpg_image(filename, width, height, bytes);
+        else
+            return error("Unsupported image format for '%s'", filename);
+    }
+    return NULL;
 }
 
 /*===========================================================================*/
+
+static int cmpname(const char *name1, const char *name2)
+{
+    if (name1 == NULL && name2 == NULL)
+        return 0;
+
+    if (name1 == NULL || name2 == NULL)
+        return 1;
+
+    return strcmp(name1, name2);
+}
 
 int dupe_create_image(int i)
 {
@@ -280,22 +310,32 @@ int dupe_create_image(int i)
     return i;
 }
 
-int send_create_image(const char *filename)
+int send_create_image(const char *file_nx,
+                      const char *file_px,
+                      const char *file_ny,
+                      const char *file_py,
+                      const char *file_nz,
+                      const char *file_pz)
 {
-    int i, n = vecnum(image);
+    int i, j, n = vecnum(image);
 
     /* Return the default texture on NULL. */
 
-    if (filename == NULL)
+    if (file_nx == NULL)
         return 0;
 
-    /* Scan the current images for an existing instance of the named file. */
+    /* Scan the current images for an existing instance of the named files. */
 
     for (i = 0; i < n; ++i)
     {
         struct image *p = get_image(i);
 
-        if (filename && p->filename && strcmp(p->filename, filename) == 0)
+        if (cmpname(file_nx, p->s[0]) == 0 &&
+            cmpname(file_px, p->s[1]) == 0 &&
+            cmpname(file_ny, p->s[2]) == 0 &&
+            cmpname(file_py, p->s[3]) == 0 &&
+            cmpname(file_nz, p->s[4]) == 0 &&
+            cmpname(file_pz, p->s[5]) == 0)
             return dupe_create_image(i);
     }
 
@@ -310,26 +350,41 @@ int send_create_image(const char *filename)
         p->semid = -1;
         p->shmid = -1;
 
-        /* Note the file name. */
+        /* Note the file names. */
 
-        p->filename = memdup(filename, strlen(filename) + 1, 1);
+        p->s[0] = file_nx ? memdup(file_nx, strlen(file_nx) + 1, 1) : NULL;
+        p->s[1] = file_px ? memdup(file_px, strlen(file_px) + 1, 1) : NULL;
+        p->s[2] = file_ny ? memdup(file_ny, strlen(file_ny) + 1, 1) : NULL;
+        p->s[3] = file_py ? memdup(file_py, strlen(file_py) + 1, 1) : NULL;
+        p->s[4] = file_nz ? memdup(file_nz, strlen(file_nz) + 1, 1) : NULL;
+        p->s[5] = file_pz ? memdup(file_pz, strlen(file_pz) + 1, 1) : NULL;
 
-        /* Load and pack the image. */
+        /* Load and pack the images. */
 
-        if ((p->p = load_image(filename, &p->w, &p->h, &p->b)))
-        {
-            send_event(EVENT_CREATE_IMAGE);
-            send_index(p->w);
-            send_index(p->h);
-            send_index(p->b);
-            send_array(p->p, p->w * p->h, p->b);
+        if ((p->p[0] = load_image(file_nx, &p->w, &p->h, &p->b))) p->n++;
+        if ((p->p[1] = load_image(file_px, &p->w, &p->h, &p->b))) p->n++;
+        if ((p->p[2] = load_image(file_ny, &p->w, &p->h, &p->b))) p->n++;
+        if ((p->p[3] = load_image(file_py, &p->w, &p->h, &p->b))) p->n++;
+        if ((p->p[4] = load_image(file_nz, &p->w, &p->h, &p->b))) p->n++;
+        if ((p->p[5] = load_image(file_pz, &p->w, &p->h, &p->b))) p->n++;
 
-            return i;
-        }
+        send_event(EVENT_CREATE_IMAGE);
+        send_index(p->n);
+        send_index(p->w);
+        send_index(p->h);
+        send_index(p->b);
+
+        /* If any file is missing, this might reorder cubemap sides.  Meh. */
+
+        for (j = 0; j < p->n; j++)
+            send_array(p->p[j], p->w * p->h, p->b);
+
+        return i;
     }
     return -1;
 }
 
+#ifdef EXPERIMENTAL
 int send_create_movie(int key, int w, int h, int b)
 {
     int i;
@@ -356,7 +411,8 @@ int send_create_movie(int key, int w, int h, int b)
                     send_index(p->w);
                     send_index(p->h);
                     send_index(p->b);
-                    send_array(p->p, p->w * p->h, p->b);
+
+                    send_array(p->p[0], p->w * p->h, p->b);
 
                     return i;
                 }
@@ -368,17 +424,23 @@ int send_create_movie(int key, int w, int h, int b)
     }
     return -1;
 }
+#endif
 
 void recv_create_image(void)
 {
     struct image *p = get_image(new_image());
+    int j;
 
+    p->n = recv_index();
     p->w = recv_index();
     p->h = recv_index();
     p->b = recv_index();
-    p->p = (GLubyte *) malloc(p->w * p->h * p->b);
 
-    recv_array(p->p, p->w * p->h, p->b);
+    for (j = 0; j < p->n; ++j)
+    {
+        p->p[j] = (GLubyte *) malloc(p->w * p->h * p->b);
+        recv_array(p->p[j], p->w * p->h, p->b);
+    }
 
     p->state = 0;
     p->count = 1;
@@ -388,7 +450,7 @@ void recv_set_image_pixels(void)
 {
     struct image *p = get_image(recv_index());
 
-    recv_array(p->p, p->w * p->h, p->b);
+    recv_array(p->p[0], p->w * p->h, p->b);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -396,6 +458,7 @@ void recv_set_image_pixels(void)
 static int free_image(int i)
 {
     struct image *p = get_image(i);
+    int j;
 
     if (i > 0 && --p->count <= 0)
     {
@@ -408,10 +471,11 @@ static int free_image(int i)
             shmctl(p->shmid,    IPC_RMID, NULL);
         }
         else
-        {
-            if (p->filename) free(p->filename);
-            if (p->p)        free(p->p);
-        }
+            for (j = 0; j < MAX_FILE; ++j)
+            {
+                if (p->s[j]) free(p->s[j]);
+                if (p->p[j]) free(p->p[j]);
+            }
 
         memset(p, 0, sizeof (struct image));
 
@@ -493,7 +557,7 @@ void init_image(int i)
 
     if (p->state == 0)
     {
-        p->texture = make_texture(p->p, p->w, p->h, p->b);
+        p->texture = make_texture(p->p, p->n, p->w, p->h, p->b);
         p->state   = 1;
     }
 }
@@ -514,10 +578,24 @@ void fini_image(int i)
 
 void draw_image(int i)
 {
-    if (get_image(i)->count)
+    struct image *p = get_image(i);
+
+    if (p->count)
     {
         init_image(i);
-        glBindTexture(GL_TEXTURE_2D, get_image(i)->texture);
+
+        if (p->n > 1)
+        {
+            glEnable(GL_TEXTURE_CUBE_MAP_ARB);
+            glDisable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, get_image(i)->texture);
+        }
+        else
+        {
+            glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, get_image(i)->texture);
+        }
     }
 }
 
@@ -612,13 +690,16 @@ int startup_image(void)
 
             p->count    =    1;
             p->state    =    0;
+            p->semid    =   -1;
+            p->shmid    =   -1;
             p->texture  =    0;
+            p->n        =    1;
             p->w        =  128;
             p->h        =  128;
             p->b        =    4;
-            p->p        = malloc(128 * 128 * 4);
+            p->p[0]     = malloc(128 * 128 * 4);
 
-            memset(p->p, 0xFF, 128 * 128 * 4);
+            memset(p->p[0], 0xFF, 128 * 128 * 4);
         }
         return 1;
     }

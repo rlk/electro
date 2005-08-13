@@ -19,13 +19,11 @@ int startup_image(void);
 
 /*---------------------------------------------------------------------------*/
 
-GLuint make_texture(const void *, int, int, int);
-
-/*---------------------------------------------------------------------------*/
-
 int  dupe_create_image(int);
-int  send_create_image(const char *);
 void recv_create_image(void);
+int  send_create_image(const char *, const char *,
+                       const char *, const char *,
+                       const char *, const char *);
 
 int  send_create_movie(int, int, int, int);
 
