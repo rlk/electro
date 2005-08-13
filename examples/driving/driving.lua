@@ -64,6 +64,11 @@ function add_ball()
                                   math.random(-180, 180),
                                   math.random(-180, 180))
 
+    E.set_brush_image(E.get_mesh(object, 1), envmap)
+    E.set_brush_image(E.get_mesh(object, 2), envmap)
+    E.set_brush_flags(E.get_mesh(object, 1), E.brush_flag_environment, true)
+    E.set_brush_flags(E.get_mesh(object, 2), E.brush_flag_environment, true)
+
     table.insert(objects, object)
     return object
 end
@@ -105,13 +110,6 @@ function add_car()
     body = E.create_object("body.obj")
 
     local height = 3
-    local image = E.create_image("../assets/flood_nx.jpg",
-                                 "../assets/flood_px.jpg",
-                                 "../assets/flood_ny.jpg",
-                                 "../assets/flood_py.jpg",
-                                 "../assets/flood_nz.jpg",
-                                 "../assets/flood_pz.jpg")
-
 
     local pos = {
         {  0.85, 0.55,  1.30 },
@@ -120,14 +118,12 @@ function add_car()
         { -0.85, 0.55,  1.30 }
     }
 
-    E.set_brush_image(E.get_mesh(body, 1), image)
-    E.set_brush_image(E.get_mesh(body, 2), image)
-    E.set_brush_image(E.get_mesh(body, 3), image)
-    E.set_brush_image(E.get_mesh(body, 4), image)
+    E.set_brush_image(E.get_mesh(body, 1), envmap)
+    E.set_brush_image(E.get_mesh(body, 2), envmap)
+    E.set_brush_image(E.get_mesh(body, 4), envmap)
 
     E.set_brush_flags(E.get_mesh(body, 1), E.brush_flag_environment, true)
     E.set_brush_flags(E.get_mesh(body, 2), E.brush_flag_environment, true)
-    E.set_brush_flags(E.get_mesh(body, 3), E.brush_flag_environment, true)
     E.set_brush_flags(E.get_mesh(body, 4), E.brush_flag_environment, true)
 
     part1 = E.create_pivot()
@@ -200,6 +196,12 @@ function do_start()
     pivot  = E.create_pivot()
 
     plane = E.create_object("checker.obj")
+    envmap = E.create_image("../assets/flood_nx.jpg",
+                            "../assets/flood_px.jpg",
+                            "../assets/flood_ny.jpg",
+                            "../assets/flood_py.jpg",
+                            "../assets/flood_nz.jpg",
+                            "../assets/flood_pz.jpg")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)

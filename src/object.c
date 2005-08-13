@@ -400,13 +400,15 @@ static int read_obj(const char *filename, struct object *o)
 
     if (filename)
     {
+        path_push(get_file_path(filename));
+
         /* Initialize the loader vector caches. */
 
         _tv = vecnew(1024, sizeof (struct vec2));
         _nv = vecnew(1024, sizeof (struct vec3));
         _vv = vecnew(1024, sizeof (struct vec3));
 
-        if ((fin = open_file(filename, "r")))
+        if ((fin = open_file(get_file_name(filename), "r")))
         {
             /* Create a default catch-all group using the default material. */
 
@@ -440,6 +442,8 @@ static int read_obj(const char *filename, struct object *o)
         vecdel(_vv);
         vecdel(_nv);
         vecdel(_tv);
+
+        path_pop();
     }
     return 1;
 }

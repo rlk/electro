@@ -1,9 +1,11 @@
+smarter directory management
 brush flags
-    cube map
     object space texgen
     eye space texgen
     generalized texture count
 new billboard transform
+better car
+rolling star
     
 Telnet to luasocket
 Tracker buttons

@@ -23,6 +23,8 @@
 #include "utility.h"
 #include "console.h"
 
+#define MAXPATH 16
+
 /*---------------------------------------------------------------------------*/
 
 const char *system_error(void)
@@ -94,42 +96,49 @@ const char *get_file_name(const char *file)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Path name stack for smart file locating.                                  */
 
-static char filepath[MAXSTR];
+static char path_stack[MAXPATH][MAXSTR];
+static int  path_index = 0;
 
-void open_path(const char *path)
+void path_push(const char *path)
 {
-    strncpy(filepath, path, MAXSTR);
+    if (path_index < MAXPATH)
+        strncpy(path_stack[path_index++], path, MAXSTR);
 }
 
-const char *make_path(const char *filename)
+void path_pop(void)
+{
+    if (path_index > 0)
+        path_index--;
+}
+
+/*---------------------------------------------------------------------------*/
+
+const char *make_path(const char *filename, int i)
 {
     static char pathname[MAXSTR];
 
-    strncpy(pathname, filepath, MAXSTR);
-    strncat(pathname, FILESEP,  MAXSTR);
-    strncat(pathname, filename, MAXSTR);
+    strncpy(pathname, path_stack[i], MAXSTR);
+    strncat(pathname, FILESEP,       MAXSTR);
+    strncat(pathname, filename,      MAXSTR);
 
     return pathname;
 }
 
 int stat_file(const char *filename, struct stat *buf)
 {
-    char pathname[MAXSTR];
-    int r;
+    int i, r;
+
+    /* Search for the file in the path stack. */
+
+    for (i = path_index - 1; i >= 0; --i)
+        if ((r = stat(make_path(filename, i), buf)) == 0)
+            return 0;
 
     /* Search for the file in the current working directory. */
 
     if ((r = stat(filename, buf)) == 0)
-        return 0;
-
-    /* Search for the file at the current default path. */
-
-    strncpy(pathname, filepath, MAXSTR);
-    strncat(pathname, FILESEP,  MAXSTR);
-    strncat(pathname, filename, MAXSTR);
-
-    if ((r = stat(pathname, buf)) == 0)
         return 0;
 
     /* Can't find it.  Punt. */
@@ -139,21 +148,18 @@ int stat_file(const char *filename, struct stat *buf)
 
 FILE *open_file(const char *filename, const char *mode)
 {
-    char pathname[MAXSTR];
     FILE *fp;
+    int i;
+
+    /* Search for the file in the path stack. */
+
+    for (i = path_index - 1; i >= 0; --i)
+        if ((fp = fopen(make_path(filename, i), mode)))
+            return fp;
 
     /* Search for the file in the current working directory. */
 
     if ((fp = fopen(filename, mode)))
-        return fp;
-
-    /* Search for the file at the current default path. */
-
-    strncpy(pathname, filepath, MAXSTR);
-    strncat(pathname, FILESEP,  MAXSTR);
-    strncat(pathname, filename, MAXSTR);
-
-    if ((fp = fopen(pathname, mode)))
         return fp;
 
     /* Can't find it.  Punt. */

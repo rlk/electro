@@ -62,7 +62,9 @@ const char *system_error(void);
 const char *get_file_name(const char *);
 const char *get_file_path(const char *);
 
-void  open_path(const char *);
+void  path_push(const char *);
+void  path_pop(void);
+
 int   stat_file(const char *, struct stat *);
 FILE *open_file(const char *, const char *);
 void *load_file(const char *, const char *, size_t *);

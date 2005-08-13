@@ -2446,14 +2446,11 @@ void load_script(const char *file)
     int  err;
     FILE *fp;
 
-    const char *path = get_file_path(file);
-    const char *name = get_file_name(file);
-
-    open_path(path);
+    path_push(get_file_path(file));
 
     /* Load and execute the script. */
 
-    if ((fp = open_file(name, "r")))
+    if ((fp = open_file(get_file_name(file), "r")))
     {
         int top = lua_gettop(L);
 
