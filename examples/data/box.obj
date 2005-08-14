@@ -61,20 +61,12 @@ vn 0.0000000e+0 0.0000000e+0 -1.00000000
 g cube1_cube1_auv2
 usemtl rgb
 f 1/2/1 4/13/10 3/16/7 2/5/4
-g cube1_cube1_auv4
-usemtl rgb
 f 4/9/11 8/15/22 7/10/19 3/1/8
-g cube1_cube1_auv6
-usemtl rgb
 f 6/12/17 7/8/21 8/4/24 5/11/14
-g cube1_cube1_auv7
-usemtl rgb
 f 2/16/6 6/8/18 5/3/15 1/14/3
 g cube1_cube1_auv8
 usemtl gray
 f 3/13/9 7/16/20 6/5/16 2/2/5
-g cube1_cube1_auv9
-usemtl gray
 f 1/6/2 5/7/13 8/15/23 4/16/12
 g wires
 usemtl wire

@@ -31,7 +31,7 @@ struct brush
     int  count;
     int  state;
     int  flags;
-    int  image;
+    int  image[4];
 
     char *file;
     char *name;
@@ -125,8 +125,8 @@ static void load_brush(struct brush *b, const char *file, const char *name)
 
                     else if (strcmp(W, "map_Kd") == 0)
                     {
-                        b->image = send_create_image(parse_name(L + n), NULL,
-                                                      NULL, NULL, NULL, NULL);
+                        b->image[0] = send_create_image(parse_name(L + n),
+                                                        0, 0, 0, 0, 0);
                     }
                     else if (strcmp(W, "Kd") == 0)
                     {
@@ -199,7 +199,6 @@ int send_create_brush(const char *file, const char *name)
 
         b->count = 1;
         b->state = 0;
-        b->image = 0;
         b->flags = BRUSH_DIFFUSE | BRUSH_SPECULAR |
                    BRUSH_AMBIENT | BRUSH_SHINY;
 
@@ -226,12 +225,13 @@ int send_create_brush(const char *file, const char *name)
             load_brush(b, file, name);
 
         send_event(EVENT_CREATE_BRUSH);
-        send_index(b->image);
         send_index(b->flags);
-        send_array(b->d, 4, sizeof (float));
-        send_array(b->s, 4, sizeof (float));
-        send_array(b->a, 4, sizeof (float));
-        send_array(b->x, 1, sizeof (float));
+
+        send_array(b->image, 4, sizeof (int));
+        send_array(b->d,     4, sizeof (float));
+        send_array(b->s,     4, sizeof (float));
+        send_array(b->a,     4, sizeof (float));
+        send_array(b->x,     1, sizeof (float));
 
         return i;
     }
@@ -242,14 +242,14 @@ void recv_create_brush(void)
 {
     struct brush *b = get_brush(new_brush());
 
-    b->image = recv_index();
     b->flags = recv_index();
     b->count = 1;
 
-    recv_array(b->d, 4, sizeof (float));
-    recv_array(b->s, 4, sizeof (float));
-    recv_array(b->a, 4, sizeof (float));
-    recv_array(b->x, 1, sizeof (float));
+    recv_array(b->image, 4, sizeof (int));
+    recv_array(b->d,     4, sizeof (float));
+    recv_array(b->s,     4, sizeof (float));
+    recv_array(b->a,     4, sizeof (float));
+    recv_array(b->x,     1, sizeof (float));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -267,7 +267,10 @@ static int free_brush(int i)
         if (b->frag) free(b->frag);
         if (b->vert) free(b->vert);
 
-        send_delete_image(b->image);
+        if (b->image[0]) send_delete_image(b->image[0]);
+        if (b->image[1]) send_delete_image(b->image[1]);
+        if (b->image[2]) send_delete_image(b->image[2]);
+        if (b->image[3]) send_delete_image(b->image[3]);
 
         memset(b, 0, sizeof (struct brush));
 
@@ -292,24 +295,26 @@ void recv_delete_brush(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_brush_image(int i, int j)
+void send_set_brush_image(int i, int j, int k)
 {
     struct brush *b = get_brush(i);
 
     dupe_create_image(j);
-    send_delete_image(b->image);
+    send_delete_image(b->image[k]);
 
     send_event(EVENT_SET_BRUSH_IMAGE);
     send_index(i);
-    send_index((b->image = j));
+    send_index((b->image[k] = j));
+    send_index(k);
 }
 
 void recv_set_brush_image(void)
 {
     int i = recv_index();
     int j = recv_index();
+    int k = recv_index();
 
-    get_brush(i)->image = j;
+    get_brush(i)->image[k] = j;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -651,6 +656,44 @@ void fini_brush(int i)
     }
 }
 
+/*---------------------------------------------------------------------------*/
+
+static void set_cube_map(GLenum texture)
+{
+    if (GL_has_multitexture)
+    {
+        /* Set the given texture to generate cube map texture coordinates. */
+
+        glActiveTextureARB(texture);
+
+        glEnable(GL_TEXTURE_GEN_S);
+        glEnable(GL_TEXTURE_GEN_T);
+        glEnable(GL_TEXTURE_GEN_R);
+
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+        glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+    
+        glActiveTextureARB(GL_TEXTURE0_ARB);
+    }
+}
+
+static void apply_image(GLenum texture, int image)
+{
+    if (GL_has_multitexture)
+    {
+        glActiveTextureARB(texture);
+
+        /* Always apply texture 0, but disable all other unused textures. */
+
+        if (texture == GL_TEXTURE0_ARB || image != 0)
+            draw_image(image);
+        else
+            glDisable(GL_TEXTURE_2D);
+    }
+    else draw_image(image);
+}
+
 int draw_brush(int i, float a)
 {
     float d[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -668,9 +711,12 @@ int draw_brush(int i, float a)
         d[2] = b->d[2];
         d[3] = b->d[3] * a;
 
-        /* Apply the texture. */
+        /* Apply the textures. */
 
-        draw_image(b->image);
+        apply_image(GL_TEXTURE3_ARB, b->image[3]);
+        apply_image(GL_TEXTURE2_ARB, b->image[2]);
+        apply_image(GL_TEXTURE1_ARB, b->image[1]);
+        apply_image(GL_TEXTURE0_ARB, b->image[0]);
 
         /* Enable vertex and fragment programs, if specified. */
 
@@ -687,16 +733,10 @@ int draw_brush(int i, float a)
 
         /* Enable reflection mapping, if requested. */
 
-        if (b->flags & BRUSH_ENVIRONMENT)
-        {
-            glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
-            glEnable(GL_TEXTURE_GEN_R);
-
-            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
-            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
-            glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
-        }
+        if (b->flags & BRUSH_CUBE_MAP_3) set_cube_map(GL_TEXTURE3_ARB);
+        if (b->flags & BRUSH_CUBE_MAP_2) set_cube_map(GL_TEXTURE2_ARB);
+        if (b->flags & BRUSH_CUBE_MAP_1) set_cube_map(GL_TEXTURE1_ARB);
+        if (b->flags & BRUSH_CUBE_MAP_0) set_cube_map(GL_TEXTURE0_ARB);
 
         /* Disable lighting, if requested. */
 
@@ -729,12 +769,18 @@ int draw_brush(int i, float a)
 
 int get_brush_w(int i)
 {
-    return get_image_w(get_brush(i)->image);
+    return get_image_w(get_brush(i)->image[0]);
 }
 
 int get_brush_h(int i)
 {
-    return get_image_h(get_brush(i)->image);
+    return get_image_h(get_brush(i)->image[0]);
+}
+
+int get_brush_t(int i)
+{
+    return ((get_brush(i)->flags & BRUSH_TRANSPARENT) ||
+            (get_brush(i)->d[3]  < 1.0));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -781,7 +827,6 @@ int startup_brush(void)
             struct brush *b = get_brush(i);
 
             b->count = 1;
-            b->image = 0;
             b->state = 0;
             b->flags = BRUSH_DIFFUSE | BRUSH_SPECULAR |
                        BRUSH_AMBIENT | BRUSH_SHINY;

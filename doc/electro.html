@@ -651,7 +651,7 @@ and sprites.</p>
 
 <dt><tt>set_brush_color</tt>(<i>brush, d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,</i> [<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,</i> [<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,</i> [<i>e</i>]]])<dd><p>Set the material color properties of <i>brush</i>. The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>) arguments give the diffuse color, (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>) gives the specular color, (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>) gives the ambient color, and <i>e</i> gives the specular exponent. Specular, ambient, and specular exponent properties are optional and any not specified retain their existing values.</p>
 
-<dt><tt>set_brush_image</tt>(<i>brush, image</i>)<dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>.</p>
+<dt><tt>set_brush_image</tt>(<i>brush, image, </i>[<i>n</i>])<dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>. The <i>n</i> argmument gives an optional texture unit number between 0 and 3, defaulting to zero.</p>
 
 <dt><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)<dd><p>Set or clear flags on the given brush. Brush flags enable and disable the application of various material properties. The <i>flag</i> argument gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> argument is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
 
@@ -666,7 +666,11 @@ and sprites.</p>
 
 <li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
 
-<li><tt>brush_flag_environment</tt><p>Surfaces with an environmental brush are given generated texture coordinates appropriate for a cubic environment reflection map. The referenced image object must be a cube map.</p>
+<li><tt>brush_flag_cube_map_0</tt>
+<li><tt>brush_flag_cube_map_1</tt>
+<li><tt>brush_flag_cube_map_2</tt>
+<li><tt>brush_flag_cube_map_3</tt>
+<p>A cube map is dynamically applied to a surface based upon the surface normal and view direction. It creates the illusion that the surface is reflecting an image of the environment. The cube map brush flags enable this feature on each of the four texture units. To appear correct, an environment map image object should be bound to the the corresponding brush image unit.</p>
 
 </ul>
 <dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>

@@ -1498,8 +1498,13 @@ static int E_set_brush_flags(lua_State *L)
 
 static int E_set_brush_image(lua_State *L)
 {
-    send_set_brush_image(E_getbrush(L, -2),
-                         E_getimage(L, -1));
+    if (lua_gettop(L) >= 3)
+        send_set_brush_image(E_getbrush  (L, -3),
+                             E_getimage  (L, -2),
+                             L_getinteger(L, -1));
+    else
+        send_set_brush_image(E_getbrush  (L, -2),
+                             E_getimage  (L, -1), 0);
     return 0;
 }
 
@@ -2359,7 +2364,10 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "brush_flag_ambient",        BRUSH_AMBIENT);
     lua_constant(L, "brush_flag_shiny",          BRUSH_SHINY);
     lua_constant(L, "brush_flag_transparent",    BRUSH_TRANSPARENT);
-    lua_constant(L, "brush_flag_environment",    BRUSH_ENVIRONMENT);
+    lua_constant(L, "brush_flag_cube_map_0",     BRUSH_CUBE_MAP_0);
+    lua_constant(L, "brush_flag_cube_map_1",     BRUSH_CUBE_MAP_1);
+    lua_constant(L, "brush_flag_cube_map_2",     BRUSH_CUBE_MAP_2);
+    lua_constant(L, "brush_flag_cube_map_3",     BRUSH_CUBE_MAP_3);
     lua_constant(L, "brush_flag_unlit",          BRUSH_UNLIT);
 
     /* Configuration constants */

@@ -43,8 +43,11 @@
 #define BRUSH_AMBIENT     0x0004
 #define BRUSH_SHINY       0x0008
 #define BRUSH_TRANSPARENT 0x0010
-#define BRUSH_ENVIRONMENT 0x0020
-#define BRUSH_UNLIT       0x0040
+#define BRUSH_CUBE_MAP_0  0x0020
+#define BRUSH_CUBE_MAP_1  0x0040
+#define BRUSH_CUBE_MAP_2  0x0080
+#define BRUSH_CUBE_MAP_3  0x0100
+#define BRUSH_UNLIT       0x0200
 
 /*---------------------------------------------------------------------------*/
 
@@ -62,7 +65,7 @@ void recv_delete_brush(void);
 void send_set_brush_flags(int, int, int);
 void recv_set_brush_flags(void);
 
-void send_set_brush_image(int, int);
+void send_set_brush_image(int, int, int);
 void recv_set_brush_image(void);
 
 void send_set_brush_rotation(int, float);
@@ -104,8 +107,9 @@ void fini_brushes(void);
 
 /*---------------------------------------------------------------------------*/
 
-int  get_brush_w(int);
-int  get_brush_h(int);
+int get_brush_w(int);
+int get_brush_h(int);
+int get_brush_t(int);
 
 /*---------------------------------------------------------------------------*/
 

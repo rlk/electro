@@ -391,7 +391,7 @@ static int read_obj(const char *filename, struct object *o)
     char W[MAXSTR];
     FILE *fin;
 
-    int n = 0;
+    int i, j, n = 0;
 
     /* Initialize the object element vectors. */
 
@@ -436,6 +436,23 @@ static int read_obj(const char *filename, struct object *o)
             fclose(fin);
         }
         else error("OBJ file '%s': %s", filename, system_error());
+
+        /* Sort meshes such that transparent ones appear last. */
+
+        for (i = 0; i < vecnum(o->mv); ++i)
+            for (j = i + 1; j < vecnum(o->mv); ++j)
+            {
+                struct object_mesh *mi = vecget(o->mv, i);
+                struct object_mesh *mj = vecget(o->mv, j);
+                struct object_mesh  mt;
+
+                if (get_brush_t(mi->brush) > get_brush_t(mj->brush))
+                {
+                     mt = *mi;
+                    *mi = *mj;
+                    *mj =  mt;
+                }
+            }
 
         /* Release the loader caches. */
 
@@ -1045,36 +1062,40 @@ static void fini_object(int i)
 
 static void draw_mesh(const struct object_mesh *m, float alpha)
 {
-    int transparent = draw_brush(m->brush, alpha);
-
-    /* If this object is transparent then don't write depth. */
-    /* Render back and front faces separately.               */
-
-    if (transparent)
+    glPushAttrib(GL_TEXTURE_BIT);
     {
-        glPushAttrib(GL_DEPTH_BUFFER_BIT);
-        glDepthMask(GL_FALSE);
+        int transparent = draw_brush(m->brush, alpha);
 
-        glCullFace(GL_FRONT);
+        /* If this object is transparent then don't write depth. */
+        /* Render back and front faces separately.               */
+
+        if (transparent)
+        {
+            glPushAttrib(GL_DEPTH_BUFFER_BIT);
+            glDepthMask(GL_FALSE);
+
+            glCullFace(GL_FRONT);
+
+            if (vecnum(m->fv) > 0)
+                glDrawElements(GL_TRIANGLES, 3 * vecnum(m->fv),
+                               GL_UNSIGNED_INT,  vecbuf(m->fv));
+
+            glCullFace(GL_BACK);
+        }
+
+        /* Render all faces and edges. */
 
         if (vecnum(m->fv) > 0)
             glDrawElements(GL_TRIANGLES, 3 * vecnum(m->fv),
                            GL_UNSIGNED_INT,  vecbuf(m->fv));
+        if (vecnum(m->ev) > 0)
+            glDrawElements(GL_LINES,     2 * vecnum(m->ev),
+                           GL_UNSIGNED_INT,  vecbuf(m->ev));
 
-        glCullFace(GL_BACK);
+        if (transparent)
+            glPopAttrib();
     }
-
-    /* Render all faces and edges. */
-
-    if (vecnum(m->fv) > 0)
-        glDrawElements(GL_TRIANGLES, 3 * vecnum(m->fv),
-                       GL_UNSIGNED_INT,  vecbuf(m->fv));
-    if (vecnum(m->ev) > 0)
-        glDrawElements(GL_LINES,     2 * vecnum(m->ev),
-                       GL_UNSIGNED_INT,  vecbuf(m->ev));
-
-    if (transparent)
-        glPopAttrib();
+    glPopAttrib();
 }
 
 static void draw_object(int j, int i, int f, float a)

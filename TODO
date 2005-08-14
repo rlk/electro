@@ -1,24 +1,9 @@
-brush flags
-    object space texgen
-    eye space texgen
-    generalized texture count
-new billboard transform
-better car
 rolling star
+brain
     
 Telnet to luasocket
 Tracker buttons
 
-
 profilers
 cooler vortex demo
-Varrier finalize
-
-
-App
-    Brain in jar.
-
-Test total queue throughput.
-Test re-texture throughput on all clusters.
-    (subimage/buffer reuse)
-consider killing fragments
+varrier finalize
