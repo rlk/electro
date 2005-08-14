@@ -26,7 +26,8 @@ struct entity_func *startup_camera(void);
 
 /*---------------------------------------------------------------------------*/
 
-int get_curr_eye(void);
+int  get_camera_eye(void);
+void get_camera_rot(float[16]);
 
 /*---------------------------------------------------------------------------*/
 

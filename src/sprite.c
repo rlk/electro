@@ -177,7 +177,7 @@ static void draw_sprite(int j, int i, int f, float a)
 
                 if (get_entity_flags(j) & FLAG_STEREO)
                 {
-                    if (get_curr_eye())
+                    if (get_camera_eye())
                         s0 = (s0 + s1) / 2;
                     else
                         s1 = (s0 + s1) / 2;

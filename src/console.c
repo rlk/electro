@@ -263,12 +263,14 @@ void draw_console(void)
         if (image_dirty)
             draw_image();
 
-        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_VIEWPORT_BIT);
         {
             int x = CONSOLE_X;
             int y = CONSOLE_Y;
             int w = CONSOLE_COLS * GLYPH_W;
             int h = CONSOLE_ROWS * GLYPH_H;
+            int W = get_window_w();
+            int H = get_window_h();
 
             float s = (float) w / IMG_W;
             float t = (float) h / IMG_H;
@@ -281,13 +283,14 @@ void draw_console(void)
             glDisable(GL_LIGHTING);
             glEnable(GL_TEXTURE_2D);
 
+            glViewport(0, 0, W, H);
+
             /* Apply a pixel-for-pixel transformation. */
 
             glMatrixMode(GL_PROJECTION);
             {
                 glLoadIdentity();
-                glOrtho(0, get_window_w(),
-                        0, get_window_h(), -1, +1);
+                glOrtho(0, W, 0, H, -1, +1);
             }
             glMatrixMode(GL_MODELVIEW);
             {

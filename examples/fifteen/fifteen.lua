@@ -163,7 +163,7 @@ function do_keyboard(k, s)
         -- Jump to the demo selector on F12.
         
         if k == 293 then
-            E.exec("../demo.lua")
+            E.exec("examples/demo.lua")
         end
     end
     return true

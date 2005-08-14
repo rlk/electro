@@ -2364,10 +2364,14 @@ void luaopen_electro(lua_State *L)
     lua_constant(L, "brush_flag_ambient",        BRUSH_AMBIENT);
     lua_constant(L, "brush_flag_shiny",          BRUSH_SHINY);
     lua_constant(L, "brush_flag_transparent",    BRUSH_TRANSPARENT);
-    lua_constant(L, "brush_flag_cube_map_0",     BRUSH_CUBE_MAP_0);
-    lua_constant(L, "brush_flag_cube_map_1",     BRUSH_CUBE_MAP_1);
-    lua_constant(L, "brush_flag_cube_map_2",     BRUSH_CUBE_MAP_2);
-    lua_constant(L, "brush_flag_cube_map_3",     BRUSH_CUBE_MAP_3);
+    lua_constant(L, "brush_flag_env_map_0",      BRUSH_ENV_MAP_0);
+    lua_constant(L, "brush_flag_env_map_1",      BRUSH_ENV_MAP_1);
+    lua_constant(L, "brush_flag_env_map_2",      BRUSH_ENV_MAP_2);
+    lua_constant(L, "brush_flag_env_map_3",      BRUSH_ENV_MAP_3);
+    lua_constant(L, "brush_flag_sky_map_0",      BRUSH_SKY_MAP_0);
+    lua_constant(L, "brush_flag_sky_map_1",      BRUSH_SKY_MAP_1);
+    lua_constant(L, "brush_flag_sky_map_2",      BRUSH_SKY_MAP_2);
+    lua_constant(L, "brush_flag_sky_map_3",      BRUSH_SKY_MAP_3);
     lua_constant(L, "brush_flag_unlit",          BRUSH_UNLIT);
 
     /* Configuration constants */
@@ -2454,6 +2458,9 @@ void load_script(const char *file)
     int  err;
     FILE *fp;
 
+    /* Pop the last-used directory. Push the script directory as current. */
+
+    path_pop();
     path_push(get_file_path(file));
 
     /* Load and execute the script. */

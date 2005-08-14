@@ -36,11 +36,6 @@ function add_box()
     local object = E.create_object("../data/box.obj")
     E.parent_entity(object, pivot)
 
-    E.set_brush_image(E.get_mesh(object, 2), envmap, 1)
-    E.set_brush_flags(E.get_mesh(object, 2), E.brush_flag_cube_map_1, true)
-    E.set_brush_image(E.get_mesh(object, 1), envmap, 1)
-    E.set_brush_flags(E.get_mesh(object, 1), E.brush_flag_cube_map_1, true)
-
     E.set_entity_body_type(object, true)
     E.set_entity_geom_type(object, E.geom_type_box, 2, 2, 2)
     E.set_entity_geom_attr(object, E.geom_attr_category, category_world)
@@ -59,6 +54,9 @@ end
 function add_ball()
     local object = E.create_object("../data/ball.obj")
     E.parent_entity(object, pivot)
+
+    E.set_brush_image(E.get_mesh(object, 2), envmap, 1)
+    E.set_brush_flags(E.get_mesh(object, 2), E.brush_flag_env_map_1, true)
 
     E.set_entity_body_type(object, true)
     E.set_entity_geom_type(object, E.geom_type_sphere, 1)
@@ -136,9 +134,9 @@ function add_car()
     E.set_brush_image(E.get_mesh(body, 4), envmap)
     E.set_brush_image(E.get_mesh(body, 6), envmap)
 
-    E.set_brush_flags(E.get_mesh(body, 1), E.brush_flag_cube_map_0, true)
-    E.set_brush_flags(E.get_mesh(body, 4), E.brush_flag_cube_map_0, true)
-    E.set_brush_flags(E.get_mesh(body, 6), E.brush_flag_cube_map_0, true)
+    E.set_brush_flags(E.get_mesh(body, 1), E.brush_flag_env_map_0, true)
+    E.set_brush_flags(E.get_mesh(body, 4), E.brush_flag_env_map_0, true)
+    E.set_brush_flags(E.get_mesh(body, 6), E.brush_flag_env_map_0, true)
 
     -- Parent all car entities to the same coordinate system.
 
@@ -302,19 +300,21 @@ function do_start()
     light  = E.create_light(E.light_type_positional)
     pivot  = E.create_pivot()
     later  = E.create_pivot()
+    sky    = E.create_object("../data/sky.obj")
 
     plane = E.create_object("../data/checker.obj")
-    envmap = E.create_image("../data/flood_nx.jpg",
-                            "../data/flood_px.jpg",
-                            "../data/flood_ny.jpg",
-                            "../data/flood_py.jpg",
-                            "../data/flood_nz.jpg",
-                            "../data/flood_pz.jpg")
+    envmap = E.create_image("../data/sky_nx.png",
+                            "../data/sky_px.png",
+                            "../data/sky_ny.png",
+                            "../data/sky_py.png",
+                            "../data/sky_nz.png",
+                            "../data/sky_pz.png")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(later, pivot)
     E.parent_entity(plane, pivot)
+    E.parent_entity(sky,   plane)
 
     E.set_entity_geom_type(plane, E.geom_type_plane, 0, 1, 0, 0)
     E.set_entity_geom_attr(plane, E.geom_attr_category, category_world)
@@ -323,6 +323,11 @@ function do_start()
     E.set_entity_position(light, 0.0,  16.0,  0.0)
     E.set_entity_position(pivot, 0.0, -16.0,  0.0)
     E.set_entity_scale   (plane, 32, 32, 32)
+    E.set_entity_scale   (sky, 8, 8, 8)
+
+    E.set_brush_image(E.get_mesh(sky, 1), envmap)
+    E.set_brush_flags(E.get_mesh(sky, 1), E.brush_flag_unlit,     true)
+    E.set_brush_flags(E.get_mesh(sky, 1), E.brush_flag_sky_map_0, true)
 
     add_ramp(0, 0, 0, 10, 0)
     add_ramp(32, 0, 10, 30, 0)
@@ -393,7 +398,7 @@ function do_keyboard(k, s)
         end
 
         if k == 293 then
-            E.exec("../demo.lua")
+            E.exec("examples/demo.lua")
         end
 
         if k == 273 then key_y = key_y - 1 end

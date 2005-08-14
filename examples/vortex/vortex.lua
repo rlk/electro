@@ -137,7 +137,7 @@ function do_keyboard(k, s)
     end
 
     if s and k == 293 then
-        E.exec("../demo.lua")
+        E.exec("examples/demo.lua")
     end
 
     return true

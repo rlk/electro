@@ -14,7 +14,7 @@
 #define DISPLAY
 
 #define MAXNAME 32
-#define MAXTILE  4
+#define MAXTILE  8
 
 /*---------------------------------------------------------------------------*/
 

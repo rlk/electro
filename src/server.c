@@ -361,6 +361,8 @@ void server(int argc, char *argv[])
                  SDL_INIT_JOYSTICK);
 #endif
 
+    path_push(".");
+
     if (init_script())
     {
         if (SDL_Init(flags) == 0)

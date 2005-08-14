@@ -1374,7 +1374,7 @@ function do_keyboard(key, down)
     end
 
     if key == 293 then
-        E.exec("../demo.lua")
+        E.exec("examples/demo.lua")
     end
 
     return false

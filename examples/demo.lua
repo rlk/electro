@@ -5,10 +5,10 @@ name_text = "Electro Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
-    { "Asteroids",                "asteroids/asteroids.lua" },
-    { "Driving",                  "driving/driving.lua"     },
-    { "Total Perspective Vortex", "vortex/vortex.lua"       },
-    { "Fifteen Puzzle",           "fifteen/fifteen.lua"     },
+    { "Asteroids",                "examples/asteroids/asteroids.lua" },
+    { "Driving",                  "examples/driving/driving.lua"     },
+    { "Total Perspective Vortex", "examples/vortex/vortex.lua"       },
+    { "Fifteen Puzzle",           "examples/fifteen/fifteen.lua"     },
 }
 
 item = { }

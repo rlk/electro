@@ -45,7 +45,9 @@ struct camera
 };
 
 static vector_t camera;
-static int      curreye = 0;
+
+static float    camera_rot[16];
+static int      camera_eye = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -65,9 +67,16 @@ static int new_camera(void)
     return vecadd(camera);
 }
 
-int get_curr_eye(void)
+/*---------------------------------------------------------------------------*/
+
+int get_camera_eye(void)
 {
-    return curreye;
+    return camera_eye;
+}
+
+void get_camera_rot(float M[16])
+{
+    memcpy(M, camera_rot, 16 * sizeof (float));
 }
 
 /*===========================================================================*/
@@ -278,9 +287,9 @@ void draw_camera(int j, int i, int f, float a)
         int next = 0;
         int pass = 0;
 
-        float d[3];
+        float d[3], M[16];
 
-        curreye = eye;
+        camera_eye = eye;
 
         /* Compute the world-space eye position. */
 
@@ -308,7 +317,22 @@ void draw_camera(int j, int i, int f, float a)
             {
                 glPushMatrix();
                 {
+                    /* Apply the view matrix. */
+
                     transform_camera(j);
+
+                    /* Grab the inverse view rotation for use in reflection */
+                    /* and billboarding. */
+
+                    glGetFloatv(GL_MODELVIEW_MATRIX, M);
+
+                    load_inv(camera_rot, M);
+
+                    camera_rot[12] = 0;
+                    camera_rot[13] = 0;
+                    camera_rot[14] = 0;
+
+                    /* Draw the scene, or a test pattern if requested. */
 
                     if (get_tile_flags(tile) & TILE_TEST)
                         test_camera(eye, flag);

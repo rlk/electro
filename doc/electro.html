@@ -666,11 +666,17 @@ and sprites.</p>
 
 <li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
 
-<li><tt>brush_flag_cube_map_0</tt>
-<li><tt>brush_flag_cube_map_1</tt>
-<li><tt>brush_flag_cube_map_2</tt>
-<li><tt>brush_flag_cube_map_3</tt>
-<p>A cube map is dynamically applied to a surface based upon the surface normal and view direction. It creates the illusion that the surface is reflecting an image of the environment. The cube map brush flags enable this feature on each of the four texture units. To appear correct, an environment map image object should be bound to the the corresponding brush image unit.</p>
+<li><tt>brush_flag_env_map_0</tt>
+<li><tt>brush_flag_env_map_1</tt>
+<li><tt>brush_flag_env_map_2</tt>
+<li><tt>brush_flag_env_map_3</tt>
+<p>An environment map is dynamically applied to a surface based upon the surface normal and view direction. It creates the illusion that the surface is reflecting an image of the scene. The environment map brush flags enable this feature on each of the four texture units. To appear correct, an environment map image object should be bound to the the corresponding brush image unit.</p>
+
+<li><tt>brush_flag_sky_map_0</tt>
+<li><tt>brush_flag_sky_map_1</tt>
+<li><tt>brush_flag_sky_map_2</tt>
+<li><tt>brush_flag_sky_map_3</tt>
+<p>A sky map is dynamically applied to a surface based upon the location of each point on the surface. This is useful when creating sky spheres and boxes using environment map image objects. When an environment map image is bound to the sky's brush the result is a sky scene that compliments the scene reflected in environment mapped surfaces.</p>
 
 </ul>
 <dt><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
@@ -755,6 +761,8 @@ and sprites.</p>
 <dl>
 
 <dt><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>Add a tile to a host, returning a tile index. The <i>x, y, w, h</i> arguments give position and size of the area of the indexed host's render area to be used for display.</p>
+
+<p class="note">There is a static limit of 8 tiles per host.</p>
 
 <dt><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>, u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p>Set the world-space position of <i>tile</i>. The (<i>o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector of the origin of the tile, usually the real-space lower-left corner of the display to which the tile is rendered. The (<i>r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub></i>) arguments give the &ldquo;right&rdquo; vector, from the origin to the lower-right corner. The (<i>u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>) arguments give the &ldquo;up&rdquo; vector, from the origin to the upper-left corner.</p>
 

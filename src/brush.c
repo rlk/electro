@@ -13,10 +13,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "opengl.h"
 #include "vector.h"
 #include "buffer.h"
+#include "camera.h"
 #include "utility.h"
 #include "image.h"
 #include "event.h"
@@ -658,22 +660,73 @@ void fini_brush(int i)
 
 /*---------------------------------------------------------------------------*/
 
-static void set_cube_map(GLenum texture)
+static void set_env_map(void)
+{
+    float M[16];
+
+    get_camera_rot(M);
+
+    /* Set the given texture to generate cube map texture coordinates. */
+
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glEnable(GL_TEXTURE_GEN_R);
+
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
+
+    glMatrixMode(GL_TEXTURE);
+    glLoadMatrixf(M);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+static void set_sky_map(void)
+{
+    float S[4] = { 1, 0, 0, 0 };
+    float T[4] = { 0, 1, 0, 0 };
+    float R[4] = { 0, 0, 1, 0 };
+
+    /* Set the given texture to generate sky map texture coordinates. */
+
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glEnable(GL_TEXTURE_GEN_R);
+
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+
+    glTexGenfv(GL_S, GL_OBJECT_PLANE, S);
+    glTexGenfv(GL_T, GL_OBJECT_PLANE, T);
+    glTexGenfv(GL_R, GL_OBJECT_PLANE, R);
+
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+static void set_tex_map(void)
+{
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_GEN_R);
+
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+static void set_tex_gen(GLenum texture, int env, int sky)
 {
     if (GL_has_multitexture)
     {
-        /* Set the given texture to generate cube map texture coordinates. */
-
         glActiveTextureARB(texture);
 
-        glEnable(GL_TEXTURE_GEN_S);
-        glEnable(GL_TEXTURE_GEN_T);
-        glEnable(GL_TEXTURE_GEN_R);
+        if      (env) set_env_map();
+        else if (sky) set_sky_map();
+        else          set_tex_map();
 
-        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
-        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
-        glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
-    
         glActiveTextureARB(GL_TEXTURE0_ARB);
     }
 }
@@ -693,6 +746,8 @@ static void apply_image(GLenum texture, int image)
     }
     else draw_image(image);
 }
+
+/*---------------------------------------------------------------------------*/
 
 int draw_brush(int i, float a)
 {
@@ -718,6 +773,17 @@ int draw_brush(int i, float a)
         apply_image(GL_TEXTURE1_ARB, b->image[1]);
         apply_image(GL_TEXTURE0_ARB, b->image[0]);
 
+        /* Enable texture coordinate generation, if requested. */
+
+        set_tex_gen(GL_TEXTURE3_ARB, (b->flags & BRUSH_ENV_MAP_3),
+                                     (b->flags & BRUSH_SKY_MAP_3));
+        set_tex_gen(GL_TEXTURE2_ARB, (b->flags & BRUSH_ENV_MAP_2),
+                                     (b->flags & BRUSH_SKY_MAP_2));
+        set_tex_gen(GL_TEXTURE1_ARB, (b->flags & BRUSH_ENV_MAP_1),
+                                     (b->flags & BRUSH_SKY_MAP_1));
+        set_tex_gen(GL_TEXTURE0_ARB, (b->flags & BRUSH_ENV_MAP_0),
+                                     (b->flags & BRUSH_SKY_MAP_0));
+
         /* Enable vertex and fragment programs, if specified. */
 
         if (b->frag_prog && GL_has_fragment_program)
@@ -730,13 +796,6 @@ int draw_brush(int i, float a)
             glEnable(GL_VERTEX_PROGRAM_ARB);
             glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
         }
-
-        /* Enable reflection mapping, if requested. */
-
-        if (b->flags & BRUSH_CUBE_MAP_3) set_cube_map(GL_TEXTURE3_ARB);
-        if (b->flags & BRUSH_CUBE_MAP_2) set_cube_map(GL_TEXTURE2_ARB);
-        if (b->flags & BRUSH_CUBE_MAP_1) set_cube_map(GL_TEXTURE1_ARB);
-        if (b->flags & BRUSH_CUBE_MAP_0) set_cube_map(GL_TEXTURE0_ARB);
 
         /* Disable lighting, if requested. */
 

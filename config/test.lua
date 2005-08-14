@@ -9,7 +9,7 @@ h2 = h / 2
 
 host = E.add_host("default", 0, 0, w, h)
 
-E.set_host_flag(host, E.host_flag_framed, true)
+E.set_host_flags(host, E.host_flag_framed, true)
 
 tile[0] = E.add_tile(host,  0, 0,  k * w2, k * h2)
 tile[1] = E.add_tile(host, w2, 0,  k * w2, k * h2)

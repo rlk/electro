@@ -43,11 +43,15 @@
 #define BRUSH_AMBIENT     0x0004
 #define BRUSH_SHINY       0x0008
 #define BRUSH_TRANSPARENT 0x0010
-#define BRUSH_CUBE_MAP_0  0x0020
-#define BRUSH_CUBE_MAP_1  0x0040
-#define BRUSH_CUBE_MAP_2  0x0080
-#define BRUSH_CUBE_MAP_3  0x0100
-#define BRUSH_UNLIT       0x0200
+#define BRUSH_ENV_MAP_0   0x0020
+#define BRUSH_ENV_MAP_1   0x0040
+#define BRUSH_ENV_MAP_2   0x0080
+#define BRUSH_ENV_MAP_3   0x0100
+#define BRUSH_SKY_MAP_0   0x0200
+#define BRUSH_SKY_MAP_1   0x0400
+#define BRUSH_SKY_MAP_2   0x0800
+#define BRUSH_SKY_MAP_3   0x1000
+#define BRUSH_UNLIT       0x2000
 
 /*---------------------------------------------------------------------------*/
 
