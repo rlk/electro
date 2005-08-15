@@ -13,6 +13,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
+#include FT_IMAGE_H
 
 #include <stdlib.h>
 #include <string.h>
