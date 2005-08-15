@@ -159,8 +159,13 @@ static void free_light(int i)
 {
     struct light *l = get_light(i);
 
-    if (--l->count <= 0)
-        memset(l, 0, sizeof (struct light));
+    if (l->count > 0)
+    {
+        l->count--;
+    
+        if (l->count == 0)
+            memset(l, 0, sizeof (struct light));
+    }
 }
 
 /*===========================================================================*/

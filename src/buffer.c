@@ -130,7 +130,7 @@ void sync_buffer(void)
 
 static void send_data(const void *buf, size_t len)
 {
-    if (buf && len > 0)
+    if (get_rank() == 0 && buf && len > 0)
     {
         size_t fit = BUCKETSZ - curr->size;
 
@@ -169,7 +169,7 @@ static void send_data(const void *buf, size_t len)
 
 static void recv_data(void *buf, size_t len)
 {
-    if (buf && len > 0)
+    if (get_rank() != 0 && buf && len > 0)
     {
         size_t fit = curr->size - count;
 
@@ -199,6 +199,15 @@ static void recv_data(void *buf, size_t len)
     }
 }
 
+int get_rank(void)
+{
+    int rank;
+
+    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+
+    return rank;
+}
+
 /*---------------------------------------------------------------------------*/
 
 #else  /* non-MPI stub functions*/
@@ -214,6 +223,11 @@ static void send_data(const void *buf, size_t len)
 static void recv_data(void *buf, size_t len)
 {
     memset(buf, 0, len);
+}
+
+int get_rank(void)
+{
+    return 0;
 }
 
 #endif /* MPI */

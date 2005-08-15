@@ -206,7 +206,7 @@ void loop_sound(int i)
 
 /*---------------------------------------------------------------------------*/
 
-void free_sounds(void)
+void nuke_sounds(void)
 {
     int i, n = vecnum(sound);
 

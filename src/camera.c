@@ -358,8 +358,13 @@ static void free_camera(int i)
 {
     struct camera *c = get_camera(i);
 
-    if (--c->count <= 0)
-        memset(c, 0, sizeof (struct camera));
+    if (c->count > 0)
+    {
+        c->count--;
+        
+        if (c->count == 0)
+            memset(c, 0, sizeof (struct camera));
+    }
 }
 
 /*===========================================================================*/

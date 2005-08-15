@@ -169,7 +169,7 @@ int   get_entity_child(int, int);
 int  step_entities(float);
 void draw_entities(void);
 
-void free_entities(void);
+void nuke_entities(void);
 void init_entities(void);
 void fini_entities(void);
 

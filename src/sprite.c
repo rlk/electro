@@ -228,10 +228,15 @@ static void free_sprite(int i)
 {
     struct sprite *s = get_sprite(i);
 
-    if (--s->count <= 0)
+    if (s->count > 0)
     {
-        send_delete_brush(s->brush);
-        memset(s, 0, sizeof (struct sprite));
+        s->count--;
+
+        if (s->count == 0)
+        {
+            send_delete_brush(s->brush);
+            memset(s, 0, sizeof (struct sprite));
+        }
     }
 }
 

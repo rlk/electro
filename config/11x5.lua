@@ -86,7 +86,7 @@ host[26] = E.add_host("nico3-10",   0, 0, pw * 2, ph)
 host[27] = E.add_host("nico4-10",   0, 0, pw * 2, ph)
 host[28] = E.add_host("nico5-10",   0, 0, pw * 2, ph)
 
-E.set_host_flag(host[0], E.host_flag_framed, true)
+E.set_host_flags(host[0], E.host_flag_framed, true)
 
 tile[ 0] = E.add_tile(host[0],       0, 0, sw, sh)
 tile[ 1] = E.add_tile(host[1],       0, 0, pw - 1, ph)

@@ -440,6 +440,8 @@ void recv_create_image(void)
     struct image *p = get_image(new_image());
     int j;
 
+    p->count = 1;
+
     p->n = recv_index();
     p->w = recv_index();
     p->h = recv_index();
@@ -450,9 +452,6 @@ void recv_create_image(void)
         p->p[j] = (GLubyte *) malloc(p->w * p->h * p->b);
         recv_array(p->p[j], p->w * p->h, p->b);
     }
-
-    p->state = 0;
-    p->count = 1;
 }
 
 void recv_set_image_pixels(void)
@@ -469,35 +468,43 @@ static int free_image(int i)
     struct image *p = get_image(i);
     int j;
 
-    if (i > 0 && --p->count <= 0)
+    if (i > 0)
     {
-        fini_image(i);
+        if (p->count > 0)
+        {
+            p->count--;
+
+            if (p->count == 0)
+            {
+                fini_image(i);
 
 #ifdef EXPERIMENTAL
-        if (p->semid >= 0)
-        {
-            shmdt(p->p);
-            semctl(p->semid, 0, IPC_RMID, NULL);
-            shmctl(p->shmid,    IPC_RMID, NULL);
-        }
-        else
+                if (p->semid >= 0)
+                {
+                    shmdt(p->p);
+                    semctl(p->semid, 0, IPC_RMID, NULL);
+                    shmctl(p->shmid,    IPC_RMID, NULL);
+                }
+                else
 #endif
-            for (j = 0; j < MAX_FILE; ++j)
-            {
-                if (p->s[j]) free(p->s[j]);
-                if (p->p[j]) free(p->p[j]);
+                    for (j = 0; j < MAX_FILE; ++j)
+                    {
+                        if (p->s[j]) free(p->s[j]);
+                        if (p->p[j]) free(p->p[j]);
+                    }
+
+                memset(p, 0, sizeof (struct image));
+
+                return 1;
             }
-
-        memset(p, 0, sizeof (struct image));
-
-        return 1;
+        }
     }
     return 0;
 }
 
 void send_delete_image(int i)
 {
-    if (free_image(i))
+    if (get_rank() == 0 && free_image(i))
     {
         send_event(EVENT_DELETE_IMAGE);
         send_index(i);
@@ -612,13 +619,13 @@ void draw_image(int i)
 
 /*---------------------------------------------------------------------------*/
 
-void free_images(void)
+void nuke_images(void)
 {
     int i, n = vecnum(image);
 
     for (i = 1; i < n; ++i)
         while (get_image(i)->count)
-            free_image(i);
+            send_delete_image(i);
 }
 
 void init_images(void)

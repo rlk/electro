@@ -135,7 +135,7 @@ static int E_isentity(lua_State *L, int i)
 
 static void E_pushentity(lua_State *L, int id)
 {
-    if (id <= 0)
+    if (entity_type(id) == 0 || id <= 0)
         lua_pushnil(L);
     else
         E_pushuserdata(L, USERDATA_ENTITY, id);
@@ -1907,10 +1907,10 @@ static int E_nuke(lua_State *L)
 {
     enable_timer(0);
 
-    free_entities();
-    free_brushes();
-    free_images();
-    free_sounds();
+    nuke_entities();
+    nuke_brushes();
+    nuke_images();
+    nuke_sounds();
 
     return 0;
 }

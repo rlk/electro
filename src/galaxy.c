@@ -524,16 +524,21 @@ static void free_galaxy(int i)
 {
     struct galaxy *g = get_galaxy(i);
 
-    if (--g->count <= 0)
+    if (g->count > 0)
     {
-        fini_galaxy(i);
+        g->count--;
 
-        if (g->S) free(g->S);
-        if (g->N) free(g->N);
+        if (g->count == 0)
+        {
+            fini_galaxy(i);
 
-        send_delete_brush(g->brush);
+            if (g->S) free(g->S);
+            if (g->N) free(g->N);
 
-        memset(g, 0, sizeof (struct galaxy));
+            send_delete_brush(g->brush);
+
+            memset(g, 0, sizeof (struct galaxy));
+        }
     }
 }
 

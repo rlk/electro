@@ -44,7 +44,7 @@ void  init_image(int);
 void  fini_image(int);
 void  draw_image(int);
 
-void  free_images(void);
+void  nuke_images(void);
 void  init_images(void);
 void  fini_images(void);
 void  step_images(void);

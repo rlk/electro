@@ -1211,25 +1211,30 @@ static void free_object(int i)
 {
     struct object *o = get_object(i);
 
-    if (--o->count <= 0)
+    if (o->count > 0)
     {
-        int j;
+        o->count--;
 
-        fini_object(i);
-
-        for (j = 0; j < vecnum(o->mv); ++j)
+        if (--o->count == 0)
         {
-            struct object_mesh *m = vecget(o->mv, j);
+            int j;
+        
+            fini_object(i);
 
-            send_delete_brush(m->brush);
+            for (j = 0; j < vecnum(o->mv); ++j)
+            {
+                struct object_mesh *m = vecget(o->mv, j);
 
-            vecdel(m->fv);
-            vecdel(m->ev);
+                send_delete_brush(m->brush);
+
+                vecdel(m->fv);
+                vecdel(m->ev);
+            }
+
+            vecdel(o->vv);
+            vecdel(o->mv);
+            memset(o, 0, sizeof (struct object));
         }
-
-        vecdel(o->vv);
-        vecdel(o->mv);
-        memset(o, 0, sizeof (struct object));
     }
 }
 

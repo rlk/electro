@@ -1080,13 +1080,13 @@ int step_entities(float dt)
 
 /*---------------------------------------------------------------------------*/
 
-void free_entities(void)
+void nuke_entities(void)
 {
     int i, n = vecnum(entity);
 
     for (i = 1; i < n; ++i)
         while (get_entity(i)->type)
-            free_entity(i);
+            send_delete_entity(i);
 }
 
 void init_entities(void)

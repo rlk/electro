@@ -260,30 +260,38 @@ static int free_brush(int i)
 {
     struct brush *b = get_brush(i);
 
-    if (i > 0 && --b->count <= 0)
+    if (i > 0)
     {
-        fini_brush(i);
+        if (b->count > 0)
+        {
+            b->count--;
 
-        if (b->file) free(b->file);
-        if (b->name) free(b->name);
-        if (b->frag) free(b->frag);
-        if (b->vert) free(b->vert);
+            if (b->count == 0)
+            {
+                fini_brush(i);
 
-        if (b->image[0]) send_delete_image(b->image[0]);
-        if (b->image[1]) send_delete_image(b->image[1]);
-        if (b->image[2]) send_delete_image(b->image[2]);
-        if (b->image[3]) send_delete_image(b->image[3]);
+                if (b->file) free(b->file);
+                if (b->name) free(b->name);
+                if (b->frag) free(b->frag);
+                if (b->vert) free(b->vert);
 
-        memset(b, 0, sizeof (struct brush));
+                if (b->image[0]) send_delete_image(b->image[0]);
+                if (b->image[1]) send_delete_image(b->image[1]);
+                if (b->image[2]) send_delete_image(b->image[2]);
+                if (b->image[3]) send_delete_image(b->image[3]);
 
-        return 1;
+                memset(b, 0, sizeof (struct brush));
+
+                return 1;
+            }
+        }
     }
     return 0;
 }
 
 void send_delete_brush(int i)
 {
-    if (free_brush(i))
+    if (get_rank() == 0 && free_brush(i))
     {
         send_event(EVENT_DELETE_BRUSH);
         send_index(i);
@@ -844,13 +852,13 @@ int get_brush_t(int i)
 
 /*---------------------------------------------------------------------------*/
 
-void free_brushes(void)
+void nuke_brushes(void)
 {
     int i, n = vecnum(brush);
 
     for (i = 1; i < n; ++i)
         while (get_brush(i)->count)
-            free_brush(i);
+            send_delete_brush(i);
 }
 
 void init_brushes(void)

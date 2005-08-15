@@ -23,6 +23,8 @@ int startup_buffer(void);
 
 void sync_buffer(void);
 
+int get_rank(void);
+
 /*---------------------------------------------------------------------------*/
 
 void  send_array(const void *, size_t, size_t);
