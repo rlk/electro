@@ -1,3 +1,5 @@
+joy_dev = 0
+
 tumble  = false
 scale   = false
 objects = { }
@@ -338,16 +340,13 @@ function do_start()
 end
 
 function do_joystick(d, b, s)
-    if d == 0 then
+    if d == joy_dev then
         if s then
-            if b == 0 then
+            if b == 1 then
                 add_box()
             end
-            if b == 1 then
-                add_ball()
-            end
             if b == 2 then
-                add_thing()
+                add_ball()
             end
             if b == 3 then
                 add_car()
@@ -382,10 +381,10 @@ function do_keyboard(k, s)
             add_ball()
         end
         if k == string.byte("3") then
-            add_thing()
+            add_car()
         end
         if k == string.byte("4") then
-            add_car()
+            right = true
         end
 
         if k == 287 then
@@ -406,6 +405,10 @@ function do_keyboard(k, s)
         if k == 275 then key_x = key_x + 1 end
         if k == 276 then key_x = key_x - 1 end
     else
+        if k == string.byte("4") then
+            right = false
+        end
+
         if k == 273 then key_y = key_y + 1 end
         if k == 274 then key_y = key_y - 1 end
         if k == 275 then key_x = key_x - 1 end
@@ -418,7 +421,7 @@ total_dt = 0
 
 function do_timer(dt)
     if base then
-        local jx, jy = E.get_joystick(0)
+        local jx, jy = E.get_joystick(joy_dev)
 
         local px, py, pz = E.get_entity_position(base)
         local xx, xy, xz = E.get_entity_x_vector(base)

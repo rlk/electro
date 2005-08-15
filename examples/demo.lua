@@ -1,3 +1,4 @@
+joy_dev = 0
 
 -------------------------------------------------------------------------------
 
@@ -44,9 +45,12 @@ end
 
 -------------------------------------------------------------------------------
 
-time = 0
+time     = 0
+centered = true
 
 function do_timer(dt)
+    local jx, jy = E.get_joystick(joy_dev)
+
     time = time + dt
 
     local r = math.min(dsp_w * 0.25, dsp_h * 0.25)
@@ -57,6 +61,18 @@ function do_timer(dt)
     E.set_entity_position(light,   x,  y,  dsp_h / 5)
     E.set_entity_position(center, -x, -y, -dsp_h / 5)
     E.set_entity_scale(logo, k, k, k)
+
+    if centered and jy < -0.5 then
+        set_selected(-1)
+        centered = false
+    end
+    if centered and jy >  0.5 then
+        set_selected( 1)
+        centered = false
+    end
+    if -0.5 < jy and jy < 0.5 then
+        centered = true
+    end
 
     return true
 end
@@ -69,6 +85,14 @@ function do_keyboard(k, s)
         E.exec(demo[selected][2])
     end
     return true
+end
+
+function do_joystick(d, b, s)
+    if s then
+        E.nuke()
+        E.exec(demo[selected][2])
+    end
+    return true        
 end
 
 function do_start()

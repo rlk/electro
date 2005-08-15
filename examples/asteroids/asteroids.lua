@@ -10,6 +10,8 @@
 --    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
 --    General Public License for more details.
 
+joy_dev = 0
+
 sound_on = true
 music_on = false
 stars_on = true
@@ -918,7 +920,7 @@ end
 
 function step_player(dt)
     local pos_x, pos_y, pos_z = E.get_entity_position(player.entity)
-    local joy_x, joy_y        = E.get_joystick(0)
+    local joy_x, joy_y        = E.get_joystick(joy_dev)
 
     -- Handle thrust.
 
@@ -1202,7 +1204,7 @@ end
 
 function state.high.timer(dt)
     local k    = 0.15625 + 0.03125 * math.sin(time_state * 10)
-    local x, y = E.get_joystick(0)
+    local x, y = E.get_joystick(joy_dev)
 
     E.set_entity_scale(overlay.high_inits[init_index], k / 2, k, k)
 
@@ -1342,7 +1344,7 @@ function do_timer(time)
 end
 
 function do_joystick(device, button, down)
-    if device == 0 then
+    if device == joy_dev then
         if button == 0 and curr_state and curr_state.button_A then
             do_state(curr_state.button_A(down))
             return true
