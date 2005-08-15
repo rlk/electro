@@ -21,6 +21,7 @@
 #include "opengl.h"
 #include "vector.h"
 #include "buffer.h"
+#include "matrix.h"
 #include "utility.h"
 #include "event.h"
 #include "font.h"
@@ -45,16 +46,16 @@ struct point
 struct glyph
 {
     vector_t points;
-    GLdouble space;
+    float    space;
     GLuint   fill;
     GLuint   line;
 };
 
 struct font
 {
-    char    *filename;
-    GLdouble epsilon;
-    GLdouble outline;
+    char *filename;
+    float epsilon;
+    float outline;
 
     GLdouble     kerns[NUMGLYPH][NUMGLYPH]; 
     struct glyph glyph[NUMGLYPH];
@@ -152,7 +153,7 @@ void cubic(GLdouble p[3], const GLdouble a[3],
 
 /*---------------------------------------------------------------------------*/
 
-static GLdouble epsilon = 0.001;
+static float epsilon = 0.001f;
 
 static void add_conic(vector_t points,
                       const GLdouble la[3],
@@ -238,7 +239,7 @@ static void read_glyph(struct glyph *glyph, FT_GlyphSlot slot)
     funcs.delta    = 0;
 
     glyph->points = vecnew(16, sizeof (struct point));
-    glyph->space  = TO_DBL(slot->advance.x);
+    glyph->space  = (float) TO_DBL(slot->advance.x);
 
     FT_Outline_Decompose(&slot->outline, &funcs, glyph->points);
 }
@@ -249,7 +250,7 @@ void send_set_font(const char *filename, float e, float o)
 {
     int r, c, i, n = vecnum(font);
 
-    epsilon = (GLdouble) e;
+    epsilon = e;
 
     /* If the requested font is already loaded, select it and return. */
 
@@ -361,7 +362,7 @@ struct combo
 
 static struct combo *combo = NULL;
 
-static void combine(GLdouble coords[3], void  *vertex_data[3],
+static void combine(GLdouble coords[3], void  *vertex_data[4],
                     GLfloat  weight[4], void **output_data)
 {
     struct combo *c;
@@ -389,8 +390,10 @@ static void tess_stroke(vector_t points, int first, int last, GLUtesselator *T)
     gluTessBeginContour(T);
     {
         for (i = first; i <= last; ++i)
+		{
             gluTessVertex(T, vecget(points, i),
                              vecget(points, i));
+		}
     }
     gluTessEndContour(T);
 }
@@ -401,7 +404,7 @@ static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
 
     /* Tesselate the glyph point list. */
 
-    gluTessBeginPolygon(T, glyph->points);
+	gluTessBeginPolygon(T, NULL);
     {
         for (b = 0, i = 1; i < n; ++i)
             if (veccmp(glyph->points, b, i) == 0)
@@ -449,21 +452,18 @@ static void line_stroke(vector_t points, int first, int last, GLdouble k)
 
                 pn[0] = -(q[1] - p[1]);
                 pn[1] =  (q[0] - p[0]);
-                l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
-                pn[0] /= l;
-                pn[1] /= l;
+				l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
+				pn[0] /= l;
+				pn[1] /= l;
 
                 rn[0] = -(r[1] - q[1]);
                 rn[1] =  (r[0] - q[0]);
-                l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
-                rn[0] /= l;
-                rn[1] /= l;
+				l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
+				rn[0] /= l;
+				rn[1] /= l;
 
                 qn[0] = pn[0] + rn[0];
                 qn[1] = pn[1] + rn[1];
-                l = sqrt(qn[0] * qn[0] + qn[1] * qn[1]);
-                qn[0] /= l;
-                qn[1] /= l;
 
                 m = k / (qn[0] * pn[0] + qn[1] * pn[1]);
 
@@ -505,7 +505,7 @@ void init_font(int i, GLdouble O)
             int j;
 
             gluTessCallback(T, GLU_TESS_BEGIN,   (_GLUfuncptr) glBegin);
-            gluTessCallback(T, GLU_TESS_COMBINE, (_GLUfuncptr) combine);
+/*          gluTessCallback(T, GLU_TESS_COMBINE, (_GLUfuncptr) combine); */
             gluTessCallback(T, GLU_TESS_VERTEX,  (_GLUfuncptr) glVertex3dv);
             gluTessCallback(T, GLU_TESS_END,     (_GLUfuncptr) glEnd);
 
@@ -545,13 +545,21 @@ void fini_font(int i)
 {
     if (F(i)->state == 1)
     {
-        struct glyph *glyph = F(i)->glyph + MINGLYPH;
+        struct glyph *glyph = F(i)->glyph;
 
         glDeleteLists(glyph->fill, NUMGLYPH);
         glDeleteLists(glyph->line, NUMGLYPH);
 
         F(i)->state = 0;
     }
+}
+
+void fini_fonts(void)
+{
+	int i;
+
+	for (i = 0; i < vecnum(font); ++i)
+		fini_font(i);
 }
 
 /*---------------------------------------------------------------------------*/

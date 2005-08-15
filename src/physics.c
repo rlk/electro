@@ -93,10 +93,10 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
 
             /* Compute collision parameters from geom parameters. */
 
-            float bounce    = MAX(d1->bounce,   d2->bounce);
-            float friction  = MIN(d1->friction, d2->friction);
-            float soft_erp  = MIN(d1->soft_erp, d2->soft_erp);
-            float soft_cfm  = MAX(d1->soft_cfm, d2->soft_cfm);
+            dReal bounce    = MAX(d1->bounce,   d2->bounce);
+            dReal friction  = MIN(d1->friction, d2->friction);
+            dReal soft_erp  = MIN(d1->soft_erp, d2->soft_erp);
+            dReal soft_cfm  = MAX(d1->soft_cfm, d2->soft_cfm);
 
             unsigned long category1 = dGeomGetCategoryBits(o1);
             unsigned long category2 = dGeomGetCategoryBits(o2);
@@ -141,7 +141,7 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
                     n[2] = (float) contact[i].geom.normal[2];
 
                     do_contact_script(d1->entity, d2->entity,
-                                      p, n, contact[i].geom.depth);
+                                      p, n, (float) contact[i].geom.depth);
                 }
         }
     }
@@ -168,10 +168,22 @@ static void set_rotation(dMatrix3 D, const float S[16])
 
 static void get_rotation(float D[16], const dMatrix3 S)
 {
-    D[0] = S[0]; D[4] = S[1]; D[8]  = S[2];  D[12] = 0;
-    D[1] = S[4]; D[5] = S[5]; D[9]  = S[6];  D[13] = 0;
-    D[2] = S[8]; D[6] = S[9]; D[10] = S[10]; D[14] = 0;
-    D[3] =    0; D[7] =    0; D[11] =     0; D[15] = 1;   
+    D[0]  = (float) S[0]; 
+    D[1]  = (float) S[4]; 
+    D[2]  = (float) S[8];
+    D[3]  = (float)    0; 
+	D[4]  = (float) S[1]; 
+	D[5]  = (float) S[5]; 
+	D[6]  = (float) S[9]; 
+	D[7]  = (float)    0; 
+	D[8]  = (float) S[2];  
+	D[9]  = (float) S[6];  
+	D[10] = (float) S[10]; 
+	D[11] = (float)    0; 
+	D[12] = (float)    0;
+	D[13] = (float)    0;
+	D[14] = (float)    0;
+	D[15] = (float)    1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -284,9 +296,9 @@ void end_phys_mass(dBodyID body, float v[3])
 
     dBodyGetMass(body, &mass);
 
-    v[0] = mass.c[0];
-    v[1] = mass.c[1];
-    v[2] = mass.c[2];
+    v[0] = (float) mass.c[0];
+    v[1] = (float) mass.c[1];
+    v[2] = (float) mass.c[2];
 
     dMassTranslate(&mass, -mass.c[0], -mass.c[1], -mass.c[2]);
     dBodySetMass(body, &mass);
@@ -364,10 +376,10 @@ static float get_phys_joint_attr(dJointID joint, int p)
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge:     return dJointGetHingeParam    (joint, p);
-    case dJointTypeSlider:    return dJointGetSliderParam   (joint, p);
-    case dJointTypeHinge2:    return dJointGetHinge2Param   (joint, p);
-    case dJointTypeUniversal: return dJointGetUniversalParam(joint, p);
+    case dJointTypeHinge:     return (float) dJointGetHingeParam    (joint, p);
+    case dJointTypeSlider:    return (float) dJointGetSliderParam   (joint, p);
+    case dJointTypeHinge2:    return (float) dJointGetHinge2Param   (joint, p);
+    case dJointTypeUniversal: return (float) dJointGetUniversalParam(joint, p);
     }
     return 0;
 }
@@ -376,9 +388,9 @@ static float get_phys_joint_value(dJointID joint)
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge:  return TO_DEG(dJointGetHingeAngle    (joint));
-    case dJointTypeSlider: return        dJointGetSliderPosition(joint);
-    case dJointTypeHinge2: return TO_DEG(dJointGetHinge2Angle1  (joint));
+    case dJointTypeHinge:  return (float) TO_DEG(dJointGetHingeAngle    (joint));
+    case dJointTypeSlider: return (float)        dJointGetSliderPosition(joint);
+    case dJointTypeHinge2: return (float) TO_DEG(dJointGetHinge2Angle1  (joint));
     }
     return 0;
 }
@@ -387,13 +399,13 @@ static float get_phys_joint_rate(dJointID joint, int n)
 {
     switch (dJointGetType(joint))
     {
-    case dJointTypeHinge:  return TO_DEG(dJointGetHingeAngleRate    (joint));
-    case dJointTypeSlider: return        dJointGetSliderPositionRate(joint);
+    case dJointTypeHinge:  return (float) TO_DEG(dJointGetHingeAngleRate    (joint));
+    case dJointTypeSlider: return (float)        dJointGetSliderPositionRate(joint);
     case dJointTypeHinge2:
         if (n == 1)
-            return TO_DEG(dJointGetHinge2Angle1Rate(joint));
+            return (float) TO_DEG(dJointGetHinge2Angle1Rate(joint));
         else
-            return TO_DEG(dJointGetHinge2Angle2Rate(joint));
+            return (float) TO_DEG(dJointGetHinge2Angle2Rate(joint));
     }
     return 0;
 }
@@ -587,11 +599,11 @@ float get_phys_geom_attr_f(dGeomID geom, int p)
 
     switch (p)
     {
-    case GEOM_ATTR_MASS:     return get_data(object)->mass;
-    case GEOM_ATTR_BOUNCE:   return get_data(object)->bounce;
-    case GEOM_ATTR_FRICTION: return get_data(object)->friction;
-    case GEOM_ATTR_SOFT_ERP: return get_data(object)->soft_erp;
-    case GEOM_ATTR_SOFT_CFM: return get_data(object)->soft_cfm;
+    case GEOM_ATTR_MASS:     return (float) get_data(object)->mass;
+    case GEOM_ATTR_BOUNCE:   return (float) get_data(object)->bounce;
+    case GEOM_ATTR_FRICTION: return (float) get_data(object)->friction;
+    case GEOM_ATTR_SOFT_ERP: return (float) get_data(object)->soft_erp;
+    case GEOM_ATTR_SOFT_CFM: return (float) get_data(object)->soft_cfm;
     }
     return 0;
 }
@@ -721,9 +733,9 @@ void set_phys_position(dBodyID body, const float p[3])
 
 void get_phys_position(dBodyID body, float p[3])
 {
-    p[0] = dBodyGetPosition(body)[0];
-    p[1] = dBodyGetPosition(body)[1];
-    p[2] = dBodyGetPosition(body)[2];
+    p[0] = (float) dBodyGetPosition(body)[0];
+    p[1] = (float) dBodyGetPosition(body)[1];
+    p[2] = (float) dBodyGetPosition(body)[2];
 }
 
 void set_phys_rotation(dBodyID body, const float r[16])

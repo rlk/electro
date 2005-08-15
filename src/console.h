@@ -23,6 +23,7 @@
 int startup_console(int, int);
 
 void draw_console(void);
+void fini_console(void);
 
 int  set_console_enable(int);
 int  console_is_enabled(void);

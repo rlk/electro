@@ -945,10 +945,10 @@ void draw_tile_background(int i, int flags)
 
         glPushAttrib(GL_ENABLE_BIT);
         {
-            float l = (T->flags & TILE_FLIP_X) ? 1 : 0;
-            float r = (T->flags & TILE_FLIP_X) ? 0 : 1;
-            float b = (T->flags & TILE_FLIP_Y) ? 1 : 0;
-            float t = (T->flags & TILE_FLIP_Y) ? 0 : 1;
+            float l = (T->flags & TILE_FLIP_X) ? 1.0f : 0.0f;
+            float r = (T->flags & TILE_FLIP_X) ? 0.0f : 1.0f;
+            float b = (T->flags & TILE_FLIP_Y) ? 1.0f : 0.0f;
+            float t = (T->flags & TILE_FLIP_Y) ? 0.0f : 1.0f;
 
             glDisable(GL_TEXTURE_2D);
             glDisable(GL_CULL_FACE);

@@ -92,6 +92,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\src\brush.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\buffer.c
 # End Source File
 # Begin Source File
@@ -113,6 +117,10 @@ SOURCE=..\src\display.c
 # Begin Source File
 
 SOURCE=..\src\entity.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\font.c
 # End Source File
 # Begin Source File
 
@@ -157,6 +165,10 @@ SOURCE=..\src\object.c
 # Begin Source File
 
 SOURCE=..\src\opengl.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\physics.c
 # End Source File
 # Begin Source File
 
@@ -212,6 +224,10 @@ SOURCE=..\src\video.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\src\brush.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\buffer.h
 # End Source File
 # Begin Source File
@@ -237,6 +253,10 @@ SOURCE=..\src\entity.h
 # Begin Source File
 
 SOURCE=..\src\event.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\font.h
 # End Source File
 # Begin Source File
 
@@ -277,6 +297,10 @@ SOURCE=..\src\object.h
 # Begin Source File
 
 SOURCE=..\src\opengl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\physics.h
 # End Source File
 # Begin Source File
 

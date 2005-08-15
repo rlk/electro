@@ -387,6 +387,17 @@ void draw_console(void)
     }
 }
 
+void fini_console(void)
+{
+    if (glIsTexture(fore_texture))
+		glDeleteTextures(1, &fore_texture);
+    if (glIsTexture(back_texture))
+		glDeleteTextures(1, &back_texture);
+
+	fore_texture = 0;
+	back_texture = 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static void refresh_command(void)

@@ -14,8 +14,10 @@
 
 #include "opengl.h"
 #include "video.h"
+#include "font.h"
 #include "image.h"
 #include "entity.h"
+#include "console.h"
 #include "display.h"
 #include "utility.h"
 
@@ -60,7 +62,9 @@ int init_video(int width, int height, int full, int framed, int stereo)
 
     /* Release all OpenGL resources in preparation for losing the context. */
 
+	fini_fonts();
     fini_images();
+	fini_console();
     fini_entities();
 
     /* Configure the new visual. */

@@ -25,7 +25,8 @@ void recv_set_font(void);
 /*---------------------------------------------------------------------------*/
 
 int  get_font(void);
-void fini_font(int);
+
+void fini_fonts(void);
 
 void draw_font(int, const char *, int);
 void aabb_font(int, const char *, float[6]);

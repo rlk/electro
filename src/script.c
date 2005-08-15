@@ -358,7 +358,7 @@ static int L_getinteger(lua_State *L, int i)
     }
     else E_arity_error(L, i);
 
-    return 0.0;
+    return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -764,7 +764,7 @@ static int E_set_entity_body_attr(lua_State *L)
 {
     set_entity_body_attr_i(E_getentity (L, -3),
                            L_getinteger(L, -2),
-                           L_getnumber (L, -1));
+                           L_getinteger(L, -1));
     return 0;
 }
 

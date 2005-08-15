@@ -49,7 +49,7 @@
 /* example, on a 72Hz display, 1 out of 5 updates will include 2 time        */
 /* steps.  This is unfortunate, but difficult to work around.                */
 
-#define TIME_STEP (1.0 / 60.0)
+#define TIME_STEP (1.0f / 60.0f)
 
 /*---------------------------------------------------------------------------*/
 
@@ -98,7 +98,7 @@ static int server_tick(void)
 
     if (timer_on)
     {
-        double now = (double) SDL_GetTicks() / 1000.0;
+        float now = (float) SDL_GetTicks() / 1000.0f;
 
         if (now - timer_last > TIME_STEP)
         {
@@ -283,7 +283,9 @@ static int server_loop(void)
 
     if (dirty)
     {
+#ifdef EXPERIMENTAL
         step_images();
+#endif
         do_frame_script();
 
         send_event(EVENT_DRAW);

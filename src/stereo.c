@@ -67,10 +67,10 @@ static void lines(float k)
     {
         for (i = -EXTENT; i < EXTENT; ++i)
         {
-            glVertex2f(i,     -EXTENT);
-            glVertex2f(i + k, -EXTENT);
-            glVertex2f(i + k,  EXTENT);
-            glVertex2f(i,      EXTENT);
+            glVertex2f((float) i,     (float) -EXTENT);
+            glVertex2f((float) i + k, (float) -EXTENT);
+            glVertex2f((float) i + k, (float)  EXTENT);
+            glVertex2f((float) i,     (float)  EXTENT);
         }
     }
     glEnd();
@@ -291,12 +291,12 @@ static void move_line_texture(int tile, const float v[3], float px)
         glLoadIdentity();
 
         glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0,
-                                   1.0 / 800.0, 1.0 / 600.0, 0.0, 0.0);
+                                   1.0f / 800.0f, 1.0f / 600.0f, 0.0f, 0.0f);
 
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
         glTranslatef(-ss + dx + px, dy, 0);  /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */
-        glScalef(0.5 * w, 0.5 * h, 1.0);     /* Scale to feet.    */
+        glScalef(0.5f * w, 0.5f * h, 1.0f);  /* Scale to feet.    */
     }
     glMatrixMode(GL_MODELVIEW);
 }

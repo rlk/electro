@@ -209,12 +209,12 @@ static void aabb_sprite(int i, float aabb[6])
     int dx = get_brush_w(s->brush) / 2;
     int dy = get_brush_h(s->brush) / 2;
 
-    aabb[0] = -dx;
-    aabb[1] = -dy;
-    aabb[2] =   0;
-    aabb[3] = +dx;
-    aabb[4] = +dy;
-    aabb[5] =   0;
+    aabb[0] = (float) -dx;
+    aabb[1] = (float) -dy;
+    aabb[2] =           0;
+    aabb[3] = (float)  dx;
+    aabb[4] = (float)  dy;
+    aabb[5] =           0;
 }
 
 /*---------------------------------------------------------------------------*/

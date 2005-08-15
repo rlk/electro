@@ -15,8 +15,10 @@
 #include <jpeglib.h>
 #include <png.h>
 
+#ifdef EXPERIMENTAL
 #include <sys/sem.h>
 #include <sys/shm.h>
+#endif
 
 #include "opengl.h"
 #include "vector.h"
@@ -471,6 +473,7 @@ static int free_image(int i)
     {
         fini_image(i);
 
+#ifdef EXPERIMENTAL
         if (p->semid >= 0)
         {
             shmdt(p->p);
@@ -478,6 +481,7 @@ static int free_image(int i)
             shmctl(p->shmid,    IPC_RMID, NULL);
         }
         else
+#endif
             for (j = 0; j < MAX_FILE; ++j)
             {
                 if (p->s[j]) free(p->s[j]);
@@ -635,6 +639,7 @@ void fini_images(void)
             fini_image(i);
 }
 
+#ifdef EXPERIMENTAL
 void step_images(void)
 {
     int i, n = vecnum(image);
@@ -682,6 +687,7 @@ void step_images(void)
         }
     }
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 

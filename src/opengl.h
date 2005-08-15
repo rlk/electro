@@ -40,9 +40,7 @@ extern GLboolean GL_has_point_sprite;
 extern GLboolean GL_has_multitexture;
 extern GLboolean GL_has_texture_compression;
 
-#ifdef __APPLE__
-typedef GLvoid (*_GLUfuncptr)(void);
-#else
+#ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 extern PFNGLPROGRAMLOCALPARAMETER4FVARBPROC glProgramLocalParameter4fvARB;
@@ -67,6 +65,14 @@ extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
 
 #ifndef GL_COORD_REPLACE_ARB
 #define GL_COORD_REPLACE_ARB GL_COORD_REPLACE_NV
+#endif
+
+#ifdef __APPLE__
+typedef GLvoid (*_GLUfuncptr)(void);
+#endif
+
+#ifdef _WIN32
+typedef GLvoid *_GLUfuncptr;
 #endif
 
 /*---------------------------------------------------------------------------*/
