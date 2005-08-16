@@ -127,7 +127,11 @@ $(TARG) : $(OBJS) $(VERS)
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(VERS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS) $(DEPS)
+	rm -f $(TARG) $(OBJS)
+
+distclean:
+	find . -name .svn | xargs rm -rf
+	rm -f $(DEPS)
 
 install : $(TARG)
 	cp $(TARG) $(PREFIX)/bin
