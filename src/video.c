@@ -62,9 +62,9 @@ int init_video(int width, int height, int full, int framed, int stereo)
 
     /* Release all OpenGL resources in preparation for losing the context. */
 
-	fini_fonts();
+    fini_fonts();
     fini_images();
-	fini_console();
+    fini_console();
     fini_entities();
 
     /* Configure the new visual. */

@@ -515,17 +515,17 @@ int get_window_h(void)   { return local ? local->win_h : DEFAULT_H; }
 
 int get_window_full(void)
 {
-	return local ? (local->flags & HOST_FULL) : 0;
+    return local ? (local->flags & HOST_FULL) : 0;
 }
 
 int get_window_stereo(void)
 {
-	return local ? (local->flags & HOST_STEREO) : 0;
+    return local ? (local->flags & HOST_STEREO) : 0;
 }
 
 int get_window_framed(void)
 {
-	return local ? (local->flags & HOST_FRAMED) : 1;
+    return local ? (local->flags & HOST_FRAMED) : 1;
 }
 
 /*---------------------------------------------------------------------------*/

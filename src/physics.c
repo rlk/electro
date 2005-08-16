@@ -172,18 +172,18 @@ static void get_rotation(float D[16], const dMatrix3 S)
     D[1]  = (float) S[4]; 
     D[2]  = (float) S[8];
     D[3]  = (float)    0; 
-	D[4]  = (float) S[1]; 
-	D[5]  = (float) S[5]; 
-	D[6]  = (float) S[9]; 
-	D[7]  = (float)    0; 
-	D[8]  = (float) S[2];  
-	D[9]  = (float) S[6];  
-	D[10] = (float) S[10]; 
-	D[11] = (float)    0; 
-	D[12] = (float)    0;
-	D[13] = (float)    0;
-	D[14] = (float)    0;
-	D[15] = (float)    1;
+    D[4]  = (float) S[1]; 
+    D[5]  = (float) S[5]; 
+    D[6]  = (float) S[9]; 
+    D[7]  = (float)    0; 
+    D[8]  = (float) S[2];  
+    D[9]  = (float) S[6];  
+    D[10] = (float) S[10]; 
+    D[11] = (float)    0; 
+    D[12] = (float)    0;
+    D[13] = (float)    0;
+    D[14] = (float)    0;
+    D[15] = (float)    1;
 }
 
 /*---------------------------------------------------------------------------*/

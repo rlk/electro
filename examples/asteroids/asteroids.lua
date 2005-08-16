@@ -20,7 +20,6 @@ stars_on = true
 -- Global variables, game state, and scene graph entities:
 
 high_score_file = "asteroids.dat"
-typeface        = "../data/VeraBd.ttf"
 
 state      = { }
 sound      = { }
@@ -200,40 +199,12 @@ function create_overlay(filename, scale, hidden)
     return sprite
 end
 
-function create_title(text, width, hidden)
-    E.set_typeface(typeface, 0.0001, 0.06250)
-    local string1 = E.create_string(text)
-
-    E.set_typeface(typeface, 0.0001, 0.03125)
-    local string2 = E.create_string(text)
-
-    x0, y0, z0, x1, y1, z1 = E.get_entity_bound(string1)
-
-    local scale = width / (x1 - x0)
-    local brush = E.create_brush()
-
-    E.set_brush_color(brush, 1.0, 1.0, 1.0, 0.25)
-    E.set_brush_flags(brush, E.brush_flag_unlit, true)
-
-    E.parent_entity      (string1, scene_2d)
-    E.parent_entity      (string2, string1)
-    E.set_string_fill    (string1, brush)
-    E.set_string_line    (string1, brush)
-    E.set_string_fill    (string2, brush)
-    E.set_string_line    (string2, brush)
-    E.set_entity_scale   (string1, scale, scale, scale)
-    E.set_entity_flags   (string1, E.entity_flag_hidden, hidden)
-    E.set_entity_position(string2, 0, 0, 0.001)
-    E.set_entity_position(string1, -scale * (x1 - x0) / 2,
-                                   -scale * (y1 - y0) / 2, 0.0)
-    return string1
-end
-
 function init_overlay()
+    local w = viewport.w
 
     -- Create all game state text overlays.
 
-    overlay.title = create_title("ASTEROIDS", 0.8 * viewport.w, true)
+    overlay.title = create_overlay("title.png", 1.00, true)
     overlay.ready = create_overlay("ready.png", 1.00, true)
     overlay.level = create_overlay("digit.png", 0.25, true)
     overlay.clear = create_overlay("clear.png", 1.00, true)

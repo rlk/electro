@@ -73,8 +73,8 @@ static GLubyte back_image[16] = {
     0x00, 0x10, 0x00, 0xB0, 0x00, 0x10, 0x00, 0xB0, 
 };
 
-static GLuint  fore_texture;
-static GLuint  back_texture;
+static GLuint fore_texture = 0;
+static GLuint back_texture = 0;
 
 /*---------------------------------------------------------------------------*/
 

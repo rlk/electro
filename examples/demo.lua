@@ -109,13 +109,12 @@ function do_start()
     item_brush = E.create_brush()
 
     E.set_brush_color(logo_brush, 0.0, 0.0, 0.0, 1.0, 1, 1, 1, 1, 0, 0, 0, 0, 100)
-    E.set_brush_color(line_brush, 1.0, 1.0, 1.0, 0.4, 1, 1, 1, 1, 0, 0, 0, 0, 100)
-    E.set_brush_color(name_brush, 1.0, 1.0, 0.0, 0.8, 1, 1, 1, 1, 0, 0, 0, 0, 10)
-    E.set_brush_color(menu_brush, 0.6, 0.6, 0.6, 0.6, 1, 1, 1, 1, 0, 0, 0, 0, 100)
-    E.set_brush_color(item_brush, 1.0, 0.6, 0.0, 0.8, 1, 1, 1, 1, 0, 0, 0, 0, 10)
+    E.set_brush_color(line_brush, 1.0, 1.0, 1.0, 0.3, 1, 1, 1, 1, 0, 0, 0, 0, 100)
+    E.set_brush_color(name_brush, 1.0, 1.0, 0.0, 0.7, 1, 1, 1, 1, 0, 0, 0, 0, 10)
+    E.set_brush_color(menu_brush, 0.6, 0.6, 0.6, 0.5, 1, 1, 1, 1, 0, 0, 0, 0, 100)
+    E.set_brush_color(item_brush, 1.0, 0.6, 0.0, 0.7, 1, 1, 1, 1, 0, 0, 0, 0, 10)
 
     E.set_background(0, 0, 0, 0, 0.5, 0)
-    E.set_typeface("data/VeraBd.ttf", 0.0001, 0.03125)
 
     camera = E.create_camera(E.camera_type_orthogonal)
     light  = E.create_light(E.light_type_positional)
@@ -128,6 +127,7 @@ function do_start()
 
     -- Find the maximum width and height of all menu items.
 
+    E.set_typeface("data/VeraBd.ttf", 0.0001, 0.03125)
     table.foreachi(demo,
                    function (i, line)
                        local O, w, h = centered_string(line[1], line_brush,
@@ -172,11 +172,11 @@ function do_start()
 
     E.set_typeface("data/Electro.ttf", 0.0001, 1 / 256)
     logo, w, h = centered_string("E", line_brush, logo_brush)
+    E.parent_entity(logo, menu)
 
-    E.set_entity_position(logo, 0, -N * H / 2, 0)
+    E.set_entity_position(logo, 0, -N * H / 2, -1)
     E.set_entity_scale(logo, 2 * N, 2 * N, 2 * N)
     E.set_entity_alpha(logo, 0.1)
-    E.parent_entity(logo, menu)
 
     set_selected(0)
     E.enable_timer(true)

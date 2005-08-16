@@ -135,7 +135,7 @@ static int E_isentity(lua_State *L, int i)
 
 static void E_pushentity(lua_State *L, int id)
 {
-    if (entity_type(id) == 0 || id <= 0)
+    if (id <= 0 || entity_type(id) == 0)
         lua_pushnil(L);
     else
         E_pushuserdata(L, USERDATA_ENTITY, id);

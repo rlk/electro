@@ -207,9 +207,12 @@ static void draw_string(int j, int i, int f, float a)
     {
         transform_entity(j);
 
+        /* Text occludes even when transparent.  This is necessary to ensure */
+        /* that text outlines occlude themselves and are blended correctly.  */
+
         glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
         {
-            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LESS);
 
             glEnable(GL_TEXTURE_GEN_S);
             glEnable(GL_TEXTURE_GEN_T);

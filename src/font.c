@@ -354,7 +354,7 @@ int get_font(void)
 
 /*---------------------------------------------------------------------------*/
 /* Vertex list for points generated during tesselator combination            */
-
+/*
 struct combo
 {
     GLdouble      p[3];
@@ -368,8 +368,6 @@ static void combine(GLdouble coords[3], void  *vertex_data[4],
 {
     struct combo *c;
 
-    /* Include the suggested combined vertex as a new vertex. */
-
     if ((c = (struct combo *) calloc(1, sizeof (struct combo))))
     {
         c->p[0] = coords[0];
@@ -381,7 +379,7 @@ static void combine(GLdouble coords[3], void  *vertex_data[4],
         *output_data = c->p;
     }
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 static void tess_stroke(vector_t points, int first, int last, GLUtesselator *T)
@@ -391,10 +389,8 @@ static void tess_stroke(vector_t points, int first, int last, GLUtesselator *T)
     gluTessBeginContour(T);
     {
         for (i = first; i <= last; ++i)
-		{
             gluTessVertex(T, vecget(points, i),
                              vecget(points, i));
-		}
     }
     gluTessEndContour(T);
 }
@@ -405,7 +401,7 @@ static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
 
     /* Tesselate the glyph point list. */
 
-	gluTessBeginPolygon(T, NULL);
+    gluTessBeginPolygon(T, NULL);
     {
         for (b = 0, i = 1; i < n; ++i)
             if (veccmp(glyph->points, b, i) == 0)
@@ -417,13 +413,14 @@ static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
     gluTessEndPolygon(T);
 
     /* Release all combined vertices generated during tesselation. */
-
+    /*
     while (combo)
     {
         struct combo *temp = combo;
         combo = combo->next;
         free(temp);
     }
+    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -453,15 +450,15 @@ static void line_stroke(vector_t points, int first, int last, GLdouble k)
 
                 pn[0] = -(q[1] - p[1]);
                 pn[1] =  (q[0] - p[0]);
-				l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
-				pn[0] /= l;
-				pn[1] /= l;
+                l = sqrt(pn[0] * pn[0] + pn[1] * pn[1]);
+                pn[0] /= l;
+                pn[1] /= l;
 
                 rn[0] = -(r[1] - q[1]);
                 rn[1] =  (r[0] - q[0]);
-				l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
-				rn[0] /= l;
-				rn[1] /= l;
+                l = sqrt(rn[0] * rn[0] + rn[1] * rn[1]);
+                rn[0] /= l;
+                rn[1] /= l;
 
                 qn[0] = pn[0] + rn[0];
                 qn[1] = pn[1] + rn[1];
@@ -557,10 +554,10 @@ void fini_font(int i)
 
 void fini_fonts(void)
 {
-	int i;
+    int i;
 
-	for (i = 0; i < vecnum(font); ++i)
-		fini_font(i);
+    for (i = 0; i < vecnum(font); ++i)
+        fini_font(i);
 }
 
 /*---------------------------------------------------------------------------*/
