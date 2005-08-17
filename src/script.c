@@ -2438,9 +2438,7 @@ int init_script(void)
         luaopen_table(L);
         luaopen_debug(L);
         luaopen_string(L);
-#ifndef NSOCKET
         luaopen_socket(L);
-#endif
         luaopen_electro(L);
 
         return 1;

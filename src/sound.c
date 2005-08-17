@@ -21,9 +21,9 @@
 #include "entity.h"
 #include "sound.h"
 
-#ifndef NAUDIO
-
 /*---------------------------------------------------------------------------*/
+
+static int enabled = 0;
 
 #define BUFSIZE 2048
 #define BUFFREQ 44100
@@ -54,13 +54,17 @@ static struct sound *get_sound(int i)
 
 static int new_sound(void)
 {
-    int i, n = vecnum(sound);
+    if (enabled)
+    {
+        int i, n = vecnum(sound);
 
-    for (i = 0; i < n; ++i)
-        if (get_sound(i)->chan == 0)
-            return i;
+        for (i = 0; i < n; ++i)
+            if (get_sound(i)->chan == 0)
+                return i;
 
-    return vecadd(sound);
+        return vecadd(sound);
+    }
+    return -1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -145,7 +149,7 @@ int load_sound(const char *filename)
     int   i;
     FILE *fp;
 
-    if ((i = new_sound()) >= 0)
+    if (enabled && (i = new_sound()) >= 0)
     {
         struct sound *s = get_sound(i);
 
@@ -169,24 +173,30 @@ int load_sound(const char *filename)
 
 void free_sound(int i)
 {
-    struct sound *s = get_sound(i);
+    if (enabled)
+    {
+        struct sound *s = get_sound(i);
 
-    ov_clear(&s->file);
-    memset(s, 0, sizeof (struct sound));
+        ov_clear(&s->file);
+        memset(s, 0, sizeof (struct sound));
+    }
 }
 
 /*---------------------------------------------------------------------------*/
 
 static void set_sound_mode(int i, int mode)
 {
-    struct sound *s = get_sound(i);
-
-    SDL_LockAudio();
+    if (enabled)
     {
-        ov_pcm_seek(&s->file, 0);
-        s->mode = mode;
+        struct sound *s = get_sound(i);
+
+        SDL_LockAudio();
+        {
+            ov_pcm_seek(&s->file, 0);
+            s->mode = mode;
+        }
+        SDL_UnlockAudio();
     }
-    SDL_UnlockAudio();
 }
 
 void stop_sound(int i)
@@ -208,11 +218,14 @@ void loop_sound(int i)
 
 void nuke_sounds(void)
 {
-    int i, n = vecnum(sound);
+    if (enabled)
+    {
+        int i, n = vecnum(sound);
 
-    for (i = 0; i < n; ++i)
-        if (get_sound(i)->chan)
-            free_sound(i);
+        for (i = 0; i < n; ++i)
+            if (get_sound(i)->chan)
+                free_sound(i);
+    }
 }
 
 int startup_sound(void)
@@ -223,37 +236,21 @@ int startup_sound(void)
     spec.format   = BUFFORM;
     spec.freq     = BUFFREQ;
 
-    if (SDL_OpenAudio(&spec, NULL) == 0)
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) == 0)
     {
-        buff = (float *) malloc(spec.samples * spec.channels * sizeof (float));
+        if (SDL_OpenAudio(&spec, NULL) == 0)
+        {
+            buff = (float *) malloc(spec.samples  *
+                                    spec.channels * sizeof (float));
 
-        if ((sound = vecnew(32, sizeof (struct sound))))
-            return 1;
+            if ((sound = vecnew(32, sizeof (struct sound))))
+                return (enabled = 1);
+        }
+        else fprintf(stderr, "%s\n", SDL_GetError());
     }
     else fprintf(stderr, "%s\n", SDL_GetError());
 
     return 0;
 }
-
-/*---------------------------------------------------------------------------*/
-
-#else  /* NAUDIO is defined.  Stub all audio functions. */
-
-int startup_sound(void)
-{
-    return 1;
-}
-
-int load_sound(const char *filename)
-{
-    return -1;
-}
-
-void free_sound(int i) { }
-void stop_sound(int i) { }
-void play_sound(int i) { }
-void loop_sound(int i) { }
-
-#endif /* NAUDIO */
 
 /*---------------------------------------------------------------------------*/

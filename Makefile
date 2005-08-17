@@ -21,20 +21,6 @@ ifdef TRACKD
 	CFLAGS += -DTRACKD
 endif
 
-# To build without audio: "make NAUDIO=1"
-
-ifdef NAUDIO
-	CFLAGS += -DNAUDIO
-endif
-
-# To build without networking: "make NSOCKET=1"
-
-ifdef NSOCKET
-	CFLAGS += -DNSOCKET
-else
-	LIBS += -lluasocket
-endif
-
 #------------------------------------------------------------------------------
 
 # Assume the Fink tree is available under OSX and GL is in a framework.
@@ -69,12 +55,24 @@ endif
 #------------------------------------------------------------------------------
 
 CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
-SDLLIB  = $(shell $(SDL_CONFIG) --libs) -lSDLmain
-FT2LIB  = $(shell $(FT2_CONFIG) --libs)
-LUALIB  = -llua -llualib
-IMGLIB  = -ljpeg -lpng -lz -lm
-OGGLIB  = -lvorbisfile
-ODELIB  = -lode -lstdc++
+
+ifdef LINUX_STATIC
+SDLLIB = /home/rlk/lib/libSDL.a -lpthread
+FT2LIB = /usr/lib/libfreetype.a
+LUALIB = /usr/lib/liblua.a /usr/lib/liblualib.a /usr/lib/libluasocket.a
+IMGLIB = /usr/lib/libjpeg.a /usr/lib/libpng.a /usr/lib/libz.a
+OGGLIB = /usr/lib/libvorbisfile.a /usr/lib/libvorbis.a /usr/lib/libogg.a
+ODELIB = /usr/lib/libode.a -lstdc++
+else
+SDLLIB = $(shell $(SDL_CONFIG) --static-libs) -lSDLmain
+FT2LIB = $(shell $(FT2_CONFIG) --libs)
+LUALIB = -llua -llualib -lluasocket
+IMGLIB = -ljpeg -lpng -lz -lm
+OGGLIB = -lvorbisfile
+ODELIB = -lode -lstdc++
+endif
+
+#------------------------------------------------------------------------------
 
 LIBS += $(LUALIB) $(ODELIB) $(SDLLIB) $(FT2LIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 

@@ -355,19 +355,11 @@ void parse_args(int argc, char *argv[])
 
 void server(int argc, char *argv[])
 {
-#ifndef NAUDIO
-    int flags = (SDL_INIT_VIDEO | SDL_INIT_TIMER |
-                 SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
-#else
-    int flags = (SDL_INIT_VIDEO | SDL_INIT_TIMER |
-                 SDL_INIT_JOYSTICK);
-#endif
-
     path_push(".");
 
     if (init_script())
     {
-        if (SDL_Init(flags) == 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) == 0)
         {
             /* Initialize all subsystems. */
         
