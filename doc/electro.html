@@ -875,7 +875,7 @@ end
 
 <p>Unlike other callbacks, the &ldquo;dirty&rdquo; flag return value from <tt>do_frame</tt> is ignored, as a redraw has already been scheduled.</p>
 
-<dt><tt>do_keyboard</tt>(<i>k, s</i>)<dd><p>This callback is invoked whenever a key is pressed or released. The <i>s</i> argument is a boolean giving the key state. The <i>k</i> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. A full listing of keys and their associated values would be lengthy and uninteresting. When in doubt about the value of a key, query it interactively as follows:</p>
+<dt><tt>do_keyboard</tt>(<i>k, s</i>)<dd><p>This callback is invoked whenever a key is pressed or released. The <i>s</i> argument is a boolean giving the key state. The <i>k</i> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. <a href="keys.html">Here is a full listing of keys and their associated value symbols</a>. When in doubt, the value of a key may be determined interactively as follows:</p>
 
 <pre>
 function do_keyboard(k, s)

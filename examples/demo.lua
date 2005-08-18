@@ -78,9 +78,9 @@ function do_timer(dt)
 end
 
 function do_keyboard(k, s)
-    if s and k == 273 then set_selected(-1) end
-    if s and k == 274 then set_selected( 1) end
-    if s and k == 13  then
+    if s and k == E.key_up     then set_selected(-1) end
+    if s and k == E.key_down   then set_selected( 1) end
+    if s and k == E.key_return then
         E.nuke()
         E.exec(demo[selected][2])
     end

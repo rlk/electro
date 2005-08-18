@@ -64,7 +64,7 @@ IMGLIB = /usr/lib/libjpeg.a /usr/lib/libpng.a /usr/lib/libz.a
 OGGLIB = /usr/lib/libvorbisfile.a /usr/lib/libvorbis.a /usr/lib/libogg.a
 ODELIB = /usr/lib/libode.a -lstdc++
 else
-SDLLIB = $(shell $(SDL_CONFIG) --static-libs) -lSDLmain
+SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
 FT2LIB = $(shell $(FT2_CONFIG) --libs)
 LUALIB = -llua -llualib -lluasocket
 IMGLIB = -ljpeg -lpng -lz -lm
@@ -125,7 +125,7 @@ $(TARG) : $(OBJS) $(VERS)
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(VERS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS)
+	rm -f $(TARG) $(OBJS) $(VERS)
 
 distclean:
 	find . -name .svn | xargs rm -rf

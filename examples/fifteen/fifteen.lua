@@ -148,21 +148,21 @@ function do_keyboard(k, s)
     if s then
         -- If an arrow key has been pressed, move a puzzle piece.
 
-        if k == 276 then move_piece( 0,  1) end
-        if k == 275 then move_piece( 0, -1) end
-        if k == 273 then move_piece( 1,  0) end
-        if k == 274 then move_piece(-1,  0) end
+        if k == E.key_left  then move_piece( 0,  1) end
+        if k == E.key_right then move_piece( 0, -1) end
+        if k == E.key_up    then move_piece( 1,  0) end
+        if k == E.key_down  then move_piece(-1,  0) end
 
         -- If autoplay has been switched, toggle the idle function.
 
-        if k == 32 then
+        if k == E.key_space then
             random = not random
             E.enable_timer(random)
         end
 
         -- Jump to the demo selector on F12.
         
-        if k == 293 then
+        if k == E.key_F12 then
             E.exec("examples/demo.lua")
         end
     end

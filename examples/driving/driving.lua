@@ -374,45 +374,45 @@ function do_keyboard(k, s)
     end
 
     if s then
-        if k == string.byte("1") then
+        if k == E.key_1 then
             add_box()
         end
-        if k == string.byte("2") then
+        if k == E.key_2 then
             add_ball()
         end
-        if k == string.byte("3") then
+        if k == E.key_3 then
             add_car()
         end
-        if k == string.byte("4") then
+        if k == E.key_4 then
             right = true
         end
 
-        if k == 287 then
+        if k == E.key_F6 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, true)
             return true
         end
-        if k == 288 then
+        if k == E.key_F7 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
         end
 
-        if k == 293 then
+        if k == E.key_F12 then
             E.exec("examples/demo.lua")
         end
 
-        if k == 273 then key_y = key_y - 1 end
-        if k == 274 then key_y = key_y + 1 end
-        if k == 275 then key_x = key_x + 1 end
-        if k == 276 then key_x = key_x - 1 end
+        if k == E.key_up    then key_y = key_y - 1 end
+        if k == E.key_down  then key_y = key_y + 1 end
+        if k == E.key_right then key_x = key_x + 1 end
+        if k == E.key_left  then key_x = key_x - 1 end
     else
-        if k == string.byte("4") then
+        if k == E.key_4 then
             right = false
         end
 
-        if k == 273 then key_y = key_y + 1 end
-        if k == 274 then key_y = key_y - 1 end
-        if k == 275 then key_x = key_x - 1 end
-        if k == 276 then key_x = key_x + 1 end
+        if k == E.key_up    then key_y = key_y + 1 end
+        if k == E.key_down  then key_y = key_y - 1 end
+        if k == E.key_right then key_x = key_x - 1 end
+        if k == E.key_left  then key_x = key_x + 1 end
     end
     return false
 end

@@ -153,7 +153,7 @@ function do_keyboard(k, s)
     end
 
     if s then
-        if k == 13 then
+        if k == E.key_return then
             E.set_entity_rotation(pivot,  0.0, 0.0, 0.0)
             E.set_entity_position(camera, 0.0, 0.0, 0.0)
             E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
@@ -165,43 +165,43 @@ function do_keyboard(k, s)
             return true
         end
 
-        if k == 287 then
+        if k == E.key_F5 then
             table.foreach(objects, function (id, object)
                 E.set_entity_flags(object, E.entity_flag_wireframe, true)
             end)
             return true
         end
-        if k == 288 then
+        if k == E.key_F6 then
             table.foreach(objects, function (id, object)
                 E.set_entity_flags(object, E.entity_flag_wireframe, false)
             end)
             return true
         end
-        if k == 289 then
+        if k == E.key_F7 then
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 -d, 0, 0, d, 0, 0)
             return true
         end
-        if k == 290 then
+        if k == E.key_F8 then
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
                                 -d, 0, 0, d, 0, 0)
             return true
         end
 
-	if k == 277 then
+	if k == E.key_insert then
             rot_dy = rot_dy + 1
 	end
-	if k == 127 then
+	if k == E.key_delete then
             rot_dy = rot_dy - 1
 	end
 
         if not E.get_modifier(E.key_modifier_control) then
-            if k == 273 then pan_z = pan_z + 1 end
-            if k == 274 then pan_z = pan_z - 1 end
-            if k == 281 then pan_y = pan_y + 1 end
-            if k == 280 then pan_y = pan_y - 1 end
-            if k == 275 then pan_x = pan_x + 1 end
-            if k == 276 then pan_x = pan_x - 1 end
+            if k == E.key_up       then pan_z = pan_z + 1 end
+            if k == E.key_down     then pan_z = pan_z - 1 end
+            if k == E.key_pagedown then pan_y = pan_y + 1 end
+            if k == E.key_pageup   then pan_y = pan_y - 1 end
+            if k == E.key_right    then pan_x = pan_x + 1 end
+            if k == E.key_legt     then pan_x = pan_x - 1 end
         end
     else
         if not E.get_modifier(E.key_modifier_control) then

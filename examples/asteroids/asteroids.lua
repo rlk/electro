@@ -1330,23 +1330,23 @@ function do_joystick(device, button, down)
 end
 
 function do_keyboard(key, down)
-    if key ==  32 and curr_state and curr_state.button_A then
+    if key ==  E.key_space and curr_state and curr_state.button_A then
         do_state(curr_state.button_A(down))
         return true
     end
-    if key == 273 and curr_state and curr_state.button_B then
+    if key == E.key_up and curr_state and curr_state.button_B then
         do_state(curr_state.button_B(down))
         return true
     end
 
-    if key == 275 then
+    if key == E.key_right then
         player.turning_R = down
     end
-    if key == 276 then
+    if key == E.key_lift  then
         player.turning_L = down
     end
 
-    if key == 293 then
+    if key == E.key_F12 then
         E.exec("examples/demo.lua")
     end
 

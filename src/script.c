@@ -2108,307 +2108,481 @@ void add_argument(int i, const char *arg)
 /*===========================================================================*/
 /* Script setup/shutdown                                                     */
 
-static void lua_function(lua_State *L, const char *n, lua_CFunction f)
+static void lua_function(lua_State *L, const char *name, lua_CFunction func)
 {
-    lua_pushstring(L, n);
-    lua_pushstring(L, n);
-    lua_pushcclosure(L, f, 1);
+    lua_pushstring(L, name);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, func, 1);
     lua_settable(L, -3);
 }
 
-static void lua_constant(lua_State *L, const char *n, int v)
+static void lua_constant(lua_State *L, const char *name, int value)
 {
-    lua_pushstring(L, n);
-    lua_pushnumber(L, v);
+    lua_pushstring(L, name);
+    lua_pushnumber(L, value);
     lua_settable(L, -3);
 }
+
+/*---------------------------------------------------------------------------*/
+
+struct function_def
+{
+    const char   *name;
+    lua_CFunction func;
+};
+
+struct constant_def
+{
+    const char *name;
+    int        value;
+};
+
+static struct function_def functions[] = {
+
+    /* Entity contructors and destructors */
+
+    { "create_camera",         E_create_camera         },
+    { "create_sprite",         E_create_sprite         },
+    { "create_object",         E_create_object         },
+    { "create_string",         E_create_string         },
+    { "create_galaxy",         E_create_galaxy         },
+    { "create_light",          E_create_light          },
+    { "create_pivot",          E_create_pivot          },
+    { "create_clone",          E_create_clone          },
+
+    /* Entity functions */
+
+    { "parent_entity",         E_parent_entity         },
+    { "delete_entity",         E_delete_entity         },
+
+    { "get_entity_parent",     E_get_entity_parent     },
+    { "get_entity_child",      E_get_entity_child      },
+
+    { "set_entity_position",   E_set_entity_position   },
+    { "set_entity_rotation",   E_set_entity_rotation   },
+    { "set_entity_scale",      E_set_entity_scale      },
+    { "set_entity_alpha",      E_set_entity_alpha      },
+    { "set_entity_flags",      E_set_entity_flags      },
+
+    { "add_entity_force",      E_add_entity_force      },
+    { "add_entity_torque",     E_add_entity_torque     },
+
+    { "get_entity_position",   E_get_entity_position   },
+    { "get_entity_x_vector",   E_get_entity_x_vector   },
+    { "get_entity_y_vector",   E_get_entity_y_vector   },
+    { "get_entity_z_vector",   E_get_entity_z_vector   },
+    { "get_entity_scale",      E_get_entity_scale      },
+    { "get_entity_bound",      E_get_entity_bound      },
+    { "get_entity_alpha",      E_get_entity_alpha      },
+
+    { "move_entity",           E_move_entity           },
+    { "turn_entity",           E_turn_entity           },
+
+    { "set_entity_body_type",  E_set_entity_body_type  },
+    { "set_entity_geom_type",  E_set_entity_geom_type  },
+    { "set_entity_joint_type", E_set_entity_joint_type },
+
+    { "set_entity_body_attr",  E_set_entity_body_attr  },
+    { "set_entity_geom_attr",  E_set_entity_geom_attr  },
+    { "set_entity_joint_attr", E_set_entity_joint_attr },
+    { "get_entity_body_attr",  E_get_entity_body_attr  },
+    { "get_entity_geom_attr",  E_get_entity_geom_attr  },
+    { "get_entity_joint_attr", E_get_entity_joint_attr },
+
+    /* Object functions */
+
+    { "create_mesh",           E_create_mesh           },
+    { "create_vert",           E_create_vert           },
+    { "create_face",           E_create_face           },
+    { "create_edge",           E_create_edge           },
+
+    { "set_mesh",              E_set_mesh              },
+    { "set_vert",              E_set_vert              },
+    { "set_face",              E_set_face              },
+    { "set_edge",              E_set_edge              },
+
+    { "get_mesh",              E_get_mesh              },
+    { "get_vert",              E_get_vert              },
+    { "get_face",              E_get_face              },
+    { "get_edge",              E_get_edge              },
+
+    { "get_mesh_count",        E_get_mesh_count        },
+    { "get_vert_count",        E_get_vert_count        },
+    { "get_face_count",        E_get_face_count        },
+    { "get_edge_count",        E_get_edge_count        },
+
+    { "delete_mesh",           E_delete_mesh           },
+    { "delete_vert",           E_delete_vert           },
+    { "delete_face",           E_delete_face           },
+    { "delete_edge",           E_delete_edge           },
+
+    /* Sprite functions */
+
+    { "set_sprite_brush",      E_set_sprite_brush      },
+    { "set_sprite_range",      E_set_sprite_range      },
+
+    /* String functions */
+
+    { "set_string_fill",       E_set_string_fill       },
+    { "set_string_line",       E_set_string_line       },
+    { "set_string_text",       E_set_string_text       },
+
+    /* Camera functions */
+
+    { "set_camera_offset",     E_set_camera_offset     },
+    { "set_camera_stereo",     E_set_camera_stereo     },
+
+    /* Light functions */
+
+    { "set_light_color",       E_set_light_color       },
+
+    /* Galaxy functions */
+
+    { "set_galaxy_magnitude",  E_set_galaxy_magnitude  },
+    { "get_star_index",        E_get_star_index        },
+    { "get_star_position",     E_get_star_position     },
+
+    /* Image functions */
+
+    { "create_image",          E_create_image          },
+    { "delete_image",          E_delete_image          },
+    { "get_image_pixel",       E_get_image_pixel       },
+    { "get_image_size",        E_get_image_size        },
+
+    /* Brush functions */
+
+    { "create_brush",          E_create_brush          },
+    { "delete_brush",          E_delete_brush          },
+    { "set_brush_flags",       E_set_brush_flags       },
+    { "set_brush_image",       E_set_brush_image       },
+    { "set_brush_color",       E_set_brush_color       },
+    { "set_brush_frag_prog",   E_set_brush_frag_prog   },
+    { "set_brush_vert_prog",   E_set_brush_vert_prog   },
+    { "set_brush_frag_param",  E_set_brush_frag_param  },
+    { "set_brush_vert_param",  E_set_brush_vert_param  },
+
+    /* Sound functions */
+
+    { "load_sound",            E_load_sound            },
+    { "free_sound",            E_free_sound            },
+    { "stop_sound",            E_stop_sound            },
+    { "play_sound",            E_play_sound            },
+    { "loop_sound",            E_loop_sound            },
+
+    /* Console functions */
+
+    { "clear_console",         E_clear_console         },
+    { "color_console",         E_color_console         },
+    { "print_console",         E_print_console         },
+
+    /* Configuration */
+
+    { "add_host",              E_add_host              },
+    { "add_tile",              E_add_tile              },
+    { "set_host_flags",        E_set_host_flags        },
+    { "set_tile_flags",        E_set_tile_flags        },
+    { "set_tile_position",     E_set_tile_position     },
+    { "set_tile_viewport",     E_set_tile_viewport     },
+    { "set_tile_line_screen",  E_set_tile_line_screen  },
+    { "set_tile_view_mirror",  E_set_tile_view_mirror  },
+    { "set_tile_view_offset",  E_set_tile_view_offset  },
+    { "get_display_union",     E_get_display_union     },
+    { "get_display_bound",     E_get_display_bound     },
+
+    /* Miscellaneous */
+
+    { "enable_timer",          E_enable_timer          },
+    { "get_joystick",          E_get_joystick          },
+    { "get_modifier",          E_get_modifier          },
+    { "set_typeface",          E_set_typeface          },
+    { "set_background",        E_set_background        },
+    { "exit",                  E_exit                  },
+    { "exec",                  E_exec                  },
+    { "nuke",                  E_nuke                  },
+};
+
+static struct constant_def constants[] = {
+
+    /* Entity constants */
+
+    { "entity_flag_hidden",        FLAG_HIDDEN         },
+    { "entity_flag_wireframe",     FLAG_WIREFRAME      },
+    { "entity_flag_billboard",     FLAG_BILLBOARD      },
+    { "entity_flag_line_smooth",   FLAG_LINE_SMOOTH    },
+    { "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0  },
+    { "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0  },
+    { "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1  },
+    { "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1  },
+
+    /* Body constants */
+
+    { "body_attr_gravity",         BODY_ATTR_GRAVITY   },
+
+    /* Geom constants */
+
+    { "geom_type_none",            -1                  },
+    { "geom_type_box",             dBoxClass           },
+    { "geom_type_plane",           dPlaneClass         },
+    { "geom_type_sphere",          dSphereClass        },
+    { "geom_type_capsule",         dCCylinderClass     },
+
+    { "geom_attr_category",        GEOM_ATTR_CATEGORY  },
+    { "geom_attr_collider",        GEOM_ATTR_COLLIDER  },
+    { "geom_attr_response",        GEOM_ATTR_RESPONSE  },
+    { "geom_attr_callback",        GEOM_ATTR_CALLBACK  },
+    { "geom_attr_mass",            GEOM_ATTR_MASS      },
+    { "geom_attr_bounce",          GEOM_ATTR_BOUNCE    },
+    { "geom_attr_friction",        GEOM_ATTR_FRICTION  },
+    { "geom_attr_soft_erp",        GEOM_ATTR_SOFT_ERP  },
+    { "geom_attr_soft_cfm",        GEOM_ATTR_SOFT_CFM  },
+
+    /* Joint constants */
+
+    { "joint_type_ball",           dJointTypeBall      },
+    { "joint_type_hinge",          dJointTypeHinge     },
+    { "joint_type_slider",         dJointTypeSlider    },
+    { "joint_type_universal",      dJointTypeUniversal },
+    { "joint_type_hinge_2",        dJointTypeHinge2    },
+
+    { "joint_attr_anchor",         JOINT_ATTR_ANCHOR   },
+    { "joint_attr_axis_1",         JOINT_ATTR_AXIS_1   },
+    { "joint_attr_axis_2",         JOINT_ATTR_AXIS_2   },
+    { "joint_attr_value",          JOINT_ATTR_VALUE    },
+    { "joint_attr_rate_1",         JOINT_ATTR_RATE_1   },
+    { "joint_attr_rate_2",         JOINT_ATTR_RATE_2   },
+    { "joint_attr_lo_stop",        dParamLoStop        },
+    { "joint_attr_lo_stop_2",      dParamLoStop2       },
+    { "joint_attr_hi_stop",        dParamHiStop        },
+    { "joint_attr_hi_stop_2",      dParamHiStop2       },
+    { "joint_attr_velocity",       dParamVel           },
+    { "joint_attr_velocity_2",     dParamVel2          },
+    { "joint_attr_force_max",      dParamFMax          },
+    { "joint_attr_force_max_2",    dParamFMax2         },
+    { "joint_attr_bounce",         dParamBounce        },
+    { "joint_attr_bounce_2",       dParamBounce2       },
+    { "joint_attr_cfm",            dParamCFM           },
+    { "joint_attr_cfm_2",          dParamCFM2          },
+    { "joint_attr_stop_erp",       dParamStopERP       },
+    { "joint_attr_stop_erp_2",     dParamStopERP2      },
+    { "joint_attr_stop_cfm",       dParamStopCFM       },
+    { "joint_attr_stop_cfm_2",     dParamStopCFM2      },
+    { "joint_attr_susp_erp",       dParamSuspensionERP },
+    { "joint_attr_susp_cfm",       dParamSuspensionCFM },
+
+    /* Brush constants */
+
+    { "brush_flag_diffuse",        BRUSH_DIFFUSE       },
+    { "brush_flag_specular",       BRUSH_SPECULAR      },
+    { "brush_flag_ambient",        BRUSH_AMBIENT       },
+    { "brush_flag_shiny",          BRUSH_SHINY         },
+    { "brush_flag_transparent",    BRUSH_TRANSPARENT   },
+    { "brush_flag_env_map_0",      BRUSH_ENV_MAP_0     },
+    { "brush_flag_env_map_1",      BRUSH_ENV_MAP_1     },
+    { "brush_flag_env_map_2",      BRUSH_ENV_MAP_2     },
+    { "brush_flag_env_map_3",      BRUSH_ENV_MAP_3     },
+    { "brush_flag_sky_map_0",      BRUSH_SKY_MAP_0     },
+    { "brush_flag_sky_map_1",      BRUSH_SKY_MAP_1     },
+    { "brush_flag_sky_map_2",      BRUSH_SKY_MAP_2     },
+    { "brush_flag_sky_map_3",      BRUSH_SKY_MAP_3     },
+    { "brush_flag_unlit",          BRUSH_UNLIT         },
+
+    /* Configuration constants */
+
+    { "host_flag_full",            HOST_FULL           },
+    { "host_flag_stereo",          HOST_STEREO         },
+    { "host_flag_framed",          HOST_FRAMED         },
+
+    { "tile_flag_flip_x",          TILE_FLIP_X         },
+    { "tile_flag_flip_y",          TILE_FLIP_Y         },
+    { "tile_flag_offset",          TILE_OFFSET         },
+    { "tile_flag_mirror",          TILE_MIRROR         },
+    { "tile_flag_test",            TILE_TEST           },
+
+    /* Camera constants */
+
+    { "camera_type_orthogonal",    CAMERA_ORTHO        },
+    { "camera_type_perspective",   CAMERA_PERSP        },
+
+    { "stereo_mode_none",          STEREO_NONE         },
+    { "stereo_mode_quad",          STEREO_QUAD         },
+    { "stereo_mode_red_blue",      STEREO_RED_BLUE     },
+    { "stereo_mode_varrier_01",    STEREO_VARRIER_01   },
+    { "stereo_mode_varrier_11",    STEREO_VARRIER_11   },
+    { "stereo_mode_varrier_33",    STEREO_VARRIER_33   },
+    { "stereo_mode_varrier_41",    STEREO_VARRIER_41   },
+
+    /* Light constants */
+
+    { "light_type_positional",     LIGHT_POSITIONAL    },
+    { "light_type_directional",    LIGHT_DIRECTIONAL   },
+
+    /* Miscellaneous constants */
+
+    { "key_modifier_shift",        KMOD_SHIFT          },
+    { "key_modifier_control",      KMOD_CTRL           },
+    { "key_modifier_alt",          KMOD_ALT            },
+};
+
+struct constant_def keys[] = {
+
+    { "key_unknown",      SDLK_UNKNOWN      },
+    { "key_backspace",    SDLK_BACKSPACE    },
+    { "key_tab",          SDLK_TAB          },
+    { "key_clear",        SDLK_CLEAR        },
+    { "key_return",       SDLK_RETURN       },
+    { "key_pause",        SDLK_PAUSE        },
+    { "key_escape",       SDLK_ESCAPE       },
+    { "key_space",        SDLK_SPACE        },
+    { "key_exclaim",      SDLK_EXCLAIM      },
+    { "key_quotedbl",     SDLK_QUOTEDBL     },
+    { "key_hash",         SDLK_HASH         },
+    { "key_dollar",       SDLK_DOLLAR       },
+    { "key_ampersand",    SDLK_AMPERSAND    },
+    { "key_quote",        SDLK_QUOTE        },
+    { "key_leftparen",    SDLK_LEFTPAREN    },
+    { "key_rightparen",   SDLK_RIGHTPAREN   },
+    { "key_asterisk",     SDLK_ASTERISK     },
+    { "key_plus",         SDLK_PLUS         },
+    { "key_comma",        SDLK_COMMA        },
+    { "key_minus",        SDLK_MINUS        },
+    { "key_period",       SDLK_PERIOD       },
+    { "key_slash",        SDLK_SLASH        },
+    { "key_0",            SDLK_0            },
+    { "key_1",            SDLK_1            },
+    { "key_2",            SDLK_2            },
+    { "key_3",            SDLK_3            },
+    { "key_4",            SDLK_4            },
+    { "key_5",            SDLK_5            },
+    { "key_6",            SDLK_6            },
+    { "key_7",            SDLK_7            },
+    { "key_8",            SDLK_8            },
+    { "key_9",            SDLK_9            },
+    { "key_colon",        SDLK_COLON        },
+    { "key_semicolon",    SDLK_SEMICOLON    },
+    { "key_less",         SDLK_LESS         },
+    { "key_equals",       SDLK_EQUALS       },
+    { "key_greater",      SDLK_GREATER      },
+    { "key_question",     SDLK_QUESTION     },
+    { "key_at",           SDLK_AT           },
+    { "key_leftbracket",  SDLK_LEFTBRACKET  },
+    { "key_backslash",    SDLK_BACKSLASH    },
+    { "key_rightbracket", SDLK_RIGHTBRACKET },
+    { "key_caret",        SDLK_CARET        },
+    { "key_underscore",   SDLK_UNDERSCORE   },
+    { "key_backquote",    SDLK_BACKQUOTE    },
+    { "key_a",            SDLK_a            },
+    { "key_b",            SDLK_b            },
+    { "key_c",            SDLK_c            },
+    { "key_d",            SDLK_d            },
+    { "key_e",            SDLK_e            },
+    { "key_f",            SDLK_f            },
+    { "key_g",            SDLK_g            },
+    { "key_h",            SDLK_h            },
+    { "key_i",            SDLK_i            },
+    { "key_j",            SDLK_j            },
+    { "key_k",            SDLK_k            },
+    { "key_l",            SDLK_l            },
+    { "key_m",            SDLK_m            },
+    { "key_n",            SDLK_n            },
+    { "key_o",            SDLK_o            },
+    { "key_p",            SDLK_p            },
+    { "key_q",            SDLK_q            },
+    { "key_r",            SDLK_r            },
+    { "key_s",            SDLK_s            },
+    { "key_t",            SDLK_t            },
+    { "key_u",            SDLK_u            },
+    { "key_v",            SDLK_v            },
+    { "key_w",            SDLK_w            },
+    { "key_x",            SDLK_x            },
+    { "key_y",            SDLK_y            },
+    { "key_z",            SDLK_z            },
+    { "key_delete",       SDLK_DELETE       },
+    { "key_kp0",          SDLK_KP0          },
+    { "key_kp1",          SDLK_KP1          },
+    { "key_kp2",          SDLK_KP2          },
+    { "key_kp3",          SDLK_KP3          },
+    { "key_kp4",          SDLK_KP4          },
+    { "key_kp5",          SDLK_KP5          },
+    { "key_kp6",          SDLK_KP6          },
+    { "key_kp7",          SDLK_KP7          },
+    { "key_kp8",          SDLK_KP8          },
+    { "key_kp9",          SDLK_KP9          },
+    { "key_kp_period",    SDLK_KP_PERIOD    },
+    { "key_kp_divide",    SDLK_KP_DIVIDE    },
+    { "key_kp_multiply",  SDLK_KP_MULTIPLY  },
+    { "key_kp_minus",     SDLK_KP_MINUS     },
+    { "key_kp_plus",      SDLK_KP_PLUS      },
+    { "key_kp_enter",     SDLK_KP_ENTER     },
+    { "key_kp_equals",    SDLK_KP_EQUALS    },
+    { "key_up",           SDLK_UP           },
+    { "key_down",         SDLK_DOWN         },
+    { "key_right",        SDLK_RIGHT        },
+    { "key_left",         SDLK_LEFT         },
+    { "key_insert",       SDLK_INSERT       },
+    { "key_home",         SDLK_HOME         },
+    { "key_end",          SDLK_END          },
+    { "key_pageup",       SDLK_PAGEUP       },
+    { "key_pagedown",     SDLK_PAGEDOWN     },
+    { "key_F1",           SDLK_F1           },
+    { "key_F2",           SDLK_F2           },
+    { "key_F3",           SDLK_F3           },
+    { "key_F4",           SDLK_F4           },
+    { "key_F5",           SDLK_F5           },
+    { "key_F6",           SDLK_F6           },
+    { "key_F7",           SDLK_F7           },
+    { "key_F8",           SDLK_F8           },
+    { "key_F9",           SDLK_F9           },
+    { "key_F10",          SDLK_F10          },
+    { "key_F11",          SDLK_F11          },
+    { "key_F12",          SDLK_F12          },
+    { "key_F13",          SDLK_F13          },
+    { "key_F14",          SDLK_F14          },
+    { "key_F15",          SDLK_F15          },
+    { "key_numlock",      SDLK_NUMLOCK      },
+    { "key_capslock",     SDLK_CAPSLOCK     },
+    { "key_scrollock",    SDLK_SCROLLOCK    },
+    { "key_rshift",       SDLK_RSHIFT       },
+    { "key_lshift",       SDLK_LSHIFT       },
+    { "key_rctrl",        SDLK_RCTRL        },
+    { "key_lctrl",        SDLK_LCTRL        },
+    { "key_ralt",         SDLK_RALT         },
+    { "key_lalt",         SDLK_LALT         },
+    { "key_rmeta",        SDLK_RMETA        },
+    { "key_lmeta",        SDLK_LMETA        },
+    { "key_lsuper",       SDLK_LSUPER       },
+    { "key_rsuper",       SDLK_RSUPER       },
+    { "key_mode",         SDLK_MODE         },
+    { "key_compose",      SDLK_COMPOSE      },
+    { "key_help",         SDLK_HELP         },
+    { "key_print",        SDLK_PRINT        },
+    { "key_sysreq",       SDLK_SYSREQ       },
+    { "key_break",        SDLK_BREAK        },
+    { "key_menu",         SDLK_MENU         },
+    { "key_power",        SDLK_POWER        },
+    { "key_euro",         SDLK_EURO         },
+    { "key_undo",         SDLK_UNDO         },
+};
 
 void luaopen_electro(lua_State *L)
 {
+    int nf = sizeof (functions) / sizeof (struct function_def);
+    int nc = sizeof (constants) / sizeof (struct constant_def);
+    int nk = sizeof (keys)      / sizeof (struct constant_def);
+    int i;
+
     /* Create the Electro environment table. */
 
     lua_pushstring(L, "E");
     lua_newtable(L);
 
-    /* Entity contructors and destructors */
+    /* Add all functions and constants to the table. */
 
-    lua_function(L, "create_camera",         E_create_camera);
-    lua_function(L, "create_sprite",         E_create_sprite);
-    lua_function(L, "create_object",         E_create_object);
-    lua_function(L, "create_string",         E_create_string);
-    lua_function(L, "create_galaxy",         E_create_galaxy);
-    lua_function(L, "create_light",          E_create_light);
-    lua_function(L, "create_pivot",          E_create_pivot);
-    lua_function(L, "create_clone",          E_create_clone);
-
-    /* Entity functions */
-
-    lua_function(L, "parent_entity",         E_parent_entity);
-    lua_function(L, "delete_entity",         E_delete_entity);
-
-    lua_function(L, "get_entity_parent",     E_get_entity_parent);
-    lua_function(L, "get_entity_child",      E_get_entity_child);
-
-    lua_function(L, "set_entity_position",   E_set_entity_position);
-    lua_function(L, "set_entity_rotation",   E_set_entity_rotation);
-    lua_function(L, "set_entity_scale",      E_set_entity_scale);
-    lua_function(L, "set_entity_alpha",      E_set_entity_alpha);
-    lua_function(L, "set_entity_flags",      E_set_entity_flags);
-
-    lua_function(L, "add_entity_force",      E_add_entity_force);
-    lua_function(L, "add_entity_torque",     E_add_entity_torque);
-
-    lua_function(L, "get_entity_position",   E_get_entity_position);
-    lua_function(L, "get_entity_x_vector",   E_get_entity_x_vector);
-    lua_function(L, "get_entity_y_vector",   E_get_entity_y_vector);
-    lua_function(L, "get_entity_z_vector",   E_get_entity_z_vector);
-    lua_function(L, "get_entity_scale",      E_get_entity_scale);
-    lua_function(L, "get_entity_bound",      E_get_entity_bound);
-    lua_function(L, "get_entity_alpha",      E_get_entity_alpha);
-
-    lua_function(L, "move_entity",           E_move_entity);
-    lua_function(L, "turn_entity",           E_turn_entity);
-
-    lua_function(L, "set_entity_body_type",  E_set_entity_body_type);
-    lua_function(L, "set_entity_geom_type",  E_set_entity_geom_type);
-    lua_function(L, "set_entity_joint_type", E_set_entity_joint_type);
-
-    lua_function(L, "set_entity_body_attr",  E_set_entity_body_attr);
-    lua_function(L, "set_entity_geom_attr",  E_set_entity_geom_attr);
-    lua_function(L, "set_entity_joint_attr", E_set_entity_joint_attr);
-    lua_function(L, "get_entity_body_attr",  E_get_entity_body_attr);
-    lua_function(L, "get_entity_geom_attr",  E_get_entity_geom_attr);
-    lua_function(L, "get_entity_joint_attr", E_get_entity_joint_attr);
-
-    /* Object functions */
-
-    lua_function(L, "create_mesh",           E_create_mesh);
-    lua_function(L, "create_vert",           E_create_vert);
-    lua_function(L, "create_face",           E_create_face);
-    lua_function(L, "create_edge",           E_create_edge);
-
-    lua_function(L, "set_mesh",              E_set_mesh);
-    lua_function(L, "set_vert",              E_set_vert);
-    lua_function(L, "set_face",              E_set_face);
-    lua_function(L, "set_edge",              E_set_edge);
-
-    lua_function(L, "get_mesh",              E_get_mesh);
-    lua_function(L, "get_vert",              E_get_vert);
-    lua_function(L, "get_face",              E_get_face);
-    lua_function(L, "get_edge",              E_get_edge);
-
-    lua_function(L, "get_mesh_count",        E_get_mesh_count);
-    lua_function(L, "get_vert_count",        E_get_vert_count);
-    lua_function(L, "get_face_count",        E_get_face_count);
-    lua_function(L, "get_edge_count",        E_get_edge_count);
-
-    lua_function(L, "delete_mesh",           E_delete_mesh);
-    lua_function(L, "delete_vert",           E_delete_vert);
-    lua_function(L, "delete_face",           E_delete_face);
-    lua_function(L, "delete_edge",           E_delete_edge);
-
-    /* Sprite functions */
-
-    lua_function(L, "set_sprite_brush",      E_set_sprite_brush);
-    lua_function(L, "set_sprite_range",      E_set_sprite_range);
-
-    /* String functions */
-
-    lua_function(L, "set_string_fill",       E_set_string_fill);
-    lua_function(L, "set_string_line",       E_set_string_line);
-    lua_function(L, "set_string_text",       E_set_string_text);
-
-    /* Camera functions */
-
-    lua_function(L, "set_camera_offset",     E_set_camera_offset);
-    lua_function(L, "set_camera_stereo",     E_set_camera_stereo);
-
-    /* Light functions */
-
-    lua_function(L, "set_light_color",       E_set_light_color);
-
-    /* Galaxy functions */
-
-    lua_function(L, "set_galaxy_magnitude",  E_set_galaxy_magnitude);
-    lua_function(L, "get_star_index",        E_get_star_index);
-    lua_function(L, "get_star_position",     E_get_star_position);
-
-    /* Image functions */
-
-    lua_function(L, "create_image",          E_create_image);
-    lua_function(L, "delete_image",          E_delete_image);
-    lua_function(L, "get_image_pixel",       E_get_image_pixel);
-    lua_function(L, "get_image_size",        E_get_image_size);
-
-    /* Brush functions */
-
-    lua_function(L, "create_brush",          E_create_brush);
-    lua_function(L, "delete_brush",          E_delete_brush);
-    lua_function(L, "set_brush_flags",       E_set_brush_flags);
-    lua_function(L, "set_brush_image",       E_set_brush_image);
-    lua_function(L, "set_brush_color",       E_set_brush_color);
-    lua_function(L, "set_brush_frag_prog",   E_set_brush_frag_prog);
-    lua_function(L, "set_brush_vert_prog",   E_set_brush_vert_prog);
-    lua_function(L, "set_brush_frag_param",  E_set_brush_frag_param);
-    lua_function(L, "set_brush_vert_param",  E_set_brush_vert_param);
-
-    /* Sound functions */
-
-    lua_function(L, "load_sound",            E_load_sound);
-    lua_function(L, "free_sound",            E_free_sound);
-    lua_function(L, "stop_sound",            E_stop_sound);
-    lua_function(L, "play_sound",            E_play_sound);
-    lua_function(L, "loop_sound",            E_loop_sound);
-
-    /* Console functions */
-
-    lua_function(L, "clear_console",         E_clear_console);
-    lua_function(L, "color_console",         E_color_console);
-    lua_function(L, "print_console",         E_print_console);
-
-    /* Configuration */
-
-    lua_function(L, "add_host",              E_add_host);
-    lua_function(L, "add_tile",              E_add_tile);
-    lua_function(L, "set_host_flags",        E_set_host_flags);
-    lua_function(L, "set_tile_flags",        E_set_tile_flags);
-    lua_function(L, "set_tile_position",     E_set_tile_position);
-    lua_function(L, "set_tile_viewport",     E_set_tile_viewport);
-    lua_function(L, "set_tile_line_screen",  E_set_tile_line_screen);
-    lua_function(L, "set_tile_view_mirror",  E_set_tile_view_mirror);
-    lua_function(L, "set_tile_view_offset",  E_set_tile_view_offset);
-    lua_function(L, "get_display_union",     E_get_display_union);
-    lua_function(L, "get_display_bound",     E_get_display_bound);
-
-    /* Miscellaneous */
-
-    lua_function(L, "enable_timer",          E_enable_timer);
-    lua_function(L, "get_joystick",          E_get_joystick);
-    lua_function(L, "get_modifier",          E_get_modifier);
-    lua_function(L, "set_typeface",          E_set_typeface);
-    lua_function(L, "set_background",        E_set_background);
-    lua_function(L, "exit",                  E_exit);
-    lua_function(L, "exec",                  E_exec);
-    lua_function(L, "nuke",                  E_nuke);
-
-    /* Entity constants */
-
-    lua_constant(L, "entity_flag_hidden",        FLAG_HIDDEN);
-    lua_constant(L, "entity_flag_wireframe",     FLAG_WIREFRAME);
-    lua_constant(L, "entity_flag_billboard",     FLAG_BILLBOARD);
-    lua_constant(L, "entity_flag_line_smooth",   FLAG_LINE_SMOOTH);
-    lua_constant(L, "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0);
-    lua_constant(L, "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0);
-    lua_constant(L, "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1);
-    lua_constant(L, "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1);
-
-    /* Body constants */
-
-    lua_constant(L, "body_attr_gravity",         BODY_ATTR_GRAVITY);
-
-    /* Geom constants */
-
-    lua_constant(L, "geom_type_none",            -1);
-    lua_constant(L, "geom_type_box",             dBoxClass);
-    lua_constant(L, "geom_type_plane",           dPlaneClass);
-    lua_constant(L, "geom_type_sphere",          dSphereClass);
-    lua_constant(L, "geom_type_capsule",         dCCylinderClass);
-
-    lua_constant(L, "geom_attr_category",        GEOM_ATTR_CATEGORY);
-    lua_constant(L, "geom_attr_collider",        GEOM_ATTR_COLLIDER);
-    lua_constant(L, "geom_attr_response",        GEOM_ATTR_RESPONSE);
-    lua_constant(L, "geom_attr_callback",        GEOM_ATTR_CALLBACK);
-    lua_constant(L, "geom_attr_mass",            GEOM_ATTR_MASS);
-    lua_constant(L, "geom_attr_bounce",          GEOM_ATTR_BOUNCE);
-    lua_constant(L, "geom_attr_friction",        GEOM_ATTR_FRICTION);
-    lua_constant(L, "geom_attr_soft_erp",        GEOM_ATTR_SOFT_ERP);
-    lua_constant(L, "geom_attr_soft_cfm",        GEOM_ATTR_SOFT_CFM);
-
-    /* Joint constants */
-
-    lua_constant(L, "joint_type_ball",           dJointTypeBall);
-    lua_constant(L, "joint_type_hinge",          dJointTypeHinge);
-    lua_constant(L, "joint_type_slider",         dJointTypeSlider);
-    lua_constant(L, "joint_type_universal",      dJointTypeUniversal);
-    lua_constant(L, "joint_type_hinge_2",        dJointTypeHinge2);
-
-    lua_constant(L, "joint_attr_anchor",         JOINT_ATTR_ANCHOR);
-    lua_constant(L, "joint_attr_axis_1",         JOINT_ATTR_AXIS_1);
-    lua_constant(L, "joint_attr_axis_2",         JOINT_ATTR_AXIS_2);
-    lua_constant(L, "joint_attr_value",          JOINT_ATTR_VALUE);
-    lua_constant(L, "joint_attr_rate_1",         JOINT_ATTR_RATE_1);
-    lua_constant(L, "joint_attr_rate_2",         JOINT_ATTR_RATE_2);
-    lua_constant(L, "joint_attr_lo_stop",        dParamLoStop);
-    lua_constant(L, "joint_attr_lo_stop_2",      dParamLoStop2);
-    lua_constant(L, "joint_attr_hi_stop",        dParamHiStop);
-    lua_constant(L, "joint_attr_hi_stop_2",      dParamHiStop2);
-    lua_constant(L, "joint_attr_velocity",       dParamVel);
-    lua_constant(L, "joint_attr_velocity_2",     dParamVel2);
-    lua_constant(L, "joint_attr_force_max",      dParamFMax);
-    lua_constant(L, "joint_attr_force_max_2",    dParamFMax2);
-    lua_constant(L, "joint_attr_bounce",         dParamBounce);
-    lua_constant(L, "joint_attr_bounce_2",       dParamBounce2);
-    lua_constant(L, "joint_attr_cfm",            dParamCFM);
-    lua_constant(L, "joint_attr_cfm_2",          dParamCFM2);
-    lua_constant(L, "joint_attr_stop_erp",       dParamStopERP);
-    lua_constant(L, "joint_attr_stop_erp_2",     dParamStopERP2);
-    lua_constant(L, "joint_attr_stop_cfm",       dParamStopCFM);
-    lua_constant(L, "joint_attr_stop_cfm_2",     dParamStopCFM2);
-    lua_constant(L, "joint_attr_susp_erp",       dParamSuspensionERP);
-    lua_constant(L, "joint_attr_susp_cfm",       dParamSuspensionCFM);
-
-    /* Brush constants */
-
-    lua_constant(L, "brush_flag_diffuse",        BRUSH_DIFFUSE);
-    lua_constant(L, "brush_flag_specular",       BRUSH_SPECULAR);
-    lua_constant(L, "brush_flag_ambient",        BRUSH_AMBIENT);
-    lua_constant(L, "brush_flag_shiny",          BRUSH_SHINY);
-    lua_constant(L, "brush_flag_transparent",    BRUSH_TRANSPARENT);
-    lua_constant(L, "brush_flag_env_map_0",      BRUSH_ENV_MAP_0);
-    lua_constant(L, "brush_flag_env_map_1",      BRUSH_ENV_MAP_1);
-    lua_constant(L, "brush_flag_env_map_2",      BRUSH_ENV_MAP_2);
-    lua_constant(L, "brush_flag_env_map_3",      BRUSH_ENV_MAP_3);
-    lua_constant(L, "brush_flag_sky_map_0",      BRUSH_SKY_MAP_0);
-    lua_constant(L, "brush_flag_sky_map_1",      BRUSH_SKY_MAP_1);
-    lua_constant(L, "brush_flag_sky_map_2",      BRUSH_SKY_MAP_2);
-    lua_constant(L, "brush_flag_sky_map_3",      BRUSH_SKY_MAP_3);
-    lua_constant(L, "brush_flag_unlit",          BRUSH_UNLIT);
-
-    /* Configuration constants */
-
-    lua_constant(L, "host_flag_full",            HOST_FULL);
-    lua_constant(L, "host_flag_stereo",          HOST_STEREO);
-    lua_constant(L, "host_flag_framed",          HOST_FRAMED);
-
-    lua_constant(L, "tile_flag_flip_x",          TILE_FLIP_X);
-    lua_constant(L, "tile_flag_flip_y",          TILE_FLIP_Y);
-    lua_constant(L, "tile_flag_offset",          TILE_OFFSET);
-    lua_constant(L, "tile_flag_mirror",          TILE_MIRROR);
-    lua_constant(L, "tile_flag_test",            TILE_TEST);
-
-    /* Camera constants */
-
-    lua_constant(L, "camera_type_orthogonal",    CAMERA_ORTHO);
-    lua_constant(L, "camera_type_perspective",   CAMERA_PERSP);
-
-    lua_constant(L, "stereo_mode_none",          STEREO_NONE);
-    lua_constant(L, "stereo_mode_quad",          STEREO_QUAD);
-    lua_constant(L, "stereo_mode_red_blue",      STEREO_RED_BLUE);
-    lua_constant(L, "stereo_mode_varrier_01",    STEREO_VARRIER_01);
-    lua_constant(L, "stereo_mode_varrier_11",    STEREO_VARRIER_11);
-    lua_constant(L, "stereo_mode_varrier_33",    STEREO_VARRIER_33);
-    lua_constant(L, "stereo_mode_varrier_41",    STEREO_VARRIER_41);
-
-    /* Light constants */
-
-    lua_constant(L, "light_type_positional",     LIGHT_POSITIONAL);
-    lua_constant(L, "light_type_directional",    LIGHT_DIRECTIONAL);
-
-    /* Miscellaneous constants */
-
-    lua_constant(L, "key_modifier_shift",        KMOD_SHIFT);
-    lua_constant(L, "key_modifier_control",      KMOD_CTRL);
-    lua_constant(L, "key_modifier_alt",          KMOD_ALT);
+    for (i = 0; i < nf; ++i)
+        lua_function(L, functions[i].name, functions[i].func);
+    for (i = 0; i < nc; ++i)
+        lua_constant(L, constants[i].name, constants[i].value);
+    for (i = 0; i < nk; ++i)
+        lua_constant(L, keys[i].name, keys[i].value);
 
     /* Add an empty table to hold command line arguments. */
 

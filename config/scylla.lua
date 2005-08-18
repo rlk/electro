@@ -394,90 +394,90 @@ function varrier_keyboard(k, s, camera)
 
     if s then
         if E.get_modifier(E.key_modifier_control) then
-            if k == chr("1") then return set_varrier_diff(10.0) end
-            if k == chr("2") then return set_varrier_diff(1.0) end
-            if k == chr("3") then return set_varrier_diff(0.1) end
-            if k == chr("4") then return set_varrier_diff(0.01) end
-            if k == chr("5") then return set_varrier_diff(0.001) end
-            if k == chr("6") then return set_varrier_diff(0.0001) end
-            if k == chr("7") then return set_varrier_diff(0.00001) end
-            if k == chr("8") then return set_varrier_diff(0.000001) end
+            if k == E.key_1 then return set_varrier_diff(10.0) end
+            if k == E.key_2 then return set_varrier_diff(1.0) end
+            if k == E.key_3 then return set_varrier_diff(0.1) end
+            if k == E.key_4 then return set_varrier_diff(0.01) end
+            if k == E.key_5 then return set_varrier_diff(0.001) end
+            if k == E.key_6 then return set_varrier_diff(0.0001) end
+            if k == E.key_7 then return set_varrier_diff(0.00001) end
+            if k == E.key_8 then return set_varrier_diff(0.000001) end
 
-            if k == chr("s") then
+            if k == E.key_s then
                 return set_varrier_func(varrier_shift, "shift")
             end
-            if k == chr("t") then
+            if k == E.key_t then
                 return set_varrier_func(varrier_thick, "thick")
             end
-            if k == chr("p") then
+            if k == E.key_p then
                 return set_varrier_func(varrier_pitch, "pitch")
             end
-            if k == chr("a") then
+            if k == E.key_a then
                 return set_varrier_func(varrier_angle, "angle")
             end
-            if k == chr("c") then
+            if k == E.key_c then
                 return set_varrier_func(varrier_cycle, "cycle")
             end
 
-            if k == 274 then return set_varrier_value(-1) end
-            if k == 273 then return set_varrier_value( 1) end
+            if k == E.key_down  then return set_varrier_value(-1) end
+            if k == E.key_up    then return set_varrier_value( 1) end
 
-            if k == 276 then return set_varrier_tile(-1) end
-            if k == 275 then return set_varrier_tile( 1) end
+            if k == E.key_left  then return set_varrier_tile(-1) end
+            if k == E.key_right then return set_varrier_tile( 1) end
 
-            if k == chr("\t") then return tog_varrier_test() end
+            if k == E.key_tab   then return tog_varrier_test() end
         end
 
-        if k == 286 then -- F5
+        if k == E.key_F5 then
 --            E.set_entity_frag_prog(scene, nil)
 --            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
         end
-        if k == 287 then -- F6
+        if k == E.key_F6 then
 --            E.set_entity_frag_prog(scene, nil)
 --            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 288 then -- F7
+        if k == E.key_F7 then
             E.set_entity_frag_prog(scene, "../varrier-01-frag.fp")
             E.set_entity_vert_prog(scene, "../varrier-01-vert.vp")
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 289 then -- F8
+        if k == E.key_F8 then
             E.set_entity_frag_prog(scene, "../varrier-01-fntx.fp")
             E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 290 then -- F9
+        if k == E.key_F9 then
             E.set_entity_frag_prog(scene, "../varrier-01-both.fp")
             E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 291 then -- F10
+        if k == E.key_F10 then
             E.set_entity_frag_prog(scene, "../varrier-01-bntx.fp")
             E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 292 then -- F11
+        if k == E.key_F11 then
 --            E.set_entity_frag_prog(scene, nil)
 --            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == 293 then -- F12
+        if k == E.key_F12 then
 --            E.set_entity_frag_prog(scene, nil)
 --            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,

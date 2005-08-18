@@ -109,23 +109,15 @@ function do_timer(dt)
 end
 
 function do_keyboard(k, s)
-    if s and k == 49 then
-        hide_hip = not hide_hip
-        E.set_entity_flags(galaxy_hip, E.entity_flag_hidden, hide_hip)
-    end
-    if s and k == 50 then
-        hide_tyc = not hide_tyc
-        E.set_entity_flags(galaxy_tyc, E.entity_flag_hidden, hide_tyc)
-    end
 
-    if s and k == 32 then
+    if s and k == E.key_space then
         d_hip_dist = 0
         d_tyc_dist = 0
         d_rot_x    = 0
         d_rot_y    = 0
         d_rot_z    = 0
     end
-    if s and k == 13 then
+    if s and k == E.key_return then
         hip_dist = 0
         tyc_dist = 0
         rot_x    = 0
@@ -136,7 +128,7 @@ function do_keyboard(k, s)
         E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
     end
 
-    if s and k == 293 then
+    if s and k == E.key_F12 then
         E.exec("examples/demo.lua")
     end
 
