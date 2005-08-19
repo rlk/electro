@@ -1215,7 +1215,7 @@ static void free_object(int i)
     {
         o->count--;
 
-        if (--o->count == 0)
+        if (o->count == 0)
         {
             int j;
         

@@ -121,7 +121,7 @@ DEPS= $(OBJS:.o=.d)
 %.o : %.c
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
-$(TARG) : $(OBJS) $(VERS)
+$(TARG) : $(OBJS) $(VERS) Makefile
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(VERS) $(LIBDIR) $(LIBS)
 
 clean :
