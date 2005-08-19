@@ -166,7 +166,7 @@ int   get_entity_child(int, int);
 
 /*===========================================================================*/
 
-int  step_entities(float);
+int  step_entities(float, int);
 void draw_entities(void);
 
 void nuke_entities(void);

@@ -56,6 +56,14 @@ Execute the named Lua script.</p>
 
 <dt><tt>-m</tt><dd><p>Grab the mouse pointer. Normally, mouse motion events are only detected while the pointer is within the Electro window. This limits the useful range of mouse motion to the size of the window. When the mouse pointer is grabbed, an application can track mouse motion over unlimited distances. This is useful to applications that implement a pointer that spans a large tiled display.</p>
 
+<dt><tt>-l</tt> <i>&lt;log file&gt;</i><dd><p>Log all console output to the named file.</p>
+
+<dt><tt>-t</tt> <i>&lt;key&gt;</i><dd><p>Use the given key value to access trackd tracker information. The default is 4126.</p>
+
+<dt><tt>-c</tt> <i>&lt;key&gt;</i><dd><p>Use the given key value to access trackd controller information. The default is 4127.</p>
+
+<dt><tt>-h</tt> <i>&lt;index&gt;</i><dd><p>Use the given trackd sensor index as head tracker. The position and orientation of this sensor will be applied to all cameras. The default is zero.</p>
+
 <dt><tt>-H</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p>Process the given Hipparcos stellar catalog into an Electro galaxy file.</p>
 
 <dt><tt>-T</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p>Process the given Tycho stellar catalog into an Electro galaxy file.</p>

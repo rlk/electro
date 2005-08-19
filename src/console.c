@@ -58,8 +58,9 @@ static unsigned char console_r = 0x00;
 static unsigned char console_g = 0xFF;
 static unsigned char console_b = 0x00;
 
-static unsigned char *console;
-static unsigned char *image;
+static FILE          *logfile = NULL;
+static unsigned char *console = NULL;
+static unsigned char *image   = NULL;
 
 #define CONS_C(i, j) console[(console_w * i + j) * 4]
 #define CONS_R(i, j) console[(console_w * i + j) * 4 + 1]
@@ -223,38 +224,6 @@ static void draw_image(void)
 }
 
 /*---------------------------------------------------------------------------*/
-
-int startup_console(int w, int h)
-{
-    int W = IMG_W;
-    int H = IMG_H;
-
-    if ((console = (unsigned char *) calloc(w * h * 4, 1)) &&
-        (image   = (unsigned char *) calloc(W * H * 4, 1)))
-    {
-        history = vecnew(256, sizeof (char *));
-
-        console_w = w;
-        console_h = h;
-        console_x = 0;
-        console_y = 0;
-
-        image_w = W;
-        image_h = H;
-
-        color_console(1.0f, 1.0f, 0.0f);
-
-        print("  |||  ELECTRO %s\n", version());
-        print("  O o  Copyright (C) 2005  Robert Kooima \n");
-        print("   -   http://www.evl.uic.edu/rlk/electro\n");
-
-        color_console(0.0f, 1.0f, 0.0f);
-
-        console_enable = 0;
-        return 1;
-    }
-    return 0;
-}
 
 void draw_console(void)
 {
@@ -568,9 +537,7 @@ void error_console(const char *str)
     write_console(str);
     write_console("\n");
     
-#ifndef NDEBUG
-    fprintf(stderr, "Error: %s\n", str);
-#endif
+    if (logfile) fprintf(logfile, "Error: %s\n", str);
 
     console_r = r;
     console_g = g;
@@ -589,10 +556,8 @@ void debug_console(const char *str)
 
     write_console(str);
     write_console("\n");
-    
-#ifndef NDEBUG
-    fprintf(stderr, "%s\n", str);
-#endif
+
+    if (logfile) fprintf(logfile, "%s\n", str);
 
     console_r = r;
     console_g = g;
@@ -602,3 +567,39 @@ void debug_console(const char *str)
 }
 
 /*---------------------------------------------------------------------------*/
+
+int startup_console(const char *filename, int w, int h)
+{
+    int W = IMG_W;
+    int H = IMG_H;
+
+    if (filename) 
+        logfile = fopen(filename, "w");
+
+    if ((console = (unsigned char *) calloc(w * h * 4, 1)) &&
+        (image   = (unsigned char *) calloc(W * H * 4, 1)))
+    {
+        history = vecnew(256, sizeof (char *));
+
+        console_w = w;
+        console_h = h;
+        console_x = 0;
+        console_y = 0;
+
+        image_w = W;
+        image_h = H;
+
+        color_console(1.0f, 1.0f, 0.0f);
+
+        print("  |||  ELECTRO %s\n", version());
+        print("  O o  Copyright (C) 2005  Robert Kooima \n");
+        print("   -   http://www.evl.uic.edu/rlk/electro\n");
+
+        color_console(0.0f, 1.0f, 0.0f);
+
+        console_enable = 0;
+        return 1;
+    }
+    return 0;
+}
+

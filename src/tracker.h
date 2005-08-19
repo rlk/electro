@@ -15,18 +15,20 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define TRACKER_KEY    4126
-#define CONTROLLER_KEY 4127
+#define TRACKER_KEY 4126
+#define CONTROL_KEY 4127
 
 /*---------------------------------------------------------------------------*/
 
-int startup_tracker(void);
+int startup_tracker(int, int);
 
-int  get_tracker_status(void);
+int get_tracker_status(void);
 
-int  get_tracker_rotation(int, float[3]);
-int  get_tracker_position(int, float[3]);
-int  get_tracker_joystick(int, float[2]);
+int get_tracker_rotation(int, float[3]);
+int get_tracker_position(int, float[3]);
+int get_tracker_joystick(int, float[2]);
+
+int get_tracker_buttons(int *, int *); 
 
 /*---------------------------------------------------------------------------*/
 

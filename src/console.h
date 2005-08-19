@@ -20,7 +20,7 @@
 #define CONSOLE_COLS 80
 #define CONSOLE_ROWS 24
 
-int startup_console(int, int);
+int startup_console(const char *, int, int);
 
 void draw_console(void);
 void fini_console(void);

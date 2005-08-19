@@ -64,6 +64,11 @@ static double timer_value = 0;
 
 static float average_fps  = 0;
 
+static char *console_log = NULL;
+static int   tracker_key = TRACKER_KEY;
+static int   control_key = CONTROL_KEY;
+static int   head_sensor = 0;
+
 /*---------------------------------------------------------------------------*/
 
 void grab(int b)
@@ -108,7 +113,7 @@ static int server_tick(void)
             while (timer_value > TIME_STEP)
             {
                 dirty |= do_timer_script(TIME_STEP);
-                dirty |= step_entities(TIME_STEP);
+                dirty |= step_entities(TIME_STEP, head_sensor);
 
                 timer_value -= TIME_STEP;
             }
@@ -189,6 +194,9 @@ static int server_loop(void)
     static int dirty = 1;
     static int count = 0;
 
+    static int i;
+    static int b;
+
     SDL_Event e;
 
     /* Service all queued events. */
@@ -267,6 +275,11 @@ static int server_loop(void)
             break;
         }
 
+        /* Dispatch tracker button events as joystick button events. */
+
+        while (get_tracker_buttons(&i, &b))
+            dirty |= do_joystick_script(0, i, b);
+
         /* Handle a clean exit.  TODO: remove redundancy. */
 
         if (e.type == SDL_QUIT)
@@ -311,27 +324,15 @@ static int server_loop(void)
 
 /*---------------------------------------------------------------------------*/
 
-void parse_args(int argc, char *argv[])
+void parse_options(int argc, char *argv[])
 {
     int i, c = 1;
 
-    /* Scan the list for Lua script arguments. */
-
-    for (i = 1; i < argc; ++i)
-        if      (strcmp(argv[i], "-f") == 0) i += 1;
-        else if (strcmp(argv[i], "-H") == 0) i += 2;
-        else if (strcmp(argv[i], "-T") == 0) i += 2;
-        else if (strcmp(argv[i], "-m") == 0) i += 0;
-        else
-            add_argument(c++, argv[i]);
-
-    /* Scan the list for Electro arguments. */
+    /* Scan the list for Electro options. */
 
     for (i = 1; i < argc; ++i)
         if      (strcmp(argv[i], "-f") == 0 && i < argc - 1)
-        {
-            load_script(argv[++i]);
-        }
+            i++;
 
         else if (strcmp(argv[i], "-T") == 0 && i < argc - 2)
         {
@@ -349,9 +350,44 @@ void parse_args(int argc, char *argv[])
             prep_hip_galaxy(dat, gal);
         }
 
+        else if (strcmp(argv[i], "-l") == 0 && i < argc - 1)
+            console_log = argv[++i];
+
+        else if (strcmp(argv[i], "-t") == 0 && i < argc - 1)
+            tracker_key = atoi(argv[++i]);
+
+        else if (strcmp(argv[i], "-c") == 0 && i < argc - 1)
+            control_key = atoi(argv[++i]);
+
+        else if (strcmp(argv[i], "-h") == 0 && i < argc - 1)
+            head_sensor = atoi(argv[++i]);
+
         else if (strcmp(argv[i], "-m") == 0)
             server_grab = 1;
+
+        else
+            add_argument(c++, argv[i]);
 }
+
+void parse_scripts(int argc, char *argv[])
+{
+    int i;
+
+    /* Scan the list for Lua scripts. */
+
+    for (i = 1; i < argc; ++i)
+        if      (strcmp(argv[i], "-f") == 0)
+            load_script(argv[++i]);
+        else if (strcmp(argv[i], "-H") == 0) i += 2;
+        else if (strcmp(argv[i], "-T") == 0) i += 2;
+        else if (strcmp(argv[i], "-l") == 0) i += 1;
+        else if (strcmp(argv[i], "-t") == 0) i += 1;
+        else if (strcmp(argv[i], "-c") == 0) i += 1;
+        else if (strcmp(argv[i], "-h") == 0) i += 1;
+        else if (strcmp(argv[i], "-m") == 0) i += 0;
+}
+
+/*---------------------------------------------------------------------------*/
 
 void server(int argc, char *argv[])
 {
@@ -361,22 +397,23 @@ void server(int argc, char *argv[])
     {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) == 0)
         {
+            parse_options(argc, argv);
+
             /* Initialize all subsystems. */
         
-            if (startup_console(CONSOLE_COLS, CONSOLE_ROWS) &&
+            if (startup_console(console_log, CONSOLE_COLS, CONSOLE_ROWS) &&
+                startup_tracker(tracker_key, control_key)  &&
                 startup_joystick() &&
                 startup_physics()  &&
                 startup_buffer()   &&
                 startup_display()  &&
-                startup_tracker()  &&
                 startup_entity()   &&
                 startup_sound()    &&
                 startup_image()    &&
                 startup_brush()    &&
                 startup_font())
             {
-                parse_args(argc, argv);
-
+                parse_scripts(argc, argv);
                 sync_display();
 
                 if (init_video(get_window_w(),

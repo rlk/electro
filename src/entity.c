@@ -1008,7 +1008,7 @@ void draw_entities(void)
     opengl_check("draw_entities");
 }
 
-int step_entities(float dt)
+int step_entities(float dt, int head)
 {
     int dirty = 0, i, n = vecnum(entity);
 
@@ -1035,8 +1035,8 @@ int step_entities(float dt)
         {
             struct entity *e = get_entity(i);
 
-            if (e->type == TYPE_CAMERA)
-                send_set_camera_offset(e->data, p[0], M);
+            if (0 <= head && head <= 1 && e->type == TYPE_CAMERA)
+                send_set_camera_offset(e->data, p[head], M);
 
             else if (e->type)
             {
