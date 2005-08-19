@@ -1342,7 +1342,7 @@ function do_keyboard(key, down)
     if key == E.key_right then
         player.turning_R = down
     end
-    if key == E.key_lift  then
+    if key == E.key_left  then
         player.turning_L = down
     end
 
