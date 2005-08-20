@@ -91,8 +91,8 @@ int send_create_camera(int t)
 
         c->count = 1;
         c->type  = t;
-        c->n     = (t == CAMERA_ORTHO) ? -1000.0f :     0.1f;
-        c->f     = (t == CAMERA_ORTHO) ?  1000.0f : 10000.0f;
+        c->n     = (t == CAMERA_ORTHO) ? -1000.0f :    0.1f;
+        c->f     = (t == CAMERA_ORTHO) ?  1000.0f : 1000.0f;
         c->f = 1000;
 
         c->view_basis[0][0] = 1.0f;
@@ -207,6 +207,26 @@ void recv_set_camera_stereo(void)
     c->eye_offset[1][0] = recv_float();
     c->eye_offset[1][1] = recv_float();
     c->eye_offset[1][2] = recv_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_camera_range(int i, float n, float f)
+{
+    struct camera *c = get_camera(i);
+
+    send_event(EVENT_SET_CAMERA_RANGE);
+    send_index(i);
+    send_float((c->n = n));
+    send_float((c->f = f));
+}
+
+void recv_set_camera_range(void)
+{
+    struct camera *c = get_camera(recv_index());
+
+    c->n = recv_float();
+    c->f = recv_float();
 }
 
 /*===========================================================================*/

@@ -34,7 +34,7 @@ ifeq ($(shell uname), Darwin)
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
-	FT2_CONFIG = $(HOME)/bin/freetype-config
+	FT2_CONFIG = /usr/bin/freetype-config
 endif
 
 # Include Lua, if it exists.

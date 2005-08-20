@@ -68,22 +68,23 @@
 #define EVENT_SET_GALAXY_MAGNITUDE 42
 #define EVENT_SET_CAMERA_OFFSET    43
 #define EVENT_SET_CAMERA_STEREO    44
-#define EVENT_SET_SPRITE_RANGE     45
-#define EVENT_SET_SPRITE_BRUSH     46
-#define EVENT_SET_STRING_FILL      47
-#define EVENT_SET_STRING_LINE      48
-#define EVENT_SET_STRING_TEXT      49
-#define EVENT_SET_LIGHT_COLOR      50
-#define EVENT_SET_BACKGROUND       51
-#define EVENT_SET_FONT             52
+#define EVENT_SET_CAMERA_RANGE     45
+#define EVENT_SET_SPRITE_RANGE     46
+#define EVENT_SET_SPRITE_BRUSH     47
+#define EVENT_SET_STRING_FILL      48
+#define EVENT_SET_STRING_LINE      49
+#define EVENT_SET_STRING_TEXT      50
+#define EVENT_SET_LIGHT_COLOR      51
+#define EVENT_SET_BACKGROUND       52
+#define EVENT_SET_FONT             53
 
-#define EVENT_ADD_TILE             53
-#define EVENT_SET_TILE_FLAGS       54
-#define EVENT_SET_TILE_POSITION    55
-#define EVENT_SET_TILE_VIEWPORT    56
-#define EVENT_SET_TILE_LINE_SCREEN 57
-#define EVENT_SET_TILE_VIEW_MIRROR 58
-#define EVENT_SET_TILE_VIEW_OFFSET 59
+#define EVENT_ADD_TILE             54
+#define EVENT_SET_TILE_FLAGS       55
+#define EVENT_SET_TILE_POSITION    56
+#define EVENT_SET_TILE_VIEWPORT    57
+#define EVENT_SET_TILE_LINE_SCREEN 58
+#define EVENT_SET_TILE_VIEW_MIRROR 59
+#define EVENT_SET_TILE_VIEW_OFFSET 60
 
 /*---------------------------------------------------------------------------*/
 

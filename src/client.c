@@ -115,6 +115,7 @@ static void client_recv(void)
         case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
         case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
         case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
+        case EVENT_SET_CAMERA_RANGE:     recv_set_camera_range();     break;
         case EVENT_SET_SPRITE_RANGE:     recv_set_sprite_range();     break;
         case EVENT_SET_SPRITE_BRUSH:     recv_set_sprite_brush();     break;
         case EVENT_SET_STRING_FILL:      recv_set_string_fill();      break;

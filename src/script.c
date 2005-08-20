@@ -1367,6 +1367,14 @@ static int E_set_camera_stereo(lua_State *L)
     return 0;
 }
 
+static int E_set_camera_range(lua_State *L)
+{
+    send_set_camera_range(E_getcamera(L, -3),
+                          L_getnumber(L, -2),
+                          L_getnumber(L, -1));
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Light functions                                                           */
 
@@ -2231,6 +2239,7 @@ static struct function_def functions[] = {
 
     { "set_camera_offset",     E_set_camera_offset     },
     { "set_camera_stereo",     E_set_camera_stereo     },
+    { "set_camera_range",      E_set_camera_range      },
 
     /* Light functions */
 

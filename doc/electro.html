@@ -585,6 +585,13 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering algorithm.</p>
 
 </ul>
+
+<dt><tt>set_camera_offset</tt>(<i>camera, x, y, z</i>)<dd><p>Set the offset of a camera's view. The camera offset is a vector (<i>x, y, z</i>) giving the real position of the viewpoint relative to the position of the camera entity. This function moves the only apex of the view frustum, not its view rectangle. Thus it modifies the <i>shape</i> of the projection rather than its position.</p>
+
+<p>Camera offset allows a distinction to be drawn between the navigational and projection-defining aspects of camera positioning.  In a VR environment for example, the camera entity position represents the position of the display within the virtual space, while the camera offset represents the position of the user's head within the display. When compiled with trackd support, Electro automatically updates the offset of all cameras based on the position of the head sensor.</p>
+
+<dt><tt>set_camera_range</tt>(<i>camera, near, far</i>)<dd><p>Set the near and far clipping planes for a camera.  The default range is (<i>0.1, 1000.0</i>) for perspective cameras and (<i>-1000.0,+1000.0</i>) for orthogonal cameras.</p>
+
 </dl>
 
 <!---------------------------------------------------------------------------->
