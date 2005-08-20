@@ -1062,12 +1062,21 @@ void set_texture_coordinates(void)
         Q[0] = X[3];  Q[1] = X[7];  Q[2] = X[11]; Q[3] = X[15];
 #endif
 
-        glActiveTextureARB(GL_TEXTURE3_ARB);
-        set_active_texture_coordinates(S, T, R, Q);
-        glActiveTextureARB(GL_TEXTURE2_ARB);
-        set_active_texture_coordinates(S, T, R, Q);
-        glActiveTextureARB(GL_TEXTURE1_ARB);
-        set_active_texture_coordinates(S, T, R, Q);
+        if (GL_TEXTURE3_ARB < GL_max_multitexture)
+        {
+            glActiveTextureARB(GL_TEXTURE3_ARB);
+            set_active_texture_coordinates(S, T, R, Q);
+        }
+        if (GL_TEXTURE2_ARB < GL_max_multitexture)
+        {
+            glActiveTextureARB(GL_TEXTURE2_ARB);
+            set_active_texture_coordinates(S, T, R, Q);
+        }
+        if (GL_TEXTURE1_ARB < GL_max_multitexture)
+        {
+            glActiveTextureARB(GL_TEXTURE1_ARB);
+            set_active_texture_coordinates(S, T, R, Q);
+        }
         glActiveTextureARB(GL_TEXTURE0_ARB);
     }
 }

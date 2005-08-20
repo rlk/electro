@@ -727,7 +727,7 @@ static void set_tex_map(void)
 
 static void set_tex_gen(GLenum texture, int env, int sky)
 {
-    if (GL_has_multitexture)
+    if (GL_has_multitexture && texture < GL_max_multitexture)
     {
         glActiveTextureARB(texture);
 
@@ -741,7 +741,7 @@ static void set_tex_gen(GLenum texture, int env, int sky)
 
 static void apply_image(GLenum texture, int image)
 {
-    if (GL_has_multitexture)
+    if (GL_has_multitexture && texture < GL_max_multitexture)
     {
         glActiveTextureARB(texture);
 

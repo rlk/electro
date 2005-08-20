@@ -316,7 +316,7 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
 
         /* Set up the line screen texture environments. */
 
-        if (GL_has_multitexture)
+        if (GL_has_multitexture && GL_TEXTURE3_ARB < GL_max_multitexture)
         {
             /* TU0 modulates the material RGB against the base texture,      */
             /* giving the pixel RGB, and sums (and clamps) the red and       */
@@ -391,12 +391,21 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
     {
         if (GL_has_multitexture)
         {
-            glActiveTextureARB(GL_TEXTURE3_ARB);
-            glDisable(GL_TEXTURE_2D);
-            glActiveTextureARB(GL_TEXTURE2_ARB);
-            glDisable(GL_TEXTURE_2D);
-            glActiveTextureARB(GL_TEXTURE1_ARB);
-            glDisable(GL_TEXTURE_2D);
+            if (GL_TEXTURE3_ARB < GL_max_multitexture)
+            {
+                glActiveTextureARB(GL_TEXTURE3_ARB);
+                glDisable(GL_TEXTURE_2D);
+            }
+            if (GL_TEXTURE2_ARB < GL_max_multitexture)
+            {
+                glActiveTextureARB(GL_TEXTURE2_ARB);
+                glDisable(GL_TEXTURE_2D);
+            }
+            if (GL_TEXTURE1_ARB < GL_max_multitexture)
+            {
+                glActiveTextureARB(GL_TEXTURE1_ARB);
+                glDisable(GL_TEXTURE_2D);
+            }
             glActiveTextureARB(GL_TEXTURE0_ARB);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         }

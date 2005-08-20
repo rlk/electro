@@ -25,8 +25,9 @@ GLboolean GL_has_fragment_program     = 0;
 GLboolean GL_has_vertex_program       = 0;
 GLboolean GL_has_vertex_buffer_object = 0;
 GLboolean GL_has_point_sprite         = 0;
-GLboolean GL_has_multitexture         = 0;
 GLboolean GL_has_texture_compression  = 0;
+GLboolean GL_has_multitexture         = 0;
+GLenum    GL_max_multitexture         = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -79,12 +80,17 @@ void *opengl_proc(const char *name)
 
 void init_opengl(void)
 {
+    GLint TUs;
+
     GL_has_fragment_program     = opengl_need("GL_ARB_fragment_program");
     GL_has_vertex_program       = opengl_need("GL_ARB_vertex_program");
     GL_has_vertex_buffer_object = opengl_need("GL_ARB_vertex_buffer_object");
     GL_has_point_sprite         = opengl_need("GL_ARB_point_sprite");
-    GL_has_multitexture         = opengl_need("GL_ARB_multitexture");
     GL_has_texture_compression  = opengl_need("GL_ARB_texture_compression");
+    GL_has_multitexture         = opengl_need("GL_ARB_multitexture");
+
+    glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
+    GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
 }
 
 #else
@@ -170,9 +176,13 @@ void init_opengl(void)
 
     if (opengl_need("GL_ARB_multitexture"))
     {
+        GLint TUs;
+
         glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)
             opengl_proc("glActiveTextureARB");
 
+        glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
+        GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
         GL_has_multitexture = (glActiveTextureARB && GL_TRUE);
     }
 
