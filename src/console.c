@@ -261,10 +261,10 @@ void draw_console(void)
                 glLoadIdentity();
                 glOrtho(0, W, 0, H, -1, +1);
             }
-            glMatrixMode(GL_MODELVIEW);
-            {
+            glMatrixMode(GL_TEXTURE);
                 glLoadIdentity();
-            }
+            glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
 
             /* This test pattern is useful for Varrier development. */
 

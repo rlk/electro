@@ -15,7 +15,7 @@
 #include <jpeglib.h>
 #include <png.h>
 
-#ifdef EXPERIMENTAL
+#ifdef VIDEOTEX
 #include <sys/sem.h>
 #include <sys/shm.h>
 #endif
@@ -27,6 +27,8 @@
 #include "event.h"
 #include "image.h"
 
+#define NPOT(n) (((n) & ((n) - 1)) != 0)
+
 /*---------------------------------------------------------------------------*/
 
 #define MAX_FILE 6
@@ -36,11 +38,9 @@ struct image
     int count;
     int state;
 
-    int frame;
-    int shmid;
-    int semid;
-
     GLuint texture;
+
+    /* Pixel buffer attributes. */
 
     int   n;
     int   w;
@@ -48,6 +48,14 @@ struct image
     int   b;
     void *p[MAX_FILE];
     char *s[MAX_FILE];
+
+    /* Shared buffer attributes. */
+
+    int  last_frame;
+    int *next_frame;
+
+    int shmid;
+    int semid;
 };
 
 static vector_t image;
@@ -79,17 +87,21 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
-/*
-static int power_of_two(int n)
+
+static void step_texture(int i)
 {
-    int i = 1;
+    struct image *p = get_image(i);
+    GLenum t;
 
-    while (i < n)
-        i *= 2;
+    if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))
+        t = GL_TEXTURE_RECTANGLE_ARB;
+    else
+        t = GL_TEXTURE_2D;
 
-    return i;
+    glBindTexture(t, p->texture);
+    glTexSubImage2D(t, 0, 0, 0, p->w, p->h,
+                    format[p->b], GL_UNSIGNED_BYTE, p->p[0]);
 }
-*/
 
 GLuint make_texture(void *p[6], int n, int w, int h, int b)
 {
@@ -99,10 +111,10 @@ GLuint make_texture(void *p[6], int n, int w, int h, int b)
 
     glGenTextures(1, &o);
 
+    /* Several images comprise a cube map. */
+
     if (n > 1)
     {
-        /* Several images comprise a cube map. */
-
         glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, o);
 
         gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, format[b],
@@ -119,9 +131,9 @@ GLuint make_texture(void *p[6], int n, int w, int h, int b)
                           w, h, format[b], GL_UNSIGNED_BYTE, p[5]);
 
         glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
                         GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
         glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
                         GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -130,19 +142,35 @@ GLuint make_texture(void *p[6], int n, int w, int h, int b)
         glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
                         GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     }
+
+    /* Non-power of two size implies texture rectangle. */
+
+    else if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
+    {
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
+
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, format[b],
+                     w, h, 0, format[b], GL_UNSIGNED_BYTE, p[0]);
+
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    /* A single image comprises a 2D texture map. */
+
     else
     {
-        /* A single image comprises a 2D texture map. */
-
         glBindTexture(GL_TEXTURE_2D, o);
 
         gluBuild2DMipmaps(GL_TEXTURE_2D, format[b], w, h,
                           format[b], GL_UNSIGNED_BYTE, p[0]);
 
         glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,
                         GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     }
 
     return o;
@@ -304,11 +332,8 @@ static void *load_image(const char *filename, int *width,
 
 static int cmpname(const char *name1, const char *name2)
 {
-    if (name1 == NULL && name2 == NULL)
-        return 0;
-
-    if (name1 == NULL || name2 == NULL)
-        return 1;
+    if (name1 == NULL && name2 == NULL) return 0;
+    if (name1 == NULL || name2 == NULL) return 1;
 
     return strcmp(name1, name2);
 }
@@ -393,43 +418,53 @@ int send_create_image(const char *file_nx,
     return -1;
 }
 
-#ifdef EXPERIMENTAL
-int send_create_movie(int key, int w, int h, int b)
+#ifdef VIDEOTEX
+int send_create_video(int k, int w, int h, int b)
 {
     int i;
 
     if ((i = new_image()) >= 0)
     {
         struct image *p = get_image(i);
+        void *buffer;
 
-        p->state = 1;
+        p->state = 0;
         p->count = 1;
+        p->n     = 1;
         p->w     = w;
         p->h     = h;
         p->b     = b;
 
         /* Acquire the semaphore and shared memory buffers.  Pack the image. */
 
-        if ((p->shmid = shmget(key, w * h * b + 4, 0666 | IPC_CREAT)) >=0 )
+        if ((p->semid = semget(k, 1, 0666 | IPC_CREAT)) >= 0)
         {
-            if ((p->p = shmat(p->shmid, NULL, SHM_RDONLY)))
+            if (semctl(p->semid, 0, SETVAL, 1) >= 0)
             {
-                if ((p->semid = semget(key, 1, 0666 | IPC_CREAT)) >= 0)
+                if ((p->shmid = shmget(k, w*h*b + 4, 0666 | IPC_CREAT)) >=0)
                 {
-                    send_event(EVENT_CREATE_IMAGE);
-                    send_index(p->w);
-                    send_index(p->h);
-                    send_index(p->b);
+                    if ((buffer = shmat(p->shmid, NULL, SHM_RDONLY)))
+                    {
+                        send_event(EVENT_CREATE_IMAGE);
+                        send_index(p->n);
+                        send_index(p->w);
+                        send_index(p->h);
+                        send_index(p->b);
 
-                    send_array(p->p[0], p->w * p->h, p->b);
+                        p->next_frame = (int *) buffer;
+                        p->p[0]       = (int *) buffer + 1;
 
-                    return i;
+                        send_array((char *) buffer + 4, p->w * p->h, p->b);
+
+                        return i;
+                    }
+                    else error("Video buffer %d: %s", k, system_error());
                 }
-                else error("Shared image mutex %d: %s", key, system_error());
+                else error("Video buffer %d: %s", k, system_error());
             }
-            else error("Shared image attach %d: %s", key, system_error());
+            else error("Video mutex %d: %s", k, system_error());
         }
-        else error("Shared image buffer %d: %s", key, system_error());
+        else error("Video mutex %d: %s", k, system_error());
     }
     return -1;
 }
@@ -449,16 +484,18 @@ void recv_create_image(void)
 
     for (j = 0; j < p->n; ++j)
     {
-        p->p[j] = (GLubyte *) malloc(p->w * p->h * p->b);
-        recv_array(p->p[j], p->w * p->h, p->b);
+        p->p[j] =    malloc(p->w * p->h * p->b);
+        recv_array(p->p[j], p->w * p->h * p->b, 1);
     }
 }
 
 void recv_set_image_pixels(void)
 {
-    struct image *p = get_image(recv_index());
+    int i           = recv_index();
+    struct image *p = get_image(i);
 
-    recv_array(p->p[0], p->w * p->h, p->b);
+    recv_array(p->p[0], p->w * p->h * p->b, 1);
+    step_texture(i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -478,20 +515,22 @@ static int free_image(int i)
             {
                 fini_image(i);
 
-#ifdef EXPERIMENTAL
-                if (p->semid >= 0)
+                if (p->semid == -1)
                 {
-                    shmdt(p->p);
-                    semctl(p->semid, 0, IPC_RMID, NULL);
-                    shmctl(p->shmid,    IPC_RMID, NULL);
-                }
-                else
-#endif
                     for (j = 0; j < MAX_FILE; ++j)
                     {
                         if (p->s[j]) free(p->s[j]);
                         if (p->p[j]) free(p->p[j]);
                     }
+                }
+                else
+                {
+#ifdef VIDEOTEX
+                    shmdt (p->p[0]);
+                    semctl(p->semid, 0, IPC_RMID, NULL);
+                    shmctl(p->shmid,    IPC_RMID, NULL);
+#endif
+                }
 
                 memset(p, 0, sizeof (struct image));
 
@@ -553,8 +592,7 @@ void get_image_c(int i, int x, int y, unsigned char c[4])
             c[3] = pixels[(p->w * y + x) * 3 + 3];
             break;
         }
-    else
-        c[0] = c[1] = c[2] = c[3] = 0xFF;
+    else c[0] = c[1] = c[2] = c[3] = 0xFF;
 }
 
 int get_image_w(int i)
@@ -600,20 +638,19 @@ void draw_image(int i)
 
     if (p->count)
     {
+        GLenum t = GL_TEXTURE_2D;
+
         init_image(i);
 
-        if (p->n > 1)
-        {
-            glEnable(GL_TEXTURE_CUBE_MAP_ARB);
-            glDisable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, get_image(i)->texture);
-        }
-        else
-        {
-            glDisable(GL_TEXTURE_CUBE_MAP_ARB);
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, get_image(i)->texture);
-        }
+        glDisable(GL_TEXTURE_RECTANGLE_ARB);
+        glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+        glDisable(GL_TEXTURE_2D);
+
+        if      (p->n > 1)                 t = GL_TEXTURE_CUBE_MAP_ARB;
+        else if (NPOT(p->w) || NPOT(p->h)) t = GL_TEXTURE_RECTANGLE_ARB;
+            
+        glEnable(t);
+        glBindTexture(t, get_image(i)->texture);
     }
 }
 
@@ -646,9 +683,9 @@ void fini_images(void)
             fini_image(i);
 }
 
-#ifdef EXPERIMENTAL
 void step_images(void)
 {
+#ifdef VIDEOTEX
     int i, n = vecnum(image);
 
     for (i = 0; i < n; ++i)
@@ -670,19 +707,17 @@ void step_images(void)
 
             /* If the frame has changed... */
 
-            if (p->frame < *((int *) p->p))
+            if (p->last_frame < *p->next_frame)
             {
                 /* Update the texture object. */
 
-                glBindTexture(GL_TEXTURE_2D, p->texture);
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, p->w, p->h,
-                                format[p->b], GL_UNSIGNED_BYTE, p->p);
+                step_texture(i);
 
                 /* Push the new image to all clients. */
 
                 send_event(EVENT_SET_IMAGE_PIXELS);
                 send_index(i);
-                send_array(p->p, p->w * p->h, p->b);
+                send_array(p->p[0], p->w * p->h * p->b, 1);
             }
 
             /* Release the buffer. */
@@ -693,8 +728,8 @@ void step_images(void)
             semop(p->semid, &s, 1);
         }
     }
-}
 #endif
+}
 
 /*---------------------------------------------------------------------------*/
 

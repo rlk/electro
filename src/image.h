@@ -25,7 +25,7 @@ int  send_create_image(const char *, const char *,
                        const char *, const char *,
                        const char *, const char *);
 
-int  send_create_movie(int, int, int, int);
+int  send_create_video(int, int, int, int);
 
 void send_delete_image(int);
 void recv_delete_image(void);

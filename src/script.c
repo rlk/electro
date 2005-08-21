@@ -1435,14 +1435,27 @@ static int E_get_star_position(lua_State *L)
 
 static int E_create_image(lua_State *L)
 {
-    if (lua_gettop(L) >= 6)
+    int N = lua_gettop(L);
+
+    if (N == 6)
         E_pushimage(L, send_create_image(L_getstring(L, -6),
                                          L_getstring(L, -5),
                                          L_getstring(L, -4),
                                          L_getstring(L, -3),
                                          L_getstring(L, -2),
                                          L_getstring(L, -1)));
-    else
+#ifdef VIDEOTEX
+    if (N == 4)
+        E_pushimage(L, send_create_video(L_getinteger(L, -4),
+                                         L_getinteger(L, -3),
+                                         L_getinteger(L, -2),
+                                         L_getinteger(L, -1)));
+#else
+    if (N == 4)
+        E_pushimage(L, 0);
+#endif
+
+    if (N == 1)
         E_pushimage(L, send_create_image(L_getstring(L, -1),
                                          NULL, NULL, NULL, NULL, NULL));
  

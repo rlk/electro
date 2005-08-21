@@ -34,6 +34,8 @@ int quad_stereo_status(void)
 
 static void init_options(void)
 {
+    GLfloat a[4] = { 0, 0, 0, 0 };
+
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -41,8 +43,9 @@ static void init_options(void)
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
 
-    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
-                  GL_SEPARATE_SPECULAR_COLOR);
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, a);
+    glLightModeli (GL_LIGHT_MODEL_COLOR_CONTROL,
+                   GL_SEPARATE_SPECULAR_COLOR);
 
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

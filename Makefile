@@ -14,11 +14,17 @@ else
 	CFLAGS = -g -Wall
 endif
 
-# To build with trackdAPI: "make TRACKD=1"
+# To build with tracking: "make TRACKD=1"
 
 ifdef TRACKD
 	LIBS   += -Wl,-rpath $(HOME)/lib -ltrackdAPI_c
 	CFLAGS += -DTRACKD
+endif
+
+# "make VIDEOTEX=1" enables shared-memory streaming image buffers under Linux.
+
+ifdef VIDEOTEX
+	CFLAGS += -DVIDEOTEX
 endif
 
 #------------------------------------------------------------------------------

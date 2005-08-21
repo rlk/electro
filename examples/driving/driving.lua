@@ -34,6 +34,26 @@ function add_ramp(x, y, z, a, r)
     E.set_entity_rotation (ramp, a, r, 0)
 end
 
+function add_tv(x, y, z)
+    local object = E.create_object("../data/tv.obj")
+    E.parent_entity(object, pivot)
+
+    E.set_entity_body_type(object, true)
+    E.set_entity_geom_type(object, E.geom_type_box, 2, 1.5, 1)
+    E.set_entity_geom_attr(object, E.geom_attr_category, category_world)
+    E.set_entity_geom_attr(object, E.geom_attr_collider, category_all)
+    E.set_entity_geom_attr(object, E.geom_attr_friction, 10)
+
+    if video then
+        E.set_brush_image(E.get_mesh(object, 2), video)
+    end
+
+    E.set_entity_position(object, x, y, z)
+
+    table.insert(objects, object)
+    return object
+end
+
 function add_box()
     local object = E.create_object("../data/box.obj")
     E.parent_entity(object, pivot)
@@ -169,7 +189,7 @@ function add_car()
     -- Define the geoms of all colliding bodies.
 
     E.set_entity_geom_type(base, E.geom_type_box, 2, 0.100, 4)
-    E.set_entity_geom_type(body, E.geom_type_box, 2, 1.125, 4)
+    E.set_entity_geom_type(body, E.geom_type_box, 2, 1.500, 4)
     E.set_entity_geom_type(W[1], E.geom_type_sphere, rad)
     E.set_entity_geom_type(W[2], E.geom_type_sphere, rad)
     E.set_entity_geom_type(W[3], E.geom_type_sphere, rad)
@@ -304,6 +324,7 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
+    video = E.create_image(2827, 1280, 480, 1)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",
@@ -334,6 +355,22 @@ function do_start()
     add_ramp(0, 0, 0, 10, 0)
     add_ramp(32, 0, 10, 30, 0)
     add_ramp(-32, 0, -10, -15, 180)
+
+    add_tv(-4, 0.75, -20)
+    add_tv(-2, 0.75, -20)
+    add_tv( 0, 0.75, -20)
+    add_tv( 2, 0.75, -20)
+    add_tv( 4, 0.75, -20)
+    add_tv(-4, 2.25, -20)
+    add_tv(-2, 2.25, -20)
+    add_tv( 0, 2.25, -20)
+    add_tv( 2, 2.25, -20)
+    add_tv( 4, 2.25, -20)
+    add_tv(-4, 3.75, -20)
+    add_tv(-2, 3.75, -20)
+    add_tv( 0, 3.75, -20)
+    add_tv( 2, 3.75, -20)
+    add_tv( 4, 3.75, -20)
 
     E.enable_timer(true)
     add_car()
@@ -384,6 +421,9 @@ function do_keyboard(k, s)
             add_car()
         end
         if k == E.key_4 then
+            add_tv(0, 10, 0)
+        end
+        if k == E.key_tab then
             right = true
         end
 
@@ -405,7 +445,7 @@ function do_keyboard(k, s)
         if k == E.key_right then key_x = key_x + 1 end
         if k == E.key_left  then key_x = key_x - 1 end
     else
-        if k == E.key_4 then
+        if k == E.key_tab then
             right = false
         end
 

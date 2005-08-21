@@ -25,6 +25,7 @@ GLboolean GL_has_fragment_program     = 0;
 GLboolean GL_has_vertex_program       = 0;
 GLboolean GL_has_vertex_buffer_object = 0;
 GLboolean GL_has_point_sprite         = 0;
+GLboolean GL_has_texture_rectangle    = 0;
 GLboolean GL_has_texture_compression  = 0;
 GLboolean GL_has_multitexture         = 0;
 GLenum    GL_max_multitexture         = 0;
@@ -32,7 +33,7 @@ GLenum    GL_max_multitexture         = 0;
 /*---------------------------------------------------------------------------*/
 
 /* Confirm that the named OpenGL extension is supported by the current       */
-/* implementation.  Print an error if not.                                   */
+/* implementation.                                                           */
 
 GLboolean opengl_need(const char *extension)
 {
@@ -55,8 +56,6 @@ GLboolean opengl_need(const char *extension)
 
         start = space;
     }
-
-    error("Requires OpenGL extension: %s", extension);
 
     return GL_FALSE;
 }
@@ -87,6 +86,7 @@ void init_opengl(void)
     GL_has_vertex_buffer_object = opengl_need("GL_ARB_vertex_buffer_object");
     GL_has_point_sprite         = opengl_need("GL_ARB_point_sprite");
     GL_has_texture_compression  = opengl_need("GL_ARB_texture_compression");
+    GL_has_texture_rectangle    = opengl_need("GL_ARB_texture_rectangle");
     GL_has_multitexture         = opengl_need("GL_ARB_multitexture");
 
     glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
@@ -188,6 +188,8 @@ void init_opengl(void)
 
     GL_has_point_sprite
         = opengl_need("GL_ARB_point_sprite");
+    GL_has_texture_rectangle
+        = opengl_need("GL_ARB_texture_rectangle");
     GL_has_texture_compression
         = opengl_need("GL_ARB_texture_compression");
 }
