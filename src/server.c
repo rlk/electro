@@ -154,7 +154,7 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%s %s (%d FPS)", TITLE, version(), fps_new);
+        sprintf(buf, "%s %s (%d FPS)", TITLE, get_version(), fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;
@@ -400,7 +400,6 @@ void server(int argc, char *argv[])
             /* Initialize all subsystems. */
         
             if (startup_console(console_log, CONSOLE_COLS, CONSOLE_ROWS) &&
-                startup_tracker(tracker_key, control_key)  &&
                 startup_joystick() &&
                 startup_physics()  &&
                 startup_buffer()   &&
@@ -411,7 +410,10 @@ void server(int argc, char *argv[])
                 startup_brush()    &&
                 startup_font())
             {
+                startup_tracker(tracker_key, control_key);
+
                 parse_scripts(argc, argv);
+
                 sync_display();
 
                 if (init_video(get_window_w(),

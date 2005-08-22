@@ -118,18 +118,21 @@ int get_tracker_joystick(int id, float a[2])
 int get_tracker_buttons(int *id, int *dn)
 {
 #ifdef TRACKD
-    int i, n = trackdGetNumberOfButtons(control);
+    if (control)
+    {
+        int i, n = trackdGetNumberOfButtons(control);
 
-    for (i = 0; i < n; ++i)
-        if (buttons[i] != trackdGetButton(control, i))
-        {
-            buttons[i]  = trackdGetButton(control, i);
+        for (i = 0; i < n; ++i)
+            if (buttons[i] != trackdGetButton(control, i))
+            {
+                buttons[i]  = trackdGetButton(control, i);
 
-            *id = i + 1;
-            *dn = buttons[i];
+                *id = i + 1;
+                *dn = buttons[i];
 
-            return 1;
-        }
+                return 1;
+            }
+    }
 #endif
     return 0;
 }

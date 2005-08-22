@@ -324,7 +324,7 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
-    video = E.create_image(2827, 1280, 480, 1)
+    video = E.create_image(2827, 1280, 480, 3)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",

@@ -17,7 +17,7 @@ endif
 # To build with tracking: "make TRACKD=1"
 
 ifdef TRACKD
-	LIBS   += -Wl,-rpath $(HOME)/lib -ltrackdAPI_c
+	LIBS   += $(HOME)/lib/libtrackdAPI_c.a
 	CFLAGS += -DTRACKD
 endif
 
@@ -147,7 +147,7 @@ install : $(TARG)
 ifneq ($(shell which svnversion),)
 
 src/version.c : $(OBJS)
-	echo -n 'const char *version(void) { const char *str = "' \
+	echo -n 'const char *get_version(void) { const char *str = "' \
 	                              > src/version.c
 	svnversion -n . | tr -d '\n' >> src/version.c
 	echo '"; return str; }'      >> src/version.c
