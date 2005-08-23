@@ -70,6 +70,8 @@ function do_start()
 
     table.foreach(E.argument, add_object)
 
+    E.set_camera_offset(camera, offset[1], offset[2], offset[3])
+
     E.enable_timer(true)
 end
 

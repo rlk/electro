@@ -888,6 +888,12 @@ void get_entity_bound(int i, float v[6])
         entity_func[e->type]->aabb(e->data, v);
     else
         memset(v, 0, 6 * sizeof (float));
+
+    if (get_entity_flags(i) & FLAG_STEREO)
+    {
+        v[0] *= 0.5f;
+        v[3] *= 0.5f;
+    }
 }
 
 float get_entity_alpha(int i)

@@ -469,8 +469,8 @@ function do_timer(dt)
         local zx, zy, zz = E.get_entity_z_vector(base)
 
         local kx =  0
-        local ky =  3
-        local kz =  8
+        local ky =  2
+        local kz = 10
 
         local x = px + xx * kx + yx * ky + zx * kz
         local y = py + xy * ky + yy * ky + zy * ky

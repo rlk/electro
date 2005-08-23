@@ -1671,6 +1671,12 @@ static int E_clear_console(lua_State *L)
     return 0;
 }
 
+static int E_close_console(lua_State *L)
+{
+    set_console_enable(0);
+    return 0;
+}
+
 static int E_color_console(lua_State *L)
 {
     color_console(L_getnumber(L, -3),
@@ -2294,6 +2300,7 @@ static struct function_def functions[] = {
     /* Console functions */
 
     { "clear_console",         E_clear_console         },
+    { "close_console",         E_close_console         },
     { "color_console",         E_color_console         },
     { "print_console",         E_print_console         },
 
@@ -2335,6 +2342,7 @@ static struct constant_def constants[] = {
     { "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0  },
     { "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1  },
     { "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1  },
+    { "entity_flag_stereo",        FLAG_STEREO         },
 
     /* Body constants */
 

@@ -383,10 +383,6 @@ end
 
 -------------------------------------------------------------------------------
 
-function chr(s)
-    return string.byte(s)
-end
-
 function varrier_keyboard(k, s, camera)
     local dx =  2.50 / 12.0 * 0.5
     local dy = -1.23 / 12.0
