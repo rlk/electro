@@ -154,7 +154,7 @@ src/version.c : $(OBJS)
 else
 
 src/version.c : $(OBJS)
-	echo 'const char *version(void) { return ""; }' > src/version.c
+	echo 'const char *get_version(void) { return ""; }' > src/version.c
 endif
 
 #------------------------------------------------------------------------------

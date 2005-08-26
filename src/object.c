@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <float.h>
 
 #include "opengl.h"
 #include "vector.h"
@@ -1168,12 +1167,17 @@ static void aabb_object(int i, float aabb[6])
 
         /* Find the object's bounding box. */
 
-        o->aabb_cache[0] = FLT_MAX;
-        o->aabb_cache[1] = FLT_MAX;
-        o->aabb_cache[2] = FLT_MAX;
-        o->aabb_cache[3] = FLT_MIN;
-        o->aabb_cache[4] = FLT_MIN;
-        o->aabb_cache[5] = FLT_MIN;
+        if (n > 0)
+        {
+            const float *v = ((struct object_vert *) vecget(o->vv, 0))->v;
+
+            o->aabb_cache[0] = v[0];
+            o->aabb_cache[1] = v[1];
+            o->aabb_cache[2] = v[2];
+            o->aabb_cache[3] = v[3];
+            o->aabb_cache[4] = v[4];
+            o->aabb_cache[5] = v[5];
+        }
 
         for (j = 0; j < n; ++j)
         {

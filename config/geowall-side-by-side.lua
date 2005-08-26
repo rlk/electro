@@ -5,8 +5,8 @@ H =  4.1666  --                            by 4'2".
 D = 10.0000  -- The ideal viewing position is 10' from the center.
 O =  0.2083  -- The interocular distance is 2.5".
 
-w = 2560
-h = 1024
+w = 2048
+h =  768
 
 ------------------------------------------------------------------------------
 
@@ -24,5 +24,7 @@ E.set_tile_viewport(tile[2], 0, 0, w / 2, h)
 
 E.set_tile_view_offset(tile[1], -O / 2, 0, 0)
 E.set_tile_view_offset(tile[2],  O / 2, 0, 0)
+
+E.set_host_flags(host, E.host_flag_full, true)
 
 ------------------------------------------------------------------------------

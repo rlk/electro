@@ -555,36 +555,45 @@ void send_set_entity_flags(int i, int flags, int state)
 
 void set_entity_body_type(int i, int t)
 {
-    struct entity *e = get_entity(i);
+    if (i > 0)
+    {
+        struct entity *e = get_entity(i);
 
-    e->body = set_phys_body_type(e->body, t);
+        e->body = set_phys_body_type(e->body, t);
 
-    update_entity_position(i);
-    update_entity_rotation(i);
+        update_entity_position(i);
+        update_entity_rotation(i);
+    }
 }
 
 void set_entity_geom_type(int i, int t, const float *v)
 {
-    struct entity *e = get_entity(i);
-    int j = find_body_entity(i);
+    if (i > 0)
+    {
+        struct entity *e = get_entity(i);
+        int j = find_body_entity(i);
 
-    if (j)
-        e->geom = set_phys_geom_type(get_entity(i)->geom,
-                                     get_entity(j)->body, i, t, v);
-    else
-        e->geom = set_phys_geom_type(get_entity(i)->geom, 0, i, t, v);
+        if (j)
+            e->geom = set_phys_geom_type(get_entity(i)->geom,
+                                         get_entity(j)->body, i, t, v);
+        else
+            e->geom = set_phys_geom_type(get_entity(i)->geom, 0, i, t, v);
 
-    update_entity_position(i);
-    update_entity_rotation(i);
+        update_entity_position(i);
+        update_entity_rotation(i);
+    }
 }
 
 void set_entity_join_type(int i, int j, int t)
 {
-    if (j)
-        set_phys_join_type(get_entity(i)->body,
-                           get_entity(j)->body, t);
-    else
-        set_phys_join_type(get_entity(i)->body, 0, t);
+    if (i > 0)
+    {
+        if (j)
+            set_phys_join_type(get_entity(i)->body,
+                               get_entity(j)->body, t);
+        else
+            set_phys_join_type(get_entity(i)->body, 0, t);
+    }
 }
 
 /*---------------------------------------------------------------------------*/

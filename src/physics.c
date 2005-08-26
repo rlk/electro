@@ -569,15 +569,13 @@ void set_phys_geom_attr_i(dGeomID geom, int p, int i)
 
 void set_phys_geom_attr_f(dGeomID geom, int p, float f)
 {
-    dGeomID object = dGeomTransformGetGeom(geom);
-
     switch (p)
     {
-    case GEOM_ATTR_MASS:     get_data(object)->mass     = f; break;
-    case GEOM_ATTR_BOUNCE:   get_data(object)->bounce   = f; break;
-    case GEOM_ATTR_FRICTION: get_data(object)->friction = f; break;
-    case GEOM_ATTR_SOFT_ERP: get_data(object)->soft_erp = f; break;
-    case GEOM_ATTR_SOFT_CFM: get_data(object)->soft_cfm = f; break;
+    case GEOM_ATTR_MASS:     get_data(geom)->mass     = f; break;
+    case GEOM_ATTR_BOUNCE:   get_data(geom)->bounce   = f; break;
+    case GEOM_ATTR_FRICTION: get_data(geom)->friction = f; break;
+    case GEOM_ATTR_SOFT_ERP: get_data(geom)->soft_erp = f; break;
+    case GEOM_ATTR_SOFT_CFM: get_data(geom)->soft_cfm = f; break;
     }
 }
 
@@ -595,15 +593,13 @@ int get_phys_geom_attr_i(dGeomID geom, int p)
 
 float get_phys_geom_attr_f(dGeomID geom, int p)
 {
-    dGeomID object = dGeomTransformGetGeom(geom);
-
     switch (p)
     {
-    case GEOM_ATTR_MASS:     return (float) get_data(object)->mass;
-    case GEOM_ATTR_BOUNCE:   return (float) get_data(object)->bounce;
-    case GEOM_ATTR_FRICTION: return (float) get_data(object)->friction;
-    case GEOM_ATTR_SOFT_ERP: return (float) get_data(object)->soft_erp;
-    case GEOM_ATTR_SOFT_CFM: return (float) get_data(object)->soft_cfm;
+    case GEOM_ATTR_MASS:     return (float) get_data(geom)->mass;
+    case GEOM_ATTR_BOUNCE:   return (float) get_data(geom)->bounce;
+    case GEOM_ATTR_FRICTION: return (float) get_data(geom)->friction;
+    case GEOM_ATTR_SOFT_ERP: return (float) get_data(geom)->soft_erp;
+    case GEOM_ATTR_SOFT_CFM: return (float) get_data(geom)->soft_cfm;
     }
     return 0;
 }
@@ -613,14 +609,16 @@ float get_phys_geom_attr_f(dGeomID geom, int p)
 
 dJointID find_shared_joint(dBodyID body1, dBodyID body2)
 {
-    int i1, n1 = dBodyGetNumJoints(body1);
-    int i2, n2 = dBodyGetNumJoints(body2);
+    if (dAreConnected(body1, body2))
+    {
+        int i1, n1 = body1 ? dBodyGetNumJoints(body1) : 0;
+        int i2, n2 = body2 ? dBodyGetNumJoints(body2) : 0;
 
-    for (i1 = 0; i1 < n1; ++i1)
-        for (i2 = 0; i2 < n2; ++i2)
-            if (dBodyGetJoint(body1, i1) ==
-                dBodyGetJoint(body2, i2)) return dBodyGetJoint(body1, i1);
-
+        for (i1 = 0; i1 < n1; ++i1)
+            for (i2 = 0; i2 < n2; ++i2)
+                if (dBodyGetJoint(body1, i1) ==
+                    dBodyGetJoint(body2, i2)) return dBodyGetJoint(body1, i1);
+    }
     return 0;
 }
 

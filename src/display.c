@@ -14,8 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <float.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -550,18 +548,17 @@ void get_display_union(float b[4])
 
 void get_display_bound(float b[6])
 {
-    int i;
+    int i, n = vecnum(tile);
 
-    if (vecnum(tile) > 0)
+    if (n > 0)
     {
-        b[0] =  1e10f;
-        b[1] =  1e10f;
-        b[2] =  1e10f;
-        b[3] = -1e10f;
-        b[4] = -1e10f;
-        b[5] = -1e10f;
+        struct tile *T = (struct tile *) vecget(tile, i);
 
-        for (i = 0; i < vecnum(tile); ++i)
+        b[0] = b[3] = T->o[0];
+        b[1] = b[4] = T->o[1];
+        b[2] = b[5] = T->o[2];
+
+        for (i = 0; i < n; ++i)
         {
             struct tile *T = (struct tile *) vecget(tile, i);
 
