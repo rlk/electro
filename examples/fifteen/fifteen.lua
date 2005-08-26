@@ -109,6 +109,9 @@ function do_start()
 
         local x0, y0, z0, x1, y1, z1 = E.get_entity_bound(sprites[i])
 
+		W = x1 - x0
+		H = y1 - y0
+
         E.parent_entity(sprites[i], camera)
         E.set_entity_scale(sprites[i], 0.25 * view_w / (x1 - x0),
                                        0.25 * view_h / (y1 - y0), 1.0)
@@ -125,10 +128,10 @@ function do_start()
 
     for i = 1, 4 do
         for j = 1, 4 do
-            local x0 = (j - 1) / 4
-            local x1 = (j - 0) / 4
-            local y0 = (4 - i) / 4
-            local y1 = (5 - i) / 4
+            local x0 = W * (j - 1) / 4
+            local x1 = W * (j - 0) / 4
+            local y0 = H * (4 - i) / 4
+            local y1 = H * (5 - i) / 4
 
             move_sprite(sprites[numbers[i][j]], i, j)
             E.set_sprite_range(sprites[numbers[i][j]], x0, x1, y0, y1)
@@ -163,7 +166,7 @@ function do_keyboard(k, s)
         -- Jump to the demo selector on F12.
         
         if k == E.key_F12 then
-            E.exec("examples/demo.lua")
+            E.exec("../demo.lua")
         end
     end
     return true

@@ -182,7 +182,7 @@ static void draw_sprite(int j, int i, int f, float a)
                     else
                         s1 = (s0 + s1) / 2;
 
-                    dx = dx * 0.5f;
+                    dx = dx / 2;
                 }
 
                 glBegin(GL_QUADS);

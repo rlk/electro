@@ -90,13 +90,22 @@ void set_window_siz(int d)
 
 static void bound_display(void)
 {
-    int l = INT_MAX;
-    int r = INT_MIN;
-    int b = INT_MAX;
-    int t = INT_MIN;
-    int i;
+    int l = 0;
+    int r = 0;
+    int b = 0;
+    int t = 0;
+    int i, n = vecnum(tile);
 
     /* Compute the total pixel size of all tiles. */
+
+	if (n > 0)
+	{
+        struct tile *T = (struct tile *) vecget(tile, 0);
+		l = T->pix_x;
+		r = T->pix_x + T->pix_w;
+		b = T->pix_y;
+		t = T->pix_y + T->pix_h;
+	}
 
     for (i = 0; i < vecnum(tile); ++i)
     {
@@ -552,7 +561,7 @@ void get_display_bound(float b[6])
 
     if (n > 0)
     {
-        struct tile *T = (struct tile *) vecget(tile, i);
+        struct tile *T = (struct tile *) vecget(tile, 0);
 
         b[0] = b[3] = T->o[0];
         b[1] = b[4] = T->o[1];

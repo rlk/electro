@@ -16,6 +16,7 @@
 #include "video.h"
 #include "font.h"
 #include "image.h"
+#include "brush.h"
 #include "entity.h"
 #include "console.h"
 #include "display.h"
@@ -34,7 +35,7 @@ int quad_stereo_status(void)
 
 static void init_options(void)
 {
-    GLfloat a[4] = { 0.2, 0.2, 0.2, 0 };
+    GLfloat a[4] = { 0.2f, 0.2f, 0.2f, 0.0f };
 
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_TEXTURE_2D);
@@ -67,6 +68,7 @@ int init_video(int width, int height, int full, int framed, int stereo)
 
     fini_fonts();
     fini_images();
+	fini_brushes();
     fini_console();
     fini_entities();
 
@@ -90,6 +92,7 @@ int init_video(int width, int height, int full, int framed, int stereo)
         init_opengl();
         init_options();
         init_images();
+		init_brushes();
         init_entities();
 
         return 1;

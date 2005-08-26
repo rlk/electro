@@ -129,7 +129,7 @@ function do_keyboard(k, s)
     end
 
     if s and k == E.key_F12 then
-        E.exec("examples/demo.lua")
+        E.exec("../demo.lua")
     end
 
     return true
