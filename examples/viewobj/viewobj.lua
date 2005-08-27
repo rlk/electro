@@ -1,7 +1,6 @@
 tumble = false
 scale  = false
 test   = false
-scene  = nil
 
 objects = { }
 
@@ -53,24 +52,19 @@ function do_start()
 
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
-    scene  = E.create_pivot()
     pivot  = E.create_pivot()
     hand   = E.create_pivot()
 
     E.parent_entity(light, camera)
-    E.parent_entity(scene, light)
-    E.parent_entity(pivot, scene)
+    E.parent_entity(pivot, light)
 
     E.set_entity_position(light,  0.0,  8.0,  8.0)
-    E.set_entity_position(scene,  0.0, -8.0, -8.0)
     E.set_entity_position(pivot,  XC,   YC,   ZC)
 
     E.set_entity_flags(hand, E.entity_flag_pos_tracked_1, true)
     E.set_entity_flags(hand, E.entity_flag_rot_tracked_1, true)
 
     table.foreach(E.argument, add_object)
-
-    E.set_camera_offset(camera, offset[1], offset[2], offset[3])
 
     E.enable_timer(true)
 end
