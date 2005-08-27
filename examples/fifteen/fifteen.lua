@@ -1,3 +1,4 @@
+local path = E.path
 
 image_file = "venus.jpg"
 
@@ -166,7 +167,7 @@ function do_keyboard(k, s)
         -- Jump to the demo selector on F12.
         
         if k == E.key_F12 then
-            E.exec("../demo.lua")
+            E.exec(path.."../demo.lua")
         end
     end
     return true

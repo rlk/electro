@@ -89,6 +89,7 @@ E.set_background(0.0, 0.5, 1.0)
 <li><a href="#sound"> Sound </a>
 <li><a href="#console"> Console </a>
 <li><a href="#configuration"> Configuration </a>
+<li><a href="#system"> System </a>
 <li><a href="#miscellaneous"> Miscellaneous </a>
 </ol>
 
@@ -816,7 +817,41 @@ and sprites.</p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="miscellaneous"><h2> 2.7. Miscellaneous API </h2>
+<a name="system"><h2> 2.7. System API </h2>
+
+<h3>Functions</h3>
+<dl>
+
+<dt><tt>exec</tt>(<i>filename</i>)<dd><p>Execute Electro Lua script <i>filename</i><p>
+
+<dt><tt>exit</tt>()<dd><p>Exit Electro cleanly.</p>
+
+</dl>
+
+<h3>Variables</h3>
+<dl>
+
+<dt><tt>arguments</tt><dd>This symbol is bound to a table of command line arguments.  Any arguments not recognized by Electro are passed along to the application in this fashion.</p>
+
+<dt><tt>path</tt><dd>This symbol is bound to the current working directory path name of the running script.</p>
+
+<p>In general, resources are loaded from the current working directory. However, applications are free to utilize multiple script files across multiple directories. If a script calls a function defined in another directory, that function's idea of the current directory may be incorrect.</p>
+
+<p>The <tt>path</tt> variable allows Electro applications to handle resource location when executing outside of their local directory. Scripts may copy this value to a local variable and later use that value to locate local resources. For example, this script captures its path and applies it to load a resource. This resource will be located correctly regardless of the path of the calling script.</p>
+
+<pre>
+local local_path = E.path
+
+function load_something()
+    return E.create_object(local_path.."something.obj")
+end
+</pre>
+
+</dl>
+
+<!---------------------------------------------------------------------------->
+
+<a name="miscellaneous"><h2> 2.8. Miscellaneous API </h2>
 <dl>
 
 <dt><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>])<dd><p>Set the background color of the display. If only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is specified, the background will appear a solid color. If an optional second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is supplied, the background will be drawn with a top-to-bottom gradient. The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>0.1, 0.2, 0.4</i>).</p>

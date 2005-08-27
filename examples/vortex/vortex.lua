@@ -1,3 +1,4 @@
+local path = E.path
 
 -------------------------------------------------------------------------------
 
@@ -129,7 +130,7 @@ function do_keyboard(k, s)
     end
 
     if s and k == E.key_F12 then
-        E.exec("../demo.lua")
+        E.exec(path.."../demo.lua")
     end
 
     return true

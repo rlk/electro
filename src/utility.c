@@ -73,9 +73,9 @@ const char *get_file_path(const char *file)
     memset(path, 0, MAXSTR);
 
     if ((l = get_file_split(file)) >= 0)
-        strncpy(path, file, l);
+        strncpy(path, file, l + 1);
     else
-        strcpy(path, ".");
+        strcpy(path, "./");
 
     return path;
 }
@@ -104,43 +104,23 @@ static int  path_index = 0;
 void path_push(const char *path)
 {
     if (path_index < MAXPATH)
-        strncpy(path_stack[path_index++], path, MAXSTR);
+    {
+        getcwd(path_stack[path_index++], MAXSTR);
+        chdir(path);
+    }
 }
 
 void path_pop(void)
 {
     if (path_index > 0)
-        path_index--;
+        chdir(path_stack[--path_index]);
 }
 
 /*---------------------------------------------------------------------------*/
 
-const char *make_path(const char *filename, int i)
-{
-    static char pathname[MAXSTR];
-    int j;
-
-    strcpy(pathname, "");
-
-    for (j = 0; j <= i; ++j)
-    {
-        strncat(pathname, path_stack[j], MAXSTR);
-        strncat(pathname, FILESEP,       MAXSTR);
-    }
-    strncat(pathname, filename,      MAXSTR);
-
-    return pathname;
-}
-
 int stat_file(const char *filename, struct stat *buf)
 {
-    int i, r;
-
-    /* Search for the file in the path stack. */
-
-    for (i = path_index - 1; i >= 0; --i)
-        if ((r = stat(make_path(filename, i), buf)) == 0)
-            return 0;
+    int r;
 
     /* Search for the file in the current working directory. */
 
@@ -155,13 +135,6 @@ int stat_file(const char *filename, struct stat *buf)
 FILE *open_file(const char *filename, const char *mode)
 {
     FILE *fp;
-    int i;
-
-    /* Search for the file in the path stack. */
-
-    for (i = path_index - 1; i >= 0; --i)
-        if ((fp = fopen(make_path(filename, i), mode)))
-            return fp;
 
     /* Search for the file in the current working directory. */
 

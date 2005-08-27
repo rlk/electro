@@ -2657,13 +2657,21 @@ void free_script(void)
 
 void load_script(const char *file)
 {
+    const char *path = get_file_path(file);
     int  err;
     FILE *fp;
 
-    /* Pop the last-used directory. Push the script directory as current. */
+    /* Push the script directory as current. */
 
-    path_pop();
-    path_push(get_file_path(file));
+    path_push(path);
+
+    /* Record the script directory in the Electro Lua environment. */
+
+    lua_getglobal (L, "E");
+    lua_pushstring(L, "path");
+    lua_pushstring(L,  path);
+    lua_settable  (L, -3);
+    lua_pop       (L,  1);
 
     /* Load and execute the script. */
 
@@ -2685,6 +2693,10 @@ void load_script(const char *file)
         fclose(fp);
     }
     else error("Script not found: %s", file);
+
+    /* Pop back to the previous working directory. */
+
+    path_pop();
 }
 
 /*---------------------------------------------------------------------------*/

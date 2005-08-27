@@ -1,3 +1,6 @@
+
+local path = E.path
+
 joy_dev = 0
 
 -------------------------------------------------------------------------------
@@ -6,10 +9,10 @@ name_text = "Electro Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
-    { "Asteroids",                "asteroids/asteroids.lua" },
-    { "Driving",                  "driving/driving.lua"     },
-    { "Total Perspective Vortex", "vortex/vortex.lua"       },
-    { "Fifteen Puzzle",           "fifteen/fifteen.lua"     },
+    { "Asteroids",                E.path.."asteroids/asteroids.lua" },
+    { "Driving",                  E.path.."driving/driving.lua"     },
+    { "Total Perspective Vortex", E.path.."vortex/vortex.lua"       },
+    { "Fifteen Puzzle",           E.path.."fifteen/fifteen.lua"     },
 }
 
 item = { }
@@ -53,13 +56,13 @@ function do_timer(dt)
 
     time = time + dt
 
-    local r = math.min(dsp_w * 0.25, dsp_h * 0.25)
-    local x = dsp_w / 4 + r * math.sin(time)
-    local y = dsp_h / 4
+    local r = math.min(dsp_w / 3, dsp_h / 3)
+    local x = dsp_w / 2 + r * math.sin(time)
+    local y = dsp_h / 2
     local k = 10 + 3 * math.sin(time / 4)
 
     E.set_entity_position(light,   x,  y,  dsp_h / 5)
-    E.set_entity_position(center, -x, -y, -dsp_h / 5)
+--  E.set_entity_position(center, -x, -y, -dsp_h / 5)
     E.set_entity_scale(logo, k, k, k)
 
     if centered and jy < -0.5 then
@@ -118,12 +121,13 @@ function do_start()
 
     camera = E.create_camera(E.camera_type_orthogonal)
     light  = E.create_light(E.light_type_positional)
-    center = E.create_pivot()
+--  center = E.create_pivot()
     menu   = E.create_pivot()
 
     E.parent_entity(light, camera)
-    E.parent_entity(center, light)
-    E.parent_entity(menu,  center)
+--  E.parent_entity(center, light)
+--  E.parent_entity(menu,  center)
+    E.parent_entity(menu,  light)
 
     -- Find the maximum width and height of all menu items.
 

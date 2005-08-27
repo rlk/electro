@@ -125,7 +125,7 @@ static void draw_light(int j, int i, int f, float a)
 
         GLenum o = GL_LIGHT0 + i;
 
-        transform_entity(j);
+/*      transform_entity(j); */
 
         /* Determine the homogenous coordinate lightsource position. */
 

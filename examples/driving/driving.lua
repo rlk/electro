@@ -1,3 +1,5 @@
+local path = E.path
+
 joy_dev = 0
 
 tumble  = false
@@ -437,7 +439,7 @@ function do_keyboard(k, s)
         end
 
         if k == E.key_F12 then
-            E.exec("examples/demo.lua")
+            E.exec(path.."../demo.lua")
         end
 
         if k == E.key_up    then key_y = key_y - 1 end

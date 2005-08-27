@@ -389,8 +389,6 @@ void parse_scripts(int argc, char *argv[])
 
 void server(int argc, char *argv[])
 {
-    path_push(".");
-
     if (init_script())
     {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) == 0)
