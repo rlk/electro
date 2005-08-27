@@ -345,8 +345,7 @@ function do_start()
     E.set_entity_geom_attr(plane, E.geom_attr_category, category_world)
     E.set_entity_geom_attr(plane, E.geom_attr_collider, category_all)
 
-    E.set_entity_position(light, 0.0,  16.0,  0.0)
-    E.set_entity_position(pivot, 0.0, -16.0,  0.0)
+    E.set_entity_position(light, 0.0, 16.0,  0.0)
     E.set_entity_scale   (plane, 32, 32, 32)
     E.set_entity_scale   (sky, 8, 8, 8)
 

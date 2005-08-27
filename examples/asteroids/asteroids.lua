@@ -161,9 +161,8 @@ function init_scene()
 
     -- Configure the lights.
 
-    E.set_entity_position(light_L,  -viewport.w / 2, 0,  viewport.h / 2)
-    E.set_entity_position(light_R,   viewport.w,     0,               0)
-    E.set_entity_position(scene_3d, -viewport.w / 2, 0, -viewport.h / 2)
+    E.set_entity_position(light_L, -viewport.w / 2, 0, viewport.h / 2)
+    E.set_entity_position(light_R,  viewport.w / 2, 0, viewport.h / 2)
 
     E.set_light_color(light_L, 1.0, 0.8, 0.5)
     E.set_light_color(light_R, 0.5, 0.8, 1.0)
