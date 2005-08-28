@@ -25,7 +25,7 @@ category_world = 4
 category_all = category_body + category_tire + category_world
 
 function add_ramp(x, y, z, a, r)
-    local ramp = E.create_object("../data/ramp.obj")
+    local ramp = E.create_object(path.."../data/ramp.obj")
 
     E.parent_entity(ramp, pivot)
 
@@ -37,7 +37,7 @@ function add_ramp(x, y, z, a, r)
 end
 
 function add_tv(x, y, z)
-    local object = E.create_object("../data/tv.obj")
+    local object = E.create_object(path.."../data/tv.obj")
     E.parent_entity(object, pivot)
 
     E.set_entity_body_type(object, true)
@@ -57,7 +57,7 @@ function add_tv(x, y, z)
 end
 
 function add_box()
-    local object = E.create_object("../data/box.obj")
+    local object = E.create_object(path.."../data/box.obj")
     E.parent_entity(object, pivot)
 
     E.set_entity_body_type(object, true)
@@ -76,7 +76,7 @@ function add_box()
 end
 
 function add_ball()
-    local object = E.create_object("../data/ball.obj")
+    local object = E.create_object(path.."../data/ball.obj")
     E.parent_entity(object, pivot)
 
     E.set_brush_image(E.get_mesh(object, 2), envmap, 1)
@@ -97,7 +97,7 @@ function add_ball()
 end
 
 function add_thing()
-    local object = E.create_object("../data/thing.obj")
+    local object = E.create_object(path.."../data/thing.obj")
     local part1  = E.create_pivot()
     local part2  = E.create_pivot()
     local part3  = E.create_pivot()
@@ -154,13 +154,11 @@ function add_car()
 
     -- Swap some of the body materials to add a chrome effect.
 
-    E.set_brush_image(E.get_mesh(body, 1), envmap)
-    E.set_brush_image(E.get_mesh(body, 4), envmap)
-    E.set_brush_image(E.get_mesh(body, 6), envmap)
+    E.set_brush_image(E.get_mesh(body, 0), envmap)
+    E.set_brush_image(E.get_mesh(body, 5), envmap)
 
-    E.set_brush_flags(E.get_mesh(body, 1), E.brush_flag_env_map_0, true)
-    E.set_brush_flags(E.get_mesh(body, 4), E.brush_flag_env_map_0, true)
-    E.set_brush_flags(E.get_mesh(body, 6), E.brush_flag_env_map_0, true)
+    E.set_brush_flags(E.get_mesh(body, 0), E.brush_flag_env_map_0, true)
+    E.set_brush_flags(E.get_mesh(body, 5), E.brush_flag_env_map_0, true)
 
     -- Parent all car entities to the same coordinate system.
 

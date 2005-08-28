@@ -197,7 +197,7 @@ function do_keyboard(k, s)
             if k == E.key_pagedown then pan_y = pan_y + 1 end
             if k == E.key_pageup   then pan_y = pan_y - 1 end
             if k == E.key_right    then pan_x = pan_x + 1 end
-            if k == E.key_legt     then pan_x = pan_x - 1 end
+            if k == E.key_left     then pan_x = pan_x - 1 end
         end
     else
         if not E.get_modifier(E.key_modifier_control) then

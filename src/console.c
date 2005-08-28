@@ -520,6 +520,8 @@ void color_console(float r, float g, float b)
 
 void print_console(const char *str)
 {
+    if (logfile) fprintf(logfile, str);
+
     write_console(str);
     console_enable = 1;
     image_dirty    = 1;

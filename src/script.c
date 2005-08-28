@@ -1180,9 +1180,9 @@ static int E_get_mesh(lua_State *L)
 
 static int E_get_vert(lua_State *L)
 {
-    float v[3];
-    float n[3];
-    float t[2];
+    float v[3] = { 0, 0, 0 };
+    float n[3] = { 0, 0, 1 };
+    float t[2] = { 0, 0    };
 
     get_vert(E_getobject(L, -2), L_getinteger(L, -1), v, n, t);
 
@@ -1200,7 +1200,7 @@ static int E_get_vert(lua_State *L)
 
 static int E_get_face(lua_State *L)
 {
-    int vi[3];
+    int vi[3] = { -1, -1, -1 };
 
     get_face(E_getobject (L, -3),
              L_getinteger(L, -2),
@@ -1215,7 +1215,7 @@ static int E_get_face(lua_State *L)
 
 static int E_get_edge(lua_State *L)
 {
-    int vi[2];
+    int vi[2] = { -1, -1 };
 
     get_edge(E_getobject (L, -3),
              L_getinteger(L, -2),

@@ -436,6 +436,20 @@ static int read_obj(const char *filename, struct object *o)
         }
         else error("OBJ file '%s': %s", filename, system_error());
 
+        /* Remove any empty meshes. */
+
+        for (i = 0; i < vecnum(o->mv); )
+            if (vecnum(((struct object_mesh *) vecget(o->mv, i))->fv) ||
+                vecnum(((struct object_mesh *) vecget(o->mv, i))->ev))
+                i++;
+            else
+            {
+                memmove(vecget(o->mv, i),
+                        vecget(o->mv, i + 1),
+                       (vecnum(o->mv) - i - 1) * sizeof (struct object_mesh));
+                vecpop(o->mv);
+            }
+
         /* Sort meshes such that transparent ones appear last. */
 
         for (i = 0; i < vecnum(o->mv); ++i)
@@ -492,6 +506,8 @@ int create_vert(int i)
         p->n[0] = 0.0;
         p->n[0] = 0.0;
         p->n[1] = 1.0;
+
+        get_object(i)->aabb_state = 0;
     }
     return j;
 }
@@ -611,40 +627,52 @@ void delete_mesh(int i, int j)
 
 int get_mesh(int i, int j)
 {
-    return get_object_mesh(i, j)->brush;
+    if (0 <= j && j < get_mesh_count(i))
+        return get_object_mesh(i, j)->brush;
+    else
+        return -1;
 }
 
 void get_vert(int i, int j, float v[3], float n[3], float t[2])
 {
-    struct object_vert *p = get_object_vert(i, j);
+    if (0 <= j && j < get_vert_count(i))
+    {
+        struct object_vert *p = get_object_vert(i, j);
 
-    v[0] = p->v[0];
-    v[1] = p->v[1];
-    v[2] = p->v[2];
+        v[0] = p->v[0];
+        v[1] = p->v[1];
+        v[2] = p->v[2];
 
-    n[0] = p->n[0];
-    n[1] = p->n[1];
-    n[2] = p->n[2];
+        n[0] = p->n[0];
+        n[1] = p->n[1];
+        n[2] = p->n[2];
 
-    t[0] = p->t[0];
-    t[1] = p->t[1];
+        t[0] = p->t[0];
+        t[1] = p->t[1];
+    }
 }
 
 void get_face(int i, int j, int k, int vi[3])
 {
-    struct object_face *f = get_object_face(i, j, k);
+    if (0 <= k && k < get_face_count(i, j))
+    {
+        struct object_face *f = get_object_face(i, j, k);
 
-    vi[0] = f->vi[0];
-    vi[1] = f->vi[1];
-    vi[2] = f->vi[2];
+        vi[0] = f->vi[0];
+        vi[1] = f->vi[1];
+        vi[2] = f->vi[2];
+    }
 }
 
 void get_edge(int i, int j, int k, int vi[2])
 {
-    struct object_edge *e = get_object_edge(i, j, k);
+    if (0 <= k && k < get_edge_count(i, j))
+    {
+        struct object_edge *e = get_object_edge(i, j, k);
 
-    vi[0] = e->vi[0];
-    vi[1] = e->vi[1];
+        vi[0] = e->vi[0];
+        vi[1] = e->vi[1];
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1174,10 +1202,11 @@ static void aabb_object(int i, float aabb[6])
             o->aabb_cache[0] = v[0];
             o->aabb_cache[1] = v[1];
             o->aabb_cache[2] = v[2];
-            o->aabb_cache[3] = v[3];
-            o->aabb_cache[4] = v[4];
-            o->aabb_cache[5] = v[5];
+            o->aabb_cache[3] = v[0];
+            o->aabb_cache[4] = v[1];
+            o->aabb_cache[5] = v[2];
         }
+        else memset(o->aabb_cache, 0, 6 * sizeof (float));
 
         for (j = 0; j < n; ++j)
         {
