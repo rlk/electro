@@ -20,7 +20,8 @@
 
 /*---------------------------------------------------------------------------*/
 
-int startup_tracker(int, int);
+int  acquire_tracker(int, int);
+void release_tracker(void);
 
 int get_tracker_status(void);
 

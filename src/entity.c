@@ -1031,18 +1031,20 @@ int step_entities(float dt, int head)
     {
         /* Acquire tracking info. */
 
-        float r[2][3];
-        float p[2][3];
+        float r[3][3];
+        float p[3][3];
         float M[16];
 
         get_tracker_position(0, p[0]);
         get_tracker_position(1, p[1]);
+        get_tracker_position(2, p[2]);
         get_tracker_rotation(0, r[0]);
         get_tracker_rotation(1, r[1]);
+        get_tracker_rotation(2, r[2]);
 
-        load_rot_mat(M, 1, 0, 0, r[0][0]);
-        mult_rot_mat(M, 0, 1, 0, r[0][1]);
-        mult_rot_mat(M, 0, 0, 1, r[0][2]);
+        load_rot_mat(M, 1, 0, 0, r[head][0]);
+        mult_rot_mat(M, 0, 1, 0, r[head][1]);
+        mult_rot_mat(M, 0, 0, 1, r[head][2]);
 
         /* Distribute it to all cameras and tracked entities. */
 
@@ -1050,7 +1052,7 @@ int step_entities(float dt, int head)
         {
             struct entity *e = get_entity(i);
 
-            if (0 <= head && head <= 1 && e->type == TYPE_CAMERA)
+            if (0 <= head && head <= 2 && e->type == TYPE_CAMERA)
                 send_set_camera_offset(e->data, p[head], M);
 
             else if (e->type)
@@ -1059,11 +1061,15 @@ int step_entities(float dt, int head)
                     send_set_entity_position(i, p[0]);
                 if (e->flags & FLAG_POS_TRACKED_1)
                     send_set_entity_position(i, p[1]);
+                if (e->flags & FLAG_POS_TRACKED_2)
+                    send_set_entity_position(i, p[2]);
 
                 if (e->flags & FLAG_ROT_TRACKED_0)
                     send_set_entity_rotation(i, r[0]);
                 if (e->flags & FLAG_ROT_TRACKED_1)
                     send_set_entity_rotation(i, r[1]);
+                if (e->flags & FLAG_ROT_TRACKED_2)
+                    send_set_entity_rotation(i, r[2]);
             }
         }
         dirty++;

@@ -40,7 +40,9 @@
 #define FLAG_ROT_TRACKED_0 0x0040
 #define FLAG_POS_TRACKED_1 0x0080
 #define FLAG_ROT_TRACKED_1 0x0100
-#define FLAG_STEREO        0x0200
+#define FLAG_POS_TRACKED_2 0x0200
+#define FLAG_ROT_TRACKED_2 0x0400
+#define FLAG_STEREO        0x0800
 
 /* Initial entity vector sizes. */
 

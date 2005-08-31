@@ -2342,6 +2342,8 @@ static struct constant_def constants[] = {
     { "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0  },
     { "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1  },
     { "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1  },
+    { "entity_flag_pos_tracked_2", FLAG_POS_TRACKED_2  },
+    { "entity_flag_rot_tracked_2", FLAG_ROT_TRACKED_2  },
     { "entity_flag_stereo",        FLAG_STEREO         },
 
     /* Body constants */

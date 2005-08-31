@@ -408,7 +408,7 @@ void server(int argc, char *argv[])
                 startup_brush()    &&
                 startup_font())
             {
-                startup_tracker(tracker_key, control_key);
+                acquire_tracker(tracker_key, control_key);
 
                 parse_scripts(argc, argv);
 
@@ -431,6 +431,8 @@ void server(int argc, char *argv[])
 
                     grab(0);
                 }
+
+                release_tracker();
             }
 
             /* Ensure everyone finishes all events before exiting. */

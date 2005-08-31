@@ -69,8 +69,17 @@ function do_start()
     E.enable_timer(true)
 end
 
+function do_joystick(d, b, s)
+    if s then
+        print(string.format("%d %d down", d, b))
+    else
+        print(string.format("%d %d up", d, b))
+    end
+end
+
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
+    local mov_x, mov_y, mov_z = E.get_entity_z_vector(hand)
     local s = 1
 
     if joy_x < -0.1 or 0.1 < joy_x then
