@@ -83,17 +83,13 @@ int acquire_tracker(int t_key, int c_key)
 
 void release_tracker(void)
 {
-    /* Detach and remove shared memory segments. */
+    /* Detach shared memory segments. */
 
     if (control != (struct control_header *) (-1)) shmdt(control);
     if (tracker != (struct tracker_header *) (-1)) shmdt(tracker);
 
     if (buttons) free(buttons);
 
-    /*
-    if (control_id >= 0) shmctl(control_id, IPC_RMID, 0);
-    if (tracker_id >= 0) shmctl(tracker_id, IPC_RMID, 0);
-    */
     /* Mark everything as uninitialized. */
 
     control = (struct control_header *) (-1);
@@ -201,132 +197,4 @@ int get_tracker_buttons(int *id, int *st)
     return 0;
 }
 
-#ifdef SNIP
-
 /*---------------------------------------------------------------------------*/
-
-#ifdef TRACKD
-#include <trackdAPI.h>
-#endif
-
-/*---------------------------------------------------------------------------*/
-
-static void *tracker = NULL;
-static void *control = NULL;
-static int  *buttons = NULL;
-
-/*---------------------------------------------------------------------------*/
-
-int startup_tracker(int tkey, int ckey)
-{
-#ifdef TRACKD
-    tracker = trackdInitTrackerReader(tkey);
-    control = trackdInitControllerReader(ckey);
-
-    if (tracker == NULL || control == NULL)
-    {
-        error("Tracker/controller startup failure");
-        return 0;
-    }
-
-    buttons = (int *) calloc(trackdGetNumberOfButtons(control), sizeof (int));
-
-#else
-    tracker = NULL;
-    control = NULL;
-    buttons = NULL;
-#endif
-
-    return 1;
-}
-
-/*---------------------------------------------------------------------------*/
-
-int get_tracker_status(void)
-{
-#ifdef TRACKD
-    return (tracker && control && buttons);
-#else
-    return 0;
-#endif
-}
-
-int get_tracker_rotation(int id, float r[3])
-{
-#ifdef TRACKD
-    if (tracker)
-    {
-        trackdGetEulerAngles(tracker, id, r);
-        return 1;
-    }
-    else
-#endif
-    {
-        r[0] = 0.0f;
-        r[1] = 0.0f;
-        r[2] = 0.0f;
-        return 0;
-    }
-}
-
-int get_tracker_position(int id, float p[3])
-{
-#ifdef TRACKD
-    if (tracker)
-    {
-        trackdGetPosition(tracker, id, p);
-        return 1;
-    }
-    else
-#endif
-    {
-        p[0] = 0.0f;
-        p[1] = 0.0f;
-        p[2] = 0.0f;
-        return 0;
-    }
-}
-
-int get_tracker_joystick(int id, float a[2])
-{
-#ifdef TRACKD
-    if (control)
-    {
-        a[0] =  trackdGetValuator(control, id + 0);
-        a[1] = -trackdGetValuator(control, id + 1);
-        return 1;
-    }
-    else
-#endif
-    {
-        a[0] = 0.0f;
-        a[1] = 0.0f;
-        return 0;
-    }
-}
-
-int get_tracker_buttons(int *id, int *dn)
-{
-#ifdef TRACKD
-    if (control)
-    {
-        int i, n = trackdGetNumberOfButtons(control);
-
-        for (i = 0; i < n; ++i)
-            if (buttons[i] != trackdGetButton(control, i))
-            {
-                buttons[i]  = trackdGetButton(control, i);
-
-                *id = i + 1;
-                *dn = buttons[i];
-
-                return 1;
-            }
-    }
-#endif
-    return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-#endif

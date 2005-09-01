@@ -794,15 +794,26 @@ int draw_brush(int i, float a)
 
         /* Enable vertex and fragment programs, if specified. */
 
-        if (b->frag_prog && GL_has_fragment_program)
+        if (GL_has_fragment_program)
         {
-            glEnable(GL_FRAGMENT_PROGRAM_ARB);
-            glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, b->frag_prog);
+            if (b->frag_prog)
+            {
+                glEnable(GL_FRAGMENT_PROGRAM_ARB);
+                glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, b->frag_prog);
+            }
+            else
+                glDisable(GL_FRAGMENT_PROGRAM_ARB);
         }
-        if (b->vert_prog && GL_has_vertex_program)
+
+        if (GL_has_vertex_program)
         {
-            glEnable(GL_VERTEX_PROGRAM_ARB);
-            glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
+            if (b->vert_prog)
+            {
+                glEnable(GL_VERTEX_PROGRAM_ARB);
+                glBindProgramARB(GL_VERTEX_PROGRAM_ARB,   b->vert_prog);
+            }
+            else
+                glDisable(GL_VERTEX_PROGRAM_ARB);
         }
 
         /* Disable lighting, if requested. */

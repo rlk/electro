@@ -2,33 +2,11 @@ local path = E.path
 
 -------------------------------------------------------------------------------
 
-camera_tyc = nil
-camera_hip = nil
-galaxy_tyc = nil
-galaxy_hip = nil
+key = { 0, 0 }
 
-hip_magn = 100.0
-tyc_magn = 100.0
-hip_dist =   0.0
-tyc_dist =   0.0
-rot_x    =   0.0
-rot_y    =   0.0
-rot_z    =   0.0
-pos_x    =   0.0
-pos_y    =   0.0
-pos_z    =   0.0
-
-d_hip_dist = 0.0
-d_tyc_dist = 0.0
-d_rot_x    = 0.0
-d_rot_y    = 0.0
-d_rot_z    = 0.0
-
-hide_tyc = false
-hide_hip = false
-
-setmagn = false
-setdist = false
+speed = 10
+scale = 0.1
+magn  = 100
 
 -------------------------------------------------------------------------------
 
@@ -38,131 +16,105 @@ function do_start()
     E.set_brush_frag_prog(brush, "../data/star.fp")
     E.set_brush_vert_prog(brush, "../data/star.vp")
 
-    E.set_background(0, 0, 0, 0, 0, 0)
+    camera  = E.create_camera(E.camera_type_perspective)
+    galaxy  = E.create_galaxy("../data/galaxy_hip.gal", brush)
+    object  = E.create_object("../data/orion.obj")
+    pointer = E.create_pivot()
 
-    camera_tyc = E.create_camera(E.camera_type_perspective)
-    camera_hip = E.create_camera(E.camera_type_perspective)
-    galaxy_tyc = E.create_galaxy("../data/galaxy_tyc.gal", brush)
-    galaxy_hip = E.create_galaxy("../data/galaxy_hip.gal", brush)
+    E.set_galaxy_magnitude(galaxy, magn)
+    E.parent_entity(galaxy, camera)
+    E.parent_entity(object, camera)
 
-    E.parent_entity(galaxy_hip, camera_hip)
-    E.parent_entity(galaxy_tyc, camera_tyc)
+    E.set_entity_scale(galaxy, scale, scale, scale)
+    E.set_entity_scale(object, scale, scale, scale)
 
-    E.set_galaxy_magnitude(galaxy_hip, hip_magn)
-    E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
+    E.set_entity_flags(pointer, E.entity_flag_pos_tracked_1, true)
+    E.set_entity_flags(pointer, E.entity_flag_rot_tracked_1, true)
+    E.set_entity_flags(object,  E.entity_flag_line_smooth,   true)
+
+    E.set_brush_flags(E.get_mesh(object, 0), E.brush_flag_unlit, true)
+
+    E.set_background(0, 0, 0)
 
     E.enable_timer(true)
-
---  E.print_console("---------- CONTROLS ---------\n")
---  E.print_console("F1:          toggle console\n")
---  E.print_console("F2:          toggle server draw\n")
---  E.print_console("Space bar:   stop motion\n")
---  E.print_console("Enter:       re-center camera\n")
---  E.print_console("Mouse move:  camera pan\n")
---  E.print_console("Left drag:   camera zoom\n")
---  E.print_console("Middle drag: star magnitude\n")
---  E.print_console("Right drag:  camera distance\n")
-
-    return true
 end
 
 function do_timer(dt)
+    local joy = { E.get_joystick(0)              }
+    local dir = { E.get_entity_z_vector(pointer) }
 
-    hip_dist = hip_dist + d_hip_dist * dt;
-    tyc_dist = tyc_dist + d_tyc_dist * dt;
-    rot_x    = rot_x    + d_rot_x    * dt;
-    rot_y    = rot_y    + d_rot_y    * dt;
-    rot_z    = rot_z    + d_rot_z    * dt;
+    -- Map the arrow keys on to joystick input.
 
-    if rot_x <  -90 then rot_x = -90 end
-    if rot_x >   90 then rot_x =  90 end
+    if math.abs(key[1]) > math.abs(joy[1]) then joy[1] = key[1] end
+    if math.abs(key[2]) > math.abs(joy[2]) then joy[2] = key[2] end
 
-    if rot_y < -180 then rot_y = rot_y + 360 end
-    if rot_y >  180 then rot_y = rot_y - 360 end
+    -- Turn about the Y axis.
 
-    local T = math.pi * rot_y / 180
-    local P = math.pi * rot_x / 180
+    if joy[1] < -0.1 or 0.1 < joy[1] then
+        E.turn_entity(camera, 0, -90 * joy[1] * dt, 0)
+    end
 
-    -- set the new magnitudes
+    -- Move along the hand vector.
 
-    E.set_galaxy_magnitude(galaxy_hip, hip_magn)
-    E.set_galaxy_magnitude(galaxy_tyc, tyc_magn)
-
-    -- set the hip position and rotation
-
-    pos_x =  math.cos(P) * math.sin(T) * hip_dist
-    pos_y = -math.sin(P)               * hip_dist
-    pos_z =  math.cos(P) * math.cos(T) * hip_dist
-
-    E.set_entity_position(camera_hip, pos_x, pos_y, pos_z)
-    E.set_entity_rotation(camera_hip, rot_x, rot_y, rot_z)
-
-    -- set the tyc position and rotation
-
-    pos_x =  math.cos(P) * math.sin(T) * tyc_dist
-    pos_y = -math.sin(P)               * tyc_dist
-    pos_z =  math.cos(P) * math.cos(T) * tyc_dist
-
-    E.set_entity_position(camera_tyc, pos_x, pos_y, pos_z)
-    E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
+    if joy[2] < -0.1 or 0.1 < joy[2] then
+        E.move_entity(camera, speed * dir[1] * joy[2] * dt,
+                              speed * dir[2] * joy[2] * dt,
+                              speed * dir[3] * joy[2] * dt)
+    end
 
     return true
 end
 
 function do_keyboard(k, s)
-
-    if s and k == E.key_space then
-        d_hip_dist = 0
-        d_tyc_dist = 0
-        d_rot_x    = 0
-        d_rot_y    = 0
-        d_rot_z    = 0
-    end
-    if s and k == E.key_return then
-        hip_dist = 0
-        tyc_dist = 0
-        rot_x    = 0
-        rot_y    = 0
-        rot_z    = 0
-
-        E.set_entity_rotation(camera_hip, rot_x, rot_y, rot_z)
-        E.set_entity_rotation(camera_tyc, rot_x, rot_y, rot_z)
+    if varrier_keyboard then
+        if varrier_keyboard(k, s, camera) then
+            return true
+        end
     end
 
-    if s and k == E.key_F12 then
-        E.exec(path.."../demo.lua")
+    if s then
+        -- Arrow keys simulate joystick input.
+
+        if k == E.key_right then key[1] = key[1] + 1 end
+        if k == E.key_left  then key[1] = key[1] - 1 end
+        if k == E.key_down  then key[2] = key[2] + 1 end
+        if k == E.key_up    then key[2] = key[2] - 1 end
+
+        -- Page up and page down control the galaxy magnitude.
+
+        if k == E.key_pageup then
+            magn = magn + 10
+            E.set_galaxy_magnitude(galaxy, magn)
+        end
+        if k == E.key_pagedown then
+            magn = magn - 10
+            E.set_galaxy_magnitude(galaxy, magn)
+        end
+
+        -- Recenter the view on Return
+
+        if k == E.key_return then
+            E.set_entity_position(camera, 0, 0, 0)
+            E.set_entity_rotation(camera, 0, 0, 0)
+        end
+
+        -- Return to the demo menu on F12
+
+        if k == E.key_F12 then
+            E.exec(path.."../demo.lua")
+        end
+
+        return true
+    else
+        -- Arrow keys simulate joystick input.
+
+        if k == E.key_right then key[1] = key[1] - 1 end
+        if k == E.key_left  then key[1] = key[1] + 1 end
+        if k == E.key_down  then key[2] = key[2] - 1 end
+        if k == E.key_up    then key[2] = key[2] + 1 end
+
+        return false
     end
-
-    return true
-end
-
-function do_point(dx, dy)
-    local shift   = E.get_modifier(E.key_modifier_shift)
-    local control = E.get_modifier(E.key_modifier_control)
-
-    if setmagn then  -- Set the stellar magnitude multiplier.
-
-        if not shift   then hip_magn = hip_magn - dy * 1.0 end
-        if not control then tyc_magn = tyc_magn - dy * 1.0 end
-
-    elseif setdist then  -- Set the camera distance from the center.
-
-        d_hip_dist = d_hip_dist + dy * 0.1
-
-    else                 -- None of the above.  Just pan the camera
-
-        d_rot_x = d_rot_x - dy * 0.005
-    end
-
-    d_rot_y = d_rot_y - dx * 0.005
-
-    return true
-end
-
-function do_click(b, s)
-    if b == 2 then setmagn = s end
-    if b == 3 then setdist = s end
-    return true
 end
 
 -------------------------------------------------------------------------------
