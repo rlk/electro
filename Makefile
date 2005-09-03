@@ -11,15 +11,8 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -g -Wall
+	CFLAGS = -O3 -Wall
 endif
-
-# To build with tracking: "make TRACKD=1"
-
-#ifdef TRACKD
-#	LIBS   += $(HOME)/lib/libtrackdAPI_c.a
-#	CFLAGS += -DTRACKD
-#endif
 
 # "make VIDEOTEX=1" enables shared-memory streaming image buffers under Linux.
 

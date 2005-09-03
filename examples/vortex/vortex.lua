@@ -11,6 +11,8 @@ magn  = 100
 -------------------------------------------------------------------------------
 
 function do_start()
+    local x, y, w, h = E.get_display_union()
+
     local brush = E.create_brush()
         
     E.set_brush_frag_prog(brush, "../data/star.fp")
@@ -20,6 +22,8 @@ function do_start()
     galaxy  = E.create_galaxy("../data/galaxy_hip.gal", brush)
     object  = E.create_object("../data/orion.obj")
     pointer = E.create_pivot()
+
+    magn = w / 2
 
     E.set_galaxy_magnitude(galaxy, magn)
     E.parent_entity(galaxy, camera)
@@ -57,9 +61,9 @@ function do_timer(dt)
     -- Move along the hand vector.
 
     if joy[2] < -0.1 or 0.1 < joy[2] then
-        E.move_entity(camera, speed * dir[1] * joy[2] * dt,
-                              speed * dir[2] * joy[2] * dt,
-                              speed * dir[3] * joy[2] * dt)
+        E.move_entity(camera, -speed * dir[1] * joy[2] * dt,
+                              -speed * dir[2] * joy[2] * dt,
+                              -speed * dir[3] * joy[2] * dt)
     end
 
     return true
@@ -77,8 +81,8 @@ function do_keyboard(k, s)
 
         if k == E.key_right then key[1] = key[1] + 1 end
         if k == E.key_left  then key[1] = key[1] - 1 end
-        if k == E.key_down  then key[2] = key[2] + 1 end
-        if k == E.key_up    then key[2] = key[2] - 1 end
+        if k == E.key_up    then key[2] = key[2] + 1 end
+        if k == E.key_down  then key[2] = key[2] - 1 end
 
         -- Page up and page down control the galaxy magnitude.
 
@@ -110,8 +114,8 @@ function do_keyboard(k, s)
 
         if k == E.key_right then key[1] = key[1] - 1 end
         if k == E.key_left  then key[1] = key[1] + 1 end
-        if k == E.key_down  then key[2] = key[2] - 1 end
-        if k == E.key_up    then key[2] = key[2] + 1 end
+        if k == E.key_up    then key[2] = key[2] - 1 end
+        if k == E.key_down  then key[2] = key[2] + 1 end
 
         return false
     end

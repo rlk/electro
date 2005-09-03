@@ -9,10 +9,10 @@ name_text = "Electro Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
-    { "Asteroids",                E.path.."asteroids/asteroids.lua" },
-    { "Driving",                  E.path.."driving/driving.lua"     },
+    { "TeraVision Viewer",        E.path.."viewvid/viewvid.lua"     },
     { "Total Perspective Vortex", E.path.."vortex/vortex.lua"       },
-    { "Fifteen Puzzle",           E.path.."fifteen/fifteen.lua"     },
+    { "Driving",                  E.path.."driving/driving.lua"     },
+    { "Asteroids",                E.path.."asteroids/asteroids.lua" },
 }
 
 item = { }

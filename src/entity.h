@@ -43,6 +43,8 @@
 #define FLAG_POS_TRACKED_2 0x0200
 #define FLAG_ROT_TRACKED_2 0x0400
 #define FLAG_STEREO        0x0800
+#define FLAG_LEFT_EYE      0x1000
+#define FLAG_RIGHT_EYE     0x2000
 
 /* Initial entity vector sizes. */
 

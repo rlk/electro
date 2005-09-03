@@ -13,14 +13,14 @@ p = {
     {  1.0521, 3.1354, -1.3614 },
 }
 
-l = { 266.67083, -7.572, 0.0117, -0.0008, 0.8125 }
+l = { 266.67083, -7.572, 0.0076, 0.0003, 0.8125 }
 
 offset = { 0, (p[2][2] + p[1][2]) / 2, 2.0 + p[1][3] }
 
 ------------------------------------------------------------------------------
 
-host = E.add_host("default", 0, 0, w, h + 1200)
-tile = E.add_tile(host,      0, 1200, w, h)
+host = E.add_host("default", 0, 0, w, h)
+tile = E.add_tile(host,      0, 0, w, h)
 
 E.set_tile_viewport(tile, 0, 0, w, h)
 E.set_tile_position(tile, p[1][1], p[1][2], p[1][3],
@@ -28,10 +28,11 @@ E.set_tile_position(tile, p[1][1], p[1][2], p[1][3],
                     p[2][1] - p[1][1], p[2][2] - p[1][2], p[2][3] - p[1][3])
 E.set_tile_line_screen(tile, l[1], l[2], l[3], l[4], l[5])
 
---E.set_host_flags(host, E.host_flag_full, true)
 E.set_host_flags(host, E.host_flag_framed, false)
 
 E.set_background(1, 0, 0, 0, 1, 0)
+
+E.set_tile_view_offset(tile, 0, 4, 0)
 
 -------------------------------------------------------------------------------
 
@@ -42,12 +43,14 @@ end
 function varrier_thick(d)
     l[3] = l[3] + d;
     E.set_tile_line_screen(tile, l[1], l[2], l[3], l[4], l[5])
+    varrier_dump()
     return true
 end
 
 function varrier_shift(d)
     l[4] = l[4] + d;
     E.set_tile_line_screen(tile, l[1], l[2], l[3], l[4], l[5])
+    varrier_dump()
     return true
 end
 

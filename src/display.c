@@ -263,7 +263,8 @@ void sync_display(void)
         local->flags = HOST_FRAMED;
     }
 
-    if (rank) set_window_pos(local->win_x, local->win_y);
+    if (rank || (local->flags & HOST_FRAMED) == 0)
+        set_window_pos(local->win_x, local->win_y);
 }
 
 /*---------------------------------------------------------------------------*/

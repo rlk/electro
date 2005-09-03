@@ -51,11 +51,15 @@ struct image
 
     /* Shared buffer attributes. */
 
+#ifdef VIDEOTEX
+    void *frame;
+    int   shmid;
+    int   semid;
+    int   bits;
+
     int  last_frame;
     int *next_frame;
-
-    int shmid;
-    int semid;
+#endif
 };
 
 static vector_t image;
@@ -87,11 +91,67 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
+/*
+#define YUV2RGB(R, G, B, Y, U, V) { \
+    B = (unsigned char) (1.164*(Y - 16)                   + 2.018*(U - 128)); \
+    G = (unsigned char) (1.164*(Y - 16) - 0.813*(V - 128) - 0.391*(U - 128)); \
+    R = (unsigned char) (1.164*(Y - 16) + 1.596*(V - 128)); \
+}
+*/
+#ifdef VIDEOTEX
+static void yuv2rgb(unsigned char c[3], unsigned char Y,
+                                        unsigned char U,
+                                        unsigned char V)
+{
+    int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
+    int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
+    int R = (int) (1.164 * (Y - 16) + 1.596 * (V - 128));
+
+    if      (R <   0) c[0] = 0x00;
+    else if (R > 255) c[0] = 0xFF;
+    else              c[0] = (unsigned char) R;
+
+    if      (G <   0) c[1] = 0x00;
+    else if (G > 255) c[1] = 0xFF;
+    else              c[1] = (unsigned char) G;
+
+    if      (B <   0) c[2] = 0x00;
+    else if (B > 255) c[2] = 0xFF;
+    else              c[2] = (unsigned char) B;
+}
+#endif
 
 static void step_texture(int i)
 {
     struct image *p = get_image(i);
     GLenum t;
+
+#ifdef VIDEOTEX
+
+    if (p->frame)
+    {
+        unsigned char *dst = (unsigned char *) p->p[0];
+        unsigned char *src = (unsigned char *) p->frame;
+
+        for (i = 0; i < p->w * p->h; i += 4)
+        {
+            const int U  = src[0];
+            const int Y0 = src[1];
+            const int Y1 = src[2];
+            const int V  = src[3];
+            const int Y2 = src[4];
+            const int Y3 = src[5];
+
+            yuv2rgb(dst + 0, Y0, U, V);
+            yuv2rgb(dst + 3, Y1, U, V);
+            yuv2rgb(dst + 6, Y2, U, V);
+            yuv2rgb(dst + 9, Y3, U, V);
+
+            src +=  6;
+            dst += 12;
+        }
+    }
+#endif
 
     if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))
         t = GL_TEXTURE_RECTANGLE_ARB;
@@ -381,8 +441,11 @@ int send_create_image(const char *file_nx,
 
         p->state =  0;
         p->count =  1;
+
+#ifdef VIDEOTEX
         p->semid = -1;
         p->shmid = -1;
+#endif
 
         /* Note the file names. */
 
@@ -411,7 +474,7 @@ int send_create_image(const char *file_nx,
         /* If any file is missing, this might reorder cubemap sides.  Meh. */
 
         for (j = 0; j < p->n; j++)
-            send_array(p->p[j], p->w * p->h, p->b);
+            send_array(p->p[j], p->w * p->h * p->b, 1);
 
         return i;
     }
@@ -419,21 +482,21 @@ int send_create_image(const char *file_nx,
 }
 
 #ifdef VIDEOTEX
-int send_create_video(int k, int w, int h, int b)
+int send_create_video(int k, int w, int h, int bits)
 {
-    int i;
+    int i, sz = w * h * bits / 8;
 
     if ((i = new_image()) >= 0)
     {
         struct image *p = get_image(i);
-        void *buffer;
+        int *buffer;
 
         p->state = 0;
         p->count = 1;
         p->n     = 1;
         p->w     = w;
         p->h     = h;
-        p->b     = b;
+        p->b     = 3;
 
         /* Acquire the semaphore and shared memory buffers.  Pack the image. */
 
@@ -441,9 +504,9 @@ int send_create_video(int k, int w, int h, int b)
         {
             if (semctl(p->semid, 0, SETVAL, 1) >= 0)
             {
-                if ((p->shmid = shmget(k, w*h*b + 4, 0666 | IPC_CREAT)) >=0)
+                if ((p->shmid = shmget(k, sz + 4, 0666 | IPC_CREAT)) >=0)
                 {
-                    if ((buffer = shmat(p->shmid, NULL, SHM_RDONLY)))
+                    if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
                     {
                         send_event(EVENT_CREATE_IMAGE);
                         send_index(p->n);
@@ -451,10 +514,12 @@ int send_create_video(int k, int w, int h, int b)
                         send_index(p->h);
                         send_index(p->b);
 
-                        p->next_frame = (int *) buffer;
-                        p->p[0]       = (int *) buffer + 1;
+                        p->next_frame = buffer;
+                        p->frame      = buffer + 1;
+                        p->bits       = bits;
 
-                        send_array((char *) buffer + 4, p->w * p->h, p->b);
+                        p->p[0]    = malloc(p->w * p->h * p->b);
+                        send_array(p->p[0], p->w * p->h * p->b, 1);
 
                         return i;
                     }
@@ -515,23 +580,17 @@ static int free_image(int i)
             {
                 fini_image(i);
 
-                if (p->semid == -1)
+                for (j = 0; j < MAX_FILE; ++j)
                 {
-                    for (j = 0; j < MAX_FILE; ++j)
-                    {
-                        if (p->s[j]) free(p->s[j]);
-                        if (p->p[j]) free(p->p[j]);
-                    }
-                }
-                else
-                {
-#ifdef VIDEOTEX
-                    shmdt (p->p[0]);
-                    semctl(p->semid, 0, IPC_RMID, NULL);
-                    shmctl(p->shmid,    IPC_RMID, NULL);
-#endif
+                    if (p->s[j]) free(p->s[j]);
+                    if (p->p[j]) free(p->p[j]);
                 }
 
+#ifdef VIDEOTEX
+                if (p->frame)      shmdt (p->frame);
+                if (p->semid >= 0) semctl(p->semid, 0, IPC_RMID, NULL);
+                if (p->shmid >= 0) shmctl(p->shmid,    IPC_RMID, NULL);
+#endif
                 memset(p, 0, sizeof (struct image));
 
                 return 1;
@@ -745,8 +804,6 @@ int startup_image(void)
 
             p->count    =    1;
             p->state    =    0;
-            p->semid    =   -1;
-            p->shmid    =   -1;
             p->texture  =    0;
             p->n        =    1;
             p->w        =  128;
@@ -754,6 +811,10 @@ int startup_image(void)
             p->b        =    4;
             p->p[0]     = malloc(128 * 128 * 4);
 
+#ifdef VIDEOTEX
+            p->semid = -1;
+            p->shmid = -1;
+#endif
             memset(p->p[0], 0xFF, 128 * 128 * 4);
         }
         return 1;

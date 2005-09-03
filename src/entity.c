@@ -229,7 +229,13 @@ void draw_entity_tree(int i, int f, float a)
     {
         struct entity *e = get_entity(j);
 
-        if ((e->flags & FLAG_HIDDEN) == 0)
+        int L = ((e->flags & FLAG_LEFT_EYE)  && (get_camera_eye() == 0));
+        int R = ((e->flags & FLAG_RIGHT_EYE) && (get_camera_eye() == 1));
+        int H = ((e->flags & FLAG_LEFT_EYE)  == 0 &&
+                 (e->flags & FLAG_RIGHT_EYE) == 0 &&
+                 (e->flags & FLAG_HIDDEN)    == 0);
+
+        if (L || R || H)
         {
             init_entity(j);
 
