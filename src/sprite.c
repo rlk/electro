@@ -173,18 +173,6 @@ static void draw_sprite(int j, int i, int f, float a)
                 if (draw_brush(s->brush, a * get_entity_alpha(j)))
                     glDepthMask(GL_FALSE);
 
-                /* HACK: Stereo sprites show half their texture to each eye. */
-
-                if (get_entity_flags(j) & FLAG_STEREO)
-                {
-                    if (get_camera_eye())
-                        s0 = (s0 + s1) / 2;
-                    else
-                        s1 = (s0 + s1) / 2;
-
-                    dx = dx / 2;
-                }
-
                 glBegin(GL_QUADS);
                 {
                     glTexCoord2f(s0, t0); glVertex2i(-dx, -dy);

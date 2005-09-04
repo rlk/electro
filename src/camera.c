@@ -47,6 +47,7 @@ struct camera
 static vector_t camera;
 
 static float    camera_rot[16];
+static float    camera_pos[3];
 static int      camera_eye = 0;
 
 /*---------------------------------------------------------------------------*/
@@ -72,6 +73,13 @@ static int new_camera(void)
 int get_camera_eye(void)
 {
     return camera_eye;
+}
+
+void get_camera_pos(float p[3])
+{
+    p[0] = camera_pos[0];
+    p[1] = camera_pos[1];
+    p[2] = camera_pos[2];
 }
 
 void get_camera_rot(float M[16])
@@ -351,6 +359,8 @@ void draw_camera(int j, int i, int f, float a)
                     camera_rot[12] = 0;
                     camera_rot[13] = 0;
                     camera_rot[14] = 0;
+
+                    get_entity_position(j, camera_pos);
 
                     /* Draw the scene, or a test pattern if requested. */
 

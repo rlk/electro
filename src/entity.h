@@ -36,15 +36,15 @@
 #define FLAG_WIREFRAME     0x0002
 #define FLAG_BILLBOARD     0x0004
 #define FLAG_LINE_SMOOTH   0x0010
-#define FLAG_POS_TRACKED_0 0x0020
-#define FLAG_ROT_TRACKED_0 0x0040
-#define FLAG_POS_TRACKED_1 0x0080
-#define FLAG_ROT_TRACKED_1 0x0100
-#define FLAG_POS_TRACKED_2 0x0200
-#define FLAG_ROT_TRACKED_2 0x0400
-#define FLAG_STEREO        0x0800
-#define FLAG_LEFT_EYE      0x1000
-#define FLAG_RIGHT_EYE     0x2000
+#define FLAG_LEFT_EYE      0x0020
+#define FLAG_RIGHT_EYE     0x0040
+#define FLAG_TRACK_POS     0x0080
+#define FLAG_TRACK_ROT     0x0100
+
+/* Entity tracking modes. */
+
+#define TRACK_LOCAL        0x0000
+#define TRACK_WORLD        0x0001
 
 /* Initial entity vector sizes. */
 
@@ -110,6 +110,7 @@ void recv_delete_entity(void);
 
 /*---------------------------------------------------------------------------*/
 
+void  send_set_entity_tracking (int, int, int);
 void  send_set_entity_position (int, const float[3]);
 void  send_set_entity_rotation (int, const float[3]);
 void  send_set_entity_scale    (int, const float[3]);

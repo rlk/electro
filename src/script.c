@@ -553,6 +553,14 @@ static int E_get_entity_child(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Entity transform functions                                                */
 
+static int E_set_entity_tracking(lua_State *L)
+{
+    send_set_entity_tracking(E_getentity (L, -3),
+                             L_getinteger(L, -2),
+                             L_getinteger(L, -1));
+    return 0;
+}
+
 static int E_set_entity_position(lua_State *L)
 {
     float p[3];
@@ -2200,6 +2208,7 @@ static struct function_def functions[] = {
     { "get_entity_parent",     E_get_entity_parent     },
     { "get_entity_child",      E_get_entity_child      },
 
+    { "set_entity_tracking",   E_set_entity_tracking   },
     { "set_entity_position",   E_set_entity_position   },
     { "set_entity_rotation",   E_set_entity_rotation   },
     { "set_entity_scale",      E_set_entity_scale      },
@@ -2355,15 +2364,13 @@ static struct constant_def constants[] = {
     { "entity_flag_wireframe",     FLAG_WIREFRAME      },
     { "entity_flag_billboard",     FLAG_BILLBOARD      },
     { "entity_flag_line_smooth",   FLAG_LINE_SMOOTH    },
-    { "entity_flag_pos_tracked_0", FLAG_POS_TRACKED_0  },
-    { "entity_flag_rot_tracked_0", FLAG_ROT_TRACKED_0  },
-    { "entity_flag_pos_tracked_1", FLAG_POS_TRACKED_1  },
-    { "entity_flag_rot_tracked_1", FLAG_ROT_TRACKED_1  },
-    { "entity_flag_pos_tracked_2", FLAG_POS_TRACKED_2  },
-    { "entity_flag_rot_tracked_2", FLAG_ROT_TRACKED_2  },
-    { "entity_flag_stereo",        FLAG_STEREO         },
     { "entity_flag_left_eye",      FLAG_LEFT_EYE       },
     { "entity_flag_right_eye",     FLAG_RIGHT_EYE      },
+    { "entity_flag_track_pos",     FLAG_TRACK_POS      },
+    { "entity_flag_track_rot",     FLAG_TRACK_ROT      },
+
+    { "tracker_mode_local",        TRACK_LOCAL         },
+    { "tracker_mode_world",        TRACK_WORLD         },
 
     /* Body constants */
 

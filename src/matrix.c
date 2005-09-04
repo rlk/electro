@@ -285,6 +285,13 @@ void mult_mat_mat(float M[16], const float N[16], const float O[16])
     load_mat(M, T);
 }
 
+void mult_mat_pos(float v[3], const float M[16], const float u[3])
+{
+    v[0] = M[0] * u[0] + M[4] * u[1] + M[8] * u[2] + M[C];
+    v[1] = M[1] * u[0] + M[5] * u[1] + M[9] * u[2] + M[D];
+    v[2] = M[2] * u[0] + M[6] * u[1] + M[A] * u[2] + M[E];
+}
+
 void mult_mat_vec(float v[4], const float M[16], const float u[4])
 {
     v[0] = M[0] * u[0] + M[4] * u[1] + M[8] * u[2] + M[C] * u[3];
