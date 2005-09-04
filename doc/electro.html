@@ -203,6 +203,14 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>To enable view culling based on the given bound, set <tt>entity_flag_bounded</tt>. Keep in mind that object, sprite, and string bounds are computed automatically, and manually-set boundaries are not likely to be used. The intended use of <tt>set_entity_bound</tt> is the specification of pivot bounds for hierarchical view culling.</p>
 
+<dt><tt>set_entity_tracking</tt>(<i>entity, sensor, mode</i>)<dd><p>Specify the tracking parameters of the entity. If <tt>entity_flag_track_pos</tt> or <tt>entity_flag_track_rot</tt> is set on the entitiy, it will track sensor number <i>sensor</i> using one of the following tracking modes:</p>
+
+<ul>
+<li><tt>tracking_mode_local</tt><p>Position and orientation are given in the coordinate system local to the viewer. These are raw tracking values as received from the sensor. These are useful when the sensor transform is applied to camera navigation.</p>
+
+<li><tt>tracking_mode_world</tt><p>Position and orientation are given in the world coordinate system. These are useful when using tracking to position objects within a scene.</p>
+</ul>
+
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -270,12 +278,12 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <li><tt> entity_flag_bounded </tt><p>Entities with the bounded flag are rendered only when their bounding box falls within the view frustum of the current camera. Objects, sprites, and strings have automatically computed bounding boxes, so they are automatically given the bounded flag. Other entities may be assigned a bounding box using <tt>set_entity_bound</tt>. When an entity is culled it behaves is though it is hidden and traversal of the hierarchy is pruned.</p>
 
-<li><tt> entity_flag_pos_tracked_0 </tt><p>Entities with the position-tracked flag have their positions updated each frame to match the position of tracker 0, if it is available. This is useful for implementing head or wand tracking in an immersive VR environment. If an application requires the position of the tracker without reference to any visible entity, the position-tracked flag should be set on a pivot entity and the pivot's position queried with <tt>get_entity_position</tt>.</p>
+<li><tt> entity_flag_track_pos </tt><p>Entities with the position-tracked flag have their positions updated each frame to match a sensor position, if available. This is useful for implementing head or wand tracking in an immersive VR environment. If an application requires the position of the tracker without reference to any visible entity, the position-tracked flag should be set on a pivot entity and the pivot's position queried with <tt>get_entity_position</tt>.</p>
 
-<li><tt> entity_flag_rot_tracked_0 </tt><p>Entities with the rotation-tracked flag have their orientations updated to match that of tracker 0, if it is available. Again, this is useful in immersive VR applications. The orientation of a tracker may be queried by setting the rotation-tracked flag on a pivot and calling <tt>get_entity_x_vector</tt>, etc.</p>
+<li><tt> entity_flag_track_rot </tt><p>Entities with the rotation-tracked flag have their orientations updated to match a sensor rotation, if available. Again, this is useful in immersive VR applications. The orientation of a tracker may be queried by setting the rotation-tracked flag on a pivot and calling <tt>get_entity_x_vector</tt>, etc.</p>
 
-<li><tt> entity_flag_pos_tracked_1 </tt>
-<li><tt> entity_flag_rot_tracked_1 </tt><p>These flags behave as above, using tracker 1. In many configurations, trackers 0 and 1 will be head and wand, or vice-versa.</p>
+<li><tt>entity_flag_left_eye</tt>
+<li><tt>entity_flag_right_eye</tt><p>These flags behave similarly to <tt>entity_flag_hidden</tt>. They allow the entity hierarchy to be pruned selectively during stereo rendering. Entities with <tt>entity_flag_left_eye</tt> are hidden while the right eye view is rendered, and vice-versa.</p>
 
 </ul>
 </dl>

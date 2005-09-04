@@ -112,8 +112,8 @@ static int server_tick(void)
 
             while (timer_value > TIME_STEP)
             {
-                dirty |= do_timer_script(TIME_STEP);
                 dirty |= step_entities(TIME_STEP, head_sensor);
+                dirty |= do_timer_script(TIME_STEP);
 
                 timer_value -= TIME_STEP;
             }
@@ -297,13 +297,14 @@ static int server_loop(void)
     if (dirty)
     {
         step_images();
-        do_frame_script();
 
         send_event(EVENT_DRAW);
         send_event(EVENT_NULL);
         sync_buffer();
 
         server_tick();
+
+        do_frame_script();
         server_draw();
         server_perf();
 

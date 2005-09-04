@@ -272,6 +272,19 @@ void draw_entity_tree(int i, int f, float a)
     }
 }
 
+void draw_entities(void)
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    /* Begin traversing the scene graph at the root. */
+
+    draw_entity_tree(0, 0, 1);
+    opengl_check("draw_entities");
+}
+
 /*===========================================================================*/
 
 static void detach_entity(int i)
@@ -862,6 +875,11 @@ void recv_set_entity_flags(void)
 
 /*---------------------------------------------------------------------------*/
 
+void get_entity_basis(int i, float M[16])
+{
+    memcpy(M, get_entity(i)->rotation, 16 * sizeof (float));
+}
+
 void get_entity_position(int i, float p[3])
 {
     struct entity *e = get_entity(i);
@@ -1037,78 +1055,106 @@ static void get_tracked_rotation(int sens, float R[16])
     mult_rot_mat(R, 0, 0, 1, r[2]);
 }
 
+static int step_entity_tree(int i, float dt, int head, const float view_p[3],
+                                                       const float view_R[16])
+{
+    struct entity *e = get_entity(i);
+    int j, c = 0;
+
+    if (e->type)
+    {
+        float R[16], sens_R[16];
+        float p[3],  sens_p[3];
+
+        if (e->type == TYPE_CAMERA)
+        {
+            /* Automatically track camera offsets. */
+
+            get_tracker_position(head, sens_p);
+            get_tracked_rotation(head, sens_R);
+
+            send_set_camera_offset(e->data, sens_p, sens_R);
+
+            /* Track child entities using this camera's transform. */
+
+            for (j = CAR(i); j; j = CDR(j))
+                c += step_entity_tree(j, dt, head, e->position, e->rotation);
+        }
+        else
+        {
+            /* Track non-camera entity position as requested. */
+
+            if (e->flags & FLAG_TRACK_POS)
+            {
+                get_tracker_position(e->track_sens, sens_p);
+
+                if (e->track_mode == TRACK_WORLD)
+                {
+                    mult_mat_pos(p, view_R, sens_p);
+                    p[0] += view_p[0];
+                    p[1] += view_p[1];
+                    p[2] += view_p[2];
+                    send_set_entity_position(i, p);
+                }
+                else
+                    send_set_entity_position(i, sens_p);
+
+                c++;
+            }
+
+            /* Track non-camera entity rotation as requested. */
+
+            if (e->flags & FLAG_TRACK_ROT)
+            {
+                get_tracked_rotation(e->track_sens, sens_R);
+
+                if (e->track_mode == TRACK_WORLD)
+                {
+                    mult_mat_mat(R, view_R, sens_R);
+                    send_set_entity_basis(i, R);
+                }
+                else
+                    send_set_entity_basis(i, sens_R);
+
+                c++;
+            }
+
+            /* Track all child entities. */
+
+            for (j = CAR(i); j; j = CDR(j))
+                c += step_entity_tree(j, dt, head, view_p, view_R);
+        }
+    }
+
+    return c;
+}
+
 int step_entities(float dt, int head)
 {
-    int sent = 0, i, n = vecnum(entity);
-
     float R[16];
     float p[3];
 
+    int c = 0;
+
+    /* Traverse the entity tree and apply tracking to all tracked entities. */
+
     if (get_tracker_status())
     {
-        float view_p[3], view_R[16];
-        float sens_p[3], sens_R[16];
+        load_idt(R);
 
-        get_camera_pos(view_p);
-        get_camera_rot(view_R);
+        p[0] = 0;
+        p[1] = 0;
+        p[2] = 0;
 
-        for (i = 0; i < n; ++i)
-        {
-            struct entity *e = get_entity(i);
-
-            if (e->type)
-            {
-                /* Automatically track camera offsets. */
-
-                if (e->type == TYPE_CAMERA)
-                {
-                    get_tracker_position(head, sens_p);
-                    get_tracked_rotation(head, sens_R);
-
-                    send_set_camera_offset(e->data, sens_p, sens_R);
-                    sent = 1;
-                }
-                else
-                {
-                    /* Track non-camera entity position as requested. */
-
-                    if (e->flags & FLAG_TRACK_POS)
-                    {
-                        get_tracker_position(e->track_sens, sens_p);
-
-                        if (e->track_mode == TRACK_WORLD)
-                        {
-                            mult_mat_pos(p, view_R, sens_p);
-                            p[0] += view_p[0];
-                            p[1] += view_p[1];
-                            p[2] += view_p[2];
-                        }
-
-                        send_set_entity_position(i, p);
-                        sent = 1;
-                    }
-
-                    /* Track non-camera entity rotation as requested. */
-
-                    if (e->flags & FLAG_TRACK_ROT)
-                    {
-                        get_tracked_rotation(e->track_sens, sens_R);
-
-                        if (e->track_mode == TRACK_WORLD)
-                            mult_mat_mat(R, view_R, sens_R);
-
-                        send_set_entity_basis(i, R);
-                        sent = 1;
-                    }
-                }
-            }
-        }
+        c += step_entity_tree(0, dt, head, p, R);
     }
 
     /* Run the physical simulation and update all entity states. */
 
     if (physics_step(dt))
     {
+        int i, n = vecnum(entity);
+
         for (i = 0; i < n; ++i)
         {
             struct entity *e = get_entity(i);
@@ -1119,28 +1165,16 @@ int step_entities(float dt, int head)
                 send_set_entity_position(i, p);
                 get_phys_rotation(e->body, R);
                 send_set_entity_basis   (i, R);
-                sent = 1;
+
+                c++;
             }
         }
     }
 
-    return sent;
+    return c;
 }
 
 /*---------------------------------------------------------------------------*/
-
-void draw_entities(void)
-{
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    /* Begin traversing the scene graph at the root. */
-
-    draw_entity_tree(0, 0, 1);
-    opengl_check("draw_entities");
-}
 
 void nuke_entities(void)
 {

@@ -40,7 +40,7 @@ function add_object(i, s)
     table.insert(objects, object)
 
     E.parent_entity(object, pivot)
-    E.set_entity_scale(object, s, s, s)
+--  E.set_entity_scale(object, s, s, s)
 end
 
 function do_start()
@@ -53,16 +53,29 @@ function do_start()
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
     pivot  = E.create_pivot()
+    wand   = E.create_pivot()
     hand   = E.create_pivot()
+    box    = E.create_object("../data/box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
+    E.parent_entity(wand,  light)
+    E.parent_entity(hand,  light)
+    E.parent_entity(box,   hand)
 
     E.set_entity_position(light,  0.0,  8.0,  8.0)
     E.set_entity_position(pivot,  XC,   YC,   ZC)
 
-    E.set_entity_flags(hand, E.entity_flag_pos_tracked_1, true)
-    E.set_entity_flags(hand, E.entity_flag_rot_tracked_1, true)
+    E.set_entity_tracking(hand, 1, E.tracking_mode_world)
+    E.set_entity_flags   (hand, E.entity_flag_track_pos, true)
+    E.set_entity_flags   (hand, E.entity_flag_track_rot, true)
+
+    E.set_entity_tracking(wand, 1, E.tracking_mode_local)
+    E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
+    E.set_entity_flags   (wand, E.entity_flag_track_rot, true)
+
+    E.set_entity_position(box, 0.0, 0.0, -1.0)
+    E.set_entity_scale   (box, 0.1, 0.1, 0.1)
 
     table.foreach(E.argument, add_object)
 
@@ -79,27 +92,28 @@ end
 
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
-    local mov_x, mov_y, mov_z = E.get_entity_z_vector(hand)
-    local s = 1
+    local s = 8
+
+--    print(string.format("%f %f %f", mov_x, mov_y, mov_z))
 
     if joy_x < -0.1 or 0.1 < joy_x then
         E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
     end
 
     if joy_y < -0.1 or 0.1 < joy_y then
-        mov_x, mov_y, mov_z = E.get_entity_z_vector(hand)
+        mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
         E.move_entity(camera, -mov_x * joy_y * dt * s,
                               -mov_y * joy_y * dt * s,
                               -mov_z * joy_y * dt * s)
     else
         E.turn_entity(camera, 0, -pan_x * dt * 90, 0)
 
-        mov_x, mov_y, mov_z = E.get_entity_y_vector(hand)
+        mov_x, mov_y, mov_z = E.get_entity_y_vector(wand)
         E.move_entity(camera, -mov_x * pan_y * dt * s,
                               -mov_y * pan_y * dt * s,
                               -mov_z * pan_y * dt * s)
 
-        mov_x, mov_y, mov_z = E.get_entity_z_vector(hand)
+        mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
         E.move_entity(camera, -mov_x * pan_z * dt * s,
                               -mov_y * pan_z * dt * s,
                               -mov_z * pan_z * dt * s)

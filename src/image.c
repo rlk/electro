@@ -151,6 +151,8 @@ static void step_texture(int i)
             dst += 12;
         }
     }
+
+/*  memcpy(p->p[0], p->frame, p->w * p->h * 12 / 8); */
 #endif
 
     if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))
@@ -508,15 +510,17 @@ int send_create_video(int k, int w, int h, int bits)
                 {
                     if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
                     {
+                        p->next_frame = &buffer[0];
+                        p->w          =  buffer[1];
+                        p->w          =  buffer[2];
+                        p->bits       =  buffer[3];
+                        p->frame      = &buffer[4];
+
                         send_event(EVENT_CREATE_IMAGE);
                         send_index(p->n);
                         send_index(p->w);
                         send_index(p->h);
                         send_index(p->b);
-
-                        p->next_frame = buffer;
-                        p->frame      = buffer + 1;
-                        p->bits       = bits;
 
                         p->p[0]    = malloc(p->w * p->h * p->b);
                         send_array(p->p[0], p->w * p->h * p->b, 1);

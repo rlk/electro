@@ -1,7 +1,7 @@
 
 key = { 0, 0 }
 
-speed = 10
+speed = 2
 scale = 0.1
 magn  = 100
 
@@ -20,7 +20,7 @@ function do_start()
     object  = E.create_object("../data/orion.obj")
     pointer = E.create_pivot()
 
-    magn = w / 2
+    magn = w / 8
 
     E.set_galaxy_magnitude(galaxy, magn)
     E.parent_entity(galaxy, camera)
@@ -29,8 +29,9 @@ function do_start()
     E.set_entity_scale(galaxy, scale, scale, scale)
     E.set_entity_scale(object, scale, scale, scale)
 
-    E.set_entity_flags(pointer, E.entity_flag_pos_tracked_1, true)
-    E.set_entity_flags(pointer, E.entity_flag_rot_tracked_1, true)
+    E.set_entity_tracking(pointer, 1, E.tracking_mode_local)
+    E.set_entity_flags(pointer, E.entity_flag_track_pos, true)
+    E.set_entity_flags(pointer, E.entity_flag_track_rot, true)
     E.set_entity_flags(object,  E.entity_flag_line_smooth,   true)
 
     E.set_brush_flags(E.get_mesh(object, 0), E.brush_flag_unlit, true)

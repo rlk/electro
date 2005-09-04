@@ -2369,8 +2369,8 @@ static struct constant_def constants[] = {
     { "entity_flag_track_pos",     FLAG_TRACK_POS      },
     { "entity_flag_track_rot",     FLAG_TRACK_ROT      },
 
-    { "tracker_mode_local",        TRACK_LOCAL         },
-    { "tracker_mode_world",        TRACK_WORLD         },
+    { "tracking_mode_local",       TRACK_LOCAL         },
+    { "tracking_mode_world",       TRACK_WORLD         },
 
     /* Body constants */
 
