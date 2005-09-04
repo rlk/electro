@@ -12,7 +12,12 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
+
+#ifdef _WIN32
+typedef unsigned int uint32_t;
+#else
 #include <sys/shm.h>
+#endif
 
 #include "tracker.h"
 #include "utility.h"
@@ -56,12 +61,13 @@ static int control_id = -1;
 
 static struct tracker_header *tracker = (struct tracker_header *) (-1);
 static struct control_header *control = (struct control_header *) (-1);
-static int                   *buttons = NULL;
+static uint32_t              *buttons = NULL;
 
 /*---------------------------------------------------------------------------*/
 
 int acquire_tracker(int t_key, int c_key)
 {
+#ifndef _WIN32
     /* Acquire the tracker and controller shared memory segments. */
 
     if ((tracker_id = shmget(t_key, sizeof (struct tracker_header), 0)) >= 0)
@@ -73,7 +79,8 @@ int acquire_tracker(int t_key, int c_key)
     /* Allocate storage for button states. */
 
     if (control != (struct control_header *) (-1))
-        buttons = (int *) calloc(control->but_count, sizeof (int));
+        buttons = (uint32_t *) calloc(control->but_count, sizeof (uint32_t));
+#endif
 
     /* Return an indication of successful attachment to shared memory. */
 
@@ -83,12 +90,14 @@ int acquire_tracker(int t_key, int c_key)
 
 void release_tracker(void)
 {
+#ifndef _WIN32
     /* Detach shared memory segments. */
 
     if (control != (struct control_header *) (-1)) shmdt(control);
     if (tracker != (struct tracker_header *) (-1)) shmdt(tracker);
 
     if (buttons) free(buttons);
+#endif
 
     /* Mark everything as uninitialized. */
 
@@ -109,7 +118,7 @@ int get_tracker_status(void)
             (control != (struct control_header *) (-1)) && buttons);
 }
 
-int get_tracker_rotation(int id, float r[3])
+int get_tracker_rotation(unsigned int id, float r[3])
 {
     if (tracker != (struct tracker_header *) (-1))
     {
@@ -131,7 +140,7 @@ int get_tracker_rotation(int id, float r[3])
     return 0;
 }
 
-int get_tracker_position(int id, float p[3])
+int get_tracker_position(unsigned int id, float p[3])
 {
     if (tracker != (struct tracker_header *) (-1))
     {
@@ -153,7 +162,7 @@ int get_tracker_position(int id, float p[3])
     return 0;
 }
 
-int get_tracker_joystick(int id, float a[2])
+int get_tracker_joystick(unsigned int id, float a[2])
 {
     if (control != (struct control_header *) (-1))
     {
@@ -161,7 +170,7 @@ int get_tracker_joystick(int id, float a[2])
 
         /* Return valuators ID and ID + 1. */
         
-        if (0 <= id && id <= control->val_count - 1)
+        if (0 <= id && id < control->val_count - 1)
         {
             a[0] = *(p + id + 0);
             a[1] = *(p + id + 1);
@@ -172,12 +181,12 @@ int get_tracker_joystick(int id, float a[2])
     return 0;
 }
 
-int get_tracker_buttons(int *id, int *st)
+int get_tracker_buttons(unsigned int *id, unsigned int *st)
 {
     if (buttons && control != (struct control_header *) (-1))
     {
-        int *p = (int *) ((unsigned char *) control + control->but_offset);
-        int  i;
+        uint32_t i, *p = (uint32_t *)
+							((unsigned char *) control + control->but_offset);
 
         /* Seek the first button that does not match its cached state. */
 

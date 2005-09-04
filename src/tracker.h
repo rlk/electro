@@ -25,11 +25,11 @@ void release_tracker(void);
 
 int get_tracker_status(void);
 
-int get_tracker_rotation(int, float[3]);
-int get_tracker_position(int, float[3]);
-int get_tracker_joystick(int, float[2]);
+int get_tracker_rotation(unsigned int, float[3]);
+int get_tracker_position(unsigned int, float[3]);
+int get_tracker_joystick(unsigned int, float[2]);
 
-int get_tracker_buttons(int *, int *); 
+int get_tracker_buttons(unsigned int *, unsigned int *); 
 
 /*---------------------------------------------------------------------------*/
 
