@@ -280,7 +280,7 @@ static int server_loop(void)
         while (get_tracker_buttons(&i, &b))
             dirty |= do_joystick_script(0, i, b);
 
-        /* Handle a clean exit.  TODO: remove redundancy. */
+        /* Handle a clean exit. */
 
         if (e.type == SDL_QUIT)
         {

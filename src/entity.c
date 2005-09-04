@@ -1021,6 +1021,9 @@ int get_entity_child(int i, int n)
 
 void draw_entities(void)
 {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     /* Begin traversing the scene graph at the root. */

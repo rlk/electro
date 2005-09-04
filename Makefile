@@ -1,4 +1,4 @@
-PREFIX = /DEMO/evl/Electro
+INSTALL_PREFIX = /usr/local/Electro
 
 #------------------------------------------------------------------------------
 
@@ -131,8 +131,10 @@ distclean:
 	rm -f $(DEPS)
 
 install : $(TARG)
-	cp $(TARG) $(PREFIX)/bin
-	cp config/* $(PREFIX)/config
+	mkdir -p $(INSTALL_PREFIX)/bin
+	mkdir -p $(INSTALL_PREFIX)/config
+	cp $(TARG) $(INSTALL_PREFIX)/bin
+	cp config/* $(INSTALL_PREFIX)/config
 
 #------------------------------------------------------------------------------
 # If Subversion is available, report the revision number in the source.

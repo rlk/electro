@@ -24,7 +24,7 @@
 #include "utility.h"
 #include "console.h"
 
-#define MAXPATH 16
+#define MAXPATH 32
 
 /*---------------------------------------------------------------------------*/
 
@@ -109,12 +109,15 @@ void path_push(const char *path)
         getcwd(path_stack[path_index++], MAXSTR);
         chdir(path);
     }
+    else error("Directory stack overflow");
 }
 
 void path_pop(void)
 {
     if (path_index > 0)
         chdir(path_stack[--path_index]);
+    else
+        error("Directory stack underflow");
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1,5 +1,3 @@
-local path = E.path
-
 video_K = 2827
 video_w =  640
 video_h =  960
@@ -18,26 +16,32 @@ function do_keyboard(k, s)
         end
     end
 
-    if s and k == E.key_left  then off_x = off_x - 1 / 32 end
-    if s and k == E.key_right then off_x = off_x + 1 / 32 end
-    if s and k == E.key_up    then off_z = off_z - 1 / 32 end
-    if s and k == E.key_down  then off_z = off_z + 1 / 32 end
+    if s then
+        if k == E.key_left  then off_x = off_x - 1 / 32 end
+        if k == E.key_right then off_x = off_x + 1 / 32 end
+        if k == E.key_up    then off_z = off_z - 1 / 32 end
+        if k == E.key_down  then off_z = off_z + 1 / 32 end
 
-    if s and k == E.key_F9 then
-        E.set_sprite_range(spriteL, 0, video_w, video_m, 0)
-        E.set_sprite_range(spriteR, 0, video_w, video_h, video_m)
-    end
-    if s and k == E.key_F10 then
-        E.set_sprite_range(spriteL, video_w, 0, video_m, 0)
-        E.set_sprite_range(spriteR, video_w, 0, video_h, video_m)
-    end
-    if s and key == E.key_F12 then
-        E.exec(path.."../demo.lua")
-    end
+        if k == E.key_F9 then
+            E.set_sprite_range(spriteL, 0, video_w, video_m, 0)
+            E.set_sprite_range(spriteR, 0, video_w, video_h, video_m)
+        end
+        if k == E.key_F10 then
+            E.set_sprite_range(spriteL, video_w, 0, video_m, 0)
+            E.set_sprite_range(spriteR, video_w, 0, video_h, video_m)
+        end
+        if k == E.key_F12 then
+            E.nuke()
+            E.chdir("..")
+            dofile("demo.lua")
+            return true
+        end
 
-    E.set_entity_position(spriteL, pos_x + off_x, pos_y, pos_z + off_z)
-    E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
-
+        E.set_entity_position(spriteL, pos_x + off_x, pos_y, pos_z + off_z)
+        E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
+        
+        return true
+    end
     return false
 end
 

@@ -324,7 +324,7 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
---  video = E.create_image(2827, 640, 480, 12)
+    video = E.create_image(2827, 640, 480, 12)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",
@@ -347,9 +347,9 @@ function do_start()
     E.set_entity_scale   (plane, 32, 32, 32)
     E.set_entity_scale   (sky, 8, 8, 8)
 
-    E.set_brush_image(E.get_mesh(sky, 1), envmap)
-    E.set_brush_flags(E.get_mesh(sky, 1), E.brush_flag_unlit,     true)
-    E.set_brush_flags(E.get_mesh(sky, 1), E.brush_flag_sky_map_0, true)
+    E.set_brush_image(E.get_mesh(sky, 0), envmap)
+    E.set_brush_flags(E.get_mesh(sky, 0), E.brush_flag_unlit,     true)
+    E.set_brush_flags(E.get_mesh(sky, 0), E.brush_flag_sky_map_0, true)
 
     add_ramp(0, 0, 0, 10, 0)
     add_ramp(32, 0, 10, 30, 0)
@@ -436,7 +436,10 @@ function do_keyboard(k, s)
         end
 
         if k == E.key_F12 then
-            E.exec(path.."../demo.lua")
+            E.nuke()
+            E.chdir("..")
+            dofile("demo.lua")
+            return true
         end
 
         if k == E.key_up    then key_y = key_y - 1 end

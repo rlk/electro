@@ -1,6 +1,4 @@
 
-local path = E.path
-
 joy_dev = 0
 
 -------------------------------------------------------------------------------
@@ -9,10 +7,10 @@ name_text = "Electro Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
-    { "TeraVision Viewer",        E.path.."viewvid/viewvid.lua"     },
-    { "Total Perspective Vortex", E.path.."vortex/vortex.lua"       },
-    { "Driving",                  E.path.."driving/driving.lua"     },
-    { "Asteroids",                E.path.."asteroids/asteroids.lua" },
+    { "TeraVision Viewer",        "viewvid",   "viewvid.lua"   },
+    { "Total Perspective Vortex", "vortex",    "vortex.lua"    },
+    { "Driving",                  "driving",   "driving.lua"   },
+    { "Asteroids",                "asteroids", "asteroids.lua" },
 }
 
 item = { }
@@ -46,6 +44,12 @@ function set_selected(d)
     E.set_string_fill(E.get_entity_child(item[selected].O, 0), item_brush)
 end
 
+function run_selected()
+    E.nuke()
+    E.chdir(demo[selected][2])
+    dofile(demo[selected][3])
+end
+
 -------------------------------------------------------------------------------
 
 time     = 0
@@ -61,7 +65,7 @@ function do_timer(dt)
     local y = dsp_h / 2
     local k = 10 + 3 * math.sin(time / 4)
 
-    E.set_entity_position(light, x, y, dsp_h / 5)
+    E.set_entity_position(light, x, y, dsp_h / 2)
     E.set_entity_scale(logo, k, k, k)
 
     if centered and jy < -0.5 then
@@ -82,17 +86,13 @@ end
 function do_keyboard(k, s)
     if s and k == E.key_up     then set_selected(-1) end
     if s and k == E.key_down   then set_selected( 1) end
-    if s and k == E.key_return then
-        E.nuke()
-        E.exec(demo[selected][2])
-    end
+    if s and k == E.key_return then run_selected()   end
     return true
 end
 
 function do_joystick(d, b, s)
     if s then
-        E.nuke()
-        E.exec(demo[selected][2])
+        run_selected()
     end
     return true        
 end
@@ -100,9 +100,9 @@ end
 function do_start()
     dsp_x, dsp_y, dsp_w, dsp_h = E.get_display_union()
 
-    local H = 0;
-    local W = 0;
-    local N = table.getn(demo);
+    local H = 0
+    local W = 0
+    local N = table.getn(demo)
 
     logo_brush = E.create_brush()
     line_brush = E.create_brush()
@@ -110,13 +110,18 @@ function do_start()
     menu_brush = E.create_brush()
     item_brush = E.create_brush()
 
-    E.set_brush_color(logo_brush, 0.0, 0.0, 0.0, 1.0, 1, 1, 1, 1, 0, 0, 0, 0, 100)
-    E.set_brush_color(line_brush, 1.0, 1.0, 1.0, 0.3, 1, 1, 1, 1, 0, 0, 0, 0, 100)
-    E.set_brush_color(name_brush, 1.0, 1.0, 0.0, 0.7, 1, 1, 1, 1, 0, 0, 0, 0, 10)
-    E.set_brush_color(menu_brush, 0.6, 0.6, 0.6, 0.5, 1, 1, 1, 1, 0, 0, 0, 0, 100)
-    E.set_brush_color(item_brush, 1.0, 0.6, 0.0, 0.7, 1, 1, 1, 1, 0, 0, 0, 0, 10)
+    E.set_brush_color(logo_brush, 0.0, 0.0, 0.0, 1.0,
+                                  1.0, 1.0, 1.0, 1.0, 0, 0, 0, 0, 100)
+    E.set_brush_color(line_brush, 1.0, 1.0, 1.0, 0.3,
+                                  0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0, 100)
+    E.set_brush_color(name_brush, 1.0, 1.0, 0.0, 0.7,
+                                  1.0, 1.0, 1.0, 1.0, 0, 0, 0, 0,  10)
+    E.set_brush_color(menu_brush, 0.6, 0.6, 0.6, 0.5,
+                                  0.5, 0.5, 0.5, 1.0, 0, 0, 0, 0, 100)
+    E.set_brush_color(item_brush, 1.0, 0.6, 0.0, 0.7,
+                                  0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0,  10)
 
-    E.set_background(0, 0, 0, 0, 0.5, 0)
+    E.set_background(0, 0.5, 0, 0, 0, 0)
 
     camera = E.create_camera(E.camera_type_orthogonal)
     light  = E.create_light(E.light_type_positional)
@@ -184,5 +189,4 @@ end
 
 -------------------------------------------------------------------------------
 
-E.nuke()
 do_start()

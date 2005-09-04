@@ -822,9 +822,13 @@ and sprites.</p>
 <h3>Functions</h3>
 <dl>
 
-<dt><tt>exec</tt>(<i>filename</i>)<dd><p>Execute Electro Lua script <i>filename</i><p>
+<dt><tt>exit</tt>()<dd><p>Exit Electro cleanly. This function should be used instead of Lua's <tt>os.exit</tt> function in order to ensure that processes running on client hosts of a cluster display are properly exited.</p>
 
-<dt><tt>exit</tt>()<dd><p>Exit Electro cleanly.</p>
+<dt><tt>chdir</tt>(<i>path</i>)<dd><p>Change the current working directory to <i>path</i>. The previous working directory will be lost.</p>
+
+<dt><tt>pushdir</tt>(<i>path</i>)<dd><p>Push the current working directory to the directory stack and change to <i>path</i>.</p>
+
+<dt><tt>popdir</tt>()<dd><p>Pop the previous current working directory from the directory stack and change there.</p>
 
 </dl>
 
@@ -832,20 +836,6 @@ and sprites.</p>
 <dl>
 
 <dt><tt>arguments</tt><dd>This symbol is bound to a table of command line arguments.  Any arguments not recognized by Electro are passed along to the application in this fashion.</p>
-
-<dt><tt>path</tt><dd>This symbol is bound to the current working directory path name of the running script.</p>
-
-<p>In general, resources are loaded from the current working directory. However, applications are free to utilize multiple script files across multiple directories. If a script calls a function defined in another directory, that function's idea of the current directory may be incorrect.</p>
-
-<p>The <tt>path</tt> variable allows Electro applications to handle resource location when executing outside of their local directory. Scripts may copy this value to a local variable and later use that value to locate local resources. For example, this script captures its path and applies it to load a resource. This resource will be located correctly regardless of the path of the calling script.</p>
-
-<pre>
-local local_path = E.path
-
-function load_something()
-    return E.create_object(local_path.."something.obj")
-end
-</pre>
 
 </dl>
 

@@ -1,6 +1,3 @@
-local path = E.path
-
--------------------------------------------------------------------------------
 
 key = { 0, 0 }
 
@@ -105,7 +102,9 @@ function do_keyboard(k, s)
         -- Return to the demo menu on F12
 
         if k == E.key_F12 then
-            E.exec(path.."../demo.lua")
+            E.nuke()
+            E.chdir("..")
+            dofile("demo.lua")
         end
 
         return true

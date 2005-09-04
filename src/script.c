@@ -1914,6 +1914,9 @@ static int E_set_background(lua_State *L)
     return 0;
 }
 
+/*===========================================================================*/
+/* System functions                                                          */
+
 static int E_exit(lua_State *L)
 {
     SDL_Event e;
@@ -1921,12 +1924,6 @@ static int E_exit(lua_State *L)
     e.type = SDL_QUIT;
     SDL_PushEvent(&e);
 
-    return 0;
-}
-
-static int E_exec(lua_State *L)
-{
-    load_script(L_getstring(L, -1));
     return 0;
 }
 
@@ -1939,6 +1936,24 @@ static int E_nuke(lua_State *L)
     nuke_images();
     nuke_sounds();
 
+    return 0;
+}
+
+static int E_pushdir(lua_State *L)
+{
+    path_push(L_getstring(L, -1));
+    return 0;
+}
+
+static int E_popdir(lua_State *L)
+{
+    path_pop();
+    return 0;
+}
+
+static int E_chdir(lua_State *L)
+{
+    chdir(L_getstring(L, -1));
     return 0;
 }
 
@@ -2326,8 +2341,10 @@ static struct function_def functions[] = {
     { "set_typeface",          E_set_typeface          },
     { "set_background",        E_set_background        },
     { "exit",                  E_exit                  },
-    { "exec",                  E_exec                  },
     { "nuke",                  E_nuke                  },
+    { "chdir",                 E_chdir                 },
+    { "popdir",                E_popdir                 },
+    { "pushdir",               E_pushdir                 },
 };
 
 static struct constant_def constants[] = {
@@ -2661,25 +2678,12 @@ void free_script(void)
 
 void load_script(const char *file)
 {
-    const char *path = get_file_path(file);
     int  err;
     FILE *fp;
 
-    /* Push the script directory as current. */
-
-    path_push(path);
-
-    /* Record the script directory in the Electro Lua environment. */
-
-    lua_getglobal (L, "E");
-    lua_pushstring(L, "path");
-    lua_pushstring(L,  path);
-    lua_settable  (L, -3);
-    lua_pop       (L,  1);
-
     /* Load and execute the script. */
 
-    if ((fp = open_file(get_file_name(file), "r")))
+    if ((fp = open_file(file, "r")))
     {
         int top = lua_gettop(L);
 
@@ -2697,10 +2701,6 @@ void load_script(const char *file)
         fclose(fp);
     }
     else error("Script not found: %s", file);
-
-    /* Pop back to the previous working directory. */
-
-    path_pop();
 }
 
 /*---------------------------------------------------------------------------*/

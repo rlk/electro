@@ -10,8 +10,6 @@
 --    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
 --    General Public License for more details.
 
-local path = E.path
-
 joy_dev = 0
 
 sound_on = true
@@ -1348,7 +1346,10 @@ function do_keyboard(key, down)
     end
 
     if key == E.key_F12 then
-        E.exec(path.."../demo.lua")
+        E.nuke()
+        E.chdir("..")
+        dofile("demo.lua")
+        return true
     end
 
     return false
