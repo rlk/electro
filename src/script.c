@@ -1452,20 +1452,16 @@ static int E_create_image(lua_State *L)
                                          L_getstring(L, -3),
                                          L_getstring(L, -2),
                                          L_getstring(L, -1)));
+    else
+    {
 #ifdef VIDEOTEX
-    if (N == 4)
-        E_pushimage(L, send_create_video(L_getinteger(L, -4),
-                                         L_getinteger(L, -3),
-                                         L_getinteger(L, -2),
-                                         L_getinteger(L, -1)));
-#else
-    if (N == 4)
-        E_pushimage(L, 0);
+        if (lua_isnumber(L, -1))
+            E_pushimage(L, send_create_video(L_getinteger(L, -1)));
+        else
 #endif
-
-    if (N == 1)
-        E_pushimage(L, send_create_image(L_getstring(L, -1),
-                                         NULL, NULL, NULL, NULL, NULL));
+            E_pushimage(L, send_create_image(L_getstring(L, -1),
+                                             NULL, NULL, NULL, NULL, NULL));
+    }
  
     return 1;
 }

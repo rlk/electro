@@ -138,37 +138,57 @@ static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
     }
 }
 
-#define DST(f, r, c, k) dst[(w*(f) + 2*w*(r) +   (c))*3 + (k)]
-#define SRC(f, r, c)    src[  ((f) + 2*w*(r) + 2*(c))]
-
-static void copy_bayer(unsigned char *dst, unsigned char *src, int w, int h)
+static void copy_stereo(unsigned char *dst, unsigned char *src, int w, int h)
 {
-    int f, r, c;
+    int i, n = w * h;
 
-    for (f = 0; f < 2; f += 1)
-        for (r = 0; r < h; r += 2)
-            for (c = 0; c < w; c += 2)
-            {
-                const unsigned char pr = SRC(f, r,   c);
-                const unsigned char pg = SRC(f, r+1, c);
-                const unsigned char qg = SRC(f, r,   c+1);
-                const unsigned char pb = SRC(f, r+1, c+1);
+    unsigned char *dstL = dst;
+    unsigned char *dstR = dst + 3 * n / 2;
 
-                DST(f, r,   c,   0) = pr;
-                DST(f, r,   c,   1) = pg;
-                DST(f, r,   c,   2) = pb;
+    for (i = 0; i < n; i += 2)
+    {
+        dstL[0] = dstL[1] = dstL[2] = src[0];
+        dstR[0] = dstR[1] = dstR[2] = src[1];
 
-                DST(f, r+1, c,   0) = pr;
-                DST(f, r+1, c,   1) = (pg + qg) / 2;
-                DST(f, r+1, c,   2) = pb;
+        dstL += 3;
+        dstR += 3;
+        src  += 2;
+    }
+}
 
-                DST(f, r,   c+1, 0) = pr;
-                DST(f, r,   c+1, 1) = (pg + qg) / 2;
-                DST(f, r,   c+1, 2) = pb;
+static void decode_bayer(unsigned char *buf, int w, int h)
+{
+    int r;
+    int c;
 
-                DST(f, r+1, c+1, 0) = pr;
-                DST(f, r+1, c+1, 1) = qg;
-                DST(f, r+1, c+1, 2) = pb;
+    for (r = 0; r < h; r += 2)
+        for (c = 0; c < w; c += 2)
+        {
+            const int i00 = 3 * (r       * w + c);
+            const int i10 = 3 * ((r + 1) * w + c);
+            const int i01 = 3 * (r       * w + (c + 1));
+            const int i11 = 3 * ((r + 1) * w + (c + 1));
+
+            const unsigned char pr = buf[i00];
+            const unsigned char pg = buf[i10];
+            const unsigned char qg = buf[i01];
+            const unsigned char pb = buf[i11];
+
+            buf[i00]     = pr;
+            buf[i00 + 1] = pg;
+            buf[i00 + 2] = pb;
+
+            buf[i10]     = pr;
+            buf[i10 + 1] = (pg + qg) / 2;
+            buf[i10 + 2] = pb;
+
+            buf[i01]     = pr;
+            buf[i01 + 1] = (pg + qg) / 2;
+            buf[i01 + 2] = pb;
+
+            buf[i11]     = pr;
+            buf[i11 + 1] = qg;
+            buf[i11 + 2] = pb;
         }
 }
 #endif
@@ -187,7 +207,10 @@ static void step_texture(int i)
         if (p->bits == 12)
             copy_yuv411(dst, src, p->w, p->h);
         if (p->bits ==  8)
-            copy_bayer (dst, src, p->w, p->h);
+        {
+            copy_stereo(dst, src, p->w, p->h);
+            decode_bayer(dst, p->w, p->h);
+        }
     }
 #endif
 
@@ -520,9 +543,9 @@ int send_create_image(const char *file_nx,
 }
 
 #ifdef VIDEOTEX
-int send_create_video(int k, int w, int h, int bits)
+int send_create_video(int k)
 {
-    int i, sz = w * h * bits / 8;
+    int i;
 
     if ((i = new_image()) >= 0)
     {
@@ -532,24 +555,41 @@ int send_create_video(int k, int w, int h, int bits)
         p->state = 0;
         p->count = 1;
         p->n     = 1;
-        p->w     = w;
-        p->h     = h;
         p->b     = 3;
 
-        /* Acquire the semaphore and shared memory buffers.  Pack the image. */
+        /* Acquire the semaphore and shared memory buffers. */
 
         if ((p->semid = semget(k, 1, 0666 | IPC_CREAT)) >= 0)
         {
             if (semctl(p->semid, 0, SETVAL, 1) >= 0)
             {
-                if ((p->shmid = shmget(k, sz + 4, 0666 | IPC_CREAT)) >=0)
+                size_t sz = sizeof (int) * 4;
+
+                /* Acquire the shared buffer header and read the size. */
+
+                if ((p->shmid = shmget(k, sz, 0666)) >=0)
+                {
+                    if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
+                    {
+                        p->w    = buffer[1];
+                        p->h    = buffer[2];
+                        p->bits = buffer[3];
+
+                        shmdt(buffer);
+                    }
+                    else error("Video buffer %d: %s", k, system_error());
+                }
+                else error("Video buffer %d: %s", k, system_error());
+
+                /* Acquire the properly-sized buffer. */
+
+                sz += p->w * p->h * p->bits / 8;
+
+                if ((p->shmid = shmget(k, sz, 0666)) >=0)
                 {
                     if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
                     {
                         p->next_frame = &buffer[0];
-                        p->w          =  buffer[1];
-                        p->w          =  buffer[2];
-                        p->bits       =  buffer[3];
                         p->frame      = &buffer[4];
 
                         send_event(EVENT_CREATE_IMAGE);
@@ -627,9 +667,7 @@ static int free_image(int i)
                 }
 
 #ifdef VIDEOTEX
-                if (p->frame)      shmdt (p->frame);
-                if (p->semid >= 0) semctl(p->semid, 0, IPC_RMID, NULL);
-                if (p->shmid >= 0) shmctl(p->shmid,    IPC_RMID, NULL);
+                if (p->frame) shmdt (p->frame);
 #endif
                 memset(p, 0, sizeof (struct image));
 
@@ -793,7 +831,7 @@ void step_images(void)
 
         /* If this is a shared image... */
 
-        if (p->count && p->semid >= 0)
+        if (p->count && p->semid >= 0 && p->shmid >= 0 && p->frame)
         {
             struct sembuf s;
 
@@ -808,6 +846,8 @@ void step_images(void)
 
             if (p->last_frame < *p->next_frame)
             {
+                p->last_frame = *p->next_frame;
+
                 /* Update the texture object. */
 
                 step_texture(i);

@@ -4,7 +4,7 @@ video_h =  960
 video_m =  480
 video_b =   12
 
-off_x = 0
+off_x = 3 / 32
 off_z = 0
 
 -------------------------------------------------------------------------------
@@ -53,8 +53,8 @@ function do_start()
     local X0, Y0, Z0, X1, Y1, Z1 = E.get_display_bound()
 
     camera  = E.create_camera(E.camera_type_perspective)
-    videoL  = E.create_image(video_K, video_w, video_h, video_b)
-    videoR  = E.create_image(video_K, video_w, video_h, video_b)
+    videoL  = E.create_image(video_K)
+    videoR  = E.create_image(video_K)
     brushL  = E.create_brush()
     brushR  = E.create_brush()
     spriteL = E.create_sprite(brushL)
