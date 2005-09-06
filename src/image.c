@@ -91,14 +91,9 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
-/*
-#define YUV2RGB(R, G, B, Y, U, V) { \
-    B = (unsigned char) (1.164*(Y - 16)                   + 2.018*(U - 128)); \
-    G = (unsigned char) (1.164*(Y - 16) - 0.813*(V - 128) - 0.391*(U - 128)); \
-    R = (unsigned char) (1.164*(Y - 16) + 1.596*(V - 128)); \
-}
-*/
+
 #ifdef VIDEOTEX
+
 static void yuv2rgb(unsigned char c[3], unsigned char Y,
                                         unsigned char U,
                                         unsigned char V)
@@ -119,6 +114,63 @@ static void yuv2rgb(unsigned char c[3], unsigned char Y,
     else if (B > 255) c[2] = 0xFF;
     else              c[2] = (unsigned char) B;
 }
+
+static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
+{
+    int i;
+
+    for (i = 0; i < w * h; i += 4)
+    {
+        const int U  = src[0];
+        const int Y0 = src[1];
+        const int Y1 = src[2];
+        const int V  = src[3];
+        const int Y2 = src[4];
+        const int Y3 = src[5];
+
+        yuv2rgb(dst + 0, Y0, U, V);
+        yuv2rgb(dst + 3, Y1, U, V);
+        yuv2rgb(dst + 6, Y2, U, V);
+        yuv2rgb(dst + 9, Y3, U, V);
+
+        src +=  6;
+        dst += 12;
+    }
+}
+
+#define DST(f, r, c, k) dst[(w*(f) + 2*w*(r) +   (c))*3 + (k)]
+#define SRC(f, r, c)    src[  ((f) + 2*w*(r) + 2*(c))]
+
+static void copy_bayer(unsigned char *dst, unsigned char *src, int w, int h)
+{
+    int f, r, c;
+
+    for (f = 0; f < 2; f += 1)
+        for (r = 0; r < h; r += 2)
+            for (c = 0; c < w; c += 2)
+            {
+                const unsigned char pr = SRC(f, r,   c);
+                const unsigned char pg = SRC(f, r+1, c);
+                const unsigned char qg = SRC(f, r,   c+1);
+                const unsigned char pb = SRC(f, r+1, c+1);
+
+                DST(f, r,   c,   0) = pr;
+                DST(f, r,   c,   1) = pg;
+                DST(f, r,   c,   2) = pb;
+
+                DST(f, r+1, c,   0) = pr;
+                DST(f, r+1, c,   1) = (pg + qg) / 2;
+                DST(f, r+1, c,   2) = pb;
+
+                DST(f, r,   c+1, 0) = pr;
+                DST(f, r,   c+1, 1) = (pg + qg) / 2;
+                DST(f, r,   c+1, 2) = pb;
+
+                DST(f, r+1, c+1, 0) = pr;
+                DST(f, r+1, c+1, 1) = qg;
+                DST(f, r+1, c+1, 2) = pb;
+        }
+}
 #endif
 
 static void step_texture(int i)
@@ -127,32 +179,16 @@ static void step_texture(int i)
     GLenum t;
 
 #ifdef VIDEOTEX
-
     if (p->frame)
     {
         unsigned char *dst = (unsigned char *) p->p[0];
         unsigned char *src = (unsigned char *) p->frame;
 
-        for (i = 0; i < p->w * p->h; i += 4)
-        {
-            const int U  = src[0];
-            const int Y0 = src[1];
-            const int Y1 = src[2];
-            const int V  = src[3];
-            const int Y2 = src[4];
-            const int Y3 = src[5];
-
-            yuv2rgb(dst + 0, Y0, U, V);
-            yuv2rgb(dst + 3, Y1, U, V);
-            yuv2rgb(dst + 6, Y2, U, V);
-            yuv2rgb(dst + 9, Y3, U, V);
-
-            src +=  6;
-            dst += 12;
-        }
+        if (p->bits == 12)
+            copy_yuv411(dst, src, p->w, p->h);
+        if (p->bits ==  8)
+            copy_bayer (dst, src, p->w, p->h);
     }
-
-/*  memcpy(p->p[0], p->frame, p->w * p->h * 12 / 8); */
 #endif
 
     if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))

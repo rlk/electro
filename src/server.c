@@ -194,8 +194,8 @@ static int server_loop(void)
     static int dirty = 1;
     static int count = 0;
 
-    static int i;
-    static int b;
+    unsigned int i;
+    unsigned int b;
 
     SDL_Event e;
 
