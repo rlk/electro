@@ -554,6 +554,9 @@ int send_create_video(int k)
 
         p->state = 0;
         p->count = 1;
+        p->w     = 0;
+        p->h     = 0;
+        p->bits  = 0;
         p->n     = 1;
         p->b     = 3;
 
@@ -583,9 +586,15 @@ int send_create_video(int k)
 
                 /* Acquire the properly-sized buffer. */
 
+                p->w =   640;
+                p->h =   960;
+                p->bits = 12;
+
+                printf("%d %d %d\n", p->w, p->h, p->bits);
+
                 sz += p->w * p->h * p->bits / 8;
 
-                if ((p->shmid = shmget(k, sz, 0666)) >=0)
+                if (p->w * p->h > 0 && (p->shmid = shmget(k, sz, 0666)) >=0)
                 {
                     if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
                     {

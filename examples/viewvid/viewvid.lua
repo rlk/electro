@@ -2,7 +2,6 @@ video_K = 2827
 video_w =  640
 video_h =  960
 video_m =  480
-video_b =   12
 
 off_x = 3 / 32
 off_z = 0
@@ -76,6 +75,8 @@ function do_start()
 
     E.set_sprite_range(spriteL, 0, video_w, video_m, 0)
     E.set_sprite_range(spriteR, 0, video_w, video_h, video_m)
+--    E.set_sprite_range(spriteL, 0, video_w, video_h, 0)
+--    E.set_sprite_range(spriteR, 0, video_w, video_h, 0)
 
     pos_x = (X0 + X1) / 2
     pos_y = (Y0 + Y1) / 2

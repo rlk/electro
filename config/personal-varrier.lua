@@ -98,10 +98,12 @@ function varrier_keyboard(k, s, camera)
             return true
         end
     else
-        if k == E.key_down  then return true end
-        if k == E.key_up    then return true end
-        if k == E.key_left  then return true end
-        if k == E.key_right then return true end
+        if E.get_modifier(E.key_modifier_control) then
+            if k == E.key_down  then return true end
+            if k == E.key_up    then return true end
+            if k == E.key_left  then return true end
+            if k == E.key_right then return true end
+        end
     end
     return false
 end

@@ -54,6 +54,8 @@ static void init_options(void)
     glPixelStorei(GL_PACK_ALIGNMENT,   1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+    glLineWidth(8.0);
+
     glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, CLEAR_A);
 }
 

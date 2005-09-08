@@ -282,7 +282,7 @@ void draw_entities(void)
     /* Begin traversing the scene graph at the root. */
 
     draw_entity_tree(0, 0, 1);
-    opengl_check("draw_entities");
+/*    opengl_check("draw_entities"); */
 }
 
 /*===========================================================================*/
@@ -911,9 +911,27 @@ void get_entity_z_vector(int i, float v[3])
 {
     struct entity *e = get_entity(i);
 
-    v[0] = e->rotation[8];
-    v[1] = e->rotation[9];
-    v[2] = e->rotation[10];
+    /* HACK: The Flock on the Personal Varrier is oriented incorrectly,      */
+    /* placing the gimbal lock along the Y axis, instead of along the Z      */
+    /* axis where it should be.  This code resamples tracking in order to    */
+    /* recompute the Z vector from scratch.                                  */
+
+    if ((e->flags & FLAG_TRACK_ROT) && get_tracker_status())
+    {
+        float r[3], R[16], z[3] = { 0, 0, 1 };
+
+        get_tracker_rotation((unsigned int) e->track_sens, r);
+
+        load_rot_mat(R, 0, 1, 0, r[1]);
+        mult_rot_mat(R, 1, 0, 0, r[0]);
+        mult_mat_pos(v, R, z);
+    }
+    else
+    {
+        v[0] = e->rotation[8];
+        v[1] = e->rotation[9];
+        v[2] = e->rotation[10];
+    }
 }
 
 void get_entity_scale(int i, float v[3])

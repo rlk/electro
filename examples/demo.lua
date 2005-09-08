@@ -8,7 +8,7 @@ help_text = "Select a demo.  Press F12 to return."
 
 demo = {
     { "TeraVision Viewer",        "viewvid",   "viewvid.lua"   },
-    { "Total Perspective Vortex", "vortex",    "vortex.lua"    },
+    { "Hipparcos Explorer",       "vortex",    "vortex.lua"    },
     { "Driving",                  "driving",   "driving.lua"   },
     { "Asteroids",                "asteroids", "asteroids.lua" },
 }
@@ -148,7 +148,7 @@ function do_start()
 
     -- Position the menu on screen.
 
-    k = math.min(0.75 * dsp_w / W, 0.50 * dsp_h / (H * N))
+    k = math.min(0.60 * dsp_w / W, 0.50 * dsp_h / (H * N))
 
     E.set_entity_scale(menu, k, k, k)
     E.set_entity_position(menu, dsp_w / 2, 3 * dsp_h / 4, 0)

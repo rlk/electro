@@ -324,7 +324,7 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
-    video = E.create_image(2827, 640, 480, 12)
+--  video = E.create_image(2827)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",
@@ -379,19 +379,19 @@ function do_joystick(d, b, s)
     if d == joy_dev then
         if s then
             if b == 1 then
-                add_box()
-            end
-            if b == 2 then
-                add_ball()
-            end
-            if b == 3 then
-                add_car()
-            end
-            if b == 4 then
                 right = true
             end
-        else
+            if b == 2 then
+                add_box()
+            end
+            if b == 3 then
+                add_ball()
+            end
             if b == 4 then
+                add_car()
+            end
+        else
+            if b == 1 then
                 right = false
             end
         end
@@ -410,27 +410,27 @@ function do_keyboard(k, s)
     end
 
     if s then
-        if k == E.key_1 then
+        if k == E.key_2 then
             add_box()
         end
-        if k == E.key_2 then
+        if k == E.key_3 then
             add_ball()
         end
-        if k == E.key_3 then
+        if k == E.key_4 then
             add_car()
         end
-        if k == E.key_4 then
+        if k == E.key_5 then
             add_tv(0, 10, 0)
         end
         if k == E.key_tab then
             right = true
         end
 
-        if k == E.key_F6 then
+        if k == E.key_F9 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, true)
             return true
         end
-        if k == E.key_F7 then
+        if k == E.key_F10 then
             E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
         end
