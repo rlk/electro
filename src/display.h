@@ -147,6 +147,7 @@ void recv_set_tile_position   (void);
 void set_window_pos(int, int);
 void set_window_siz(int);
 
+void set_window_full(int);
 void set_window_w(int);
 void set_window_h(int);
 int  get_window_w(void);

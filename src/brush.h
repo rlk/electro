@@ -99,6 +99,9 @@ void recv_set_brush_frag_param(void);
 void send_set_brush_vert_param(int, int, const float[4]);
 void recv_set_brush_vert_param(void);
 
+void send_set_brush_line_width(int, float);
+void recv_set_brush_line_width(void);
+
 /*---------------------------------------------------------------------------*/
 
 void init_brush(int);

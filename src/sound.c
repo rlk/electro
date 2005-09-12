@@ -250,7 +250,7 @@ int startup_sound(void)
     }
     else fprintf(stderr, "%s\n", SDL_GetError());
 
-    return 0;
+    return 1;
 }
 
 /*---------------------------------------------------------------------------*/

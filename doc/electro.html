@@ -286,6 +286,9 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <li><tt>entity_flag_right_eye</tt><p>These flags behave similarly to <tt>entity_flag_hidden</tt>. They allow the entity hierarchy to be pruned selectively during stereo rendering. Entities with <tt>entity_flag_left_eye</tt> are hidden while the right eye view is rendered, and vice-versa.</p>
 
 </ul>
+
+<dt><i>value</i> = <tt>get_entity_flags</tt>(<i>entity, flags</i>)<dd><p>Return <tt>true</tt> if <i>flags</i> are set on the entity.</p>
+
 </dl>
 
 <!---------------------------------------------------------------------------->
@@ -712,6 +715,8 @@ and sprites.</p>
 <dt><tt>set_brush_frag_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])<dd><p>Specify a local parameter to be accessible to <i>brush</i>'s fragment program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
 
 <dt><tt>set_brush_vert_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])<dd><p>Specify a local parameter to be accessible to <i>brush</i>'s vertex program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+
+<dt><tt>set_brush_line_width</tt>(<i>brush, width</i>)<dd><p>Specify the width in pixels of all lines drawn using this brush. The default is <i>1.0</i>. This will apply both to lines defined by OBJ models and to entities drawn in wireframe mode. </p>
 
 </dl>
 

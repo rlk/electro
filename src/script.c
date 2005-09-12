@@ -742,6 +742,17 @@ static int E_get_entity_alpha(lua_State *L)
     return 1;
 }
 
+static int E_get_entity_flags(lua_State *L)
+{
+    int id    = E_getentity(L, -2);
+    int flags = E_getentity(L, -1);
+    int value = get_entity_flags(id);
+
+    lua_pushboolean(L, (flags & value));
+
+    return 1;
+}
+
 static int E_get_entity_bound(lua_State *L)
 {
     int  id = E_getentity(L, -1);
@@ -1629,6 +1640,13 @@ static int E_set_brush_vert_param(lua_State *L)
     return 0;
 }
 
+static int E_set_brush_line_width(lua_State *L)
+{
+    send_set_brush_line_width(E_getbrush (L, -2),
+                              L_getnumber(L, -1));
+    return 0;
+}
+
 /*===========================================================================*/
 /* Sound functions                                                           */
 
@@ -2221,6 +2239,7 @@ static struct function_def functions[] = {
     { "get_entity_scale",      E_get_entity_scale      },
     { "get_entity_bound",      E_get_entity_bound      },
     { "get_entity_alpha",      E_get_entity_alpha      },
+    { "get_entity_flags",      E_get_entity_flags      },
 
     { "move_entity",           E_move_entity           },
     { "turn_entity",           E_turn_entity           },
@@ -2308,6 +2327,7 @@ static struct function_def functions[] = {
     { "set_brush_vert_prog",   E_set_brush_vert_prog   },
     { "set_brush_frag_param",  E_set_brush_frag_param  },
     { "set_brush_vert_param",  E_set_brush_vert_param  },
+    { "set_brush_line_width",  E_set_brush_line_width  },
 
     /* Sound functions */
 

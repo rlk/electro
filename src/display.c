@@ -492,6 +492,17 @@ void recv_set_background(void)
 
 /*---------------------------------------------------------------------------*/
 
+void set_window_full(int f)
+{
+    if (local)
+    {
+        if (f)
+            local->flags |= ( HOST_FULL);
+        else
+            local->flags &= (~HOST_FULL);
+    }
+}
+
 void set_window_w(int w)
 {
     int i;

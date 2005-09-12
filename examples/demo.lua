@@ -11,6 +11,7 @@ demo = {
     { "Hipparcos Explorer",       "vortex",    "vortex.lua"    },
     { "Driving",                  "driving",   "driving.lua"   },
     { "Asteroids",                "asteroids", "asteroids.lua" },
+    { "Fifteen",                  "fifteen",   "fifteen.lua" },
 }
 
 item = { }

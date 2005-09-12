@@ -22,16 +22,6 @@ XC = 0
 YC = 0
 ZC = 0
 
-function help()
-    E.print_console("ESC: Exit\n")
-    E.print_console(" F1: Toggle server console\n")
-    E.print_console(" F2: Toggle server rendering\n")
-    E.print_console(" F3: Decrease server window resolution\n")
-    E.print_console(" F4: Increase server window resolution\n")
-
-    if varrier_help then varrier_help() end
-end
-
 function add_object(i, s)
     local object = E.create_object(s)
     local x0, y0, z0, x1, y1, z1 = E.get_entity_bound(object)
@@ -40,7 +30,7 @@ function add_object(i, s)
     table.insert(objects, object)
 
     E.parent_entity(object, pivot)
---  E.set_entity_scale(object, s, s, s)
+    E.set_entity_scale(object, s, s, s)
 end
 
 function do_start()
@@ -82,19 +72,9 @@ function do_start()
     E.enable_timer(true)
 end
 
-function do_joystick(d, b, s)
-    if s then
-        print(string.format("%d %d down", d, b))
-    else
-        print(string.format("%d %d up", d, b))
-    end
-end
-
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
     local s = 8
-
---    print(string.format("%f %f %f", mov_x, mov_y, mov_z))
 
     if joy_x < -0.1 or 0.1 < joy_x then
         E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
@@ -236,7 +216,4 @@ function do_keyboard(k, s)
     return false
 end
 
---help()
 do_start()
-
---E.set_background(0, 0, 0)

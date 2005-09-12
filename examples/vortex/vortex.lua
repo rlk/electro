@@ -45,6 +45,7 @@ function do_start()
     E.set_entity_flags(sign,   E.entity_flag_billboard,   true)
 
     E.set_brush_flags(E.get_mesh(orion, 0), E.brush_flag_unlit, true)
+    E.set_brush_line_width(E.get_mesh(orion, 0), 8)
 
     -- Enable tracking on the pointer.
 

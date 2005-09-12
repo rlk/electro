@@ -43,8 +43,8 @@
 * Usage
 
         ESC - Exit
-        F1  - Toggle server console
-        F2  - Toggle server rendering
+        F1  - Toggle server console display
+        F2  - Toggle server full screen display
         F3  - Decrease server window resolution
         F4  - Increase server window resolution
 

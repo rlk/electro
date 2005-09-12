@@ -50,6 +50,8 @@ struct brush
 
     float  frag_param[MAX_PARAM][4];
     float  vert_param[MAX_PARAM][4];
+
+    float  line_width;
 };
 
 static vector_t brush;
@@ -221,6 +223,8 @@ int send_create_brush(const char *file, const char *name)
 
         b->x[0] = BRUSH_SHININESS;
 
+        b->line_width = 1;
+
         /* Load and pack the brush. */
 
         if (file && name)
@@ -246,6 +250,8 @@ void recv_create_brush(void)
 
     b->flags = recv_index();
     b->count = 1;
+
+    b->line_width = 1;
 
     recv_array(b->image, 4, sizeof (int));
     recv_array(b->d,     4, sizeof (float));
@@ -552,6 +558,24 @@ void recv_set_brush_vert_param(void)
 
 /*---------------------------------------------------------------------------*/
 
+void send_set_brush_line_width(int i, float w)
+{
+    struct brush *b = get_brush(i);
+
+    send_event(EVENT_SET_BRUSH_LINE_WIDTH);
+    send_index(i);
+    send_float((b->line_width = w));
+}
+
+void recv_set_brush_line_width(void)
+{
+    struct brush *b = get_brush(recv_index());
+
+    b->line_width = recv_float();
+}
+
+/*---------------------------------------------------------------------------*/
+
 void send_set_brush_color(int i, const float d[4],
                                  const float s[4],
                                  const float a[4],
@@ -815,6 +839,10 @@ int draw_brush(int i, float a)
             else
                 glDisable(GL_VERTEX_PROGRAM_ARB);
         }
+
+        /* Set the line width. */
+
+        glLineWidth(b->line_width);
 
         /* Disable lighting, if requested. */
 

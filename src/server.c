@@ -55,7 +55,6 @@
 
 static void server_draw(void);
 
-static int server_mirror  = 1;
 static int server_grab    = 0;
 
 static int    timer_on    = 0;
@@ -135,12 +134,8 @@ static void server_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (server_mirror)
-    {
-        draw_host_background();
-        draw_entities();
-    }
-
+    draw_host_background();
+    draw_entities();
     draw_console();
     server_swap();
 }
@@ -216,7 +211,12 @@ static int server_loop(void)
                 dirty |= set_console_enable(!console_is_enabled());
                 break;
             case SDLK_F2:
-                server_mirror = 1 - server_mirror;
+                set_window_full(!get_window_full());
+                dirty |= init_video(get_window_w(),
+                                    get_window_h(),
+                                    get_window_full(),
+                                    get_window_framed(),
+                                    get_window_stereo());
                 break;
             case SDLK_F3:
                 set_window_siz(-1);

@@ -54,8 +54,6 @@ static void init_options(void)
     glPixelStorei(GL_PACK_ALIGNMENT,   1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glLineWidth(8.0);
-
     glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, CLEAR_A);
 }
 
@@ -70,31 +68,36 @@ int init_video(int width, int height, int full, int framed, int stereo)
 
     fini_fonts();
     fini_images();
-	fini_brushes();
+    fini_brushes();
     fini_console();
     fini_entities();
 
     /* Configure the new visual. */
 
-    SDL_GL_SetAttribute(SDL_GL_STEREO,  stereo);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     5);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   5);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    5);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+#ifdef SDL_GL_STEREO
+    SDL_GL_SetAttribute(SDL_GL_STEREO,  stereo);
+#endif
 
     if (SDL_SetVideoMode(width, height, 0, mode))
     {
         /* Stereo is problematic.  Note whether we've got it. */
 
+#ifdef SDL_GL_STEREO
         SDL_GL_GetAttribute(SDL_GL_STEREO, &stereo_status);
+#endif
 
         /* Initialize all OpenGL state in the new context. */
 
         init_opengl();
         init_options();
         init_images();
-		init_brushes();
+        init_brushes();
         init_entities();
 
         return 1;

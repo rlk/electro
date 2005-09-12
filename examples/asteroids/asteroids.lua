@@ -14,7 +14,7 @@ joy_dev = 0
 
 sound_on = true
 music_on = false
-stars_on = true
+stars_on = false
 
 -------------------------------------------------------------------------------
 -- Global variables, game state, and scene graph entities:

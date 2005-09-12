@@ -202,7 +202,7 @@ void new_phys_mass(dBodyID body, float v[3])
 }
 
 void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
-                                               const float r[16])
+                   const float r[16])
 {
     dVector3  v;
     dMatrix3  M;
@@ -211,47 +211,50 @@ void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
     dMass mass1;
     dMass mass2;
 
-    dGeomID object = dGeomTransformGetGeom(geom);
-
-    /* Create a new mass for the given geom. */
-
-    switch (dGeomGetClass(object))
+    if (dGeomGetClass(geom) != dPlaneClass)
     {
-    case dBoxClass:
-        dGeomBoxGetLengths(object, v);
-        dMassSetBoxTotal(&mass2, get_data(geom)->mass, v[0], v[1], v[2]);
-        break;
+        dGeomID object = dGeomTransformGetGeom(geom);
 
-    case dSphereClass:
-        rad = dGeomSphereGetRadius(object);
-        dMassSetSphereTotal(&mass2, get_data(geom)->mass, rad);
-        break;
+        /* Create a new mass for the given geom. */
 
-    case dCCylinderClass:
-        dGeomCCylinderGetParams(object, &rad, &len);
-        dMassSetCappedCylinderTotal(&mass2, get_data(geom)->mass, 3, rad, len);
-        break;
+        switch (dGeomGetClass(object))
+        {
+        case dBoxClass:
+            dGeomBoxGetLengths(object, v);
+            dMassSetBoxTotal(&mass2, get_data(geom)->mass, v[0], v[1], v[2]);
+            break;
 
-    default:
-        dMassSetZero(&mass2);
-        break;
+        case dSphereClass:
+            rad = dGeomSphereGetRadius(object);
+            dMassSetSphereTotal(&mass2, get_data(geom)->mass, rad);
+            break;
+
+        case dCCylinderClass:
+            dGeomCCylinderGetParams(object, &rad, &len);
+            dMassSetCappedCylinderTotal(&mass2, get_data(geom)->mass, 3, rad, len);
+            break;
+
+        default:
+            dMassSetZero(&mass2);
+            break;
+        }
+
+        /* Transform the geom mass to the given position and rotation. */
+
+        if (p)
+            dMassTranslate(&mass2, p[0], p[1], p[2]);
+        if (r)
+        {
+            set_rotation(M, r);
+            dMassRotate(&mass2, M);
+        }
+
+        /* Accumulate the new mass with the body's existing mass. */
+
+        dBodyGetMass(body, &mass1);
+        dMassAdd(&mass1, &mass2);
+        dBodySetMass(body, &mass1);
     }
-
-    /* Transform the geom mass to the given position and rotation. */
-
-    if (p)
-        dMassTranslate(&mass2, p[0], p[1], p[2]);
-    if (r)
-    {
-        set_rotation(M, r);
-        dMassRotate(&mass2, M);
-    }
-
-    /* Accumulate the new mass with the body's existing mass. */
-
-    dBodyGetMass(body, &mass1);
-    dMassAdd(&mass1, &mass2);
-    dBodySetMass(body, &mass1);
 }
 
 void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
@@ -758,7 +761,7 @@ int startup_physics(void)
     group = dJointGroupCreate(0);
 
     dWorldSetGravity(world, 0, -9.8, 0);
-    dWorldSetAutoDisableFlag(world, 1);
+/*  dWorldSetAutoDisableFlag(world, 1); */
 
     return 1;
 }
