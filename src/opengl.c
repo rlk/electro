@@ -19,6 +19,10 @@
 #include "utility.h"
 #include "console.h"
 
+#ifdef __linux__
+#include <GL/glx.h>
+#endif
+
 /*---------------------------------------------------------------------------*/
 
 GLboolean GL_has_fragment_program     = 0;
@@ -61,11 +65,17 @@ GLboolean opengl_need(const char *extension)
 }
 
 /* Acquire a pointer to the named OpenGL function.  Print an error if this   */
-/* function is not supported by the current implementation.                  */
+/* function is not supported by the current implementation.  Note that SDL's */
+/* SDL_GL_GetProcAddress function doesn't work correctly on older Linux      */
+/* systems, so we call GLX directly.                                         */
 
 void *opengl_proc(const char *name)
 {
+#ifdef __linux__
+    void *p = glXGetProcAddressARB(name);
+#else
     void *p = SDL_GL_GetProcAddress(name);
+#endif
 
     if (p == NULL)
         error("OpenGL procedure '%s' not found", name);
@@ -189,7 +199,7 @@ void init_opengl(void)
     GL_has_point_sprite
         = opengl_need("GL_ARB_point_sprite");
     GL_has_texture_rectangle
-        = opengl_need("GL_ARB_texture_rectangle");
+        = opengl_need("GL_ARB_texture_rectangle") | GL_TRUE;
     GL_has_texture_compression
         = opengl_need("GL_ARB_texture_compression");
 }

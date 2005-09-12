@@ -94,9 +94,9 @@ static int new_image(void)
 
 #ifdef VIDEOTEX
 
-static void yuv2rgb(unsigned char c[3], unsigned char Y,
-                                        unsigned char U,
-                                        unsigned char V)
+static inline void yuv2rgb(unsigned char c[3], unsigned char Y,
+                                               unsigned char U,
+                                               unsigned char V)
 {
     int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
     int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
@@ -585,12 +585,6 @@ int send_create_video(int k)
                 else error("Video buffer %d: %s", k, system_error());
 
                 /* Acquire the properly-sized buffer. */
-
-                p->w =   640;
-                p->h =   960;
-                p->bits = 12;
-
-                printf("%d %d %d\n", p->w, p->h, p->bits);
 
                 sz += p->w * p->h * p->bits / 8;
 
