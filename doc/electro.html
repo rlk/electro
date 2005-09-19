@@ -320,7 +320,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <a name="geom_type_sphere"><li><tt>geom_type_sphere</tt><i>, r</i><p>A sphere of radius <i>r</i>.</p>
 
-<a name="geom_type_capsule"><li><tt>geom_type_capsule</tt><i>, l, r</i><p>A cylinder with spherical end caps, oriented along the Z axis. The length of the cylinder is <i>l</i> and its radius is <i>r</i>.</p>
+<a name="geom_type_capsule"><li><tt>geom_type_capsule</tt><i>, r, l</i><p>A cylinder with spherical end caps, oriented along the Z axis. The radius of the cylinder is <i>r</i> and its length is <i>l</i>.</p>
 
 <a name="geom_type_plane"><li><tt>geom_type_plane</tt><i>, a, b, c, d</i></p>A plane satisfying the equation <i>ax + by + cz = d</i>.</p>
 
@@ -361,7 +361,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <a name="geom_attr_response"><li><tt>geom_attr_response</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should respond physically in any way. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the geoms will impact or bounce as their attributes define. The default is <tt>0xFFFFFFFF</tt> and all collisions respond physically.</p>
 
-<a name="geom_attr_callback"><li><tt>geom_attr_callback</tt><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the <a href="#do_contact"><tt>do_contact</tt></a> callback will be invoked with arguments describing the collision. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
+<a name="geom_attr_callback"><li><tt>geom_attr_callback</tt><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>callback<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>callback<sub>A</sub></i>) then the <a href="#do_contact"><tt>do_contact</tt></a> callback will be invoked with arguments describing the collision. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
 
 <p class="note">These bit fields define 4 useful combinations:  1) Non-interacting objects might include the particles of an explosion or cloud effect. 2) Unreported colliding objects might include a car's tires rolling on a road. 3) Reported colliding objects might include a bullet hitting a target. 4) Reported non-colliding objects might include a car crossing a finish line. The bit field defaults produce combination 2 for all geoms.</p>
 
@@ -571,7 +571,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <a name="camera"><h3> 2.1.4. Camera </h3>
 <dl>
 
-<dt><a name="set_camera_stereo"><tt>set_camera_stereo</tt>(<i>mode, L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)<dd><p>Set stereo options on the given camera. The <i>mode</i> argument gives the stereo method, as described below. The (<i>L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the camera to the user's left and right eyes.</p>
+<dt><a name="set_camera_stereo"><tt>set_camera_stereo</tt>(<i>camera, mode, L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)<dd><p>Set stereo options on the given camera. The <i>mode</i> argument gives the stereo method, as described below. The (<i>L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the camera to the user's left and right eyes.</p>
 
 <p>The available stereo modes are as follows:</p>
 

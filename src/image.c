@@ -93,14 +93,15 @@ static int new_image(void)
 /*===========================================================================*/
 
 #ifdef VIDEOTEX
+#ifndef YUV_BLACK_AND_WHITE
 
-static inline void yuv2rgb(unsigned char c[3], unsigned char Y,
+static inline void yuv2rgb(unsigned char c[4], unsigned char Y,
                                                unsigned char U,
                                                unsigned char V)
 {
-    int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
-    int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
     int R = (int) (1.164 * (Y - 16) + 1.596 * (V - 128));
+    int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
+    int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
 
     if      (R <   0) c[0] = 0x00;
     else if (R > 255) c[0] = 0xFF;
@@ -113,13 +114,35 @@ static inline void yuv2rgb(unsigned char c[3], unsigned char Y,
     if      (B <   0) c[2] = 0x00;
     else if (B > 255) c[2] = 0xFF;
     else              c[2] = (unsigned char) B;
+
+    c[3] = 0xFF;
 }
+
+#endif
 
 static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
 {
-    int i;
+    int i, n = w * h;
 
-    for (i = 0; i < w * h; i += 4)
+#ifdef YUV_BLACK_AND_WHITE
+    unsigned int *pix = (unsigned int *) dst;
+
+    /* Extract RGBA grayscale from YUV */
+
+    for (i = 0; i < n; i += 4)
+    {
+        pix[0] = 0xFF000000 | src[1] | (src[1] << 8) | (src[1] << 16);
+        pix[1] = 0xFF000000 | src[2] | (src[2] << 8) | (src[2] << 16);
+        pix[2] = 0xFF000000 | src[4] | (src[4] << 8) | (src[4] << 16);
+        pix[3] = 0xFF000000 | src[5] | (src[5] << 8) | (src[5] << 16);
+
+        src += 6;
+        pix += 4;
+    }
+#else
+    /* Extract RGBA color from YUV */
+
+    for (i = 0; i < n; i += 4)
     {
         const int U  = src[0];
         const int Y0 = src[1];
@@ -128,68 +151,67 @@ static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
         const int Y2 = src[4];
         const int Y3 = src[5];
 
-        yuv2rgb(dst + 0, Y0, U, V);
-        yuv2rgb(dst + 3, Y1, U, V);
-        yuv2rgb(dst + 6, Y2, U, V);
-        yuv2rgb(dst + 9, Y3, U, V);
+        yuv2rgb(dst +  0, Y0, U, V);
+        yuv2rgb(dst +  4, Y1, U, V);
+        yuv2rgb(dst +  8, Y2, U, V);
+        yuv2rgb(dst + 12, Y3, U, V);
 
         src +=  6;
-        dst += 12;
+        dst += 16;
     }
+#endif
 }
 
 static void copy_stereo(unsigned char *dst, unsigned char *src, int w, int h)
 {
     int i, n = w * h;
 
-    unsigned char *dstL = dst;
-    unsigned char *dstR = dst + 3 * n / 2;
+    const unsigned char *srcL = src;
+    const unsigned char *srcR = src + 1;
+
+    unsigned int *dstL = (unsigned int *) dst;
+    unsigned int *dstR = (unsigned int *) dst + n / 2;
 
     for (i = 0; i < n; i += 2)
     {
-        dstL[0] = dstL[1] = dstL[2] = src[0];
-        dstR[0] = dstR[1] = dstR[2] = src[1];
+        *dstL = 0xFF000000 | *srcL | (*srcL << 8) | (*srcL << 16);
+        *dstR = 0xFF000000 | *srcR | (*srcR << 8) | (*srcR << 16);
 
-        dstL += 3;
-        dstR += 3;
-        src  += 2;
+        dstL += 1;
+        dstR += 1;
+        srcL += 2;
+        srcR += 2;
     }
 }
 
-static void decode_bayer(unsigned char *buf, int w, int h)
+static void decode_bayer(unsigned char *buf, unsigned int w, unsigned int h)
 {
-    int r;
-    int c;
+    unsigned int r;
+    unsigned int c;
 
     for (r = 0; r < h; r += 2)
+    {
+        unsigned int *p00 = (unsigned int *) buf +  r    * w, *p01 = p00 + 1;
+        unsigned int *p10 = (unsigned int *) buf + (r+1) * w, *p11 = p10 + 1;
+
         for (c = 0; c < w; c += 2)
         {
-            const int i00 = 3 * (r       * w + c);
-            const int i10 = 3 * ((r + 1) * w + c);
-            const int i01 = 3 * (r       * w + (c + 1));
-            const int i11 = 3 * ((r + 1) * w + (c + 1));
+            const unsigned int pr = *p00 & 0xFF0000FF;
+            const unsigned int pg = *p01 & 0xFF00FF00;
+            const unsigned int qg = *p10 & 0xFF00FF00;
+            const unsigned int pb = *p11 & 0xFFFF0000;
 
-            const unsigned char pr = buf[i00];
-            const unsigned char pg = buf[i10];
-            const unsigned char qg = buf[i01];
-            const unsigned char pb = buf[i11];
+            *p00 = pr | pg | pb;
+            *p01 = pr | pg | pb;
+            *p10 = pr | qg | pb;
+            *p11 = pr | qg | pb;
 
-            buf[i00]     = pr;
-            buf[i00 + 1] = pg;
-            buf[i00 + 2] = pb;
-
-            buf[i10]     = pr;
-            buf[i10 + 1] = (pg + qg) / 2;
-            buf[i10 + 2] = pb;
-
-            buf[i01]     = pr;
-            buf[i01 + 1] = (pg + qg) / 2;
-            buf[i01 + 2] = pb;
-
-            buf[i11]     = pr;
-            buf[i11 + 1] = qg;
-            buf[i11 + 2] = pb;
+            p00 += 2;
+            p01 += 2;
+            p10 += 2;
+            p11 += 2;
         }
+    }
 }
 #endif
 
@@ -558,11 +580,11 @@ int send_create_video(int k)
         p->h     = 0;
         p->bits  = 0;
         p->n     = 1;
-        p->b     = 3;
+        p->b     = 4;
 
         /* Acquire the semaphore and shared memory buffers. */
 
-        if ((p->semid = semget(k, 1, 0666 | IPC_CREAT)) >= 0)
+        if ((p->semid = semget(k, 1, 0666)) >= 0)
         {
             if (semctl(p->semid, 0, SETVAL, 1) >= 0)
             {
@@ -588,27 +610,31 @@ int send_create_video(int k)
 
                 sz += p->w * p->h * p->bits / 8;
 
-                if (p->w * p->h > 0 && (p->shmid = shmget(k, sz, 0666)) >=0)
+                if (p->w * p->h > 0)
                 {
-                    if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
+                    if ((p->shmid = shmget(k, sz, 0666)) >=0)
                     {
-                        p->next_frame = &buffer[0];
-                        p->frame      = &buffer[4];
+                        if ((buffer = (int *) shmat(p->shmid, 0, SHM_RDONLY)))
+                        {
+                            p->next_frame = &buffer[0];
+                            p->frame      = &buffer[4];
 
-                        send_event(EVENT_CREATE_IMAGE);
-                        send_index(p->n);
-                        send_index(p->w);
-                        send_index(p->h);
-                        send_index(p->b);
+                            send_event(EVENT_CREATE_IMAGE);
+                            send_index(p->n);
+                            send_index(p->w);
+                            send_index(p->h);
+                            send_index(p->b);
 
-                        p->p[0]    = malloc(p->w * p->h * p->b);
-                        send_array(p->p[0], p->w * p->h * p->b, 1);
+                            p->p[0]    = malloc(p->w * p->h * p->b);
+                            send_array(p->p[0], p->w * p->h * p->b, 1);
 
-                        return i;
+                            return i;
+                        }
+                        else error("Video buffer %d: %s", k, system_error());
                     }
                     else error("Video buffer %d: %s", k, system_error());
                 }
-                else error("Video buffer %d: %s", k, system_error());
+                else error("Video buffer %d: zero size", k);
             }
             else error("Video mutex %d: %s", k, system_error());
         }
@@ -847,9 +873,9 @@ void step_images(void)
 
             /* If the frame has changed... */
 
-            if (p->last_frame < *p->next_frame)
+            if (p->last_frame != *p->next_frame)
             {
-                p->last_frame = *p->next_frame;
+                p->last_frame  = *p->next_frame;
 
                 /* Update the texture object. */
 
