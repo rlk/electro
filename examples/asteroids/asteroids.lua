@@ -1323,6 +1323,10 @@ function do_joystick(device, button, down)
             do_state(curr_state.button_B(down))
             return true
         end
+        if button == 2 and curr_state and curr_state.button_A then
+            do_state(curr_state.button_A(down))
+            return true
+        end
     end
 
     return false

@@ -665,6 +665,8 @@ void init_brush(int i)
         }
 
         b->state = 1;
+
+        opengl_check("init_brush %d", i);
     }
 }
 
@@ -864,6 +866,8 @@ int draw_brush(int i, float a)
             if (b->flags & BRUSH_SHINY)
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, b->x);
         }
+
+        opengl_check("draw_brush %d", i);
     }
 
     /* Return an indication that this brush is transparent. */

@@ -1,4 +1,5 @@
-local path = E.path
+
+S = 3
 
 joy_dev = 0
 
@@ -47,7 +48,7 @@ function add_tv(x, y, z)
     E.set_entity_geom_attr(object, E.geom_attr_friction, 10)
 
     if video then
-        E.set_brush_image(E.get_mesh(object, 2), video)
+        E.set_brush_image(E.get_mesh(object, 1), video)
     end
 
     E.set_entity_position(object, x, y, z)
@@ -324,7 +325,7 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
---  video = E.create_image(2827)
+    video = E.create_image(2828)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",
@@ -332,6 +333,8 @@ function do_start()
                             "../data/sky_py.png",
                             "../data/sky_nz.png",
                             "../data/sky_pz.png")
+
+    E.set_camera_range(camera, 1, 10000)
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
@@ -343,7 +346,8 @@ function do_start()
     E.set_entity_geom_attr(plane, E.geom_attr_category, category_world)
     E.set_entity_geom_attr(plane, E.geom_attr_collider, category_all)
 
-    E.set_entity_position(light, 0.0, 16.0,  0.0)
+    E.set_entity_position(light, 0.0, 48.0, 32.0)
+    E.set_entity_scale   (pivot,  S,  S,  S)
     E.set_entity_scale   (plane, 32, 32, 32)
     E.set_entity_scale   (sky, 8, 8, 8)
 
@@ -373,6 +377,8 @@ function do_start()
 
     E.enable_timer(true)
     add_car()
+
+    do_keyboard(E.key_F8, true)
 end
 
 function do_joystick(d, b, s)
@@ -471,7 +477,7 @@ function do_timer(dt)
         local zx, zy, zz = E.get_entity_z_vector(base)
 
         local kx =  0
-        local ky =  2
+        local ky =  0
         local kz = 10
 
         local x = px + xx * kx + yx * ky + zx * kz
@@ -482,8 +488,7 @@ function do_timer(dt)
                             (pos_z - pz) * (pos_z - pz));
 
         local a = math.atan2(pos_x - px, pos_z - pz) * 180 / math.pi
-        local b = math.atan2(pos_y - py, d)          * 180 / math.pi
-        local k = 20
+        local k = 10
 
         pos_x = ((k - 1) * pos_x + x) / k
         pos_y = ((k - 1) * pos_y + y) / k
@@ -491,8 +496,8 @@ function do_timer(dt)
 
         pos_y = math.abs(pos_y)
 
-        E.set_entity_position(camera, pos_x, pos_y, pos_z)
-        E.set_entity_rotation(camera, -b, a, 0)
+        E.set_entity_position(camera, S * pos_x, 0, S * pos_z)
+        E.set_entity_rotation(camera, 0, a, 0)
 
         go_car(jx + key_x, jy + key_y)
 

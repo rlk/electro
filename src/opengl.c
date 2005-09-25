@@ -287,12 +287,21 @@ GLuint opengl_frag_prog(const char *text)
 
 #ifndef NDEBUG
 
-void opengl_check(const char *str)
+void opengl_check(const char *format, ...)
 {
     GLenum err;
 
     while ((err = glGetError()) != GL_NO_ERROR)
-        error("OpenGL error: %s: %s", str, gluErrorString(err));
+    {
+        char string[MAXSTR];
+        va_list args;
+
+        va_start(args, format);
+        vsprintf(string, format, args);
+        va_end(args);
+
+        error("OpenGL error: %s: %s", gluErrorString(err), string);
+    }
 }
 
 #endif

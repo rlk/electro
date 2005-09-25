@@ -282,7 +282,6 @@ void draw_entities(void)
     /* Begin traversing the scene graph at the root. */
 
     draw_entity_tree(0, 0, 1);
-/*    opengl_check("draw_entities"); */
 }
 
 /*===========================================================================*/

@@ -1993,6 +1993,8 @@ static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
 
     lua_pop(L, 1);
 
+    opengl_check(name);
+
     return r;
 }
 

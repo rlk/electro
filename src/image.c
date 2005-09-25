@@ -93,7 +93,6 @@ static int new_image(void)
 /*===========================================================================*/
 
 #ifdef VIDEOTEX
-#ifndef YUV_BLACK_AND_WHITE
 
 static inline void yuv2rgb(unsigned char c[4], unsigned char Y,
                                                unsigned char U,
@@ -118,48 +117,51 @@ static inline void yuv2rgb(unsigned char c[4], unsigned char Y,
     c[3] = 0xFF;
 }
 
-#endif
-
 static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
 {
     int i, n = w * h;
 
-#ifdef YUV_BLACK_AND_WHITE
-    unsigned int *pix = (unsigned int *) dst;
-
-    /* Extract RGBA grayscale from YUV */
-
-    for (i = 0; i < n; i += 4)
+    if (GL_has_fragment_program)
     {
-        pix[0] = 0xFF000000 | src[1] | (src[1] << 8) | (src[1] << 16);
-        pix[1] = 0xFF000000 | src[2] | (src[2] << 8) | (src[2] << 16);
-        pix[2] = 0xFF000000 | src[4] | (src[4] << 8) | (src[4] << 16);
-        pix[3] = 0xFF000000 | src[5] | (src[5] << 8) | (src[5] << 16);
+        unsigned int *pix = (unsigned int *) dst;
 
-        src += 6;
-        pix += 4;
+        /* Extract raw YUV and allow RGB conversion via fragment program. */
+
+        for (i = 0; i < n; i += 4)
+        {
+            const int UV = 0xFF000000 | (src[0] << 8) | (src[3] << 16);
+
+            pix[0] = src[1] | UV;
+            pix[1] = src[2] | UV;
+            pix[2] = src[4] | UV;
+            pix[3] = src[5] | UV;
+
+            src += 6;
+            pix += 4;
+        }
     }
-#else
-    /* Extract RGBA color from YUV */
-
-    for (i = 0; i < n; i += 4)
+    else
     {
-        const int U  = src[0];
-        const int Y0 = src[1];
-        const int Y1 = src[2];
-        const int V  = src[3];
-        const int Y2 = src[4];
-        const int Y3 = src[5];
+        /* Extract RGBA color from YUV */
 
-        yuv2rgb(dst +  0, Y0, U, V);
-        yuv2rgb(dst +  4, Y1, U, V);
-        yuv2rgb(dst +  8, Y2, U, V);
-        yuv2rgb(dst + 12, Y3, U, V);
+        for (i = 0; i < n; i += 4)
+        {
+            const int U  = src[0];
+            const int Y0 = src[1];
+            const int Y1 = src[2];
+            const int V  = src[3];
+            const int Y2 = src[4];
+            const int Y3 = src[5];
 
-        src +=  6;
-        dst += 16;
+            yuv2rgb(dst +  0, Y0, U, V);
+            yuv2rgb(dst +  4, Y1, U, V);
+            yuv2rgb(dst +  8, Y2, U, V);
+            yuv2rgb(dst + 12, Y3, U, V);
+
+            src +=  6;
+            dst += 16;
+        }
     }
-#endif
 }
 
 static void copy_stereo(unsigned char *dst, unsigned char *src, int w, int h)
@@ -213,7 +215,7 @@ static void decode_bayer(unsigned char *buf, unsigned int w, unsigned int h)
         }
     }
 }
-#endif
+#endif /* VIDEOTEX */
 
 static void step_texture(int i)
 {
@@ -236,14 +238,17 @@ static void step_texture(int i)
     }
 #endif
 
-    if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))
-        t = GL_TEXTURE_RECTANGLE_ARB;
-    else
-        t = GL_TEXTURE_2D;
+    if (p->texture)
+    {
+        if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))
+            t = GL_TEXTURE_RECTANGLE_ARB;
+        else
+            t = GL_TEXTURE_2D;
 
-    glBindTexture(t, p->texture);
-    glTexSubImage2D(t, 0, 0, 0, p->w, p->h,
-                    format[p->b], GL_UNSIGNED_BYTE, p->p[0]);
+        glBindTexture(t, p->texture);
+        glTexSubImage2D(t, 0, 0, 0, p->w, p->h,
+                        format[p->b], GL_UNSIGNED_BYTE, p->p[0]);
+    }
 }
 
 GLuint make_texture(void *p[6], int n, int w, int h, int b)
@@ -781,6 +786,8 @@ void init_image(int i)
     {
         p->texture = make_texture(p->p, p->n, p->w, p->h, p->b);
         p->state   = 1;
+
+        opengl_check("init_image %d", i);
     }
 }
 
@@ -817,6 +824,8 @@ void draw_image(int i)
             
         glEnable(t);
         glBindTexture(t, get_image(i)->texture);
+
+        opengl_check("draw_image %d", i);
     }
 }
 
@@ -854,7 +863,7 @@ void step_images(void)
 #ifdef VIDEOTEX
     int i, n = vecnum(image);
 
-    for (i = 0; i < n; ++i)
+    for (i = 1; i < n; ++i)
     {
         struct image *p = get_image(i);
 

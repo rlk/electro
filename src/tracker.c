@@ -172,8 +172,8 @@ int get_tracker_joystick(unsigned int id, float a[2])
         
         if (0 <= id && id < control->val_count - 1)
         {
-            a[0] = *(p + id + 0);
-            a[1] = *(p + id + 1);
+            a[0] = +(*(p + id + 0));
+            a[1] = -(*(p + id + 1));
 
             return 1;
         }

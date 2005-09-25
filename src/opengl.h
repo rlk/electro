@@ -93,9 +93,9 @@ GLuint    opengl_vert_prog(const char *);
 /*---------------------------------------------------------------------------*/
 
 #ifdef NDEBUG
-#define opengl_check(S) { }
+#define opengl_check(...) { }
 #else
-void    opengl_check(const char *);
+void    opengl_check(const char *, ...);
 #endif
 
 /*---------------------------------------------------------------------------*/
