@@ -36,7 +36,7 @@ E.set_tile_line_screen(tile, linescreen[1], linescreen[2],
 
 E.set_host_flags(host, E.host_flag_framed, false)
 
-E.set_background(1, 0, 0, 0, 1, 0)
+--E.set_background(1, 0, 0, 0, 1, 0)
 
 -- Uncomment this line when head tracking is disabled.
 --E.set_tile_view_offset(tile, 0, 4, 0)

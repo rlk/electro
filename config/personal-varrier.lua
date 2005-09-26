@@ -1,3 +1,4 @@
+linescreen_file = "/DEMO/varrier/electro/ives-linescreen.lua"
 
 W =  2.0000
 H =  1.1250
@@ -13,7 +14,8 @@ p = {
     {  1.0521, 3.1354, -1.3614 },
 }
 
-l = { 266.67083, -7.572, 0.0076, 0.0003, 0.8125 }
+--linescreen = { 266.67083, -7.572, 0.0076, 0.0003, 0.8125 }
+dofile(linescreen_file)
 
 offset = { 0, (p[2][2] + p[1][2]) / 2, 2.0 + p[1][3] }
 
@@ -26,32 +28,39 @@ E.set_tile_viewport(tile, 0, 0, w, h)
 E.set_tile_position(tile, p[1][1], p[1][2], p[1][3],
                     p[3][1] - p[1][1], p[3][2] - p[1][2], p[3][3] - p[1][3],
                     p[2][1] - p[1][1], p[2][2] - p[1][2], p[2][3] - p[1][3])
-E.set_tile_line_screen(tile, l[1], l[2], l[3], l[4], l[5])
+E.set_tile_line_screen(tile, linescreen[1], linescreen[2],
+                             linescreen[3], linescreen[4], linescreen[5])
 
 E.set_host_flags(host, E.host_flag_framed, false)
 
-E.set_background(1, 0, 0, 0, 1, 0)
+--E.set_background(1, 0, 0, 0, 1, 0)
 
 -- Uncomment this line when head tracking is disabled.
 --E.set_tile_view_offset(tile, 0, 4, 0)
 
 -------------------------------------------------------------------------------
 
-function varrier_dump()
-    print("l = { "..l[1]..", "..l[2]..", "..l[3]..", "..l[4]..", "..l[5].." }")
+function varrier_store()
+    local fd = io.open(linescreen_file, "w")
+    fd:write(string.format("linescreen = { %f, %f, %f, %f, %f }\n",
+                           linescreen[1], linescreen[2],
+                           linescreen[3], linescreen[4], linescreen[5]))
+    fd:close()
 end
 
 function varrier_thick(d)
-    l[3] = l[3] + d;
-    E.set_tile_line_screen(tile, l[1], l[2], l[3], l[4], l[5])
-    varrier_dump()
+    linescreen[3] = linescreen[3] + d;
+    E.set_tile_line_screen(tile, linescreen[1], linescreen[2],
+                                 linescreen[3], linescreen[4], linescreen[5])
+    varrier_store()
     return true
 end
 
 function varrier_shift(d)
-    l[4] = l[4] + d;
-    E.set_tile_line_screen(tile, l[1], l[2], l[3], l[4], l[5])
-    varrier_dump()
+    linescreen[4] = linescreen[4] + d;
+    E.set_tile_line_screen(tile, linescreen[1], linescreen[2],
+                                 linescreen[3], linescreen[4], linescreen[5])
+    varrier_store()
     return true
 end
 

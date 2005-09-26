@@ -9,9 +9,9 @@ help_text = "Select a demo.  Press F12 to return."
 demo = {
     { "Video Viewer",             "viewvid",   "viewvid.lua"   },
     { "Hipparcos Explorer",       "vortex",    "vortex.lua"    },
+    { "NCMIR Data",               "imgplay",   "imgplay.lua"   },
     { "Driving",                  "driving",   "driving.lua"   },
     { "Asteroids",                "asteroids", "asteroids.lua" },
-    { "Fifteen",                  "fifteen",   "fifteen.lua" },
 }
 
 item = { }
@@ -55,6 +55,9 @@ end
 
 time     = 0
 centered = true
+
+function do_frame()
+end
 
 function do_timer(dt)
     local jx, jy = E.get_joystick(joy_dev)

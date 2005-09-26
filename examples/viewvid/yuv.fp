@@ -8,12 +8,12 @@ PARAM B = {  1.1640,  2.0180,  0.0000 };
 TEMP yuv;
 
 TEX yuv, fragment.texcoord[0], texture[0], RECT;
-#ADD yuv, yuv, d;
+ADD yuv, yuv, d;
 
-#DP3 result.color.r, yuv, R;
-#DP3 result.color.g, yuv, G;
-#DP3 result.color.b, yuv, B;
-#MOV result.color.a, yuv.a;
-MOV result.color, yuv;
+DP3 result.color.r, yuv, R;
+DP3 result.color.g, yuv, G;
+DP3 result.color.b, yuv, B;
+MOV result.color.a, yuv.a;
+#MOV result.color, yuv;
 
 END

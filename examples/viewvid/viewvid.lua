@@ -1,4 +1,4 @@
-that_K = 2828
+that_K = 2827
 that_w =  640
 that_h =  960
 that_m =  480
@@ -131,7 +131,7 @@ function do_start()
     this_brush = E.create_brush()
 
     E.set_brush_frag_prog(this_brush, "yuv.fp")
-    E.set_brush_frag_prog(that_brush, "yuv.fp")
+--  E.set_brush_frag_prog(that_brush, "yuv.fp")
 
     E.set_brush_image(that_brush, that_image)
     E.set_brush_image(this_brush, this_image)
