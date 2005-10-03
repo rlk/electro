@@ -11,7 +11,7 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -g -Wall
+	CFLAGS = -O2 -Wall
 endif
 
 # "make VIDEOTEX=1" enables shared-memory streaming image buffers under Linux.
@@ -162,9 +162,11 @@ osxdist : $(TARG)
 	$(CH) /sw/lib/libvorbisfile.3.dylib \
           @executable_path/lib/libvorbisfile.3.dylib $(TARG)
 	$(CH) /sw/lib/libvorbis.0.dylib     \
-          @executable_path/lib/libvorbis.0.dylib     $(TARG)
+          @executable_path/lib/libvorbis.0.dylib     lib/libvorbisfile.3.dylib
 	$(CH) /sw/lib/libogg.0.dylib        \
-          @executable_path/lib/libogg.0.dylib        $(TARG)
+          @executable_path/lib/libogg.0.dylib        lib/libvorbisfile.3.dylib
+	$(CH) /sw/lib/libogg.0.dylib        \
+          @executable_path/lib/libogg.0.dylib        lib/libvorbis.0.dylib
 
 #------------------------------------------------------------------------------
 # If Subversion is available, report the revision number in the source.
