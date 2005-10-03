@@ -274,9 +274,9 @@ void draw_entity_tree(int i, int f, float a)
 
     /* Draw this entity's physical state, if requested. */
 
-    if (E->geom /* && E->flags & FLAG_VISIBLE_GEOM*/)
+    if (E->geom && E->flags & FLAG_VISIBLE_GEOM)
         draw_phys_geom(E->geom);
-    if (E->body /* && E->flags & FLAG_VISIBLE_BODY*/)
+    if (E->body && E->flags & FLAG_VISIBLE_BODY)
         draw_phys_body(E->body);
 }
 

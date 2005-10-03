@@ -1,3 +1,4 @@
+Lua check for tracking (built-in simulator?)
 global state
     gravity vector
     ambient light
@@ -13,14 +14,8 @@ GLslang
 positional audio
 multichannel audio
 OpenAL?
-view physics geom flag (for debugging)
 cwall config
 windows trackd
 rolling star
 brain
-    
 Telnet to luasocket
-
-profilers
-cooler vortex demo
-varrier finalize

@@ -55,6 +55,13 @@ endif
 
 CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
 
+SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
+FT2LIB = $(shell $(FT2_CONFIG) --libs)
+LUALIB = -llua -llualib -lluasocket
+IMGLIB = -ljpeg -lpng -lz -lm
+OGGLIB = -lvorbisfile
+ODELIB = -lode -lstdc++
+
 ifdef LINUX_STATIC
 SDLLIB = /home/rlk/lib/libSDL.a -lpthread
 FT2LIB = /usr/lib/libfreetype.a
@@ -62,13 +69,6 @@ LUALIB = /usr/lib/liblua.a /usr/lib/liblualib.a /usr/lib/libluasocket.a
 IMGLIB = /usr/lib/libjpeg.a /usr/lib/libpng.a /usr/lib/libz.a
 OGGLIB = /usr/lib/libvorbisfile.a /usr/lib/libvorbis.a /usr/lib/libogg.a
 ODELIB = /usr/lib/libode.a -lstdc++
-else
-SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
-FT2LIB = $(shell $(FT2_CONFIG) --libs)
-LUALIB = -llua -llualib -lluasocket
-IMGLIB = -ljpeg -lpng -lz -lm
-OGGLIB = -lvorbisfile
-ODELIB = -lode -lstdc++
 endif
 
 #------------------------------------------------------------------------------
@@ -135,6 +135,36 @@ install : $(TARG)
 	mkdir -p $(INSTALL_PREFIX)/config
 	cp $(TARG) $(INSTALL_PREFIX)/bin
 	cp config/* $(INSTALL_PREFIX)/config
+
+#------------------------------------------------------------------------------
+
+CH= install_name_tool -change
+
+osxdist : $(TARG)
+	mkdir -p lib
+
+	cp    /sw/lib/libSDL-1.2.0.dylib    lib
+	cp    /sw/lib/libfreetype.6.dylib   lib
+	cp    /sw/lib/libjpeg.62.dylib      lib
+	cp    /sw/lib/libpng.3.dylib        lib
+	cp    /sw/lib/libvorbisfile.3.dylib lib
+	cp    /sw/lib/libvorbis.0.dylib     lib
+	cp    /sw/lib/libogg.0.dylib        lib
+
+	$(CH) /sw/lib/libSDL-1.2.0.dylib    \
+          @executable_path/lib/libSDL-1.2.0.dylib    $(TARG)
+	$(CH) /sw/lib/libfreetype.6.dylib   \
+          @executable_path/lib/libfreetype.6.dylib   $(TARG)
+	$(CH) /sw/lib/libjpeg.62.dylib      \
+          @executable_path/lib/libjpeg.62.dylib      $(TARG)
+	$(CH) /sw/lib/libpng.3.dylib        \
+          @executable_path/lib/libpng.3.dylib        $(TARG)
+	$(CH) /sw/lib/libvorbisfile.3.dylib \
+          @executable_path/lib/libvorbisfile.3.dylib $(TARG)
+	$(CH) /sw/lib/libvorbis.0.dylib     \
+          @executable_path/lib/libvorbis.0.dylib     $(TARG)
+	$(CH) /sw/lib/libogg.0.dylib        \
+          @executable_path/lib/libogg.0.dylib        $(TARG)
 
 #------------------------------------------------------------------------------
 # If Subversion is available, report the revision number in the source.

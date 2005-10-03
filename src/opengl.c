@@ -372,11 +372,11 @@ void init_opengl_obj(void)
 
 void fini_opengl_obj(void)
 {
-    if (glIsList(xyz_list)) glDeleteLists(xyz_list, 1);
-    if (glIsList(grd_list)) glDeleteLists(grd_list, 1);
-    if (glIsList(cap_list)) glDeleteLists(cap_list, 1);
-    if (glIsList(cyl_list)) glDeleteLists(cyl_list, 1);
-    if (glIsList(box_list)) glDeleteLists(box_list, 1);
+    if (xyz_list && glIsList(xyz_list)) glDeleteLists(xyz_list, 1);
+    if (grd_list && glIsList(grd_list)) glDeleteLists(grd_list, 1);
+    if (cap_list && glIsList(cap_list)) glDeleteLists(cap_list, 1);
+    if (cyl_list && glIsList(cyl_list)) glDeleteLists(cyl_list, 1);
+    if (box_list && glIsList(box_list)) glDeleteLists(box_list, 1);
 
     box_list = 0;
     cyl_list = 0;

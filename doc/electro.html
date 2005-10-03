@@ -159,7 +159,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><a name="create_galaxy"><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename, brush</i>)<dd><p>Load a galaxy definition from the named file and return a galaxy entity. A galaxy entity is a static 3D collection of particles, organized into a BSP structure for efficient rendering.</p>
 
-<p>A galaxy object must have a <a href="#brushes">brush</a> with the <tt>examples/star.fp</tt> and <tt>examples/star.vp</tt> <a href="#set_brush_frag_prog">fragment</a> and <a href="#set_brush_vert_prog">vertex</a> programs applied to it to render correctly.</p>
+<p>A galaxy object must have a <a href="#brushes">brush</a> with the <tt>examples/data/star.fp</tt> and <tt>examples/data/star.vp</tt> <a href="#set_brush_frag_prog">fragment</a> and <a href="#set_brush_vert_prog">vertex</a> programs applied to it to render correctly.</p>
 
 <p class="note">The galaxy object should be considered a hack. It has only a very specific use. It will probably be removed in a future revision of the Electro API, or possibly abstracted into a general particle system.</p>
 
@@ -284,6 +284,9 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <a name="entity_flag_left_eye"><li><tt>entity_flag_left_eye</tt>
 <a name="entity_flag_right_eye"><li><tt>entity_flag_right_eye</tt><p>These flags behave similarly to <a href="#entity_flag_hidden"><tt>entity_flag_hidden</tt></a>. They allow the entity hierarchy to be pruned selectively during stereo rendering. Entities with <tt>entity_flag_left_eye</tt> are hidden while the right eye view is rendered, and vice-versa.</p>
+
+<a name="entity_flag_visible_body"><li><tt>entity_flag_visible_body</tt>
+<a name="entity_flag_visible_geom"><li><tt>entity_flag_visible_geom</tt><p>These flags enable a form of visual debugging for physical entities.  Body-entities designated using <a href="#set_entity_body_type"><tt>set_entity_body_type</tt></a> are displayed with a coordinate axis indicating center of mass and orientation.  Geom-entities designated using <a href="#set_entity_geom_type"><tt>set_entity_geom_type</tt></a> are displayed with a wireframe outline indicating their exact collidable shape.</p>
 
 </ul>
 

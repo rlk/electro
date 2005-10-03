@@ -783,7 +783,7 @@ static int E_set_entity_body_attr(lua_State *L)
 {
     set_entity_body_attr_i(E_getentity (L, -3),
                            L_getinteger(L, -2),
-                           L_getinteger(L, -1));
+                           L_getboolean(L, -1));
     return 0;
 }
 
@@ -2386,6 +2386,8 @@ static struct constant_def constants[] = {
     { "entity_flag_right_eye",     FLAG_RIGHT_EYE      },
     { "entity_flag_track_pos",     FLAG_TRACK_POS      },
     { "entity_flag_track_rot",     FLAG_TRACK_ROT      },
+    { "entity_flag_visible_body",  FLAG_VISIBLE_BODY   },
+    { "entity_flag_visible_geom",  FLAG_VISIBLE_GEOM   },
 
     { "tracking_mode_local",       TRACK_LOCAL         },
     { "tracking_mode_world",       TRACK_WORLD         },

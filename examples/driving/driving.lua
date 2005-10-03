@@ -106,6 +106,9 @@ function add_thing()
     E.set_entity_geom_attr(object, E.geom_attr_category, category_world)
     E.set_entity_geom_attr(object, E.geom_attr_collider, category_all)
 
+    E.set_entity_flags(object, E.entity_flag_visible_geom, true)
+    E.set_entity_flags(object, E.entity_flag_visible_body, true)
+
     E.set_entity_position(object, 0.0, 20.0, 0.0)
     E.set_entity_rotation(object, math.random(-180, 180),
                                   math.random(-180, 180),
