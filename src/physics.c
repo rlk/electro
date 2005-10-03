@@ -16,6 +16,7 @@
 #include "physics.h"
 #include "matrix.h"
 #include "script.h"
+#include "opengl.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -202,7 +203,7 @@ void new_phys_mass(dBodyID body, float v[3])
 }
 
 void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
-                   const float r[16])
+                                               const float r[16])
 {
     dVector3  v;
     dMatrix3  M;
@@ -214,6 +215,7 @@ void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
     if (dGeomGetClass(geom) != dPlaneClass)
     {
         dGeomID object = dGeomTransformGetGeom(geom);
+        dReal   m      = get_data(geom)->mass;
 
         /* Create a new mass for the given geom. */
 
@@ -221,17 +223,17 @@ void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
         {
         case dBoxClass:
             dGeomBoxGetLengths(object, v);
-            dMassSetBoxTotal(&mass2, get_data(geom)->mass, v[0], v[1], v[2]);
+            dMassSetBoxTotal(&mass2, m, v[0], v[1], v[2]);
             break;
 
         case dSphereClass:
             rad = dGeomSphereGetRadius(object);
-            dMassSetSphereTotal(&mass2, get_data(geom)->mass, rad);
+            dMassSetSphereTotal(&mass2, m, rad);
             break;
 
         case dCCylinderClass:
             dGeomCCylinderGetParams(object, &rad, &len);
-            dMassSetCappedCylinderTotal(&mass2, get_data(geom)->mass, 3, rad, len);
+            dMassSetCappedCylinderTotal(&mass2, m, 3, rad, len);
             break;
 
         default:
@@ -323,110 +325,107 @@ static dJointID create_phys_joint(int t)
     return 0;
 }
 
-static void set_phys_joint_anchor(dJointID joint, const float v[3])
+static void set_phys_joint_anchor(dJointID j, const float v[3])
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
     case dJointTypeBall:
-        dJointSetBallAnchor     (joint, v[0], v[1], v[2]); break;
+        dJointSetBallAnchor     (j, v[0], v[1], v[2]); break;
     case dJointTypeHinge:
-        dJointSetHingeAnchor    (joint, v[0], v[1], v[2]); break;
+        dJointSetHingeAnchor    (j, v[0], v[1], v[2]); break;
     case dJointTypeHinge2:
-        dJointSetHinge2Anchor   (joint, v[0], v[1], v[2]); break;
+        dJointSetHinge2Anchor   (j, v[0], v[1], v[2]); break;
     case dJointTypeUniversal:
-        dJointSetUniversalAnchor(joint, v[0], v[1], v[2]); break;
+        dJointSetUniversalAnchor(j, v[0], v[1], v[2]); break;
     }
 }
 
-static void set_phys_joint_axis_1(dJointID joint, const float v[3])
+static void set_phys_joint_axis_1(dJointID j, const float v[3])
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
     case dJointTypeHinge:
-        dJointSetHingeAxis     (joint, v[0], v[1], v[2]); break;
+        dJointSetHingeAxis     (j, v[0], v[1], v[2]); break;
     case dJointTypeSlider:
-        dJointSetSliderAxis    (joint, v[0], v[1], v[2]); break;
+        dJointSetSliderAxis    (j, v[0], v[1], v[2]); break;
     case dJointTypeHinge2:
-        dJointSetHinge2Axis1   (joint, v[0], v[1], v[2]); break;
+        dJointSetHinge2Axis1   (j, v[0], v[1], v[2]); break;
     case dJointTypeUniversal:
-        dJointSetUniversalAxis1(joint, v[0], v[1], v[2]); break;
+        dJointSetUniversalAxis1(j, v[0], v[1], v[2]); break;
     }
 }
 
-static void set_phys_joint_axis_2(dJointID joint, const float v[3])
+static void set_phys_joint_axis_2(dJointID j, const float v[3])
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
     case dJointTypeHinge2:
-        dJointSetHinge2Axis2   (joint, v[0], v[1], v[2]); break;
+        dJointSetHinge2Axis2   (j, v[0], v[1], v[2]); break;
     case dJointTypeUniversal:
-        dJointSetUniversalAxis2(joint, v[0], v[1], v[2]); break;
+        dJointSetUniversalAxis2(j, v[0], v[1], v[2]); break;
     }
 }
 
-static void set_phys_joint_attr(dJointID joint, int p, float v)
+static void set_phys_joint_attr(dJointID j, int p, float v)
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeHinge:     dJointSetHingeParam    (joint, p, v); break;
-    case dJointTypeSlider:    dJointSetSliderParam   (joint, p, v); break;
-    case dJointTypeHinge2:    dJointSetHinge2Param   (joint, p, v); break;
-    case dJointTypeUniversal: dJointSetUniversalParam(joint, p, v); break;
+    case dJointTypeHinge:     dJointSetHingeParam    (j, p, v); break;
+    case dJointTypeSlider:    dJointSetSliderParam   (j, p, v); break;
+    case dJointTypeHinge2:    dJointSetHinge2Param   (j, p, v); break;
+    case dJointTypeUniversal: dJointSetUniversalParam(j, p, v); break;
     }
 }
 
-static float get_phys_joint_attr(dJointID joint, int p)
+static float get_phys_joint_attr(dJointID j, int p)
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeHinge:     return (float) dJointGetHingeParam    (joint, p);
-    case dJointTypeSlider:    return (float) dJointGetSliderParam   (joint, p);
-    case dJointTypeHinge2:    return (float) dJointGetHinge2Param   (joint, p);
-    case dJointTypeUniversal: return (float) dJointGetUniversalParam(joint, p);
+    case dJointTypeHinge:     return (float) dJointGetHingeParam    (j, p);
+    case dJointTypeSlider:    return (float) dJointGetSliderParam   (j, p);
+    case dJointTypeHinge2:    return (float) dJointGetHinge2Param   (j, p);
+    case dJointTypeUniversal: return (float) dJointGetUniversalParam(j, p);
     }
     return 0;
 }
 
-static float get_phys_joint_value(dJointID joint)
+static float get_phys_joint_value(dJointID j)
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeHinge:  return (float) TO_DEG(dJointGetHingeAngle    (joint));
-    case dJointTypeSlider: return (float)        dJointGetSliderPosition(joint);
-    case dJointTypeHinge2: return (float) TO_DEG(dJointGetHinge2Angle1  (joint));
+    case dJointTypeHinge:  return (float) DEG(dJointGetHingeAngle    (j));
+    case dJointTypeSlider: return (float)     dJointGetSliderPosition(j);
+    case dJointTypeHinge2: return (float) DEG(dJointGetHinge2Angle1  (j));
     }
     return 0;
 }
 
-static float get_phys_joint_rate(dJointID joint, int n)
+static float get_phys_joint_rate(dJointID j, int n)
 {
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeHinge:  return (float) TO_DEG(dJointGetHingeAngleRate    (joint));
-    case dJointTypeSlider: return (float)        dJointGetSliderPositionRate(joint);
+    case dJointTypeHinge:  return (float) DEG(dJointGetHingeAngleRate    (j));
+    case dJointTypeSlider: return (float)     dJointGetSliderPositionRate(j);
     case dJointTypeHinge2:
         if (n == 1)
-            return (float) TO_DEG(dJointGetHinge2Angle1Rate(joint));
+            return (float) DEG(dJointGetHinge2Angle1Rate(j));
         else
-            return (float) TO_DEG(dJointGetHinge2Angle2Rate(joint));
+            return (float) DEG(dJointGetHinge2Angle2Rate(j));
     }
     return 0;
 }
 
-static void get_phys_joint_anchor(dJointID joint, float *v)
+
+static void get_phys_joint_anchor(dJointID j, float *v)
 {
     dVector3 V = { 0, 0, 0 };
 
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeBall:
-        dJointGetBallAnchor     (joint, V); break;
-    case dJointTypeHinge:
-        dJointGetHingeAnchor    (joint, V); break;
-    case dJointTypeHinge2:
-        dJointGetHinge2Anchor   (joint, V); break;
-    case dJointTypeUniversal:
-        dJointGetUniversalAnchor(joint, V); break;
+    case dJointTypeBall:      dJointGetBallAnchor     (j, V); break;
+    case dJointTypeHinge:     dJointGetHingeAnchor    (j, V); break;
+    case dJointTypeHinge2:    dJointGetHinge2Anchor   (j, V); break;
+    case dJointTypeUniversal: dJointGetUniversalAnchor(j, V); break;
     }
 
     v[0] = (float) V[0];
@@ -434,20 +433,16 @@ static void get_phys_joint_anchor(dJointID joint, float *v)
     v[2] = (float) V[2];
 }
 
-static void get_phys_joint_axis_1(dJointID joint, float *v)
+static void get_phys_joint_axis_1(dJointID j, float *v)
 {
     dVector3 V = { 0, 0, 0 };
 
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeHinge:
-        dJointGetHingeAxis     (joint, V); break;
-    case dJointTypeSlider:
-        dJointGetSliderAxis    (joint, V); break;
-    case dJointTypeHinge2:
-        dJointGetHinge2Axis1   (joint, V); break;
-    case dJointTypeUniversal:
-        dJointGetUniversalAxis1(joint, V); break;
+    case dJointTypeHinge:     dJointGetHingeAxis     (j, V); break;
+    case dJointTypeSlider:    dJointGetSliderAxis    (j, V); break;
+    case dJointTypeHinge2:    dJointGetHinge2Axis1   (j, V); break;
+    case dJointTypeUniversal: dJointGetUniversalAxis1(j, V); break;
     }
 
     v[0] = (float) V[0];
@@ -455,16 +450,14 @@ static void get_phys_joint_axis_1(dJointID joint, float *v)
     v[2] = (float) V[2];
 }
 
-static void get_phys_joint_axis_2(dJointID joint, float *v)
+static void get_phys_joint_axis_2(dJointID j, float *v)
 {
     dVector3 V = { 0, 0, 0 };
 
-    switch (dJointGetType(joint))
+    switch (dJointGetType(j))
     {
-    case dJointTypeHinge2:
-        dJointGetHinge2Axis2   (joint, V); break;
-    case dJointTypeUniversal:
-        dJointGetUniversalAxis2(joint, V); break;
+    case dJointTypeHinge2:    dJointGetHinge2Axis2   (j, V); break;
+    case dJointTypeUniversal: dJointGetUniversalAxis2(j, V); break;
     }
 
     v[0] = (float) V[0];
@@ -612,16 +605,14 @@ float get_phys_geom_attr_f(dGeomID geom, int p)
 
 dJointID find_shared_joint(dBodyID body1, dBodyID body2)
 {
-    if (dAreConnected(body1, body2))
-    {
-        int i1, n1 = body1 ? dBodyGetNumJoints(body1) : 0;
-        int i2, n2 = body2 ? dBodyGetNumJoints(body2) : 0;
+    int i1, n1 = body1 ? dBodyGetNumJoints(body1) : 0;
+    int i2, n2 = body2 ? dBodyGetNumJoints(body2) : 0;
 
-        for (i1 = 0; i1 < n1; ++i1)
-            for (i2 = 0; i2 < n2; ++i2)
-                if (dBodyGetJoint(body1, i1) ==
-                    dBodyGetJoint(body2, i2)) return dBodyGetJoint(body1, i1);
-    }
+    for (i1 = 0; i1 < n1; ++i1)
+        for (i2 = 0; i2 < n2; ++i2)
+            if (dBodyGetJoint(body1, i1) ==
+                dBodyGetJoint(body2, i2)) return dBodyGetJoint(body1, i1);
+
     return 0;
 }
 
@@ -651,7 +642,7 @@ void set_phys_join_attr_f(dBodyID body1, dBodyID body2, int p, float f)
         case dParamHiStop:
         case dParamLoStop2:
         case dParamHiStop2:
-            set_phys_joint_attr(joint, p, TO_RAD(f));
+            set_phys_joint_attr(joint, p, RAD(f));
             break;
         default:
             set_phys_joint_attr(joint, p, f);
@@ -687,7 +678,7 @@ float get_phys_join_attr_f(dBodyID body1, dBodyID body2, int p)
         case dParamHiStop:
         case dParamLoStop2:
         case dParamHiStop2:
-            return TO_DEG(get_phys_joint_attr(joint, p));
+            return DEG(get_phys_joint_attr(joint, p));
             break;
         default:
             return get_phys_joint_attr(joint, p);
@@ -750,6 +741,85 @@ void set_phys_rotation(dBodyID body, const float r[16])
 void get_phys_rotation(dBodyID body, float r[16])
 {
     get_rotation(r, dBodyGetRotation(body));
+}
+
+/*===========================================================================*/
+/* Physics state renderers                                                   */
+
+static void draw_phys_plane(dGeomID geom)
+{
+    dVector4 v;
+
+    dGeomPlaneGetParams(geom, v);
+    opengl_draw_grd(v[0], v[1], v[2], v[3]);
+}
+
+static void draw_phys_box(dGeomID geom)
+{
+    dVector3 v;
+
+    dGeomBoxGetLengths(geom, v);
+    opengl_draw_box(v[0], v[1], v[2]);
+}
+
+static void draw_phys_sphere(dGeomID geom)
+{
+    opengl_draw_sph(dGeomSphereGetRadius(geom));
+}
+
+static void draw_phys_ccylinder(dGeomID geom)
+{
+    dReal r;
+    dReal l;
+
+    dGeomCCylinderGetParams(geom, &r, &l);
+    opengl_draw_cap(r, l);
+}
+
+void draw_phys_geom(dGeomID geom)
+{
+    glPushAttrib(GL_ENABLE_BIT);
+    {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
+        glEnable(GL_COLOR_MATERIAL);
+        glColor4f(1.0f, 1.0f, 0.0f, 0.5f);
+
+        if (dGeomGetClass(geom) == dPlaneClass)
+            draw_phys_plane(geom);
+        else
+        {
+            dGeomID object = dGeomTransformGetGeom(geom);
+
+            switch (dGeomGetClass(object))
+            {
+            case dBoxClass:       draw_phys_box      (object); break;
+            case dSphereClass:    draw_phys_sphere   (object); break;
+            case dCCylinderClass: draw_phys_ccylinder(object); break;
+            }
+        }
+    }
+    glPopAttrib();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void draw_phys_body(dBodyID body)
+{
+    dMass mass;
+
+    dBodyGetMass(body, &mass);
+
+    glPushAttrib(GL_ENABLE_BIT);
+    {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+        glEnable(GL_COLOR_MATERIAL);
+
+        opengl_draw_xyz(mass.c[0], mass.c[1], mass.c[2]);
+    }
+    glPopAttrib();
 }
 
 /*===========================================================================*/

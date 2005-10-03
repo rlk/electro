@@ -71,6 +71,7 @@ int init_video(int width, int height, int full, int framed, int stereo)
     fini_brushes();
     fini_console();
     fini_entities();
+    fini_opengl();
 
     /* Configure the new visual. */
 

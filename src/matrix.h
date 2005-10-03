@@ -17,8 +17,8 @@
 
 #define PI 3.14159265f
 
-#define TO_DEG(r) (180.0f * (r) / PI)
-#define TO_RAD(d) (PI * (d) / 180.0f)
+#define DEG(r) (180.0f * (r) / PI)
+#define RAD(d) (PI * (d) / 180.0f)
 
 #define DOT3(v, w) ((v)[0] * (w)[0] + \
                     (v)[1] * (w)[1] + \

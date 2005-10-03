@@ -80,6 +80,7 @@ typedef GLvoid *_GLUfuncptr;
 /*---------------------------------------------------------------------------*/
 
 void      init_opengl(void);
+void      fini_opengl(void);
 
 void     *opengl_proc(const char *);
 GLboolean opengl_need(const char *);
@@ -89,6 +90,12 @@ void      opengl_basis_mult(float[3][3]);
 void      opengl_basis_invt(float[3][3]); 
 GLuint    opengl_frag_prog(const char *);
 GLuint    opengl_vert_prog(const char *);
+
+void      opengl_draw_xyz(float, float, float);
+void      opengl_draw_grd(float, float, float, float);
+void      opengl_draw_box(float, float, float);
+void      opengl_draw_cap(float, float);
+void      opengl_draw_sph(float);
 
 /*---------------------------------------------------------------------------*/
 

@@ -296,8 +296,8 @@ void draw_console(void)
                 int i;
 
                 for (i = 0; i < 360; i++)
-                    glVertex2f(W / 2 + cos(TO_RAD(i)) * H / 2,
-                               H / 2 + sin(TO_RAD(i)) * H / 2);
+                    glVertex2f(W / 2 + cos(RAD(i)) * H / 2,
+                               H / 2 + sin(RAD(i)) * H / 2);
             }
             glEnd();
 #endif

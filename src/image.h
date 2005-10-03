@@ -15,6 +15,18 @@
 
 /*---------------------------------------------------------------------------*/
 
+struct message
+{
+    unsigned int pixel_x;
+    unsigned int pixel_y;
+    unsigned int pixel_w;
+    unsigned int pixel_h;
+    unsigned int image_w;
+    unsigned int image_h;
+};
+
+/*---------------------------------------------------------------------------*/
+
 int startup_image(void);
 
 /*---------------------------------------------------------------------------*/

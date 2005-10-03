@@ -98,6 +98,24 @@ function add_ball()
 end
 
 function add_thing()
+    local object = E.create_pivot()
+    E.parent_entity(object, pivot)
+
+    E.set_entity_body_type(object, true)
+    E.set_entity_geom_type(object, E.geom_type_capsule, 0.5, 2)
+    E.set_entity_geom_attr(object, E.geom_attr_category, category_world)
+    E.set_entity_geom_attr(object, E.geom_attr_collider, category_all)
+
+    E.set_entity_position(object, 0.0, 20.0, 0.0)
+    E.set_entity_rotation(object, math.random(-180, 180),
+                                  math.random(-180, 180),
+                                  math.random(-180, 180))
+
+    table.insert(objects, object)
+    return object
+end
+
+function add_compound()
     local object = E.create_object("../data/thing.obj")
     local part1  = E.create_pivot()
     local part2  = E.create_pivot()
@@ -124,6 +142,8 @@ function add_thing()
     E.set_entity_rotation(object, math.random(-180, 180),
                                   math.random(-180, 180),
                                   math.random(-180, 180))
+
+    E.set_entity_geom_attr(part1, E.geom_attr_mass, 10)
 
     E.set_entity_position(part1, 1.5, 0.5, 0.5)
     E.set_entity_position(part2, 0.5, 1.5, 0.5)
@@ -325,7 +345,7 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
-    video = E.create_image(2828)
+--  video = E.create_image(2828)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",
@@ -396,6 +416,9 @@ function do_joystick(d, b, s)
             if b == 4 then
                 add_car()
             end
+            if b == 5 then
+                add_thing()
+            end
         else
             if b == 1 then
                 right = false
@@ -427,6 +450,12 @@ function do_keyboard(k, s)
         end
         if k == E.key_5 then
             add_tv(0, 10, 0)
+        end
+        if k == E.key_6 then
+            add_thing()
+        end
+        if k == E.key_7 then
+            add_compound()
         end
         if k == E.key_tab then
             right = true
@@ -477,7 +506,7 @@ function do_timer(dt)
         local zx, zy, zz = E.get_entity_z_vector(base)
 
         local kx =  0
-        local ky =  0
+        local ky =  2
         local kz = 10
 
         local x = px + xx * kx + yx * ky + zx * kz
@@ -496,7 +525,7 @@ function do_timer(dt)
 
         pos_y = math.abs(pos_y)
 
-        E.set_entity_position(camera, S * pos_x, 0, S * pos_z)
+        E.set_entity_position(camera, S * pos_x, S * pos_y, S * pos_z)
         E.set_entity_rotation(camera, 0, a, 0)
 
         go_car(jx + key_x, jy + key_y)

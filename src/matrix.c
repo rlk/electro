@@ -150,8 +150,8 @@ void load_rot_mat(float M[16], float x, float y, float z, float a)
 {
     float U[16], S[16], u[3], k = (float) sqrt(x * x + y * y + z * z);
 
-    const float s = (float) sin((double) TO_RAD(a));
-    const float c = (float) cos((double) TO_RAD(a));
+    const float s = (float) sin((double) RAD(a));
+    const float c = (float) cos((double) RAD(a));
 
     u[0] = x / k;
     u[1] = y / k;

@@ -11,11 +11,13 @@
 /*    General Public License for more details.                               */
 
 #include <SDL.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
 #include "opengl.h"
+#include "matrix.h"
 #include "utility.h"
 #include "console.h"
 
@@ -83,7 +85,307 @@ void *opengl_proc(const char *name)
     return p;
 }
 
+/*===========================================================================*/
+
+#define SEGMENTS 24
+
+static GLuint box_list;
+static GLuint cyl_list;
+static GLuint cap_list;
+static GLuint grd_list;
+static GLuint xyz_list;
+
+void opengl_draw_xyz(float x, float y, float z)
+{
+    glPushMatrix();
+    {
+        glTranslatef(x, y, z);
+        glCallList(xyz_list);
+    }
+    glPopMatrix();
+}
+
+void opengl_draw_grd(float a, float b, float c, float d)
+{
+    const float da = (float) fabs(a);
+    const float db = (float) fabs(b);
+    const float dc = (float) fabs(c);
+
+    float x[3] = { 1, 0, 0 };
+    float y[3] = { 0, 1, 0 };
+    float z[3];
+    float M[16];
+
+    /* Compute a well-defined basis for the plane's space. */
+
+    if (da > db && da > dc)
+    {
+        x[0] = 0;
+        x[1] = 0;
+        x[2] = 1;
+    }
+    if (db > da && db > dc)
+    {
+        y[0] = 0;
+        y[1] = 0;
+        y[2] = 1;
+    }
+
+    z[0] = a;
+    z[1] = b;
+    z[2] = c;
+
+    cross(x, y, z);
+    cross(y, z, x);
+
+    normalize(x);
+    normalize(y);
+
+    /* Use this basis as plane transformation. */
+
+    M[0] = x[0]; M[4] = y[0]; M[8]  = z[0]; M[12] = 0;
+    M[1] = x[1]; M[5] = y[1]; M[9]  = z[1]; M[13] = 0;
+    M[2] = x[2]; M[6] = y[2]; M[10] = z[2]; M[14] = 0;
+    M[3] =    0; M[7] =    0; M[11] =    0; M[15] = 1;
+
+    glPushMatrix();
+    {
+        glMultMatrixf(M);
+        glCallList(grd_list);
+    }
+    glPopMatrix();
+    
+}
+
+void opengl_draw_box(float x, float y, float z)
+{
+    glPushMatrix();
+    {
+        glScalef(x, y, z);
+        glCallList(box_list);
+    }
+    glPopMatrix();
+}
+
+void opengl_draw_cap(float r, float l)
+{
+    glPushMatrix();
+    {
+        glTranslatef(0, 0, +l / 2);
+        glScalef(+r, +r, +r);
+        glCallList(cap_list);
+    }
+    glPopMatrix();
+
+    glPushMatrix();
+    {
+        glScalef(+r, +r, +l);
+        glCallList(cyl_list);
+    }
+    glPopMatrix();
+
+    glPushMatrix();
+    {
+        glTranslatef(0, 0, -l / 2);
+        glScalef(+r, +r, -r);
+        glCallList(cap_list);
+    }
+    glPopMatrix();
+}
+
+void opengl_draw_sph(float r)
+{
+    glPushMatrix();
+    {
+        glScalef(+r, +r, +r);
+        glCallList(cap_list);
+    }
+    glPopMatrix();
+
+    glPushMatrix();
+    {
+        glScalef(+r, +r, -r);
+        glCallList(cap_list);
+    }
+    glPopMatrix();
+}
+
 /*---------------------------------------------------------------------------*/
+
+static void init_opengl_box(void)
+{
+    const float x = 0.5f;
+    const float y = 0.5f;
+    const float z = 0.5f;
+
+    glBegin(GL_LINES);
+    {
+        glVertex3f(-x, -y, -z);  glVertex3f(-x, -y, +z);
+        glVertex3f(-x, +y, -z);  glVertex3f(-x, +y, +z);
+        glVertex3f(+x, -y, -z);  glVertex3f(+x, -y, +z);
+        glVertex3f(+x, +y, -z);  glVertex3f(+x, +y, +z);
+
+        glVertex3f(-x, -y, -z);  glVertex3f(-x, +y, -z);
+        glVertex3f(-x, -y, +z);  glVertex3f(-x, +y, +z);
+        glVertex3f(+x, -y, -z);  glVertex3f(+x, +y, -z);
+        glVertex3f(+x, -y, +z);  glVertex3f(+x, +y, +z);
+
+        glVertex3f(-x, -y, -z);  glVertex3f(+x, -y, -z);
+        glVertex3f(-x, -y, +z);  glVertex3f(+x, -y, +z);
+        glVertex3f(-x, +y, -z);  glVertex3f(+x, +y, -z);
+        glVertex3f(-x, +y, +z);  glVertex3f(+x, +y, +z);
+    }
+    glEnd();
+}
+
+static void init_opengl_cyl(void)
+{
+    int d = 360 / SEGMENTS;
+    int i;
+
+    glBegin(GL_LINES);
+    {
+        for (i = 0; i < 360; i += d)
+        {
+            float x = cos(RAD((float) i));
+            float y = sin(RAD((float) i));
+
+            glVertex3f(x, y, -0.5f);
+            glVertex3f(x, y, +0.5f);
+        }
+    }
+    glEnd();
+}
+
+static void init_opengl_cap(void)
+{
+    int d = 360 / SEGMENTS;
+    int i;
+    int j;
+
+    /* Longitude */
+
+    for (i = 0; i < 360; i += d)
+    {
+        glBegin(GL_LINE_STRIP);
+        {
+            for (j = 0; j <= 90; j += d)
+            {
+                float x = cos(RAD((float) i)) * cos(RAD((float) j));
+                float y = sin(RAD((float) i)) * cos(RAD((float) j));
+                float z =                       sin(RAD((float) j));
+
+                glVertex3f(x, y, z);
+            }
+        }
+        glEnd();
+    }
+
+    /* Latitude */
+
+    for (j = 0; j < 90; j += d)
+    {
+        glBegin(GL_LINE_LOOP);
+        {
+            for (i = 0; i < 360; i += d)
+            {
+                float x = cos(RAD((float) i)) * cos(RAD((float) j));
+                float y = sin(RAD((float) i)) * cos(RAD((float) j));
+                float z =                       sin(RAD((float) j));
+
+                glVertex3f(x, y, z);
+            }
+        }
+        glEnd();
+    }
+}
+
+static void init_opengl_grd(void)
+{
+    int d = SEGMENTS / 2;
+    int i;
+
+    glBegin(GL_LINES);
+    {
+        for (i = -d; i <= d; ++i)
+        {
+            glVertex2i(-d, i);
+            glVertex2i(+d, i);
+            glVertex2i(i, -d);
+            glVertex2i(i, +d);
+        }
+    }
+    glEnd();
+}
+
+static void init_opengl_xyz(void)
+{
+    float d = 1.0f / 8.0f;
+
+    glBegin(GL_LINES);
+    {
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glVertex3f(0, 0, 0);
+        glVertex3f(d, 0, 0);
+
+        glColor3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, d, 0);
+
+        glColor3f(0.0f, 0.0f, 1.0f);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, 0, d);
+    }
+    glEnd();
+}
+
+/*---------------------------------------------------------------------------*/
+
+void init_opengl_obj(void)
+{
+    box_list = glGenLists(1);
+    cyl_list = glGenLists(1);
+    cap_list = glGenLists(1);
+    grd_list = glGenLists(1);
+    xyz_list = glGenLists(1);
+
+    glNewList(box_list, GL_COMPILE);
+    init_opengl_box();
+    glEndList();
+
+    glNewList(cyl_list, GL_COMPILE);
+    init_opengl_cyl();
+    glEndList();
+
+    glNewList(cap_list, GL_COMPILE);
+    init_opengl_cap();
+    glEndList();
+
+    glNewList(grd_list, GL_COMPILE);
+    init_opengl_grd();
+    glEndList();
+
+    glNewList(xyz_list, GL_COMPILE);
+    init_opengl_xyz();
+    glEndList();
+}
+
+void fini_opengl_obj(void)
+{
+    if (glIsList(xyz_list)) glDeleteLists(xyz_list, 1);
+    if (glIsList(grd_list)) glDeleteLists(grd_list, 1);
+    if (glIsList(cap_list)) glDeleteLists(cap_list, 1);
+    if (glIsList(cyl_list)) glDeleteLists(cyl_list, 1);
+    if (glIsList(box_list)) glDeleteLists(box_list, 1);
+
+    box_list = 0;
+    cyl_list = 0;
+    cap_list = 0;
+    grd_list = 0;
+    xyz_list = 0;
+}
+
+/*===========================================================================*/
 
 #ifdef __APPLE__
 
@@ -101,6 +403,8 @@ void init_opengl(void)
 
     glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
     GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
+
+    init_opengl_obj();
 }
 
 #else
@@ -202,9 +506,16 @@ void init_opengl(void)
         = opengl_need("GL_ARB_texture_rectangle") | GL_TRUE;
     GL_has_texture_compression
         = opengl_need("GL_ARB_texture_compression");
+
+    init_opengl_obj();
 }
 
 #endif
+
+void fini_opengl(void)
+{
+    fini_opengl_obj();
+}
 
 /*---------------------------------------------------------------------------*/
 

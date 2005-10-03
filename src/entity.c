@@ -226,8 +226,9 @@ int test_entity_aabb(int i)
 
 void draw_entity_tree(int i, int f, float a)
 {
+    struct entity *E = get_entity(i);
     int j;
-
+    
     /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
     for (j = CAR(i); j; j = CDR(j))
@@ -248,12 +249,12 @@ void draw_entity_tree(int i, int f, float a)
                          GL_POLYGON_BIT |
                          GL_DEPTH_BUFFER_BIT);
             {
-                /* Enable wireframe if specified. */
+                /* Enable wireframe, if specified. */
 
                 if (e->flags & FLAG_WIREFRAME)
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-                /* Enable line smoothing if requested. */
+                /* Enable line smoothing, if requested. */
 
                 if (e->flags & FLAG_LINE_SMOOTH)
                     glEnable(GL_LINE_SMOOTH);
@@ -270,6 +271,13 @@ void draw_entity_tree(int i, int f, float a)
             glPopAttrib();
         }
     }
+
+    /* Draw this entity's physical state, if requested. */
+
+    if (E->geom /* && E->flags & FLAG_VISIBLE_GEOM*/)
+        draw_phys_geom(E->geom);
+    if (E->body /* && E->flags & FLAG_VISIBLE_BODY*/)
+        draw_phys_body(E->body);
 }
 
 void draw_entities(void)
@@ -477,6 +485,40 @@ static void update_entity_rotation(int i)
         remass_body_entity(find_body_entity(i), i);
 }
 
+static void set_entity_position(int i, const float p[3])
+{
+    struct entity *e = get_entity(i);
+
+    send_event(EVENT_SET_ENTITY_POSITION);
+    send_index(i);
+
+    send_float((e->position[0] = p[0]));
+    send_float((e->position[1] = p[1]));
+    send_float((e->position[2] = p[2]));
+}
+
+static void set_entity_basis(int i, const float M[16])
+{
+    struct entity *e = get_entity(i);
+
+    send_event(EVENT_SET_ENTITY_BASIS);
+    send_index(i);
+
+    send_float(M[0]);
+    send_float(M[1]);
+    send_float(M[2]);
+
+    send_float(M[4]);
+    send_float(M[5]);
+    send_float(M[6]);
+
+    send_float(M[8]);
+    send_float(M[9]);
+    send_float(M[10]);
+
+    load_mat(e->rotation, M);
+}
+
 /*---------------------------------------------------------------------------*/
 
 void send_set_entity_tracking(int i, int sens, int mode)
@@ -509,39 +551,13 @@ void send_set_entity_rotation(int i, const float r[3])
 
 void send_set_entity_position(int i, const float p[3])
 {
-    struct entity *e = get_entity(i);
-
-    send_event(EVENT_SET_ENTITY_POSITION);
-    send_index(i);
-
-    send_float((e->position[0] = p[0]));
-    send_float((e->position[1] = p[1]));
-    send_float((e->position[2] = p[2]));
-
+    set_entity_position(i, p);
     update_entity_position(i);
 }
 
 void send_set_entity_basis(int i, const float M[16])
 {
-    struct entity *e = get_entity(i);
-
-    send_event(EVENT_SET_ENTITY_BASIS);
-    send_index(i);
-
-    send_float(M[0]);
-    send_float(M[1]);
-    send_float(M[2]);
-
-    send_float(M[4]);
-    send_float(M[5]);
-    send_float(M[6]);
-
-    send_float(M[8]);
-    send_float(M[9]);
-    send_float(M[10]);
-
-    load_mat(e->rotation, M);
-
+    set_entity_basis(i, M);
     update_entity_rotation(i);
 }
 
@@ -617,6 +633,12 @@ void set_entity_geom_type(int i, int t, const float *v)
 
 void set_entity_join_type(int i, int j, int t)
 {
+    dBodyID bi = i ? get_entity(i)->body : 0;
+    dBodyID bj = j ? get_entity(j)->body : 0;
+
+    set_phys_join_type(bi, bj, t);
+
+    /*
     if (i > 0)
     {
         if (j)
@@ -625,6 +647,7 @@ void set_entity_join_type(int i, int j, int t)
         else
             set_phys_join_type(get_entity(i)->body, 0, t);
     }
+    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -632,23 +655,41 @@ void set_entity_join_type(int i, int j, int t)
 void set_entity_body_attr_i(int i, int p, int d)
 {
     if (get_entity(i)->body)
+    {
         set_phys_body_attr_i(get_entity(i)->body, p, d);
+        update_entity_position(i);
+        update_entity_rotation(i);
+    }
 }
 
 void set_entity_geom_attr_f(int i, int p, float f)
 {
     if (get_entity(i)->geom)
+    {
         set_phys_geom_attr_f(get_entity(i)->geom, p, f);
+        update_entity_position(i);
+        update_entity_rotation(i);
+    }
 }
 
 void set_entity_geom_attr_i(int i, int p, int d)
 {
     if (get_entity(i)->geom)
+    {
         set_phys_geom_attr_i(get_entity(i)->geom, p, d);
+        update_entity_position(i);
+        update_entity_rotation(i);
+    }
 }
 
 void set_entity_join_attr_f(int i, int j, int p, float f)
 {
+    dBodyID bi = i ? get_entity(i)->body : 0;
+    dBodyID bj = j ? get_entity(j)->body : 0;
+
+    set_phys_join_attr_f(bi, bj, p, f);
+
+    /*
     if (get_entity(i)->body)
     {
         if (j)
@@ -657,10 +698,17 @@ void set_entity_join_attr_f(int i, int j, int p, float f)
         else
             set_phys_join_attr_f(get_entity(i)->body, 0, p, f);
     }
+    */
 }
 
 void set_entity_join_attr_v(int i, int j, int p, const float *v)
 {
+    dBodyID bi = i ? get_entity(i)->body : 0;
+    dBodyID bj = j ? get_entity(j)->body : 0;
+
+    set_phys_join_attr_v(bi, bj, p, v);
+
+    /*
     if (get_entity(i)->body)
     {
         if (j)
@@ -669,6 +717,7 @@ void set_entity_join_attr_v(int i, int j, int p, const float *v)
         else
             set_phys_join_attr_v(get_entity(i)->body, 0, p, v);
     }
+    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1179,9 +1228,9 @@ int step_entities(float dt, int head)
             if (e->type && e->body)
             {
                 get_phys_position(e->body, p);
-                send_set_entity_position(i, p);
+                set_entity_position(i, p);
                 get_phys_rotation(e->body, R);
-                send_set_entity_basis   (i, R);
+                set_entity_basis   (i, R);
 
                 c++;
             }

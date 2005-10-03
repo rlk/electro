@@ -40,6 +40,8 @@
 #define FLAG_RIGHT_EYE     0x0040
 #define FLAG_TRACK_POS     0x0080
 #define FLAG_TRACK_ROT     0x0100
+#define FLAG_VISIBLE_GEOM  0x0200
+#define FLAG_VISIBLE_BODY  0x0400
 
 /* Entity tracking modes. */
 

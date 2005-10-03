@@ -139,8 +139,8 @@ int star_parse_hip(struct star *s, FILE *fp)
             /* Compute equatorial position in parsecs and radians. */
 
             plx = 1000.0 / fabs(plx);
-            ra  = TO_RAD(ra);
-            de  = TO_RAD(de);
+            ra  = RAD(ra);
+            de  = RAD(de);
 
             /* Compute the position in galactic coordinates. */
 
@@ -200,8 +200,8 @@ int star_parse_tyc(struct star *s, FILE *fp)
             /* Compute equatorial position in parsecs and radians. */
             
             mag = vt - 0.090 * (bt - vt);
-            ra  = TO_RAD(ra);
-            de  = TO_RAD(de);
+            ra  = RAD(ra);
+            de  = RAD(de);
             plx = 10.0;
 
             /* Compute the position in galactic coordinates. */

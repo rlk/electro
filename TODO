@@ -1,3 +1,18 @@
+global state
+    gravity vector
+    ambient light
+Build against mesa
+OBJ shading groups
+OBJ extract
+MIDI IO
+Stronger OBJ index checking?
+UDP texture
+UDP audio?
+access more joystick axes
+GLslang
+positional audio
+multichannel audio
+OpenAL?
 view physics geom flag (for debugging)
 cwall config
 windows trackd

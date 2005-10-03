@@ -349,8 +349,7 @@ void draw_camera(int j, int i, int f, float a)
 
                     transform_camera(j);
 
-                    /* Grab the inverse view rotation for use in reflection */
-                    /* and billboarding. */
+                    /* Grab the inverse view rotation for use by env maps. */
 
                     glGetFloatv(GL_MODELVIEW_MATRIX, M);
 
