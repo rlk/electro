@@ -421,8 +421,15 @@ void server(int argc, char *argv[])
                                get_window_framed(),
                                get_window_stereo()))
                 {
+                    SDL_Event e = { SDL_USEREVENT };
+
+                    /* Kickstart SDL event processing. */
+
+                    SDL_PushEvent(&e);
                     SDL_EnableUNICODE(1);
                     SDL_PauseAudio(0);
+
+                    /* Loop, handling SDL events. */
 
                     grab(1);
 
