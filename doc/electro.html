@@ -1,3 +1,4 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
   <style type="text/css">
@@ -13,6 +14,7 @@
     pre    { background: #FFFFCC; padding: 1.0em; }
     p.note { background: #CCFFFF; padding: 1.0em; }
   </style>
+  <title>Electro</title>
 </head>
 <body>
 
@@ -32,7 +34,7 @@
 
 <p>Electro API function definitions appear here as follows:
 
-<dl><dt><i>baz</i> = <tt>function</tt>(<i>foo</i>, [<i>bar</i>])<dd></p> Invoke <tt>function</tt> with arguments <i>foo</i>, and optionally <i>bar</i>, giving <i>baz</i>.</p></dl>
+<dl><dt><i>baz</i> = <tt>function</tt>(<i>foo</i>, [<i>bar</i>])<dd><p>Invoke <tt>function</tt> with arguments <i>foo</i>, and optionally <i>bar</i>, giving <i>baz</i>.</p></dl>
 
 <p>This document includes a number of Lua code examples. These examples are distinguished from the main text as follows:</p>
 
@@ -51,18 +53,17 @@ print("Hello, World!")
 <p>Electro accepts the following command line arguments. All unrecognized arguments are copied to a table in the Electro Lua environment called <a href="#arguments"><tt>E.arguments</tt></a>. Scripts are free to access them there.</p>
 
 <dl>
-<dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>
-Execute the named Lua script.</p>
+<dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>Execute the named Lua script.</p>
 
 <dt><tt>-m</tt><dd><p>Grab the mouse pointer. Normally, mouse motion events are only detected while the pointer is within the Electro window. This limits the useful range of mouse motion to the size of the window. When the mouse pointer is grabbed, an application can track mouse motion over unlimited distances. This is useful to applications that implement a pointer that spans a large tiled display.</p>
 
 <dt><tt>-l</tt> <i>&lt;log file&gt;</i><dd><p>Log all console output to the named file.</p>
 
-<dt><a name="option-t"><tt>-t</tt> <i>&lt;key&gt;</i><dd><p>Use the given key value to access trackd tracker information. The default is 4126.</p>
+<dt><a name="option-t"><tt>-t</tt> <i>&lt;key&gt;</i></a><dd><p>Use the given key value to access trackd tracker information. The default is 4126.</p>
 
-<dt><a name="option-c"><tt>-c</tt> <i>&lt;key&gt;</i><dd><p>Use the given key value to access trackd controller information. The default is 4127.</p>
+<dt><a name="option-c"><tt>-c</tt> <i>&lt;key&gt;</i></a><dd><p>Use the given key value to access trackd controller information. The default is 4127.</p>
 
-<dt><a name="option-h"><tt>-h</tt> <i>&lt;index&gt;</i><dd><p>Use the given trackd sensor index as head tracker. The position and orientation of this sensor will be applied to all cameras. The default is zero.</p>
+<dt><a name="option-h"><tt>-h</tt> <i>&lt;index&gt;</i></a><dd><p>Use the given trackd sensor index as head tracker. The position and orientation of this sensor will be applied to all cameras. The default is zero.</p>
 
 <dt><tt>-H</tt> <i>&lt;catalog file&gt; &lt;galaxy file&gt;</i><dd><p>Process the given Hipparcos stellar catalog into an Electro galaxy file.</p>
 
@@ -83,17 +84,17 @@ E.set_background(0.0, 0.5, 1.0)
 <p>These are the major functional sections of the Electro API:</p>
 
 <ol>
-<li><a href="#entities"> Entities </a>
-<li><a href="#images"> Images </a>
-<li><a href="#brushes"> Brushes </a>
-<li><a href="#sound"> Sound </a>
-<li><a href="#console"> Console </a>
-<li><a href="#configuration"> Configuration </a>
-<li><a href="#system"> System </a>
-<li><a href="#miscellaneous"> Miscellaneous </a>
+<li><a href="#entities">Entities</a>
+<li><a href="#images">Images</a>
+<li><a href="#brushes">Brushes</a>
+<li><a href="#sound">Sound</a>
+<li><a href="#console">Console</a>
+<li><a href="#configuration">Configuration</a>
+<li><a href="#system">System</a>
+<li><a href="#miscellaneous">Miscellaneous</a>
 </ol>
 
-<a name="entities"><h2> 2.1. Entities </h2>
+<h2><a name="entities">2.1. Entities</a></h2>
 
 <p>The core of any Electro application is the scene graph. The scene graph is a very common organizing scheme in 3D graphics, and examples of its use abound. Other scene graph libraries include
 
@@ -106,64 +107,64 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>Scene graph functionality is organized into a small class hierarchy. The entity base class handles all of the common properties and behaviors of scene graph elements, most notably 3D transformation, and the parent-child relationships that hold a scene hierarchy together. The subclasses handle the specifics of controlling the view and lighting, drawing 3D and 2D geometry, etc. The class hierarchy is as follows:</p>
 
-<ol start="0">
-<a href="#entity"> Entity </a>
+<ul>
+<li><a href="#entity"> Entity</a>
 <ol>
-<li><a href="#object"> Object </a>
-<li><a href="#sprite"> Sprite </a>
-<li><a href="#string"> String </a>
-<li><a href="#camera"> Camera </a>
-<li><a href="#light">  Light  </a>
-<li><a href="#pivot">  Pivot  </a>
-<li><a href="#galaxy"> Galaxy </a>
+<li><a href="#object">Object</a>
+<li><a href="#sprite">Sprite</a>
+<li><a href="#string">String</a>
+<li><a href="#camera">Camera</a>
+<li><a href="#light">Light</a>
+<li><a href="#pivot">Pivot</a>
+<li><a href="#galaxy">Galaxy</a>
 </ol>
-</ol>
+</ul>
 
 <p>Constructor functions instantiate scene graph objects.</p>
 
 <dl>
 
-<dt><a name="create_object"><i>object</i> = <tt>create_object</tt>(<i>filename</i>)<dd><p>Load an OBJ format 3D object and return an Electro object entity. This is the normal means of importing 3D geometry into an Electro application. It supports polygonal geometry in OBJ file format, including material files and texture maps. The OBJ export capabilities of Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.</p>
+<dt><a name="create_object"><i>object</i> = <tt>create_object</tt>(<i>filename</i>)</a><dd><p>Load an OBJ format 3D object and return an Electro object entity. This is the normal means of importing 3D geometry into an Electro application. It supports polygonal geometry in OBJ file format, including material files and texture maps. The OBJ export capabilities of Maya, Lightwave, Wings3D, and Milkshape are known to be compatible.</p>
 
 <p class="note">The Electro OBJ loader lacks support for free-form curve specification. This is actually due to the fact that the Electro renderer lacks the ability to render free-form curves. Any curve specifiers appearing in OBJ files will be silently ignored. If curves are required, tessellate them using your favorite 3D modeler.</p>
 
-<dt><a name="create_sprite"><i>sprite</i> = <tt>create_sprite</tt>(<i>brush</i>)<dd><p>Create a sprite entity using the given <a href="#brushes">brush</a>. A sprite consists of a single quadrilateral. The default size of the sprite object is equal to the size of the brush's image. Commonly, sprite objects are used as <a href="#entity_flag_billboard">billboards</a> in 3D scenes, or are displayed as 2D overlays using an <a href="#camera_type_orthogonal">orthogonal</a> camera.</p>
+<dt><a name="create_sprite"><i>sprite</i> = <tt>create_sprite</tt>(<i>brush</i>)</a><dd><p>Create a sprite entity using the given <a href="#brushes">brush</a>. A sprite consists of a single quadrilateral. The default size of the sprite object is equal to the size of the brush's image. Commonly, sprite objects are used as <a href="#entity_flag_billboard">billboards</a> in 3D scenes, or are displayed as 2D overlays using an <a href="#camera_type_orthogonal">orthogonal</a> camera.</p>
 
-<dt><a name="create_string"><i>string</i> = <tt>create_string</tt>(<i>text</i>)<dd><p>Create a string object using the current <a href="#set_typeface">typeface</a> and the given text. A string object is a polygonal model one unit in height. It sits in the XY-plane, with its lower-left corner at the origin.</p>
+<dt><a name="create_string"><i>string</i> = <tt>create_string</tt>(<i>text</i>)</a><dd><p>Create a string object using the current <a href="#set_typeface">typeface</a> and the given text. A string object is a polygonal model one unit in height. It sits in the XY-plane, with its lower-left corner at the origin.</p>
 
-<dt><a name="create_camera"><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)<dd><p>Create a camera of the given type. To be visible in a scene, all entities must be descendants of a camera entity. Because of this, cameras are commonly left unparented and allowed to remain at the root. Here are the defined camera types:</p>
+<dt><a name="create_camera"><i>camera</i> = <tt>create_camera</tt>(<i>type</i>)</a><dd><p>Create a camera of the given type. To be visible in a scene, all entities must be descendants of a camera entity. Because of this, cameras are commonly left unparented and allowed to remain at the root. Here are the defined camera types:</p>
 
 <ul>
 
-<a name="camera_type_orthogonal"><li><tt>camera_type_orthogonal</tt><p>An orthogonal camera uses an orthogonal projection. By default, the aperture of an orthogonal camera matches the total size of the current display, which is appropriate for pixel-correct 2D overlays.</p>
+<li><a name="camera_type_orthogonal"><tt>camera_type_orthogonal</tt></a><p>An orthogonal camera uses an orthogonal projection. By default, the aperture of an orthogonal camera matches the total size of the current display, which is appropriate for pixel-correct 2D overlays.</p>
 
-<a name="camera_type_perspective"><li><tt>camera_type_perspective</tt><p>A perspective camera uses a perspective projection. By default the aperture of a perspective camera is one unit high, with width determined by the aspect ratio of the total display.</p>
+<li><a name="camera_type_perspective"><tt>camera_type_perspective</tt></a><p>A perspective camera uses a perspective projection. By default the aperture of a perspective camera is one unit high, with width determined by the aspect ratio of the total display.</p>
 
 </ul>
 
 <p>A scene is allowed to include any number of cameras. One reasonable configuration is to include one perspective camera for the display of 3D objects, and one orthogonal camera for the display of 2D overlays.</p>
 
-<dt><a name="create_light"><i>light</i> = <tt>create_light</tt>(<i>type</i>)<dd><p>Create a light source of the given type. To be illuminated, all entities must be descendants of a light entity. Conversely, entities which should appear unshaded and fully-bright should not descend from a light entity. Here are the defined light types:</p>
+<dt><a name="create_light"><i>light</i> = <tt>create_light</tt>(<i>type</i>)</a><dd><p>Create a light source of the given type. To be illuminated, all entities must be descendants of a light entity. Conversely, entities which should appear unshaded and fully-bright should not descend from a light entity. Here are the defined light types:</p>
 
 <ul>
 
-<a name="light_type_positional"><li><tt>light_type_positional</tt><p>A positional light provides a localized light from within the scene.</p>
+<li><a name="light_type_positional"><tt>light_type_positional</tt></a><p>A positional light provides a localized light from within the scene.</p>
 
-<a name="light_type_directional"><li><tt>light_type_directional</tt><p>A directional light source provides a parallel light from infinitely far away. Light is directed along the vector from the position of a directional light source to the origin of the light's coordinate system (determined by any transformations defined by parent entities).</p>
+<li><a name="light_type_directional"><tt>light_type_directional</tt></a><p>A directional light source provides a parallel light from infinitely far away. Light is directed along the vector from the position of a directional light source to the origin of the light's coordinate system (determined by any transformations defined by parent entities).</p>
 
 </ul>
 
 <p class="note">In the implementation, the only difference between positional and directional light sources is the value of the <i>w</i> component of the homogeneous position of the light. A positional light has <i>w=1</i> and a directional light has <i>w=0</i>, thus the homogeneous position vector is finite or infinite in length, respectively.</p>
 
-<dt><a name="create_pivot"><i>pivot</i> = <tt>create_pivot</tt>()<dd><p>Create a pivot entity. A pivot does nothing, but is useful as a grouping entity. As it has all the properties of an entity, including transformation and render flags, It provides a mechanism by which the transform hierarchy may be extended and controlled.</p>
+<dt><a name="create_pivot"><i>pivot</i> = <tt>create_pivot</tt>()</a><dd><p>Create a pivot entity. A pivot does nothing, but is useful as a grouping entity. As it has all the properties of an entity, including transformation and render flags, It provides a mechanism by which the transform hierarchy may be extended and controlled.</p>
 
-<dt><a name="create_galaxy"><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename, brush</i>)<dd><p>Load a galaxy definition from the named file and return a galaxy entity. A galaxy entity is a static 3D collection of particles, organized into a BSP structure for efficient rendering.</p>
+<dt><a name="create_galaxy"><i>galaxy</i> = <tt>create_galaxy</tt>(<i>filename, brush</i>)</a><dd><p>Load a galaxy definition from the named file and return a galaxy entity. A galaxy entity is a static 3D collection of particles, organized into a BSP structure for efficient rendering.</p>
 
 <p>A galaxy object must have a <a href="#brushes">brush</a> with the <tt>examples/data/star.fp</tt> and <tt>examples/data/star.vp</tt> <a href="#set_brush_frag_prog">fragment</a> and <a href="#set_brush_vert_prog">vertex</a> programs applied to it to render correctly.</p>
 
 <p class="note">The galaxy object should be considered a hack. It has only a very specific use. It will probably be removed in a future revision of the Electro API, or possibly abstracted into a general particle system.</p>
 
-<dt><a name="create_clone"><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)<dd><p>Duplicate the given entity. Cloning allows entities to be instanced within a scene graph. Cloning an entity is more efficient than recreating an entity from scratch, so cloning is often useful in circumstances where large numbers of similar entities are frequently created and destroyed.</p>
+<dt><a name="create_clone"><i>entity</i> = <tt>create_clone</tt>(<i>entity</i>)</a><dd><p>Duplicate the given entity. Cloning allows entities to be instanced within a scene graph. Cloning an entity is more efficient than recreating an entity from scratch, so cloning is often useful in circumstances where large numbers of similar entities are frequently created and destroyed.</p>
 
 <p>Note, however, that a clone is a <i>shallow</i> copy of the original. A clone has all of the attributes of a distinct entity, but it shares the attributes specific to its derived type. For example, if a <a href="#set_entity_scale">scaling</a> operation is applied to a cloned entity, only that entity will be scaled. However if the <a href="#set_string_text">text</a> value of a <a href="#string">string</a> entity is changed, all instances of the original string will change.</p>
 
@@ -171,20 +172,20 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <!---------------------------------------------------------------------------->
 
-<a name="entity"><h3> 2.1.0. Entity </h3>
+<h3><a name="entity">2.1.0. Entity</a></h3>
 
 <p>The following functions act on entities. The entity argument of each function may take any entity value, including object, sprite, camera, light, and pivot.</p>
 
-<h4> 2.1.0.1. Hierarchy Management </h4>
+<h4>2.1.0.1. Hierarchy Management</h4>
 <dl>
 
-<dt><a name="parent_entity"><tt>parent_entity</tt>(<i>entity, parent</i>)<dd><p>Include <i>entity</i> as a child of <i>parent</i>. This will cause <i>entity</i> to be drawn in the coordinate system of <i>parent</i>, using its graphics state. If <i>entity</i> is already the child of some parent entity prior to the call, it is cleanly removed from that parent's child list. An entity may be unparented by specifying a <i>parent</i> entity of <tt>nil</tt>.
+<dt><a name="parent_entity"><tt>parent_entity</tt>(<i>entity, parent</i>)</a><dd><p>Include <i>entity</i> as a child of <i>parent</i>. This will cause <i>entity</i> to be drawn in the coordinate system of <i>parent</i>, using its graphics state. If <i>entity</i> is already the child of some parent entity prior to the call, it is cleanly removed from that parent's child list. An entity may be unparented by specifying a <i>parent</i> entity of <tt>nil</tt>.
 
-<dt><a name="delete_entity"><tt>delete_entity</tt>(<i>entity</i>)<dd><p>Remove <i>entity</i> from the scene hierarchy and release all resources associated with it. Any children of <i>entity</i> will be recursively deleted as well. If <i>entity</i> is a <a href="#create_clone">clone</a>, then the entity itself will be removed, but any resources shared by other instances of the same entity will remain.
+<dt><a name="delete_entity"><tt>delete_entity</tt>(<i>entity</i>)</a><dd><p>Remove <i>entity</i> from the scene hierarchy and release all resources associated with it. Any children of <i>entity</i> will be recursively deleted as well. If <i>entity</i> is a <a href="#create_clone">clone</a>, then the entity itself will be removed, but any resources shared by other instances of the same entity will remain.
 
-<dt><a name="get_entity_parent"><i>parent</i> = <tt>get_entity_parent</tt>(<i>entity</i>)<dd><p>Return the parent of <i>entity</i>, or <tt>nil</tt> if it is unparented.</p>
+<dt><a name="get_entity_parent"><i>parent</i> = <tt>get_entity_parent</tt>(<i>entity</i>)</a><dd><p>Return the parent of <i>entity</i>, or <tt>nil</tt> if it is unparented.</p>
 
-<dt><a name="get_entity_child"><i>child</i> = <tt>get_entity_child</tt>(<i>entity</i>, <i>n</i>)<dd><p>Return the <tt>n</tt>th child of <i>entity</i>, or <tt>nil</tt> if it has no such child. Unparented entities may be referenced as children of <tt>nil</tt>. The first child is at index <i>0</i>.</p>
+<dt><a name="get_entity_child"><i>child</i> = <tt>get_entity_child</tt>(<i>entity</i>, <i>n</i>)</a><dd><p>Return the <tt>n</tt>th child of <i>entity</i>, or <tt>nil</tt> if it has no such child. Unparented entities may be referenced as children of <tt>nil</tt>. The first child is at index <i>0</i>.</p>
 
 </dl>
 
@@ -193,22 +194,22 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <h4> 2.1.0.2. Absolute Transformation </h4>
 <dl>
 
-<dt><a name="set_entity_position"><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)<dd><p>Specify the position of the entity. Position is given in the coordinate system of the entity's parent.</p>
+<dt><a name="set_entity_position"><tt>set_entity_position</tt>(<i>entity, x, y, z</i>)</a><dd><p>Specify the position of the entity. Position is given in the coordinate system of the entity's parent.</p>
 
-<dt><a name="set_entity_rotation"><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)<dd><p>Specify the rotation of the entity. The 3 values give the angles of rotation in degrees about the X, Y, and Z axes. Rotation is given in the coordinate system of the entity's parent.</p>
+<dt><a name="set_entity_rotation"><tt>set_entity_rotation</tt>(<i>entity, x, y, z</i>)</a><dd><p>Specify the rotation of the entity. The 3 values give the angles of rotation in degrees about the X, Y, and Z axes. Rotation is given in the coordinate system of the entity's parent.</p>
 
-<dt><a name="set_entity_scale"><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)<dd><p>Specify the scale of the entity. The 3 values give scale multipliers along the X, Y, and Z axes. Scale is given in the coordinate system of the entity's parent.</p>
+<dt><a name="set_entity_scale"><tt>set_entity_scale</tt>(<i>entity, x, y, z</i>)</a><dd><p>Specify the scale of the entity. The 3 values give scale multipliers along the X, Y, and Z axes. Scale is given in the coordinate system of the entity's parent.</p>
 
-<dt><a name="set_entity_bound"><tt>set_entity_bound</tt>(<i>entity, min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i>) <dd><p>Specify the axis-aligned bounding box of the entity. The 6 values give the minimum and maximum X, Y, and Z values in object coordinates.</p>
+<dt><a name="set_entity_bound"><tt>set_entity_bound</tt>(<i>entity, min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i>)</a><dd><p>Specify the axis-aligned bounding box of the entity. The 6 values give the minimum and maximum X, Y, and Z values in object coordinates.</p>
 
 <p>To enable view culling based on the given bound, set <a href="#entity_flag_bounded"><tt>entity_flag_bounded</tt></a>. Keep in mind that object, sprite, and string bounds are computed automatically, and manually-set boundaries are not likely to be used. The intended use of <tt>set_entity_bound</tt> is the specification of <a href="#pivot">pivot</a> bounds for hierarchical view culling.</p>
 
-<dt><a name="set_entity_tracking"><tt>set_entity_tracking</tt>(<i>entity, sensor, mode</i>)<dd><p>Specify the tracking parameters of the entity. If <a href="#entity_flag_track_pos"><tt>entity_flag_track_pos</tt></a> or <a href="#entity_flag_track_rot"><tt>entity_flag_track_rot</tt></a> is set on the entitiy, it will track sensor number <i>sensor</i> using one of the following tracking modes:</p>
+<dt><a name="set_entity_tracking"><tt>set_entity_tracking</tt>(<i>entity, sensor, mode</i>)</a><dd><p>Specify the tracking parameters of the entity. If <a href="#entity_flag_track_pos"><tt>entity_flag_track_pos</tt></a> or <a href="#entity_flag_track_rot"><tt>entity_flag_track_rot</tt></a> is set on the entitiy, it will track sensor number <i>sensor</i> using one of the following tracking modes:</p>
 
 <ul>
-<a name="tracking_mode_local"><li><tt>tracking_mode_local</tt><p>Position and orientation are given in the coordinate system local to the viewer. These are raw tracking values as received from the sensor. These are useful when the sensor transform is applied to camera navigation.</p>
+<li><a name="tracking_mode_local"><tt>tracking_mode_local</tt></a><p>Position and orientation are given in the coordinate system local to the viewer. These are raw tracking values as received from the sensor. These are useful when the sensor transform is applied to camera navigation.</p>
 
-<a name="tracking_mode_world"><li><tt>tracking_mode_world</tt><p>Position and orientation are given in the world coordinate system. These are useful when using tracking to position objects within a scene.</p>
+<li><a name="tracking_mode_world"><tt>tracking_mode_world</tt></a><p>Position and orientation are given in the world coordinate system. These are useful when using tracking to position objects within a scene.</p>
 </ul>
 
 </dl>
@@ -221,11 +222,11 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dl>
 
-<dt><a name="move_entity"><tt>move_entity</tt>(<i>entity, x, y, z</i>)<dd><p>Move the entity relative to its current position. X is to the right, Y is up, and Z is to the rear, as defined by the entity's current orientation.</p>
+<dt><a name="move_entity"><tt>move_entity</tt>(<i>entity, x, y, z</i>)</a><dd><p>Move the entity relative to its current position. X is to the right, Y is up, and Z is to the rear, as defined by the entity's current orientation.</p>
 
 <p class="note">It might be more clear to the beginner if the Z axis to pointed forward rather than back. However, this would be in conflict with the normal right-handed coordinate system, and would only lead to inconsistency and confusion for the experienced 3D user.</p>
 
-<dt><a name="turn_entity"><tt>turn_entity</tt>(<i>entity, x, y, z</i>)<dd><p>Rotate the entity relative to its current orientation. Rotation about the X, Y, and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
+<dt><a name="turn_entity"><tt>turn_entity</tt>(<i>entity, x, y, z</i>)</a><dd><p>Rotate the entity relative to its current orientation. Rotation about the X, Y, and Z axes corresponds to pitch, yaw, and roll, respectively.</p>
 
 </dl>
 
@@ -234,7 +235,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <h4> 2.1.0.4. Rendering properties </h4>
 <dl>
 
-<dt><a name="set_entity_alpha"><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)<dd><p>Specify the transparency of the entity. A value of <i>1.0</i> is fully opaque and <i>0.0</i> is fully invisible. This transparency value propagates down the hierarchy. Transparency values specified by child nodes will accumulate. That is, if a parent and a child both specify <i>alpha=0.5</i> then the child will appear with a transparency of <i>0.25</i>.</p>
+<dt><a name="set_entity_alpha"><tt>set_entity_alpha</tt>(<i>entity, alpha</i>)</a><dd><p>Specify the transparency of the entity. A value of <i>1.0</i> is fully opaque and <i>0.0</i> is fully invisible. This transparency value propagates down the hierarchy. Transparency values specified by child nodes will accumulate. That is, if a parent and a child both specify <i>alpha=0.5</i> then the child will appear with a transparency of <i>0.25</i>.</p>
 
 </dl>
 
@@ -243,19 +244,19 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <h4> 2.1.0.5. Query </h4>
 <dl>
 
-<dt><a name="get_entity_position"><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)<dd><p>Return the position (<i>x, y, z</i>) of the entity in local coordinates.</p>
+<dt><a name="get_entity_position"><i>x, y, z</i> = <tt>get_entity_position</tt>(<i>entity</i>)</a><dd><p>Return the position (<i>x, y, z</i>) of the entity in local coordinates.</p>
 
-<dt><a name="get_entity_x_vector"><i>x, y, z</i> = <tt>get_entity_x_vector</tt>(<i>entity</i>)<dd><p>Return the vector pointing to the right from the entity in local coordinates.</p>
+<dt><a name="get_entity_x_vector"><i>x, y, z</i> = <tt>get_entity_x_vector</tt>(<i>entity</i>)</a><dd><p>Return the vector pointing to the right from the entity in local coordinates.</p>
 
-<dt><a name="get_entity_y_vector"><i>x, y, z</i> = <tt>get_entity_y_vector</tt>(<i>entity</i>)<dd><p>Return the vector pointing up from the entity in local coordinates.</p>
+<dt><a name="get_entity_y_vector"><i>x, y, z</i> = <tt>get_entity_y_vector</tt>(<i>entity</i>)</a><dd><p>Return the vector pointing up from the entity in local coordinates.</p>
 
-<dt><a name="get_entity_z_vector"><i>x, y, z</i> = <tt>get_entity_z_vector</tt>(<i>entity</i>)<dd><p>Return the vector pointing to the rear of entity in local coordinates.</p>
+<dt><a name="get_entity_z_vector"><i>x, y, z</i> = <tt>get_entity_z_vector</tt>(<i>entity</i>)</a><dd><p>Return the vector pointing to the rear of entity in local coordinates.</p>
 
-<dt><a name="get_entity_scale"><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)<dd><p>Return the scaling of the entity along the local X, Y, and Z axes.</p>
+<dt><a name="get_entity_scale"><i>x, y, z</i> = <tt>get_entity_scale</tt>(<i>entity</i>)</a><dd><p>Return the scaling of the entity along the local X, Y, and Z axes.</p>
 
-<dt><a name="get_entity_bound"><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_entity_bound</tt>(<i>entity</i>) <dd><p>Return the minimum and maximum X, Y, and Z values of the entity. This may be used to determine the extent of an object or sprite. This is useful when computing pivot bounds for hierarchical view culling, or when positioning entities on-screen.</p>
+<dt><a name="get_entity_bound"><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_entity_bound</tt>(<i>entity</i>)</a><dd><p>Return the minimum and maximum X, Y, and Z values of the entity. This may be used to determine the extent of an object or sprite. This is useful when computing pivot bounds for hierarchical view culling, or when positioning entities on-screen.</p>
 
-<dt><a name="get_entity_alpha"><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)<dd><p>Return the transparency value of the entity.</p>
+<dt><a name="get_entity_alpha"><i>a</i> = <tt>get_entity_alpha</tt>(<i>entity</i>)</a><dd><p>Return the transparency value of the entity.</p>
 
 </dl>
 
@@ -264,33 +265,33 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <h4> 2.1.0.6. Flags </h4>
 <dl>
 
-<dt><a name="set_entity_flags"><tt>set_entity_flags</tt>(<i>entity, flags, value</i>) <dd><p>Set or clear flags on the given entity. Entity flags enable and disable extra features in the entity hierarchy. These flags act not only on the entity that carries them, but also on the children of that entity. The <i>flag</i> parameter gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> parameter is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
+<dt><a name="set_entity_flags"><tt>set_entity_flags</tt>(<i>entity, flags, value</i>)</a><dd><p>Set or clear flags on the given entity. Entity flags enable and disable extra features in the entity hierarchy. These flags act not only on the entity that carries them, but also on the children of that entity. The <i>flag</i> parameter gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> parameter is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
 
 <ul>
 
-<a name="entity_flag_wireframe"><li><tt>entity_flag_wireframe</tt><p>The wire-frame flag causes an entity and its descendants to be rendered in wire-frame. An entire scene may be rendered in wire-frame by setting the wire-frame flag on a camera or light. The application is free to set or clear a wire-frame flag value at one point in the hierarchy and set an opposite value at a lower point. Entities will appear as expected.</p>
+<li><a name="entity_flag_wireframe"><tt>entity_flag_wireframe</tt></a><p>The wire-frame flag causes an entity and its descendants to be rendered in wire-frame. An entire scene may be rendered in wire-frame by setting the wire-frame flag on a camera or light. The application is free to set or clear a wire-frame flag value at one point in the hierarchy and set an opposite value at a lower point. Entities will appear as expected.</p>
 
-<a name="entity_flag_hidden"><li><tt>entity_flag_hidden</tt><p>The hidden flag causes an entity and its descendants to be omitted from rendering. Unlike the wire-frame flag, the hidden state <i>cannot</i> be reversed lower in the hierarchy, as it actually causes traversal of the hierarchy to be pruned.</p>
+<li><a name="entity_flag_hidden"><tt>entity_flag_hidden</tt></a><p>The hidden flag causes an entity and its descendants to be omitted from rendering. Unlike the wire-frame flag, the hidden state <i>cannot</i> be reversed lower in the hierarchy, as it actually causes traversal of the hierarchy to be pruned.</p>
 
-<a name="entity_flag_billboard"><li><tt>entity_flag_billboard</tt><p>Entities with the billboard flag are drawn facing the camera, regardless of their actual orientation. In effect, all rotations and translations are applied as usual, so the entity will be positioned in space as expected, but an extra rotation is applied in order to re-aim the entity's Z axis toward the camera.</p>
+<li><a name="entity_flag_billboard"><tt>entity_flag_billboard</tt></a><p>Entities with the billboard flag are drawn facing the camera, regardless of their actual orientation. In effect, all rotations and translations are applied as usual, so the entity will be positioned in space as expected, but an extra rotation is applied in order to re-aim the entity's Z axis toward the camera.</p>
 
 <p class="note">Due to the manner in which the billboard transformation is implemented, scaling operations will <i>not</i> transform billboard entities below them in the hierarchy. This is a minor limitation in practice, as scaling is normally applied near the leaves of the scene hierarchy anyway. The common case of an entity with local scaling <i>and</i> a local billboard flag will work properly, but when in doubt, scale below bill-boarding.</p>
 
-<a name="entity_flag_bounded"><li><tt>entity_flag_bounded</tt><p>Entities with the bounded flag are rendered only when their bounding box falls within the view frustum of the current camera. Objects, sprites, and strings have automatically computed bounding boxes, so they are automatically given the bounded flag. Other entities may be assigned a bounding box using <a href="#set_entity_bound"><tt>set_entity_bound</tt></a>. When an entity is culled it behaves is though it is hidden and traversal of the hierarchy is pruned.</p>
+<li><a name="entity_flag_bounded"><tt>entity_flag_bounded</tt></a><p>Entities with the bounded flag are rendered only when their bounding box falls within the view frustum of the current camera. Objects, sprites, and strings have automatically computed bounding boxes, so they are automatically given the bounded flag. Other entities may be assigned a bounding box using <a href="#set_entity_bound"><tt>set_entity_bound</tt></a>. When an entity is culled it behaves is though it is hidden and traversal of the hierarchy is pruned.</p>
 
-<a name="entity_flag_track_pos"><li><tt>entity_flag_track_pos</tt><p>Entities with the position-tracked flag have their positions updated each frame to match a sensor position, if available. This is useful for implementing head or wand tracking in an immersive VR environment. Tracking parameters may be configured using <a href="#set_entity_tracking"><tt>set_entity_tracking</tt></a>. If an application requires the position of the tracker without reference to any visible entity, the position-tracked flag should be set on a <a href="#create_pivot">pivot</a> entity and the pivot's position queried with <a href="#get_entity_position"><tt>get_entity_position</tt></a>.</p>
+<li><a name="entity_flag_track_pos"><tt>entity_flag_track_pos</tt></a><p>Entities with the position-tracked flag have their positions updated each frame to match a sensor position, if available. This is useful for implementing head or wand tracking in an immersive VR environment. Tracking parameters may be configured using <a href="#set_entity_tracking"><tt>set_entity_tracking</tt></a>. If an application requires the position of the tracker without reference to any visible entity, the position-tracked flag should be set on a <a href="#create_pivot">pivot</a> entity and the pivot's position queried with <a href="#get_entity_position"><tt>get_entity_position</tt></a>.</p>
 
-<a name="entity_flag_track_rot"><li><tt>entity_flag_track_rot</tt><p>Entities with the rotation-tracked flag have their orientations updated to match a sensor rotation, if available. Again, this is useful in immersive VR applications. Tracking parameters may be specified using <a href="#set_entity_tracking"><tt>set_entity_tracking</tt></a>. The orientation of a tracker may be queried by setting the rotation-tracked flag on a <a href="#create_pivot">pivot</a> and calling <a href="#get_entity_x_vector"><tt>get_entity_x_vector</tt></a>, etc.</p>
+<li><a name="entity_flag_track_rot"><tt>entity_flag_track_rot</tt></a><p>Entities with the rotation-tracked flag have their orientations updated to match a sensor rotation, if available. Again, this is useful in immersive VR applications. Tracking parameters may be specified using <a href="#set_entity_tracking"><tt>set_entity_tracking</tt></a>. The orientation of a tracker may be queried by setting the rotation-tracked flag on a <a href="#create_pivot">pivot</a> and calling <a href="#get_entity_x_vector"><tt>get_entity_x_vector</tt></a>, etc.</p>
 
-<a name="entity_flag_left_eye"><li><tt>entity_flag_left_eye</tt>
-<a name="entity_flag_right_eye"><li><tt>entity_flag_right_eye</tt><p>These flags behave similarly to <a href="#entity_flag_hidden"><tt>entity_flag_hidden</tt></a>. They allow the entity hierarchy to be pruned selectively during stereo rendering. Entities with <tt>entity_flag_left_eye</tt> are hidden while the right eye view is rendered, and vice-versa.</p>
+<li><a name="entity_flag_left_eye"><tt>entity_flag_left_eye</tt></a>
+<li><a name="entity_flag_right_eye"><tt>entity_flag_right_eye</tt></a><p>These flags behave similarly to <a href="#entity_flag_hidden"><tt>entity_flag_hidden</tt></a>. They allow the entity hierarchy to be pruned selectively during stereo rendering. Entities with <tt>entity_flag_left_eye</tt> are hidden while the right eye view is rendered, and vice-versa.</p>
 
-<a name="entity_flag_visible_body"><li><tt>entity_flag_visible_body</tt>
-<a name="entity_flag_visible_geom"><li><tt>entity_flag_visible_geom</tt><p>These flags enable a form of visual debugging for physical entities.  Body-entities designated using <a href="#set_entity_body_type"><tt>set_entity_body_type</tt></a> are displayed with a coordinate axis indicating center of mass and orientation.  Geom-entities designated using <a href="#set_entity_geom_type"><tt>set_entity_geom_type</tt></a> are displayed with a wireframe outline indicating their exact collidable shape.</p>
+<li><a name="entity_flag_visible_body"><tt>entity_flag_visible_body</tt></a>
+<li><a name="entity_flag_visible_geom"><tt>entity_flag_visible_geom</tt></a><p>These flags enable a form of visual debugging for physical entities.  Body-entities designated using <a href="#set_entity_body_type"><tt>set_entity_body_type</tt></a> are displayed with a coordinate axis indicating center of mass and orientation.  Geom-entities designated using <a href="#set_entity_geom_type"><tt>set_entity_geom_type</tt></a> are displayed with a wireframe outline indicating their exact collidable shape.</p>
 
 </ul>
 
-<dt><a name="get_entity_flags"><i>value</i> = <tt>get_entity_flags</tt>(<i>entity, flags</i>)<dd><p>Return <tt>true</tt> if <i>flags</i> are set on the entity.</p>
+<dt><a name="get_entity_flags"><i>value</i> = <tt>get_entity_flags</tt>(<i>entity, flags</i>)</a><dd><p>Return <tt>true</tt> if <i>flags</i> are set on the entity.</p>
 
 </dl>
 
@@ -304,164 +305,164 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>Bodies and geoms are defined using the normal Electro hierarchy. An entity may be marked as a body, as a geom, or as both. All geom-entities within the hierarchy of a body-entity are geoms of that body. Child entity positions and rotations define the arrangements of geoms within bodies.</p>
 
-<b>Types</b>
+<p><b>Types</b></p>
 
 <dl>
 
-<dt><a name="set_entity_body_type"><tt>set_entity_body_type</tt>(<i>entity, type</i>)<dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the position and rotation will be updated each frame according to the parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
+<dt><a name="set_entity_body_type"><tt>set_entity_body_type</tt>(<i>entity, type</i>)</a><dd><p>Mark an entity as body. If <i>type</i> is <tt>true</tt> then the position and rotation will be updated each frame according to the parameters of the physical system. If <tt>false</tt>, the entity will remain exclusively user-controlled. The default is <tt>false</tt>.</p>
 
-<dt><a name="set_entity_geom_type"><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)<dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of inertia of the body.</p>
+<dt><a name="set_entity_geom_type"><tt>set_entity_geom_type</tt>(<i>entity, type, ...</i>)</a><dd><p>Mark an entity as a geom and define its shape. This geom will become a part of the nearest body defined above it in the entity hierarchy. The child entity's transformation defines the geom's position within the body, and so affects the collision characteristics, mass, and moment of inertia of the body.</p>
 
 <p>If no enclosing body exists, then the geom is rigidly attached to the environment. It will act in collision, but will not respond physically. This is the normal mechanism for creating solid scene geometry.</p>
 
 <p>The following geom types and shape parameters are allowed:</p>
 <ul>
 
-<a name="geom_type_none"><li><tt>geom_type_none</tt><p>No physical representation. This is the default.</p>
+<li><a name="geom_type_none"><tt>geom_type_none</tt></a><p>No physical representation. This is the default.</p>
 
-<a name="geom_type_box"><li><tt>geom_type_box</tt><i>, x, y, z</i><p>A box with lengths <i>x, y, z</i> centered at the origin.</p>
+<li><a name="geom_type_box"><tt>geom_type_box</tt><i>, x, y, z</i></a><p>A box with lengths <i>x, y, z</i> centered at the origin.</p>
 
-<a name="geom_type_sphere"><li><tt>geom_type_sphere</tt><i>, r</i><p>A sphere of radius <i>r</i>.</p>
+<li><a name="geom_type_sphere"><tt>geom_type_sphere</tt><i>, r</i></a><p>A sphere of radius <i>r</i>.</p>
 
-<a name="geom_type_capsule"><li><tt>geom_type_capsule</tt><i>, r, l</i><p>A cylinder with spherical end caps, oriented along the Z axis. The radius of the cylinder is <i>r</i> and its length is <i>l</i>.</p>
+<li><a name="geom_type_capsule"><tt>geom_type_capsule</tt><i>, r, l</i></a><p>A cylinder with spherical end caps, oriented along the Z axis. The radius of the cylinder is <i>r</i> and its length is <i>l</i>.</p>
 
-<a name="geom_type_plane"><li><tt>geom_type_plane</tt><i>, a, b, c, d</i></p>A plane satisfying the equation <i>ax + by + cz = d</i>.</p>
+<li><a name="geom_type_plane"><tt>geom_type_plane</tt><i>, a, b, c, d</i></a><p>A plane satisfying the equation <i>ax + by + cz = d</i>.</p>
 
 <p><b>Note</b>: the plane is a degenerate geom type. It cannot act as part of a body and <i>must</i> be attached to the environment. It is defined only by the parameters given at creation time and does not respond to entity transformation. Planes are commonly used to define floors or walls to contain the physical system.</p>
 
 </ul>
 
-<dt><a name="set_entity_joint_type"><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)<dd><p>Define a joint between the two given body-entities. If a given entity is not a body-entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of these joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0">the ODE documentation</a>.</p>
+<dt><a name="set_entity_joint_type"><tt>set_entity_joint_type</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, type</i>)</a><dd><p>Define a joint between the two given body-entities. If a given entity is not a body-entity or is <tt>nil</tt> then the joint will be rigidly attached to the environment. The following joint types are defined. For detailed descriptions and images of these joints, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_7_3_0">the ODE documentation</a>.</p>
 
 <ul>
-<a name="joint_type_ball"><li><tt>joint_type_ball</tt>
-<a name="joint_type_hinge"><li><tt>joint_type_hinge</tt>
-<a name="joint_type_slider"><li><tt>joint_type_slider</tt>
-<a name="joint_type_universal"><li><tt>joint_type_universal</tt>
-<a name="joint_type_hinge_2"><li><tt>joint_type_hinge_2</tt>
+<li><a name="joint_type_ball"><tt>joint_type_ball</tt></a>
+<li><a name="joint_type_hinge"><tt>joint_type_hinge</tt></a>
+<li><a name="joint_type_slider"><tt>joint_type_slider</tt></a>
+<li><a name="joint_type_universal"><tt>joint_type_universal</tt></a>
+<li><a name="joint_type_hinge_2"><tt>joint_type_hinge_2</tt></a>
 </ul>
 </dl>
 
-<b>Attributes</b>
+<p><b>Attributes</b></p>
 
 <p>Bodies, geoms, and joints have a variety of attributes defining their behavior. The following enumerations define these attributes and the functions provided to manipulate them. The functions take arguments of varying number and type, and all numbers and types are checked for correctness against the named attribute.</p>
 
 <dl>
 
-<dt><a name="set_entity_body_attr"><tt>set_entity_body_attr</tt>(<i>entity, attr, value</i>)<dd><p>Set one of the following attributes on the given body-entity.</p>
+<dt><a name="set_entity_body_attr"><tt>set_entity_body_attr</tt>(<i>entity, attr, value</i>)</a><dd><p>Set one of the following attributes on the given body-entity.</p>
 <ul>
 
-<a name="body_attr_gravity"><li><tt>body_attr_gravity</tt><p>If <tt>true</tt>, the force of gravity will act on this body. If <tt>false</tt>, this body will behave weightlessly. The default is <tt>true</tt>.
+<li><a name="body_attr_gravity"><tt>body_attr_gravity</tt></a><p>If <tt>true</tt>, the force of gravity will act on this body. If <tt>false</tt>, this body will behave weightlessly. The default is <tt>true</tt>.
 
 </ul>
 
-<dt><a name="set_entity_geom_attr"><tt>set_entity_geom_attr</tt>(<i>entity, attr, value</i>)<dd><p>Set one of the following attributes on the given geom-entity.</p>
+<dt><a name="set_entity_geom_attr"><tt>set_entity_geom_attr</tt>(<i>entity, attr, value</i>)</a><dd><p>Set one of the following attributes on the given geom-entity.</p>
 <ul>
 
-<a name="geom_attr_category"><li><tt>geom_attr_category</tt><p>The category value is a 32-bit field allowing geoms to be classified. 32 categories are defined and geoms may be assigned to these categories as the application demands. If a bit in the category bit field is set then the geom belongs to that category. The default is <tt>0xFFFFFFFF</tt> and all geoms belong to all categories.</p>
+<li><a name="geom_attr_category"><tt>geom_attr_category</tt></a><p>The category value is a 32-bit field allowing geoms to be classified. 32 categories are defined and geoms may be assigned to these categories as the application demands. If a bit in the category bit field is set then the geom belongs to that category. The default is <tt>0xFFFFFFFF</tt> and all geoms belong to all categories.</p>
 
-<a name="geom_attr_collider"><li><tt>geom_attr_collider</tt><p>The collider bit field uses the category bit field to determine if two geoms should be tested for collision. Given geoms A and B, if (<i>category<sub>A</sub></i> &and; <i>collider<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>collider<sub>A</sub></i>) then collision will be tested. The default is <tt>0xFFFFFFFF</tt> and all geoms are tested against all others.</p>
+<li><a name="geom_attr_collider"><tt>geom_attr_collider</tt></a><p>The collider bit field uses the category bit field to determine if two geoms should be tested for collision. Given geoms A and B, if (<i>category<sub>A</sub></i> &and; <i>collider<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>collider<sub>A</sub></i>) then collision will be tested. The default is <tt>0xFFFFFFFF</tt> and all geoms are tested against all others.</p>
 
-<a name="geom_attr_response"><li><tt>geom_attr_response</tt><p>The response bit field uses the category bit field to determine if two colliding geoms should respond physically in any way. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the geoms will impact or bounce as their attributes define. The default is <tt>0xFFFFFFFF</tt> and all collisions respond physically.</p>
+<li><a name="geom_attr_response"><tt>geom_attr_response</tt></a><p>The response bit field uses the category bit field to determine if two colliding geoms should respond physically in any way. If (<i>category<sub>A</sub></i> &and; <i>response<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>response<sub>A</sub></i>) then the geoms will impact or bounce as their attributes define. The default is <tt>0xFFFFFFFF</tt> and all collisions respond physically.</p>
 
-<a name="geom_attr_callback"><li><tt>geom_attr_callback</tt><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>callback<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>callback<sub>A</sub></i>) then the <a href="#do_contact"><tt>do_contact</tt></a> callback will be invoked with arguments describing the collision. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
+<li><a name="geom_attr_callback"><tt>geom_attr_callback</tt></a><p>The callback bit field uses the category bit field to determine if two colliding geoms should be reported to the application. If (<i>category<sub>A</sub></i> &and; <i>callback<sub>B</sub></i>) &or; (<i>category<sub>B</sub></i> &and; <i>callback<sub>A</sub></i>) then the <a href="#do_contact"><tt>do_contact</tt></a> callback will be invoked with arguments describing the collision. The default is <tt>0x00000000</tt> and no collisions are reported.</p>
 
 <p class="note">These bit fields define 4 useful combinations:  1) Non-interacting objects might include the particles of an explosion or cloud effect. 2) Unreported colliding objects might include a car's tires rolling on a road. 3) Reported colliding objects might include a bullet hitting a target. 4) Reported non-colliding objects might include a car crossing a finish line. The bit field defaults produce combination 2 for all geoms.</p>
 
-<a name="geom_attr_mass"><li><tt>geom_attr_mass</tt><p>The mass of the entity.</p>
+<li><a name="geom_attr_mass"><tt>geom_attr_mass</tt></a><p>The mass of the entity.</p>
 
-<a name="geom_attr_bounce"><li><tt>geom_attr_bounce</tt><p>The coefficient of restitution, or bounciness of an entity. This determines the fraction of the energy entering a collision that remains in the system leaving it. When two geoms of differing bounce collide, the maximum of the two values is used. This value should be between <i>0</i> and <i>1</i>. The default is <i>0.5</i></p>
+<li><a name="geom_attr_bounce"><tt>geom_attr_bounce</tt></a><p>The coefficient of restitution, or bounciness of an entity. This determines the fraction of the energy entering a collision that remains in the system leaving it. When two geoms of differing bounce collide, the maximum of the two values is used. This value should be between <i>0</i> and <i>1</i>. The default is <i>0.5</i></p>
 
-<a name="geom_attr_friction"><li><tt>geom_attr_friction</tt><p>The coefficient of friction of an entity. This determines the ease of sliding along the surface of an entity. When two geoms of differing friction collide, the minimum of the two values is used. This value should be between <i>0</i> and infinity. The default is infinity.</p>
+<li><a name="geom_attr_friction"><tt>geom_attr_friction</tt></a><p>The coefficient of friction of an entity. This determines the ease of sliding along the surface of an entity. When two geoms of differing friction collide, the minimum of the two values is used. This value should be between <i>0</i> and infinity. The default is infinity.</p>
 
-<a name="geom_attr_soft_erp"><li><tt>geom_attr_soft_erp</tt>
-<a name="geom_attr_soft_cfm"><li><tt>geom_attr_soft_cfm</tt><p>The Error Reduction Parameter and Constraint Force Mixing value determine the sponginess and springiness of a surface, respectively. For details, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_3_7_0">the ODE documentation's discussion</a>. When two geoms of differing values collide, the minimum ERP and maximum CFM are used. ERP should be between <i>0</i> and <i>1</i>. The default is <i>0.2</i>. CFM should be positive but small. The default is <i>0.01</i>.</p>
+<li><a name="geom_attr_soft_erp"><tt>geom_attr_soft_erp</tt></a>
+<li><a name="geom_attr_soft_cfm"><tt>geom_attr_soft_cfm</tt></a><p>The Error Reduction Parameter and Constraint Force Mixing value determine the sponginess and springiness of a surface, respectively. For details, see <a href="http://www.ode.org/ode-latest-userguide.html#sec_3_7_0">the ODE documentation's discussion</a>. When two geoms of differing values collide, the minimum ERP and maximum CFM are used. ERP should be between <i>0</i> and <i>1</i>. The default is <i>0.2</i>. CFM should be positive but small. The default is <i>0.01</i>.</p>
 
 </ul>
 
-<dt><a name="set_entity_joint_attr"><tt>set_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr, value</i>)<dd><p></p>
+<dt><a name="set_entity_joint_attr"><tt>set_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr, value</i>)</a><dd><p></p>
 
 <p>Set one of the following attributes on the joint between the given bodies. Most of these attributes are scalar values, but a few are vectors.</p>
 
 <ul>
-<a name="joint_attr_anchor"><li><tt>joint_attr_anchor</tt><p>The point (<i>x, y, z</i>) of a ball, hinge, hinge2, or universal joint.</p>
+<li><a name="joint_attr_anchor"><tt>joint_attr_anchor</tt></a><p>The point (<i>x, y, z</i>) of a ball, hinge, hinge2, or universal joint.</p>
 
-<a name="joint_attr_axis_1"><li><tt>joint_attr_axis_1</tt><p>The primary axis vector (<i>x, y, z</i>) of a hinge, slider, hinge2, or universal joint.</p>
+<li><a name="joint_attr_axis_1"><tt>joint_attr_axis_1</tt></a><p>The primary axis vector (<i>x, y, z</i>) of a hinge, slider, hinge2, or universal joint.</p>
 
-<a name="joint_attr_axis_2"><li><tt>joint_attr_axis_2</tt><p>The secondary axis vector (<i>x, y, z</i>) of a hinge2 or universal joint.</p>
+<li><a name="joint_attr_axis_2"><tt>joint_attr_axis_2</tt></a><p>The secondary axis vector (<i>x, y, z</i>) of a hinge2 or universal joint.</p>
 
-<a name="joint_attr_lo_stop"><li><tt>joint_attr_lo_stop</tt>
-<a name="joint_attr_hi_stop"><li><tt>joint_attr_hi_stop</tt>
-<a name="joint_attr_lo_stop_2"><li><tt>joint_attr_lo_stop_2</tt>
-<a name="joint_attr_hi_stop_2"><li><tt>joint_attr_hi_stop_2</tt><p>The minimum and maximum values of the primary and secondary joint attributes. For a rotating joint such as a hinge, these values define the minimum and maximum angles, in degrees. For a moving joint such as a slider, these define the minimum and maximum linear extensions.</p>
+<li><a name="joint_attr_lo_stop"><tt>joint_attr_lo_stop</tt></a>
+<li><a name="joint_attr_hi_stop"><tt>joint_attr_hi_stop</tt></a>
+<li><a name="joint_attr_lo_stop_2"><tt>joint_attr_lo_stop_2</tt></a>
+<li><a name="joint_attr_hi_stop_2"><tt>joint_attr_hi_stop_2</tt></a><p>The minimum and maximum values of the primary and secondary joint attributes. For a rotating joint such as a hinge, these values define the minimum and maximum angles, in degrees. For a moving joint such as a slider, these define the minimum and maximum linear extensions.</p>
 
 <p class="note">Note, ODE requires that these angles be specified in radians, but Electro generally requires that angles be specified in degrees. Degrees are converted to radians here in order to ensure consistency across the Electro API.</p>
 
-<a name="joint_attr_velocity"><li><tt>joint_attr_velocity</tt>
-<a name="joint_attr_force_max"><li><tt>joint_attr_force_max</tt>
-<a name="joint_attr_velocity_2"><li><tt>joint_attr_velocity_2</tt>
-<a name="joint_attr_force_max_2"><li><tt>joint_attr_force_max_2</tt><p>The velocity and force applied by a joint motor. These enable the animation of bodies through the application of articulating forces at joints. The <tt>velocity</tt> attribute gives the desired linear or angular rate of change for the joint and the <tt>force</tt> attribute gives the maximum force or torque to applied attempting to meet this goal. These attributes can also simulate joint friction when given a zero desired velocity and a non-zero maximum force.</p>
+<li><a name="joint_attr_velocity"><tt>joint_attr_velocity</tt></a>
+<li><a name="joint_attr_force_max"><tt>joint_attr_force_max</tt></a>
+<li><a name="joint_attr_velocity_2"><tt>joint_attr_velocity_2</tt></a>
+<li><a name="joint_attr_force_max_2"><tt>joint_attr_force_max_2</tt></a><p>The velocity and force applied by a joint motor. These enable the animation of bodies through the application of articulating forces at joints. The <tt>velocity</tt> attribute gives the desired linear or angular rate of change for the joint and the <tt>force</tt> attribute gives the maximum force or torque to applied attempting to meet this goal. These attributes can also simulate joint friction when given a zero desired velocity and a non-zero maximum force.</p>
 
-<a name="joint_attr_bounce"><li><tt>joint_attr_bounce</tt>
-<a name="joint_attr_cfm"><li><tt>joint_attr_cfm</tt>
-<a name="joint_attr_bounce_2"><li><tt>joint_attr_bounce_2</tt>
-<a name="joint_attr_cfm_2"><li><tt>joint_attr_cfm_2</tt><p>The bounciness and CFM of the joint between stops.</p>
+<li><a name="joint_attr_bounce"><tt>joint_attr_bounce</tt></a>
+<li><a name="joint_attr_cfm"><tt>joint_attr_cfm</tt></a>
+<li><a name="joint_attr_bounce_2"><tt>joint_attr_bounce_2</tt></a>
+<li><a name="joint_attr_cfm_2"><tt>joint_attr_cfm_2</tt></a><p>The bounciness and CFM of the joint between stops.</p>
 
-<a name="joint_attr_stop_erp"><li><tt>joint_attr_stop_erp</tt>
-<a name="joint_attr_stop_erp_2"><li><tt>joint_attr_stop_erp_2</tt>
-<a name="joint_attr_stop_cfm"><li><tt>joint_attr_stop_cfm</tt>
-<a name="joint_attr_stop_cfm_2"><li><tt>joint_attr_stop_cfm_2</tt><p>The ERP and CFM of a joint's <tt>lo_stop</tt> and <tt>hi_stop</tt>. These define the sponginess and springiness of the limits of the joint.</p>
+<li><a name="joint_attr_stop_erp"><tt>joint_attr_stop_erp</tt></a>
+<li><a name="joint_attr_stop_erp_2"><tt>joint_attr_stop_erp_2</tt></a>
+<li><a name="joint_attr_stop_cfm"><tt>joint_attr_stop_cfm</tt></a>
+<li><a name="joint_attr_stop_cfm_2"><tt>joint_attr_stop_cfm_2</tt></a><p>The ERP and CFM of a joint's <tt>lo_stop</tt> and <tt>hi_stop</tt>. These define the sponginess and springiness of the limits of the joint.</p>
 
-<a name="joint_attr_susp_erp"><li><tt>joint_attr_susp_erp</tt>
-<a name="joint_attr_susp_cfm"><li><tt>joint_attr_susp_cfm</tt></p>The ERP and CFM of a suspension joint. Currently, only the hinge2 joint defines suspension along its axis.</p>
+<li><a name="joint_attr_susp_erp"><tt>joint_attr_susp_erp</tt></a>
+<li><a name="joint_attr_susp_cfm"><tt>joint_attr_susp_cfm</tt></a><p>The ERP and CFM of a suspension joint. Currently, only the hinge2 joint defines suspension along its axis.</p>
 
 </ul>
 </dl>
 
-<b>Query</b>
+<p><b>Query</b></p>
 
 <p>The following functions allow the attributes of the physical system to be queried. Most queried attributes are scalars, but a few are vectors. These query functions will return 1 or 3 values depending on the attribute.</p>
 
 <dl>
 
-<dt><a name="get_entity_body_attr"><i>value</i> = <tt>get_entity_body_attr</tt>(<i>entity, attr</i>)<dd><p>Return the value of the corresponding body attribute. All of the settable body attributes defined <a href="#set_entity_body_attr">above</a> may be queried. In addition, the following attribute may be queried but not directly set:</p>
+<dt><a name="get_entity_body_attr"><i>value</i> = <tt>get_entity_body_attr</tt>(<i>entity, attr</i>)</a><dd><p>Return the value of the corresponding body attribute. All of the settable body attributes defined <a href="#set_entity_body_attr">above</a> may be queried. In addition, the following attribute may be queried but not directly set:</p>
 
 <ul>
-<a name="body_attr_center"><li><tt>body_attr_center</tt><p>The offset (<i>x, y, z</i>) of the center of mass of a body.</p>
+<li><a name="body_attr_center"><tt>body_attr_center</tt></a><p>The offset (<i>x, y, z</i>) of the center of mass of a body.</p>
 
 <p class="note">The center of mass of a body is a slightly sticky issue. ODE requires that the center of mass be at the origin of a body's local coordinate system. However, applications are free to distribute collision geoms and visible geometry arbitrarily in this coordinate system. To compensate, Electro translates a body, its geoms, and all local visible entities to center the body's mass. This means that an asymmetric rigid body might not appear where the application places it, and it therefore might not rotate about its intended center. Applications can query this center of mass offset in order to work around this limitation.</p>
 
 </ul>
 
-<dt><a name="get_entity_geom_attr"><i>value</i> = <tt>get_entity_geom_attr</tt>(<i>entity, attr</i>)<dd><p>Return the value of the corresponding geom attribute. All of the geom attributes defined <a href="#set_entity_geom_attr">above</a> may be queried.</p>
+<dt><a name="get_entity_geom_attr"><i>value</i> = <tt>get_entity_geom_attr</tt>(<i>entity, attr</i>)</a><dd><p>Return the value of the corresponding geom attribute. All of the geom attributes defined <a href="#set_entity_geom_attr">above</a> may be queried.</p>
 
-<dt><a name="get_entity_joint_attr"><i>value</i> = <tt>get_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr</i>)<dd><p>Return the value of the corresponding joint attribute. All of the joint attributes defined <a href="#set_entity_joint_attr">above</a> may be queried. In addition, the following attributes may be queried but not directly set:</p>
+<dt><a name="get_entity_joint_attr"><i>value</i> = <tt>get_entity_joint_attr</tt>(<i>entity<sub>1</sub>, entity<sub>2</sub>, attr</i>)</a><dd><p>Return the value of the corresponding joint attribute. All of the joint attributes defined <a href="#set_entity_joint_attr">above</a> may be queried. In addition, the following attributes may be queried but not directly set:</p>
 
 <ul>
-<a name="joint_attr_value"><li><tt>joint_attr_value</tt><p>The angle of rotation (in degrees) or distance of extension of a joint. </p>
+<li><a name="joint_attr_value"><tt>joint_attr_value</tt></a><p>The angle of rotation (in degrees) or distance of extension of a joint. </p>
 
 <p class="note">It is not possible to query all of the axes of rotation of multi-axis joints. This is an unexplained limitation in ODE.</p>
 
-<a name="joint_attr_rate_1"><li><tt>joint_attr_rate_1</tt>
-<a name="joint_attr_rate_2"><li><tt>joint_attr_rate_2</tt><p>The angular velocity of a rotating joint, or the linear velocity of an extension joint.</p>
+<li><a name="joint_attr_rate_1"><tt>joint_attr_rate_1</tt></a>
+<li><a name="joint_attr_rate_2"><tt>joint_attr_rate_2</tt></a><p>The angular velocity of a rotating joint, or the linear velocity of an extension joint.</p>
 
 </ul>
 </dl>
 
-<b>Direct Force Application</b>
+<p><b>Direct Force Application</b></p>
 
 <p>Joint motors are an incredibly powerful and flexible means of initiating action in a physical system. However, they do not always suffice. The following functions may be used to apply external forces on arbitrary body-entities. These forces accumulate, but are reset each frame. So, if a persistent force is to be applied to a body then it must be reapplied during each update.</p>
 
 <dl>
-<dt><a name="add_entity_force"><tt>add_entity_force</tt>(<i>entity, x, y, z</i>)<dd><p>Apply force to <i>entity</i> with the magnitude and direction of vector (<i>x, y, z</i>).
+<dt><a name="add_entity_force"><tt>add_entity_force</tt>(<i>entity, x, y, z</i>)</a><dd><p>Apply force to <i>entity</i> with the magnitude and direction of vector (<i>x, y, z</i>).
 
-<dt><a name="add_entity_torque"><tt>add_entity_torque</tt>(<i>entity, x, y, z</i>)<dd><p>Apply torque to <i>entity</i> with the magnitude and axis of vector (<i>x, y, z</i>).
+<dt><a name="add_entity_torque"><tt>add_entity_torque</tt>(<i>entity, x, y, z</i>)</a><dd><p>Apply torque to <i>entity</i> with the magnitude and axis of vector (<i>x, y, z</i>).
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="object"><h3> 2.1.1. Object </h3>
+<h3><a name="object">2.1.1. Object</a></h3>
 
 <p>An object is a collection of vertices and meshes. A mesh is a collection of faces and edges. Faces and edges are defined by sets of indices into the object's vertex list. Brushes are applied per-mesh.</p>
 
@@ -469,16 +470,16 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>The following functions allow objects to be created, destroyed, modified, and queried through the manipulation of object element indices.</p>
 
-<h4> 2.1.1.1. Constructors </h4>
+<h4>2.1.1.1. Constructors</h4>
 <dl>
 
-<dt><a name="create_mesh"><i>i<sub>M</sub></i> = <tt>create_mesh</tt>(<i>object,</i> [<i>brush</i>])<dd><p>Add a new mesh to <i>object</i> and return its index. A <a href="#brushes">brush</a> may be applied to the new mesh at creation time, but if none is provided then the default brush will be used.</p>
+<dt><a name="create_mesh"><i>i<sub>M</sub></i> = <tt>create_mesh</tt>(<i>object,</i> [<i>brush</i>])</a><dd><p>Add a new mesh to <i>object</i> and return its index. A <a href="#brushes">brush</a> may be applied to the new mesh at creation time, but if none is provided then the default brush will be used.</p>
 
-<dt><a name="create_vert"><i>i<sub>V</sub></i> = <tt>create_vert</tt>(<i>object,</i> [<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Add a new vertex to <i>object</i> and return its index. The vertex's position (<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specified. If any of these are not provided, default values of (<i>0, 0, 0</i>), (<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
+<dt><a name="create_vert"><i>i<sub>V</sub></i> = <tt>create_vert</tt>(<i>object,</i> [<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])</a><dd><p>Add a new vertex to <i>object</i> and return its index. The vertex's position (<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>), normal (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>), and texture coordinate (<i>t<sub>u</sub>, t<sub>v</sub></i>) may be specified. If any of these are not provided, default values of (<i>0, 0, 0</i>), (<i>0, 0, 1</i>), and (<i>0, 0</i>) are used.</p>
 
-<dt><a name="create_face"><i>i<sub>F</sub></i> = <tt>create_face</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Add a new triangular face to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>). Vertex order distinguishes the front of a face from the back. Vertices should be appear counter-clockwise when the face is viewed from the front.
+<dt><a name="create_face"><i>i<sub>F</sub></i> = <tt>create_face</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)</a><dd><p>Add a new triangular face to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>). Vertex order distinguishes the front of a face from the back. Vertices should be appear counter-clockwise when the face is viewed from the front.
 
-<dt><a name="create_edge"><i>i<sub>E</sub></i> = <tt>create_edge</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub></i>)<dd><p>Add a new edge to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub></i>)</p>
+<dt><a name="create_edge"><i>i<sub>E</sub></i> = <tt>create_edge</tt>(<i>object, i<sub>M</sub>, i<sub>V</sub>, j<sub>V</sub></i>)</a><dd><p>Add a new edge to mesh <i>i<sub>M</sub></i> of <i>object</i> defined by the vertices (<i>i<sub>V</sub>, j<sub>V</sub></i>)</p>
 
 </dl>
 
@@ -488,13 +489,13 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dl>
 
-<dt><a name="delete_mesh"><tt>delete_mesh</tt>(<i>object, i<sub>M</sub></i>)<dd><p>Remove mesh <i>i<sub>M</sub></i> from <i>object</i>. All faces and edges contained by the mesh are deleted as well.
+<dt><a name="delete_mesh"><tt>delete_mesh</tt>(<i>object, i<sub>M</sub></i>)</a><dd><p>Remove mesh <i>i<sub>M</sub></i> from <i>object</i>. All faces and edges contained by the mesh are deleted as well.
 
-<dt><a name="delete_vert"><tt>delete_vert</tt>(<i>object, i<sub>V</sub></i>)<dd><p>Remove vertex <i>i<sub>V</sub></i> from <i>object</i>. The vertex is deleted from the object's vertex vector and all following vertices are shifted to fill in the remaining space. Vertex references in the object's face and edge vectors are updated accordingly, but vertex indices held in Lua variables may be off by one. To ensure the internal correctness of the object and all its indices, any faces and edges referencing the missing vertex are also deleted.</p>
+<dt><a name="delete_vert"><tt>delete_vert</tt>(<i>object, i<sub>V</sub></i>)</a><dd><p>Remove vertex <i>i<sub>V</sub></i> from <i>object</i>. The vertex is deleted from the object's vertex vector and all following vertices are shifted to fill in the remaining space. Vertex references in the object's face and edge vectors are updated accordingly, but vertex indices held in Lua variables may be off by one. To ensure the internal correctness of the object and all its indices, any faces and edges referencing the missing vertex are also deleted.</p>
 
-<dt><a name="delete_face"><tt>delete_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)<dd><p>Remove face <i>i<sub>F</sub></i> from mesh <i>i<sub>M</sub></i> of <i>object</i>. This function does not remove the vertices referenced by the face.</p>
+<dt><a name="delete_face"><tt>delete_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)</a><dd><p>Remove face <i>i<sub>F</sub></i> from mesh <i>i<sub>M</sub></i> of <i>object</i>. This function does not remove the vertices referenced by the face.</p>
 
-<dt><a name="delete_edge"><tt>delete_edge</tt>(<i>object, i<sub>M</sub>, i<sub>E</sub></i>)<dd><p>Remove edge <i>i<sub>E</sub></i> from mesh <i>i<sub>M</sub></i> of <i>object</i>. As with faces, this function does not alter the object's vertex vector.</p>
+<dt><a name="delete_edge"><tt>delete_edge</tt>(<i>object, i<sub>M</sub>, i<sub>E</sub></i>)</a><dd><p>Remove edge <i>i<sub>E</sub></i> from mesh <i>i<sub>M</sub></i> of <i>object</i>. As with faces, this function does not alter the object's vertex vector.</p>
 
 <p class="note">The deletion of faces and edges can result in unused vertices within an object. This is sometimes desired, but often not. It is left to the application to do the right thing.</p>
 
@@ -503,137 +504,137 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <h4> 2.1.1.3. Modifiers </h4>
 <dl>
 
-<dt><a name="set_mesh"><tt>set_mesh</tt>(<i>object, i<sub>M</sub>, brush</i>)<dd><p>Set the <a href="#brushes">brush</a> used to render mesh <i>i<sub>M</sub></i> of <i>object</i>.</p>
+<dt><a name="set_mesh"><tt>set_mesh</tt>(<i>object, i<sub>M</sub>, brush</i>)</a><dd><p>Set the <a href="#brushes">brush</a> used to render mesh <i>i<sub>M</sub></i> of <i>object</i>.</p>
 
-<dt><a name="set_vert"><tt>set_vert</tt>(<i>object, i<sub>V</sub>, v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])<dd><p>Set the vector values of vertex <i>i<sub>V</sub></i>. The normal and texture coordinate are optional and, if not specified, the existing values are retained.</p>
+<dt><a name="set_vert"><tt>set_vert</tt>(<i>object, i<sub>V</sub>, v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>,</i> [<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>,</i> [<i>t<sub>u</sub>, t<sub>v</sub></i>]]])</a><dd><p>Set the vector values of vertex <i>i<sub>V</sub></i>. The normal and texture coordinate are optional and, if not specified, the existing values are retained.</p>
 
 <p class="note">Like vertex deletion, vertex modification can trigger object bound re-computation. This computation is done only when the bound becomes necessary, so modifying a large batch of vertices at once has the same overhead as modifying a single vertex.</p>
 
-<dt><a name="set_face"><tt>set_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)<dd><p>Specify the set of vertices defining face <i>i<sub>F</sub></i>. Again, vertices should be listed in counter-clockwise order.</p>
+<dt><a name="set_face"><tt>set_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub>, i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i>)</a><dd><p>Specify the set of vertices defining face <i>i<sub>F</sub></i>. Again, vertices should be listed in counter-clockwise order.</p>
 
-<dt><a name="set_edge"><tt>set_edge</tt>(<i>object, i<sub>M</sub>, i<sub>E</sub>, i<sub>V</sub>, j<sub>V</sub></i>)<dd><p>Specify the set of vertices defining edge <i>i<sub>E</sub></i>.</p>
-
-</dl>
-
-<h4> 2.1.1.4. Value Queries </h4>
-<dl>
-
-<dt><a name="get_mesh"><i>brush</i> = <tt>get_mesh</tt>(<i>object, i<sub>M</sub></i>)<dd><p>Return the brush used by a mesh.</p>
-
-<dt><a name="get_vert"><i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, t<sub>u</sub>, t<sub>v</sub></i> = <tt>get_vert</tt>(<i>object, i<sub>V</sub></i>)<dd><p>Return the position, normal, and texture coordinate of a vertex.</p>
-
-<dt><a name="get_face"><i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i> = <tt>get_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)<dd><p>Return the set of vertex indices that define a face.</p>
-
-<dt><a name="get_edge"><i>i<sub>V</sub>, j<sub>V</sub></i> = <tt>get_edge</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)<dd><p>Return the set of vertex indices that define an edge.</p>
+<dt><a name="set_edge"><tt>set_edge</tt>(<i>object, i<sub>M</sub>, i<sub>E</sub>, i<sub>V</sub>, j<sub>V</sub></i>)</a><dd><p>Specify the set of vertices defining edge <i>i<sub>E</sub></i>.</p>
 
 </dl>
 
-
-<h4> 2.1.1.5. Number queries </h4>
+<h4>2.1.1.4. Value Queries</h4>
 <dl>
 
-<dt><a name="get_mesh_count"><i>n</i> = <tt>get_mesh_count</tt>(<i>object</i>)
+<dt><a name="get_mesh"><i>brush</i> = <tt>get_mesh</tt>(<i>object, i<sub>M</sub></i>)</a><dd><p>Return the brush used by a mesh.</p>
 
-<dt><a name="get_vert_count"><i>n</i> = <tt>get_vert_count</tt>(<i>object</i>)
+<dt><a name="get_vert"><i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, t<sub>u</sub>, t<sub>v</sub></i> = <tt>get_vert</tt>(<i>object, i<sub>V</sub></i>)</a><dd><p>Return the position, normal, and texture coordinate of a vertex.</p>
 
-<dt><a name="get_face_count"><i>n</i> = <tt>get_face_count</tt>(<i>object, i<sub>M</sub></i>)
+<dt><a name="get_face"><i>i<sub>V</sub>, j<sub>V</sub>, k<sub>V</sub></i> = <tt>get_face</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)</a><dd><p>Return the set of vertex indices that define a face.</p>
 
-<dt><a name="get_edge_count"><i>n</i> = <tt>get_edge_count</tt>(<i>object, i<sub>M</sub></i>)<dd><p>Return the number of meshes or vertices in an object, or the number of faces or edges in a mesh. All element indices in [<i>0, n-1</i>] are valid.</p>
+<dt><a name="get_edge"><i>i<sub>V</sub>, j<sub>V</sub></i> = <tt>get_edge</tt>(<i>object, i<sub>M</sub>, i<sub>F</sub></i>)</a><dd><p>Return the set of vertex indices that define an edge.</p>
+
+</dl>
+
+
+<h4>2.1.1.5. Number queries</h4>
+<dl>
+
+<dt><a name="get_mesh_count"><i>n</i> = <tt>get_mesh_count</tt>(<i>object</i>)</a><dd>
+
+<dt><a name="get_vert_count"><i>n</i> = <tt>get_vert_count</tt>(<i>object</i>)</a><dd>
+
+<dt><a name="get_face_count"><i>n</i> = <tt>get_face_count</tt>(<i>object, i<sub>M</sub></i>)</a><dd>
+
+<dt><a name="get_edge_count"><i>n</i> = <tt>get_edge_count</tt>(<i>object, i<sub>M</sub></i>)</a><dd><p>Return the number of meshes or vertices in an object, or the number of faces or edges in a mesh. All element indices in [<i>0, n-1</i>] are valid.</p>
 
 </dl>
 
 
 <!---------------------------------------------------------------------------->
 
-<a name="sprite"><h3> 2.1.2. Sprite </h3>
+<h3><a name="sprite">2.1.2. Sprite</a></h3>
 <dl>
 
-<dt><a name="set_sprite_brush"><tt>set_sprite_brush</tt>(<i>sprite, brush</i>)<dd><p>Set the <a href="#brushes">brush</a> used to display <i>sprite</i>.</p>
+<dt><a name="set_sprite_brush"><tt>set_sprite_brush</tt>(<i>sprite, brush</i>)</a><dd><p>Set the <a href="#brushes">brush</a> used to display <i>sprite</i>.</p>
 
-<dt><a name="set_sprite_range"><tt>set_sprite_range</tt>(<i>sprite, s<sub>0</sub>, s<sub>1</sub>, t<sub>0</sub>, t<sub>1</sub></i>)<dd><p>Set the texture coordinate rectangle used by <i>sprite</i>. By default, a sprite uses its brush's entire image. This corresponds to texture coordinate rectangle (<i>0.0, 1.0, 0.0, 1.0</i>). However it is frequently useful to display only a subset of a texture on a sprite. For example, a numerical display might use a single texture that contains images of all of the digits 0-9, and select the digit currently displayed simply by modifying the sprite bounds.</p>
+<dt><a name="set_sprite_range"><tt>set_sprite_range</tt>(<i>sprite, s<sub>0</sub>, s<sub>1</sub>, t<sub>0</sub>, t<sub>1</sub></i>)</a><dd><p>Set the texture coordinate rectangle used by <i>sprite</i>. By default, a sprite uses its brush's entire image. This corresponds to texture coordinate rectangle (<i>0.0, 1.0, 0.0, 1.0</i>). However it is frequently useful to display only a subset of a texture on a sprite. For example, a numerical display might use a single texture that contains images of all of the digits 0-9, and select the digit currently displayed simply by modifying the sprite bounds.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="string"><h3> 2.1.3. String </h3>
+<h3><a name="string">2.1.3. String</a></h3>
 <dl>
 
-<dt><a name="set_string_text"><tt>set_string_text</tt>(<i>string, text</i>)<dd><p>Set the text displayed by the given string object.</p>
+<dt><a name="set_string_text"><tt>set_string_text</tt>(<i>string, text</i>)</a><dd><p>Set the text displayed by the given string object.</p>
 
 <p class="note">Modifying a string value is very cheap. When an application requires that an on-screen text element change frequently, changes should be made using <tt>set_string_text</tt> rather than the <a href="#delete_entity">deletion</a> and <a href="#create_string">creation</a> of string objects.</p>
 
-<dt><a name="set_string_fill"><tt>set_string_fill</tt>(<i>string, brush</i>)<dd> <p>Set the fill <a href="#brushes">brush</a> of the string entity.</p>
+<dt><a name="set_string_fill"><tt>set_string_fill</tt>(<i>string, brush</i>)</a><dd> <p>Set the fill <a href="#brushes">brush</a> of the string entity.</p>
 
-<dt><a name="set_string_line"><tt>set_string_line</tt>(<i>string, brush</i>)<dd> <p>Set the outline <a href="#brushes">brush</a> of the string entity.</p>
+<dt><a name="set_string_line"><tt>set_string_line</tt>(<i>string, brush</i>)</a><dd> <p>Set the outline <a href="#brushes">brush</a> of the string entity.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="camera"><h3> 2.1.4. Camera </h3>
+<h3><a name="camera">2.1.4. Camera</a></h3>
 <dl>
 
-<dt><a name="set_camera_stereo"><tt>set_camera_stereo</tt>(<i>camera, mode, L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)<dd><p>Set stereo options on the given camera. The <i>mode</i> argument gives the stereo method, as described below. The (<i>L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the camera to the user's left and right eyes.</p>
+<dt><a name="set_camera_stereo"><tt>set_camera_stereo</tt>(<i>camera, mode, L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)</a><dd><p>Set stereo options on the given camera. The <i>mode</i> argument gives the stereo method, as described below. The (<i>L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the camera to the user's left and right eyes.</p>
 
 <p>The available stereo modes are as follows:</p>
 
 <ul>
-<a name="stereo_mode_none"><li><tt>stereo_mode_none</tt>
+<li><a name="stereo_mode_none"><tt>stereo_mode_none</tt></a>
 
 <p>This mode disables stereo rendering. This is the default.</p>
 
-<a name="stereo_mode_quad"><li><tt>stereo_mode_quad</tt>
+<li><a name="stereo_mode_quad"><tt>stereo_mode_quad</tt></a>
 
 <p>This mode enables quad-buffered stereo viewing. This is appropriate for active stereo viewing using LCD flicker glasses, or passive stereo viewing using dual-output video hardware in &ldquo;clone&rdquo; mode. To function correctly, the underlying graphics hardware must support quad-buffered stereo, and <tt>host_flag_stereo</tt> must be enabled on the rendering host at application startup. See <tt>set_host_flag</tt> below.</p>
 
-<a name="stereo_mode_red_blue"><li><tt>stereo_mode_red_blue</tt><p>This mode enables red-blue anaglyphic stereo.</p>
+<li><a name="stereo_mode_red_blue"><tt>stereo_mode_red_blue</tt></a><p>This mode enables red-blue anaglyphic stereo.</p>
 
-<a name="stereo_mode_varrier_11"><li><tt>stereo_mode_varrier_11</tt><p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 1-line-pass/1-scene-pass Varrier algorithm. The Varrier line screen is configured using <a href="#set_tile_linescreen"><tt>set_tile_linescreen</tt></a>.</p>
+<li><a name="stereo_mode_varrier_11"><tt>stereo_mode_varrier_11</tt></a><p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 1-line-pass/1-scene-pass Varrier algorithm. The Varrier line screen is configured using <a href="#set_tile_linescreen"><tt>set_tile_linescreen</tt></a>.</p>
 
-<a name="stereo_mode_varrier_33"><li><tt>stereo_mode_varrier_33</tt><p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering algorithm. The Varrier line screen is configured using <a href="#set_tile_linescreen"><tt>set_tile_linescreen</tt></a>.</p>
+<li><a name="stereo_mode_varrier_33"><tt>stereo_mode_varrier_33</tt></a><p>This mode enables <a href="http://www.evl.uic.edu/research/res_project.php3?indi=275">Varrier</a> stereo viewing using the 3-line-pass/3-scene-pass Varrier sub-pixel rendering algorithm. The Varrier line screen is configured using <a href="#set_tile_linescreen"><tt>set_tile_linescreen</tt></a>.</p>
 
 </ul>
 
-<dt><a name="set_camera_offset"><tt>set_camera_offset</tt>(<i>camera, x, y, z</i>)<dd><p>Set the offset of a camera's view. The camera offset is a vector (<i>x, y, z</i>) giving the real position of the viewpoint relative to the position of the camera entity. This function moves the only apex of the view frustum, not its <a href="#set_tile_position">view rectangle</a>. Thus it modifies the <i>shape</i> of the projection rather than its position.</p>
+<dt><a name="set_camera_offset"><tt>set_camera_offset</tt>(<i>camera, x, y, z</i>)</a><dd><p>Set the offset of a camera's view. The camera offset is a vector (<i>x, y, z</i>) giving the real position of the viewpoint relative to the position of the camera entity. This function moves the only apex of the view frustum, not its <a href="#set_tile_position">view rectangle</a>. Thus it modifies the <i>shape</i> of the projection rather than its position.</p>
 
 <p>Camera offset allows a distinction to be drawn between the navigational and projection-defining aspects of camera positioning.  In a VR environment for example, the camera entity position represents the position of the display within the virtual space, while the camera offset represents the position of the user's head within the display. In the presence of trackd, Electro automatically updates the offset of all cameras based on the position of the <a href="#option-h">head sensor</a>.</p>
 
-<dt><a name="set_camera_range"><tt>set_camera_range</tt>(<i>camera, near, far</i>)<dd><p>Set the near and far clipping planes for a camera.  The default range is (<i>0.1, 1000.0</i>) for <a href="#camera_type_perspective">perspective</a> cameras and (<i>-1000.0,+1000.0</i>) for <a href="#camera_type_orthogonal">orthogonal</a> cameras.</p>
+<dt><a name="set_camera_range"><tt>set_camera_range</tt>(<i>camera, near, far</i>)</a><dd><p>Set the near and far clipping planes for a camera.  The default range is (<i>0.1, 1000.0</i>) for <a href="#camera_type_perspective">perspective</a> cameras and (<i>-1000.0,+1000.0</i>) for <a href="#camera_type_orthogonal">orthogonal</a> cameras.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="light"><h3> 2.1.5. Light </h3>
+<h3><a name="light">2.1.5. Light</a></h3>
 <dl>
 
-<dt><a name="set_light_color"><tt>set_light_color</tt>(<i>light, r, g, b</i>)<dd><p>Set the diffuse color of a light source.</p>
+<dt><a name="set_light_color"><tt>set_light_color</tt>(<i>light, r, g, b</i>)</a><dd><p>Set the diffuse color of a light source.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="pivot"><h3> 2.1.6. Pivot </h3>
+<h3><a name="pivot">2.1.6. Pivot</a></h3>
 
 <p>Pivots have no type-specific functionality, but they share all of the attributes common to <a href="#entity">entities</a>.</p>
 
 <!---------------------------------------------------------------------------->
 
-<a name="galaxy"><h3> 2.1.7. Galaxy </h3>
+<h3><a name="galaxy">2.1.7. Galaxy</a></h3>
 <dl>
 
-<dt><a name="set_galaxy_magnitude"><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)<dd><p>Set the magnitude multiplier of a galaxy. By default, stars are rendered using their computed luminosity. For all but a few stars, this is far too dim to be visible. The magnitude multiplier can be treated as a linear scale of apparent star size. For example, a magnitude value of 100 will result in the very largest of stars being rendered approximately 100 pixels across.</p>
+<dt><a name="set_galaxy_magnitude"><tt>set_galaxy_magnitude</tt>(<i>galaxy</i>)</a><dd><p>Set the magnitude multiplier of a galaxy. By default, stars are rendered using their computed luminosity. For all but a few stars, this is far too dim to be visible. The magnitude multiplier can be treated as a linear scale of apparent star size. For example, a magnitude value of 100 will result in the very largest of stars being rendered approximately 100 pixels across.</p>
 
-<dt><a name="get_star_index"><i>i<sub>S</sub></i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)<dd><p>Return the star &ldquo;being pointed at&rdquo; by the given entity. That is, return the index of the star closest to the forward vector of the entity. This is useful for star selection and galaxy navigation, and is particularly well applied to cameras and tracked entities.</p>
+<dt><a name="get_star_index"><i>i<sub>S</sub></i> = <tt>get_star_index</tt>(<i>galaxy, entity</i>)</a><dd><p>Return the star &ldquo;being pointed at&rdquo; by the given entity. That is, return the index of the star closest to the forward vector of the entity. This is useful for star selection and galaxy navigation, and is particularly well applied to cameras and tracked entities.</p>
 
-<dt><a name="get_star_position"><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy, i<sub>S</sub></i>)<dd><p>Return the 3D position of the star at index <i>i<sub>S</sub></i> of <i>galaxy</i>.
+<dt><a name="get_star_position"><i>x, y, z</i> = <tt>get_star_position</tt>(<i>galaxy, i<sub>S</sub></i>)</a><dd><p>Return the 3D position of the star at index <i>i<sub>S</sub></i> of <i>galaxy</i>.
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="images"><h2> 2.2. Images </h2>
+<h2><a name="images">2.2. Images</a></h2>
 
 <p>Images are used as textures for objects, strings, and sprites.</p>
 
@@ -641,25 +642,25 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dl>
 
-<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename,</i> [<i>filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>])<dd><p>Load an image from the named PNG or JPEG file. Images <i>must</i> be powers-of-two in size.</p>
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename,</i> [<i>filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>])</a><dd><p>Load an image from the named PNG or JPEG file. Images <i>must</i> be powers-of-two in size.</p>
 
 <p>If 6 image files are named then a cube map is defined. All 6 cube map images must be the same size. If the image is to applied as a cubic environment map, applications must set <a href="#brush_flag_env_map_0"><tt>brush_flag_env_map</tt></a> on any brush referencing it. <a href="#get_image_pixel">Pixel queries</a> act only on the first image of a cube map.</p>
 
 <p>A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filenames will result in the same image object.</p>
 
-<dt><a name="delete_image"><tt>delete_image</tt>(<i>image</i>)<dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
+<dt><a name="delete_image"><tt>delete_image</tt>(<i>image</i>)</a><dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
 
 <p class="note">In general, applications should explicitly delete any images that they explicitly create. This includes the circumstance where an image is created and assigned to a brush which is subsequently deleted. In that case, the image is not automatically released because it is presumed to be directly referenced by the application. The same create/delete policy applies to <a href="#brushes">brushes</a>.</p>
 
-<dt><a name="get_image_pixel"><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>) <dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: grey-scale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
+<dt><a name="get_image_pixel"><i>r, g, b, a</i> = <tt>get_image_pixel</tt>(<i>image, x, y</i>)</a><dd><p>Return the color value of the (<i>x, y</i>) pixel of an image. This function always returns 4 color components. If the source image does not include all four channels, then values are extrapolated: grey-scale values are copied to all three color channels and opaque textures are assigned an alpha value of 1.</p>
 
-<dt><a name="get_image_size"><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)<dd><p>Return the size of the image in pixels.</p>
+<dt><a name="get_image_size"><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)</a><dd><p>Return the size of the image in pixels.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="brushes"><h2> 2.3. Brushes </h2>
+<h2><a name="brushes">2.3. Brushes</a></h2>
 
 <p>Brushes describe the appearance of the surfaces of objects, strings,
 and sprites.</p>
@@ -668,116 +669,116 @@ and sprites.</p>
 
 <dl>
 
-<dt><a name="create_brush"><i>brush</i> = <tt>create_brush</tt>()<dd><p>Create a new brush object with the default material properties.</p>
+<dt><a name="create_brush"><i>brush</i> = <tt>create_brush</tt>()</a><dd><p>Create a new brush object with the default material properties.</p>
 
-<dt><a name="delete_brush"><tt>delete_brush</tt>(<i>brush</i>)<dd><p>Delete a brush and release all resources associated with it. The brush may not be deleted immediately if it is referenced by an existing entity.</p>
+<dt><a name="delete_brush"><tt>delete_brush</tt>(<i>brush</i>)</a><dd><p>Delete a brush and release all resources associated with it. The brush may not be deleted immediately if it is referenced by an existing entity.</p>
 
 
-<dt><a name="set_brush_color"><tt>set_brush_color</tt>(<i>brush, d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,</i> [<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,</i> [<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,</i> [<i>e</i>]]])<dd><p>Set the material color properties of <i>brush</i>. The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>) arguments give the diffuse color, (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>) gives the specular color, (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>) gives the ambient color, and <i>e</i> gives the specular exponent. Specular, ambient, and specular exponent properties are optional and any not specified retain their existing values.</p>
+<dt><a name="set_brush_color"><tt>set_brush_color</tt>(<i>brush, d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,</i> [<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,</i> [<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,</i> [<i>e</i>]]])</a><dd><p>Set the material color properties of <i>brush</i>. The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>) arguments give the diffuse color, (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>) gives the specular color, (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>) gives the ambient color, and <i>e</i> gives the specular exponent. Specular, ambient, and specular exponent properties are optional and any not specified retain their existing values.</p>
 
-<dt><a name="set_brush_image"><tt>set_brush_image</tt>(<i>brush, image, </i>[<i>n</i>])<dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>. The <i>n</i> argmument gives an optional texture unit number between 0 and 3, defaulting to zero.</p>
+<dt><a name="set_brush_image"><tt>set_brush_image</tt>(<i>brush, image, </i>[<i>n</i>])</a><dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>. The <i>n</i> argmument gives an optional texture unit number between 0 and 3, defaulting to zero.</p>
 
-<dt><a name="set_brush_flags"><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)<dd><p>Set or clear flags on the given brush. Brush flags enable and disable the application of various material properties. The <i>flag</i> argument gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> argument is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
+<dt><a name="set_brush_flags"><tt>set_brush_flags</tt>(<i>brush, flags, value</i>)</a><dd><p>Set or clear flags on the given brush. Brush flags enable and disable the application of various material properties. The <i>flag</i> argument gives the set of flags to be modified, and may be the sum of multiple flags. The <i>value</i> argument is a boolean giving the desired state. A value of <tt>true</tt> will set the given flags, and <tt>false</tt> will clear them.</p>
 
 <ul>
-<a name="brush_flag_diffuse"><li><tt>brush_flag_diffuse</tt>
-<a name="brush_flag_specular"><li><tt>brush_flag_specular</tt>
-<a name="brush_flag_ambient"><li><tt>brush_flag_ambient</tt>
-<a name="brush_flag_shiny"><li><tt>brush_flag_shiny</tt>
+<li><a name="brush_flag_diffuse"><tt>brush_flag_diffuse</tt></a>
+<li><a name="brush_flag_specular"><tt>brush_flag_specular</tt></a>
+<li><a name="brush_flag_ambient"><tt>brush_flag_ambient</tt></a>
+<li><a name="brush_flag_shiny"><tt>brush_flag_shiny</tt></a>
 <p>These flags control the application of each of the material color properties. If any of these flags is <tt>false</tt> then the corresponding material is not applied at all. This provides applications with a mechanism to control how material properties to trickle down the entity hierarchy.</p>
 
-<a name="brush_flag_unlit"><li><tt>brush_flag_unlit</tt><p>Surfaces with an unlit brush are drawn with all lighting disabled. They will appear fully bright. This is especially useful for <a href="#sprite">sprite</a> and <a href="#entity_flag_wireframe">wire-frame</a> objects which do not have light-able surfaces.</p>
+<li><a name="brush_flag_unlit"><tt>brush_flag_unlit</tt></a><p>Surfaces with an unlit brush are drawn with all lighting disabled. They will appear fully bright. This is especially useful for <a href="#sprite">sprite</a> and <a href="#entity_flag_wireframe">wire-frame</a> objects which do not have light-able surfaces.</p>
 
-<a name="brush_flag_transparent"><li><tt>brush_flag_transparent</tt><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
+<li><a name="brush_flag_transparent"><tt>brush_flag_transparent</tt></a><p>Surfaces with a transparent brush are drawn to the color buffer but not the depth buffer. This prevents transparent objects from occluding opaque objects during the depth test.</p>
 
-<a name="brush_flag_env_map_0"><li><tt>brush_flag_env_map_0</tt>
-<a name="brush_flag_env_map_1"><li><tt>brush_flag_env_map_1</tt>
-<a name="brush_flag_env_map_2"><li><tt>brush_flag_env_map_2</tt>
-<a name="brush_flag_env_map_3"><li><tt>brush_flag_env_map_3</tt>
+<li><a name="brush_flag_env_map_0"><tt>brush_flag_env_map_0</tt></a>
+<li><a name="brush_flag_env_map_1"><tt>brush_flag_env_map_1</tt></a>
+<li><a name="brush_flag_env_map_2"><tt>brush_flag_env_map_2</tt></a>
+<li><a name="brush_flag_env_map_3"><tt>brush_flag_env_map_3</tt></a>
 <p>An environment map is dynamically applied to a surface based upon the surface normal and view direction. It creates the illusion that the surface is reflecting an image of the scene. The environment map brush flags enable this feature on each of the four texture units. To appear correct, an environment map <a href="#images">image</a> object should be bound to the corresponding brush image unit.</p>
 
-<a name="brush_flag_sky_map_0"><li><tt>brush_flag_sky_map_0</tt>
-<a name="brush_flag_sky_map_1"><li><tt>brush_flag_sky_map_1</tt>
-<a name="brush_flag_sky_map_2"><li><tt>brush_flag_sky_map_2</tt>
-<a name="brush_flag_sky_map_3"><li><tt>brush_flag_sky_map_3</tt>
+<li><a name="brush_flag_sky_map_0"><tt>brush_flag_sky_map_0</tt></a>
+<li><a name="brush_flag_sky_map_1"><tt>brush_flag_sky_map_1</tt></a>
+<li><a name="brush_flag_sky_map_2"><tt>brush_flag_sky_map_2</tt></a>
+<li><a name="brush_flag_sky_map_3"><tt>brush_flag_sky_map_3</tt></a>
 <p>A sky map is dynamically applied to a surface based upon the location of each point of the surface. This is useful when creating sky spheres and boxes using environment map <a href="#images">image</a> objects. When an environment map image is bound to the sky surface's brush the result is a sky scene that compliments the scene reflected in environment mapped surfaces.</p>
 
 </ul>
-<dt><a name="set_brush_frag_prog"><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)<dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+<dt><a name="set_brush_frag_prog"><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<dt><a name="set_brush_vert_prog"><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)<dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB vertex program syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+<dt><a name="set_brush_vert_prog"><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB vertex program syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
 <p class="note">ARB fragment and vertex program syntaxes were chosen because the standards are mature. High-quality implementations are wide-spread and available on a nice array of hardware. If you prefer a higher-level language, use one that can be compiled down to ARB_fp and ARB_vp, such as Cg.</p>
 
-<dt><a name="set_brush_frag_param"><tt>set_brush_frag_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])<dd><p>Specify a local parameter to be accessible to <i>brush</i>'s fragment program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+<dt><a name="set_brush_frag_param"><tt>set_brush_frag_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a local parameter to be accessible to <i>brush</i>'s fragment program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
 
-<dt><a name="set_brush_vert_param"><tt>set_brush_vert_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])<dd><p>Specify a local parameter to be accessible to <i>brush</i>'s vertex program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+<dt><a name="set_brush_vert_param"><tt>set_brush_vert_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a local parameter to be accessible to <i>brush</i>'s vertex program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
 
-<dt><a name="set_brush_line_width"><tt>set_brush_line_width</tt>(<i>brush, width</i>)<dd><p>Specify the width in pixels of all lines drawn using this brush. The default is <i>1.0</i>. This will apply both to lines defined by <a href="#create_object">OBJ</a> models and to entities drawn in <a href="#entity_flag_wireframe">wire-frame</a> mode. </p>
+<dt><a name="set_brush_line_width"><tt>set_brush_line_width</tt>(<i>brush, width</i>)</a><dd><p>Specify the width in pixels of all lines drawn using this brush. The default is <i>1.0</i>. This will apply both to lines defined by <a href="#create_object">OBJ</a> models and to entities drawn in <a href="#entity_flag_wireframe">wire-frame</a> mode. </p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="sound"><h2> 2.4. Sound </h2>
+<h2><a name="sound">2.4. Sound</a></h2>
 
 <p>Electro provides a basic audio API suitable for adding simple sounds to an application. It supports streaming of 44.1 KHz stereo or mono Ogg Vorbis audio sources. Any number of audio streams may play simultaneously.</p>
 
 <dl>
 
-<dt><a name="load_sound"><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)<dd><p>Open a reference to the named Ogg Vorbis audio stream. This is the normal means by which audio is imported into an Electro application. This function initializes a sound for playback, but does not start playback.</p>
+<dt><a name="load_sound"><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)</a><dd><p>Open a reference to the named Ogg Vorbis audio stream. This is the normal means by which audio is imported into an Electro application. This function initializes a sound for playback, but does not start playback.</p>
 
-<dt><a name="free_sound"><tt>free_sound</tt>(<i>stream</i>)<dd><p>Close an audio stream and release all resources associated with it.
+<dt><a name="free_sound"><tt>free_sound</tt>(<i>stream</i>)</a><dd><p>Close an audio stream and release all resources associated with it.
 </p>
 
-<dt><a name="play_sound"><tt>play_sound</tt>(<i>stream</i>)<dd><p>Start playback of an audio stream. If <i>stream</i> is already playing when this function is called, then the original playback will stop and the stream will be rewound to the beginning before being restarted. If it is necessary to mix multiple instances of one specific sound, then multiple sound objects must be used.</p>
+<dt><a name="play_sound"><tt>play_sound</tt>(<i>stream</i>)</a><dd><p>Start playback of an audio stream. If <i>stream</i> is already playing when this function is called, then the original playback will stop and the stream will be rewound to the beginning before being restarted. If it is necessary to mix multiple instances of one specific sound, then multiple sound objects must be used.</p>
 
-<dt><a name="loop_sound"><tt>loop_sound</tt>(<i>stream</i>)<dd><p>Begin playing an audio stream, but automatically rewind it when the end is reached.</p>
+<dt><a name="loop_sound"><tt>loop_sound</tt>(<i>stream</i>)</a><dd><p>Begin playing an audio stream, but automatically rewind it when the end is reached.</p>
 
-<dt><a name="step_sound"><tt>stop_sound</tt>(<i>stream</i>)<dd><p>Stop a playing audio stream. This function merely stops playback, and does not release any resources. The stream may be restarted from the beginning.
+<dt><a name="step_sound"><tt>stop_sound</tt>(<i>stream</i>)</a><dd><p>Stop a playing audio stream. This function merely stops playback, and does not release any resources. The stream may be restarted from the beginning.
 </p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="console"><h2> 2.5. Console </h2>
+<h2><a name="console">2.5. Console</a></h2>
 
 <p>Electro uses a text console overlay to display error messages and enable run-time interaction with Lua state. This console can be enabled and disabled by pressing F1. It also appears automatically whenever anything is printed to it. Applications are free to use this console for their own purposes as well. For example, debugging information may be sent there.</p>
 
 <dl>
 
-<dt><a name="print_console"><tt>print_console</tt>(<i>...</i>)<dd></p> Print all string and number arguments to the console. To print formatted output, pass arguments via Lua's <tt>string.format</tt> function.</p>
+<dt><a name="print_console"><tt>print_console</tt>(<i>...</i>)</a><dd><p> Print all string and number arguments to the console. To print formatted output, pass arguments via Lua's <tt>string.format</tt> function.</p>
 
-<dt><a name="clear_console"><tt>clear_console</tt>()<dd><p>Clear the console to blank.</p>
+<dt><a name="clear_console"><tt>clear_console</tt>()</a><dd><p>Clear the console to blank.</p>
 
-<dt><a name="close_console"><tt>close_console</tt>()<dd><p>Remove the console from the screen.</p>
+<dt><a name="close_console"><tt>close_console</tt>()</a><dd><p>Remove the console from the screen.</p>
 
-<dt><a name="color_console"><tt>color_console</tt>(<i>r, g, b</i>)<dd><p>Set the console text color to (<i>r, g, b</i>).</p>
+<dt><a name="color_console"><tt>color_console</tt>(<i>r, g, b</i>)</a><dd><p>Set the console text color to (<i>r, g, b</i>).</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="configuration"><h2> 2.6. Configuration </h2>
+<h2><a name="configuration">2.6. Configuration</a></h2>
 
-<h3> 2.6.1. Hosts </h3>
+<h3>2.6.1. Hosts</h3>
 <dl>
 
-<dt><a name="add_host"><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)<dd><p>Add a host, returning a host index. This function is used by configuration scripts to define the structure of the cluster driving a tiled display.</p>
+<dt><a name="add_host"><i>host</i> = <tt>add_host</tt>(<i>name, x, y, w, h</i>)</a><dd><p>Add a host, returning a host index. This function is used by configuration scripts to define the structure of the cluster driving a tiled display.</p>
 
 <p>The <i>name</i> argument gives the Internet host name of the rendering node to be used. The <i>x, y, w, h</i> arguments give the position and size of the area of that host's desktop to be used for OpenGL rendering. A given render node can only support one Electro host. If the same <i>name</i> argument is reused for multiple configurations, only the first will be used. If <i>name</i> is &ldquo;<tt>default</tt>&rdquo; then the given host configuration will be applied to all hosts not specifically named in another configuration. If a render node is to handle multiple displays, they must be defined as Electro tiles.</p>
 
 <p>Host configuration and rendering context creation is closely bound with MPI process initialization, so it must be performed immediately upon application startup, and cannot be modified later in an application's execution.</p>
 
-<dt><a name="set_host_flags"><tt>set_host_flags</tt>(<i>host, flags, value</i>)<dd><p>Set or clear host flags on <i>host</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state. Like host window configurations, host flags must be specified at application startup and later modification will have no effect. The default value for all flags is <tt>false</tt>.</p>
+<dt><a name="set_host_flags"><tt>set_host_flags</tt>(<i>host, flags, value</i>)</a><dd><p>Set or clear host flags on <i>host</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state. Like host window configurations, host flags must be specified at application startup and later modification will have no effect. The default value for all flags is <tt>false</tt>.</p>
 
 <ul>
-<a name="host_flag_full"><li><tt>host_flag_full</tt><p>The full flag sets a full-screen flag on the host's render window, causing it to fill the display, possibly switching the resolution of the display to match the configuration. This flag may be necessary to remove window decoration or other operating system screen clutter.</p>
+<li><a name="host_flag_full"><tt>host_flag_full</tt></a><p>The full flag sets a full-screen flag on the host's render window, causing it to fill the display, possibly switching the resolution of the display to match the configuration. This flag may be necessary to remove window decoration or other operating system screen clutter.</p>
 
-<a name="host_flag_stereo"><li><tt>host_flag_stereo</tt><p>The stereo flag enables quad-buffered stereo rendering on a host's render window. If this flag is not specified at startup, later use of <a href="#stereo_mode_quad"><tt>stereo_mode_quad</tt></a> will fail.</p>
+<li><a name="host_flag_stereo"><tt>host_flag_stereo</tt></a><p>The stereo flag enables quad-buffered stereo rendering on a host's render window. If this flag is not specified at startup, later use of <a href="#stereo_mode_quad"><tt>stereo_mode_quad</tt></a> will fail.</p>
 
-<a name="host_flag_framed"><li><tt>host_flag_framed</tt><p>The framed flag enables window decoration on a host's render window. Unconfigured host windows are framed by default, but configured host windows are not.</p>
+<li><a name="host_flag_framed"><tt>host_flag_framed</tt></a><p>The framed flag enables window decoration on a host's render window. Unconfigured host windows are framed by default, but configured host windows are not.</p>
 
 </ul>
 
@@ -785,78 +786,79 @@ and sprites.</p>
 
 </dl>
 
-<h3> 2.6.2. Tiles </h3>
+<h3>2.6.2. Tiles</h3>
 <dl>
 
-<dt><a name="add_tile"><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)<dd><p>Add a tile to a host, returning a tile index. The <i>x, y, w, h</i> arguments give position and size of the area of the indexed host's render area to be used for display.</p>
+<dt><a name="add_tile"><i>tile</i> = <tt>add_tile</tt>(<i>host, x, y, w, h</i>)</a><dd><p>Add a tile to a host, returning a tile index. The <i>x, y, w, h</i> arguments give position and size of the area of the indexed host's render area to be used for display.</p>
 
 <p class="note">There is a static limit of 8 tiles per host.</p>
 
-<dt><a name="set_tile_position"><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>, u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)<dd><p>Set the world-space position of <i>tile</i>. The (<i>o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector of the origin of the tile, usually the real-space lower-left corner of the display to which the tile is rendered. The (<i>r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub></i>) arguments give the &ldquo;right&rdquo; vector, from the origin to the lower-right corner. The (<i>u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>) arguments give the &ldquo;up&rdquo; vector, from the origin to the upper-left corner.</p>
+<dt><a name="set_tile_position"><tt>set_tile_position</tt>(<i>tile, o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub>, r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub>, u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>)</a><dd><p>Set the world-space position of <i>tile</i>. The (<i>o<sub>x</sub>, o<sub>y</sub>, o<sub>z</sub></i>) arguments give the position vector of the origin of the tile, usually the real-space lower-left corner of the display to which the tile is rendered. The (<i>r<sub>x</sub>, r<sub>y</sub>, r<sub>z</sub></i>) arguments give the &ldquo;right&rdquo; vector, from the origin to the lower-right corner. The (<i>u<sub>x</sub>, u<sub>y</sub>, u<sub>z</sub></i>) arguments give the &ldquo;up&rdquo; vector, from the origin to the upper-left corner.</p>
 
 <p>These three vectors, with the view position vector, define the view frustum of the indexed tile's <a href="#camera_type_perspective">perspective</a> projection. The default view position vector is (<i>0, 0, 0</i>), though this is subject to the motion-tracked offset of any perspective camera used during rendering.</p>
 
-<dt><a name="set_tile_viewport"><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)<dd><p>Set the pixel area of <i>tile</i>. This defines the range of any <a href="#camera_type_orthogonal">orthogonal</a> camera used during rendering.</p>
+<dt><a name="set_tile_viewport"><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)</a><dd><p>Set the pixel area of <i>tile</i>. This defines the range of any <a href="#camera_type_orthogonal">orthogonal</a> camera used during rendering.</p>
 
-<dt><a name="set_tile_offset"><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)<dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as <a href="#set_camera_offset">camera view offset</a>, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side Geowall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
+<dt><a name="set_tile_offset"><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)</a><dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as <a href="#set_camera_offset">camera view offset</a>, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side Geowall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
 
-<dt><a name="set_tile_mirror"><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)<dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustum to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <a href="#tile_flag_mirror"><tt>tile_flag_mirror</tt></a> option.</p>
+<dt><a name="set_tile_mirror"><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)</a><dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustum to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <a href="#tile_flag_mirror"><tt>tile_flag_mirror</tt></a> option.</p>
 
-<dt><a name="set_tile_flags"><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)<dd><p>Set or clear tile flags on <i>tile</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state.</p>
+<dt><a name="set_tile_flags"><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)</a><dd><p>Set or clear tile flags on <i>tile</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state.</p>
 
 <ul>
 
-<a name="tile_flag_mirror"><li><tt>tile_flag_mirror</tt><p>The mirror flag enables projection of the view position vector across the plane given by <a href="#set_tile_mirror"><tt>set_tile_mirror</tt></>.</p>
+<li><a name="tile_flag_mirror"><tt>tile_flag_mirror</tt></a><p>The mirror flag enables projection of the view position vector across the plane given by <a href="#set_tile_mirror"><tt>set_tile_mirror</tt></>.</p>
 
-<a name="tile_flag_flip_x"><li><tt>tile_flag_flip_x</tt><li><tt>tile_flag_flip_y</tt><p>The flip flags cause the scene rendered to the tile to be flipped horizontally or vertically, respectively. This may be used to correct tiles viewed by reflection in a mirror.</p>
+<li><a name="tile_flag_flip_x"><tt>tile_flag_flip_x</tt></a>
+<li><a name="tile_flag_flip_y"><tt>tile_flag_flip_y</tt></a><p>The flip flags cause the scene rendered to the tile to be flipped horizontally or vertically, respectively. This may be used to correct tiles viewed by reflection in a mirror.</p>
 
 </ul>
 
-<dt><a name="set_tile_linescreen"><tt>set_tile_linescreen</tt>(<i>tile, pitch, angle, thickness, shift, cycle</i>)<dd><p>Set the Varrier line screen parameters for <i>tile</i>. These are only significant for <a href="#stereo_mode_varrier_11"><tt>stereo_mode_varrier</tt></a> camera modes. They give the line screen pitch, angle of rotation about the tile's Z axis, optical thickness (shift along the tile's Z axis), shift along the tile's X axis, and duty cycle (percentage of black).</p>
+<dt><a name="set_tile_linescreen"><tt>set_tile_linescreen</tt>(<i>tile, pitch, angle, thickness, shift, cycle</i>)</a><dd><p>Set the Varrier line screen parameters for <i>tile</i>. These are only significant for <a href="#stereo_mode_varrier_11"><tt>stereo_mode_varrier</tt></a> camera modes. They give the line screen pitch, angle of rotation about the tile's Z axis, optical thickness (shift along the tile's Z axis), shift along the tile's X axis, and duty cycle (percentage of black).</p>
 
 </dl>
 
-<h3> 2.6.3. Query </h3>
+<h3>2.6.3. Query</h3>
 <dl>
 
-<dt><a name="get_display_union"><i>x, y, w, h</i> = <tt>get_display_union</tt>()<dd><p>Return the total pixel size of the display. The return values <i>x, y, w, h</i> give the position, width, and height of the rectangle of available pixels. This is the union of the viewports of all <a href="#add_tile">tile</a> definitions. This information is often useful when positioning entities in view of an <a href="#camera_type_orthogonal">orthogonal</a> camera, or configuring a scene to match the aspect ratio of a display.</p>
+<dt><a name="get_display_union"><i>x, y, w, h</i> = <tt>get_display_union</tt>()</a><dd><p>Return the total pixel size of the display. The return values <i>x, y, w, h</i> give the position, width, and height of the rectangle of available pixels. This is the union of the viewports of all <a href="#add_tile">tile</a> definitions. This information is often useful when positioning entities in view of an <a href="#camera_type_orthogonal">orthogonal</a> camera, or configuring a scene to match the aspect ratio of a display.</p>
 
-<dt><a name="get_display_bound"><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_display_bound</tt>()<dd><p>Return the axis-aligned bounding box of the entire display, in world coordinates. This information is useful when positioning entities in view of a <a href="#camera_type_perspective">perspective</a> camera.</p>
+<dt><a name="get_display_bound"><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_display_bound</tt>()</a><dd><p>Return the axis-aligned bounding box of the entire display, in world coordinates. This information is useful when positioning entities in view of a <a href="#camera_type_perspective">perspective</a> camera.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="system"><h2> 2.7. System API </h2>
+<h2><a name="system">2.7. System API</a></h2>
 
 <h3>Functions</h3>
 <dl>
 
-<dt><a name="exit"><tt>exit</tt>()<dd><p>Exit Electro cleanly. This function should be used instead of Lua's <tt>os.exit</tt> function in order to ensure that processes running on client hosts of a cluster display are properly exited.</p>
+<dt><a name="exit"><tt>exit</tt>()</a><dd><p>Exit Electro cleanly. This function should be used instead of Lua's <tt>os.exit</tt> function in order to ensure that processes running on client hosts of a cluster display are properly exited.</p>
 
-<dt><a name="chdir"><tt>chdir</tt>(<i>path</i>)<dd><p>Change the current working directory to <i>path</i>. The previous working directory will be lost.</p>
+<dt><a name="chdir"><tt>chdir</tt>(<i>path</i>)</a><dd><p>Change the current working directory to <i>path</i>. The previous working directory will be lost.</p>
 
-<dt><a name="pushdir"><tt>pushdir</tt>(<i>path</i>)<dd><p>Push the current working directory to the directory stack and change to <i>path</i>.</p>
+<dt><a name="pushdir"><tt>pushdir</tt>(<i>path</i>)</a><dd><p>Push the current working directory to the directory stack and change to <i>path</i>.</p>
 
-<dt><a name="popdir"><tt>popdir</tt>()<dd><p>Pop the previous current working directory from the directory stack and change there.</p>
+<dt><a name="popdir"><tt>popdir</tt>()</a><dd><p>Pop the previous current working directory from the directory stack and change there.</p>
 
 </dl>
 
 <h3>Variables</h3>
 <dl>
 
-<dt><a name="arguments"><tt>arguments</tt><dd>This symbol is bound to a table of command line arguments.  Any arguments not recognized by Electro are passed along to the application in this fashion.</p>
+<dt><a name="arguments"><tt>arguments</tt></a><dd><p>This symbol is bound to a table of command line arguments.  Any arguments not recognized by Electro are passed along to the application in this fashion.</p>
 
 </dl>
 
 <!---------------------------------------------------------------------------->
 
-<a name="miscellaneous"><h2> 2.8. Miscellaneous API </h2>
+<h2><a name="miscellaneous">2.8. Miscellaneous API</a></h2>
 <dl>
 
-<dt><a name="set_background"><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>])<dd><p>Set the background color of the display. If only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is specified, the background will appear a solid color. If an optional second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is supplied, the background will be drawn with a top-to-bottom gradient. The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>0.1, 0.2, 0.4</i>).</p>
+<dt><a name="set_background"><tt>set_background</tt>(<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>, [<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>])</a><dd><p>Set the background color of the display. If only one color (<i>T<sub>r</sub>, T<sub>g</sub>, T<sub>b</sub></i>) is specified, the background will appear a solid color. If an optional second color (<i>B<sub>r</sub>, B<sub>g</sub>, B<sub>b</sub></i>) is supplied, the background will be drawn with a top-to-bottom gradient. The default background has the gradient (<i>0.0, 0.0, 0.0</i>) to (<i>0.1, 0.2, 0.4</i>).</p>
 
-<dt><a name="set_typeface"><tt>set_typeface</tt>(<i>filename</i>, [<i>epsilon, outline</i>])<dd><p>Set the typeface to be used for all subsequently created <a href="#create_string">string</a> entities. The filename gives a TrueType font file.</p>
+<dt><a name="set_typeface"><tt>set_typeface</tt>(<i>filename</i>, [<i>epsilon, outline</i>])</a><dd><p>Set the typeface to be used for all subsequently created <a href="#create_string">string</a> entities. The filename gives a TrueType font file.</p>
 
 <p>The optional <i>epsilon</i> parameter gives an error bound in world units to which glyphs are tessellated. This allows the application to make a quality-speed trade-off, favoring finely tessellated text for magnified string entities, and coarse text for minimized string entities. The default <i>epsilon</i> value is <i>0.001</i>.</p>
 
@@ -864,18 +866,17 @@ and sprites.</p>
 
 <p class="note">Applications that use multiple typefaces need not be concerned about the cost of switching typefaces. The overhead of loading a new typeface is incurred only the first time. Applications are free to switch from one typeface to another and back again without penalty. Note, however that two typefaces with different <i>epsilon</i> or <i>outline</i> values are distinct even when loaded from the same TrueType font file.</p>
 
-<dt><a name="enable_timer"><tt>enable_timer</tt>(<i>enabled</i>)<dd><p>Enable or disable the <a href="#do_timer"><tt>do_timer</tt></a> callback. If <i>enabled</i> has value <tt>true</tt> then callback will occur.</p>
+<dt><a name="enable_timer"><tt>enable_timer</tt>(<i>enabled</i>)</a><dd><p>Enable or disable the <a href="#do_timer"><tt>do_timer</tt></a> callback. If <i>enabled</i> has value <tt>true</tt> then callback will occur.</p>
 
-<dt><a name="get_modifier"><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)<dd><p>Return the current state of a keyboard modifier. The return value is <tt>true</tt> if the modifier key is down. The queriable modifiers are:
+<dt><a name="get_modifier"><i>state</i> = <tt>get_modifier</tt>(<i>modifier</i>)</a><dd><p>Return the current state of a keyboard modifier. The return value is <tt>true</tt> if the modifier key is down. The queriable modifiers are:</p>
 
 <ul>
-<a name="key_modifier_shift"><li><tt>key_modifier_shift</tt>
-<a name="key_modifier_control"><li><tt>key_modifier_control</tt>
-<a name="key_modifier_alt"><li><tt>key_modifier_alt</tt>
+<li><a name="key_modifier_shift"><tt>key_modifier_shift</tt></a>
+<li><a name="key_modifier_control"><tt>key_modifier_control</tt></a>
+<li><a name="key_modifier_alt"><tt>key_modifier_alt</tt></a>
 </ul>
-</p>
 
-<dt><a name="get_joystick"><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)<dd><p>Return the current value of the X and Y axes of joystick <i>number</i>.</p>
+<dt><a name="get_joystick"><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)</a><dd><p>Return the current value of the X and Y axes of joystick <i>number</i>.</p>
 
 <p class="note">There is no direct mechanism provided to determine the number of joysticks connected to the system. The capability exists in SDL, but it isn't really necessary in Electro. If an application needs to count joysticks, it should observe the device numbers received by the <a href="#do_joystick"><tt>do_joystick</tt></a> callback. For example, allow the user to select the number of active joysticks by pressing Start on each.</p>
 
@@ -883,13 +884,13 @@ and sprites.</p>
 
 <!---------------------------------------------------------------------------->
 
-<h1> 3. Callbacks </h1>
+<h1>3. Callbacks</h1>
 
 <p>Callback functions are the mechanism by which Electro Lua applications respond to user interface events. An application may define these functions as needed. If a function exists then it is invoked when the corresponding event occurs. Callback functions should return a boolean value to indicate whether the event resulted in a dirty screen. Returning <tt>true</tt> schedules a screen update to occur at the next opportunity.</p>
 
 <dl>
 
-<dt><a name="do_point"><tt>do_point</tt>(<i>dx, dy</i>)<dd><p>This callback is invoked whenever the mouse pointer moves within the Electro main window. Motion is reported relatively, so the pointer may move an unlimited distance in any direction. Absolute position is not reported. If absolute mouse position is necessary, then it must be tracked manually, as follows:</p>
+<dt><a name="do_point"><tt>do_point</tt>(<i>dx, dy</i>)</a><dd><p>This callback is invoked whenever the mouse pointer moves within the Electro main window. Motion is reported relatively, so the pointer may move an unlimited distance in any direction. Absolute position is not reported. If absolute mouse position is necessary, then it must be tracked manually, as follows:</p>
 
 <pre>
 mouse_x = 0
@@ -902,9 +903,9 @@ function do_point(dx, dy)
 end
 </pre>
 
-<dt><a name="do_click"><tt>do_click</tt>(<i>b, s</i>)<dd><p>This callback is invoked whenever a mouse button is pressed or released. The <i>b</i> argument gives the button number, 1, 2, 3, etc. The <i>s</i> argument is a boolean giving button state. A value of <tt>true</tt> indicates the button has been pressed, and <tt>false</tt> indicates it has been released. Note, on most modern systems mouse wheel up and down are reported as presses of buttons 4 and 5. Button press events on wheel buttons do not have accompanying release events.</p>
+<dt><a name="do_click"><tt>do_click</tt>(<i>b, s</i>)</a><dd><p>This callback is invoked whenever a mouse button is pressed or released. The <i>b</i> argument gives the button number, 1, 2, 3, etc. The <i>s</i> argument is a boolean giving button state. A value of <tt>true</tt> indicates the button has been pressed, and <tt>false</tt> indicates it has been released. Note, on most modern systems mouse wheel up and down are reported as presses of buttons 4 and 5. Button press events on wheel buttons do not have accompanying release events.</p>
 
-<dt><a name="do_timer"><tt>do_timer</tt>(<i>dt</i>)<dd><p>The <tt>do_timer</tt> callback is invoked regularly while idling is enabled. The <i>dt</i> argument gives the amount of time, in seconds, that has passed since the last time the callback was invoked. The rate of callback is not defined, but it will happen as often as is possible. The <tt>do_timer</tt> function is intended to be used to update animations and other background processes. Applications should be sure to return <tt>true</tt> in order to force an update to the display.</p>
+<dt><a name="do_timer"><tt>do_timer</tt>(<i>dt</i>)</a><dd><p>The <tt>do_timer</tt> callback is invoked regularly while idling is enabled. The <i>dt</i> argument gives the amount of time, in seconds, that has passed since the last time the callback was invoked. The rate of callback is not defined, but it will happen as often as is possible. The <tt>do_timer</tt> function is intended to be used to update animations and other background processes. Applications should be sure to return <tt>true</tt> in order to force an update to the display.</p>
 
 <p>If an absolute measure of time is necessary, applications should accumulate  the <i>dt</i> parameter, just as they would accumulate relative mouse motion.</p>
 
@@ -921,13 +922,13 @@ end
 
 <p class="note">The update rate of the <tt>do_timer</tt> callback is deliberately obscured because it is nearly impossible to guarantee. While it might make sense to allow an application to request a callback rate, this request can only be precisely filled in a limited number of cases. Just trust the <i>dt</i>.</p>
 
-<dt><a name="do_frame"><tt>do_frame</tt>()<dd><p>This callback is invoked immediately before a frame is rendered. This is useful for operations that should be performed exactly once per frame.</p>
+<dt><a name="do_frame"><tt>do_frame</tt>()</a><dd><p>This callback is invoked immediately before a frame is rendered. This is useful for operations that should be performed exactly once per frame.</p>
 
 <p>In general, events are queued and several events are handled during each frame period. This is necessary because rendering is usually more expensive than event handling, and re-rendering after each event leads to sluggish performance. Often, the most efficient event-handling organization is to accumulate events as they arrive (as in the <a href="#do_timer"><tt>do_timer</tt></a> and <a href="#do_point"><tt>do_point</tt></a> examples) and use the resulting totals to update the scene at the last moment.</p>
 
 <p>Unlike other callbacks, the &ldquo;dirty&rdquo; flag return value from <tt>do_frame</tt> is ignored, as a redraw has already been scheduled.</p>
 
-<dt><a name="do_keyboard"><tt>do_keyboard</tt>(<i>k, s</i>)<dd><p>This callback is invoked whenever a key is pressed or released. The <i>s</i> argument is a boolean giving the key state. The <i>k</i> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. <a href="keys.html">Here is a full listing of keys and their associated value symbols</a>. When in doubt, the value of a key may be determined interactively as follows:</p>
+<dt><a name="do_keyboard"><tt>do_keyboard</tt>(<i>k, s</i>)</a><dd><p>This callback is invoked whenever a key is pressed or released. The <i>s</i> argument is a boolean giving the key state. The <i>k</i> argument gives a key identifier. For most keys, this gives the ASCII value of the unshifted character. For non-ASCII keys and modifiers it is a unique identifier outside of the range of ASCII. <a href="keys.html">Here is a full listing of keys and their associated value symbols</a>. When in doubt, the value of a key may be determined interactively as follows:</p>
 
 <pre>
 function do_keyboard(k, s)
@@ -940,9 +941,9 @@ function do_keyboard(k, s)
 end
 </pre>
 
-<dt><a name="do_joystick"><tt>do_joystick</tt>(<i>n, b, s</i>)<dd><p>This callback is invoked whenever a joystick button is pressed or released. The <i>n</i> argument gives the joystick device number. The <i>b</i> argument gives the button number. The <i>s</i> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are acquired by calling <a href="#get_joystick"><tt>get_joystick</tt></a> in a <a href="#do_timer"><tt>do_timer</tt></a> callback.</p>
+<dt><a name="do_joystick"><tt>do_joystick</tt>(<i>n, b, s</i>)</a><dd><p>This callback is invoked whenever a joystick button is pressed or released. The <i>n</i> argument gives the joystick device number. The <i>b</i> argument gives the button number. The <i>s</i> argument is a boolean giving button state. Applications respond to button presses in an event-driven fashion, but they should read joystick axis input more continuously. Usually joystick axes are acquired by calling <a href="#get_joystick"><tt>get_joystick</tt></a> in a <a href="#do_timer"><tt>do_timer</tt></a> callback.</p>
 
-<dt><a name="do_contact"><tt>do_contact</tt>(<i>entity<sub>A</sub>, entity<sub>B</sub>, p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, d</i>)<dd><p>This callback is invoked when a rigid body collision has been detected between two bodies with a <a href="#geom_attr_callback"><tt>geom_attr_callback</tt></a> category bit set. The <i>entity<sub>A</sub></i> and <i>entity<sub>B</sub></i> arguments give the entities (in no specific order), (<i>p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub></i>) gives the point of collision, (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>) gives the normal vector of the collision, and <i>d</i> gives the depth of penetration of the two geoms (assuming their <a href="#geom_attr_soft_cfm">CFM</a> values permit penetration.)</p>
+<dt><a name="do_contact"><tt>do_contact</tt>(<i>entity<sub>A</sub>, entity<sub>B</sub>, p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub>, n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub>, d</i>)</a><dd><p>This callback is invoked when a rigid body collision has been detected between two bodies with a <a href="#geom_attr_callback"><tt>geom_attr_callback</tt></a> category bit set. The <i>entity<sub>A</sub></i> and <i>entity<sub>B</sub></i> arguments give the entities (in no specific order), (<i>p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub></i>) gives the point of collision, (<i>n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub></i>) gives the normal vector of the collision, and <i>d</i> gives the depth of penetration of the two geoms (assuming their <a href="#geom_attr_soft_cfm">CFM</a> values permit penetration.)</p>
 
 <p>Keep in mind that a collision can produce multiple contacts, so more than one may be reported. For example, a box sitting flat on a floor makes contact across an area larger than a point. This may be reported as multiple point contacts. Similarly, a soft or non-responding collision will be reported multiple times. Soft impacting bodies remain in contact for several frames, and contact will be reported each frame. Non-responding colliding bodies are allowed to pass through each other, and contact will be reported every frame during which they intersect.</p>
 
@@ -951,4 +952,4 @@ end
 <!---------------------------------------------------------------------------->
 
 <p class="note" style="text-align: right"><i> rlk (at) evl.uic.edu </i></p>
-<body>
+</body>

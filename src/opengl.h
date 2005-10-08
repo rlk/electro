@@ -92,6 +92,7 @@ GLuint    opengl_frag_prog(const char *);
 GLuint    opengl_vert_prog(const char *);
 
 void      opengl_draw_xyz(float, float, float);
+void      opengl_draw_vec(float, float, float, float, float, float);
 void      opengl_draw_grd(float, float, float, float);
 void      opengl_draw_box(float, float, float);
 void      opengl_draw_cap(float, float);

@@ -105,6 +105,17 @@ void opengl_draw_xyz(float x, float y, float z)
     glPopMatrix();
 }
 
+void opengl_draw_vec(float px, float py, float pz,
+                     float qx, float qy, float qz)
+{
+    glBegin(GL_LINES);
+    {
+        glVertex3f(px, py, pz);
+        glVertex3f(qx, qy, qz);
+    }
+    glEnd();
+}
+
 void opengl_draw_grd(float a, float b, float c, float d)
 {
     const float da = (float) fabs(a);

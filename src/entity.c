@@ -620,11 +620,8 @@ void set_entity_geom_type(int i, int t, const float *v)
         struct entity *e = get_entity(i);
         int j = find_body_entity(i);
 
-        if (j)
-            e->geom = set_phys_geom_type(get_entity(i)->geom,
-                                         get_entity(j)->body, i, t, v);
-        else
-            e->geom = set_phys_geom_type(get_entity(i)->geom, 0, i, t, v);
+        e->geom = set_phys_geom_type(get_entity(i)->geom,
+                                     get_entity(j)->body, i, t, v);
 
         update_entity_position(i);
         update_entity_rotation(i);
@@ -637,17 +634,6 @@ void set_entity_join_type(int i, int j, int t)
     dBodyID bj = j ? get_entity(j)->body : 0;
 
     set_phys_join_type(bi, bj, t);
-
-    /*
-    if (i > 0)
-    {
-        if (j)
-            set_phys_join_type(get_entity(i)->body,
-                               get_entity(j)->body, t);
-        else
-            set_phys_join_type(get_entity(i)->body, 0, t);
-    }
-    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -688,17 +674,6 @@ void set_entity_join_attr_f(int i, int j, int p, float f)
     dBodyID bj = j ? get_entity(j)->body : 0;
 
     set_phys_join_attr_f(bi, bj, p, f);
-
-    /*
-    if (get_entity(i)->body)
-    {
-        if (j)
-            set_phys_join_attr_f(get_entity(i)->body,
-                                 get_entity(j)->body, p, f);
-        else
-            set_phys_join_attr_f(get_entity(i)->body, 0, p, f);
-    }
-    */
 }
 
 void set_entity_join_attr_v(int i, int j, int p, const float *v)
@@ -707,17 +682,6 @@ void set_entity_join_attr_v(int i, int j, int p, const float *v)
     dBodyID bj = j ? get_entity(j)->body : 0;
 
     set_phys_join_attr_v(bi, bj, p, v);
-
-    /*
-    if (get_entity(i)->body)
-    {
-        if (j)
-            set_phys_join_attr_v(get_entity(i)->body,
-                                 get_entity(j)->body, p, v);
-        else
-            set_phys_join_attr_v(get_entity(i)->body, 0, p, v);
-    }
-    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -762,28 +726,14 @@ float get_entity_geom_attr_f(int i, int p)
 
 float get_entity_join_attr_f(int i, int j, int p)
 {
-    if (get_entity(i)->body)
-    {
-        if (j)
-            return get_phys_join_attr_f(get_entity(i)->body,
-                                        get_entity(j)->body, p);
-        else
-            return get_phys_join_attr_f(get_entity(i)->body, 0, p);
-    }
-    else
-        return 0;
+    return get_phys_join_attr_f(get_entity(i)->body,
+                                get_entity(j)->body, p);
 }
 
 void get_entity_join_attr_v(int i, int j, int p, float *v)
 {
-    if (get_entity(i)->body)
-    {
-        if (j)
-            get_phys_join_attr_v(get_entity(i)->body,
-                                 get_entity(j)->body, p, v);
-        else
-            get_phys_join_attr_v(get_entity(i)->body, 0, p, v);
-    }
+    get_phys_join_attr_v(get_entity(i)->body,
+                         get_entity(j)->body, p, v);
 }
 
 /*---------------------------------------------------------------------------*/

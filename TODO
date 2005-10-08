@@ -1,6 +1,7 @@
 Fix varrier thickness
 get entity along vector
 get display pointer vector
+set entity rotation vectors
 Lua check for tracking (built-in simulator?)
 global state
     gravity vector

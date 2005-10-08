@@ -820,7 +820,7 @@ static int E_set_entity_geom_type(lua_State *L)
     int i = E_getentity (L, -n + 0);
     int t = L_getinteger(L, -n + 1);
 
-    float v[4] = { 0, 0, 0, 0 };
+    float v[6] = { 0, 0, 0, 0, 0, 0 };
 
     switch (t)
     {
@@ -841,6 +841,14 @@ static int E_set_entity_geom_type(lua_State *L)
         v[1] = L_getnumber(L, -n + 3);
         v[2] = L_getnumber(L, -n + 4);
         v[3] = L_getnumber(L, -n + 5);
+        break;
+    case dRayClass:
+        v[0] = L_getnumber(L, -n + 2);
+        v[1] = L_getnumber(L, -n + 3);
+        v[2] = L_getnumber(L, -n + 4);
+        v[3] = L_getnumber(L, -n + 5);
+        v[4] = L_getnumber(L, -n + 6);
+        v[5] = L_getnumber(L, -n + 7);
         break;
     }
 
@@ -2403,6 +2411,7 @@ static struct constant_def constants[] = {
     { "geom_type_plane",           dPlaneClass         },
     { "geom_type_sphere",          dSphereClass        },
     { "geom_type_capsule",         dCCylinderClass     },
+    { "geom_type_capsule",         dRayClass           },
 
     { "geom_attr_category",        GEOM_ATTR_CATEGORY  },
     { "geom_attr_collider",        GEOM_ATTR_COLLIDER  },

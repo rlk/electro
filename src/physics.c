@@ -534,6 +534,12 @@ dGeomID set_phys_geom_type(dGeomID geom, dBodyID body,
     case dPlaneClass:
         object    = dCreatePlane(space, v[0], v[1], v[2], v[3]);
         break;
+    case dRayClass:
+        object    = dCreateRay(space, sqrt(v[3] * v[3] +
+                                           v[4] * v[4] +
+                                           v[5] * v[5]));
+        dGeomRaySet(object, v[0], v[1], v[2], v[3], v[4], v[5]);
+        break;
     }
 
     /* Assign geom data and encapsulate the new geom in a transform. */
@@ -776,6 +782,21 @@ static void draw_phys_ccylinder(dGeomID geom)
     opengl_draw_cap(r, l);
 }
 
+static void draw_phys_ray(dGeomID geom)
+{
+    dVector3 p;
+    dVector3 v;
+
+    dReal l = dGeomRayGetLength(geom);
+
+    dGeomRayGet(geom, p, v);
+
+    opengl_draw_vec(p[0], p[1], p[2],
+                    p[0] + v[0] * l,
+                    p[1] + v[1] * l,
+                    p[2] + v[2] * l);
+}
+
 void draw_phys_geom(dGeomID geom)
 {
     glPushAttrib(GL_ENABLE_BIT);
@@ -797,6 +818,7 @@ void draw_phys_geom(dGeomID geom)
             case dBoxClass:       draw_phys_box      (object); break;
             case dSphereClass:    draw_phys_sphere   (object); break;
             case dCCylinderClass: draw_phys_ccylinder(object); break;
+            case dRayClass:       draw_phys_ray      (object); break;
             }
         }
     }
@@ -831,7 +853,7 @@ int startup_physics(void)
     group = dJointGroupCreate(0);
 
     dWorldSetGravity(world, 0, -9.8, 0);
-/*  dWorldSetAutoDisableFlag(world, 1); */
+    dWorldSetAutoDisableFlag(world, 1);
 
     return 1;
 }
