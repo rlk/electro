@@ -107,7 +107,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>Scene graph functionality is organized into a small class hierarchy. The entity base class handles all of the common properties and behaviors of scene graph elements, most notably 3D transformation, and the parent-child relationships that hold a scene hierarchy together. The subclasses handle the specifics of controlling the view and lighting, drawing 3D and 2D geometry, etc. The class hierarchy is as follows:</p>
 
-<ul>
+<ol start="0">
 <li><a href="#entity"> Entity</a>
 <ol>
 <li><a href="#object">Object</a>
@@ -118,7 +118,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 <li><a href="#pivot">Pivot</a>
 <li><a href="#galaxy">Galaxy</a>
 </ol>
-</ul>
+</ol>
 
 <p>Constructor functions instantiate scene graph objects.</p>
 
@@ -574,6 +574,8 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <h3><a name="camera">2.1.4. Camera</a></h3>
 <dl>
+
+<dt><a name="get_camera_vector"><i>x, y, z</i> = <tt>get_camera_vector</tt>(<i>camera, display<sub>x</sub>, display<sub>y</sub></i>)</a><dd><p>Return the normalized world-space vector corresponding to the display position (<i>display<sub>x</sub>, display<sub>y</sub></i>) as viewed from <i>camera</i>. In effect, this provides a mapping between the 2D display definition as specified using <a href="#set_tile_viewport"><tt>set_tile_viewport</tt></a> and its 3D definition specified by <a href="#set_tile_position"><tt>set_tile_position</tt></a>. It is especially useful when doing 3D picking using the 2D pointer position determined using <a href="#do_point"><tt>do_point</tt></a>. The returned vector (<i>x, y, z</i>) takes into account the current camera offset, determined by <a href="#set_camera_offset"><tt>set_camera_offset</tt></a> or by <a href="#option-h">head tracking</a>, but <i>not</i> any eye offset specified using <a href="#set_camera_stereo"><tt>set_camera_stereo</tt></a>. If the given point does not fall within any defined tile, then the last known correct world-space vector is returned. The default is (<i>0.0, 0.0, 0.0</i>).</p>
 
 <dt><a name="set_camera_stereo"><tt>set_camera_stereo</tt>(<i>camera, mode, L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>)</a><dd><p>Set stereo options on the given camera. The <i>mode</i> argument gives the stereo method, as described below. The (<i>L<sub>x</sub>, L<sub>y</sub>, L<sub>z</sub></i>) and (<i>R<sub>x</sub>, R<sub>y</sub>, R<sub>z</sub></i>) arguments give the offsets from the camera to the user's left and right eyes.</p>
 

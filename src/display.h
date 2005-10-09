@@ -158,6 +158,7 @@ int  get_window_stereo(void);
 
 /*---------------------------------------------------------------------------*/
 
+void  get_display_point(float[3], const float[3], int, int);
 void  get_display_union(float[4]);
 void  get_display_bound(float[6]);
 

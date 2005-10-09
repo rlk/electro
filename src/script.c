@@ -1361,6 +1361,22 @@ static int E_set_string_text(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* Camera functions                                                          */
 
+static int E_get_camera_vector(lua_State *L)
+{
+    float v[3];
+
+    get_camera_vector(E_getentity(L, -3),
+                      E_getcamera(L, -3), v,
+                      L_getnumber(L, -2),
+                      L_getnumber(L, -1));
+
+    lua_pushnumber(L, v[0]);
+    lua_pushnumber(L, v[1]);
+    lua_pushnumber(L, v[2]);
+
+    return 3;
+}
+
 static int E_set_camera_offset(lua_State *L)
 {
     float v[3], M[16] = {
@@ -2305,6 +2321,7 @@ static struct function_def functions[] = {
 
     /* Camera functions */
 
+    { "get_camera_vector",     E_get_camera_vector     },
     { "set_camera_offset",     E_set_camera_offset     },
     { "set_camera_stereo",     E_set_camera_stereo     },
     { "set_camera_range",      E_set_camera_range      },

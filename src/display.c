@@ -98,14 +98,15 @@ static void bound_display(void)
 
     /* Compute the total pixel size of all tiles. */
 
-	if (n > 0)
-	{
+    if (n > 0)
+    {
         struct tile *T = (struct tile *) vecget(tile, 0);
-		l = T->pix_x;
-		r = T->pix_x + T->pix_w;
-		b = T->pix_y;
-		t = T->pix_y + T->pix_h;
-	}
+
+        l = T->pix_x;
+        r = T->pix_x + T->pix_w;
+        b = T->pix_y;
+        t = T->pix_y + T->pix_h;
+    }
 
     for (i = 0; i < vecnum(tile); ++i)
     {
@@ -512,7 +513,10 @@ void set_window_w(int w)
         local->win_w = w;
 
         for (i = 0; i < local->n; ++i)
+        {
             ((struct tile *) vecget(tile, local->tile[i]))->win_w = w;
+            ((struct tile *) vecget(tile, local->tile[i]))->pix_w = w;
+        }
     }
 }
 
@@ -525,8 +529,11 @@ void set_window_h(int h)
         local->win_h = h;
 
         for (i = 0; i < local->n; ++i)
-            ((struct tile *) vecget(tile, local->tile[i]))->win_h = h;
-    }
+        {
+             ((struct tile *) vecget(tile, local->tile[i]))->win_h = h;
+             ((struct tile *) vecget(tile, local->tile[i]))->pix_h = h;
+        }
+   }
 }
 
 int get_window_w(void)   { return local ? local->win_w : DEFAULT_W; }
@@ -548,6 +555,49 @@ int get_window_framed(void)
 }
 
 /*---------------------------------------------------------------------------*/
+
+void get_display_point(float v[3], const float p[3], int x, int y)
+{
+    static float last_v[3] = { 0.0f, 0.0f, 0.0f };
+
+    int i, n = vecnum(tile);
+
+    /* Search all tiles for one encompassing the given point (x, y). */
+
+    for (i = 0; i < n; ++i)
+    {
+        struct tile *T = (struct tile *) vecget(tile, i);
+
+        if (T->pix_x <= x && x < T->pix_x + T->pix_w &&
+            T->pix_y <= y && y < T->pix_y + T->pix_h)
+        {
+            /* Compute the world-space vector of this point. */
+
+            const float kx =        (float) (x - T->pix_x) / T->pix_w;
+            const float ky = 1.0f - (float) (y - T->pix_y) / T->pix_h;
+
+            v[0] = (T->o[0] + T->r[0] * kx + T->u[0] * ky) - p[0];
+            v[1] = (T->o[1] + T->r[1] * kx + T->u[1] * ky) - p[1];
+            v[2] = (T->o[2] + T->r[2] * kx + T->u[2] * ky) - p[2];
+
+            normalize(v);
+
+            /* Cache this value. */
+
+            last_v[0] = v[0];
+            last_v[1] = v[1];
+            last_v[2] = v[2];
+                
+            return;
+        }
+    }
+
+    /* The point does not fall within a tile.  Return the previous value. */
+
+    v[0] = last_v[0];
+    v[1] = last_v[1];
+    v[2] = last_v[2];
+}
 
 void get_display_union(float b[4])
 {
@@ -574,6 +624,8 @@ void get_display_bound(float b[6])
     if (n > 0)
     {
         struct tile *T = (struct tile *) vecget(tile, 0);
+
+        /* Compute the rectangular union of all tiles. */
 
         b[0] = b[3] = T->o[0];
         b[1] = b[4] = T->o[1];
@@ -622,6 +674,8 @@ void get_display_bound(float b[6])
     }
     else
     {
+        /* No tiles are defined.  Return the defaults. */
+
         b[0] = DEFAULT_OX;
         b[1] = DEFAULT_OY;
         b[2] = DEFAULT_OZ;

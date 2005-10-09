@@ -140,6 +140,39 @@ void recv_create_camera(void)
 
 /*---------------------------------------------------------------------------*/
 
+void get_camera_vector(int j, int i, float v[3], int x, int y)
+{
+    struct camera *c = get_camera(i);
+
+    float X[3];
+    float Y[3];
+    float Z[3];
+    float V[3];
+
+    /* Get the point vector in camera coordinates. */
+
+    if (c->type == CAMERA_PERSP)
+        get_display_point(V, c->pos_offset, x, y);
+    else
+    {
+        V[0] =  x;
+        V[1] =  y;
+        V[2] = -1.0;
+    }
+
+    /* Transform this vector to world coordinates. */
+
+    get_entity_x_vector(j, X);
+    get_entity_y_vector(j, Y);
+    get_entity_z_vector(j, Z);
+
+    v[0] = V[0] * X[0] + V[1] * Y[0] + V[2] * Z[0];
+    v[1] = V[0] * X[1] + V[1] * Y[1] + V[2] * Z[1];
+    v[2] = V[0] * X[2] + V[1] * Y[2] + V[2] * Z[2];
+}
+
+/*---------------------------------------------------------------------------*/
+
 void send_set_camera_offset(int i, const float p[3], const float M[16])
 {
     struct camera *c = get_camera(i);

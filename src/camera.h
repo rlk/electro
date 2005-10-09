@@ -30,6 +30,8 @@ int  get_camera_eye(void);
 void get_camera_pos(float[3]);
 void get_camera_rot(float[16]);
 
+void get_camera_vector(int, int, float[3], int, int);
+
 /*---------------------------------------------------------------------------*/
 
 int  send_create_camera(int);
