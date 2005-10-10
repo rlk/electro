@@ -326,6 +326,10 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <li><a name="geom_type_capsule"><tt>geom_type_capsule</tt><i>, r, l</i></a><p>A cylinder with spherical end caps, oriented along the Z axis. The radius of the cylinder is <i>r</i> and its length is <i>l</i>.</p>
 
+<li><a name="geom_type_ray"><tt>geom_type_ray</tt><i>, p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub>, v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i></a><p>An infinitely thin line from the point (<i>p<sub>x</sub>, p<sub>y</sub>, p<sub>z</sub></i>) along the length of vector (<i>v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub></i>).
+
+<p><b>Note</b>: the ray is a non-colliding geom type. It can detect collision and generate contact callbacks, but it does not respond to collision physically. It is useful when finding a selected entity in response to a mouse click, or when determining whether a gunshot would hit. It can also be used as an entity trip-wire.</p>
+
 <li><a name="geom_type_plane"><tt>geom_type_plane</tt><i>, a, b, c, d</i></a><p>A plane satisfying the equation <i>ax + by + cz = d</i>.</p>
 
 <p><b>Note</b>: the plane is a degenerate geom type. It cannot act as part of a body and <i>must</i> be attached to the environment. It is defined only by the parameters given at creation time and does not respond to entity transformation. Planes are commonly used to define floors or walls to contain the physical system.</p>

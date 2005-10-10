@@ -107,22 +107,24 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
             if ((category1 & d2->response) ||
                 (category2 & d1->response))
                 for (i = 0; i < n; ++i)
-                {
-                    dJointID c;
+                    if (dGeomGetClass(contact[0].geom.g1) != dRayClass &&
+                        dGeomGetClass(contact[0].geom.g2) != dRayClass)
+                    {
+                        dJointID c;
                 
-                    contact[i].surface.mode = dContactBounce
-                                            | dContactSoftCFM
-                                            | dContactSoftERP;
+                        contact[i].surface.mode = dContactBounce
+                                                | dContactSoftCFM
+                                                | dContactSoftERP;
 
-                    contact[i].surface.mu         = friction;
-                    contact[i].surface.bounce     = bounce;
-                    contact[i].surface.soft_cfm   = soft_cfm;
-                    contact[i].surface.soft_erp   = soft_erp;
-                    contact[i].surface.bounce_vel = 0.10;
+                        contact[i].surface.mu         = friction;
+                        contact[i].surface.bounce     = bounce;
+                        contact[i].surface.soft_cfm   = soft_cfm;
+                        contact[i].surface.soft_erp   = soft_erp;
+                        contact[i].surface.bounce_vel = 0.10;
 
-                    c = dJointCreateContact(world, group, contact + i);
-                    dJointAttach(c, b1, b2);
-                }
+                        c = dJointCreateContact(world, group, contact + i);
+                        dJointAttach(c, b1, b2);
+                    }
 
             /* Report contacts to the Lua script, if requested. */
 
@@ -535,6 +537,7 @@ dGeomID set_phys_geom_type(dGeomID geom, dBodyID body,
         object    = dCreatePlane(space, v[0], v[1], v[2], v[3]);
         break;
     case dRayClass:
+        transform = dCreateGeomTransform(space);
         object    = dCreateRay(space, sqrt(v[3] * v[3] +
                                            v[4] * v[4] +
                                            v[5] * v[5]));

@@ -2428,7 +2428,7 @@ static struct constant_def constants[] = {
     { "geom_type_plane",           dPlaneClass         },
     { "geom_type_sphere",          dSphereClass        },
     { "geom_type_capsule",         dCCylinderClass     },
-    { "geom_type_capsule",         dRayClass           },
+    { "geom_type_ray",             dRayClass           },
 
     { "geom_attr_category",        GEOM_ATTR_CATEGORY  },
     { "geom_attr_collider",        GEOM_ATTR_COLLIDER  },

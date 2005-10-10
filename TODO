@@ -1,25 +1,30 @@
-Fix varrier thickness
 get entity along vector
-get display pointer vector
+        fix ray
 set entity rotation vectors
-Lua check for tracking (built-in simulator?)
 global state
-    gravity vector
-    ambient light
+        gravity vector
+        ambient light
 Build against mesa
-OBJ shading groups
-OBJ extract
+OBJ
+        shading groups
+        surface extract?
+        Stronger index checking
+        extract libobj?
+        Tangent space basis per vertex
+        MTL texture transform?
 MIDI IO
-Stronger OBJ index checking?
 UDP texture
 UDP audio?
 access more joystick axes
 GLslang
-positional audio
-multichannel audio
-OpenAL?
+skeletal animation
+audio
+        positional
+        multichannel
+
+tracking
+        windows trackd
+        Lua check for tracking (built-in simulator?)
+
 cwall config
-windows trackd
-rolling star
-brain
 Telnet to luasocket
