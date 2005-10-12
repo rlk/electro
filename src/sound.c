@@ -24,6 +24,7 @@
 /*---------------------------------------------------------------------------*/
 
 static int enabled = 0;
+static int camera  = 0;
 
 #define BUFSIZE 2048
 #define BUFFREQ 44100
@@ -39,6 +40,10 @@ struct sound
 {
     int mode;
     int chan;
+    int entity;
+
+    float amplitude;
+    float frequency;
 
     OggVorbis_File file;
 };
@@ -129,6 +134,13 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
         if (s->mode == SOUND_PLAY || s->mode == SOUND_LOOP)
         {
+            float p[3];
+            float q[3];
+
+            get_entity_position(camera,    p);
+            get_entity_position(s->entity, q);
+
+            
             if (mix_sound(i, buff, output, length))
                 s->mode = SOUND_STOP;
         }
@@ -161,6 +173,9 @@ int load_sound(const char *filename)
 
                 s->mode = SOUND_STOP;
                 s->chan = I->channels;
+
+                s->amplitude = 1.0f;
+                s->frequency = 1.0f;
 
                 return i;
             }
@@ -212,6 +227,26 @@ void play_sound(int i)
 void loop_sound(int i)
 {
     set_sound_mode(i, SOUND_LOOP);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void set_sound_entity(int i, int j)
+{
+    if (enabled)
+        get_sound(i)->entity = j;
+}
+
+void set_sound_amplitude(int i, float a)
+{
+    if (enabled)
+        get_sound(i)->amplitude = a;
+}
+
+void set_sound_frequency(int i, float f)
+{
+    if (enabled)
+        get_sound(i)->frequency = f;
 }
 
 /*---------------------------------------------------------------------------*/

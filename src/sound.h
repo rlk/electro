@@ -30,6 +30,12 @@ void stop_sound(int);
 void play_sound(int);
 void loop_sound(int);
 
+void set_sound_entity(int, int);
+void set_sound_camera(int);
+
+void set_sound_amplitude(int, float);
+void set_sound_frequency(int, float);
+
 void nuke_sounds(void);
 
 /*---------------------------------------------------------------------------*/
