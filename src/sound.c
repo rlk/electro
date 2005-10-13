@@ -11,20 +11,23 @@
 /*    General Public License for more details.                               */
 
 #include <SDL.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 
 #include "utility.h"
+#include "matrix.h"
 #include "vector.h"
 #include "entity.h"
 #include "sound.h"
 
 /*---------------------------------------------------------------------------*/
 
-static int enabled = 0;
-static int camera  = 0;
+static int   enabled     = 0;
+static int   receiver    = 0;
+static float attenuation = 10.0f;
 
 #define BUFSIZE 2048
 #define BUFFREQ 44100
@@ -40,7 +43,7 @@ struct sound
 {
     int mode;
     int chan;
-    int entity;
+    int emitter;
 
     float amplitude;
     float frequency;
@@ -73,19 +76,21 @@ static int new_sound(void)
 }
 
 /*---------------------------------------------------------------------------*/
-
-static int mix_sound(int i, float *fbuf, short *sbuf, int max)
+#ifdef SNIP
+static int mix_sound(int i, float *fbuf,
+                            short *sbuf, int max, float kl, float kr)
 {
     struct sound *s = get_sound(i);
 
     char *buf = (char *) sbuf;
 
-    int j, k, d = (s->chan == 2) ? 1 : 2;
-
-    int siz = max / d;
+    int siz = max;
     int tot = 0;
     int len = 0;
     int bit = 0;
+    int j;
+
+    float k = 0;
 
     /* Try to fill the short buffer with Ogg.  Rewind loops as necessary. */
 
@@ -103,18 +108,112 @@ static int mix_sound(int i, float *fbuf, short *sbuf, int max)
             else
                 break;
         }
-        
-    /* Mix read data into the float buffer, duplicating a mono channel. */
 
-    tot = tot / sizeof (short);
+    /* Mix read data into the float buffer. */
 
-    for (j = 0; j < tot; ++j)
-        for (k = 0; k < d; ++k)
-            fbuf[j * d + k] += (float) sbuf[j];
+    tot = tot / (sizeof (short) * s->chan);
+
+    if (s->chan == 2)
+        for (j = 0; j < tot; ++j)
+        {
+            int i = (int) floor(k);
+
+            *(fbuf++) = sbuf[i + 0] * kl;
+            *(fbuf++) = sbuf[i + 1] * kr;
+
+            k += s->frequency * 2;
+        }
+
+    if (s->chan == 1)
+        for (j = 0; j < tot; ++j)
+        {
+            int i = (int) floor(k);
+
+            *(fbuf++) = sbuf[i] * kl;
+            *(fbuf++) = sbuf[i] * kr;
+
+            k += s->frequency;
+        }
 
     /* Signal EOF. */
 
     return (tot == 0);
+}
+#endif
+
+static int mix_chunk(int i, float *fbuf,
+                            short *sbuf, int len, float kl, float kr)
+{
+    struct sound *s = get_sound(i);
+
+    float k = 0;
+    int   n = 0;
+
+    /* Mix read data into the float buffer. */
+
+    len = len / (2 * s->chan);
+
+    if (s->chan == 2)
+        while (k < len && n < 2 * BUFSIZE)
+        {
+            int i = (int) floor(k);
+
+            fbuf[n++] = sbuf[i + 0] * kl;
+            fbuf[n++] = sbuf[i + 1] * kr;
+
+            k += s->frequency;
+        }
+
+    if (s->chan == 1)
+        while (k < len && n < 2 * BUFSIZE)
+        {
+            int i = (int) floor(k);
+
+            fbuf[n++] = sbuf[i] * kl;
+            fbuf[n++] = sbuf[i] * kr;
+
+            k += s->frequency;
+        }
+
+    return n / 2;
+}
+
+static int mix_sound(int i, float *fbuf,
+                            short *sbuf, int max, float kl, float kr)
+{
+    struct sound *s = get_sound(i);
+
+    /* Compute the number of frames to be acquired. */
+
+    int tot = max / (sizeof (short) * 2);
+    int len = 0;
+    int bit = 0;
+
+    /* Try to fill the short buffer with Ogg.  Rewind loops as necessary. */
+
+    while (tot > 0)
+    {
+        int get = tot * 2 * s->chan;
+
+        if ((len = ov_read(&s->file, (char *) sbuf, get, 0, 2, 1, &bit)) > 0)
+        {
+            int num = mix_chunk(i, fbuf, sbuf, len, kl, kr);
+
+            tot  -= num;
+            fbuf += num * 2;
+        }
+        else
+        {
+            if (s->mode == SOUND_LOOP)
+                ov_pcm_seek(&s->file, 0);
+            else
+                break;
+        }
+    }
+
+    /* Signal EOF. */
+
+    return (len == 0);
 }
 
 static void step_sound(void *data, Uint8 *stream, int length)
@@ -134,14 +233,52 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
         if (s->mode == SOUND_PLAY || s->mode == SOUND_LOOP)
         {
-            float p[3];
-            float q[3];
+            float kl = s->amplitude;
+            float kr = s->amplitude;
 
-            get_entity_position(camera,    p);
-            get_entity_position(s->entity, q);
+            /* If there exist source and listener for this sound... */
 
+            if (receiver && s->emitter)
+            {
+                float x[3];
+                float p[3];
+                float q[3];
+                float d[3];
+                float dl, dr;
+
+                /* Find the direction and distance from source to listener. */
+
+                get_entity_x_vector(receiver,   x);
+                get_entity_position(receiver,   p);
+                get_entity_position(s->emitter, q);
+
+                d[0] = q[0] - p[0];
+                d[1] = q[1] - p[1];
+                d[2] = q[2] - p[2];
+
+                /* Compute the panning scalars. */
+                
+                dl = -d[0] * x[0] + d[1] * x[1] + d[2] * x[2];
+                dr = +d[0] * x[0] + d[1] * x[1] + d[2] * x[2];
+
+                if (dl > 1)
+                    kl = (attenuation - dl) / (attenuation - 1);
+                else
+                    kl = (dl * 0.5f + 0.5f);
+
+                if (dr > 1)
+                    kr = (attenuation - dr) / (attenuation - 1);
+                else
+                    kr = (dr * 0.5f + 0.5f);
+
+                if (kl < 0) kl = 0;
+                if (kr < 0) kr = 0;
+            }
+
+            /* Mix this sound. */
             
-            if (mix_sound(i, buff, output, length))
+            if (mix_sound(i, buff, output, length, kl * s->amplitude,
+                                                   kr * s->amplitude))
                 s->mode = SOUND_STOP;
         }
     }
@@ -231,10 +368,19 @@ void loop_sound(int i)
 
 /*---------------------------------------------------------------------------*/
 
-void set_sound_entity(int i, int j)
+void set_sound_emitter(int i, int j)
 {
     if (enabled)
-        get_sound(i)->entity = j;
+        get_sound(i)->emitter = j;
+}
+
+void set_sound_receiver(int j, float a)
+{
+    if (enabled)
+    {
+        receiver    = j;
+        attenuation = a;
+    }
 }
 
 void set_sound_amplitude(int i, float a)
@@ -246,7 +392,7 @@ void set_sound_amplitude(int i, float a)
 void set_sound_frequency(int i, float f)
 {
     if (enabled)
-        get_sound(i)->frequency = f;
+        get_sound(i)->frequency = MAX(f, 1.0);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1708,6 +1708,34 @@ static int E_loop_sound(lua_State *L)
     return 0;
 }
 
+static int E_set_sound_emitter(lua_State *L)
+{
+    set_sound_emitter(E_getsound (L, -2),
+                      E_getentity(L, -1));
+    return 0;
+}
+
+static int E_set_sound_receiver(lua_State *L)
+{
+    set_sound_receiver(E_getentity(L, -2),
+                       L_getnumber(L, -1));
+    return 0;
+}
+
+static int E_set_sound_amplitude(lua_State *L)
+{
+    set_sound_amplitude(E_getsound (L, -2),
+                        L_getnumber(L, -1));
+    return 0;
+}
+
+static int E_set_sound_frequency(lua_State *L)
+{
+    set_sound_frequency(E_getsound (L, -2),
+                        L_getnumber(L, -1));
+    return 0;
+}
+
 /*===========================================================================*/
 /* Console functions                                                         */
 
@@ -2363,6 +2391,11 @@ static struct function_def functions[] = {
     { "stop_sound",            E_stop_sound            },
     { "play_sound",            E_play_sound            },
     { "loop_sound",            E_loop_sound            },
+
+    { "set_sound_emitter",     E_set_sound_emitter     },
+    { "set_sound_receiver",    E_set_sound_receiver    },
+    { "set_sound_amplitude",   E_set_sound_amplitude   },
+    { "set_sound_frequency",   E_set_sound_frequency   },
 
     /* Console functions */
 

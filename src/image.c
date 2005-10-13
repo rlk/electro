@@ -731,7 +731,7 @@ void recv_delete_image(void)
 void get_image_c(int i, int x, int y, unsigned char c[4])
 {
     struct image  *p      = get_image(i);
-    unsigned char *pixels = (unsigned char *) p->p;
+    unsigned char *pixels = (unsigned char *) p->p[0];
 
     /* Return a pixel in any format as RGBA format. */
 
