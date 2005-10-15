@@ -100,11 +100,7 @@ void      opengl_draw_sph(float);
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef NDEBUG
-#define opengl_check(...) { }
-#else
-void    opengl_check(const char *, ...);
-#endif
+void opengl_check(const char *, ...);
 
 /*---------------------------------------------------------------------------*/
 

@@ -18,7 +18,6 @@
 #include <math.h>
 
 #include "opengl.h"
-#include "version.h"
 #include "utility.h"
 #include "display.h"
 #include "console.h"
@@ -593,7 +592,7 @@ int startup_console(const char *filename, int w, int h)
 
         color_console(1.0f, 1.0f, 0.0f);
 
-        print("  |||  ELECTRO %s\n", get_version());
+        print("  |||  ELECTRO\n");
         print("  O o  Copyright (C) 2005  Robert Kooima \n");
         print("   -   http://www.evl.uic.edu/rlk/electro\n");
 

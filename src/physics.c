@@ -760,7 +760,10 @@ static void draw_phys_plane(dGeomID geom)
     dVector4 v;
 
     dGeomPlaneGetParams(geom, v);
-    opengl_draw_grd(v[0], v[1], v[2], v[3]);
+    opengl_draw_grd((float) v[0],
+                    (float) v[1],
+                    (float) v[2],
+                    (float) v[3]);
 }
 
 static void draw_phys_box(dGeomID geom)
@@ -768,12 +771,14 @@ static void draw_phys_box(dGeomID geom)
     dVector3 v;
 
     dGeomBoxGetLengths(geom, v);
-    opengl_draw_box(v[0], v[1], v[2]);
+    opengl_draw_box((float) v[0],
+                    (float) v[1],
+                    (float) v[2]);
 }
 
 static void draw_phys_sphere(dGeomID geom)
 {
-    opengl_draw_sph(dGeomSphereGetRadius(geom));
+    opengl_draw_sph((float) dGeomSphereGetRadius(geom));
 }
 
 static void draw_phys_ccylinder(dGeomID geom)
@@ -782,7 +787,7 @@ static void draw_phys_ccylinder(dGeomID geom)
     dReal l;
 
     dGeomCCylinderGetParams(geom, &r, &l);
-    opengl_draw_cap(r, l);
+    opengl_draw_cap((float) r, (float) l);
 }
 
 static void draw_phys_ray(dGeomID geom)
@@ -794,10 +799,12 @@ static void draw_phys_ray(dGeomID geom)
 
     dGeomRayGet(geom, p, v);
 
-    opengl_draw_vec(p[0], p[1], p[2],
-                    p[0] + v[0] * l,
-                    p[1] + v[1] * l,
-                    p[2] + v[2] * l);
+    opengl_draw_vec((float)  p[0],
+                    (float)  p[1],
+                    (float)  p[2],
+                    (float) (p[0] + v[0] * l),
+                    (float) (p[1] + v[1] * l),
+                    (float) (p[2] + v[2] * l));
 }
 
 void draw_phys_geom(dGeomID geom)
@@ -842,7 +849,9 @@ void draw_phys_body(dBodyID body)
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
 
-        opengl_draw_xyz(mass.c[0], mass.c[1], mass.c[2]);
+        opengl_draw_xyz((float) mass.c[0],
+                        (float) mass.c[1],
+                        (float) mass.c[2]);
     }
     glPopAttrib();
 }

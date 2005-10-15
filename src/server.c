@@ -15,7 +15,6 @@
 
 #include "opengl.h"
 #include "video.h"
-#include "version.h"
 #include "tracker.h"
 #include "joystick.h"
 #include "console.h"
@@ -149,7 +148,7 @@ static void server_perf(void)
     {
         char buf[32];
 
-        sprintf(buf, "%s %s (%d FPS)", TITLE, get_version(), fps_new);
+        sprintf(buf, "%s (%d FPS)", TITLE, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
         fps_old = fps_new;

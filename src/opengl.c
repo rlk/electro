@@ -258,8 +258,8 @@ static void init_opengl_cyl(void)
     {
         for (i = 0; i < 360; i += d)
         {
-            float x = cos(RAD((float) i));
-            float y = sin(RAD((float) i));
+            float x = (float) cos(RAD(i));
+            float y = (float) sin(RAD(i));
 
             glVertex3f(x, y, -0.5f);
             glVertex3f(x, y, +0.5f);
@@ -282,9 +282,9 @@ static void init_opengl_cap(void)
         {
             for (j = 0; j <= 90; j += d)
             {
-                float x = cos(RAD((float) i)) * cos(RAD((float) j));
-                float y = sin(RAD((float) i)) * cos(RAD((float) j));
-                float z =                       sin(RAD((float) j));
+                float x = (float) (cos(RAD(i)) * cos(RAD(j)));
+                float y = (float) (sin(RAD(i)) * cos(RAD(j)));
+                float z = (float) (              sin(RAD(j)));
 
                 glVertex3f(x, y, z);
             }
@@ -300,9 +300,9 @@ static void init_opengl_cap(void)
         {
             for (i = 0; i < 360; i += d)
             {
-                float x = cos(RAD((float) i)) * cos(RAD((float) j));
-                float y = sin(RAD((float) i)) * cos(RAD((float) j));
-                float z =                       sin(RAD((float) j));
+                float x = (float) (cos(RAD(i)) * cos(RAD(j)));
+                float y = (float) (sin(RAD(i)) * cos(RAD(j)));
+                float z = (float) (              sin(RAD(j)));
 
                 glVertex3f(x, y, z);
             }
@@ -607,10 +607,9 @@ GLuint opengl_frag_prog(const char *text)
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef NDEBUG
-
 void opengl_check(const char *format, ...)
 {
+#ifndef NDEBUG
     GLenum err;
 
     while ((err = glGetError()) != GL_NO_ERROR)
@@ -624,9 +623,8 @@ void opengl_check(const char *format, ...)
 
         error("OpenGL error: %s: %s", gluErrorString(err), string);
     }
-}
-
 #endif
+}
 
 /*---------------------------------------------------------------------------*/
 

@@ -1365,10 +1365,10 @@ static int E_get_camera_vector(lua_State *L)
 {
     float v[3];
 
-    get_camera_vector(E_getentity(L, -3),
-                      E_getcamera(L, -3), v,
-                      L_getnumber(L, -2),
-                      L_getnumber(L, -1));
+    get_camera_vector(E_getentity (L, -3),
+                      E_getcamera (L, -3), v,
+                      L_getinteger(L, -2),
+                      L_getinteger(L, -1));
 
     lua_pushnumber(L, v[0]);
     lua_pushnumber(L, v[1]);

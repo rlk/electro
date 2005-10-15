@@ -155,8 +155,8 @@ void get_camera_vector(int j, int i, float v[3], int x, int y)
         get_display_point(V, c->pos_offset, x, y);
     else
     {
-        V[0] =  x;
-        V[1] =  y;
+        V[0] = (float) x;
+        V[1] = (float) y;
         V[2] = -1.0;
     }
 

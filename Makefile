@@ -75,7 +75,6 @@ endif
 
 LIBS += $(LUALIB) $(ODELIB) $(SDLLIB) $(FT2LIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
-VERS =	src/version.o
 OBJS =	src/opengl.o   \
 	src/video.o    \
 	src/glyph.o    \
@@ -120,11 +119,11 @@ DEPS= $(OBJS:.o=.d)
 %.o : %.c
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
-$(TARG) : $(OBJS) $(VERS) Makefile
-	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(VERS) $(LIBDIR) $(LIBS)
+$(TARG) : $(OBJS) Makefile
+	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS) $(VERS)
+	rm -f $(TARG) $(OBJS)
 
 distclean:
 	find . -name .svn | xargs rm -rf
@@ -167,22 +166,6 @@ osxdist : $(TARG)
           @executable_path/lib/libogg.0.dylib        lib/libvorbisfile.3.dylib
 	$(CH) /sw/lib/libogg.0.dylib        \
           @executable_path/lib/libogg.0.dylib        lib/libvorbis.0.dylib
-
-#------------------------------------------------------------------------------
-# If Subversion is available, report the revision number in the source.
-
-ifneq ($(shell which svnversion),)
-
-src/version.c : $(OBJS)
-	echo -n 'const char *get_version(void) { const char *str = "' \
-	                              > src/version.c
-	svnversion -n . | tr -d '\n' >> src/version.c
-	echo '"; return str; }'      >> src/version.c
-else
-
-src/version.c : $(OBJS)
-	echo 'const char *get_version(void) { return ""; }' > src/version.c
-endif
 
 #------------------------------------------------------------------------------
 
