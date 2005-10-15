@@ -216,10 +216,6 @@ SOURCE=..\src\vector.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\version.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\video.c
 # End Source File
 # End Group
@@ -349,10 +345,6 @@ SOURCE=..\src\utility.h
 # Begin Source File
 
 SOURCE=..\src\vector.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\version.h
 # End Source File
 # Begin Source File
 
