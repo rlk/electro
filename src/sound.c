@@ -35,23 +35,33 @@ static float attenuation = 10.0f;
 #define BUFFORM AUDIO_S16
 
 static SDL_AudioSpec spec;
-static float        *buff;
 
 /*---------------------------------------------------------------------------*/
 
+struct frame
+{
+    float L;
+    float R;
+};
+
 struct sound
 {
-    int mode;
-    int chan;
-    int emitter;
+    int   mode;
+    float point;
+    int   length;
+    int   emitter;
 
     float amplitude;
     float frequency;
 
-    OggVorbis_File file;
+    float L_mix;
+    float R_mix;
+
+    struct frame *data;
 };
 
-static vector_t sound;
+static struct frame *mix;
+static vector_t      sound;
 
 /*---------------------------------------------------------------------------*/
 
@@ -67,7 +77,7 @@ static int new_sound(void)
         int i, n = vecnum(sound);
 
         for (i = 0; i < n; ++i)
-            if (get_sound(i)->chan == 0)
+            if (get_sound(i)->data == 0)
                 return i;
 
         return vecadd(sound);
@@ -76,156 +86,57 @@ static int new_sound(void)
 }
 
 /*---------------------------------------------------------------------------*/
-#ifdef SNIP
-static int mix_sound(int i, float *fbuf,
-                            short *sbuf, int max, float kl, float kr)
+
+static void mix_sound(struct sound *s, int n, float kl, float kr)
 {
-    struct sound *s = get_sound(i);
+    float dl = (kl - s->L_mix) / n;
+    float dr = (kr - s->R_mix) / n;
 
-    char *buf = (char *) sbuf;
+    int i;
 
-    int siz = max;
-    int tot = 0;
-    int len = 0;
-    int bit = 0;
-    int j;
-
-    float k = 0;
-
-    /* Try to fill the short buffer with Ogg.  Rewind loops as necessary. */
-
-    while (siz > 0)
-        if ((len = ov_read(&s->file, buf, siz, 0, 2, 1, &bit)) > 0)
-        {
-            tot += len;
-            buf += len;
-            siz -= len;
-        }
-        else
-        {
-            if (s->mode == SOUND_LOOP)
-                ov_pcm_seek(&s->file, 0);
-            else
-                break;
-        }
-
-    /* Mix read data into the float buffer. */
-
-    tot = tot / (sizeof (short) * s->chan);
-
-    if (s->chan == 2)
-        for (j = 0; j < tot; ++j)
-        {
-            int i = (int) floor(k);
-
-            *(fbuf++) = sbuf[i + 0] * kl;
-            *(fbuf++) = sbuf[i + 1] * kr;
-
-            k += s->frequency * 2;
-        }
-
-    if (s->chan == 1)
-        for (j = 0; j < tot; ++j)
-        {
-            int i = (int) floor(k);
-
-            *(fbuf++) = sbuf[i] * kl;
-            *(fbuf++) = sbuf[i] * kr;
-
-            k += s->frequency;
-        }
-
-    /* Signal EOF. */
-
-    return (tot == 0);
-}
-#endif
-
-static int mix_chunk(int i, float *fbuf,
-                            short *sbuf, int len, float kl, float kr)
-{
-    struct sound *s = get_sound(i);
-
-    float k = 0;
-    int   n = 0;
-
-    /* Mix read data into the float buffer. */
-
-    len = len / (2 * s->chan);
-
-    if (s->chan == 2)
-        while (k < len && n < 2 * BUFSIZE)
-        {
-            int i = (int) floor(k);
-
-            fbuf[n++] = sbuf[i + 0] * kl;
-            fbuf[n++] = sbuf[i + 1] * kr;
-
-            k += s->frequency;
-        }
-
-    if (s->chan == 1)
-        while (k < len && n < 2 * BUFSIZE)
-        {
-            int i = (int) floor(k);
-
-            fbuf[n++] = sbuf[i] * kl;
-            fbuf[n++] = sbuf[i] * kr;
-
-            k += s->frequency;
-        }
-
-    return n / 2;
-}
-
-static int mix_sound(int i, float *fbuf,
-                            short *sbuf, int max, float kl, float kr)
-{
-    struct sound *s = get_sound(i);
-
-    /* Compute the number of frames to be acquired. */
-
-    int tot = max / (sizeof (short) * 2);
-    int len = 0;
-    int bit = 0;
-
-    /* Try to fill the short buffer with Ogg.  Rewind loops as necessary. */
-
-    while (tot > 0)
+    for (i = 0; i < n; )
     {
-        int get = tot * 2 * s->chan;
+        /* Mix as much PCM as possible.  Fade toward the goal panning. */
 
-        if ((len = ov_read(&s->file, (char *) sbuf, get, 0, 2, 1, &bit)) > 0)
+        for (; i < n && s->point < s->length; ++i)
         {
-            int num = mix_chunk(i, fbuf, sbuf, len, kl, kr);
+            int j = (int) floor(s->point);
 
-            tot  -= num;
-            fbuf += num * 2;
+            mix[i].L += s->data[j].L * (s->L_mix + dl * i);
+            mix[i].R += s->data[j].R * (s->R_mix + dr * i);
+            s->point += s->frequency;
         }
-        else
+
+        /* If the sound has played out, loop or stop. */
+
+        if (i < n)
         {
             if (s->mode == SOUND_LOOP)
-                ov_pcm_seek(&s->file, 0);
+                s->point = 0.0f;
             else
+            {
+                s->mode =  SOUND_STOP;
                 break;
+            }
         }
     }
 
-    /* Signal EOF. */
-
-    return (len == 0);
+    s->L_mix = kl;
+    s->R_mix = kr;
 }
 
 static void step_sound(void *data, Uint8 *stream, int length)
 {
     short *output = (short *) stream;
-    int i, n = vecnum(sound);
+    int i, j, n = vecnum(sound);
+
+    int frames = length / (2 * spec.channels);
 
     /* Zero the mix buffer. */
 
-    memset(buff, 0, spec.samples * spec.channels * sizeof (float));
+    memset(mix, 0, spec.samples * spec.channels * sizeof (float));
 
-    /* Sum the playing sounds (using the output buffer as temp space). */
+    /* Sum the playing sounds. */
 
     for (i = 0; i < n; ++i)
     {
@@ -277,50 +188,123 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
             /* Mix this sound. */
             
-            if (mix_sound(i, buff, output, length, kl * s->amplitude,
-                                                   kr * s->amplitude))
-                s->mode = SOUND_STOP;
+            mix_sound(s, frames, kl * s->amplitude,
+                                 kr * s->amplitude);
         }
     }
 
     /* Copy the mix buffer to the output buffer, clamping as necessary. */
 
-    for (i = 0; i < length / 2; ++i)
-        if      (buff[i] >  32767) output[i] =  32767;
-        else if (buff[i] < -32768) output[i] = -32768;
-        else                       output[i] = (short) (buff[i]);
+    for (i = 0, j = 0; i < frames; ++i)
+    {
+        if      (mix[i].L >=  1.0f) output[j++] =  32767;
+        else if (mix[i].L <  -1.0f) output[j++] = -32768;
+        else                        output[j++] = (short) (mix[i].L * 32768);
+
+        if      (mix[i].R >=  1.0f) output[j++] =  32767;
+        else if (mix[i].R <  -1.0f) output[j++] = -32768;
+        else                        output[j++] = (short) (mix[i].R * 32768);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+/* ov_pcm_total seems to under-report the length of some OGGs, so this hack  */
+/* makes an initial pass over the file and computes the length by hand.      */
+
+static int size_sound(const char *filename)
+{
+    FILE          *fp;
+    OggVorbis_File vf;
+    char buf[BUFSIZE];
+
+    int b, n, s = 0;
+
+    if ((fp = open_file(filename, FMODE_RB)))
+    {
+        if (ov_open(fp, &vf, NULL, 0) == 0)
+        {
+            struct vorbis_info *I = ov_info(&vf, -1);
+
+            while ((n = ov_read(&vf, buf, BUFSIZE, 0, 2, 1, &b)) > 0)
+                s += n / (I->channels * 2);
+
+            ov_clear(&vf);
+        }
+        else fclose(fp);
+    }
+    return s;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int load_sound(const char *filename)
 {
-    int   i;
+    int   i = -1;
     FILE *fp;
+
+    OggVorbis_File vf;
 
     if (enabled && (i = new_sound()) >= 0)
     {
         struct sound *s = get_sound(i);
 
+        int length = size_sound(filename);
+
+        /* Open the file and initialize Ogg Vorbis decoding. */
+
         if ((fp = open_file(filename, FMODE_RB)))
         {
-            if (ov_open(fp, &s->file, NULL, 0) == 0)
+            if (ov_open(fp, &vf, NULL, 0) == 0)
             {
-                struct vorbis_info *I = ov_info(&s->file, -1);
+                struct vorbis_info *I = ov_info(&vf, -1);
 
-                s->mode = SOUND_STOP;
-                s->chan = I->channels;
+                short buf[BUFSIZE];
+                int   b, j, k = 0, n;
 
+                char *p = (char *) buf;
+
+                /* Initialize the sound header. */
+
+                s->mode      = SOUND_STOP;
+                s->length    = length;
+                s->L_mix     = 0.0f;
+                s->R_mix     = 0.0f;
                 s->amplitude = 1.0f;
                 s->frequency = 1.0f;
 
-                return i;
+                /* Allocate PCM storage. */
+
+                s->data = (struct frame *) malloc(s->length *
+                                                  sizeof (struct frame));
+
+                /* Decode all PCM.  Convert it to 2-channel float. */
+
+                if (I->channels == 2)
+                {
+                    while ((n = ov_read(&vf, p, BUFSIZE * 2, 0, 2, 1, &b)) > 0)
+                        for (j = 0; j < n / 4; ++j, ++k)
+                        {
+                            s->data[k].L = (float) buf[j * 2 + 0] / 32768;
+                            s->data[k].R = (float) buf[j * 2 + 1] / 32768;
+                        }
+                }
+                else
+                {
+                    while ((n = ov_read(&vf, p, BUFSIZE * 2, 0, 2, 1, &b)) > 0)
+                        for (j = 0; j < n / 2; ++j, ++k)
+                        {
+                            s->data[k].L = (float) buf[j] / 32768;
+                            s->data[k].R = (float) buf[j] / 32768;
+                        }
+                }
+                ov_clear(&vf);
             }
-            fclose(fp);
+            else fclose(fp);
         }
         else error("OGG file '%s': %s", filename, system_error());
     }
-    return -1;
+    return i;
 }
 
 void free_sound(int i)
@@ -329,7 +313,8 @@ void free_sound(int i)
     {
         struct sound *s = get_sound(i);
 
-        ov_clear(&s->file);
+        if (s->data) free(s->data);
+
         memset(s, 0, sizeof (struct sound));
     }
 }
@@ -344,8 +329,10 @@ static void set_sound_mode(int i, int mode)
 
         SDL_LockAudio();
         {
-            ov_pcm_seek(&s->file, 0);
-            s->mode = mode;
+            s->point = 0.0f;
+            s->L_mix = 0.0f;
+            s->R_mix = 0.0f;
+            s->mode  = mode;
         }
         SDL_UnlockAudio();
     }
@@ -386,13 +373,13 @@ void set_sound_receiver(int j, float a)
 void set_sound_amplitude(int i, float a)
 {
     if (enabled)
-        get_sound(i)->amplitude = a;
+        get_sound(i)->amplitude = MAX(a, 0.0f);
 }
 
 void set_sound_frequency(int i, float f)
 {
-    if (enabled)
-        get_sound(i)->frequency = MAX(f, 1.0);
+    if (enabled && 0.0f <= f)
+        get_sound(i)->frequency = MAX(f, 0.0f);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -404,7 +391,7 @@ void nuke_sounds(void)
         int i, n = vecnum(sound);
 
         for (i = 0; i < n; ++i)
-            if (get_sound(i)->chan)
+            if (get_sound(i)->data)
                 free_sound(i);
     }
 }
@@ -421,8 +408,8 @@ int startup_sound(void)
     {
         if (SDL_OpenAudio(&spec, NULL) == 0)
         {
-            buff = (float *) malloc(spec.samples  *
-                                    spec.channels * sizeof (float));
+            mix = (struct frame *) malloc(spec.samples *
+                                          sizeof (struct frame));
 
             if ((sound = vecnew(32, sizeof (struct sound))))
                 return (enabled = 1);

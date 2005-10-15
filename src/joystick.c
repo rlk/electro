@@ -34,15 +34,17 @@ int startup_joystick(void)
 
 /*---------------------------------------------------------------------------*/
 
-void get_joystick(int i, float a[2])
+void get_joystick(int i, int x, int y, float a[2])
 {
     if (get_tracker_joystick(i, a))
         return;
 
     if (i < SDL_NumJoysticks() && SDL_JoystickOpened(i))
     {
-        a[0] = SDL_JoystickGetAxis(joy[i], 0) / 32768.0f;
-        a[1] = SDL_JoystickGetAxis(joy[i], 1) / 32768.0f;
+        int n = SDL_JoystickNumAxes(joy[i]);
+
+        a[0] = (x < n) ? SDL_JoystickGetAxis(joy[i], x) / 32768.0f : 0.0f;
+        a[1] = (y < n) ? SDL_JoystickGetAxis(joy[i], y) / 32768.0f : 0.0f;
     }
     else
     {

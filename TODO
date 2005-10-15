@@ -1,5 +1,3 @@
-get entity along vector
-        fix ray
 set entity rotation vectors
 global state
         gravity vector
@@ -15,11 +13,9 @@ OBJ
 MIDI IO
 UDP texture
 UDP audio?
-access more joystick axes
 GLslang
 skeletal animation
 audio
-        positional
         multichannel
 
 tracking

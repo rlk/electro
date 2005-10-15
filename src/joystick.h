@@ -17,7 +17,7 @@
 
 int startup_joystick(void);
 
-void get_joystick(int, float[2]);
+void get_joystick(int, int, int, float[2]);
 
 /*---------------------------------------------------------------------------*/
 

@@ -1926,7 +1926,12 @@ static int E_get_joystick(lua_State *L)
 {
     float a[2];
 
-    get_joystick(L_getinteger(L, -1), a);
+    if (lua_gettop(L) == 3)
+        get_joystick(L_getinteger(L, -3),
+                     L_getinteger(L, -2),
+                     L_getinteger(L, -1), a);
+    else
+        get_joystick(L_getinteger(L, -1), 0, 1, a);
 
     lua_pushnumber(L, (double) a[0]);
     lua_pushnumber(L, (double) a[1]);
