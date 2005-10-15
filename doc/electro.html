@@ -107,7 +107,7 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>Scene graph functionality is organized into a small class hierarchy. The entity base class handles all of the common properties and behaviors of scene graph elements, most notably 3D transformation, and the parent-child relationships that hold a scene hierarchy together. The subclasses handle the specifics of controlling the view and lighting, drawing 3D and 2D geometry, etc. The class hierarchy is as follows:</p>
 
-<ol start="0">
+<ol start=0>
 <li><a href="#entity"> Entity</a>
 <ol>
 <li><a href="#object">Object</a>
@@ -728,21 +728,39 @@ and sprites.</p>
 
 <h2><a name="sound">2.4. Sound</a></h2>
 
-<p>Electro provides a basic audio API suitable for adding simple sounds to an application. It supports streaming of 44.1 KHz stereo or mono Ogg Vorbis audio sources. Any number of audio streams may play simultaneously.</p>
+<p>Electro provides a basic audio API suitable for adding simple sounds to an application. It supports playback of 44.1 KHz stereo or mono Ogg Vorbis audio files. Any number of voices may play simultaneously.</p>
 
+<h3>2.4.1 Sound I/O</h3>
 <dl>
 
-<dt><a name="load_sound"><i>stream</i> = <tt>load_sound</tt>(<i>filename</i>)</a><dd><p>Open a reference to the named Ogg Vorbis audio stream. This is the normal means by which audio is imported into an Electro application. This function initializes a sound for playback, but does not start playback.</p>
+<dt><a name="load_sound"><i>sound</i> = <tt>load_sound</tt>(<i>filename</i>)</a><dd><p>Open a reference to the named Ogg Vorbis file. This is the normal means by which audio is imported into an Electro application. This function initializes a sound for playback, but does not start playback.</p>
 
-<dt><a name="free_sound"><tt>free_sound</tt>(<i>stream</i>)</a><dd><p>Close an audio stream and release all resources associated with it.
+<dt><a name="free_sound"><tt>free_sound</tt>(<i>sound</i>)</a><dd><p>Close a sound and release all resources associated with it.
 </p>
 
-<dt><a name="play_sound"><tt>play_sound</tt>(<i>stream</i>)</a><dd><p>Start playback of an audio stream. If <i>stream</i> is already playing when this function is called, then the original playback will stop and the stream will be rewound to the beginning before being restarted. If it is necessary to mix multiple instances of one specific sound, then multiple sound objects must be used.</p>
+<dt><a name="play_sound"><tt>play_sound</tt>(<i>sound</i>)</a><dd><p>Start playback of a sound. If <i>sound</i> is already playing when this function is called, then the original playback will stop and the sound will be rewound to the beginning before being restarted. If it is necessary to mix multiple instances of one specific sound, then multiple sound objects must be used.</p>
 
-<dt><a name="loop_sound"><tt>loop_sound</tt>(<i>stream</i>)</a><dd><p>Begin playing an audio stream, but automatically rewind it when the end is reached.</p>
+<dt><a name="loop_sound"><tt>loop_sound</tt>(<i>sound</i>)</a><dd><p>Begin playing a sound, and automatically rewind it when the end is reached.</p>
 
-<dt><a name="step_sound"><tt>stop_sound</tt>(<i>stream</i>)</a><dd><p>Stop a playing audio stream. This function merely stops playback, and does not release any resources. The stream may be restarted from the beginning.
-</p>
+<dt><a name="stop_sound"><tt>stop_sound</tt>(<i>sound</i>)</a><dd><p>Stop a playing sound. This function merely stops playback, and does not release any resources. The sound may be restarted from the beginning.</p>
+
+</dl>
+
+<h3>2.4.1 Sound Control</h3>
+<dl>
+
+<dt><a name="set_sound_amplitude"><tt>set_sound_amplitude</tt>(<i>sound, amplitude</i>)</a><dd><p>Set the playback amplitude (volume) of a sound. The <i>amplitude</i> argument should be a value between <i>0</i> (silent) and <i>1</i> (normal volume), though it may be higher if gain is desired. Negative values will be clamped at zero.</p>
+
+<dt><a name="set_sound_frequency"><tt>set_sound_frequency</tt>(<i>sound, frequency</i>)</a><dd><p>Set the playback frequency (pitch) of a sound. The <i>frequency</i> argument is a playback rate multiplier, so a value of <i>2</i> will cause the sound to play twice as fast normal. For reference, music playing with a frequency of <i>2</i> will sound one octive higher than normal, and will play at double tempo. Negative values will be clamped at zero.</p>
+
+</dl>
+
+<h3>2.4.1 Positional Sound</h3>
+<dl>
+
+<dt><a name="set_sound_listener"><tt>set_sound_listener</tt>(<i>entity, distance</i>)</a><dd><p>Specify <i>entity</i> as the listener. Any sound associated with an entity will be mixed according to that entity's position with respect to this listener entity. The <i>distance</i> argument gives the maximum hearing range of the listener. Sound is attenuated as the distance to an emitting entity appreaches this value, and any emitting entity outside of this range will be unheard. Commonly a perpective camera is used as a listener. If the listener is <tt>nil</tt> then all sounds will play at normal volume regardless of associated entity positions.</p>
+
+<dt><a name="set_sound_emitter"><tt>set_sound_emitter</tt>(<i>sound, entity</i>)</a><dd><p>Associate <i>sound</i> with <i>entity</i>. The sound will be mixed in stereo according to the position and distance of the associated entity from the listener entity. Sounds associated with entity <tt>nil</tt> will play at normal volume regardless of listener position.</p>
 
 </dl>
 
@@ -882,7 +900,7 @@ and sprites.</p>
 <li><a name="key_modifier_alt"><tt>key_modifier_alt</tt></a>
 </ul>
 
-<dt><a name="get_joystick"><i>x, y</i> = <tt>get_joystick</tt>(<i>number</i>)</a><dd><p>Return the current value of the X and Y axes of joystick <i>number</i>.</p>
+<dt><a name="get_joystick"><i>x, y</i> = <tt>get_joystick</tt>(<i>number,</i> [<i>axis<sub>x</sub>, axis<sub>y</sub></i>])</a><dd><p>Return the current value of a pair of axes of joystick <i>number</i>. The <i>axis<sub>x</sub></i> and <i>axis<sub>y</sub></i> arguments optionally give desired axis numbers. The defaults are axes <i>0</i> and <i>1</i>. Requests for the values of non-existant axes will return <i>0</i>.</p>
 
 <p class="note">There is no direct mechanism provided to determine the number of joysticks connected to the system. The capability exists in SDL, but it isn't really necessary in Electro. If an application needs to count joysticks, it should observe the device numbers received by the <a href="#do_joystick"><tt>do_joystick</tt></a> callback. For example, allow the user to select the number of active joysticks by pressing Start on each.</p>
 
