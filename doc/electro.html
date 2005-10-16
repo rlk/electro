@@ -758,9 +758,9 @@ and sprites.</p>
 <h3>2.4.1 Positional Sound</h3>
 <dl>
 
-<dt><a name="set_sound_listener"><tt>set_sound_listener</tt>(<i>entity, distance</i>)</a><dd><p>Specify <i>entity</i> as the listener. Any sound associated with an entity will be mixed according to that entity's position with respect to this listener entity. The <i>distance</i> argument gives the maximum hearing range of the listener. Sound is attenuated as the distance to an emitting entity appreaches this value, and any emitting entity outside of this range will be unheard. Commonly a perpective camera is used as a listener. If the listener is <tt>nil</tt> then all sounds will play at normal volume regardless of associated entity positions.</p>
+<dt><a name="set_sound_receiver"><tt>set_sound_receiver</tt>(<i>entity, distance</i>)</a><dd><p>Specify <i>entity</i> as the receiver. Any sound associated with an entity will be mixed according to that entity's position with respect to this receiver entity. The <i>distance</i> argument gives the maximum hearing range of the receiver. Sound is attenuated as the distance to an emitting entity appreaches this value, and any emitting entity outside of this range will be unheard. Commonly a perpective camera is used as a receiver. If the receiver is <tt>nil</tt> then all sounds will play at normal volume regardless of associated entity positions.</p>
 
-<dt><a name="set_sound_emitter"><tt>set_sound_emitter</tt>(<i>sound, entity</i>)</a><dd><p>Associate <i>sound</i> with <i>entity</i>. The sound will be mixed in stereo according to the position and distance of the associated entity from the listener entity. Sounds associated with entity <tt>nil</tt> will play at normal volume regardless of listener position.</p>
+<dt><a name="set_sound_emitter"><tt>set_sound_emitter</tt>(<i>sound, entity</i>)</a><dd><p>Associate <i>sound</i> with <i>entity</i>. The sound will be mixed in stereo according to the position and distance of the associated entity from the receiver entity. Sounds associated with entity <tt>nil</tt> will play at normal volume regardless of receiver position.</p>
 
 </dl>
 

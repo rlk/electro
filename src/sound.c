@@ -115,7 +115,7 @@ static void mix_sound(struct sound *s, int n, float kl, float kr)
                 s->point = 0.0f;
             else
             {
-                s->mode =  SOUND_STOP;
+                s->mode  = SOUND_STOP;
                 break;
             }
         }
@@ -144,8 +144,8 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
         if (s->mode == SOUND_PLAY || s->mode == SOUND_LOOP)
         {
-            float kl = s->amplitude;
-            float kr = s->amplitude;
+            float kl = 1.0f;
+            float kr = 1.0f;
 
             /* If there exist source and listener for this sound... */
 
@@ -155,7 +155,7 @@ static void step_sound(void *data, Uint8 *stream, int length)
                 float p[3];
                 float q[3];
                 float d[3];
-                float dl, dr;
+                float dd, dx = 0;
 
                 /* Find the direction and distance from source to listener. */
 
@@ -167,20 +167,24 @@ static void step_sound(void *data, Uint8 *stream, int length)
                 d[1] = q[1] - p[1];
                 d[2] = q[2] - p[2];
 
-                /* Compute the panning scalars. */
+                dd = (float) sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+
+                if (dd > 0.01)
+                {
+                    d[0] /= dd;
+                    d[1] /= dd;
+                    d[2] /= dd;
                 
-                dl = -d[0] * x[0] + d[1] * x[1] + d[2] * x[2];
-                dr = +d[0] * x[0] + d[1] * x[1] + d[2] * x[2];
+                    /* Compute the panning scalars. */
 
-                if (dl > 1)
-                    kl = (attenuation - dl) / (attenuation - 1);
-                else
-                    kl = (dl * 0.5f + 0.5f);
+                    dx = d[0] * x[0] + d[2] * x[2];
 
-                if (dr > 1)
-                    kr = (attenuation - dr) / (attenuation - 1);
-                else
-                    kr = (dr * 0.5f + 0.5f);
+                    if (dx < 0) kr = 1.0f + dx;
+                    if (dx > 0) kl = 1.0f - dx;
+
+                    kr *= (attenuation - dd) / attenuation;
+                    kl *= (attenuation - dd) / attenuation;
+                }
 
                 if (kl < 0) kl = 0;
                 if (kr < 0) kr = 0;
