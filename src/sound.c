@@ -11,6 +11,8 @@
 /*    General Public License for more details.                               */
 
 #include <SDL.h>
+#include <SDL_endian.h>
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,6 +88,47 @@ static int new_sound(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Convert between little-endian signed 16-bit short and native float.       */
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+static void swap16(void *p)
+{
+    unsigned char *c = (unsigned char *) p;
+    unsigned char  t;
+
+    t    = c[0];
+    c[0] = c[1];
+    c[1] =    t;
+}
+#endif
+
+static short float_to_short(float f)
+{
+    short s;
+
+    if      (f >= 1.0f) s =  32767;
+    else if (f < -1.0f) s = -32768;
+    else                s = (short) (f * 32768);
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    swap16(&s);
+#endif
+
+    return s;
+}
+
+static float short_to_float(short s)
+{
+    short t = s;
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    swap16(&t);
+#endif
+
+    return (float) t / 32768.0f;
+}
+
+/*---------------------------------------------------------------------------*/
 
 static void mix_sound(struct sound *s, int n, float kl, float kr)
 {
@@ -134,7 +177,7 @@ static void step_sound(void *data, Uint8 *stream, int length)
 
     /* Zero the mix buffer. */
 
-    memset(mix, 0, spec.samples * spec.channels * sizeof (float));
+    memset(mix, 0, spec.samples * sizeof (struct frame));
 
     /* Sum the playing sounds. */
 
@@ -197,17 +240,12 @@ static void step_sound(void *data, Uint8 *stream, int length)
         }
     }
 
-    /* Copy the mix buffer to the output buffer, clamping as necessary. */
+    /* Copy the mix buffer to the output buffer. */
 
     for (i = 0, j = 0; i < frames; ++i)
     {
-        if      (mix[i].L >=  1.0f) output[j++] =  32767;
-        else if (mix[i].L <  -1.0f) output[j++] = -32768;
-        else                        output[j++] = (short) (mix[i].L * 32768);
-
-        if      (mix[i].R >=  1.0f) output[j++] =  32767;
-        else if (mix[i].R <  -1.0f) output[j++] = -32768;
-        else                        output[j++] = (short) (mix[i].R * 32768);
+        output[j++] = float_to_short(mix[i].L);
+        output[j++] = float_to_short(mix[i].R);
     }
 }
 
@@ -289,18 +327,16 @@ int load_sound(const char *filename)
                     while ((n = ov_read(&vf, p, BUFSIZE * 2, 0, 2, 1, &b)) > 0)
                         for (j = 0; j < n / 4; ++j, ++k)
                         {
-                            s->data[k].L = (float) buf[j * 2 + 0] / 32768;
-                            s->data[k].R = (float) buf[j * 2 + 1] / 32768;
+                            s->data[k].L = short_to_float(buf[j * 2 + 0]);
+                            s->data[k].R = short_to_float(buf[j * 2 + 1]);
                         }
                 }
                 else
                 {
                     while ((n = ov_read(&vf, p, BUFSIZE * 2, 0, 2, 1, &b)) > 0)
                         for (j = 0; j < n / 2; ++j, ++k)
-                        {
-                            s->data[k].L = (float) buf[j] / 32768;
-                            s->data[k].R = (float) buf[j] / 32768;
-                        }
+                            s->data[k].L =
+                            s->data[k].R = short_to_float(buf[j]);
                 }
                 ov_clear(&vf);
             }
