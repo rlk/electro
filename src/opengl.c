@@ -439,6 +439,7 @@ PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
 
 void init_opengl(void)
 {
+
    glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
         opengl_proc("glProgramStringARB");
     glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)

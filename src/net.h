@@ -10,20 +10,14 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef NET_H
+#define NET_H
 
 /*---------------------------------------------------------------------------*/
 
-#define TITLE "Electro"
+void net_send(const char *);
 
-/*---------------------------------------------------------------------------*/
-
-void send_user_event(const char *);
-
-void enable_timer(int);
-
-void server(int, char **);
+int startup_net(int);
 
 /*---------------------------------------------------------------------------*/
 

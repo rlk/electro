@@ -786,8 +786,6 @@ void init_image(int i)
     {
         p->texture = make_texture(p->p, p->n, p->w, p->h, p->b);
         p->state   = 1;
-
-        opengl_check("init_image %d", i);
     }
 }
 
@@ -824,8 +822,6 @@ void draw_image(int i)
             
         glEnable(t);
         glBindTexture(t, get_image(i)->texture);
-
-        opengl_check("draw_image %d", i);
     }
 }
 

@@ -25,6 +25,7 @@
 #include "glyph.h"
 #include "script.h"
 #include "vector.h"
+#include "net.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -504,6 +505,28 @@ int input_console(int symbol, int unicode)
 
 /*---------------------------------------------------------------------------*/
 
+void *mirror_output(const char *format, ...)
+{
+    char string[MAXSTR];
+    va_list args;
+
+    /* Collapse all arguments to a single string. */
+
+    va_start(args, format);
+    vsprintf(string, format, args);
+    va_end(args);
+
+    /* Send the string to the console, log, and all connected clients. */
+
+    write_console(string);
+    net_send(string);
+
+    if (logfile)
+        fprintf(logfile, string);
+
+    return NULL;
+}
+
 void clear_console(void)
 {
     memset(console, 0, console_w * console_h * 4);
@@ -519,9 +542,7 @@ void color_console(float r, float g, float b)
 
 void print_console(const char *str)
 {
-    if (logfile) fprintf(logfile, str);
-
-    write_console(str);
+    mirror_output(str);
     console_enable = 1;
     image_dirty    = 1;
 }
@@ -533,12 +554,7 @@ void error_console(const char *str)
     unsigned char b = console_b;
 
     color_console(1.0f, 0.0f, 0.0f);
-
-    write_console("Error: ");
-    write_console(str);
-    write_console("\n");
-    
-    if (logfile) fprintf(logfile, "Error: %s\n", str);
+    mirror_output("Error: %s\n", str);
 
     console_r = r;
     console_g = g;
@@ -554,11 +570,7 @@ void debug_console(const char *str)
     unsigned char b = console_b;
 
     color_console(1.0f, 0.5f, 0.0f);
-
-    write_console(str);
-    write_console("\n");
-
-    if (logfile) fprintf(logfile, "%s\n", str);
+    mirror_output("%s\n", str);
 
     console_r = r;
     console_g = g;

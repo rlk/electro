@@ -17,6 +17,8 @@
 #endif
 
 #include <SDL.h>
+#include <SDL_thread.h>
+
 #include <lua.h>
 #include <lualib.h>
 #include <luasocket.h>
@@ -2050,8 +2052,6 @@ static int lua_callassert(lua_State *L, int nin, int nout, const char *name)
 
     lua_pop(L, 1);
 
-    opengl_check(name);
-
     return r;
 }
 
@@ -2160,7 +2160,7 @@ int do_joystick_script(int n, int b, int s)
 }
 
 int do_contact_script(int i, int j, const float p[3],
-                                    const float n[3], float d)
+                      const float n[3], float d)
 {
     const char *name = "do_contact";
 

@@ -29,6 +29,7 @@
 #include "image.h"
 #include "brush.h"
 #include "font.h"
+#include "net.h"
 #include "event.h"
 #include "server.h"
 
@@ -62,10 +63,11 @@ static double timer_value = 0;
 
 static float average_fps  = 0;
 
-static char *console_log = NULL;
-static int   tracker_key = TRACKER_KEY;
-static int   control_key = CONTROL_KEY;
-static int   head_sensor = 0;
+static int   console_port = 0;
+static char *console_log  = NULL;
+static int   tracker_key  = TRACKER_KEY;
+static int   control_key  = CONTROL_KEY;
+static int   head_sensor  = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -137,6 +139,8 @@ static void server_draw(void)
     draw_entities();
     draw_console();
     server_swap();
+
+    opengl_check("server_draw");
 }
 
 static void server_perf(void)
@@ -177,6 +181,32 @@ static int server_keyup(SDL_KeyboardEvent *k)
         return 1;
 
     return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_user_event(const char *str)
+{
+    SDL_Event e;
+
+    e.type = SDL_USEREVENT;
+
+    if (str)
+        e.user.data1 = memdup(str, 1, 1 + strlen(str));
+    else
+        e.user.data1 = NULL;
+
+    SDL_PushEvent(&e);
+}
+
+int recv_user_event(SDL_UserEvent *e)
+{
+    if (e->data1)
+    {
+        do_command(e->data1);
+        free(e->data1);
+    }
+    return 1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -266,7 +296,7 @@ static int server_loop(void)
             dirty |= server_keyup(&e.key);
             break;
         case SDL_USEREVENT:
-            dirty |= 1;
+            dirty |= recv_user_event(&e.user);
             break;
         case SDL_VIDEOEXPOSE:
             dirty |= 1;
@@ -312,10 +342,7 @@ static int server_loop(void)
     }
 
     if (timer_on)
-    {
-        e.type = SDL_USEREVENT;
-        SDL_PushEvent(&e);
-    }
+        send_user_event(NULL);
 
     return 1;
 }
@@ -348,8 +375,10 @@ void parse_options(int argc, char *argv[])
             prep_hip_galaxy(dat, gal);
         }
 
+        else if (strcmp(argv[i], "-p") == 0 && i < argc - 1)
+            console_port = atoi(argv[++i]);
         else if (strcmp(argv[i], "-l") == 0 && i < argc - 1)
-            console_log = argv[++i];
+            console_log  = argv[++i];
 
         else if (strcmp(argv[i], "-t") == 0 && i < argc - 1)
             tracker_key = atoi(argv[++i]);
@@ -378,6 +407,7 @@ void parse_scripts(int argc, char *argv[])
             load_script(argv[++i]);
         else if (strcmp(argv[i], "-H") == 0) i += 2;
         else if (strcmp(argv[i], "-T") == 0) i += 2;
+        else if (strcmp(argv[i], "-p") == 0) i += 1;
         else if (strcmp(argv[i], "-l") == 0) i += 1;
         else if (strcmp(argv[i], "-t") == 0) i += 1;
         else if (strcmp(argv[i], "-c") == 0) i += 1;
@@ -406,7 +436,8 @@ void server(int argc, char *argv[])
                 startup_sound()    &&
                 startup_image()    &&
                 startup_brush()    &&
-                startup_font())
+                startup_font()     &&
+                startup_net(console_port))
             {
                 acquire_tracker(tracker_key, control_key);
 

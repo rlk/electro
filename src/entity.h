@@ -136,6 +136,7 @@ void  recv_set_entity_flags   (void);
 /*---------------------------------------------------------------------------*/
 
 void  get_entity_position(int, float[3]);
+void  get_entity_rotation(int, float[3]);
 void  get_entity_x_vector(int, float[3]);
 void  get_entity_y_vector(int, float[3]);
 void  get_entity_z_vector(int, float[3]);

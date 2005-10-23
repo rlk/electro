@@ -106,6 +106,7 @@ OBJS =	src/opengl.o   \
 	src/font.o     \
 	src/node.o     \
 	src/star.o     \
+	src/net.o      \
 	src/main.o
 
 SRCS= $(OBJS:.o=.c)

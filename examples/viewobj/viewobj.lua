@@ -45,13 +45,11 @@ function do_start()
     pivot  = E.create_pivot()
     wand   = E.create_pivot()
     hand   = E.create_pivot()
-    box    = E.create_object("../data/box.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(wand,  light)
     E.parent_entity(hand,  light)
-    E.parent_entity(box,   hand)
 
     E.set_entity_position(light,  0.0,  8.0,  8.0)
     E.set_entity_position(pivot,  XC,   YC,   ZC)
@@ -63,9 +61,6 @@ function do_start()
     E.set_entity_tracking(wand, 1, E.tracking_mode_local)
     E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
     E.set_entity_flags   (wand, E.entity_flag_track_rot, true)
-
-    E.set_entity_position(box, 0.0, 0.0, -1.0)
-    E.set_entity_scale   (box, 0.1, 0.1, 0.1)
 
     table.foreach(E.argument, add_object)
 

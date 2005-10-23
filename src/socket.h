@@ -10,20 +10,28 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef SOCKET_H
+#define SOCKET_H
 
 /*---------------------------------------------------------------------------*/
+/* These definitions homogenize Winsock with Berkeley Sockets.               */
 
-#define TITLE "Electro"
+#ifdef _WIN32
+#include <winsock.h>
+#else
+#include <stddef.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
-/*---------------------------------------------------------------------------*/
+typedef int SOCKET;
+#define SOCKET_ERROR    -1
+#define INVALID_SOCKET  -1
+#endif
 
-void send_user_event(const char *);
-
-void enable_timer(int);
-
-void server(int, char **);
+typedef struct sockaddr_in sockaddr_t;
 
 /*---------------------------------------------------------------------------*/
 
