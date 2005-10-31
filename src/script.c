@@ -1491,11 +1491,9 @@ static int E_create_image(lua_State *L)
                                          L_getstring(L, -1)));
     else
     {
-#ifdef VIDEOTEX
         if (lua_isnumber(L, -1))
             E_pushimage(L, send_create_video(L_getinteger(L, -1)));
         else
-#endif
             E_pushimage(L, send_create_image(L_getstring(L, -1),
                                              NULL, NULL, NULL, NULL, NULL));
     }

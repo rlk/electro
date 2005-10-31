@@ -15,14 +15,10 @@
 #include <jpeglib.h>
 #include <png.h>
 
-#ifdef VIDEOTEX
-#include <sys/sem.h>
-#include <sys/shm.h>
-#endif
-
 #include "opengl.h"
 #include "vector.h"
 #include "buffer.h"
+#include "socket.h"
 #include "utility.h"
 #include "event.h"
 #include "image.h"
@@ -49,17 +45,10 @@ struct image
     void *p[MAX_FILE];
     char *s[MAX_FILE];
 
-    /* Shared buffer attributes. */
+    /* Video socket attributes. */
 
-#ifdef VIDEOTEX
-    void *frame;
-    int   shmid;
-    int   semid;
-    int   bits;
-
-    int  last_frame;
-    int *next_frame;
-#endif
+    int sock;
+    int code;
 };
 
 static vector_t image;
@@ -71,6 +60,20 @@ static GLenum format[5] = {
     GL_RGB,
     GL_RGBA,
 };
+
+/*---------------------------------------------------------------------------*/
+
+#define BUFMAX 65536
+
+struct header
+{
+    int   code;
+    short x, y;
+    short w, h;
+    short W, H;
+};
+
+static void *buffer = NULL;
 
 /*---------------------------------------------------------------------------*/
 
@@ -92,30 +95,7 @@ static int new_image(void)
 
 /*===========================================================================*/
 
-#ifdef VIDEOTEX
-
-static inline void yuv2rgb(unsigned char c[4], unsigned char Y,
-                                               unsigned char U,
-                                               unsigned char V)
-{
-    int R = (int) (1.164 * (Y - 16) + 1.596 * (V - 128));
-    int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
-    int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
-
-    if      (R <   0) c[0] = 0x00;
-    else if (R > 255) c[0] = 0xFF;
-    else              c[0] = (unsigned char) R;
-
-    if      (G <   0) c[1] = 0x00;
-    else if (G > 255) c[1] = 0xFF;
-    else              c[1] = (unsigned char) G;
-
-    if      (B <   0) c[2] = 0x00;
-    else if (B > 255) c[2] = 0xFF;
-    else              c[2] = (unsigned char) B;
-
-    c[3] = 0xFF;
-}
+#ifdef OBSOLETE
 
 static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
 {
@@ -215,14 +195,12 @@ static void decode_bayer(unsigned char *buf, unsigned int w, unsigned int h)
         }
     }
 }
-#endif /* VIDEOTEX */
 
 static void step_texture(int i)
 {
     struct image *p = get_image(i);
     GLenum t;
 
-#ifdef VIDEOTEX
     if (p->frame)
     {
         unsigned char *dst = (unsigned char *) p->p[0];
@@ -236,7 +214,6 @@ static void step_texture(int i)
             decode_bayer(dst, p->w, p->h);
         }
     }
-#endif
 
     if (p->texture)
     {
@@ -251,7 +228,162 @@ static void step_texture(int i)
     }
 }
 
-GLuint make_texture(void *p[6], int n, int w, int h, int b)
+#endif /* OBSOLETE */
+
+/*===========================================================================*/
+
+static void yuv2rgb(GLubyte c[4], GLubyte Y,
+                                  GLubyte U,
+                                  GLubyte V)
+{
+    int R = (int) (1.164 * (Y - 16) + 1.596 * (V - 128));
+    int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
+    int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
+
+    if      (R <   0) c[0] = 0x00;
+    else if (R > 255) c[0] = 0xFF;
+    else              c[0] = (unsigned char) R;
+
+    if      (G <   0) c[1] = 0x00;
+    else if (G > 255) c[1] = 0xFF;
+    else              c[1] = (unsigned char) G;
+
+    if      (B <   0) c[2] = 0x00;
+    else if (B > 255) c[2] = 0xFF;
+    else              c[2] = (unsigned char) B;
+
+    c[3] = 0xFF;
+}
+
+static void decode_yuv411(GLubyte *p, int w, int h)
+{
+    GLubyte *dst = p + (w * h - 1) * 16;
+    GLubyte *src = p + (w * h - 1) *  6;
+
+    while (src > p && dst > p)
+    {
+        const int U  = src[0];
+        const int Y0 = src[1];
+        const int Y1 = src[2];
+        const int V  = src[3];
+        const int Y2 = src[4];
+        const int Y3 = src[5];
+
+        yuv2rgb(dst +  0, Y0, U, V);
+        yuv2rgb(dst +  4, Y1, U, V);
+        yuv2rgb(dst +  8, Y2, U, V);
+        yuv2rgb(dst + 12, Y3, U, V);
+
+        src -=  6;
+        dst -= 16;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void step_video(int i)
+{
+    struct image *p = get_image(i);
+    ssize_t n;
+
+    struct header *head = (struct header *) buffer;
+    GLubyte       *data =       (GLubyte *) buffer + sizeof (struct header);
+
+    /* Receive an incoming subimage. */
+
+    if ((n = recv(p->sock, buffer, BUFMAX, 0)) > 0)
+    {
+        if (p->texture)
+        {
+            /* Decode the subimage header. */
+
+            int code = ntohl(head->code);
+            int x    = ntohs(head->x);
+            int y    = ntohs(head->y);
+            int w    = ntohs(head->w);
+            int h    = ntohs(head->h);
+            int W    = ntohs(head->W);
+            int H    = ntohs(head->H);
+
+            /* If the video format changes, refresh the texture object. */
+
+            if (p->w != W || p->w != H || p->code != code)
+            {
+                p->code = code;
+                p->w    = W;
+                p->h    = H;
+
+                fini_image(i);
+                init_image(i);
+            }
+
+            /* Decode the incoming image data as necessary. */
+
+            if (code == 0x31313459)
+                decode_yuv411(buffer, w, h);
+
+            /* Apply the incoming subimage to the existing texture object. */
+
+            if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
+            {
+                glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
+                glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB,
+                                0, x, y, w, h, GL_RGB, GL_UNSIGNED_BYTE, data);
+            }
+            else
+            {
+                glBindTexture  (GL_TEXTURE_2D, p->texture);
+                glTexSubImage2D(GL_TEXTURE_2D,
+                                0, x, y, w, h, GL_RGB, GL_UNSIGNED_BYTE, data);
+            }
+        }
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static GLuint make_video(int w, int h)
+{
+    GLuint o = 0;
+
+    /* Create a GL texture object. */
+
+    glGenTextures(1, &o);
+
+    /* Non-power-of-two size implies texture rectangle. */
+
+    if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
+    {
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
+
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+                     w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    /* A power-of-two image comprises a 2D texture map. */
+
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, o);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                     w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+
+    return o;
+}
+
+static GLuint make_image(void *p[6], int n, int w, int h, int b)
 {
     GLuint o = 0;
 
@@ -529,11 +661,7 @@ int send_create_image(const char *file_nx,
 
         p->state =  0;
         p->count =  1;
-
-#ifdef VIDEOTEX
-        p->semid = -1;
-        p->shmid = -1;
-#endif
+        p->sock  = -1;
 
         /* Note the file names. */
 
@@ -569,85 +697,54 @@ int send_create_image(const char *file_nx,
     return -1;
 }
 
-#ifdef VIDEOTEX
-int send_create_video(int k)
+int send_create_video(int port)
 {
-    int i;
+    int i, s = -1, n = 1024 * 1024;
 
     if ((i = new_image()) >= 0)
     {
         struct image *p = get_image(i);
-        int *buffer;
 
-        p->state = 0;
-        p->count = 1;
-        p->w     = 0;
-        p->h     = 0;
-        p->bits  = 0;
-        p->n     = 1;
-        p->b     = 4;
+        p->state =   0;
+        p->count =   1;
+        p->w     = 128;
+        p->h     = 128;
+        p->n     =   1;
+        p->b     =   4;
+        p->sock  =  -1;
 
-        /* Acquire the semaphore and shared memory buffers. */
+        /* Open a UDP socket for receiving. */
 
-        if ((p->semid = semget(k, 1, 0666)) >= 0)
+        if ((s = socket(PF_INET, SOCK_DGRAM, 0)) >= 0)
         {
-            if (semctl(p->semid, 0, SETVAL, 1) >= 0)
+            /* Increase the receive buffer size to handle a gigabit stream. */
+
+            if (setsockopt(s, SOL_SOCKET, SO_RCVBUF, &n, sizeof (int)) >= 0)
             {
-                size_t sz = sizeof (int) * 4;
+                sockaddr_t addr;
+                size_t     addr_len = sizeof (sockaddr_t);
 
-                /* Acquire the shared buffer header and read the size. */
+                /* Accept connections from any address on the given port. */
 
-                if ((p->shmid = shmget(k, sz, 0666)) >=0)
+                addr.sin_family      = AF_INET;
+                addr.sin_port        = htons(port);
+                addr.sin_addr.s_addr = INADDR_ANY;
+
+                /* Bind the socket to this address. */
+
+                if (bind(s, (struct sockaddr *) &addr, addr_len) >= 0)
                 {
-                    if ((buffer = (int *) shmat(p->shmid, NULL, SHM_RDONLY)))
-                    {
-                        p->w    = buffer[1];
-                        p->h    = buffer[2];
-                        p->bits = buffer[3];
-
-                        shmdt(buffer);
-                    }
-                    else error("Video buffer %d: %s", k, system_error());
+                    p->sock = s;
+                    return i;
                 }
-                else error("Video buffer %d: %s", k, system_error());
-
-                /* Acquire the properly-sized buffer. */
-
-                sz += p->w * p->h * p->bits / 8;
-
-                if (p->w * p->h > 0)
-                {
-                    if ((p->shmid = shmget(k, sz, 0666)) >=0)
-                    {
-                        if ((buffer = (int *) shmat(p->shmid, 0, SHM_RDONLY)))
-                        {
-                            p->next_frame = &buffer[0];
-                            p->frame      = &buffer[4];
-
-                            send_event(EVENT_CREATE_IMAGE);
-                            send_index(p->n);
-                            send_index(p->w);
-                            send_index(p->h);
-                            send_index(p->b);
-
-                            p->p[0]    = malloc(p->w * p->h * p->b);
-                            send_array(p->p[0], p->w * p->h * p->b, 1);
-
-                            return i;
-                        }
-                        else error("Video buffer %d: %s", k, system_error());
-                    }
-                    else error("Video buffer %d: %s", k, system_error());
-                }
-                else error("Video buffer %d: zero size", k);
+                else error("bind %d : %s", p, system_error());
             }
-            else error("Video mutex %d: %s", k, system_error());
+            else error("setsockopt : %s", system_error());
         }
-        else error("Video mutex %d: %s", k, system_error());
+        else error("socket : %s", system_error());
     }
     return -1;
 }
-#endif
 
 void recv_create_image(void)
 {
@@ -670,11 +767,13 @@ void recv_create_image(void)
 
 void recv_set_image_pixels(void)
 {
+/* TODO: fix
     int i           = recv_index();
     struct image *p = get_image(i);
 
     recv_array(p->p[0], p->w * p->h * p->b, 1);
     step_texture(i);
+*/
 }
 
 /*---------------------------------------------------------------------------*/
@@ -700,9 +799,8 @@ static int free_image(int i)
                     if (p->p[j]) free(p->p[j]);
                 }
 
-#ifdef VIDEOTEX
-                if (p->frame) shmdt (p->frame);
-#endif
+                if (p->sock >= 0) close(p->sock);
+
                 memset(p, 0, sizeof (struct image));
 
                 return 1;
@@ -784,7 +882,11 @@ void init_image(int i)
 
     if (p->state == 0)
     {
-        p->texture = make_texture(p->p, p->n, p->w, p->h, p->b);
+        if (p->sock >= 0)
+            p->texture = make_video(p->w, p->h);
+        else
+            p->texture = make_image(p->p, p->n, p->w, p->h, p->b);
+        
         p->state   = 1;
     }
 }
@@ -813,9 +915,13 @@ void draw_image(int i)
 
         init_image(i);
 
+        /* Ensure the wrong texture unit types are disabled. */
+
         glDisable(GL_TEXTURE_RECTANGLE_ARB);
         glDisable(GL_TEXTURE_CUBE_MAP_ARB);
         glDisable(GL_TEXTURE_2D);
+
+        /* Determine the right texture unit type and enable it. */
 
         if      (p->n > 1)                 t = GL_TEXTURE_CUBE_MAP_ARB;
         else if (NPOT(p->w) || NPOT(p->h)) t = GL_TEXTURE_RECTANGLE_ARB;
@@ -856,52 +962,43 @@ void fini_images(void)
 
 void step_images(void)
 {
-#ifdef VIDEOTEX
-    int i, n = vecnum(image);
+    int i, m = 0, n = vecnum(image);
 
-    for (i = 1; i < n; ++i)
+    fd_set fds0;
+    fd_set fds1;
+
+    /* Initialize a descriptor set including all video sockets. */
+
+    FD_ZERO(&fds0);
+
+    for (i = 0; i < n; ++i)
     {
         struct image *p = get_image(i);
 
-        /* If this is a shared image... */
-
-        if (p->count && p->semid >= 0 && p->shmid >= 0 && p->frame)
+        if (p->count && p->sock >= 0)
         {
-            struct sembuf s;
+            FD_SET(p->sock, &fds0);
 
-            /* Acquire the buffer. */
-
-            s.sem_num =  0;
-            s.sem_op  = -1;
-            s.sem_flg =  0;
-            semop(p->semid, &s, 1);
-
-            /* If the frame has changed... */
-
-            if (p->last_frame != *p->next_frame)
-            {
-                p->last_frame  = *p->next_frame;
-
-                /* Update the texture object. */
-
-                step_texture(i);
-
-                /* Push the new image to all clients. */
-
-                send_event(EVENT_SET_IMAGE_PIXELS);
-                send_index(i);
-                send_array(p->p[0], p->w * p->h * p->b, 1);
-            }
-
-            /* Release the buffer. */
-
-            s.sem_num =  0;
-            s.sem_op  =  1;
-            s.sem_flg =  0;
-            semop(p->semid, &s, 1);
+            if (m < p->sock + 1)
+                m = p->sock + 1;
         }
     }
-#endif
+
+    FD_COPY(&fds0, &fds1);
+
+    /* Handle all video socket activity. */
+
+    while (select(m, &fds1, NULL, NULL, NULL) > 0)
+    {
+        for (i = 0; i < n; ++i)
+        {
+            struct image *p = get_image(i);
+
+            if (p->count && p->sock >= 0 && FD_ISSET(p->sock, &fds1))
+                step_video(i);
+        }
+        FD_COPY(&fds0, &fds1);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -912,27 +1009,27 @@ int startup_image(void)
 
     if ((image = vecnew(256, sizeof (struct image))))
     {
-        if ((i = new_image()) >= 0)
+        if ((buffer = malloc(BUFMAX)))
         {
-            struct image *p = get_image(i);
+            if ((i = new_image()) >= 0)
+            {
+                struct image *p = get_image(i);
 
-            p->count    =    1;
-            p->state    =    0;
-            p->texture  =    0;
-            p->n        =    1;
-            p->w        =  128;
-            p->h        =  128;
-            p->b        =    4;
-            p->p[0]     = malloc(128 * 128 * 4);
+                p->count   =   1;
+                p->state   =   0;
+                p->sock    =  -1;
+                p->texture =   0;
+                p->n       =   1;
+                p->w       = 128;
+                p->h       = 128;
+                p->b       =   4;
+                p->p[0]    =   malloc(128 * 128 * 4);
 
-#ifdef VIDEOTEX
-            p->semid = -1;
-            p->shmid = -1;
-#endif
-            memset(p->p[0], 0xFF, 128 * 128 * 4);
+                memset(p->p[0], 0xFF, 128 * 128 * 4);
+
+                return 1;
+            }
         }
-        return 1;
     }
-    else
-        return 0;
+    return 0;
 }

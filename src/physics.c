@@ -79,7 +79,7 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
 
     /* Two geoms associated with the same body do not collide. */
 
-    if (b1 != b2)
+    if (b1 == 0 || b2 == 0 || b1 != b2)
     {
         dContact contact[MAX_CONTACTS];
         size_t sz = sizeof (dContact);

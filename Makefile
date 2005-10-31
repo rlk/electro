@@ -14,12 +14,6 @@ else
 	CFLAGS = -g -Wall
 endif
 
-# "make VIDEOTEX=1" enables shared-memory streaming image buffers under Linux.
-
-ifdef VIDEOTEX
-	CFLAGS += -DVIDEOTEX
-endif
-
 #------------------------------------------------------------------------------
 
 # Assume the Fink tree is available under OSX and GL is in a framework.
