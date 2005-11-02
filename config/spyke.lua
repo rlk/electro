@@ -1,8 +1,8 @@
-dofile("varrier.lua")
+--dofile("varrier.lua")
 
 ------------------------------------------------------------------------------
 
-linescreen_file = "/disk2/varrier/varrier_configs/linescreen_setup.txt"
+linescreen_file = "/nfs/disk2/varrier/varrier_configs/linescreen_setup.txt"
 read_linescreen(linescreen_file, "screen5")
 
 w = 2560
@@ -18,8 +18,8 @@ offset = { 0, (p[2][2] + p[1][2]) / 2, 2.0 + p[1][3] }
 
 ------------------------------------------------------------------------------
 
-host = E.add_host("default", 1280, 0, w, h)
-tile = E.add_tile(host,         0, 0, w, h)
+host = E.add_host("default", 0, 0, w, h)
+tile = E.add_tile(host,      0, 0, w, h)
 
 E.set_tile_viewport(tile, 0, 0, w, h)
 E.set_tile_position(tile, p[1][1], p[1][2], p[1][3],
@@ -32,4 +32,5 @@ E.set_host_flags(host, E.host_flag_framed, false)
 
 -- Uncomment this line when head tracking is disabled.
 --E.set_tile_view_offset(tile, 0, 4, 0)
+E.set_tile_view_offset(tile, 0, 0, -1)
 

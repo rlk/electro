@@ -42,7 +42,7 @@ ifneq ($(wildcard $(HOME)/include),)
 	INCDIR += -I$(HOME)/include
 endif
 ifneq ($(wildcard $(HOME)/lib),)
-	LIBDIR += -L$(HOME)/lib
+	LIBDIR += -L/usr/lib -L$(HOME)/lib
 endif
 
 #------------------------------------------------------------------------------

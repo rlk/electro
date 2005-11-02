@@ -101,7 +101,7 @@ static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
 {
     int i, n = w * h;
 
-    if (GL_has_fragment_program)
+    if (0) /*(GL_has_fragment_program) */
     {
         unsigned int *pix = (unsigned int *) dst;
 
@@ -232,7 +232,7 @@ static void step_texture(int i)
 
 /*===========================================================================*/
 
-static void yuv2rgb(GLubyte c[4], GLubyte Y,
+static void yuv2rgb(GLubyte c[3], GLubyte Y,
                                   GLubyte U,
                                   GLubyte V)
 {
@@ -251,13 +251,11 @@ static void yuv2rgb(GLubyte c[4], GLubyte Y,
     if      (B <   0) c[2] = 0x00;
     else if (B > 255) c[2] = 0xFF;
     else              c[2] = (unsigned char) B;
-
-    c[3] = 0xFF;
 }
 
 static void decode_yuv411(GLubyte *p, int w, int h)
 {
-    GLubyte *dst = p + (w * h - 1) * 16;
+    GLubyte *dst = p + (w * h - 1) * 12;
     GLubyte *src = p + (w * h - 1) *  6;
 
     while (src > p && dst > p)
@@ -269,13 +267,13 @@ static void decode_yuv411(GLubyte *p, int w, int h)
         const int Y2 = src[4];
         const int Y3 = src[5];
 
-        yuv2rgb(dst +  0, Y0, U, V);
-        yuv2rgb(dst +  4, Y1, U, V);
-        yuv2rgb(dst +  8, Y2, U, V);
-        yuv2rgb(dst + 12, Y3, U, V);
+        yuv2rgb(dst + 0, Y0, U, V);
+        yuv2rgb(dst + 3, Y1, U, V);
+        yuv2rgb(dst + 6, Y2, U, V);
+        yuv2rgb(dst + 9, Y3, U, V);
 
         src -=  6;
-        dst -= 16;
+        dst -= 12;
     }
 }
 
@@ -307,7 +305,7 @@ static void step_video(int i)
 
             /* If the video format changes, refresh the texture object. */
 
-            if (p->w != W || p->w != H || p->code != code)
+            if (p->w != W || p->h != H || p->code != code)
             {
                 p->code = code;
                 p->w    = W;
@@ -356,8 +354,8 @@ static GLuint make_video(int w, int h)
     {
         glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
 
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-                     w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+                     w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
         glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
                         GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -371,8 +369,8 @@ static GLuint make_video(int w, int h)
     {
         glBindTexture(GL_TEXTURE_2D, o);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                     w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                     w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
         glTexParameteri(GL_TEXTURE_2D,
                         GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -699,7 +697,7 @@ int send_create_image(const char *file_nx,
 
 int send_create_video(int port)
 {
-    int i, s = -1, n = 1024 * 1024;
+    int i, s = -1, n = 1024 * 1024 * 8;
 
     if ((i = new_image()) >= 0)
     {
@@ -962,6 +960,8 @@ void fini_images(void)
 
 void step_images(void)
 {
+    struct timeval zero = { 0, 0 };
+
     int i, m = 0, n = vecnum(image);
 
     fd_set fds0;
@@ -984,21 +984,22 @@ void step_images(void)
         }
     }
 
-    FD_COPY(&fds0, &fds1);
+    memcpy(&fds1, &fds0, sizeof (fd_set));
 
     /* Handle all video socket activity. */
 
-    while (select(m, &fds1, NULL, NULL, NULL) > 0)
-    {
-        for (i = 0; i < n; ++i)
+    if (m > 0)
+        while (select(m, &fds1, NULL, NULL, &zero) > 0)
         {
-            struct image *p = get_image(i);
+            for (i = 0; i < n; ++i)
+            {
+                struct image *p = get_image(i);
 
-            if (p->count && p->sock >= 0 && FD_ISSET(p->sock, &fds1))
-                step_video(i);
+                if (p->count && p->sock >= 0 && FD_ISSET(p->sock, &fds1))
+                    step_video(i);
+            }
+            memcpy(&fds1, &fds0, sizeof (fd_set));
         }
-        FD_COPY(&fds0, &fds1);
-    }
 }
 
 /*---------------------------------------------------------------------------*/
