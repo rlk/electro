@@ -77,8 +77,8 @@ static void lines(float k)
 }
 
 static void draw_varrier_lines_new(int tile, const float M[16],
-                                         const float c[3],
-                                         float w, float h, float d)
+                                             const float c[3],
+                                             float w, float h, float d)
 {
     float p = get_varrier_pitch(tile);
     float a = get_varrier_angle(tile);
@@ -413,7 +413,6 @@ static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
     return 0;
 }
 
-#ifdef SNIP
 static int stereo_varrier_11(int eye, int tile, int pass)
 {
     if (pass == 0)
@@ -431,7 +430,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
         {
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
             glColorMask(0, 0, 0, 0);
-            draw_varrier_lines(tile, M, c, w, h, 0);
+            draw_varrier_lines_new(tile, M, c, w, h, 0);
             glColorMask(1, 1, 1, 1);
             draw_tile_background(tile, 0);
         }
@@ -439,7 +438,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
         {
             glClear(GL_DEPTH_BUFFER_BIT);
             glColorMask(0, 0, 0, 0);
-            draw_varrier_lines(tile, M, c, w, h, 0);
+            draw_varrier_lines_new(tile, M, c, w, h, 0);
             glColorMask(1, 1, 1, 1);
             draw_tile_background(tile, 0);
         }
@@ -448,59 +447,6 @@ static int stereo_varrier_11(int eye, int tile, int pass)
     }
     return 0;
 }
-#else
-static int stereo_varrier_11(int eye, int tile, int pass)
-{
-    float M[16];
-    float c[3];
-    float n[3];
-    float w, h, d = 0.00025f;
-
-    int next = 0;
-
-    get_varrier_tile(tile, M, c, n, &w, &h);
-
-    switch (pass)
-    {
-    case 0:
-        if (eye == 0)
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        else
-            glClear(GL_DEPTH_BUFFER_BIT);
-
-        glColorMask(0, 0, 0, 0);
-        draw_varrier_lines_new(tile, M, c, w, h, +d);
-        glColorMask(1, 0, 0, 0);
-        draw_tile_background(tile, 0);
-        next = 1;
-        break;
-        
-    case 1:
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glColorMask(0, 0, 0, 0);
-        draw_varrier_lines_new(tile, M, c, w, h,  0);
-        glColorMask(0, 1, 0, 0);
-        draw_tile_background(tile, 0);
-        next = 2;
-        break;
-        
-    case 2:
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glColorMask(0, 0, 0, 0);
-        draw_varrier_lines_new(tile, M, c, w, h, -d);
-        glColorMask(0, 0, 1, 0);
-        draw_tile_background(tile, 0);
-        next = 3;
-        break;
-        
-    case 3:
-        glColorMask(1, 1, 1, 1);
-        next = 0;
-    }
-
-    return next;
-}
-#endif
 
 static int stereo_varrier_33(int eye, int tile, int pass)
 {

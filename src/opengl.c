@@ -74,9 +74,9 @@ GLboolean opengl_need(const char *extension)
 void *opengl_proc(const char *name)
 {
 #ifdef __linux__
-    void *p = glXGetProcAddressARB(name);
+    void *p = glXGetProcAddressARB((const GLubyte *) name);
 #else
-    void *p = SDL_GL_GetProcAddress(name);
+    void *p = SDL_GL_GetProcAddress((const GLubyte *) name);
 #endif
 
     if (p == NULL)

@@ -1,3 +1,4 @@
+luasocket disabled by default
 2d external GUI
 set entity rotation vectors
 global state
@@ -24,4 +25,3 @@ tracking
         Lua check for tracking (built-in simulator?)
 
 cwall config
-Telnet to luasocket

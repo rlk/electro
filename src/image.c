@@ -253,12 +253,12 @@ static void yuv2rgb(GLubyte c[3], GLubyte Y,
     else              c[2] = (unsigned char) B;
 }
 
-static void decode_yuv411(GLubyte *p, int w, int h)
+static void decode_Y411(GLubyte *p, int w, int h)
 {
     GLubyte *dst = p + (w * h - 1) * 12;
     GLubyte *src = p + (w * h - 1) *  6;
 
-    while (src > p && dst > p)
+    while (src >= p && dst >= p)
     {
         const int U  = src[0];
         const int Y0 = src[1];
@@ -274,6 +274,22 @@ static void decode_yuv411(GLubyte *p, int w, int h)
 
         src -=  6;
         dst -= 12;
+    }
+}
+
+static void decode_Y800(GLubyte *p, int w, int h)
+{
+    GLubyte *dst = p + (w * h - 1) * 3;
+    GLubyte *src = p + (w * h - 1) * 1;
+
+    while (src >= p && dst >= p)
+    {
+        dst[0] = src[0];
+        dst[1] = src[0];
+        dst[2] = src[0];
+
+        src -= 1;
+        dst -= 3;
     }
 }
 
@@ -311,28 +327,36 @@ static void step_video(int i)
                 p->w    = W;
                 p->h    = H;
 
+                switch (code)
+                {
+                case 0x31313459: p->b = 3; break;
+                case 0x30303859: p->b = 1; break;
+                }
+
                 fini_image(i);
                 init_image(i);
             }
 
             /* Decode the incoming image data as necessary. */
 
-            if (code == 0x31313459)
-                decode_yuv411(buffer, w, h);
+            switch (code)
+            {
+            case 0x31313459: decode_Y411(data, w, h); break;
+            }
 
             /* Apply the incoming subimage to the existing texture object. */
 
             if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
             {
                 glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
-                glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB,
-                                0, x, y, w, h, GL_RGB, GL_UNSIGNED_BYTE, data);
+                glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, x, y, w, h,
+                                format[p->b], GL_UNSIGNED_BYTE, data);
             }
             else
             {
                 glBindTexture  (GL_TEXTURE_2D, p->texture);
-                glTexSubImage2D(GL_TEXTURE_2D,
-                                0, x, y, w, h, GL_RGB, GL_UNSIGNED_BYTE, data);
+                glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
+                                format[p->b], GL_UNSIGNED_BYTE, data);
             }
         }
     }
@@ -340,7 +364,7 @@ static void step_video(int i)
 
 /*---------------------------------------------------------------------------*/
 
-static GLuint make_video(int w, int h)
+static GLuint make_video(int w, int h, int b)
 {
     GLuint o = 0;
 
@@ -354,8 +378,8 @@ static GLuint make_video(int w, int h)
     {
         glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
 
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-                     w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, format[b],
+                     w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
 
         glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
                         GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -369,8 +393,8 @@ static GLuint make_video(int w, int h)
     {
         glBindTexture(GL_TEXTURE_2D, o);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                     w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, format[b],
+                     w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
 
         glTexParameteri(GL_TEXTURE_2D,
                         GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -708,7 +732,7 @@ int send_create_video(int port)
         p->w     = 128;
         p->h     = 128;
         p->n     =   1;
-        p->b     =   4;
+        p->b     =   3;
         p->sock  =  -1;
 
         /* Open a UDP socket for receiving. */
@@ -881,7 +905,7 @@ void init_image(int i)
     if (p->state == 0)
     {
         if (p->sock >= 0)
-            p->texture = make_video(p->w, p->h);
+            p->texture = make_video(p->w, p->h, p->b);
         else
             p->texture = make_image(p->p, p->n, p->w, p->h, p->b);
         
