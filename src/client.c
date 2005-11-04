@@ -140,7 +140,7 @@ static void client_recv(void)
 
 static void client_swap(void)
 {
-#ifdef MPI
+#ifdef CONF_MPI
     glFinish();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
@@ -211,7 +211,7 @@ void client(void)
         }
 
         /* Ensure everyone finishes all events before exiting. */
-#ifdef MPI
+#ifdef CONF_MPI
         assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
         SDL_Quit();

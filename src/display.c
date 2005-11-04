@@ -215,7 +215,7 @@ void sync_display(void)
     int  rank = 0;
     int  i;
 
-#ifdef MPI
+#ifdef CONF_MPI
     int num  = vecnum(host);
     int siz  = vecsiz(host);
     int j;

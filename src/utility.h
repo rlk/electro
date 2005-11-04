@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifdef MPI
+#ifdef CONF_MPI
 #include <mpi.h>
 #endif
 

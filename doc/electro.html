@@ -50,14 +50,16 @@ print("Hello, World!")
 
 <h1> 1. Command Line Arguments </h1>
 
-<p>Electro accepts the following command line arguments. All unrecognized arguments are copied to a table in the Electro Lua environment called <a href="#arguments"><tt>E.arguments</tt></a>. Scripts are free to access them there.</p>
+<p>Electro accepts the following command line arguments. All arguments with the extension <tt>.lua</tt> are taken to be Lua scripts to be executed in order. All unrecognized arguments are copied to a table in the Lua environment called <a href="#arguments"><tt>E.arguments</tt></a>. This table is populated before any script is run, so all scripts are free to access arguments there.</p>
 
 <dl>
-<dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>Execute the named Lua script.</p>
+<dt><tt>-f</tt> <i>&lt;Lua script&gt;</i><dd><p>Execute the named Lua script. This may be used to execute script files that lack the <tt>.lua</tt> extension.</p>
 
 <dt><tt>-m</tt><dd><p>Grab the mouse pointer. Normally, mouse motion events are only detected while the pointer is within the Electro window. This limits the useful range of mouse motion to the size of the window. When the mouse pointer is grabbed, an application can track mouse motion over unlimited distances. This is useful to applications that implement a pointer that spans a large tiled display.</p>
 
 <dt><tt>-l</tt> <i>&lt;log file&gt;</i><dd><p>Log all console output to the named file.</p>
+
+<dt><tt>-p</tt> <i>&lt;port&gt;</i><dd><p>Use the given TCP port as network console. The default is 0, and remote console access is disabled.</p>
 
 <dt><a name="option-t"><tt>-t</tt> <i>&lt;key&gt;</i></a><dd><p>Use the given key value to access trackd tracker information. The default is 4126.</p>
 

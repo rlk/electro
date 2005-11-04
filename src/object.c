@@ -130,6 +130,10 @@ static vector_t _tv;
 static vector_t _nv;
 static vector_t _vv;
 
+static int terr;
+static int nerr;
+static int verr;
+
 /*---------------------------------------------------------------------------*/
 
 static int read_face_indices(const char *line, int *vi, int *ti, int *ni)
@@ -155,32 +159,31 @@ static void read_face_vertices(vector_t vv, const char *line)
 {
     const char *c = line;
     int dc;
-    int vi;
-    int ti;
-    int ni;
+    int vj, vc = vecnum(_vv);
+    int tj, tc = vecnum(_tv);
+    int nj, nc = vecnum(_nv);
     int i;
 
     /* Scan down the face string recording index set specifications. */
 
-    while ((dc = read_face_indices(c, &vi, &ti, &ni)))
+    while ((dc = read_face_indices(c, &vj, &tj, &nj)))
         if ((i = vecadd(vv)) >= 0)
         {
             struct object_vert *v = (struct object_vert *) vecget(vv, i);
 
-            struct vec2 *tp = NULL;
-            struct vec3 *np = NULL;
-            struct vec3 *vp = NULL;
+            /* Convert a face index to a vector index. */
 
-            /* Locate the indexed value in the vector caches. */
+            int ti = (tj > 0) ? tj - 1 : tj + tc;
+            int ni = (nj > 0) ? nj - 1 : nj + nc;
+            int vi = (vj > 0) ? vj - 1 : vj + vc;
 
-            if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
-            else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv)+ti);
-            if      (ni > 0) np = (struct vec3 *) vecget(_nv, ni - 1);
-            else if (ni < 0) np = (struct vec3 *) vecget(_nv, vecnum(_nv)+ni);
-            if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
-            else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv)+vi);
+            /* Locate the indexed values in the vector caches. */
 
-            /* Initialize the new vertex. */
+            struct vec2 *tp = (0 <= ti && ti < tc) ? vecget(_tv, ti) : NULL;
+            struct vec3 *np = (0 <= ni && ni < nc) ? vecget(_nv, ni) : NULL;
+            struct vec3 *vp = (0 <= vi && vi < vc) ? vecget(_vv, vi) : NULL;
+
+            /* Initialize the new vertex, defaulting on bad input. */
 
             v->t[0] = tp ? tp->u : 0.0f;
             v->t[1] = tp ? tp->v : 0.0f;
@@ -192,6 +195,12 @@ static void read_face_vertices(vector_t vv, const char *line)
             v->v[0] = vp ? vp->x : 0.0f;
             v->v[1] = vp ? vp->y : 0.0f;
             v->v[2] = vp ? vp->z : 0.0f;
+
+            /* Note bad indices. */
+
+            if (tj && !tp) terr++;
+            if (nj && !np) nerr++;
+            if (vj && !vp) verr++;
 
             c += dc;
         }
@@ -242,28 +251,28 @@ static void read_edge_vertices(vector_t vv, const char *line)
 {
     const char *c = line;
     int dc;
-    int vi;
-    int ti;
+    int vj, vc = vecnum(_vv);
+    int tj, tc = vecnum(_tv);
     int i;
 
     /* Scan down the face string recording index set specifications. */
 
-    while ((dc = read_edge_indices(c, &vi, &ti)))
+    while ((dc = read_edge_indices(c, &vj, &tj)))
         if ((i = vecadd(vv)) >= 0)
         {
             struct object_vert *v = (struct object_vert *) vecget(vv, i);
 
-            struct vec2 *tp = NULL;
-            struct vec3 *vp = NULL;
+            /* Convert an edge index to a vector index. */
 
-            /* Locate the indexed value in the vector caches. */
+            int ti = (tj > 0) ? tj - 1 : tj + tc;
+            int vi = (vj > 0) ? vj - 1 : vj + vc;
 
-            if      (ti > 0) tp = (struct vec2 *) vecget(_tv, ti - 1);
-            else if (ti < 0) tp = (struct vec2 *) vecget(_tv, vecnum(_tv)+ti);
-            if      (vi > 0) vp = (struct vec3 *) vecget(_vv, vi - 1);
-            else if (vi < 0) vp = (struct vec3 *) vecget(_vv, vecnum(_vv)+vi);
+            /* Locate the indexed values in the vector caches. */
 
-            /* Initialize the new vertex. */
+            struct vec2 *tp = (0 <= ti && ti < tc) ? vecget(_tv, ti) : NULL;
+            struct vec3 *vp = (0 <= vi && vi < vc) ? vecget(_vv, vi) : NULL;
+
+            /* Initialize the new vertex, defaulting on bad input. */
 
             v->t[0] = tp ? tp->u : 0.0f;
             v->t[1] = tp ? tp->v : 0.0f;
@@ -275,6 +284,11 @@ static void read_edge_vertices(vector_t vv, const char *line)
             v->v[0] = vp ? vp->x : 0.0f;
             v->v[1] = vp ? vp->y : 0.0f;
             v->v[2] = vp ? vp->z : 0.0f;
+
+            /* Note bad indices. */
+
+            if (tj && !tp) terr++;
+            if (vj && !vp) verr++;
 
             c += dc;
         }
@@ -407,6 +421,8 @@ static int read_obj(const char *filename, struct object *o)
         _nv = vecnew(1024, sizeof (struct vec3));
         _vv = vecnew(1024, sizeof (struct vec3));
 
+        terr = nerr = verr = 0;
+
         if ((fin = open_file(get_file_name(filename), "r")))
         {
             /* Create a default catch-all group using the default material. */
@@ -472,6 +488,15 @@ static int read_obj(const char *filename, struct object *o)
         vecdel(_vv);
         vecdel(_nv);
         vecdel(_tv);
+
+        /* Report index errors. */
+
+        if (terr > 0)
+            error("OBJ file '%s' has %d bad texture indices", filename, terr);
+        if (nerr > 0)
+            error("OBJ file '%s' has %d bad normal indices",  filename, nerr);
+        if (verr > 0)
+            error("OBJ file '%s' has %d bad vertex indices",  filename, verr);
 
         path_pop();
     }

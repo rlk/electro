@@ -1,4 +1,4 @@
-luasocket disabled by default
+texture clamp
 2d external GUI
 set entity rotation vectors
 global state
@@ -13,7 +13,6 @@ OBJ
         Tangent space basis per vertex
         MTL texture transform?
 MIDI IO
-UDP texture
 UDP audio?
 GLslang
 skeletal animation

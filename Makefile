@@ -7,11 +7,15 @@ INSTALL_PREFIX = /usr/local/Electro
 ifdef MPI
 	CC     = mpicc
 	TARG   = electro-mpi
-	CFLAGS = -O2 -Wall -DNDEBUG -DMPI
+	CFLAGS = -O2 -Wall -DNDEBUG -DCONF_MPI
 else
 	CC     = cc
 	TARG   = electro
 	CFLAGS = -O3 -Wall
+endif
+
+ifdef SOCKET
+	CFLAGS += -DCONF_SOCKET
 endif
 
 #------------------------------------------------------------------------------
@@ -51,10 +55,14 @@ CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
 
 SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
 FT2LIB = $(shell $(FT2_CONFIG) --libs)
-LUALIB = -llua -llualib -lluasocket
+LUALIB = -llua -llualib
 IMGLIB = -ljpeg -lpng -lz -lm
 OGGLIB = -lvorbisfile
 ODELIB = -lode -lstdc++
+
+ifdef SOCKET
+LUALIB += -lluasocket
+endif
 
 ifdef LINUX_STATIC
 SDLLIB = /home/rlk/lib/libSDL.a -lpthread

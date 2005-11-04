@@ -21,7 +21,10 @@
 
 #include <lua.h>
 #include <lualib.h>
+#ifdef CONF_SOCKET
 #include <luasocket.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -2752,7 +2755,9 @@ int init_script(void)
         luaopen_table(L);
         luaopen_debug(L);
         luaopen_string(L);
+#ifdef CONF_SOCKET
         luaopen_socket(L);
+#endif
         luaopen_electro(L);
 
         return 1;

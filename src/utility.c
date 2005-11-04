@@ -298,7 +298,7 @@ void *print(char *format, ...)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef MPI
+#ifdef CONF_MPI
 
 void assert_mpi(int err)
 {

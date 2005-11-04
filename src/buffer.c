@@ -54,7 +54,7 @@ int startup_buffer(void)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef MPI
+#ifdef CONF_MPI
 
 static void clear_buffer(void)
 {

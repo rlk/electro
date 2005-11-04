@@ -124,7 +124,7 @@ static int server_tick(void)
 
 static void server_swap(void)
 {
-#ifdef MPI
+#ifdef CONF_MPI
     glFinish();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
@@ -351,6 +351,16 @@ static int server_loop(void)
 
 /*---------------------------------------------------------------------------*/
 
+static int is_script(const char *argp)
+{
+    int n = argp ? strlen(argp) : 0;
+
+    if (n > 4 && strncasecmp(argp + n - 4, ".lua", 4) == 0)
+        return 1;
+    else
+        return 0;
+}
+
 void parse_options(int argc, char *argv[])
 {
     int i, c = 1;
@@ -358,7 +368,10 @@ void parse_options(int argc, char *argv[])
     /* Scan the list for Electro options. */
 
     for (i = 1; i < argc; ++i)
-        if      (strcmp(argv[i], "-f") == 0 && i < argc - 1)
+        if   (is_script(argv[i]))
+            /* skip */ ;
+
+        else if (strcmp(argv[i], "-f") == 0 && i < argc - 1)
             i++;
 
         else if (strcmp(argv[i], "-T") == 0 && i < argc - 2)
@@ -405,7 +418,9 @@ void parse_scripts(int argc, char *argv[])
     /* Scan the list for Lua scripts. */
 
     for (i = 1; i < argc; ++i)
-        if      (strcmp(argv[i], "-f") == 0)
+        if   (is_script(argv[i]))
+            load_script(argv[i]);
+        else if (strcmp(argv[i], "-f") == 0)
             load_script(argv[++i]);
         else if (strcmp(argv[i], "-H") == 0) i += 2;
         else if (strcmp(argv[i], "-T") == 0) i += 2;
@@ -476,7 +491,7 @@ void server(int argc, char *argv[])
             }
 
             /* Ensure everyone finishes all events before exiting. */
-#ifdef MPI
+#ifdef CONF_MPI
             assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
             SDL_Quit();

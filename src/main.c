@@ -24,7 +24,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef MPI
+#ifdef CONF_MPI
 #include <mpi.h>
 
 int MAIN(int argc, char *argv[])

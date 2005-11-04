@@ -277,22 +277,6 @@ static void decode_Y411(GLubyte *p, int w, int h)
     }
 }
 
-static void decode_Y800(GLubyte *p, int w, int h)
-{
-    GLubyte *dst = p + (w * h - 1) * 3;
-    GLubyte *src = p + (w * h - 1) * 1;
-
-    while (src >= p && dst >= p)
-    {
-        dst[0] = src[0];
-        dst[1] = src[0];
-        dst[2] = src[0];
-
-        src -= 1;
-        dst -= 3;
-    }
-}
-
 /*---------------------------------------------------------------------------*/
 
 static void step_video(int i)
@@ -329,8 +313,8 @@ static void step_video(int i)
 
                 switch (code)
                 {
-                case 0x31313459: p->b = 3; break;
-                case 0x30303859: p->b = 1; break;
+                case 0x31313459: p->b = 3; break;  /* Y411 */
+                case 0x30303859: p->b = 1; break;  /* Y800 */
                 }
 
                 fini_image(i);
@@ -877,10 +861,10 @@ void get_image_c(int i, int x, int y, unsigned char c[4])
             c[3] = 0xff;
             break;
         case 4:
-            c[0] = pixels[(p->w * y + x) * 3 + 0];
-            c[1] = pixels[(p->w * y + x) * 3 + 1];
-            c[2] = pixels[(p->w * y + x) * 3 + 2];
-            c[3] = pixels[(p->w * y + x) * 3 + 3];
+            c[0] = pixels[(p->w * y + x) * 4 + 0];
+            c[1] = pixels[(p->w * y + x) * 4 + 1];
+            c[2] = pixels[(p->w * y + x) * 4 + 2];
+            c[3] = pixels[(p->w * y + x) * 4 + 3];
             break;
         }
     else c[0] = c[1] = c[2] = c[3] = 0xFF;
