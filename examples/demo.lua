@@ -7,11 +7,11 @@ name_text = "Electro Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
+    { "Trainer",                  "trainer",   "trainer.lua"   },
     { "Video Viewer",             "viewvid",   "viewvid.lua"   },
     { "Hipparcos Explorer",       "vortex",    "vortex.lua"    },
     { "NCMIR Data",               "imgplay",   "imgplay.lua"   },
     { "Driving",                  "driving",   "driving.lua"   },
-    { "Asteroids",                "asteroids", "asteroids.lua" },
 }
 
 item = { }

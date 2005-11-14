@@ -291,45 +291,45 @@ static void step_video(int i)
 
     if ((n = recv(p->sock, buffer, BUFMAX, 0)) > 0)
     {
-        if (p->texture)
+        /* Decode the subimage header. */
+
+        int code = ntohl(head->code);
+        int x    = ntohs(head->x);
+        int y    = ntohs(head->y);
+        int w    = ntohs(head->w);
+        int h    = ntohs(head->h);
+        int W    = ntohs(head->W);
+        int H    = ntohs(head->H);
+
+        /* If the video format changes, refresh the texture object. */
+
+        if (p->w != W || p->h != H || p->code != code)
         {
-            /* Decode the subimage header. */
-
-            int code = ntohl(head->code);
-            int x    = ntohs(head->x);
-            int y    = ntohs(head->y);
-            int w    = ntohs(head->w);
-            int h    = ntohs(head->h);
-            int W    = ntohs(head->W);
-            int H    = ntohs(head->H);
-
-            /* If the video format changes, refresh the texture object. */
-
-            if (p->w != W || p->h != H || p->code != code)
-            {
-                p->code = code;
-                p->w    = W;
-                p->h    = H;
-
-                switch (code)
-                {
-                case 0x31313459: p->b = 3; break;  /* Y411 */
-                case 0x30303859: p->b = 1; break;  /* Y800 */
-                }
-
-                fini_image(i);
-                init_image(i);
-            }
-
-            /* Decode the incoming image data as necessary. */
+            p->code = code;
+            p->w    = W;
+            p->h    = H;
 
             switch (code)
             {
-            case 0x31313459: decode_Y411(data, w, h); break;
+            case 0x31313459: p->b = 3; break;  /* Y411 */
+            case 0x30303859: p->b = 1; break;  /* Y800 */
             }
 
-            /* Apply the incoming subimage to the existing texture object. */
+            fini_image(i);
+            init_image(i);
+        }
 
+        /* Decode the incoming image data as necessary. */
+
+        switch (code)
+        {
+        case 0x31313459: decode_Y411(data, w, h); break;
+        }
+
+        /* Apply the incoming subimage to the existing texture object. */
+
+        if (p->texture)
+        {
             if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
             {
                 glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
@@ -352,40 +352,42 @@ static GLuint make_video(int w, int h, int b)
 {
     GLuint o = 0;
 
-    /* Create a GL texture object. */
-
-    glGenTextures(1, &o);
-
-    /* Non-power-of-two size implies texture rectangle. */
-
-    if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
+    if (w * h * b > 0)
     {
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
+        /* Create a GL texture object. */
 
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, format[b],
-                     w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
+        glGenTextures(1, &o);
 
-        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
-                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        /* Non-power-of-two size implies texture rectangle. */
+
+        if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
+        {
+            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
+
+            glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, format[b],
+                         w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
+
+            glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+
+        /* A power-of-two image comprises a 2D texture map. */
+
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, o);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, format[b],
+                         w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
+
+            glTexParameteri(GL_TEXTURE_2D,
+                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D,
+                            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        }
     }
-
-    /* A power-of-two image comprises a 2D texture map. */
-
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, o);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, format[b],
-                     w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
-
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    }
-
     return o;
 }
 
@@ -917,23 +919,26 @@ void draw_image(int i)
 
     if (p->count)
     {
-        GLenum t = GL_TEXTURE_2D;
-
         init_image(i);
 
-        /* Ensure the wrong texture unit types are disabled. */
+        if (p->texture)
+        {
+            GLenum t = GL_TEXTURE_2D;
 
-        glDisable(GL_TEXTURE_RECTANGLE_ARB);
-        glDisable(GL_TEXTURE_CUBE_MAP_ARB);
-        glDisable(GL_TEXTURE_2D);
+            /* Ensure the wrong texture unit types are disabled. */
 
-        /* Determine the right texture unit type and enable it. */
+            glDisable(GL_TEXTURE_RECTANGLE_ARB);
+            glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+            glDisable(GL_TEXTURE_2D);
 
-        if      (p->n > 1)                 t = GL_TEXTURE_CUBE_MAP_ARB;
-        else if (NPOT(p->w) || NPOT(p->h)) t = GL_TEXTURE_RECTANGLE_ARB;
+            /* Determine the right texture unit type and enable it. */
+
+            if      (p->n > 1)                 t = GL_TEXTURE_CUBE_MAP_ARB;
+            else if (NPOT(p->w) || NPOT(p->h)) t = GL_TEXTURE_RECTANGLE_ARB;
             
-        glEnable(t);
-        glBindTexture(t, get_image(i)->texture);
+            glEnable(t);
+            glBindTexture(t, get_image(i)->texture);
+        }
     }
 }
 
@@ -970,7 +975,7 @@ void step_images(void)
 {
     struct timeval zero = { 0, 0 };
 
-    int i, m = 0, n = vecnum(image);
+    int i, m = 0, n = vecnum(image), c;
 
     fd_set fds0;
     fd_set fds1;
@@ -997,7 +1002,7 @@ void step_images(void)
     /* Handle all video socket activity. */
 
     if (m > 0)
-        while (select(m, &fds1, NULL, NULL, &zero) > 0)
+        while ((c = select(m, &fds1, NULL, NULL, &zero)) > 0)
         {
             for (i = 0; i < n; ++i)
             {
