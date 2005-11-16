@@ -52,8 +52,8 @@ function varrier_keyboard(k, s, camera)
 
             if k == E.key_down  then return varrier_thick(-0.0001) end
             if k == E.key_up    then return varrier_thick( 0.0001) end
-            if k == E.key_left  then return varrier_shift(-0.0001) end
-            if k == E.key_right then return varrier_shift( 0.0001) end
+            if k == E.key_left  then return varrier_shift(-0.00005) end
+            if k == E.key_right then return varrier_shift( 0.00005) end
 
             if k == E.key_tab then
                 test = not test

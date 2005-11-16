@@ -20,7 +20,7 @@ function do_start()
     E.set_brush_frag_prog(star_brush, "../data/star.fp")
     E.set_brush_vert_prog(star_brush, "../data/star.vp")
 
---  local sign_image = E.create_image("../data/sunsign.png")
+    local sign_image = E.create_image("../data/sunsign.png")
     local sign_brush = E.create_brush()
     E.set_brush_image(sign_brush, sign_image)
     E.set_brush_flags(sign_brush, E.brush_flag_unlit, true)

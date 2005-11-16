@@ -8,9 +8,9 @@ help_text = "Select a demo.  Press F12 to return."
 
 demo = {
     { "Trainer",                  "trainer",   "trainer.lua"   },
-    { "Video Viewer",             "viewvid",   "viewvid.lua"   },
+    { "Video Viewer",             "movie",     "movie.lua"     },
     { "Hipparcos Explorer",       "vortex",    "vortex.lua"    },
-    { "NCMIR Data",               "imgplay",   "imgplay.lua"   },
+--  { "NCMIR Data",               "imgplay",   "imgplay.lua"   },
     { "Driving",                  "driving",   "driving.lua"   },
 }
 

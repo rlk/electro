@@ -279,7 +279,7 @@ static void decode_Y411(GLubyte *p, int w, int h)
 
 /*---------------------------------------------------------------------------*/
 
-static void step_video(int i)
+static void step_video(int i, int c)
 {
     struct image *p = get_image(i);
     ssize_t n;
@@ -289,7 +289,7 @@ static void step_video(int i)
 
     /* Receive an incoming subimage. */
 
-    if ((n = recv(p->sock, buffer, BUFMAX, 0)) > 0)
+    if ((n = recv(p->sock, buffer, BUFMAX, 0)) > 0 && c < 960)
     {
         /* Decode the subimage header. */
 
@@ -745,7 +745,7 @@ int send_create_video(int port)
                     p->sock = s;
                     return i;
                 }
-                else error("bind %d : %s", p, system_error());
+                else error("bind %d : %s", port, system_error());
             }
             else error("setsockopt : %s", system_error());
         }
@@ -975,7 +975,7 @@ void step_images(void)
 {
     struct timeval zero = { 0, 0 };
 
-    int i, m = 0, n = vecnum(image), c;
+    int i, x = 0, m = 0, n = vecnum(image), c;
 
     fd_set fds0;
     fd_set fds1;
@@ -1009,7 +1009,7 @@ void step_images(void)
                 struct image *p = get_image(i);
 
                 if (p->count && p->sock >= 0 && FD_ISSET(p->sock, &fds1))
-                    step_video(i);
+                    step_video(i, x++);
             }
             memcpy(&fds1, &fds0, sizeof (fd_set));
         }

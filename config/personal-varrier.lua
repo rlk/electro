@@ -1,4 +1,5 @@
-linescreen_file = "/DEMO/varrier/electro/ives-linescreen.lua"
+linescreen_file = "/DEMO/varrier/varrier_configs/linescreen_setup.txt"
+read_linescreen(linescreen_file, "screen1")
 
 W =  2.0000
 H =  1.1250
@@ -14,13 +15,28 @@ p = {
     {  1.0521, 3.1354, -1.3614 },
 }
 
---linescreen = { 266.67083, -7.572, 0.0076, 0.0003, 0.8125 }
-dofile(linescreen_file)
-
 offset = { 0, (p[2][2] + p[1][2]) / 2, 2.0 + p[1][3] }
 
 ------------------------------------------------------------------------------
 
+host = E.add_host("default", 0, 0, w, h)
+tile = E.add_tile(host,      0, 0, w, h)
+
+E.set_tile_viewport(tile, 0, 0, w, h)
+E.set_tile_position(tile, p[1][1], p[1][2], p[1][3],
+                    p[3][1] - p[1][1], p[3][2] - p[1][2], p[3][3] - p[1][3],
+                    p[2][1] - p[1][1], p[2][2] - p[1][2], p[2][3] - p[1][3])
+E.set_tile_line_screen(tile, linescreen.p, linescreen.a,
+                             linescreen.t, linescreen.s, linescreen.c)
+
+E.set_host_flags(host, E.host_flag_framed, false)
+
+-- Uncomment this line when head tracking is disabled.
+--E.set_tile_view_offset(tile, 0, 4, 0)
+--E.set_tile_view_offset(tile, 0, 0, -1)
+
+------------------------------------------------------------------------------
+--[[
 host = E.add_host("default", 0, 0, w, h)
 tile = E.add_tile(host,      0, 0, w, h)
 
@@ -37,9 +53,9 @@ E.set_host_flags(host, E.host_flag_framed, false)
 
 -- Uncomment this line when head tracking is disabled.
 --E.set_tile_view_offset(tile, 0, 4, 0)
-
+]]--
 -------------------------------------------------------------------------------
-
+--[[
 function varrier_store()
     local fd = io.open(linescreen_file, "w")
     fd:write(string.format("linescreen = { %f, %f, %f, %f, %f }\n",
@@ -63,9 +79,9 @@ function varrier_shift(d)
     varrier_store()
     return true
 end
-
+]]--
 ------------------------------------------------------------------------------
-
+--[[
 function varrier_keyboard(k, s, camera)
     local dx =  2.50 / 12.0 * 0.5
     local dy = -1.23 / 12.0
@@ -116,4 +132,4 @@ function varrier_keyboard(k, s, camera)
     end
     return false
 end
-
+]]--

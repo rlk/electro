@@ -5,8 +5,8 @@ image = nil
 brush = nil
 total = 0
 
---off_x = 3 / 32
 off_x = 0
+off_y = 0
 off_z = 0
 
 -------------------------------------------------------------------------------
@@ -18,10 +18,12 @@ function do_keyboard(k, s)
     end
 
     if s then
-        if k == E.key_left  then off_x = off_x - 1 / 128 end
-        if k == E.key_right then off_x = off_x + 1 / 128 end
-        if k == E.key_up    then off_z = off_z - 1 / 32  end
-        if k == E.key_down  then off_z = off_z + 1 / 32  end
+        if k == E.key_left      then off_x = off_x - 1 / 128 end
+        if k == E.key_right     then off_x = off_x + 1 / 128 end
+        if k == E.key_up        then off_y = off_y - 1 / 128 end
+        if k == E.key_down      then off_y = off_y + 1 / 128 end
+        if k == E.key_pageup    then off_z = off_z - 1 / 32  end
+        if k == E.key_pagedown  then off_z = off_z + 1 / 32  end
 
         if k == E.key_F12 then
             E.nuke()
@@ -30,8 +32,12 @@ function do_keyboard(k, s)
             return true
         end
 
-        E.set_entity_position(spriteL, pos_x + off_x, pos_y, pos_z + off_z)
-        E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
+        E.set_entity_position(spriteL, pos_x + off_x,
+                                       pos_y + off_y,
+                                       pos_z + off_z)
+        E.set_entity_position(spriteR, pos_x - off_x,
+                                       pos_y - off_y,
+                                       pos_z + off_z)
         
         return true
     end
@@ -44,16 +50,16 @@ function do_timer(dt)
 
     local w = (x1 - x0)
     local h = (y1 - y0)
-    local m = w / 2
+    local m = h / 2
     local s
 
     if stereo then
 --        s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
-        s = math.min(2 * (X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
-        E.set_sprite_range(spriteL, 0, m, 0, h)
-        E.set_sprite_range(spriteR, m, w, 0, h)
-        E.set_entity_scale(spriteL, s, s, s)
-        E.set_entity_scale(spriteR, s, s, s)
+        s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
+        E.set_sprite_range(spriteL, 0, w, m, 0)
+        E.set_sprite_range(spriteR, 0, w, h, m)
+        E.set_entity_scale(spriteL, 2 * s, s, s)
+        E.set_entity_scale(spriteR, 2 * s, s, s)
 --        E.set_entity_scale(spriteL, s / 2, s, s)
 --        E.set_entity_scale(spriteR, s / 2, s, s)
     else
@@ -94,7 +100,8 @@ function do_start()
     E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
 
     E.enable_timer(true)
-    E.set_background(0.2, 0.2, 0.2)
+--  E.set_background(0.2, 0.2, 0.2)
+    E.set_background(0, 0, 0)
 end
 
 -------------------------------------------------------------------------------
