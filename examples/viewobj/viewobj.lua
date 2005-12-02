@@ -39,17 +39,29 @@ function do_start()
     XC = (X0 + X1) / 2
     YC = (Y0 + Y1) / 2
     ZC = (Z0 + Z1) / 2
+    envmap = E.create_image("../data/sky_nx.png",
+                            "../data/sky_px.png",
+                            "../data/sky_ny.png",
+                            "../data/sky_py.png",
+                            "../data/sky_nz.png",
+                            "../data/sky_pz.png")
 
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
     pivot  = E.create_pivot()
     wand   = E.create_pivot()
     hand   = E.create_pivot()
+    sky    = E.create_object("../data/sky.obj")
+
+    E.set_brush_image(E.get_mesh(sky, 0), envmap)
+    E.set_brush_flags(E.get_mesh(sky, 0), E.brush_flag_unlit,     true)
+    E.set_brush_flags(E.get_mesh(sky, 0), E.brush_flag_sky_map_0, true)
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(wand,  light)
     E.parent_entity(hand,  light)
+    E.parent_entity(sky,   light)
 
     E.set_entity_position(light,  0.0,  8.0,  8.0)
     E.set_entity_position(pivot,  XC,   YC,   ZC)
@@ -61,6 +73,8 @@ function do_start()
     E.set_entity_tracking(wand, 1, E.tracking_mode_local)
     E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
     E.set_entity_flags   (wand, E.entity_flag_track_rot, true)
+
+    E.set_entity_scale   (sky, 16, 16, 16)
 
     table.foreach(E.argument, add_object)
 
@@ -178,6 +192,11 @@ function do_keyboard(k, s)
         end
         if k == E.key_F8 then
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
+                                -d, 0, 0, d, 0, 0)
+            return true
+        end
+        if k == E.key_F9 then
+            E.set_camera_stereo(camera, E.stereo_mode_quad,
                                 -d, 0, 0, d, 0, 0)
             return true
         end

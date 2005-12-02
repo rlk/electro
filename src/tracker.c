@@ -56,8 +56,13 @@ struct sensor
 
 /*---------------------------------------------------------------------------*/
 
+#ifndef _WIN32
 static int tracker_id = -1;
 static int control_id = -1;
+#else
+static volatile HANDLE tracker_id = NULL;
+static volatile HANDLE control_id = NULL;
+#endif
 
 static struct tracker_header *tracker = (struct tracker_header *) (-1);
 static struct control_header *control = (struct control_header *) (-1);
@@ -67,37 +72,62 @@ static uint32_t              *buttons = NULL;
 
 int acquire_tracker(int t_key, int c_key)
 {
-#ifndef _WIN32
     /* Acquire the tracker and controller shared memory segments. */
 
+#ifndef _WIN32
     if ((tracker_id = shmget(t_key, sizeof (struct tracker_header), 0)) >= 0)
         tracker = (struct tracker_header *) shmat(tracker_id, 0, 0);
 
     if ((control_id = shmget(c_key, sizeof (struct control_header), 0)) >= 0)
         control = (struct control_header *) shmat(control_id, 0, 0);
+#else
+    char shmkey[256];
+
+    sprintf(shmkey, "%d", t_key);
+    if ((tracker_id = OpenFileMapping(FILE_MAP_WRITE, FALSE, shmkey)))
+        tracker = (struct tracker_header *)
+                    MapViewOfFile(tracker_id, FILE_MAP_WRITE, 0, 0, 0);
+    else
+        tracker = (struct tracker_header *) (-1);
+
+    sprintf(shmkey, "%d", c_key);
+    if ((control_id = OpenFileMapping(FILE_MAP_WRITE, FALSE, shmkey)))
+        control = (struct tracker_header *)
+                    MapViewOfFile(control_id, FILE_MAP_WRITE, 0, 0, 0);
+    else
+        control = (struct tracker_header *) (-1);
+#endif
 
     /* Allocate storage for button states. */
 
     if (control != (struct control_header *) (-1))
         buttons = (uint32_t *) calloc(control->but_count, sizeof (uint32_t));
-#endif
 
-    /* Return an indication of successful attachment to shared memory. */
-
-    return ((tracker != (struct tracker_header *) (-1)) &&
-            (control != (struct control_header *) (-1)) && buttons);
+    return 1;
 }
 
 void release_tracker(void)
 {
-#ifndef _WIN32
     /* Detach shared memory segments. */
 
+#ifndef _WIN32
     if (control != (struct control_header *) (-1)) shmdt(control);
     if (tracker != (struct tracker_header *) (-1)) shmdt(tracker);
 
-    if (buttons) free(buttons);
+    control_id = -1;
+    tracker_id = -1;
+#else
+    if (control != (struct control_header *) (-1)) UnmapViewOfFile(control);
+    if (tracker != (struct tracker_header *) (-1)) UnmapViewOfFile(tracker);
+
+    CloseHandle(control_id);
+    CloseHandle(tracker_id);
+
+    control_id = NULL;
+    tracker_id = NULL;
 #endif
+
+    if (buttons) free(buttons);
 
     /* Mark everything as uninitialized. */
 
@@ -105,17 +135,13 @@ void release_tracker(void)
     tracker = (struct tracker_header *) (-1);
 
     buttons = NULL;
-
-    control_id = -1;
-    tracker_id = -1;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int get_tracker_status(void)
 {
-    return ((tracker != (struct tracker_header *) (-1)) &&
-            (control != (struct control_header *) (-1)) && buttons);
+    return ((tracker != (struct tracker_header *) (-1)));
 }
 
 int get_tracker_rotation(unsigned int id, float r[3])

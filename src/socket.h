@@ -17,7 +17,11 @@
 /* These definitions homogenize Winsock with Berkeley Sockets.               */
 
 #ifdef _WIN32
-#include <winsock.h>
+#include <io.h>
+#include <winsock2.h>
+
+typedef int socklen_t;
+
 #else
 #include <stddef.h>
 #include <unistd.h>
@@ -25,6 +29,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 
 typedef int SOCKET;
 #define SOCKET_ERROR    -1

@@ -355,7 +355,8 @@ static int is_script(const char *argp)
 {
     int n = argp ? strlen(argp) : 0;
 
-    if (n > 4 && strncasecmp(argp + n - 4, ".lua", 4) == 0)
+    if (n > 4 && (strncmp(argp + n - 4, ".lua", 4) == 0 ||
+                  strncmp(argp + n - 4, ".LUA", 4) == 0))
         return 1;
     else
         return 0;

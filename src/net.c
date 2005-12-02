@@ -12,8 +12,9 @@
 
 #include <SDL.h>
 #include <SDL_thread.h>
-#include <sys/select.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "utility.h"
 #include "socket.h"
@@ -109,8 +110,8 @@ static void net_loop(void)
         if (conn[i] >= 0)
             FD_SET(conn[i], &fds);
 
-        if (n < conn[i] + 1)
-            n = conn[i] + 1;
+        if (n < (int) conn[i] + 1)
+            n = (int) conn[i] + 1;
     }
 
     /* Check for activity on all sockets. */

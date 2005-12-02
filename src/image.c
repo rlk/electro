@@ -282,14 +282,14 @@ static void decode_Y411(GLubyte *p, int w, int h)
 static void step_video(int i, int c)
 {
     struct image *p = get_image(i);
-    ssize_t n;
+    int n;
 
     struct header *head = (struct header *) buffer;
     GLubyte       *data =       (GLubyte *) buffer + sizeof (struct header);
 
     /* Receive an incoming subimage. */
 
-    if ((n = recv(p->sock, buffer, BUFMAX, 0)) > 0 && c < 960)
+    if ((n = (int) recv(p->sock, buffer, BUFMAX, 0)) > 0 && c < 960)
     {
         /* Decode the subimage header. */
 
@@ -727,7 +727,8 @@ int send_create_video(int port)
         {
             /* Increase the receive buffer size to handle a gigabit stream. */
 
-            if (setsockopt(s, SOL_SOCKET, SO_RCVBUF, &n, sizeof (int)) >= 0)
+            if (setsockopt(s, SOL_SOCKET,
+                              SO_RCVBUF, (char *) &n, sizeof (int)) >= 0)
             {
                 sockaddr_t addr;
                 size_t     addr_len = sizeof (sockaddr_t);

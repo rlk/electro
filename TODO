@@ -1,9 +1,17 @@
+document video network protocol
+work on video efficiency
+UTF-8... extra chars
+find_shared_joint on a nil body not working?
+        can't specify attributes on env joints
 texture clamp
 2d external GUI
 set entity rotation vectors
 global state
         gravity vector
         ambient light
+        ERP
+        CFM
+        auto disable?
 Build against mesa
 OBJ
         shading groups
