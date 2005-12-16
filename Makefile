@@ -11,7 +11,7 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -O3 -Wall
+	CFLAGS = -O2 -Wall
 endif
 
 ifdef SOCKET

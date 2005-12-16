@@ -48,6 +48,7 @@ struct entity
     float position[3];
     float scale[3];
     float alpha;
+    float bound[6];
 
     /* Entity hierarchy. */
 
@@ -220,6 +221,11 @@ int test_entity_aabb(int i)
         get_viewfrust(V);
 
         return test_frustum(V, aabb);
+    }
+    else if (e->flags & FLAG_BOUNDED)
+    {
+        get_viewfrust(V);
+        return test_frustum(V, e->bound);
     }
     return 1;
 }
@@ -598,6 +604,21 @@ void send_set_entity_flags(int i, int flags, int state)
         e->flags = e->flags & (~flags);
 }
 
+void send_set_entity_bound(int i, const float b[6])
+{
+    struct entity *e = get_entity(i);
+
+    send_event(EVENT_SET_ENTITY_BOUND);
+    send_index(i);
+
+    send_float((e->bound[0] = b[0]));
+    send_float((e->bound[1] = b[1]));
+    send_float((e->bound[2] = b[2]));
+    send_float((e->bound[3] = b[3]));
+    send_float((e->bound[4] = b[4]));
+    send_float((e->bound[5] = b[5]));
+}
+
 /*---------------------------------------------------------------------------*/
 
 void set_entity_body_type(int i, int t)
@@ -869,6 +890,18 @@ void recv_set_entity_flags(void)
         e->flags = e->flags | ( flags);
     else
         e->flags = e->flags & (~flags);
+}
+
+void recv_set_entity_bound(void)
+{
+    struct entity *e = (struct entity *) vecget(entity, recv_index());
+
+    e->bound[0] = recv_float();
+    e->bound[1] = recv_float();
+    e->bound[2] = recv_float();
+    e->bound[3] = recv_float();
+    e->bound[4] = recv_float();
+    e->bound[5] = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/

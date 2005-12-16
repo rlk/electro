@@ -617,6 +617,21 @@ static int E_set_entity_flags(lua_State *L)
     return 0;
 }
 
+static int E_set_entity_bound(lua_State *L)
+{
+    float b[6];
+
+    b[0] = L_getnumber(L, -6);
+    b[1] = L_getnumber(L, -5);
+    b[2] = L_getnumber(L, -4);
+    b[3] = L_getnumber(L, -3);
+    b[4] = L_getnumber(L, -2);
+    b[5] = L_getnumber(L, -1);
+
+    send_set_entity_bound(E_getentity(L, -7), b);
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
 static int E_add_entity_force(lua_State *L)
@@ -2288,6 +2303,7 @@ static struct function_def functions[] = {
     { "set_entity_scale",      E_set_entity_scale      },
     { "set_entity_alpha",      E_set_entity_alpha      },
     { "set_entity_flags",      E_set_entity_flags      },
+    { "set_entity_bound",      E_set_entity_bound      },
 
     { "add_entity_force",      E_add_entity_force      },
     { "add_entity_torque",     E_add_entity_torque     },
@@ -2445,6 +2461,7 @@ static struct constant_def constants[] = {
     { "entity_flag_hidden",        FLAG_HIDDEN         },
     { "entity_flag_wireframe",     FLAG_WIREFRAME      },
     { "entity_flag_billboard",     FLAG_BILLBOARD      },
+    { "entity_flag_bounded",       FLAG_BOUNDED        },
     { "entity_flag_line_smooth",   FLAG_LINE_SMOOTH    },
     { "entity_flag_left_eye",      FLAG_LEFT_EYE       },
     { "entity_flag_right_eye",     FLAG_RIGHT_EYE      },

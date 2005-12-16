@@ -35,6 +35,7 @@
 #define FLAG_HIDDEN        0x0001
 #define FLAG_WIREFRAME     0x0002
 #define FLAG_BILLBOARD     0x0004
+#define FLAG_BOUNDED       0x0008
 #define FLAG_LINE_SMOOTH   0x0010
 #define FLAG_LEFT_EYE      0x0020
 #define FLAG_RIGHT_EYE     0x0040

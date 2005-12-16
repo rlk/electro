@@ -31,7 +31,7 @@ static SOCKET conn[MAXCONN];
 
 /*---------------------------------------------------------------------------*/
 
-void net_send(const char *str)
+void net_send_all(const char *str)
 {
     if (port)
     {

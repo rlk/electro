@@ -15,7 +15,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-void net_send(const char *);
+void net_send_all(const char *);
 
 int startup_net(int);
 

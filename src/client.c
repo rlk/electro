@@ -87,6 +87,7 @@ static void client_recv(void)
         case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
         case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
         case EVENT_SET_ENTITY_FLAGS:     recv_set_entity_flags();     break;
+        case EVENT_SET_ENTITY_BOUND:     recv_set_entity_bound();     break;
 
         case EVENT_CREATE_MESH:          recv_create_mesh();          break;
         case EVENT_CREATE_VERT:          recv_create_vert();          break;

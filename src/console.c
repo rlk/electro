@@ -519,7 +519,7 @@ void *mirror_output(const char *format, ...)
     /* Send the string to the console, log, and all connected clients. */
 
     write_console(string);
-    net_send(string);
+    net_send_all(string);
 
     if (logfile)
         fprintf(logfile, string);
