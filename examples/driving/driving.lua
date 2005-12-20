@@ -520,7 +520,7 @@ function do_keyboard(k, s)
             return true
         end
 
-        if k == E.key_F12 then
+        if k == E.key_F11 then
             E.nuke()
             E.chdir("..")
             dofile("demo.lua")

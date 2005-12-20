@@ -1,5 +1,5 @@
 stereo = true
-port   = 2827
+port   = 5555
 
 image = nil
 brush = nil
@@ -25,7 +25,7 @@ function do_keyboard(k, s)
         if k == E.key_pageup    then off_z = off_z - 1 / 32  end
         if k == E.key_pagedown  then off_z = off_z + 1 / 32  end
 
-        if k == E.key_F12 then
+        if k == E.key_F11 then
             E.nuke()
             E.chdir("..")
             dofile("demo.lua")
@@ -56,8 +56,8 @@ function do_timer(dt)
     if stereo then
 --        s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
         s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
-        E.set_sprite_range(spriteL, 0, w, m, 0)
-        E.set_sprite_range(spriteR, 0, w, h, m)
+        E.set_sprite_range(spriteR, 0, w, m, 0)
+        E.set_sprite_range(spriteL, 0, w, h, m)
         E.set_entity_scale(spriteL, 2 * s, s, s)
         E.set_entity_scale(spriteR, 2 * s, s, s)
 --        E.set_entity_scale(spriteL, s / 2, s, s)

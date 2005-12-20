@@ -31,6 +31,6 @@ E.set_tile_line_screen(tile, linescreen.p, linescreen.a,
 E.set_host_flags(host, E.host_flag_framed, false)
 
 -- Uncomment this line when head tracking is disabled.
---E.set_tile_view_offset(tile, 0, 4, 0)
-E.set_tile_view_offset(tile, 0, 0, -1)
+E.set_tile_view_offset(tile, 0, 4, 0)
+--E.set_tile_view_offset(tile, 0, 0, -1)
 

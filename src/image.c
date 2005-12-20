@@ -94,186 +94,104 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
-
-#ifdef OBSOLETE
-
-static void copy_yuv411(unsigned char *dst, unsigned char *src, int w, int h)
+/*
+static void decode_Y411(GLubyte *p, int w, int h)
 {
-    int i, n = w * h;
+    GLuint  *dst = (GLuint  *) p + (w * h - 1) * 4;
+    GLubyte *src = (GLubyte *) p + (w * h - 1) * 6;
 
-    if (0) /*(GL_has_fragment_program) */
+    while (src >= p)
     {
-        unsigned int *pix = (unsigned int *) dst;
+        const float Ug = -0.391f * (src[0] - 128);
+        const float Ub =  2.018f * (src[0] - 128);
+        const float Y0 =  1.164f * (src[1] -  16);
+        const float Y1 =  1.164f * (src[2] -  16);
+        const float Vr =  1.596f * (src[3] - 128);
+        const float Vg = -0.813f * (src[3] - 128);
+        const float Y2 =  1.164f * (src[4] -  16);
+        const float Y3 =  1.164f * (src[5] -  16);
+        
+        dst[0] = PIXEL(byte(Y0 + Vr), byte(Y0 + Ug + Vg), byte(Y0 + Ub));
+        dst[1] = PIXEL(byte(Y1 + Vr), byte(Y1 + Ug + Vg), byte(Y1 + Ub));
+        dst[2] = PIXEL(byte(Y2 + Vr), byte(Y2 + Ug + Vg), byte(Y2 + Ub));
+        dst[3] = PIXEL(byte(Y3 + Vr), byte(Y3 + Ug + Vg), byte(Y3 + Ub));
 
-        /* Extract raw YUV and allow RGB conversion via fragment program. */
-
-        for (i = 0; i < n; i += 4)
-        {
-            const int UV = 0xFF000000 | (src[0] << 8) | (src[3] << 16);
-
-            pix[0] = src[1] | UV;
-            pix[1] = src[2] | UV;
-            pix[2] = src[4] | UV;
-            pix[3] = src[5] | UV;
-
-            src += 6;
-            pix += 4;
-        }
-    }
-    else
-    {
-        /* Extract RGBA color from YUV */
-
-        for (i = 0; i < n; i += 4)
-        {
-            const int U  = src[0];
-            const int Y0 = src[1];
-            const int Y1 = src[2];
-            const int V  = src[3];
-            const int Y2 = src[4];
-            const int Y3 = src[5];
-
-            yuv2rgb(dst +  0, Y0, U, V);
-            yuv2rgb(dst +  4, Y1, U, V);
-            yuv2rgb(dst +  8, Y2, U, V);
-            yuv2rgb(dst + 12, Y3, U, V);
-
-            src +=  6;
-            dst += 16;
-        }
+        src -= 6;
+        dst -= 4;
     }
 }
+*/
 
-static void copy_stereo(unsigned char *dst, unsigned char *src, int w, int h)
+#define PIXEL(r, g, b) (0xFF000000 | ((b) << 16) | ((g) <<  8) | (r))
+
+static GLubyte byte(int n)
 {
-    int i, n = w * h;
+    if (n > 255) return 0xFF;
+    if (n <   0) return 0x00;
 
-    const unsigned char *srcL = src;
-    const unsigned char *srcR = src + 1;
-
-    unsigned int *dstL = (unsigned int *) dst;
-    unsigned int *dstR = (unsigned int *) dst + n / 2;
-
-    for (i = 0; i < n; i += 2)
-    {
-        *dstL = 0xFF000000 | *srcL | (*srcL << 8) | (*srcL << 16);
-        *dstR = 0xFF000000 | *srcR | (*srcR << 8) | (*srcR << 16);
-
-        dstL += 1;
-        dstR += 1;
-        srcL += 2;
-        srcR += 2;
-    }
-}
-
-static void decode_bayer(unsigned char *buf, unsigned int w, unsigned int h)
-{
-    unsigned int r;
-    unsigned int c;
-
-    for (r = 0; r < h; r += 2)
-    {
-        unsigned int *p00 = (unsigned int *) buf +  r    * w, *p01 = p00 + 1;
-        unsigned int *p10 = (unsigned int *) buf + (r+1) * w, *p11 = p10 + 1;
-
-        for (c = 0; c < w; c += 2)
-        {
-            const unsigned int pr = *p00 & 0xFF0000FF;
-            const unsigned int pg = *p01 & 0xFF00FF00;
-            const unsigned int qg = *p10 & 0xFF00FF00;
-            const unsigned int pb = *p11 & 0xFFFF0000;
-
-            *p00 = pr | pg | pb;
-            *p01 = pr | pg | pb;
-            *p10 = pr | qg | pb;
-            *p11 = pr | qg | pb;
-
-            p00 += 2;
-            p01 += 2;
-            p10 += 2;
-            p11 += 2;
-        }
-    }
-}
-
-static void step_texture(int i)
-{
-    struct image *p = get_image(i);
-    GLenum t;
-
-    if (p->frame)
-    {
-        unsigned char *dst = (unsigned char *) p->p[0];
-        unsigned char *src = (unsigned char *) p->frame;
-
-        if (p->bits == 12)
-            copy_yuv411(dst, src, p->w, p->h);
-        if (p->bits ==  8)
-        {
-            copy_stereo(dst, src, p->w, p->h);
-            decode_bayer(dst, p->w, p->h);
-        }
-    }
-
-    if (p->texture)
-    {
-        if (GL_has_texture_rectangle && (NPOT(p->w) || NPOT(p->h)))
-            t = GL_TEXTURE_RECTANGLE_ARB;
-        else
-            t = GL_TEXTURE_2D;
-
-        glBindTexture(t, p->texture);
-        glTexSubImage2D(t, 0, 0, 0, p->w, p->h,
-                        format[p->b], GL_UNSIGNED_BYTE, p->p[0]);
-    }
-}
-
-#endif /* OBSOLETE */
-
-/*===========================================================================*/
-
-static void yuv2rgb(GLubyte c[3], GLubyte Y,
-                                  GLubyte U,
-                                  GLubyte V)
-{
-    int R = (int) (1.164 * (Y - 16) + 1.596 * (V - 128));
-    int G = (int) (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128));
-    int B = (int) (1.164 * (Y - 16)                     + 2.018 * (U - 128));
-
-    if      (R <   0) c[0] = 0x00;
-    else if (R > 255) c[0] = 0xFF;
-    else              c[0] = (unsigned char) R;
-
-    if      (G <   0) c[1] = 0x00;
-    else if (G > 255) c[1] = 0xFF;
-    else              c[1] = (unsigned char) G;
-
-    if      (B <   0) c[2] = 0x00;
-    else if (B > 255) c[2] = 0xFF;
-    else              c[2] = (unsigned char) B;
+    return (GLubyte) (n);
 }
 
 static void decode_Y411(GLubyte *p, int w, int h)
 {
-    GLubyte *dst = p + (w * h - 1) * 12;
-    GLubyte *src = p + (w * h - 1) *  6;
+    GLuint  *dst = (GLuint  *) p + (w * h - 1) * 4;
+    GLubyte *src = (GLubyte *) p + (w * h - 1) * 6;
 
-    while (src >= p && dst >= p)
+    const int o = 16;
+    const int k = 2 << o;
+
+    const int Yc = (int) ( 1.164f * k);
+    const int Ug = (int) (-0.391f * k);
+    const int Ub = (int) ( 2.018f * k);
+    const int Vr = (int) ( 1.596f * k);
+    const int Vg = (int) (-0.813f * k);
+
+    while (src >= p)
     {
-        const int U  = src[0];
-        const int Y0 = src[1];
-        const int Y1 = src[2];
-        const int V  = src[3];
-        const int Y2 = src[4];
-        const int Y3 = src[5];
+        const int U  = (int) src[0] - 128;
+        const int Y0 = (int) src[1] -  16;
+        const int Y1 = (int) src[2] -  16;
+        const int V  = (int) src[3] - 128;
+        const int Y2 = (int) src[4] -  16;
+        const int Y3 = (int) src[5] -  16;
 
-        yuv2rgb(dst + 0, Y0, U, V);
-        yuv2rgb(dst + 3, Y1, U, V);
-        yuv2rgb(dst + 6, Y2, U, V);
-        yuv2rgb(dst + 9, Y3, U, V);
+        const int UVr =          V * Vr;
+        const int UVg = U * Ug + V * Vg;
+        const int UVb = U * Ub;
 
-        src -=  6;
-        dst -= 12;
+        const int Y0c = Y0 * Yc;
+        const int Y1c = Y1 * Yc;
+        const int Y2c = Y2 * Yc;
+        const int Y3c = Y3 * Yc;
+
+        int r, g, b;
+
+        r = (Y0c + UVr) >> o;
+        g = (Y0c + UVg) >> o;
+        b = (Y0c + UVb) >> o;
+
+        dst[0] = PIXEL(byte(r), byte(g), byte(b));
+
+        r = (Y1c + UVr) >> o;
+        g = (Y1c + UVg) >> o;
+        b = (Y1c + UVb) >> o;
+
+        dst[1] = PIXEL(byte(r), byte(g), byte(b));
+
+        r = (Y2c + UVr) >> o;
+        g = (Y2c + UVg) >> o;
+        b = (Y2c + UVb) >> o;
+
+        dst[2] = PIXEL(byte(r), byte(g), byte(b));
+
+        r = (Y3c + UVr) >> o;
+        g = (Y3c + UVg) >> o;
+        b = (Y3c + UVb) >> o;
+
+        dst[3] = PIXEL(byte(r), byte(g), byte(b));
+
+        src -= 6;
+        dst -= 4;
     }
 }
 
@@ -300,7 +218,7 @@ static void step_video(int i, int c)
         int h    = ntohs(head->h);
         int W    = ntohs(head->W);
         int H    = ntohs(head->H);
-
+        
         /* If the video format changes, refresh the texture object. */
 
         if (p->w != W || p->h != H || p->code != code)
@@ -309,11 +227,15 @@ static void step_video(int i, int c)
             p->w    = W;
             p->h    = H;
 
+            /* Infer the pixel width from the FOURCC code. */
+
             switch (code)
             {
-            case 0x31313459: p->b = 3; break;  /* Y411 */
+            case 0x31313459: p->b = 4; break;  /* Y411 */
             case 0x30303859: p->b = 1; break;  /* Y800 */
             }
+
+            /* Flush and refresh the GL texture state. */
 
             fini_image(i);
             init_image(i);
@@ -713,13 +635,14 @@ int send_create_video(int port)
     {
         struct image *p = get_image(i);
 
-        p->state =   0;
-        p->count =   1;
-        p->w     = 128;
-        p->h     = 128;
-        p->n     =   1;
-        p->b     =   3;
-        p->sock  =  -1;
+        p->state =  0;
+        p->count =  1;
+        p->w     =  0;
+        p->h     =  0;
+        p->n     =  1;
+        p->b     =  3;
+        p->code  =  0;
+        p->sock  = -1;
 
         /* Open a UDP socket for receiving. */
 
