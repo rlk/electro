@@ -92,10 +92,10 @@ int acquire_tracker(int t_key, int c_key)
 
     sprintf(shmkey, "%d", c_key);
     if ((control_id = OpenFileMapping(FILE_MAP_WRITE, FALSE, shmkey)))
-        control = (struct tracker_header *)
+        control = (struct control_header *)
                     MapViewOfFile(control_id, FILE_MAP_WRITE, 0, 0, 0);
     else
-        control = (struct tracker_header *) (-1);
+        control = (struct control_header *) (-1);
 #endif
 
     /* Allocate storage for button states. */

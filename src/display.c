@@ -751,6 +751,11 @@ void get_tile_n(int i, float n[3])
     normalize(n);
 }
 
+int get_tile_count(void)
+{
+	return local ? local->n : 0;
+}
+
 int get_tile_flags(int i)
 {
     return local ? ((struct tile *) vecget(tile, local->tile[i]))->flags : 0;
@@ -800,36 +805,171 @@ float get_varrier_cycle(int i)
 
 int draw_ortho(int i, float N, float F)
 {
-    if (local && i < local->n)
+    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+    GLdouble fL = T->pix_x;
+    GLdouble fR = T->pix_x + T->pix_w;
+    GLdouble fB = T->pix_y;
+    GLdouble fT = T->pix_y + T->pix_h;
+
+    /* Flip the projection if requested. */
+
+    if (T->flags & TILE_FLIP_X) swap(fL, fR);
+    if (T->flags & TILE_FLIP_Y) swap(fB, fT);
+
+    /* Configure the viewport. */
+
+    glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+    glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
+
+    /* Apply the projection. */
+
+    glMatrixMode(GL_PROJECTION);
     {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+        glLoadIdentity();
+        glOrtho(T->pix_x, T->pix_x + T->pix_w,
+                T->pix_y, T->pix_y + T->pix_h, N, F);
+    }
+    glMatrixMode(GL_MODELVIEW);
 
-        GLdouble fL = T->pix_x;
-        GLdouble fR = T->pix_x + T->pix_w;
-        GLdouble fB = T->pix_y;
-        GLdouble fT = T->pix_y + T->pix_h;
+    glLoadIdentity();
 
-        /* Flip the projection if requested. */
+    /* Rewind polygons if necessary. */
 
-        if (T->flags & TILE_FLIP_X) swap(fL, fR);
-        if (T->flags & TILE_FLIP_Y) swap(fB, fT);
+    if (((T->flags & TILE_FLIP_X) ? 1 : 0) ^
+        ((T->flags & TILE_FLIP_Y) ? 1 : 0))
+        glFrontFace(GL_CW);
+    else
+        glFrontFace(GL_CCW);
+
+    return 1;
+}
+
+int draw_persp(int i, float N, float F, int e, const float p[3])
+{
+    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+    const int L = (T->flags & TILE_LEFT_EYE)  ? 1 : 0;
+    const int R = (T->flags & TILE_RIGHT_EYE) ? 1 : 0;
+
+	if ((L == 0 && R == 0) || (L == 1 && e == 0) || (R == 1 && e == 1))
+    {
+        float P[3];
+        float r[3];
+        float u[3];
+        float n[3];
+        float c[3];
+        float k;
+
+        float M[16];
+        float I[16];
+
+        float p0[3];
+        float p1[3];
+        float p3[3];
+
+        /* Compute the view position. */
+
+        P[0]  = T->d[0] + p[0];
+        P[1]  = T->d[1] + p[1];
+        P[2]  = T->d[2] + p[2];
+
+        /* Optionally reflect the view position across the mirror. */
+
+        if (T->flags & TILE_MIRROR)
+        {
+            float k = (P[0] * T->p[0] +
+                        P[1] * T->p[1] +
+                        P[2] * T->p[2]) - T->p[3];
+
+            P[0] -= T->p[0] * k * 2;
+            P[1] -= T->p[1] * k * 2;
+            P[2] -= T->p[2] * k * 2;
+        }
+
+        /* Compute the screen corners. */
+
+        p0[0] = T->o[0];
+        p0[1] = T->o[1];
+        p0[2] = T->o[2];
+
+        p1[0] = T->r[0] + p0[0];
+        p1[1] = T->r[1] + p0[1];
+        p1[2] = T->r[2] + p0[2];
+
+        p3[0] = T->u[0] + p0[0];
+        p3[1] = T->u[1] + p0[1];
+        p3[2] = T->u[2] + p0[2];
 
         /* Configure the viewport. */
 
         glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
         glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
 
-        /* Apply the projection. */
+        /* Compute the projection. */
+
+        r[0] = T->r[0];
+        r[1] = T->r[1];
+        r[2] = T->r[2];
+
+        u[0] = T->u[0];
+        u[1] = T->u[1];
+        u[2] = T->u[2];
+
+        cross(n, r, u);
+        normalize(r);
+        normalize(u);
+        normalize(n);
+
+        k = n[0] * (T->o[0] - P[0]) + 
+            n[1] * (T->o[1] - P[1]) +
+            n[2] * (T->o[2] - P[2]);
+
+        c[0] = P[0] + n[0] * k;
+        c[1] = P[1] + n[1] * k;
+        c[2] = P[2] + n[2] * k;
 
         glMatrixMode(GL_PROJECTION);
         {
+            double fL = N * (r[0] * (P[0] - p0[0]) +
+                             r[1] * (P[1] - p0[1]) +
+                             r[2] * (P[2] - p0[2])) / k;
+            double fR = N * (r[0] * (P[0] - p1[0]) +
+                             r[1] * (P[1] - p1[1]) +
+                             r[2] * (P[2] - p1[2])) / k;
+            double fB = N * (u[0] * (P[0] - p0[0]) +
+                             u[1] * (P[1] - p0[1]) +
+                             u[2] * (P[2] - p0[2])) / k;
+            double fT = N * (u[0] * (P[0] - p3[0]) +
+                             u[1] * (P[1] - p3[1]) +
+                             u[2] * (P[2] - p3[2])) / k;
+
+            /* Flip the projection if requested. */
+
+            if (T->flags & TILE_FLIP_X) swap(fL, fR);
+            if (T->flags & TILE_FLIP_Y) swap(fB, fT);
+
+            /* Apply the projection. */
+
             glLoadIdentity();
-            glOrtho(T->pix_x, T->pix_x + T->pix_w,
-                    T->pix_y, T->pix_y + T->pix_h, N, F);
+            glFrustum(fL, fR, fB, fT, N, F);
+
+            /* Account for the orientation of the display. */
+
+            M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
+            M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;
+            M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
+            M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
+
+            load_inv(I, M);
+            glMultMatrixf(I);
         }
         glMatrixMode(GL_MODELVIEW);
 
+        /* Apply the tile offset. */
+
         glLoadIdentity();
+        glTranslatef(-T->d[0], -T->d[1], -T->d[2]);
 
         /* Rewind polygons if necessary. */
 
@@ -839,149 +979,7 @@ int draw_ortho(int i, float N, float F)
         else
             glFrontFace(GL_CCW);
 
-        return i + 1;
-    }
-    return 0;
-}
-
-int draw_persp(int i, float N, float F, int e, const float p[3])
-{
-    if (local && i < local->n)
-    {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        const int L = (T->flags & TILE_LEFT_EYE)  ? 1 : 0;
-        const int R = (T->flags & TILE_RIGHT_EYE) ? 1 : 0;
-        
-        if ((L == 0 && R == 0) || (L == 1 && e == 0) || (R == 1 && e == 1))
-        {
-            float P[3];
-            float r[3];
-            float u[3];
-            float n[3];
-            float c[3];
-            float k;
-
-            float M[16];
-            float I[16];
-
-            float p0[3];
-            float p1[3];
-            float p3[3];
-
-            /* Compute the view position. */
-
-            P[0]  = T->d[0] + p[0];
-            P[1]  = T->d[1] + p[1];
-            P[2]  = T->d[2] + p[2];
-
-            /* Optionally reflect the view position across the mirror. */
-
-            if (T->flags & TILE_MIRROR)
-            {
-                float k = (P[0] * T->p[0] +
-                           P[1] * T->p[1] +
-                           P[2] * T->p[2]) - T->p[3];
-
-                P[0] -= T->p[0] * k * 2;
-                P[1] -= T->p[1] * k * 2;
-                P[2] -= T->p[2] * k * 2;
-            }
-
-            /* Compute the screen corners. */
-
-            p0[0] = T->o[0];
-            p0[1] = T->o[1];
-            p0[2] = T->o[2];
-
-            p1[0] = T->r[0] + p0[0];
-            p1[1] = T->r[1] + p0[1];
-            p1[2] = T->r[2] + p0[2];
-
-            p3[0] = T->u[0] + p0[0];
-            p3[1] = T->u[1] + p0[1];
-            p3[2] = T->u[2] + p0[2];
-
-            /* Configure the viewport. */
-
-            glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
-            glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
-
-            /* Compute the projection. */
-
-            r[0] = T->r[0];
-            r[1] = T->r[1];
-            r[2] = T->r[2];
-
-            u[0] = T->u[0];
-            u[1] = T->u[1];
-            u[2] = T->u[2];
-
-            cross(n, r, u);
-            normalize(r);
-            normalize(u);
-            normalize(n);
-
-            k = n[0] * (T->o[0] - P[0]) + 
-                n[1] * (T->o[1] - P[1]) +
-                n[2] * (T->o[2] - P[2]);
-
-            c[0] = P[0] + n[0] * k;
-            c[1] = P[1] + n[1] * k;
-            c[2] = P[2] + n[2] * k;
-
-            glMatrixMode(GL_PROJECTION);
-            {
-                double fL = N * (r[0] * (P[0] - p0[0]) +
-                                 r[1] * (P[1] - p0[1]) +
-                                 r[2] * (P[2] - p0[2])) / k;
-                double fR = N * (r[0] * (P[0] - p1[0]) +
-                                 r[1] * (P[1] - p1[1]) +
-                                 r[2] * (P[2] - p1[2])) / k;
-                double fB = N * (u[0] * (P[0] - p0[0]) +
-                                 u[1] * (P[1] - p0[1]) +
-                                 u[2] * (P[2] - p0[2])) / k;
-                double fT = N * (u[0] * (P[0] - p3[0]) +
-                                 u[1] * (P[1] - p3[1]) +
-                                 u[2] * (P[2] - p3[2])) / k;
-
-                /* Flip the projection if requested. */
-
-                if (T->flags & TILE_FLIP_X) swap(fL, fR);
-                if (T->flags & TILE_FLIP_Y) swap(fB, fT);
-
-                /* Apply the projection. */
-
-                glLoadIdentity();
-                glFrustum(fL, fR, fB, fT, N, F);
-
-                /* Account for the orientation of the display. */
-
-                M[0] = r[0]; M[4] = u[0]; M[8]  = n[0]; M[12] = 0.0f;
-                M[1] = r[1]; M[5] = u[1]; M[9]  = n[1]; M[13] = 0.0f;
-                M[2] = r[2]; M[6] = u[2]; M[10] = n[2]; M[14] = 0.0f;
-                M[3] = 0.0f; M[7] = 0.0f; M[11] = 0.0f; M[15] = 1.0f;
-
-                load_inv(I, M);
-                glMultMatrixf(I);
-            }
-            glMatrixMode(GL_MODELVIEW);
-
-            /* Apply the tile offset. */
-
-            glLoadIdentity();
-            glTranslatef(-T->d[0], -T->d[1], -T->d[2]);
-
-            /* Rewind polygons if necessary. */
-
-            if (((T->flags & TILE_FLIP_X) ? 1 : 0) ^
-                ((T->flags & TILE_FLIP_Y) ? 1 : 0))
-                glFrontFace(GL_CW);
-            else
-                glFrontFace(GL_CCW);
-
-            return i + 1;
-        }
+		return 1;
     }
     return 0;
 }

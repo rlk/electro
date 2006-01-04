@@ -170,6 +170,7 @@ void  get_tile_r(int, float[3]);
 void  get_tile_u(int, float[3]);
 void  get_tile_n(int, float[3]);
 
+int   get_tile_count(void);
 int   get_tile_flags(int);
 
 float get_varrier_pitch(int);
