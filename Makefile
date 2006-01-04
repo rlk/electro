@@ -20,7 +20,7 @@ endif
 
 #------------------------------------------------------------------------------
 
-# Assume the Fink tree is available under OSX and GL is in a framework.
+# Under OSX assume the Fink tree is available in /sw and GL is in a framework.
 
 ifeq ($(shell uname), Darwin)
 	INCDIR = -I/sw/include
@@ -40,13 +40,13 @@ ifneq ($(wildcard /usr/include/lua),)
 	INCDIR += -I/usr/include/lua
 endif
 
-# If user include or lib directories exist, assume dependancies are there.
+# Use user include and lib directories if they exist.
 
 ifneq ($(wildcard $(HOME)/include),)
 	INCDIR += -I$(HOME)/include
 endif
 ifneq ($(wildcard $(HOME)/lib),)
-	LIBDIR += -L/usr/lib -L$(HOME)/lib
+	LIBDIR += -L$(HOME)/lib
 endif
 
 #------------------------------------------------------------------------------

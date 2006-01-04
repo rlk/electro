@@ -1,5 +1,8 @@
+eye offset on GeoWall-style displays
+YUV decode using SSE
+GLslang
 texture clamp
-document video network protocol
+check that RGB and RGBA video work
 work on video efficiency
 UTF-8... extra chars
 find_shared_joint on a nil body not working?
@@ -22,13 +25,11 @@ OBJ
         MTL texture transform?
 MIDI IO
 UDP audio?
-GLslang
 skeletal animation
 audio
         multichannel
 
 tracking
-        windows trackd
         Lua check for tracking (built-in simulator?)
 
 cwall config

@@ -592,6 +592,10 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <p>This mode disables stereo rendering. This is the default.</p>
 
+<li><a name="stereo_mode_tile"><tt>stereo_mode_tile</tt></a>
+
+<p>This mode enables stereo rendering on tracked GeoWall-type displays. Both the left and right eye views are rendered with the given eye offsets, but no other stereo processing is done. It is up to the display configuration to use <a href="#tile_flag_left_eye"><tt>tile_flag_left_eye</tt></a> and <a href="#tile_flag_right_eye"><tt>tile_flag_right_eye</tt></a> appropriately to ensure that each view is visible where required.</p>
+
 <li><a name="stereo_mode_quad"><tt>stereo_mode_quad</tt></a>
 
 <p>This mode enables quad-buffered stereo viewing. This is appropriate for active stereo viewing using LCD flicker glasses, or passive stereo viewing using dual-output video hardware in &ldquo;clone&rdquo; mode. To function correctly, the underlying graphics hardware must support quad-buffered stereo, and <a href="#host_flag_stereo"><tt>host_flag_stereo</tt></a> must be enabled on the rendering host using <a href="#set_host_flags"><tt>set_host_flags</tt></a> at application startup.</p>
@@ -650,11 +654,15 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dl>
 
-<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename,</i> [<i>filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>])</a><dd><p>Load an image from the named PNG or JPEG file. Images <i>must</i> be powers-of-two in size.</p>
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename,</i> [<i>filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>])</a><dd><p>Load a static image from the named PNG or JPEG file.</p>
 
 <p>If 6 image files are named then a cube map is defined. All 6 cube map images must be the same size. If the image is to applied as a cubic environment map, applications must set <a href="#brush_flag_env_map_0"><tt>brush_flag_env_map</tt></a> on any brush referencing it. <a href="#get_image_pixel">Pixel queries</a> act only on the first image of a cube map.</p>
 
 <p>A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filenames will result in the same image object.</p>
+
+<p class="note">Some hardware requires that image width and height be powers of two. If support for non-power-of-two images is available, Electro will use it. If a non-power-of-two image is used on hardware that does not support it, then the image will appear white.</p>
+
+<dt><a name="create_image_dynamic"><i>image</i> = <tt>create_image</tt>(<i>port</i>)</a><dd><p>Create a dynamic image using UDP port <i>port</i>. The UDP image protocol is <a href="image.html">documented here</a>.</p>
 
 <dt><a name="delete_image"><tt>delete_image</tt>(<i>image</i>)</a><dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
 
@@ -825,7 +833,7 @@ and sprites.</p>
 
 <dt><a name="set_tile_viewport"><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)</a><dd><p>Set the pixel area of <i>tile</i>. This defines the range of any <a href="#camera_type_orthogonal">orthogonal</a> camera used during rendering.</p>
 
-<dt><a name="set_tile_offset"><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)</a><dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as <a href="#set_camera_offset">camera view offset</a>, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side Geowall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
+<dt><a name="set_tile_offset"><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)</a><dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as <a href="#set_camera_offset">camera view offset</a>, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side GeoWall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
 
 <dt><a name="set_tile_mirror"><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)</a><dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustum to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <a href="#tile_flag_mirror"><tt>tile_flag_mirror</tt></a> option.</p>
 
@@ -837,6 +845,9 @@ and sprites.</p>
 
 <li><a name="tile_flag_flip_x"><tt>tile_flag_flip_x</tt></a>
 <li><a name="tile_flag_flip_y"><tt>tile_flag_flip_y</tt></a><p>The flip flags cause the scene rendered to the tile to be flipped horizontally or vertically, respectively. This may be used to correct tiles viewed by reflection in a mirror.</p>
+
+<li><a name="tile_flag_left_eye"><tt>tile_flag_left_eye</tt></a>
+<li><a name="tile_flag_right_eye"><tt>tile_flag_right_eye</tt></a><p>These flags behave similarly to <a href="#entity_flag_left_eye"><tt>entity_flag_left_eye</tt></a> and <a href="#entity_flag_right_eye"><tt>entity_flag_right_eye</tt></a>. They allow the display to be pruned selectively during stereo rendering. Tiles with <tt>tile_flag_left_eye</tt> display only the left eye view of a stereo camera and tiles with <tt>tile_flag_right_eye</tt> display only the right eye view. This is useful with a tracked stereo configuration such as a GeoWall or ImmersaDesk 4, where the stereoscopic effect is the result of separate viewpoints rendered to separate tiles. A stereo camera with <a href="#stereo_mode_tile"><tt>stereo_mode_tile</tt></a> should be used in such a configuration.</p>
 
 </ul>
 

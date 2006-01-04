@@ -16,12 +16,13 @@
 /*---------------------------------------------------------------------------*/
 
 #define STEREO_NONE       0
-#define STEREO_QUAD       1
-#define STEREO_RED_BLUE   2
-#define STEREO_VARRIER_01 3
-#define STEREO_VARRIER_11 4
-#define STEREO_VARRIER_33 5
-#define STEREO_VARRIER_41 6
+#define STEREO_TILE       1
+#define STEREO_QUAD       2
+#define STEREO_RED_BLUE   3
+#define STEREO_VARRIER_01 4
+#define STEREO_VARRIER_11 5
+#define STEREO_VARRIER_33 6
+#define STEREO_VARRIER_41 7
 
 int draw_pass(int, int, int, int, const float[3]);
 

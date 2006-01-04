@@ -2557,6 +2557,8 @@ static struct constant_def constants[] = {
     { "tile_flag_offset",          TILE_OFFSET         },
     { "tile_flag_mirror",          TILE_MIRROR         },
     { "tile_flag_test",            TILE_TEST           },
+    { "tile_flag_left_eye",        TILE_LEFT_EYE       },
+    { "tile_flag_right_eye",       TILE_RIGHT_EYE      },
 
     /* Camera constants */
 
@@ -2564,6 +2566,7 @@ static struct constant_def constants[] = {
     { "camera_type_perspective",   CAMERA_PERSP        },
 
     { "stereo_mode_none",          STEREO_NONE         },
+    { "stereo_mode_tile",          STEREO_TILE         },
     { "stereo_mode_quad",          STEREO_QUAD         },
     { "stereo_mode_red_blue",      STEREO_RED_BLUE     },
     { "stereo_mode_varrier_01",    STEREO_VARRIER_01   },

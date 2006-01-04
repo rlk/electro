@@ -51,15 +51,18 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define HOST_FULL    1
-#define HOST_STEREO  2
-#define HOST_FRAMED  4
+#define HOST_FULL       1
+#define HOST_STEREO     2
+#define HOST_FRAMED     4
 
-#define TILE_FLIP_X  1
-#define TILE_FLIP_Y  2
-#define TILE_OFFSET  4
-#define TILE_MIRROR  8
-#define TILE_TEST   16
+#define TILE_FLIP_X     1
+#define TILE_FLIP_Y     2
+#define TILE_OFFSET     4
+#define TILE_MIRROR     8
+#define TILE_TEST      16
+#define TILE_LEFT_EYE  32
+#define TILE_RIGHT_EYE 64
+
 
 struct tile
 {
@@ -114,7 +117,7 @@ int startup_display(void);
 void sync_display(void);
 
 int  draw_ortho(int, float, float);
-int  draw_persp(int, float, float, const float[3]);
+int  draw_persp(int, float, float, int, const float[3]);
 
 int  add_host(const char *, int, int, int, int);
 

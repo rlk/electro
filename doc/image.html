@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style type="text/css">
+    body   { text-align:   justify;
+             margin-right: 12%;
+             margin-left:  12%; }
+    h1     { margin-left: -12%; }
+    h2     { margin-left:  -9%; }
+    h3     { margin-left:  -6%; }
+    h4     { margin-left:  -3%; }
+    h5     { margin-left:  -0%; }
+    dt     { background: #EEEEEE; padding: 0.5em; }
+    pre    { background: #FFFFCC; padding: 1.0em; }
+    p.note { background: #CCFFFF; padding: 1.0em; }
+  </style>
+  <title>Electro UDP Image Protocol</title>
+</head>
+<body>
+
+<!---------------------------------------------------------------------------->
+
+<h1>UDP Image Protocol</h1>
+
+<p>Electro implements dynamic images using a simple UDP-based message protocol. A dynamic image is created when <a href="electro.html#create_image_dynamic"><tt>create_image</tt></a> is called with a numeric port number. A socket is opened on this port and incoming datagrams are read.</p>
+
+</p>An image datagram consists of a 16-byte header followed by image data. The header is in network byte order and is described below. The image data are byte-wise and thus byte-order-independant. A datagram may specify a sub-image of a larger image. This way, video may be streamed using one or more scanlines per datagram, and damageable images may be updated in blocks.</p>
+
+<pre>
+struct header
+{
+    int   code;
+    short x, y;
+    short w, h;
+    short W, H;
+};
+</pre>
+
+<dl>
+<dt><tt>code</tt><dd><p>A 32-bit value giving the FOURCC code of the incoming image data. The following FOURCC codes are supported.</p>
+
+<ul>
+<li><tt>'RGBA'</tt><p>24-bit RGB color with 8-bit alpha.</p>
+
+<li><tt>'RGB '</tt><p>24-bit RGB color.</p>
+
+<li><tt>'Y411'</tt><p>12-bit YUV411 color.</p>
+
+<li><tt>'Y800'</tt><p>8-bit monochrome.</p>
+
+</ul>
+
+<dt><tt>x</tt>, <tt>y</tt><dd><p>16-bit values giving the location of the lower left corner of the sub-image given by this datagram.</p>
+
+<dt><tt>w</tt>, <tt>h</tt><dd><p>16-bit values giving the width and height of the sub-image given by this datagram.</p>
+
+<dt><tt>W</tt>, <tt>H</tt><dd><p>16-bit values giving the width and height of the image as a whole. Electro uses these values to determine image size. A dynamic image has a default size of 128&times;128. If a datagram gives width and height values that are not equal to the current image size then the image will be flushed and reallocated. The resulting contents of the image are undefined.</p>
+
+</dl>
+
+<!---------------------------------------------------------------------------->

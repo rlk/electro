@@ -209,10 +209,12 @@ int get_tracker_joystick(unsigned int id, float a[2])
 
 int get_tracker_buttons(unsigned int *id, unsigned int *st)
 {
+    uint32_t  i;
+    uint32_t *p;
+
     if (buttons && control != (struct control_header *) (-1))
     {
-        uint32_t i, *p = (uint32_t *)
-							((unsigned char *) control + control->but_offset);
+        p = (uint32_t *) ((unsigned char *) control + control->but_offset);
 
         /* Seek the first button that does not match its cached state. */
 

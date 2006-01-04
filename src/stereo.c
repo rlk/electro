@@ -566,6 +566,7 @@ int draw_pass(int mode, int eye, int tile, int pass, const float v[3])
     switch (mode)
     {
     case STEREO_NONE:       return stereo_none      (eye, tile, pass);
+    case STEREO_TILE:       return stereo_none      (eye, tile, pass);
     case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
     case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
     case STEREO_VARRIER_01: return stereo_varrier_01(eye, tile, pass, v);

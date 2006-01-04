@@ -322,10 +322,10 @@ static void test_camera(int eye, int flags)
 }
 
 
-static int draw_tile(struct camera *c, int tile, const float d[3])
+static int draw_tile(struct camera *c, int eye, int tile, const float d[3])
 {
     if (c->type == CAMERA_PERSP)
-        return draw_persp(tile, c->n, c->f, d);
+        return draw_persp(tile, c->n, c->f, eye, d);
 
     if (c->type == CAMERA_ORTHO)
         return draw_ortho(tile, c->n, c->f);
@@ -366,7 +366,7 @@ void draw_camera(int j, int i, int f, float a)
 
         /* Iterate over all tiles of this host. */
 
-        while ((next = draw_tile(c, tile, d)))
+        while ((next = draw_tile(c, eye, tile, d)))
         {
             pass = 0;
 
