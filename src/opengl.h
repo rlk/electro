@@ -39,6 +39,9 @@ extern GLboolean GL_has_vertex_buffer_object;
 extern GLboolean GL_has_point_sprite;
 extern GLboolean GL_has_texture_rectangle;
 extern GLboolean GL_has_texture_compression;
+extern GLboolean GL_has_shader_objects;
+extern GLboolean GL_has_vertex_shader;
+extern GLboolean GL_has_fragment_shader;
 extern GLboolean GL_has_multitexture;
 extern GLenum    GL_max_multitexture;
 
@@ -59,6 +62,24 @@ extern PFNGLBUFFERDATAARBPROC               glBufferDataARB;
 extern PFNGLISBUFFERARBPROC                 glIsBufferARB;
 extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
+extern PFNGLUSEPROGRAMOBJECTARBPROC         glUseProgramObjectARB;
+extern PFNGLCREATESHADEROBJECTARBPROC       glCreateShaderObjectARB;
+extern PFNGLCREATEPROGRAMOBJECTARBPROC      glCreateProgramObjectARB;
+extern PFNGLSHADERSOURCEARBPROC             glShaderSourceARB;
+extern PFNGLCOMPILESHADERARBPROC            glCompileShaderARB;
+extern PFNGLATTACHOBJECTARBPROC             glAttachObjectARB;
+extern PFNGLLINKPROGRAMARBPROC              glLinkProgramARB;
+extern PFNGLGETOBJECTPARAMETERIVARBPROC     glGetObjectParameterivARB;
+extern PFNGLGETINFOLOGARBPROC               glGetInfoLogARB;
+extern PFNGLDELETEOBJECTARBPROC             glDeleteObjectARB;
+extern PFNGLGETUNIFORMLOCATIONARBPROC       glGetUniformLocationARB;
+extern PFNGLUNIFORM1FVARBPROC               glUniform1fvARB;
+extern PFNGLUNIFORM2FVARBPROC               glUniform2fvARB;
+extern PFNGLUNIFORM3FVARBPROC               glUniform3fvARB;
+extern PFNGLUNIFORM4FVARBPROC               glUniform4fvARB;
+extern PFNGLUNIFORMMATRIX2FVARBPROC         glUniformMatrix2fvARB;
+extern PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
+extern PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
 #endif
 
 #ifndef GL_POINT_SPRITE_ARB
@@ -86,10 +107,12 @@ void     *opengl_proc(const char *);
 GLboolean opengl_need(const char *);
 GLfloat   opengl_perf(GLfloat *);
 
-void      opengl_basis_mult(float[3][3]); 
-void      opengl_basis_invt(float[3][3]); 
-GLuint    opengl_frag_prog(const char *);
-GLuint    opengl_vert_prog(const char *);
+void        opengl_basis_mult(float[3][3]); 
+void        opengl_basis_invt(float[3][3]); 
+GLhandleARB opengl_shader_object(GLenum, const char *);
+GLhandleARB opengl_program_object(GLhandleARB, GLhandleARB);
+GLuint      opengl_frag_prog(const char *);
+GLuint      opengl_vert_prog(const char *);
 
 void      opengl_draw_xyz(float, float, float);
 void      opengl_draw_vec(float, float, float, float, float, float);

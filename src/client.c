@@ -63,79 +63,82 @@ static void client_recv(void)
     while ((event = recv_event()))
         switch (event)
         {
-        case EVENT_DRAW:                 recv_draw_client();          break;
-        case EVENT_EXIT:                 recv_exit_client();          break;
+        case EVENT_DRAW:                  recv_draw_client();           break;
+        case EVENT_EXIT:                  recv_exit_client();           break;
 
-        case EVENT_CREATE_CAMERA:        recv_create_camera();        break;
-        case EVENT_CREATE_SPRITE:        recv_create_sprite();        break;
-        case EVENT_CREATE_OBJECT:        recv_create_object();        break;
-        case EVENT_CREATE_STRING:        recv_create_string();        break;
-        case EVENT_CREATE_GALAXY:        recv_create_galaxy();        break;
-        case EVENT_CREATE_LIGHT:         recv_create_light();         break;
-        case EVENT_CREATE_PIVOT:         recv_create_pivot();         break;
-        case EVENT_CREATE_CLONE:         recv_create_clone();         break;
-        case EVENT_CREATE_IMAGE:         recv_create_image();         break;
-        case EVENT_CREATE_BRUSH:         recv_create_brush();         break;
+        case EVENT_CREATE_CAMERA:         recv_create_camera();         break;
+        case EVENT_CREATE_SPRITE:         recv_create_sprite();         break;
+        case EVENT_CREATE_OBJECT:         recv_create_object();         break;
+        case EVENT_CREATE_STRING:         recv_create_string();         break;
+        case EVENT_CREATE_GALAXY:         recv_create_galaxy();         break;
+        case EVENT_CREATE_LIGHT:          recv_create_light();          break;
+        case EVENT_CREATE_PIVOT:          recv_create_pivot();          break;
+        case EVENT_CREATE_CLONE:          recv_create_clone();          break;
+        case EVENT_CREATE_IMAGE:          recv_create_image();          break;
+        case EVENT_CREATE_BRUSH:          recv_create_brush();          break;
 
-        case EVENT_PARENT_ENTITY:        recv_parent_entity();        break;
-        case EVENT_DELETE_ENTITY:        recv_delete_entity();        break;
-        case EVENT_DELETE_IMAGE:         recv_delete_image();         break;
-        case EVENT_DELETE_BRUSH:         recv_delete_brush();         break;
+        case EVENT_PARENT_ENTITY:         recv_parent_entity();         break;
+        case EVENT_DELETE_ENTITY:         recv_delete_entity();         break;
+        case EVENT_DELETE_IMAGE:          recv_delete_image();          break;
+        case EVENT_DELETE_BRUSH:          recv_delete_brush();          break;
 
-        case EVENT_SET_ENTITY_POSITION:  recv_set_entity_position();  break;
-        case EVENT_SET_ENTITY_BASIS:     recv_set_entity_basis();     break;
-        case EVENT_SET_ENTITY_SCALE:     recv_set_entity_scale();     break;
-        case EVENT_SET_ENTITY_ALPHA:     recv_set_entity_alpha();     break;
-        case EVENT_SET_ENTITY_FLAGS:     recv_set_entity_flags();     break;
-        case EVENT_SET_ENTITY_BOUND:     recv_set_entity_bound();     break;
+        case EVENT_SET_ENTITY_POSITION:   recv_set_entity_position();   break;
+        case EVENT_SET_ENTITY_BASIS:      recv_set_entity_basis();      break;
+        case EVENT_SET_ENTITY_SCALE:      recv_set_entity_scale();      break;
+        case EVENT_SET_ENTITY_ALPHA:      recv_set_entity_alpha();      break;
+        case EVENT_SET_ENTITY_FLAGS:      recv_set_entity_flags();      break;
+        case EVENT_SET_ENTITY_BOUND:      recv_set_entity_bound();      break;
 
-        case EVENT_CREATE_MESH:          recv_create_mesh();          break;
-        case EVENT_CREATE_VERT:          recv_create_vert();          break;
-        case EVENT_CREATE_FACE:          recv_create_face();          break;
-        case EVENT_CREATE_EDGE:          recv_create_edge();          break;
+        case EVENT_CREATE_MESH:           recv_create_mesh();           break;
+        case EVENT_CREATE_VERT:           recv_create_vert();           break;
+        case EVENT_CREATE_FACE:           recv_create_face();           break;
+        case EVENT_CREATE_EDGE:           recv_create_edge();           break;
 
-        case EVENT_DELETE_MESH:          recv_delete_mesh();          break;
-        case EVENT_DELETE_VERT:          recv_delete_vert();          break;
-        case EVENT_DELETE_FACE:          recv_delete_face();          break;
-        case EVENT_DELETE_EDGE:          recv_delete_edge();          break;
+        case EVENT_DELETE_MESH:           recv_delete_mesh();           break;
+        case EVENT_DELETE_VERT:           recv_delete_vert();           break;
+        case EVENT_DELETE_FACE:           recv_delete_face();           break;
+        case EVENT_DELETE_EDGE:           recv_delete_edge();           break;
 
-        case EVENT_SET_MESH:             recv_set_mesh();             break;
-        case EVENT_SET_VERT:             recv_set_vert();             break;
-        case EVENT_SET_FACE:             recv_set_face();             break;
-        case EVENT_SET_EDGE:             recv_set_edge();             break;
+        case EVENT_SET_MESH:              recv_set_mesh();              break;
+        case EVENT_SET_VERT:              recv_set_vert();              break;
+        case EVENT_SET_FACE:              recv_set_face();              break;
+        case EVENT_SET_EDGE:              recv_set_edge();              break;
 
-        case EVENT_SET_IMAGE_PIXELS:     recv_set_image_pixels();     break;
-        case EVENT_SET_BRUSH_IMAGE:      recv_set_brush_image();      break;
-        case EVENT_SET_BRUSH_COLOR:      recv_set_brush_color();      break;
-        case EVENT_SET_BRUSH_FLAGS:      recv_set_brush_flags();      break;
-        case EVENT_SET_BRUSH_FRAG_PROG:  recv_set_brush_frag_prog();  break;
-        case EVENT_SET_BRUSH_VERT_PROG:  recv_set_brush_vert_prog();  break;
-        case EVENT_SET_BRUSH_FRAG_PARAM: recv_set_brush_frag_param(); break;
-        case EVENT_SET_BRUSH_VERT_PARAM: recv_set_brush_vert_param(); break;
-        case EVENT_SET_BRUSH_LINE_WIDTH: recv_set_brush_line_width(); break;
+        case EVENT_SET_IMAGE_PIXELS:      recv_set_image_pixels();      break;
+        case EVENT_SET_BRUSH_IMAGE:       recv_set_brush_image();       break;
+        case EVENT_SET_BRUSH_COLOR:       recv_set_brush_color();       break;
+        case EVENT_SET_BRUSH_FLAGS:       recv_set_brush_flags();       break;
+        case EVENT_SET_BRUSH_FRAG_SHADER: recv_set_brush_frag_shader(); break;
+        case EVENT_SET_BRUSH_VERT_SHADER: recv_set_brush_vert_shader(); break;
+        case EVENT_SET_BRUSH_UNIFORM:     recv_set_brush_uniform();     break;
+        case EVENT_SET_BRUSH_FRAG_PROG:   recv_set_brush_frag_prog();   break;
+        case EVENT_SET_BRUSH_VERT_PROG:   recv_set_brush_vert_prog();   break;
+        case EVENT_SET_BRUSH_FRAG_PARAM:  recv_set_brush_frag_param();  break;
+        case EVENT_SET_BRUSH_VERT_PARAM:  recv_set_brush_vert_param();  break;
+        case EVENT_SET_BRUSH_LINE_WIDTH:  recv_set_brush_line_width();  break;
 
-        case EVENT_SET_GALAXY_MAGNITUDE: recv_set_galaxy_magnitude(); break;
-        case EVENT_SET_CAMERA_OFFSET:    recv_set_camera_offset();    break;
-        case EVENT_SET_CAMERA_STEREO:    recv_set_camera_stereo();    break;
-        case EVENT_SET_CAMERA_RANGE:     recv_set_camera_range();     break;
-        case EVENT_SET_SPRITE_RANGE:     recv_set_sprite_range();     break;
-        case EVENT_SET_SPRITE_BRUSH:     recv_set_sprite_brush();     break;
-        case EVENT_SET_STRING_FILL:      recv_set_string_fill();      break;
-        case EVENT_SET_STRING_LINE:      recv_set_string_line();      break;
-        case EVENT_SET_STRING_TEXT:      recv_set_string_text();      break;
-        case EVENT_SET_LIGHT_COLOR:      recv_set_light_color();      break;
-        case EVENT_SET_BACKGROUND:       recv_set_background();       break;
-        case EVENT_SET_FONT:             recv_set_font();             break;
+        case EVENT_SET_GALAXY_MAGNITUDE:  recv_set_galaxy_magnitude();  break;
+        case EVENT_SET_CAMERA_OFFSET:     recv_set_camera_offset();     break;
+        case EVENT_SET_CAMERA_STEREO:     recv_set_camera_stereo();     break;
+        case EVENT_SET_CAMERA_RANGE:      recv_set_camera_range();      break;
+        case EVENT_SET_SPRITE_RANGE:      recv_set_sprite_range();      break;
+        case EVENT_SET_SPRITE_BRUSH:      recv_set_sprite_brush();      break;
+        case EVENT_SET_STRING_FILL:       recv_set_string_fill();       break;
+        case EVENT_SET_STRING_LINE:       recv_set_string_line();       break;
+        case EVENT_SET_STRING_TEXT:       recv_set_string_text();       break;
+        case EVENT_SET_LIGHT_COLOR:       recv_set_light_color();       break;
+        case EVENT_SET_BACKGROUND:        recv_set_background();        break;
+        case EVENT_SET_FONT:              recv_set_font();              break;
 
-        case EVENT_ADD_TILE:             recv_add_tile();             break;
-        case EVENT_SET_TILE_FLAGS:       recv_set_tile_flags();       break;
-        case EVENT_SET_TILE_VIEWPORT:    recv_set_tile_viewport();    break;
-        case EVENT_SET_TILE_POSITION:    recv_set_tile_position();    break;
-        case EVENT_SET_TILE_LINE_SCREEN: recv_set_tile_line_screen(); break;
-        case EVENT_SET_TILE_VIEW_MIRROR: recv_set_tile_view_mirror(); break;
-        case EVENT_SET_TILE_VIEW_OFFSET: recv_set_tile_view_offset(); break;
+        case EVENT_ADD_TILE:              recv_add_tile();              break;
+        case EVENT_SET_TILE_FLAGS:        recv_set_tile_flags();        break;
+        case EVENT_SET_TILE_VIEWPORT:     recv_set_tile_viewport();     break;
+        case EVENT_SET_TILE_POSITION:     recv_set_tile_position();     break;
+        case EVENT_SET_TILE_LINE_SCREEN:  recv_set_tile_line_screen();  break;
+        case EVENT_SET_TILE_VIEW_MIRROR:  recv_set_tile_view_mirror();  break;
+        case EVENT_SET_TILE_VIEW_OFFSET:  recv_set_tile_view_offset();  break;
         }
-}
+ }
 
 /*---------------------------------------------------------------------------*/
 

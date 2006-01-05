@@ -1146,6 +1146,9 @@ static void draw_mesh(const struct object_mesh *m, float alpha)
 
         if (transparent)
             glPopAttrib();
+
+        if (GL_has_shader_objects)
+            glUseProgramObjectARB(0);
     }
     glPopAttrib();
 }

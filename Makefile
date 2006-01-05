@@ -1,4 +1,4 @@
-INSTALL_PREFIX = /usr/local/Electro
+INSTALL_PREFIX = $(HOME)
 
 #------------------------------------------------------------------------------
 
@@ -11,7 +11,7 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -O2 -Wall
+	CFLAGS = -g -Wall
 endif
 
 ifdef SOCKET
@@ -119,7 +119,7 @@ DEPS= $(OBJS:.o=.d)
 %.d : %.c
 	$(CC) $(CFLAGS) $(INCDIR) -MM -MF $@ -MT $*.o $< > /dev/null
 
-%.o : %.c
+%.o : %.c Makefile
 	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
 
 $(TARG) : $(OBJS) Makefile

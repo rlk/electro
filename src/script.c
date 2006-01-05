@@ -1626,6 +1626,50 @@ static int E_set_brush_color(lua_State *L)
     return 0;
 }
 
+static int E_set_brush_frag_shader(lua_State *L)
+{
+    int id           = E_getbrush (L, -2);
+    const char *file = L_getstring(L, -1);
+
+    char *text = load_file(file, "r", NULL);
+
+    send_set_brush_frag_shader(id, text);
+    if (text) free(text);
+
+    return 0;
+}
+
+static int E_set_brush_vert_shader(lua_State *L)
+{
+    int id           = E_getbrush (L, -2);
+    const char *file = L_getstring(L, -1);
+
+    char *text = load_file(file, "r", NULL);
+
+    send_set_brush_vert_shader(id, text);
+    if (text) free(text);
+
+    return 0;
+}
+
+static int E_set_brush_uniform(lua_State *L)
+{
+    int N = lua_gettop(L);
+    int r = L_getinteger(L, -N + 2);
+    int c = L_getinteger(L, -N + 3);
+
+    float v[16];
+    int   i;
+
+    for (i = 0; i < r * c && i < 16; ++i)
+        v[i] = L_getnumber(L, -N + 4 + i); 
+
+    send_set_brush_uniform(E_getbrush (L, -N + 0),
+                           L_getstring(L, -N + 1), r, c, v);
+
+    return 0;
+}
+
 static int E_set_brush_frag_prog(lua_State *L)
 {
     int id           = E_getbrush (L, -2);
@@ -2400,6 +2444,9 @@ static struct function_def functions[] = {
     { "set_brush_flags",       E_set_brush_flags       },
     { "set_brush_image",       E_set_brush_image       },
     { "set_brush_color",       E_set_brush_color       },
+    { "set_brush_frag_shader", E_set_brush_frag_shader },
+    { "set_brush_vert_shader", E_set_brush_vert_shader },
+    { "set_brush_uniform",     E_set_brush_uniform     },
     { "set_brush_frag_prog",   E_set_brush_frag_prog   },
     { "set_brush_vert_prog",   E_set_brush_vert_prog   },
     { "set_brush_frag_param",  E_set_brush_frag_param  },

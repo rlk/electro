@@ -33,6 +33,7 @@ GLboolean GL_has_vertex_buffer_object = 0;
 GLboolean GL_has_point_sprite         = 0;
 GLboolean GL_has_texture_rectangle    = 0;
 GLboolean GL_has_texture_compression  = 0;
+GLboolean GL_has_shader_objects       = 0;
 GLboolean GL_has_multitexture         = 0;
 GLenum    GL_max_multitexture         = 0;
 
@@ -436,6 +437,24 @@ PFNGLBUFFERDATAARBPROC               glBufferDataARB;
 PFNGLISBUFFERARBPROC                 glIsBufferARB;
 PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
+PFNGLUSEPROGRAMOBJECTARBPROC         glUseProgramObjectARB;
+PFNGLCREATESHADEROBJECTARBPROC       glCreateShaderObjectARB;
+PFNGLCREATEPROGRAMOBJECTARBPROC      glCreateProgramObjectARB;
+PFNGLSHADERSOURCEARBPROC             glShaderSourceARB;
+PFNGLCOMPILESHADERARBPROC            glCompileShaderARB;
+PFNGLATTACHOBJECTARBPROC             glAttachObjectARB;
+PFNGLLINKPROGRAMARBPROC              glLinkProgramARB;
+PFNGLGETOBJECTPARAMETERIVARBPROC     glGetObjectParameterivARB;
+PFNGLGETINFOLOGARBPROC               glGetInfoLogARB;
+PFNGLDELETEOBJECTARBPROC             glDeleteObjectARB;
+PFNGLGETUNIFORMLOCATIONARBPROC       glGetUniformLocationARB;
+PFNGLUNIFORM1FVARBPROC               glUniform1fvARB;
+PFNGLUNIFORM2FVARBPROC               glUniform2fvARB;
+PFNGLUNIFORM3FVARBPROC               glUniform3fvARB;
+PFNGLUNIFORM4FVARBPROC               glUniform4fvARB;
+PFNGLUNIFORMMATRIX2FVARBPROC         glUniformMatrix2fvARB;
+PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
+PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
 
 void init_opengl(void)
 {
@@ -500,6 +519,66 @@ void init_opengl(void)
                                     && glDeleteBuffersARB);
     }
 
+    if (opengl_need("GL_ARB_shader_objects"))
+    {
+        glUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)
+            opengl_proc("glUseProgramObjectARB");
+        glCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)
+            opengl_proc("glCreateShaderObjectARB");
+        glCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)
+            opengl_proc("glCreateProgramObjectARB");
+        glShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)
+            opengl_proc("glShaderSourceARB");
+        glCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)
+            opengl_proc("glCompileShaderARB");
+        glAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)
+            opengl_proc("glAttachObjectARB");
+        glLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)
+            opengl_proc("glLinkProgramARB");
+        glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)
+            opengl_proc("glGetObjectParameterivARB");
+        glGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)
+            opengl_proc("glGetInfoLogARB");
+        glDeleteObjectARB = (PFNGLDELETEOBJECTARBPROC)
+            opengl_proc("glDeleteObjectARB");
+
+        glGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)
+            opengl_proc("glGetUniformLocationARB");
+        glUniform1fvARB = (PFNGLUNIFORM1FVARBPROC)
+            opengl_proc("glUniform1fvARB");
+        glUniform2fvARB = (PFNGLUNIFORM2FVARBPROC)
+            opengl_proc("glUniform2fvARB");
+        glUniform3fvARB = (PFNGLUNIFORM3FVARBPROC)
+            opengl_proc("glUniform3fvARB");
+        glUniform4fvARB = (PFNGLUNIFORM4FVARBPROC)
+            opengl_proc("glUniform4fvARB");
+        glUniformMatrix2fvARB = (PFNGLUNIFORMMATRIX2FVARBPROC)
+            opengl_proc("glUniformMatrix2fvARB");
+        glUniformMatrix3fvARB = (PFNGLUNIFORMMATRIX3FVARBPROC)
+            opengl_proc("glUniformMatrix3fvARB");
+        glUniformMatrix4fvARB = (PFNGLUNIFORMMATRIX4FVARBPROC)
+            opengl_proc("glUniformMatrix4fvARB");
+
+        GL_has_shader_objects = (glUseProgramObjectARB
+                              && glCreateShaderObjectARB
+                              && glCreateProgramObjectARB
+                              && glShaderSourceARB
+                              && glCompileShaderARB
+                              && glAttachObjectARB
+                              && glLinkProgramARB
+                              && glGetObjectParameterivARB
+                              && glGetInfoLogARB
+                              && glDeleteObjectARB
+                              && glGetUniformLocationARB
+                              && glUniform1fvARB
+                              && glUniform2fvARB
+                              && glUniform3fvARB
+                              && glUniform4fvARB
+                              && glUniformMatrix2fvARB
+                              && glUniformMatrix3fvARB
+                              && glUniformMatrix4fvARB);
+    }
+
     if (opengl_need("GL_ARB_multitexture"))
     {
         GLint TUs;
@@ -562,6 +641,53 @@ GLfloat opengl_perf(GLfloat *all)
     if (all) *all = 1000.0f * total / (now - start);
 
     return fps;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void opengl_object_error(const char *tag, GLhandleARB H)
+{
+    char *s;
+    int   l;
+
+    glGetObjectParameterivARB(H, GL_OBJECT_INFO_LOG_LENGTH_ARB, &l);
+
+    if ((s = (char *) calloc(l + 1, 1)))
+    {
+        glGetInfoLogARB(H, l, NULL, s);
+        error("%s: %s\n", tag, s);
+        free(s);
+    }
+}
+
+GLhandleARB opengl_shader_object(GLenum type, const char *text)
+{
+    GLhandleARB H = glCreateShaderObjectARB(type);
+    int p;
+
+    glShaderSourceARB(H, 1, &text, NULL);
+    glCompileShaderARB(H);
+
+    glGetObjectParameterivARB(H, GL_OBJECT_COMPILE_STATUS_ARB,  &p);
+    if (p == 0) opengl_object_error("Compiler Status", H);
+
+    return H;
+}
+
+GLhandleARB opengl_program_object(GLhandleARB vert_shad, GLhandleARB frag_shad)
+{
+    GLhandleARB H = glCreateProgramObjectARB();
+    int p;
+
+    if (vert_shad) glAttachObjectARB(H, vert_shad);
+    if (frag_shad) glAttachObjectARB(H, frag_shad);
+
+    glLinkProgramARB(H);
+
+    glGetObjectParameterivARB(H, GL_OBJECT_LINK_STATUS_ARB, &p);
+    if (p == 0) opengl_object_error("Linker Status", H);
+
+    return H;
 }
 
 /*---------------------------------------------------------------------------*/

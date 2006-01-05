@@ -87,6 +87,15 @@ void send_set_brush_color(int, const float[4],
                                const float[1], int);
 void recv_set_brush_color(void);
 
+void send_set_brush_frag_shader(int, const char *);
+void recv_set_brush_frag_shader(void);
+
+void send_set_brush_vert_shader(int, const char *);
+void recv_set_brush_vert_shader(void);
+
+void send_set_brush_uniform(int, const char *, int, int, const float *);
+void recv_set_brush_uniform(void);
+
 void send_set_brush_frag_prog(int, const char *);
 void recv_set_brush_frag_prog(void);
 

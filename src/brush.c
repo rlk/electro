@@ -26,7 +26,17 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define MAX_PARAM 96
+#define MAX_UNIFORM 16
+#define MAX_NAME    64
+#define MAX_PARAM   96
+
+struct uniform
+{
+    char  *name;
+    int    rows;
+    int    cols;
+    float *vals;
+};
 
 struct brush
 {
@@ -45,13 +55,26 @@ struct brush
     float a[4];
     float x[1];
 
-    GLuint  frag_prog;
-    GLuint  vert_prog;
+    float  line_width;
+
+    /* Vertex and fragment program state. */
+
+    GLuint frag_prog;
+    GLuint vert_prog;
 
     float  frag_param[MAX_PARAM][4];
     float  vert_param[MAX_PARAM][4];
 
-    float  line_width;
+    /* Vertex and fragment shader state. */
+
+    char *frag_text;
+    char *vert_text;
+
+    GLhandleARB frag_shad;
+    GLhandleARB vert_shad;
+    GLhandleARB shad_prog;
+
+    vector_t uniform;
 };
 
 static vector_t brush;
@@ -72,6 +95,86 @@ static int new_brush(void)
             return i;
 
     return vecadd(brush);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static struct uniform *get_uniform(struct brush *b, const char *n)
+{
+    struct uniform *u = NULL;
+
+    /* Ensure that the uniform vector exists. */
+
+    if (b->uniform == NULL)
+        b->uniform = vecnew(4, sizeof (struct uniform));
+
+    if (b->uniform)
+    {
+        int i;
+
+        /* Search for an existing uniform of the given name. */
+
+        for (i = 0; i < vecnum(b->uniform); ++i)
+            if (!strcmp(((struct uniform *) vecget(b->uniform, i))->name, n))
+                return   (struct uniform *) vecget(b->uniform, i);
+
+        /* This uniform does not exist.  Create it. */
+
+        if ((u = (struct uniform *) vecget(b->uniform, vecadd(b->uniform))))
+        {
+            u->name = memdup(n, 1, strlen(n) + 1);
+            u->rows = 0;
+            u->cols = 0;
+            u->vals = NULL;
+        }
+    }
+    return u;
+}
+
+static void set_uniform(struct uniform *u, const char *n,
+                        int r, int c, const float *v)
+{
+    int i;
+
+    /* Resize the value array if necessary. */
+
+    if (u->rows != r || u->cols != c)
+        if ((u->vals = realloc(u->vals, r * c * sizeof (float))))
+        {
+            u->rows = r;
+            u->cols = c;
+        }
+
+    /* Copy the new values into the array. */
+
+    if (u->vals)
+        for (i = 0; i < r * c; ++i)
+            u->vals[i] = v[i];
+}
+
+static void use_uniform(struct brush *b, struct uniform *u)
+{
+    int L;
+
+    /* Apply the uniform values to the OpenGL state. */
+
+    if (u && b->shad_prog)
+    {
+        if ((L = glGetUniformLocationARB(b->shad_prog, u->name)) != -1)
+        {
+            int r = u->rows;
+            int c = u->cols;
+
+            if      (r == 1 && c == 1) glUniform1fvARB(L, 1, u->vals);
+            else if (r == 1 && c == 2) glUniform2fvARB(L, 1, u->vals);
+            else if (r == 1 && c == 3) glUniform3fvARB(L, 1, u->vals);
+            else if (r == 1 && c == 4) glUniform4fvARB(L, 1, u->vals);
+
+            else if (r == 2 && c == 2) glUniformMatrix2fvARB(L, 1, 0, u->vals);
+            else if (r == 3 && c == 3) glUniformMatrix3fvARB(L, 1, 0, u->vals);
+            else if (r == 4 && c == 4) glUniformMatrix4fvARB(L, 1, 0, u->vals);
+        }
+    }
 }
 
 /*===========================================================================*/
@@ -274,6 +377,8 @@ static int free_brush(int i)
 
             if (b->count == 0)
             {
+                /* TODO: free uniforms. */
+
                 fini_brush(i);
 
                 if (b->file) free(b->file);
@@ -558,6 +663,174 @@ void recv_set_brush_vert_param(void)
 
 /*---------------------------------------------------------------------------*/
 
+void send_set_brush_vert_shader(int i, const char *text)
+{
+    int n = text ? (strlen(text) + 1) : 0;
+
+    struct brush *b = get_brush(i);
+
+    send_event(EVENT_SET_BRUSH_VERT_PROG);
+    send_index(i);
+    send_index(n);
+
+    fini_brush(i);
+
+    /* Free the old vertex program buffer. */
+
+    if (b->vert_text)
+    {
+        free(b->vert_text);
+        b->vert_text = NULL;
+    }
+
+    /* Copy the new vertex program buffer. */
+
+    if (n > 0)
+    {
+        b->vert_text = memdup(text, n, 1);
+        send_array(b->vert_text, n, 1);
+    }
+}
+
+void recv_set_brush_vert_shader(void)
+{
+    int i = recv_index();
+    int n = recv_index();
+
+    struct brush *b = get_brush(i);
+
+    fini_brush(i);
+
+    /* Free the old vertex program buffer. */
+
+    if (b->vert_text)
+    {
+        free(b->vert_text);
+        b->vert_text = NULL;
+    }
+
+    /* Receive the new vertex program buffer. */
+
+    if (n > 0)
+    {
+        b->vert_text = (char *) malloc(n);
+        recv_array(b->vert_text, n, 1);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_set_brush_frag_shader(int i, const char *text)
+{
+    int n = text ? (strlen(text) + 1) : 0;
+
+    struct brush *b = get_brush(i);
+
+    send_event(EVENT_SET_BRUSH_FRAG_SHADER);
+    send_index(i);
+    send_index(n);
+
+    fini_brush(i);
+
+    /* Free the old fragment program buffer. */
+
+    if (b->frag_text)
+    {
+        free(b->frag_text);
+        b->frag_text = NULL;
+    }
+
+    /* Copy the new fragment program buffer. */
+
+    if (n > 0)
+    {
+        b->frag_text = memdup(text, n, 1);
+        send_array(b->frag_text, n, 1);
+    }
+}
+
+void recv_set_brush_frag_shader(void)
+{
+    int i = recv_index();
+    int n = recv_index();
+
+    struct brush *b = get_brush(i);
+
+    fini_brush(i);
+
+    /* Free the old fragment program buffer. */
+
+    if (b->frag_text)
+    {
+        free(b->frag_text);
+        b->frag_text = NULL;
+    }
+
+    /* Receive the new fragment program buffer. */
+
+    if (n > 0)
+    {
+        b->frag_text = (char *) malloc(n);
+        recv_array(b->frag_text, n, 1);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void set_brush_uniform(struct brush *b, const char *n,
+                              int r, int c, const float *v)
+{
+    struct uniform *u;
+
+    /* Apply the given values to the uniform cache and OpenGL state. */
+
+    if ((u = get_uniform(b, n)))
+    {
+        set_uniform(u, n, r, c, v);
+        use_uniform(b, u);
+    }
+}
+
+void send_set_brush_uniform(int i, const char *n,
+                            int r, int c, const float *v)
+{
+    struct brush *b = get_brush(i);
+
+    int l = strlen(n);
+
+    send_event(EVENT_SET_BRUSH_UNIFORM);
+    send_index(i);
+    send_index(r);
+    send_index(c);
+    send_index(l);
+    send_array(n, l,     sizeof (char));
+    send_array(v, r * c, sizeof (float));
+
+    set_brush_uniform(b, n, r, c, v);
+}
+
+void recv_set_brush_uniform(void)
+{
+    struct brush *b = get_brush(recv_index());
+
+    int r = recv_index();
+    int c = recv_index();
+    int l = recv_index();
+
+    float v[MAX_UNIFORM];
+    char  n[MAX_NAME];
+
+    memset(n, 0, MAX_NAME    * sizeof (char));
+    memset(v, 0, MAX_UNIFORM * sizeof (float));
+
+    recv_array(n, l,     sizeof (char));
+    recv_array(v, r * c, sizeof (float));
+
+    set_brush_uniform(b, n, r, c, v);
+}
+
+/*---------------------------------------------------------------------------*/
+
 void send_set_brush_line_width(int i, float w)
 {
     struct brush *b = get_brush(i);
@@ -642,6 +915,25 @@ void init_brush(int i)
     {
         int p;
 
+        /* Initialize and vertex and fragment shaders and uniforms. */
+
+        if (GL_has_shader_objects)
+        {
+            if (b->vert_text)
+                b->vert_shad = opengl_shader_object(GL_VERTEX_SHADER_ARB,
+                                                    b->vert_text);
+            if (b->frag_text)
+                b->frag_shad = opengl_shader_object(GL_FRAGMENT_SHADER_ARB,
+                                                    b->frag_text);
+            if (b->vert_shad || b->frag_shad)
+                b->shad_prog = opengl_program_object(b->vert_shad,
+                                                     b->frag_shad);
+
+            if (b->shad_prog && b->uniform)
+                for (p = 0; p < vecnum(b->uniform); ++p)
+                    use_uniform(b, (struct uniform *) vecget(b->uniform, p));
+        }
+
         /* Initialize any vertex program and parameters. */
 
         if (b->vert && GL_has_vertex_program)
@@ -674,6 +966,15 @@ void fini_brush(int i)
 
     if (b->state == 1)
     {
+        /* Finalize any vertex and fragment shader objects. */
+
+        if (GL_has_shader_objects)
+        {
+            if (b->shad_prog) glDeleteObjectARB(b->shad_prog);
+            if (b->vert_shad) glDeleteObjectARB(b->vert_shad);
+            if (b->frag_shad) glDeleteObjectARB(b->frag_shad);
+        }
+                
         /* Finalize any vertex and fragment programs. */
 
         if (GL_has_vertex_program)
@@ -684,6 +985,10 @@ void fini_brush(int i)
             if (glIsProgramARB(b->frag_prog))
                 glDeleteProgramsARB(1, &b->frag_prog);
                 
+        b->vert_shad = 0;
+        b->frag_shad = 0;
+        b->shad_prog = 0;
+
         b->vert_prog = 0;
         b->frag_prog = 0;
         b->state     = 0;
@@ -815,6 +1120,11 @@ int draw_brush(int i, float a)
                                      (b->flags & BRUSH_SKY_MAP_1));
         set_tex_gen(GL_TEXTURE0_ARB, (b->flags & BRUSH_ENV_MAP_0),
                                      (b->flags & BRUSH_SKY_MAP_0));
+
+        /* Enable the shader program, if specified. */
+
+        if (b->shad_prog && GL_has_shader_objects)
+            glUseProgramObjectARB(b->shad_prog);
 
         /* Enable vertex and fragment programs, if specified. */
 
