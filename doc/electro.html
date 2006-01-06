@@ -11,6 +11,7 @@
     h4     { margin-left:  -3%; }
     h5     { margin-left:  -0%; }
     dt     { background: #EEEEEE; padding: 0.5em; }
+    dt.dep { background: #FFEEEE; padding: 0.5em; }
     pre    { background: #FFFFCC; padding: 1.0em; }
     p.note { background: #CCFFFF; padding: 1.0em; }
   </style>
@@ -32,9 +33,13 @@
 
 <p>This document details the functions and data types of the Electro API. A knowledge of the Lua Programming Language version 5.0 is prerequisite. Lua documentation and tutorials may be found at <a href="http://www.lua.org/docs.html"> the official Lua site</a>. A tutorial example of the use of the Electro API with Lua is <a href="example.html">included here</a>.</p>
 
-<p>Electro API function definitions appear here as follows:
+<p>Electro API function definitions appear here as follows:</p>
 
 <dl><dt><i>baz</i> = <tt>function</tt>(<i>foo</i>, [<i>bar</i>])<dd><p>Invoke <tt>function</tt> with arguments <i>foo</i>, and optionally <i>bar</i>, giving <i>baz</i>.</p></dl>
+
+<p>Deprecated functions may be removed in a future release. Deprecated function definitions appear here as follows:</p>
+
+<dl><dt class="dep"><i>baz</i> = <tt>oldfunction</tt>(<i>foo</i>, [<i>bar</i>])<dd><p>Invoke <tt>oldfunction</tt> with arguments <i>foo</i>, and optionally <i>bar</i>, giving <i>baz</i>.</p></dl>
 
 <p>This document includes a number of Lua code examples. These examples are distinguished from the main text as follows:</p>
 
@@ -689,7 +694,6 @@ and sprites.</p>
 
 <dt><a name="delete_brush"><tt>delete_brush</tt>(<i>brush</i>)</a><dd><p>Delete a brush and release all resources associated with it. The brush may not be deleted immediately if it is referenced by an existing entity.</p>
 
-
 <dt><a name="set_brush_color"><tt>set_brush_color</tt>(<i>brush, d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub>,</i> [<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub>,</i> [<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub>,</i> [<i>e</i>]]])</a><dd><p>Set the material color properties of <i>brush</i>. The (<i>d<sub>r</sub>, d<sub>g</sub>, d<sub>b</sub>, d<sub>a</sub></i>) arguments give the diffuse color, (<i>s<sub>r</sub>, s<sub>g</sub>, s<sub>b</sub>, s<sub>a</sub></i>) gives the specular color, (<i>a<sub>r</sub>, a<sub>g</sub>, a<sub>b</sub>, a<sub>a</sub></i>) gives the ambient color, and <i>e</i> gives the specular exponent. Specular, ambient, and specular exponent properties are optional and any not specified retain their existing values.</p>
 
 <dt><a name="set_brush_image"><tt>set_brush_image</tt>(<i>brush, image, </i>[<i>n</i>])</a><dd><p>Select <i>image</i> for use as the texture map of <i>brush</i>. The <i>n</i> argmument gives an optional texture unit number between 0 and 3, defaulting to zero.</p>
@@ -720,15 +724,19 @@ and sprites.</p>
 <p>A sky map is dynamically applied to a surface based upon the location of each point of the surface. This is useful when creating sky spheres and boxes using environment map <a href="#images">image</a> objects. When an environment map image is bound to the sky surface's brush the result is a sky scene that compliments the scene reflected in environment mapped surfaces.</p>
 
 </ul>
-<dt><a name="set_brush_frag_prog"><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB fragment program syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+<dt><a name="set_brush_frag_shader"><tt>set_brush_frag_shader</tt>(<i>brush, file</i>)</a><dd><p>Specify a fragment shader to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in <a href="http://www.opengl.org/documentation/oglsl.html">GLslang</a> syntax. To remove a fragment shader, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<dt><a name="set_brush_vert_prog"><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in ARB vertex program syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+<dt><a name="set_brush_vert_shader"><tt>set_brush_vert_shader</tt>(<i>brush, file</i>)</a><dd><p>Specify a vertex shader to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in <a href="http://www.opengl.org/documentation/oglsl.html">GLslang</a> syntax. To remove a vertex shader, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<p class="note">ARB fragment and vertex program syntaxes were chosen because the standards are mature. High-quality implementations are wide-spread and available on a nice array of hardware. If you prefer a higher-level language, use one that can be compiled down to ARB_fp and ARB_vp, such as Cg.</p>
+<dt><a name="set_brush_uniform"><tt>set_brush_uniform</tt>(<i>brush, name, rows, cols,</i>[<i>...</i>])</a><dd><p>Specify a uniform variable to be applied to <i>brush</i>. The <i>name</i> argument gives the name of the uniform, which must correspond to a uniform variable declared in the brush's <a href="#set_brush_frag_shader">fragment shader</a> or <a href="#set_brush_vert_shader">vertex shader</a>. The <i>rows</i> and <i>cols</i> arguments give the arity of the uniform value. Supported vector sizes include 1&times;1, 1&times;2, 1&times;3, and 1&times;4. Supported matrix sizes include 2&times;2, 3&times;3, and 4&times;4. The variable argument list gives the uniform values.</p>
 
-<dt><a name="set_brush_frag_param"><tt>set_brush_frag_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a local parameter to be accessible to <i>brush</i>'s fragment program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+<dt class="dep"><a name="set_brush_frag_prog"><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in <a href="http://oss.sgi.com/projects/ogl-sample/registry/ARB/fragment_program.txt">ARB fragment program</a> syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<dt><a name="set_brush_vert_param"><tt>set_brush_vert_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a local parameter to be accessible to <i>brush</i>'s vertex program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+<dt class="dep"><a name="set_brush_vert_prog"><tt>set_brush_vert_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a vertex program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in <a href="http://oss.sgi.com/projects/ogl-sample/registry/ARB/vertex_program.txt">ARB vertex program</a> syntax. to remove a vertex program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
+
+<dt class="dep"><a name="set_brush_frag_param"><tt>set_brush_frag_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a local parameter to be accessible to <i>brush</i>'s fragment program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+
+<dt class="dep"><a name="set_brush_vert_param"><tt>set_brush_vert_param</tt>(<i>brush, param, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a local parameter to be accessible to <i>brush</i>'s vertex program. The <i>param</i> argument gives an index between <i>0</i> and <i>96</i>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
 
 <dt><a name="set_brush_line_width"><tt>set_brush_line_width</tt>(<i>brush, width</i>)</a><dd><p>Specify the width in pixels of all lines drawn using this brush. The default is <i>1.0</i>. This will apply both to lines defined by <a href="#create_object">OBJ</a> models and to entities drawn in <a href="#entity_flag_wireframe">wire-frame</a> mode. </p>
 

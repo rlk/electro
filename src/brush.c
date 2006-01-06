@@ -160,6 +160,8 @@ static void use_uniform(struct brush *b, struct uniform *u)
 
     if (u && b->shad_prog)
     {
+        glUseProgramObjectARB(b->shad_prog);
+
         if ((L = glGetUniformLocationARB(b->shad_prog, u->name)) != -1)
         {
             int r = u->rows;
@@ -174,6 +176,8 @@ static void use_uniform(struct brush *b, struct uniform *u)
             else if (r == 3 && c == 3) glUniformMatrix3fvARB(L, 1, 0, u->vals);
             else if (r == 4 && c == 4) glUniformMatrix4fvARB(L, 1, 0, u->vals);
         }
+
+        glUseProgramObjectARB(0);
     }
 }
 
@@ -367,7 +371,8 @@ void recv_create_brush(void)
 
 static int free_brush(int i)
 {
-    struct brush *b = get_brush(i);
+    struct brush   *b = get_brush(i);
+    struct uniform *u;
 
     if (i > 0)
     {
@@ -377,14 +382,30 @@ static int free_brush(int i)
 
             if (b->count == 0)
             {
-                /* TODO: free uniforms. */
-
                 fini_brush(i);
+
+                /* Release all uniforms. */
+
+                if (b->uniform)
+                {
+                    for (i = 0; i < vecnum(b->uniform); ++i)
+                    {
+                        u = (struct uniform *) vecget(b->uniform, i);
+
+                        if (u->name) free(u->name);
+                        if (u->vals) free(u->vals);
+                    }
+                    vecdel(b->uniform);
+                }
+
+                /* Release all string buffers. */
 
                 if (b->file) free(b->file);
                 if (b->name) free(b->name);
                 if (b->frag) free(b->frag);
                 if (b->vert) free(b->vert);
+
+                /* Release all images. */
 
                 if (b->image[0]) send_delete_image(b->image[0]);
                 if (b->image[1]) send_delete_image(b->image[1]);

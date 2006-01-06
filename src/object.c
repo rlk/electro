@@ -46,9 +46,11 @@ struct vec3
 
 struct object_vert
 {
-    float t[2];
-    float n[3];
     float v[3];
+    float t[3];
+    float b[3];
+    float n[3];
+    float u[2];
 };
 
 struct object_face
@@ -126,29 +128,29 @@ static int new_object(void)
 /*===========================================================================*/
 /* OBJ loader caches                                                         */
 
-static vector_t _tv;
+static vector_t _uv;
 static vector_t _nv;
 static vector_t _vv;
 
-static int terr;
+static int uerr;
 static int nerr;
 static int verr;
 
 /*---------------------------------------------------------------------------*/
 
-static int read_face_indices(const char *line, int *vi, int *ti, int *ni)
+static int read_face_indices(const char *line, int *vi, int *ui, int *ni)
 {
     static char vert[MAXSTR];
     int n;
 
     *vi = 0;
-    *ti = 0;
+    *ui = 0;
     *ni = 0;
 
     if (sscanf(line, "%s%n", vert, &n) >= 1)
     {
-        if (sscanf(vert, "%d/%d/%d", vi, ti, ni) == 3) return n;
-        if (sscanf(vert, "%d/%d",    vi, ti    ) == 2) return n;
+        if (sscanf(vert, "%d/%d/%d", vi, ui, ni) == 3) return n;
+        if (sscanf(vert, "%d/%d",    vi, ui    ) == 2) return n;
         if (sscanf(vert, "%d//%d",   vi,     ni) == 2) return n;
         if (sscanf(vert, "%d",       vi        ) == 1) return n;
     }
@@ -160,33 +162,33 @@ static void read_face_vertices(vector_t vv, const char *line)
     const char *c = line;
     int dc;
     int vj, vc = vecnum(_vv);
-    int tj, tc = vecnum(_tv);
+    int uj, uc = vecnum(_uv);
     int nj, nc = vecnum(_nv);
     int i;
 
     /* Scan down the face string recording index set specifications. */
 
-    while ((dc = read_face_indices(c, &vj, &tj, &nj)))
+    while ((dc = read_face_indices(c, &vj, &uj, &nj)))
         if ((i = vecadd(vv)) >= 0)
         {
             struct object_vert *v = (struct object_vert *) vecget(vv, i);
 
             /* Convert a face index to a vector index. */
 
-            int ti = (tj > 0) ? tj - 1 : tj + tc;
+            int ui = (uj > 0) ? uj - 1 : uj + uc;
             int ni = (nj > 0) ? nj - 1 : nj + nc;
             int vi = (vj > 0) ? vj - 1 : vj + vc;
 
             /* Locate the indexed values in the vector caches. */
 
-            struct vec2 *tp = (0 <= ti && ti < tc) ? vecget(_tv, ti) : NULL;
+            struct vec2 *up = (0 <= ui && ui < uc) ? vecget(_uv, ui) : NULL;
             struct vec3 *np = (0 <= ni && ni < nc) ? vecget(_nv, ni) : NULL;
             struct vec3 *vp = (0 <= vi && vi < vc) ? vecget(_vv, vi) : NULL;
 
             /* Initialize the new vertex, defaulting on bad input. */
 
-            v->t[0] = tp ? tp->u : 0.0f;
-            v->t[1] = tp ? tp->v : 0.0f;
+            v->u[0] = up ? up->u : 0.0f;
+            v->u[1] = up ? up->v : 0.0f;
 
             v->n[0] = np ? np->x : 0.0f;
             v->n[1] = np ? np->y : 0.0f;
@@ -198,7 +200,7 @@ static void read_face_vertices(vector_t vv, const char *line)
 
             /* Note bad indices. */
 
-            if (tj && !tp) terr++;
+            if (uj && !up) uerr++;
             if (nj && !np) nerr++;
             if (vj && !vp) verr++;
 
@@ -231,17 +233,17 @@ static void read_f(vector_t vv, vector_t fv, const char *line)
 
 /*---------------------------------------------------------------------------*/
 
-static int read_edge_indices(const char *line, int *vi, int *ti)
+static int read_edge_indices(const char *line, int *vi, int *ui)
 {
     static char vert[MAXSTR];
     int n;
 
     *vi = 0;
-    *ti = 0;
+    *ui = 0;
 
     if (sscanf(line, "%s%n", vert, &n) >= 1)
     {
-        if (sscanf(vert, "%d/%d", vi, ti) == 2) return n;
+        if (sscanf(vert, "%d/%d", vi, ui) == 2) return n;
         if (sscanf(vert, "%d",    vi    ) == 1) return n;
     }
     return 0;
@@ -252,7 +254,7 @@ static void read_edge_vertices(vector_t vv, const char *line)
     const char *c = line;
     int dc;
     int vj, vc = vecnum(_vv);
-    int tj, tc = vecnum(_tv);
+    int tj, tc = vecnum(_uv);
     int i;
 
     /* Scan down the face string recording index set specifications. */
@@ -264,18 +266,18 @@ static void read_edge_vertices(vector_t vv, const char *line)
 
             /* Convert an edge index to a vector index. */
 
-            int ti = (tj > 0) ? tj - 1 : tj + tc;
+            int ui = (tj > 0) ? tj - 1 : tj + tc;
             int vi = (vj > 0) ? vj - 1 : vj + vc;
 
             /* Locate the indexed values in the vector caches. */
 
-            struct vec2 *tp = (0 <= ti && ti < tc) ? vecget(_tv, ti) : NULL;
+            struct vec2 *up = (0 <= ui && ui < tc) ? vecget(_uv, ui) : NULL;
             struct vec3 *vp = (0 <= vi && vi < vc) ? vecget(_vv, vi) : NULL;
 
             /* Initialize the new vertex, defaulting on bad input. */
 
-            v->t[0] = tp ? tp->u : 0.0f;
-            v->t[1] = tp ? tp->v : 0.0f;
+            v->u[0] = up ? up->u : 0.0f;
+            v->u[1] = up ? up->v : 0.0f;
 
             v->n[0] = 0.0f;
             v->n[1] = 0.0f;
@@ -287,7 +289,7 @@ static void read_edge_vertices(vector_t vv, const char *line)
 
             /* Note bad indices. */
 
-            if (tj && !tp) terr++;
+            if (tj && !up) uerr++;
             if (vj && !vp) verr++;
 
             c += dc;
@@ -367,10 +369,10 @@ static void read_vt(const char *line)
 {
     int i;
 
-    if ((i = vecadd(_tv)) >= 0)
+    if ((i = vecadd(_uv)) >= 0)
     {
-        struct vec2 *tp = (struct vec2 *) vecget(_tv, i);
-        sscanf(line, "%f %f", &tp->u, &tp->v);
+        struct vec2 *up = (struct vec2 *) vecget(_uv, i);
+        sscanf(line, "%f %f", &up->u, &up->v);
     }
 }
 
@@ -398,6 +400,96 @@ static void read_v(const char *line)
 
 /*---------------------------------------------------------------------------*/
 
+static void calc_face_tbn(const struct object_face *f, vector_t vv)
+{
+    struct object_vert *v0 = (struct object_vert *) vecget(vv, f->vi[0]);
+    struct object_vert *v1 = (struct object_vert *) vecget(vv, f->vi[1]);
+    struct object_vert *v2 = (struct object_vert *) vecget(vv, f->vi[2]);
+
+    float du1[2], dv1[3], t[3];
+    float du2[2], dv2[3], b[3];
+
+    /* Calculate texture coordinate differences. */
+
+    du1[0] = v1->u[0] - v0->u[0];
+    du1[1] = v1->u[1] - v0->u[1];
+
+    du2[0] = v2->u[0] - v0->u[0];
+    du2[1] = v2->u[1] - v0->u[1];
+
+    /* Calculate vertex coordinate differences. */
+
+    dv1[0] = v1->v[0] - v0->v[0];
+    dv1[1] = v1->v[1] - v0->v[1];
+    dv1[2] = v1->v[2] - v0->v[2];
+
+    dv2[0] = v2->v[0] - v0->v[0];
+    dv2[1] = v2->v[1] - v0->v[1];
+    dv2[2] = v2->v[2] - v0->v[2];
+
+    /* Calculate and accumulate the tangent vector. */
+
+    t[0] = du2[1] * dv1[0] - du1[1] * dv2[0];
+    t[1] = du2[1] * dv1[1] - du1[1] * dv2[1];
+    t[2] = du2[1] * dv1[2] - du1[1] * dv2[2];
+
+    v0->t[0] += t[0];
+    v0->t[1] += t[1];
+    v0->t[2] += t[2];
+    v1->t[0] += t[0];
+    v1->t[1] += t[1];
+    v1->t[2] += t[2];
+    v2->t[0] += t[0];
+    v2->t[1] += t[1];
+    v2->t[2] += t[2];
+
+    /* Calculate and accumulate the bitangent vector. */
+
+    b[0] = du1[0] * dv2[0] - du2[0] * dv1[0];
+    b[1] = du1[0] * dv2[1] - du2[0] * dv1[1];
+    b[2] = du1[0] * dv2[2] - du2[0] * dv1[2];
+
+    v0->b[0] += b[0];
+    v0->b[1] += b[1];
+    v0->b[2] += b[2];
+    v1->b[0] += b[0];
+    v1->b[1] += b[1];
+    v1->b[2] += b[2];
+    v2->b[0] += b[0];
+    v2->b[1] += b[1];
+    v2->b[2] += b[2];
+}
+
+static void calc_mesh_tbn(const struct object_mesh *m, vector_t vv)
+{
+    int i;
+
+    /* Compute tangent and bitangent for all vertices used by this mesh. */
+
+    for (i = 0; i < vecnum(m->fv); ++i)
+        calc_face_tbn((const struct object_face *) vecget(m->fv, i), vv);
+}
+
+static void calc_tbn(struct object *o)
+{
+    int i;
+
+    /* Compute tangent and bitangent for all vertices used by this object. */
+
+    for (i = 0; i < vecnum(o->mv); ++i)
+        calc_mesh_tbn((const struct object_mesh *) vecget(o->mv, i), o->vv);
+
+    /* Normalize all tangent and bitangent vectors. */
+
+    for (i = 0; i < vecnum(o->vv); ++i)
+    {
+        normalize(((struct object_vert *) vecget(o->vv, i))->t);
+        normalize(((struct object_vert *) vecget(o->vv, i))->b);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 static int read_obj(const char *filename, struct object *o)
 {
     char L[MAXSTR];
@@ -417,11 +509,11 @@ static int read_obj(const char *filename, struct object *o)
 
         /* Initialize the loader vector caches. */
 
-        _tv = vecnew(1024, sizeof (struct vec2));
+        _uv = vecnew(1024, sizeof (struct vec2));
         _nv = vecnew(1024, sizeof (struct vec3));
         _vv = vecnew(1024, sizeof (struct vec3));
 
-        terr = nerr = verr = 0;
+        uerr = nerr = verr = 0;
 
         if ((fin = open_file(get_file_name(filename), "r")))
         {
@@ -466,6 +558,10 @@ static int read_obj(const char *filename, struct object *o)
                 vecpop(o->mv);
             }
 
+        /* Compute tangent and bitangent vectors. */
+
+        calc_tbn(o);
+
         /* Sort meshes such that transparent ones appear last. */
 
         for (i = 0; i < vecnum(o->mv); ++i)
@@ -487,12 +583,12 @@ static int read_obj(const char *filename, struct object *o)
 
         vecdel(_vv);
         vecdel(_nv);
-        vecdel(_tv);
+        vecdel(_uv);
 
         /* Report index errors. */
 
-        if (terr > 0)
-            error("OBJ file '%s' has %d bad texture indices", filename, terr);
+        if (uerr > 0)
+            error("OBJ file '%s' has %d bad texture indices", filename, uerr);
         if (nerr > 0)
             error("OBJ file '%s' has %d bad normal indices",  filename, nerr);
         if (verr > 0)
@@ -658,7 +754,7 @@ int get_mesh(int i, int j)
         return -1;
 }
 
-void get_vert(int i, int j, float v[3], float n[3], float t[2])
+void get_vert(int i, int j, float v[3], float n[3], float u[2])
 {
     if (0 <= j && j < get_vert_count(i))
     {
@@ -672,8 +768,8 @@ void get_vert(int i, int j, float v[3], float n[3], float t[2])
         n[1] = p->n[1];
         n[2] = p->n[2];
 
-        t[0] = p->t[0];
-        t[1] = p->t[1];
+        u[0] = p->u[0];
+        u[1] = p->u[1];
     }
 }
 
@@ -978,7 +1074,7 @@ void recv_set_mesh(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_vert(int i, int j, float v[3], float n[3], float t[2])
+void send_set_vert(int i, int j, float v[3], float n[3], float u[2])
 {
     struct object_vert *p = get_object_vert(i, j);
 
@@ -990,15 +1086,15 @@ void send_set_vert(int i, int j, float v[3], float n[3], float t[2])
     p->n[1] = n[1];
     p->n[2] = n[2];
 
-    p->t[0] = t[0];
-    p->t[1] = t[1];
+    p->u[0] = u[0];
+    p->u[1] = u[1];
 
     send_event(EVENT_SET_VERT);
     send_index(i);
     send_index(j);
     send_array(p->v, 3, sizeof (float));
     send_array(p->n, 3, sizeof (float));
-    send_array(p->t, 2, sizeof (float));
+    send_array(p->u, 2, sizeof (float));
 
     fini_object(i);
 }
@@ -1012,7 +1108,7 @@ void recv_set_vert(void)
 
     recv_array(p->v, 3, sizeof (float));
     recv_array(p->n, 3, sizeof (float));
-    recv_array(p->t, 2, sizeof (float));
+    recv_array(p->u, 2, sizeof (float));
 
     fini_object(i);
 }
@@ -1112,6 +1208,27 @@ static void fini_object(int i)
 
 /*---------------------------------------------------------------------------*/
 
+static void draw_vert(const vector_t vv, GLubyte *base)
+{
+    GLsizei s = sizeof (struct object_vert);
+
+    /* Enable all necessary vertex attribute pointers. */
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableVertexAttribArrayARB(6);
+    glEnableVertexAttribArrayARB(7);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    /* Bind all vertex attribute pointers. */
+
+    glVertexPointer         (3,    GL_FLOAT,    s, base);
+    glVertexAttribPointerARB(6, 3, GL_FLOAT, 0, s, base + 3  * sizeof (float));
+    glVertexAttribPointerARB(7, 3, GL_FLOAT, 0, s, base + 6  * sizeof (float));
+    glNormalPointer         (      GL_FLOAT,    s, base + 9  * sizeof (float));
+    glTexCoordPointer       (2,    GL_FLOAT,    s, base + 12 * sizeof (float));
+}
+
 static void draw_mesh(const struct object_mesh *m, float alpha)
 {
     glPushAttrib(GL_TEXTURE_BIT);
@@ -1175,8 +1292,6 @@ static void draw_object(int j, int i, int f, float a)
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
             glPushAttrib(GL_LIGHTING_BIT | GL_TEXTURE_BIT);
             {
-                GLsizei stride = sizeof (struct object_vert);
-
                 int k, n = vecnum(o->mv);
 
                 /* Bind a vertex buffer or array. */
@@ -1184,11 +1299,10 @@ static void draw_object(int j, int i, int f, float a)
                 if (GL_has_vertex_buffer_object)
                 {
                     glBindBufferARB(GL_ARRAY_BUFFER_ARB, o->buffer);
-                    glInterleavedArrays(GL_T2F_N3F_V3F, stride, 0);
+                    draw_vert(o->vv, 0);
                 }
                 else
-                    glInterleavedArrays(GL_T2F_N3F_V3F, stride,
-                                        vecget(o->vv, 0));
+                    draw_vert(o->vv, vecget(o->vv, 0));
 
                 /* Draw each surface. */
 

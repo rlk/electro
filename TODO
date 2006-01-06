@@ -1,5 +1,7 @@
+new vector implementation
+        improve vector traversal
+Add brief changelogs to website
 YUV decode using SSE
-GLslang
 texture clamp
 check that RGB and RGBA video work
 work on video efficiency
