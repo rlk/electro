@@ -11,7 +11,7 @@
     h4     { margin-left:  -3%; }
     h5     { margin-left:  -0%; }
     dt     { background: #EEEEEE; padding: 0.5em; }
-    dt.dep { background: #FFEEEE; padding: 0.5em; }
+    dt.dep { background: #FFDDDD; padding: 0.5em; }
     pre    { background: #FFFFCC; padding: 1.0em; }
     p.note { background: #CCFFFF; padding: 1.0em; }
   </style>
@@ -728,7 +728,11 @@ and sprites.</p>
 
 <dt><a name="set_brush_vert_shader"><tt>set_brush_vert_shader</tt>(<i>brush, file</i>)</a><dd><p>Specify a vertex shader to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in <a href="http://www.opengl.org/documentation/oglsl.html">GLslang</a> syntax. To remove a vertex shader, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
-<dt><a name="set_brush_uniform"><tt>set_brush_uniform</tt>(<i>brush, name, rows, cols,</i>[<i>...</i>])</a><dd><p>Specify a uniform variable to be applied to <i>brush</i>. The <i>name</i> argument gives the name of the uniform, which must correspond to a uniform variable declared in the brush's <a href="#set_brush_frag_shader">fragment shader</a> or <a href="#set_brush_vert_shader">vertex shader</a>. The <i>rows</i> and <i>cols</i> arguments give the arity of the uniform value. Supported vector sizes include 1&times;1, 1&times;2, 1&times;3, and 1&times;4. Supported matrix sizes include 2&times;2, 3&times;3, and 4&times;4. The variable argument list gives the uniform values.</p>
+<dt><a name="set_brush_uniform_sampler"><tt>set_brush_uniform_sampler</tt>(<i>brush, name, T</i>)</a><dd><p>Specify a uniform sampler to be applied to <i>brush</i>. The <i>name</i> argument gives the name of the uniform, which must correspond to a uniform sampler declared in the brush's <a href="#set_brush_frag_shader">fragment shader</a> or <a href="#set_brush_vert_shader">vertex shader</a>. The <i>T</i> argument gives the sampler's texture unit number.</p>
+
+<dt><a name="set_brush_uniform_vector"><tt>set_brush_uniform_vector</tt>(<i>brush, name, x, </i>[<i>y, </i>[<i>z, </i>[<i>w</i>]]])</a><dd><p>Specify a uniform vector to be applied to <i>brush</i>. The <i>name</i> argument gives the name of the uniform, which must correspond to a uniform vector declared in the brush's <a href="#set_brush_frag_shader">fragment shader</a> or <a href="#set_brush_vert_shader">vertex shader</a>. The (<i>x, y, z, w</i>) arguments give optional values.</p>
+
+<dt><a name="set_brush_uniform"><tt>set_brush_uniform_matrix</tt>(<i>brush, name,</i>[<i>...</i>])</a><dd><p>Specify a uniform matrix to be applied to <i>brush</i>. The <i>name</i> argument gives the name of the uniform, which must correspond to a uniform variable declared in the brush's <a href="#set_brush_frag_shader">fragment shader</a> or <a href="#set_brush_vert_shader">vertex shader</a>. Supported matrix sizes include 2&times;2, 3&times;3, and 4&times;4. The variable argument list gives the uniform values.</p>
 
 <dt class="dep"><a name="set_brush_frag_prog"><tt>set_brush_frag_prog</tt>(<i>brush, file</i>)</a><dd><p>Specify a fragment program to be applied to <i>brush</i>. The <i>file</i> argument gives a text file in <a href="http://oss.sgi.com/projects/ogl-sample/registry/ARB/fragment_program.txt">ARB fragment program</a> syntax. To remove a fragment program, specify <tt>nil</tt> for the <i>file</i> argument.</p>
 
