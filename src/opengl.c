@@ -602,7 +602,7 @@ void init_opengl(void)
     GL_has_point_sprite
         = opengl_need("GL_ARB_point_sprite");
     GL_has_texture_rectangle
-        = opengl_need("GL_ARB_texture_rectangle") | GL_TRUE;
+        = opengl_need("GL_ARB_texture_rectangle");
     GL_has_texture_compression
         = opengl_need("GL_ARB_texture_compression");
 

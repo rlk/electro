@@ -47,8 +47,8 @@ struct image
 
     /* Video socket attributes. */
 
-    int sock;
-    int code;
+    SOCKET sock;
+    int    code;
 };
 
 static vector_t image;
@@ -589,9 +589,9 @@ int send_create_image(const char *file_nx,
     {
         struct image *p = get_image(i);
 
-        p->state =  0;
-        p->count =  1;
-        p->sock  = -1;
+        p->state = 0;
+        p->count = 1;
+        p->sock  = INVALID_SOCKET;
 
         /* Note the file names. */
 
@@ -629,20 +629,21 @@ int send_create_image(const char *file_nx,
 
 int send_create_video(int port)
 {
-    int i, s = -1, n = 1024 * 1024 * 8;
+    int i, n = 1024 * 1024 * 8;
+    SOCKET s = INVALID_SOCKET;
 
     if ((i = new_image()) >= 0)
     {
         struct image *p = get_image(i);
 
-        p->state =  0;
-        p->count =  1;
-        p->w     =  0;
-        p->h     =  0;
-        p->n     =  1;
-        p->b     =  3;
-        p->code  =  0;
-        p->sock  = -1;
+        p->state = 0;
+        p->count = 1;
+        p->w     = 0;
+        p->h     = 0;
+        p->n     = 1;
+        p->b     = 3;
+        p->code  = 0;
+        p->sock  = INVALID_SOCKET;
 
         /* Open a UDP socket for receiving. */
 
@@ -659,7 +660,7 @@ int send_create_video(int port)
                 /* Accept connections from any address on the given port. */
 
                 addr.sin_family      = AF_INET;
-                addr.sin_port        = htons(port);
+                addr.sin_port        = htons((short) port);
                 addr.sin_addr.s_addr = INADDR_ANY;
 
                 /* Bind the socket to this address. */
@@ -814,7 +815,7 @@ void init_image(int i)
 
     if (p->state == 0)
     {
-        if (p->sock >= 0)
+        if (p->sock != INVALID_SOCKET)
             p->texture = make_video(p->w, p->h, p->b);
         else
             p->texture = make_image(p->p, p->n, p->w, p->h, p->b);
@@ -912,12 +913,12 @@ void step_images(void)
     {
         struct image *p = get_image(i);
 
-        if (p->count && p->sock >= 0)
+        if (p->count && p->sock != INVALID_SOCKET)
         {
             FD_SET(p->sock, &fds0);
 
-            if (m < p->sock + 1)
-                m = p->sock + 1;
+            if (m < (int) p->sock + 1)
+                m = (int) p->sock + 1;
         }
     }
 
@@ -932,8 +933,11 @@ void step_images(void)
             {
                 struct image *p = get_image(i);
 
-                if (p->count && p->sock >= 0 && FD_ISSET(p->sock, &fds1))
-                    step_video(i, x++);
+                if (p->count && p->sock != INVALID_SOCKET)
+                {
+                    if (FD_ISSET(p->sock, &fds1))
+                        step_video(i, x++);
+                }
             }
             memcpy(&fds1, &fds0, sizeof (fd_set));
         }
@@ -955,7 +959,7 @@ int startup_image(void)
 
                 p->count   =   1;
                 p->state   =   0;
-                p->sock    =  -1;
+                p->sock    =   INVALID_SOCKET;
                 p->texture =   0;
                 p->n       =   1;
                 p->w       = 128;

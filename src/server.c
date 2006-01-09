@@ -140,7 +140,7 @@ static void server_draw(void)
     draw_console();
     server_swap();
 
-    opengl_check("");
+/*    opengl_check("");*/
 }
 
 static void server_perf(void)
@@ -155,7 +155,7 @@ static void server_perf(void)
         sprintf(buf, "%s (%d FPS)", TITLE, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
-        printf("%3d fps\n", fps_new);
+/*      printf("%3d fps\n", fps_new); */
 
         fps_old = fps_new;
     }

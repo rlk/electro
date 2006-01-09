@@ -260,7 +260,7 @@ void *error(char *format, ...)
     va_list args;
 
     va_start(args, format);
-    vsnprintf(string, MAXSTR, format, args);
+    vsprintf(string, format, args);
     va_end(args);
 
     error_console(string);
@@ -274,7 +274,7 @@ void *debug(char *format, ...)
     va_list args;
 
     va_start(args, format);
-    vsnprintf(string, MAXSTR, format, args);
+    vsprintf(string, format, args);
     va_end(args);
 
     debug_console(string);
@@ -288,7 +288,7 @@ void *print(char *format, ...)
     va_list args;
 
     va_start(args, format);
-    vsnprintf(string, MAXSTR, format, args);
+    vsprintf(string, format, args);
     va_end(args);
 
     print_console(string);

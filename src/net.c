@@ -148,7 +148,7 @@ static int net_main(void *data)
         sockaddr_t addr;
 
         addr.sin_family      = AF_INET;
-        addr.sin_port        = htons(port);
+        addr.sin_port        = htons((short) port);
         addr.sin_addr.s_addr = INADDR_ANY;
 
         /* Bind the new socket and listen for incoming connections. */

@@ -162,7 +162,7 @@ static void use_uniform(struct brush *b, struct uniform *u)
 
     /* Apply the uniform values to the OpenGL state. */
 
-    if (u && b->shad_prog)
+    if (GL_has_shader_objects && u && b->shad_prog)
     {
         glUseProgramObjectARB(b->shad_prog);
 
@@ -1152,8 +1152,13 @@ int draw_brush(int i, float a)
 
         /* Enable the shader program, if specified. */
 
-        if (b->shad_prog && GL_has_shader_objects)
-            glUseProgramObjectARB(b->shad_prog);
+        if (GL_has_shader_objects)
+        {
+            if (b->shad_prog)
+                glUseProgramObjectARB(b->shad_prog);
+            else
+                glUseProgramObjectARB(0);
+        }
 
         /* Enable vertex and fragment programs, if specified. */
 
