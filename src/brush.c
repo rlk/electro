@@ -35,6 +35,7 @@ struct uniform
     char  *name;
     int    rows;
     int    cols;
+    int    indx;
     float *vals;
 };
 
@@ -125,6 +126,7 @@ static struct uniform *get_uniform(struct brush *b, const char *n)
             u->name = memdup(n, 1, strlen(n) + 1);
             u->rows = 0;
             u->cols = 0;
+            u->indx = 0;
             u->vals = NULL;
         }
     }
@@ -132,7 +134,7 @@ static struct uniform *get_uniform(struct brush *b, const char *n)
 }
 
 static void set_uniform(struct uniform *u, const char *n,
-                        int r, int c, const float *v)
+                        int r, int c, int d, const float *v)
 {
     int i;
 
@@ -150,6 +152,8 @@ static void set_uniform(struct uniform *u, const char *n,
     if (u->vals)
         for (i = 0; i < r * c; ++i)
             u->vals[i] = v[i];
+
+    u->indx = d;
 }
 
 static void use_uniform(struct brush *b, struct uniform *u)
@@ -167,7 +171,9 @@ static void use_uniform(struct brush *b, struct uniform *u)
             int r = u->rows;
             int c = u->cols;
 
-            if      (r == 1 && c == 1) glUniform1fvARB(L, 1, u->vals);
+            if      (r == 0 && c == 0) glUniform1iARB(L, u->indx);
+
+            else if (r == 1 && c == 1) glUniform1fvARB(L, 1, u->vals);
             else if (r == 1 && c == 2) glUniform2fvARB(L, 1, u->vals);
             else if (r == 1 && c == 3) glUniform3fvARB(L, 1, u->vals);
             else if (r == 1 && c == 4) glUniform4fvARB(L, 1, u->vals);
@@ -799,7 +805,7 @@ void recv_set_brush_frag_shader(void)
 /*---------------------------------------------------------------------------*/
 
 static void set_brush_uniform(struct brush *b, const char *n,
-                              int r, int c, const float *v)
+                              int r, int c, int d, const float *v)
 {
     struct uniform *u;
 
@@ -807,13 +813,13 @@ static void set_brush_uniform(struct brush *b, const char *n,
 
     if ((u = get_uniform(b, n)))
     {
-        set_uniform(u, n, r, c, v);
+        set_uniform(u, n, r, c, d, v);
         use_uniform(b, u);
     }
 }
 
 void send_set_brush_uniform(int i, const char *n,
-                            int r, int c, const float *v)
+                            int r, int c, int d, const float *v)
 {
     struct brush *b = get_brush(i);
 
@@ -823,11 +829,12 @@ void send_set_brush_uniform(int i, const char *n,
     send_index(i);
     send_index(r);
     send_index(c);
+    send_index(d);
     send_index(l);
     send_array(n, l,     sizeof (char));
     send_array(v, r * c, sizeof (float));
 
-    set_brush_uniform(b, n, r, c, v);
+    set_brush_uniform(b, n, r, c, d, v);
 }
 
 void recv_set_brush_uniform(void)
@@ -836,6 +843,7 @@ void recv_set_brush_uniform(void)
 
     int r = recv_index();
     int c = recv_index();
+    int d = recv_index();
     int l = recv_index();
 
     float v[MAX_UNIFORM];
@@ -847,7 +855,7 @@ void recv_set_brush_uniform(void)
     recv_array(n, l,     sizeof (char));
     recv_array(v, r * c, sizeof (float));
 
-    set_brush_uniform(b, n, r, c, v);
+    set_brush_uniform(b, n, r, c, d, v);
 }
 
 /*---------------------------------------------------------------------------*/

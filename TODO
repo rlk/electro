@@ -6,9 +6,6 @@ texture clamp
 check that RGB and RGBA video work
 work on video efficiency
 UTF-8... extra chars
-find_shared_joint on a nil body not working?
-        can't specify attributes on env joints
-2d external GUI
 set entity rotation vectors
 global state
         gravity vector
@@ -22,7 +19,6 @@ OBJ
         surface extract?
         Stronger index checking
         extract libobj?
-        Tangent space basis per vertex
         MTL texture transform?
 MIDI IO
 UDP audio?

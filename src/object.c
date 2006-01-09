@@ -429,9 +429,9 @@ static void calc_face_tbn(const struct object_face *f, vector_t vv)
 
     /* Calculate and accumulate the tangent vector. */
 
-    t[0] = du2[1] * dv1[0] - du1[1] * dv2[0];
-    t[1] = du2[1] * dv1[1] - du1[1] * dv2[1];
-    t[2] = du2[1] * dv1[2] - du1[1] * dv2[2];
+    t[0] = du1[1] * dv2[0] - du2[1] * dv1[0];
+    t[1] = du1[1] * dv2[1] - du2[1] * dv1[1];
+    t[2] = du1[1] * dv2[2] - du2[1] * dv1[2];
 
     v0->t[0] += t[0];
     v0->t[1] += t[1];

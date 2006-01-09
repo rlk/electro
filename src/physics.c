@@ -614,15 +614,28 @@ float get_phys_geom_attr_f(dGeomID geom, int p)
 
 dJointID find_shared_joint(dBodyID body1, dBodyID body2)
 {
-    int i1, n1 = body1 ? dBodyGetNumJoints(body1) : 0;
-    int i2, n2 = body2 ? dBodyGetNumJoints(body2) : 0;
+    dJointID joint = 0;
 
-    for (i1 = 0; i1 < n1; ++i1)
-        for (i2 = 0; i2 < n2; ++i2)
-            if (dBodyGetJoint(body1, i1) ==
-                dBodyGetJoint(body2, i2)) return dBodyGetJoint(body1, i1);
+    if (body1 == 0)
+    {
+        if (body2 == 0)
+            return 0;
+        else
+            return find_shared_joint(body2, body1);
+    }
+    else
+    {
+        int i, n = dBodyGetNumJoints(body1);
 
-    return 0;
+        for (i = 0; i < n; ++i)
+            if ((joint = dBodyGetJoint(body1, i)))
+            {
+                if (dJointGetBody(joint, 0) == body2 ||
+                    dJointGetBody(joint, 1) == body2) return joint;
+            }
+
+        return 0;
+    }
 }
 
 void set_phys_join_type(dBodyID body1, dBodyID body2, int t)

@@ -423,6 +423,7 @@ void init_opengl(void)
 
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
+PFNGLBINDATTRIBLOCATIONARBPROC       glBindAttribLocationARB;
 PFNGLPROGRAMLOCALPARAMETER4FVARBPROC glProgramLocalParameter4fvARB;
 PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
@@ -448,6 +449,7 @@ PFNGLGETOBJECTPARAMETERIVARBPROC     glGetObjectParameterivARB;
 PFNGLGETINFOLOGARBPROC               glGetInfoLogARB;
 PFNGLDELETEOBJECTARBPROC             glDeleteObjectARB;
 PFNGLGETUNIFORMLOCATIONARBPROC       glGetUniformLocationARB;
+PFNGLUNIFORM1IARBPROC                glUniform1iARB;
 PFNGLUNIFORM1FVARBPROC               glUniform1fvARB;
 PFNGLUNIFORM2FVARBPROC               glUniform2fvARB;
 PFNGLUNIFORM3FVARBPROC               glUniform3fvARB;
@@ -487,12 +489,15 @@ void init_opengl(void)
             opengl_proc("glDisableVertexAttribArrayARB");
         glEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)
             opengl_proc("glEnableVertexAttribArrayARB");
+        glBindAttribLocationARB = (PFNGLBINDATTRIBLOCATIONARBPROC)
+            opengl_proc("glBindAttribLocationARB");
         glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)
             opengl_proc("glVertexAttribPointerARB");
 
         GL_has_vertex_program = (glProgramEnvParameter4fARB
                               && glDisableVertexAttribArrayARB
                               && glEnableVertexAttribArrayARB
+                              && glBindAttribLocationARB
                               && glVertexAttribPointerARB
                               && glProgramStringARB
                               && glBindProgramARB
@@ -544,6 +549,8 @@ void init_opengl(void)
 
         glGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)
             opengl_proc("glGetUniformLocationARB");
+        glUniform1iARB = (PFNGLUNIFORM1IARBPROC)
+            opengl_proc("glUniform1iARB");
         glUniform1fvARB = (PFNGLUNIFORM1FVARBPROC)
             opengl_proc("glUniform1fvARB");
         glUniform2fvARB = (PFNGLUNIFORM2FVARBPROC)
@@ -570,6 +577,7 @@ void init_opengl(void)
                               && glGetInfoLogARB
                               && glDeleteObjectARB
                               && glGetUniformLocationARB
+                              && glUniform1iARB
                               && glUniform1fvARB
                               && glUniform2fvARB
                               && glUniform3fvARB
@@ -678,6 +686,9 @@ GLhandleARB opengl_program_object(GLhandleARB vert_shad, GLhandleARB frag_shad)
 {
     GLhandleARB H = glCreateProgramObjectARB();
     int p;
+
+    glBindAttribLocationARB(H, 6, "tangent");
+    glBindAttribLocationARB(H, 7, "bitangent");
 
     if (vert_shad) glAttachObjectARB(H, vert_shad);
     if (frag_shad) glAttachObjectARB(H, frag_shad);

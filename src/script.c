@@ -1626,6 +1626,13 @@ static int E_set_brush_color(lua_State *L)
     return 0;
 }
 
+static int E_set_brush_line_width(lua_State *L)
+{
+    send_set_brush_line_width(E_getbrush (L, -2),
+                              L_getnumber(L, -1));
+    return 0;
+}
+
 static int E_set_brush_frag_shader(lua_State *L)
 {
     int id           = E_getbrush (L, -2);
@@ -1652,20 +1659,50 @@ static int E_set_brush_vert_shader(lua_State *L)
     return 0;
 }
 
-static int E_set_brush_uniform(lua_State *L)
+static int E_set_brush_uniform_sampler(lua_State *L)
+{
+    send_set_brush_uniform(E_getbrush  (L, -3),
+                           L_getstring (L, -2), 0, 0,
+                           L_getinteger(L, -1), NULL);
+    return 0;
+}
+
+static int E_set_brush_uniform_vector(lua_State *L)
 {
     int N = lua_gettop(L);
-    int r = L_getinteger(L, -N + 2);
-    int c = L_getinteger(L, -N + 3);
+    int r = 1;
+    int c = N - 2;
+    int i;
 
     float v[16];
-    int   i;
 
     for (i = 0; i < r * c && i < 16; ++i)
-        v[i] = L_getnumber(L, -N + 4 + i); 
+        v[i] = L_getnumber(L, -N + 2 + i); 
 
     send_set_brush_uniform(E_getbrush (L, -N + 0),
-                           L_getstring(L, -N + 1), r, c, v);
+                           L_getstring(L, -N + 1), r, c, 0, v);
+
+    return 0;
+}
+
+static int E_set_brush_uniform_matrix(lua_State *L)
+{
+    int N = lua_gettop(L);
+    int r;
+    int c;
+    int i;
+
+    float v[16];
+
+    if (N - 2 >= 2 + 2) r = c = 2;
+    if (N - 2 >= 3 * 3) r = c = 3;
+    if (N - 2 >= 4 * 4) r = c = 4;
+
+    for (i = 0; i < r * c && i < 16; ++i)
+        v[i] = L_getnumber(L, -N + 2 + i); 
+
+    send_set_brush_uniform(E_getbrush (L, -N + 0),
+                           L_getstring(L, -N + 1), r, c, 0, v);
 
     return 0;
 }
@@ -1723,13 +1760,6 @@ static int E_set_brush_vert_param(lua_State *L)
 
     send_set_brush_vert_param(E_getbrush  (L, -N + 0),
                               L_getinteger(L, -N + 1), v);
-    return 0;
-}
-
-static int E_set_brush_line_width(lua_State *L)
-{
-    send_set_brush_line_width(E_getbrush (L, -2),
-                              L_getnumber(L, -1));
     return 0;
 }
 
@@ -2444,14 +2474,18 @@ static struct function_def functions[] = {
     { "set_brush_flags",       E_set_brush_flags       },
     { "set_brush_image",       E_set_brush_image       },
     { "set_brush_color",       E_set_brush_color       },
+    { "set_brush_line_width",  E_set_brush_line_width  },
     { "set_brush_frag_shader", E_set_brush_frag_shader },
     { "set_brush_vert_shader", E_set_brush_vert_shader },
-    { "set_brush_uniform",     E_set_brush_uniform     },
+
+    { "set_brush_uniform_sampler", E_set_brush_uniform_sampler },
+    { "set_brush_uniform_vector",  E_set_brush_uniform_vector  },
+    { "set_brush_uniform_matrix",  E_set_brush_uniform_matrix  },
+
     { "set_brush_frag_prog",   E_set_brush_frag_prog   },
     { "set_brush_vert_prog",   E_set_brush_vert_prog   },
     { "set_brush_frag_param",  E_set_brush_frag_param  },
     { "set_brush_vert_param",  E_set_brush_vert_param  },
-    { "set_brush_line_width",  E_set_brush_line_width  },
 
     /* Sound functions */
 

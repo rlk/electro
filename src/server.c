@@ -140,7 +140,7 @@ static void server_draw(void)
     draw_console();
     server_swap();
 
-    opengl_check("server_draw");
+    opengl_check("");
 }
 
 static void server_perf(void)

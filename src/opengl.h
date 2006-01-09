@@ -48,6 +48,7 @@ extern GLenum    GL_max_multitexture;
 #ifndef __APPLE__
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
+extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLPROGRAMLOCALPARAMETER4FVARBPROC glProgramLocalParameter4fvARB;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC    glProgramEnvParameter4fARB;
 extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB;
@@ -73,6 +74,7 @@ extern PFNGLGETOBJECTPARAMETERIVARBPROC     glGetObjectParameterivARB;
 extern PFNGLGETINFOLOGARBPROC               glGetInfoLogARB;
 extern PFNGLDELETEOBJECTARBPROC             glDeleteObjectARB;
 extern PFNGLGETUNIFORMLOCATIONARBPROC       glGetUniformLocationARB;
+extern PFNGLUNIFORM1IARBPROC                glUniform1iARB;
 extern PFNGLUNIFORM1FVARBPROC               glUniform1fvARB;
 extern PFNGLUNIFORM2FVARBPROC               glUniform2fvARB;
 extern PFNGLUNIFORM3FVARBPROC               glUniform3fvARB;
