@@ -190,7 +190,7 @@ union swapper
     unsigned char b[4];
 };
 
-void host_to_net(union swapper *s)
+static void host_to_net(union swapper *s)
 {
     union swapper t = *s;
 
@@ -200,7 +200,7 @@ void host_to_net(union swapper *s)
     s->b[3] = t.b[swapmap[3]];
 }
 
-void net_to_host(union swapper *s)
+static void net_to_host(union swapper *s)
 {
     union swapper t = *s;
 

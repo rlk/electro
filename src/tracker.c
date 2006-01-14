@@ -148,7 +148,7 @@ int get_tracker_rotation(unsigned int id, float r[3])
 {
     if (tracker != (struct tracker_header *) (-1))
     {
-        if (0 <= id && id < tracker->count)
+        if (id < tracker->count)
         {
             /* Return the rotation of sensor ID. */
 
@@ -170,7 +170,7 @@ int get_tracker_position(unsigned int id, float p[3])
 {
     if (tracker != (struct tracker_header *) (-1))
     {
-        if (0 <= id && id < tracker->count)
+        if (id < tracker->count)
         {
             /* Return the position of sensor ID. */
 
@@ -196,7 +196,7 @@ int get_tracker_joystick(unsigned int id, float a[2])
 
         /* Return valuators ID and ID + 1. */
         
-        if (0 <= id && id < control->val_count - 1)
+        if (id < control->val_count - 1)
         {
             a[0] = +(*(p + id + 0));
             a[1] = -(*(p + id + 1));

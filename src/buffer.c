@@ -21,6 +21,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef CONF_MPI
+
 #define BUCKETSZ (4 * 1024 * 1024)
 
 struct bucket
@@ -53,8 +55,6 @@ int startup_buffer(void)
 }
 
 /*---------------------------------------------------------------------------*/
-
-#ifdef CONF_MPI
 
 static void clear_buffer(void)
 {
@@ -211,6 +211,11 @@ int get_rank(void)
 /*---------------------------------------------------------------------------*/
 
 #else  /* non-MPI stub functions*/
+
+int startup_buffer(void)
+{
+    return 1;
+}
 
 void sync_buffer(void)
 {

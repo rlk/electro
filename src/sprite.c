@@ -146,7 +146,7 @@ void recv_set_sprite_range(void)
 
 /*===========================================================================*/
 
-static void draw_sprite(int j, int i, int f, float a)
+static void draw_sprite(int i, int j, int f, float a)
 {
     struct sprite *s = get_sprite(i);
 

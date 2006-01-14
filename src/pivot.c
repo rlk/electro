@@ -15,6 +15,7 @@
 #include "opengl.h"
 #include "buffer.h"
 #include "entity.h"
+#include "pivot.h"
 #include "event.h"
 
 /*===========================================================================*/
@@ -33,7 +34,7 @@ void recv_create_pivot(void)
 
 /*===========================================================================*/
 
-static void draw_pivot(int j, int i, int f, float a)
+static void draw_pivot(int i, int j, int f, float a)
 {
     glPushMatrix();
     {
@@ -47,7 +48,7 @@ static void draw_pivot(int j, int i, int f, float a)
 
 /*===========================================================================*/
 
-struct entity_func pivot_func = {
+static struct entity_func pivot_func = {
     "pivot",
     NULL,
     NULL,

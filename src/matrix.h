@@ -50,9 +50,9 @@ void mult_xlt_mat(float[16], float, float, float);
 void mult_scl_mat(float[16], float, float, float);
 void mult_rot_mat(float[16], float, float, float, float);
 
-void mult_xlt_int(float[16], float, float, float);
-void mult_scl_int(float[16], float, float, float);
-void mult_rot_int(float[16], float, float, float, float);
+void mult_xlt_inv(float[16], float, float, float);
+void mult_scl_inv(float[16], float, float, float);
+void mult_rot_inv(float[16], float, float, float, float);
 
 /*---------------------------------------------------------------------------*/
 

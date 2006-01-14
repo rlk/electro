@@ -1,6 +1,6 @@
 /*    Copyright (C) 2005 Robert Kooima                                       */
 /*                                                                           */
-/*    ELECTRO is free software;  you can redistribute it and/or modify it    */
+/*    vec.[ch] is free software; you can redistribute it and/or modify it    */
 /*    under the terms of the  GNU General Public License  as published by    */
 /*    the  Free Software Foundation;  either version 2 of the License, or    */
 /*    (at your option) any later version.                                    */
@@ -10,19 +10,18 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
-#ifndef PIVOT_H
-#define PIVOT_H
+#ifndef VEC_H
+#define VEC_H
 
-#include "entity.h"
-
-/*---------------------------------------------------------------------------*/
-
-struct entity_func *startup_pivot(void);
+#include <stdlib.h>
 
 /*---------------------------------------------------------------------------*/
 
-int  send_create_pivot(void);
-void recv_create_pivot(void);
+void        *vec_new(size_t, size_t);
+void        *vec_gro(void *, size_t);
+unsigned int vec_add(void *, size_t);
+void         vec_del(void *, size_t, unsigned int);
+unsigned int vec_all(void *, size_t, unsigned int *, unsigned int *);
 
 /*---------------------------------------------------------------------------*/
 

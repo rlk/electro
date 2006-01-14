@@ -602,7 +602,7 @@ static int read_obj(const char *filename, struct object *o)
 /*===========================================================================*/
 /* Object constructors                                                       */
 
-int create_mesh(int i)
+static int create_mesh(int i)
 {
     int j;
 
@@ -616,7 +616,7 @@ int create_mesh(int i)
     return j;
 }
 
-int create_vert(int i)
+static int create_vert(int i)
 {
     int j;
 
@@ -633,12 +633,12 @@ int create_vert(int i)
     return j;
 }
 
-int create_face(int i, int j)
+static int create_face(int i, int j)
 {
     return vecadd(get_object_mesh(i, j)->fv);
 }
 
-int create_edge(int i, int j)
+static int create_edge(int i, int j)
 {
     return vecadd(get_object_mesh(i, j)->ev);
 }
@@ -646,7 +646,7 @@ int create_edge(int i, int j)
 /*---------------------------------------------------------------------------*/
 /* Object destructors                                                        */
 
-void delete_edge(int i, int j, int k)
+static void delete_edge(int i, int j, int k)
 {
     struct object_mesh *m = get_object_mesh(i, j);
 
@@ -658,7 +658,7 @@ void delete_edge(int i, int j, int k)
     vecpop(m->ev);
 }
 
-void delete_face(int i, int j, int k)
+static void delete_face(int i, int j, int k)
 {
     struct object_mesh *m = get_object_mesh(i, j);
 
@@ -670,7 +670,7 @@ void delete_face(int i, int j, int k)
     vecpop(m->fv);
 }
 
-void delete_vert(int i, int j)
+static void delete_vert(int i, int j)
 {
     struct object *o = get_object(i);
 
@@ -725,7 +725,7 @@ void delete_vert(int i, int j)
     fini_object(i);
 }
 
-void delete_mesh(int i, int j)
+static void delete_mesh(int i, int j)
 {
     struct object      *o = get_object(i);
     struct object_mesh *m = get_object_mesh(i, j);
@@ -1141,13 +1141,12 @@ void recv_set_face(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_edge(int i, int j, int k, int vi[3])
+void send_set_edge(int i, int j, int k, int vi[2])
 {
     struct object_edge *e = get_object_edge(i, j, k);
 
     e->vi[0] = vi[0];
     e->vi[1] = vi[1];
-    e->vi[2] = vi[2];
 
     send_event(EVENT_SET_EDGE);
     send_index(i);
@@ -1208,7 +1207,7 @@ static void fini_object(int i)
 
 /*---------------------------------------------------------------------------*/
 
-static void draw_vert(const vector_t vv, GLubyte *base)
+static void draw_vert(GLubyte *base)
 {
     GLsizei s = sizeof (struct object_vert);
 
@@ -1270,7 +1269,7 @@ static void draw_mesh(const struct object_mesh *m, float alpha)
     glPopAttrib();
 }
 
-static void draw_object(int j, int i, int f, float a)
+static void draw_object(int i, int j, int f, float a)
 {
     struct object      *o = get_object(i);
     struct object_mesh *m = NULL;
@@ -1299,10 +1298,10 @@ static void draw_object(int j, int i, int f, float a)
                 if (GL_has_vertex_buffer_object)
                 {
                     glBindBufferARB(GL_ARRAY_BUFFER_ARB, o->buffer);
-                    draw_vert(o->vv, 0);
+                    draw_vert(0);
                 }
                 else
-                    draw_vert(o->vv, vecget(o->vv, 0));
+                    draw_vert(vecget(o->vv, 0));
 
                 /* Draw each surface. */
 

@@ -133,7 +133,7 @@ static struct uniform *get_uniform(struct brush *b, const char *n)
     return u;
 }
 
-static void set_uniform(struct uniform *u, const char *n,
+static void set_uniform(struct uniform *u,
                         int r, int c, int d, const float *v)
 {
     int i;
@@ -813,7 +813,7 @@ static void set_brush_uniform(struct brush *b, const char *n,
 
     if ((u = get_uniform(b, n)))
     {
-        set_uniform(u, n, r, c, d, v);
+        set_uniform(u, r, c, d, v);
         use_uniform(b, u);
     }
 }

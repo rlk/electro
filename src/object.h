@@ -18,17 +18,6 @@
 struct entity_func *startup_object(void);
 
 /*---------------------------------------------------------------------------*/
-/*
-int  create_mesh(int);
-int  create_vert(int);
-int  create_face(int, int);
-int  create_edge(int, int);
-
-void delete_mesh(int, int);
-void delete_vert(int, int);
-void delete_face(int, int, int);
-void delete_edge(int, int, int);
-*/
 
 int  get_mesh(int, int);
 void get_vert(int, int, float[3], float[3], float[2]);

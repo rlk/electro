@@ -15,7 +15,6 @@
 #include <math.h>
 
 #include "opengl.h"
-#include "vector.h"
 #include "frustum.h"
 #include "display.h"
 #include "physics.h"
@@ -32,29 +31,29 @@
 #include "event.h"
 #include "utility.h"
 #include "tracker.h"
+#include "vec.h"
 
 /*---------------------------------------------------------------------------*/
 
 struct entity
 {
-    int type;
-    int data;
-    int flags;
-    int state;
+    unsigned int type;
+    unsigned int data;
+    unsigned int flags;
 
     /* Entity transformation. */
 
     float rotation[16];
     float position[3];
     float scale[3];
-    float alpha;
     float bound[6];
+    float alpha;
 
     /* Entity hierarchy. */
 
-    int car;
-    int cdr;
-    int par;
+    unsigned int car;
+    unsigned int cdr;
+    unsigned int par;
 
     /* Tracking status. */
 
@@ -68,96 +67,140 @@ struct entity
     dGeomID geom;
 };
 
-static vector_t            entity;
+static struct entity      *entity;
 static struct entity_func *entity_func[TYPE_COUNT];
 
 /*---------------------------------------------------------------------------*/
 
-#define CAR(i) ((struct entity *) vecget(entity, (i)))->car
-#define CDR(i) ((struct entity *) vecget(entity, (i)))->cdr
-#define PAR(i) ((struct entity *) vecget(entity, (i)))->par
+#define ALL_ENTITIES(i, ii) \
+    i = ii = 0; vec_all(entity, sizeof (struct entity), &i, &ii);
 
-static struct entity *get_entity(int i)
+#define CAR(i) (entity[i].car)
+#define CDR(i) (entity[i].cdr)
+#define PAR(i) (entity[i].par)
+
+#define FLAG(i, f) (entity[i].flags & f)
+
+static void entity_init_func(unsigned int i)
 {
-    return (struct entity *) vecget(entity, i);
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->init)
+        entity_func[entity[i].type]->init(entity[i].data);
 }
 
-static int new_entity(void)
+static void entity_fini_func(unsigned int i)
 {
-    int i, n = vecnum(entity);
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->fini)
+        entity_func[entity[i].type]->fini(entity[i].data);
+}
 
-    for (i = 0; i < n; ++i)
-        if (get_entity(i)->type == 0)
-            return i;
+static void entity_aabb_func(unsigned int i, float v[6])
+{
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->aabb)
+        entity_func[entity[i].type]->aabb(entity[i].data, v);
+}
 
-    return vecadd(entity);
+static void entity_draw_func(unsigned int i, int f, float a)
+{
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->draw)
+        entity_func[entity[i].type]->draw(entity[i].data, i, f, a);
+}
+
+static void entity_dupe_func(unsigned int i)
+{
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->dupe)
+        entity_func[entity[i].type]->dupe(entity[i].data);
+}
+
+static void entity_free_func(unsigned int i)
+{
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->free)
+        entity_func[entity[i].type]->free(entity[i].data);
+}
+
+static unsigned int new_entity(void)
+{
+    unsigned int i;
+    void        *v;
+
+    if ((i = vec_add(entity, sizeof (struct entity))))
+    {
+        memset(entity + i, 0, sizeof (struct entity));
+        return i;
+    }
+
+    if ((v = vec_gro(entity, sizeof (struct entity))))
+    {
+        entity = (struct entity *) v;
+        return new_entity();
+    }
+    return 0;
 }
 
 /*===========================================================================*/
 
-int entity_data(int i)
+int get_entity_data(unsigned int i)
 {
-    return get_entity(i)->data;
+    return entity[i].data;
 }
 
-int entity_type(int i)
+int get_entity_type(unsigned int i)
 {
-    return get_entity(i)->type;
+    return entity[i].type;
 }
 
-const char *entity_name(int i)
+const char *get_entity_name(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
-    if (entity_func[e->type])
-        return entity_func[e->type]->name;
+    if (entity_func[entity[i].type])
+        return entity_func[entity[i].type]->name;
     else
         return "unknown";
 }
 
 /*---------------------------------------------------------------------------*/
 
-void transform_camera(int i)
+void transform_camera(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
     float M[16];
 
     /* Inverse scale. */
 
-    glScalef(1 / e->scale[0],
-             1 / e->scale[1],
-             1 / e->scale[2]);
+    glScalef(1 / entity[i].scale[0],
+             1 / entity[i].scale[1],
+             1 / entity[i].scale[2]);
 
     /* Inverse (transposed) rotation. */
 
-    load_xps(M, e->rotation);
+    load_xps(M, entity[i].rotation);
     glMultMatrixf(M);
 
     /* Inverse translation. */
 
-    glTranslatef(-e->position[0],
-                 -e->position[1],
-                 -e->position[2]);
+    glTranslatef(-entity[i].position[0],
+                 -entity[i].position[1],
+                 -entity[i].position[2]);
 }
 
-void transform_entity(int i)
+void transform_entity(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
     /* Translation. */
 
-    glTranslatef(e->position[0],
-                 e->position[1],
-                 e->position[2]);
+    glTranslatef(entity[i].position[0],
+                 entity[i].position[1],
+                 entity[i].position[2]);
 
     /* Rotation. */
 
-    glMultMatrixf(e->rotation);
+    glMultMatrixf(entity[i].rotation);
 
     /* Billboard. */
 
-    if (e->flags & FLAG_BILLBOARD)
+    if (entity[i].flags & FLAG_BILLBOARD)
     {
         float M[16];
 
@@ -172,107 +215,82 @@ void transform_entity(int i)
 
     /* Scale. */
 
-    glScalef(e->scale[0],
-             e->scale[1],
-             e->scale[2]);
+    glScalef(entity[i].scale[0],
+             entity[i].scale[1],
+             entity[i].scale[2]);
 
     /* Center of mass. */
 
-    glTranslatef(-e->center[0],
-                 -e->center[1],
-                 -e->center[2]);
+    glTranslatef(-entity[i].center[0],
+                 -entity[i].center[1],
+                 -entity[i].center[2]);
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void init_entity(int i)
+int test_entity_aabb(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
-    if (e->state == 0)
-    {
-        e->state = 1;
-    }
-}
-
-static void fini_entity(int i)
-{
-    struct entity *e = get_entity(i);
-
-    if (e->state == 1)
-    {
-        e->state = 0;
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-
-int test_entity_aabb(int i)
-{
-    struct entity *e = get_entity(i);
     float V[6][4];
 
-    if (entity_func[e->type] &&
-        entity_func[e->type]->aabb)
+    /* TODO: rework bound handling and testing. */
+
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->aabb)
     {
         float aabb[6];
 
-        entity_func[e->type]->aabb(e->data, aabb);
+        entity_func[entity[i].type]->aabb(entity[i].data, aabb);
         get_viewfrust(V);
 
         return test_frustum(V, aabb);
     }
-    else if (e->flags & FLAG_BOUNDED)
+    else if (entity[i].flags & FLAG_BOUNDED)
     {
         get_viewfrust(V);
-        return test_frustum(V, e->bound);
+        return test_frustum(V, entity[i].bound);
     }
     return 1;
 }
 
-void draw_entity_tree(int i, int f, float a)
+void draw_entity_tree(unsigned int i, int f, float a)
 {
-    struct entity *E = get_entity(i);
-    int j;
+    unsigned int j;
     
     /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
     for (j = CAR(i); j; j = CDR(j))
     {
-        struct entity *e = get_entity(j);
+        const int e = get_camera_eye();
 
-        int L = ((e->flags & FLAG_LEFT_EYE)  && (get_camera_eye() == 0));
-        int R = ((e->flags & FLAG_RIGHT_EYE) && (get_camera_eye() == 1));
-        int H = ((e->flags & FLAG_LEFT_EYE)  == 0 &&
-                 (e->flags & FLAG_RIGHT_EYE) == 0 &&
-                 (e->flags & FLAG_HIDDEN)    == 0);
+        const int L =  (FLAG(j, FLAG_LEFT_EYE)  && e == 0);
+        const int R =  (FLAG(j, FLAG_RIGHT_EYE) && e == 1);
+        const int H = (!FLAG(j, FLAG_LEFT_EYE)  &&
+                       !FLAG(j, FLAG_RIGHT_EYE) && !FLAG(j, FLAG_HIDDEN));
 
-        if (L || R || H)
+        if (H || L || R)
         {
-            init_entity(j);
-
             glPushAttrib(GL_ENABLE_BIT  |
                          GL_POLYGON_BIT |
                          GL_DEPTH_BUFFER_BIT);
             {
                 /* Enable wireframe, if specified. */
 
-                if (e->flags & FLAG_WIREFRAME)
+                if (entity[j].flags & FLAG_WIREFRAME)
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
                 /* Enable line smoothing, if requested. */
 
-                if (e->flags & FLAG_LINE_SMOOTH)
+                if (entity[j].flags & FLAG_LINE_SMOOTH)
                     glEnable(GL_LINE_SMOOTH);
 
-                /* Draw this entity. */
+                /* Enable Varrier texture line screen, if requested. */
 
                 if (f & DRAW_VARRIER_TEXGEN)
                     set_texture_coordinates();
 
-                if (entity_func[e->type] &&
-                    entity_func[e->type]->draw)
-                    entity_func[e->type]->draw(j, e->data, f, a);
+                /* Draw this entity. */
+
+                entity_draw_func(j, f, a);
             }
             glPopAttrib();
         }
@@ -280,10 +298,10 @@ void draw_entity_tree(int i, int f, float a)
 
     /* Draw this entity's physical state, if requested. */
 
-    if (E->geom && E->flags & FLAG_VISIBLE_GEOM)
-        draw_phys_geom(E->geom);
-    if (E->body && E->flags & FLAG_VISIBLE_BODY)
-        draw_phys_body(E->body);
+    if (entity[i].geom && FLAG(i, FLAG_VISIBLE_GEOM))
+        draw_phys_geom(entity[i].geom);
+    if (entity[i].body && FLAG(i, FLAG_VISIBLE_BODY))
+        draw_phys_body(entity[i].body);
 }
 
 void draw_entities(void)
@@ -295,37 +313,30 @@ void draw_entities(void)
 
     /* Begin traversing the scene graph at the root. */
 
-    draw_entity_tree(0, 0, 1);
+    draw_entity_tree(1, 0, 1);
 }
 
 /*===========================================================================*/
 
-static void detach_entity(int i)
+static void detach_entity(unsigned int i)
 {
-    /* Never allow the root entity to be used as a child. */
+    int j, k, p = PAR(i);
 
-    if (i)
-    {
-        int j, k, p = PAR(i);
+    /* Remove the child from its parent's child list. */
 
-        /* Remove the child from its parent's child list. */
-
-        for (j = 0, k = CAR(p); k; j = k, k = CDR(k))
-            if (k == i)
-            {
-                if (j)
-                    CDR(j) = CDR(k);
-                else
-                    CAR(p) = CDR(k);
-            }
-    }
+    for (j = 0, k = CAR(p); k; j = k, k = CDR(k))
+        if (k == i)
+        {
+            if (j)
+                CDR(j) = CDR(k);
+            else
+                CAR(p) = CDR(k);
+        }
 }
 
-static void attach_entity(int i, int j)
+static void attach_entity(unsigned int i, unsigned int j)
 {
-    /* Never allow the root entity to be used as a child. */
-
-    if (i && i != j)
+    if (i != j)
     {
         /* Insert the child into the new parent's child list. */
 
@@ -337,15 +348,15 @@ static void attach_entity(int i, int j)
 
 /*===========================================================================*/
 
-static void center_geom_entity(dBodyID body, int i, int d)
+static void center_geom_entity(dBodyID body, unsigned int i, unsigned int d)
 {
-    struct entity *e = get_entity(i);
-    int j;
+    unsigned int j;
 
     /* Move the body's center of mass to the origin. */
 
-    if (e->geom && d)
-        mov_phys_mass(body, e->geom, e->position, e->rotation);
+    if (entity[i].geom && d)
+        mov_phys_mass(body, entity[i].geom, entity[i].position,
+                                            entity[i].rotation);
 
     /* Continue traversing the hierarchy. */
 
@@ -353,19 +364,19 @@ static void center_geom_entity(dBodyID body, int i, int d)
         center_geom_entity(body, j, d + 1);
 }
 
-static void remass_geom_entity(dBodyID body, int i, int d)
+static void remass_geom_entity(dBodyID body, unsigned int i, unsigned int d)
 {
-    struct entity *e = get_entity(i);
-    int j;
+    unsigned int j;
 
     /* Accumulate this geom's mass. */
 
-    if (e->geom)
+    if (entity[i].geom)
     {
         if (d)
-            add_phys_mass(body, e->geom, e->position, e->rotation);
+            add_phys_mass(body, entity[i].geom, entity[i].position,
+                                                entity[i].rotation);
         else
-            add_phys_mass(body, e->geom, NULL, NULL);
+            add_phys_mass(body, entity[i].geom, NULL, NULL);
     }
 
     /* Continue traversing the hierarchy. */
@@ -374,60 +385,58 @@ static void remass_geom_entity(dBodyID body, int i, int d)
         remass_geom_entity(body, j, d + 1);
 }
 
-static void remass_body_entity(int i, int j)
+static void remass_body_entity(unsigned int i, unsigned int j)
 {
     /* Compute a body's moment of inertia by adding all child geom masses. */
 
     if (i)
     {
-        struct entity *e = get_entity(i);
+        new_phys_mass(entity[i].body, entity[i].center);
 
-        new_phys_mass(e->body, e->center);
-        remass_geom_entity(e->body, i, 0);
-        center_geom_entity(e->body, i, 0);
-        end_phys_mass(e->body, e->center);
+        remass_geom_entity(entity[i].body, i, 0);
+        center_geom_entity(entity[i].body, i, 0);
+
+        end_phys_mass(entity[i].body, entity[i].center);
     }
     else center_geom_entity(0, j, 1);
 }
 
-static int find_body_entity(int i)
+static int find_body_entity(unsigned int i)
 {
     /* Search up the tree for an entity with a rigid body strucure. */
 
-    if (i)
-    {
-        if (get_entity(i)->body)
-            return i;
-        else
-            return find_body_entity(PAR(i));
-    }
-    return 0;
+    if (i == 0 || entity[i].body)
+        return i;
+    else
+        return find_body_entity(PAR(i));
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void create_entity(int i, int type, int data)
+static void create_entity(unsigned int i, int type, int data)
 {
-    struct entity *e = get_entity(i);
+    /* Initialize a new entity. */
 
-    load_idt(e->rotation);
+    load_idt(entity[i].rotation);
 
-    e->type     = type;
-    e->data     = data;
-    e->flags    = 0;
-    e->scale[0] = 1;
-    e->scale[1] = 1;
-    e->scale[2] = 1;
-    e->alpha    = 1;
+    entity[i].type     = type;
+    entity[i].data     = data;
+    entity[i].flags    = 0;
+    entity[i].scale[0] = 1;
+    entity[i].scale[1] = 1;
+    entity[i].scale[2] = 1;
+    entity[i].alpha    = 1;
 
-    attach_entity(i, 0);
+    /* Attach it at the root. */
+
+    attach_entity(i, 1);
 }
 
-int send_create_entity(int type, int data)
+unsigned int send_create_entity(int type, int data)
 {
-    int i;
+    unsigned int i;
 
-    if ((i = new_entity()) >= 0)
+    if ((i = new_entity()))
     {
         send_index(type);
         send_index(data);
@@ -436,12 +445,13 @@ int send_create_entity(int type, int data)
 
         return i;
     }
-    return -1;
+    return 0;
 }
 
 void recv_create_entity(void)
 {
-    int i    = new_entity();
+    unsigned int i = new_entity();
+
     int type = recv_index();
     int data = recv_index();
 
@@ -450,7 +460,7 @@ void recv_create_entity(void)
 
 /*---------------------------------------------------------------------------*/
 
-void send_parent_entity(int i, int j)
+void send_parent_entity(unsigned int i, unsigned int j)
 {
     send_event(EVENT_PARENT_ENTITY);
     send_index(i);
@@ -462,8 +472,8 @@ void send_parent_entity(int i, int j)
 
 void recv_parent_entity(void)
 {
-    int i = recv_index();
-    int j = recv_index();
+    unsigned int i = recv_index();
+    unsigned int j = recv_index();
 
     detach_entity(i);
     attach_entity(i, j);
@@ -471,42 +481,34 @@ void recv_parent_entity(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void update_entity_position(int i)
+static void update_entity_position(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
-    if (e->body)
-        set_phys_position(e->body, e->position);
-    if (e->geom)
+    if (entity[i].body)
+        set_phys_position(entity[i].body, entity[i].position);
+    if (entity[i].geom)
         remass_body_entity(find_body_entity(i), i);
 }
 
-static void update_entity_rotation(int i)
+static void update_entity_rotation(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
-    if (e->body)
-        set_phys_rotation(e->body, e->rotation);
-    if (e->geom)
+    if (entity[i].body)
+        set_phys_rotation(entity[i].body, entity[i].rotation);
+    if (entity[i].geom)
         remass_body_entity(find_body_entity(i), i);
 }
 
-static void set_entity_position(int i, const float p[3])
+static void set_entity_position(unsigned int i, const float p[3])
 {
-    struct entity *e = get_entity(i);
-
     send_event(EVENT_SET_ENTITY_POSITION);
     send_index(i);
 
-    send_float((e->position[0] = p[0]));
-    send_float((e->position[1] = p[1]));
-    send_float((e->position[2] = p[2]));
+    send_float((entity[i].position[0] = p[0]));
+    send_float((entity[i].position[1] = p[1]));
+    send_float((entity[i].position[2] = p[2]));
 }
 
-static void set_entity_basis(int i, const float M[16])
+static void set_entity_basis(unsigned int i, const float M[16])
 {
-    struct entity *e = get_entity(i);
-
     send_event(EVENT_SET_ENTITY_BASIS);
     send_index(i);
 
@@ -522,24 +524,22 @@ static void set_entity_basis(int i, const float M[16])
     send_float(M[9]);
     send_float(M[10]);
 
-    load_mat(e->rotation, M);
+    load_mat(entity[i].rotation, M);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_entity_tracking(int i, int sens, int mode)
+void send_set_entity_tracking(unsigned int i, int sens, int mode)
 {
-    struct entity *e = get_entity(i);
-
-    e->track_sens = sens;
-    e->track_mode = mode;
+    entity[i].track_sens = sens;
+    entity[i].track_mode = mode;
 }
 
-void send_set_entity_rotation(int i, const float r[3])
+void send_set_entity_rotation(unsigned int i, const float r[3])
 {
     float M[16];
 
-    if (get_entity(i)->type == TYPE_CAMERA)
+    if (entity[i].type == TYPE_CAMERA)
     {
         load_rot_mat(M, 0, 0, 1, r[2]);
         mult_rot_mat(M, 0, 1, 0, r[1]);
@@ -555,268 +555,243 @@ void send_set_entity_rotation(int i, const float r[3])
     send_set_entity_basis(i, M);
 }
 
-void send_set_entity_position(int i, const float p[3])
+void send_set_entity_position(unsigned int i, const float p[3])
 {
     set_entity_position(i, p);
     update_entity_position(i);
 }
 
-void send_set_entity_basis(int i, const float M[16])
+void send_set_entity_basis(unsigned int i, const float M[16])
 {
     set_entity_basis(i, M);
     update_entity_rotation(i);
 }
 
-void send_set_entity_scale(int i, const float v[3])
+void send_set_entity_scale(unsigned int i, const float v[3])
 {
-    struct entity *e = get_entity(i);
-
     send_event(EVENT_SET_ENTITY_SCALE);
     send_index(i);
 
-    send_float((e->scale[0] = v[0]));
-    send_float((e->scale[1] = v[1]));
-    send_float((e->scale[2] = v[2]));
+    send_float((entity[i].scale[0] = v[0]));
+    send_float((entity[i].scale[1] = v[1]));
+    send_float((entity[i].scale[2] = v[2]));
 }
 
-void send_set_entity_alpha(int i, float a)
+void send_set_entity_bound(unsigned int i, const float b[6])
 {
-    struct entity *e = get_entity(i);
+    send_event(EVENT_SET_ENTITY_BOUND);
+    send_index(i);
 
+    send_float((entity[i].bound[0] = b[0]));
+    send_float((entity[i].bound[1] = b[1]));
+    send_float((entity[i].bound[2] = b[2]));
+    send_float((entity[i].bound[3] = b[3]));
+    send_float((entity[i].bound[4] = b[4]));
+    send_float((entity[i].bound[5] = b[5]));
+}
+
+void send_set_entity_alpha(unsigned int i, float a)
+{
     send_event(EVENT_SET_ENTITY_ALPHA);
     send_index(i);
 
-    send_float((e->alpha = a));
+    send_float((entity[i].alpha = a));
 }
 
-void send_set_entity_flags(int i, int flags, int state)
+void send_set_entity_flags(unsigned int i, int flags, int state)
 {
-    struct entity *e = get_entity(i);
-
     send_event(EVENT_SET_ENTITY_FLAGS);
     send_index(i);
     send_index(flags);
     send_index(state);
 
     if (state)
-        e->flags = e->flags | ( flags);
+        entity[i].flags = entity[i].flags | ( flags);
     else
-        e->flags = e->flags & (~flags);
-}
-
-void send_set_entity_bound(int i, const float b[6])
-{
-    struct entity *e = get_entity(i);
-
-    send_event(EVENT_SET_ENTITY_BOUND);
-    send_index(i);
-
-    send_float((e->bound[0] = b[0]));
-    send_float((e->bound[1] = b[1]));
-    send_float((e->bound[2] = b[2]));
-    send_float((e->bound[3] = b[3]));
-    send_float((e->bound[4] = b[4]));
-    send_float((e->bound[5] = b[5]));
+        entity[i].flags = entity[i].flags & (~flags);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void set_entity_body_type(int i, int t)
+void set_entity_body_type(unsigned int i, int t)
 {
-    if (i > 0)
-    {
-        struct entity *e = get_entity(i);
+    entity[i].body = set_phys_body_type(entity[i].body, t);
 
-        e->body = set_phys_body_type(e->body, t);
-
-        update_entity_position(i);
-        update_entity_rotation(i);
-    }
+    update_entity_position(i);
+    update_entity_rotation(i);
 }
 
-void set_entity_geom_type(int i, int t, const float *v)
+void set_entity_geom_type(unsigned int i, int t, const float *v)
 {
-    if (i > 0)
-    {
-        struct entity *e = get_entity(i);
-        int j = find_body_entity(i);
+    int j = find_body_entity(i);
 
-        e->geom = set_phys_geom_type(get_entity(i)->geom,
-                                     get_entity(j)->body, i, t, v);
-
-        update_entity_position(i);
-        update_entity_rotation(i);
-    }
+    entity[i].geom = set_phys_geom_type(entity[i].geom,
+                                        entity[j].body, i, t, v);
+    update_entity_position(i);
+    update_entity_rotation(i);
 }
 
-void set_entity_join_type(int i, int j, int t)
+void set_entity_join_type(unsigned int i, unsigned int j, int t)
 {
-    dBodyID bi = i ? get_entity(i)->body : 0;
-    dBodyID bj = j ? get_entity(j)->body : 0;
-
-    set_phys_join_type(bi, bj, t);
+    set_phys_join_type((i > 1) ? entity[i].body : 0,
+                       (j > 1) ? entity[j].body : 0, t);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void set_entity_body_attr_i(int i, int p, int d)
+void set_entity_body_attr_i(unsigned int i, int p, int d)
 {
-    if (get_entity(i)->body)
+    if (entity[i].body)
     {
-        set_phys_body_attr_i(get_entity(i)->body, p, d);
+        set_phys_body_attr_i(entity[i].body, p, d);
+
         update_entity_position(i);
         update_entity_rotation(i);
     }
 }
 
-void set_entity_geom_attr_f(int i, int p, float f)
+void set_entity_geom_attr_f(unsigned int i, int p, float f)
 {
-    if (get_entity(i)->geom)
+    if (entity[i].geom)
     {
-        set_phys_geom_attr_f(get_entity(i)->geom, p, f);
+        set_phys_geom_attr_f(entity[i].geom, p, f);
+
         update_entity_position(i);
         update_entity_rotation(i);
     }
 }
 
-void set_entity_geom_attr_i(int i, int p, int d)
+void set_entity_geom_attr_i(unsigned int i, int p, int d)
 {
-    if (get_entity(i)->geom)
+    if (entity[i].geom)
     {
-        set_phys_geom_attr_i(get_entity(i)->geom, p, d);
+        set_phys_geom_attr_i(entity[i].geom, p, d);
+
         update_entity_position(i);
         update_entity_rotation(i);
     }
 }
 
-void set_entity_join_attr_f(int i, int j, int p, float f)
+void set_entity_join_attr_f(unsigned int i,
+                            unsigned int j, int p, float f)
 {
-    dBodyID bi = i ? get_entity(i)->body : 0;
-    dBodyID bj = j ? get_entity(j)->body : 0;
-
-    set_phys_join_attr_f(bi, bj, p, f);
+    set_phys_join_attr_f((i > 1) ? entity[i].body : 0,
+                         (j > 1) ? entity[j].body : 0, p, f);
 }
 
-void set_entity_join_attr_v(int i, int j, int p, const float *v)
+void set_entity_join_attr_v(unsigned int i,
+                            unsigned int j, int p, const float *v)
 {
-    dBodyID bi = i ? get_entity(i)->body : 0;
-    dBodyID bj = j ? get_entity(j)->body : 0;
-
-    set_phys_join_attr_v(bi, bj, p, v);
+    set_phys_join_attr_v((i > 1) ? entity[i].body : 0,
+                         (j > 1) ? entity[j].body : 0, p, v);
 }
 
 /*---------------------------------------------------------------------------*/
 
-int get_entity_body_attr_i(int i, int p)
+int get_entity_body_attr_i(unsigned int i, int p)
 {
-    if (get_entity(i)->body)
-        return get_phys_body_attr_i(get_entity(i)->body, p);
+    if (entity[i].body)
+        return get_phys_body_attr_i(entity[i].body, p);
     else
         return 0;
 }
 
-void get_entity_body_attr_v(int i, int p, float *v)
+void get_entity_body_attr_v(unsigned int i, int p, float *v)
 {
-    struct entity *e = get_entity(i);
-
     switch (p)
     {
     case BODY_ATTR_CENTER:
-        v[0] = e->center[0];
-        v[1] = e->center[1];
-        v[2] = e->center[2];
+        v[0] = entity[i].center[0];
+        v[1] = entity[i].center[1];
+        v[2] = entity[i].center[2];
         break;
     }
 }
 
-int get_entity_geom_attr_i(int i, int p)
+int get_entity_geom_attr_i(unsigned int i, int p)
 {
-    if (get_entity(i)->geom)
-        return get_phys_geom_attr_i(get_entity(i)->geom, p);
+    if (entity[i].geom)
+        return get_phys_geom_attr_i(entity[i].geom, p);
     else
         return 0;
 }
 
-float get_entity_geom_attr_f(int i, int p)
+float get_entity_geom_attr_f(unsigned int i, int p)
 {
-    if (get_entity(i)->geom)
-        return get_phys_geom_attr_f(get_entity(i)->geom, p);
+    if (entity[i].geom)
+        return get_phys_geom_attr_f(entity[i].geom, p);
     else
         return 0;
 }
 
-float get_entity_join_attr_f(int i, int j, int p)
+float get_entity_join_attr_f(unsigned int i, unsigned int j, int p)
 {
-    return get_phys_join_attr_f(get_entity(i)->body,
-                                get_entity(j)->body, p);
+    return get_phys_join_attr_f((i > 1) ? entity[i].body : 0,
+                                (j > 1) ? entity[j].body : 0, p);
 }
 
-void get_entity_join_attr_v(int i, int j, int p, float *v)
+void get_entity_join_attr_v(unsigned int i, unsigned int j, int p, float *v)
 {
-    get_phys_join_attr_v(get_entity(i)->body,
-                         get_entity(j)->body, p, v);
-}
-
-/*---------------------------------------------------------------------------*/
-
-void add_entity_force(int i, float x, float y, float z)
-{
-    if (get_entity(i)->body)
-        add_phys_force(get_entity(i)->body, x, y, z);
-}
-
-void add_entity_torque(int i, float x, float y, float z)
-{
-    if (get_entity(i)->body)
-        add_phys_torque(get_entity(i)->body, x, y, z);
+    return get_phys_join_attr_v((i > 1) ? entity[i].body : 0,
+                                (j > 1) ? entity[j].body : 0, p, v);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_move_entity(int i, const float v[3])
+void add_entity_force(unsigned int i, float x, float y, float z)
 {
-    struct entity *e = get_entity(i);
+    if (entity[i].body)
+        add_phys_force(entity[i].body, x, y, z);
+}
 
+void add_entity_torque(unsigned int i, float x, float y, float z)
+{
+    if (entity[i].body)
+        add_phys_torque(entity[i].body, x, y, z);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_move_entity(unsigned int i, const float v[3])
+{
     float p[3];
 
-    p[0] = e->position[0] + (e->rotation[0]  * v[0] +
-                             e->rotation[4]  * v[1] +
-                             e->rotation[8]  * v[2]);
-    p[1] = e->position[1] + (e->rotation[1]  * v[0] +
-                             e->rotation[5]  * v[1] +
-                             e->rotation[9]  * v[2]);
-    p[2] = e->position[2] + (e->rotation[2]  * v[0] +
-                             e->rotation[6]  * v[1] +
-                             e->rotation[10] * v[2]);
+    p[0] = entity[i].position[0] + (entity[i].rotation[0]  * v[0] +
+                                    entity[i].rotation[4]  * v[1] +
+                                    entity[i].rotation[8]  * v[2]);
+    p[1] = entity[i].position[1] + (entity[i].rotation[1]  * v[0] +
+                                    entity[i].rotation[5]  * v[1] +
+                                    entity[i].rotation[9]  * v[2]);
+    p[2] = entity[i].position[2] + (entity[i].rotation[2]  * v[0] +
+                                    entity[i].rotation[6]  * v[1] +
+                                    entity[i].rotation[10] * v[2]);
 
     send_set_entity_position(i, p);
 }
 
-void send_turn_entity(int i, const float r[3])
+void send_turn_entity(unsigned int i, const float r[3])
 {
-    struct entity *e = get_entity(i);
-
     float M[16], R[16];
 
     /* Compose a transformation matrix. */
 
-    load_rot_mat(M, e->rotation[0],
-                    e->rotation[1],
-                    e->rotation[2], r[0]);
-    mult_rot_mat(M, e->rotation[4],
-                    e->rotation[5],
-                    e->rotation[6], r[1]);
-    mult_rot_mat(M, e->rotation[8],
-                    e->rotation[9],
-                    e->rotation[10], r[2]);
+    load_rot_mat(M, entity[i].rotation[0],
+                    entity[i].rotation[1],
+                    entity[i].rotation[2], r[0]);
+    mult_rot_mat(M, entity[i].rotation[4],
+                    entity[i].rotation[5],
+                    entity[i].rotation[6], r[1]);
+    mult_rot_mat(M, entity[i].rotation[8],
+                    entity[i].rotation[9],
+                    entity[i].rotation[10], r[2]);
 
     /* Transform the entity's basis. */
 
     load_idt(R);
 
-    mult_mat_vec(R + 0, M, e->rotation + 0);
-    mult_mat_vec(R + 4, M, e->rotation + 4);
-    mult_mat_vec(R + 8, M, e->rotation + 8);
+    mult_mat_vec(R + 0, M, entity[i].rotation + 0);
+    mult_mat_vec(R + 4, M, entity[i].rotation + 4);
+    mult_mat_vec(R + 8, M, entity[i].rotation + 8);
 
     /* Re-orthogonalize the basis. */
 
@@ -837,121 +812,108 @@ void send_turn_entity(int i, const float r[3])
 
 void recv_set_entity_position(void)
 {
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
+    unsigned int i = recv_index();
 
-    e->position[0] = recv_float();
-    e->position[1] = recv_float();
-    e->position[2] = recv_float();
+    entity[i].position[0] = recv_float();
+    entity[i].position[1] = recv_float();
+    entity[i].position[2] = recv_float();
 }
 
 void recv_set_entity_basis(void)
 {
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
+    unsigned int i = recv_index();
 
-    load_idt(e->rotation);
+    load_idt(entity[i].rotation);
 
-    e->rotation[0]  = recv_float();
-    e->rotation[1]  = recv_float();
-    e->rotation[2]  = recv_float();
+    entity[i].rotation[0]  = recv_float();
+    entity[i].rotation[1]  = recv_float();
+    entity[i].rotation[2]  = recv_float();
 
-    e->rotation[4]  = recv_float();
-    e->rotation[5]  = recv_float();
-    e->rotation[6]  = recv_float();
+    entity[i].rotation[4]  = recv_float();
+    entity[i].rotation[5]  = recv_float();
+    entity[i].rotation[6]  = recv_float();
 
-    e->rotation[8]  = recv_float();
-    e->rotation[9]  = recv_float();
-    e->rotation[10] = recv_float();
+    entity[i].rotation[8]  = recv_float();
+    entity[i].rotation[9]  = recv_float();
+    entity[i].rotation[10] = recv_float();
 }
 
 void recv_set_entity_scale(void)
 {
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
+    unsigned int i = recv_index();
 
-    e->scale[0] = recv_float();
-    e->scale[1] = recv_float();
-    e->scale[2] = recv_float();
+    entity[i].scale[0] = recv_float();
+    entity[i].scale[1] = recv_float();
+    entity[i].scale[2] = recv_float();
 }
 
 void recv_set_entity_alpha(void)
 {
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
+    unsigned int i = recv_index();
 
-    e->alpha = recv_float();
+    entity[i].alpha = recv_float();
 }
 
 void recv_set_entity_flags(void)
 {
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
+    unsigned int i = recv_index();
 
     int flags = recv_index();
     int state = recv_index();
 
     if (state)
-        e->flags = e->flags | ( flags);
+        entity[i].flags = entity[i].flags | ( flags);
     else
-        e->flags = e->flags & (~flags);
+        entity[i].flags = entity[i].flags & (~flags);
 }
 
 void recv_set_entity_bound(void)
 {
-    struct entity *e = (struct entity *) vecget(entity, recv_index());
+    unsigned int i = recv_index();
 
-    e->bound[0] = recv_float();
-    e->bound[1] = recv_float();
-    e->bound[2] = recv_float();
-    e->bound[3] = recv_float();
-    e->bound[4] = recv_float();
-    e->bound[5] = recv_float();
+    entity[i].bound[0] = recv_float();
+    entity[i].bound[1] = recv_float();
+    entity[i].bound[2] = recv_float();
+    entity[i].bound[3] = recv_float();
+    entity[i].bound[4] = recv_float();
+    entity[i].bound[5] = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void get_entity_basis(int i, float M[16])
+void get_entity_position(unsigned int i, float p[3])
 {
-    memcpy(M, get_entity(i)->rotation, 16 * sizeof (float));
+    p[0] = entity[i].position[0];
+    p[1] = entity[i].position[1];
+    p[2] = entity[i].position[2];
 }
 
-void get_entity_position(int i, float p[3])
+void get_entity_x_vector(unsigned int i, float v[3])
 {
-    struct entity *e = get_entity(i);
-
-    p[0] = e->position[0];
-    p[1] = e->position[1];
-    p[2] = e->position[2];
+    v[0] = entity[i].rotation[0];
+    v[1] = entity[i].rotation[1];
+    v[2] = entity[i].rotation[2];
 }
 
-void get_entity_x_vector(int i, float v[3])
+void get_entity_y_vector(unsigned int i, float v[3])
 {
-    struct entity *e = get_entity(i);
-
-    v[0] = e->rotation[0];
-    v[1] = e->rotation[1];
-    v[2] = e->rotation[2];
+    v[0] = entity[i].rotation[4];
+    v[1] = entity[i].rotation[5];
+    v[2] = entity[i].rotation[6];
 }
 
-void get_entity_y_vector(int i, float v[3])
+void get_entity_z_vector(unsigned int i, float v[3])
 {
-    struct entity *e = get_entity(i);
-
-    v[0] = e->rotation[4];
-    v[1] = e->rotation[5];
-    v[2] = e->rotation[6];
-}
-
-void get_entity_z_vector(int i, float v[3])
-{
-    struct entity *e = get_entity(i);
-
     /* HACK: The Flock on the Personal Varrier is oriented incorrectly,      */
     /* placing the gimbal lock along the Y axis, instead of along the Z      */
     /* axis where it should be.  This code resamples tracking in order to    */
     /* recompute the Z vector from scratch.                                  */
 
-    if ((e->flags & FLAG_TRACK_ROT) && get_tracker_status())
+    if (FLAG(i, FLAG_TRACK_ROT) && get_tracker_status())
     {
         float r[3], R[16], z[3] = { 0, 0, 1 };
 
-        get_tracker_rotation((unsigned int) e->track_sens, r);
+        get_tracker_rotation((unsigned int) entity[i].track_sens, r);
 
         load_rot_mat(R, 0, 1, 0, r[1]);
         mult_rot_mat(R, 1, 0, 0, r[0]);
@@ -959,60 +921,51 @@ void get_entity_z_vector(int i, float v[3])
     }
     else
     {
-        v[0] = e->rotation[8];
-        v[1] = e->rotation[9];
-        v[2] = e->rotation[10];
+        v[0] = entity[i].rotation[8];
+        v[1] = entity[i].rotation[9];
+        v[2] = entity[i].rotation[10];
     }
 }
 
-void get_entity_scale(int i, float v[3])
+void get_entity_scale(unsigned int i, float v[3])
 {
-    struct entity *e = get_entity(i);
-
-    v[0] = e->scale[0];
-    v[1] = e->scale[1];
-    v[2] = e->scale[2];
+    v[0] = entity[i].scale[0];
+    v[1] = entity[i].scale[1];
+    v[2] = entity[i].scale[2];
 }
 
-void get_entity_bound(int i, float v[6])
+void get_entity_bound(unsigned int i, float v[6])
 {
-    struct entity *e = get_entity(i);
-
-    if (entity_func[e->type] &&
-        entity_func[e->type]->aabb)
-        entity_func[e->type]->aabb(e->data, v);
+    if (entity_func[entity[i].type] &&
+        entity_func[entity[i].type]->aabb)
+        entity_func[entity[i].type]->aabb(entity[i].data, v);
     else
         memset(v, 0, 6 * sizeof (float));
 }
 
-float get_entity_alpha(int i)
+float get_entity_alpha(unsigned int i)
 {
-    return get_entity(i)->alpha;
+    return entity[i].alpha;
 }
 
-int get_entity_flags(int i)
+int get_entity_flags(unsigned int i)
 {
-    return get_entity(i)->flags;
+    return entity[i].flags;
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void create_clone(int i, int j)
+static void create_clone(unsigned int i, unsigned int j)
 {
-    struct entity *e = get_entity(i);
-
-    if (entity_func[e->type] &&
-        entity_func[e->type]->dupe)
-        entity_func[e->type]->dupe(e->data);
-
-    create_entity(j, e->type, e->data);
+    entity_dupe_func(i);
+    create_entity(j, entity[i].type, entity[i].data);
 }
 
-int send_create_clone(int i)
+unsigned int send_create_clone(unsigned int i)
 {
-    int j;
+    unsigned int j;
 
-    if ((j = new_entity()) >= 0)
+    if ((j = new_entity()))
     {
         send_event(EVENT_CREATE_CLONE);
         send_index(i);
@@ -1029,21 +982,17 @@ void recv_create_clone(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void free_entity(int i)
+static void free_entity(unsigned int i)
 {
-    struct entity *e = get_entity(i);
-
-    fini_entity(i);
-
     /* Delete all physical objects. */
 
-    if (e->geom) dGeomDestroy(e->geom);
-    if (e->body) dBodyDestroy(e->body);
+    if (entity[i].geom) dGeomDestroy(entity[i].geom);
+    if (entity[i].body) dBodyDestroy(entity[i].body);
 
     /* Delete all child entities. */
 
-    while (e->car)
-        free_entity(e->car);
+    while (CAR(i))
+        free_entity(CAR(i));
 
     /* Remove this entity from the parent's child list. */
 
@@ -1051,16 +1000,14 @@ static void free_entity(int i)
 
     /* Delete the type-specific data. */
 
-    if (entity_func[e->type] &&
-        entity_func[e->type]->free)
-        entity_func[e->type]->free(e->data);
+    entity_free_func(i);
 
     /* Pave it. */
 
-    if (i) memset(e, 0, sizeof (struct entity));
+    if (i > 1) memset(entity + i, 0, sizeof (struct entity));
 }
 
-void send_delete_entity(int i)
+void send_delete_entity(unsigned int i)
 {
     send_event(EVENT_DELETE_ENTITY);
     send_index(i);
@@ -1075,20 +1022,21 @@ void recv_delete_entity(void)
 
 /*---------------------------------------------------------------------------*/
 
-int get_entity_parent(int i)
+unsigned int get_entity_parent(unsigned int i)
 {
     return PAR(i);
 }
 
-int get_entity_child(int i, int n)
+unsigned int get_entity_child(unsigned int i, unsigned int n)
 {
-    int j, m;
+    unsigned int j;
+    unsigned int m;
 
     for (m = 0, j = CAR(i); j; m++, j = CDR(j))
         if (n == m)
             return j;
 
-    return -1;
+    return 0;
 }
 
 /*===========================================================================*/
@@ -1104,40 +1052,42 @@ static void get_tracked_rotation(int sens, float R[16])
     mult_rot_mat(R, 0, 0, 1, r[2]);
 }
 
-static int step_entity_tree(int i, float dt, int head, const float view_p[3],
-                                                       const float view_R[16])
+static int step_entity_tree(unsigned int i, float dt, int head,
+                            const float view_p[3],
+                            const float view_R[16])
 {
-    struct entity *e = get_entity(i);
-    int j, c = 0;
+    int c = 0;
+    int j;
 
-    if (e->type)
+    if (entity[i].type)
     {
         float R[16], sens_R[16];
         float p[3],  sens_p[3];
 
-        if (e->type == TYPE_CAMERA)
+        if (entity[i].type == TYPE_CAMERA)
         {
             /* Automatically track camera offsets. */
 
             get_tracker_position(head, sens_p);
             get_tracked_rotation(head, sens_R);
 
-            send_set_camera_offset(e->data, sens_p, sens_R);
+            send_set_camera_offset(entity[i].data, sens_p, sens_R);
 
             /* Track child entities using this camera's transform. */
 
             for (j = CAR(i); j; j = CDR(j))
-                c += step_entity_tree(j, dt, head, e->position, e->rotation);
+                c += step_entity_tree(j, dt, head, entity[i].position,
+                                                   entity[i].rotation);
         }
         else
         {
             /* Track non-camera entity position as requested. */
 
-            if (e->flags & FLAG_TRACK_POS)
+            if (entity[i].flags & FLAG_TRACK_POS)
             {
-                get_tracker_position(e->track_sens, sens_p);
+                get_tracker_position(entity[i].track_sens, sens_p);
 
-                if (e->track_mode == TRACK_WORLD)
+                if (entity[i].track_mode == TRACK_WORLD)
                 {
                     mult_mat_pos(p, view_R, sens_p);
                     p[0] += view_p[0];
@@ -1153,11 +1103,11 @@ static int step_entity_tree(int i, float dt, int head, const float view_p[3],
 
             /* Track non-camera entity rotation as requested. */
 
-            if (e->flags & FLAG_TRACK_ROT)
+            if (entity[i].flags & FLAG_TRACK_ROT)
             {
-                get_tracked_rotation(e->track_sens, sens_R);
+                get_tracked_rotation(entity[i].track_sens, sens_R);
 
-                if (e->track_mode == TRACK_WORLD)
+                if (entity[i].track_mode == TRACK_WORLD)
                 {
                     mult_mat_mat(R, view_R, sens_R);
                     send_set_entity_basis(i, R);
@@ -1202,22 +1152,18 @@ int step_entities(float dt, int head)
 
     if (physics_step(dt))
     {
-        int i, n = vecnum(entity);
+        unsigned int i, ii;
 
-        for (i = 0; i < n; ++i)
-        {
-            struct entity *e = get_entity(i);
-
-            if (e->type && e->body)
+        for (ALL_ENTITIES(i, ii))
+            if (entity[i].type && entity[i].body)
             {
-                get_phys_position(e->body, p);
+                get_phys_position(entity[i].body, p);
                 set_entity_position(i, p);
-                get_phys_rotation(e->body, R);
+                get_phys_rotation(entity[i].body, R);
                 set_entity_basis   (i, R);
 
                 c++;
             }
-        }
     }
 
     return c;
@@ -1227,64 +1173,43 @@ int step_entities(float dt, int head)
 
 void nuke_entities(void)
 {
-    int i, n = vecnum(entity);
+    unsigned int i, ii;
 
-    for (i = 1; i < n; ++i)
-        while (get_entity(i)->type)
-            send_delete_entity(i);
+    /* Clear all entity state. */
+
+    for (ALL_ENTITIES(i, ii))
+        send_delete_entity(i);
 }
 
 void init_entities(void)
 {
-    int i, n = vecnum(entity);
+    unsigned int i, ii;
 
     /* Ask all entities with GL state to initialize themselves. */
 
-    for (i = 0; i < n; ++i)
-    {
-        struct entity *e = get_entity(i);
-
-        if (e->type)
-        {
-            init_entity(i);
-
-            if (entity_func[e->type] &&
-                entity_func[e->type]->init)
-                entity_func[e->type]->init(e->data);
-        }
-    }
+    for (ALL_ENTITIES(i, ii))
+        entity_init_func(i);
 }
 
 void fini_entities(void)
 {
-    int i, n = vecnum(entity);
+    unsigned int i, ii;
 
     /* Ask all entities with GL state to finalize themselves. */
 
-    for (i = 0; i < n; ++i)
-    {
-        struct entity *e = get_entity(i);
-
-        if (e->type)
-        {
-            fini_entity(i);
-
-            if (entity_func[e->type] &&
-                entity_func[e->type]->fini)
-                entity_func[e->type]->fini(e->data);
-        }
-    }
+    for (ALL_ENTITIES(i, ii))
+        entity_fini_func(i);
 }
 
 /*===========================================================================*/
 
 int startup_entity(void)
 {
-    if ((entity = vecnew(256, sizeof (struct entity))))
+    if ((entity = vec_new(256, sizeof (struct entity))))
     {
-        struct entity *e = (struct entity *) vecget(entity, vecadd(entity));
+        unsigned int i = new_entity();
 
-        e->type = TYPE_ROOT;
+        entity[i].type = TYPE_ROOT;
 
         entity_func[TYPE_NULL]   = NULL;
         entity_func[TYPE_ROOT]   = NULL;

@@ -9,9 +9,9 @@ ifdef MPI
 	TARG   = electro-mpi
 	CFLAGS = -O2 -Wall -DNDEBUG -DCONF_MPI
 else
-	CC     = cc
+	CC     = /opt/intel/cc/9.0/bin/icc
 	TARG   = electro
-	CFLAGS = -g -Wall
+	CFLAGS = -g -Wall -wd981 -wd869
 endif
 
 ifdef SOCKET
@@ -109,6 +109,7 @@ OBJS =	src/opengl.o   \
 	src/node.o     \
 	src/star.o     \
 	src/net.o      \
+	src/vec.o      \
 	src/main.o
 
 SRCS= $(OBJS:.o=.c)

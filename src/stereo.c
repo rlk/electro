@@ -241,7 +241,6 @@ static void move_line_texture(int tile, const float v[3], float px)
     float n[3];
     float u[3];
     float r[3];
-    float q[3];
     float e[3];
     float w, h;
     float x, y, z;
@@ -257,10 +256,6 @@ static void move_line_texture(int tile, const float v[3], float px)
     nn = ((v[0] - C[0]) * n[0] +
           (v[1] - C[1]) * n[1] +
           (v[2] - C[2]) * n[2]);
-
-    q[0] = v[0] - n[0] * nn;
-    q[1] = v[1] - n[1] * nn;
-    q[2] = v[2] - n[2] * nn;
 
     /* Compute the parallax offset due to optical thickness. */
 
@@ -502,7 +497,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
 
 /*---------------------------------------------------------------------------*/
 
-static int stereo_none(int eye, int tile, int pass)
+static int stereo_none(int pass)
 {
     if (pass == 0)
         return 1;
@@ -565,8 +560,9 @@ int draw_pass(int mode, int eye, int tile, int pass, const float v[3])
 
     switch (mode)
     {
-    case STEREO_NONE:       return stereo_none      (eye, tile, pass);
-    case STEREO_TILE:       return stereo_none      (eye, tile, pass);
+    case STEREO_NONE:       return stereo_none(pass);
+    case STEREO_TILE:       return stereo_none(pass);
+
     case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
     case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
     case STEREO_VARRIER_01: return stereo_varrier_01(eye, tile, pass, v);

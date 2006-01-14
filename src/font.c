@@ -109,8 +109,8 @@ static void get_point(GLdouble p[3], vector_t points)
 
 /*---------------------------------------------------------------------------*/
 
-void linear(GLdouble p[3], const GLdouble a[3],
-                           const GLdouble b[3], GLdouble u)
+static void linear(GLdouble p[3], const GLdouble a[3],
+                                  const GLdouble b[3], GLdouble u)
 
 {
     const GLdouble v = 1.0 - u;
@@ -120,9 +120,9 @@ void linear(GLdouble p[3], const GLdouble a[3],
     p[2] = a[2] * v + b[2] * u;
 }
 
-void conic(GLdouble p[3], const GLdouble a[3],
-                          const GLdouble b[3],
-                          const GLdouble c[3], GLdouble u)
+static void conic(GLdouble p[3], const GLdouble a[3],
+                                 const GLdouble b[3],
+                                 const GLdouble c[3], GLdouble u)
 {
     const GLdouble v = 1.0 - u;
 
@@ -135,10 +135,11 @@ void conic(GLdouble p[3], const GLdouble a[3],
     p[2] = a[2] * ka + b[2] * kb + c[2] * kc;
 }
 
-void cubic(GLdouble p[3], const GLdouble a[3],
-                          const GLdouble b[3],
-                          const GLdouble c[3],
-                          const GLdouble d[3], GLdouble u)
+/*
+static void cubic(GLdouble p[3], const GLdouble a[3],
+                                 const GLdouble b[3],
+                                 const GLdouble c[3],
+                                 const GLdouble d[3], GLdouble u)
 {
     const GLdouble v = 1.0 - u;
 
@@ -151,7 +152,7 @@ void cubic(GLdouble p[3], const GLdouble a[3],
     p[1] = a[1] * ka + b[1] * kb + c[1] * kc + d[1] * kd;
     p[2] = a[2] * ka + b[2] * kb + c[2] * kc + d[2] * kd;
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 static float epsilon = 0.001f;
@@ -353,34 +354,6 @@ int get_font(void)
 }
 
 /*---------------------------------------------------------------------------*/
-/* Vertex list for points generated during tesselator combination            */
-/*
-struct combo
-{
-    GLdouble      p[3];
-    struct combo *next;
-};
-
-static struct combo *combo = NULL;
-
-static void combine(GLdouble coords[3], void  *vertex_data[4],
-                    GLfloat  weight[4], void **output_data)
-{
-    struct combo *c;
-
-    if ((c = (struct combo *) calloc(1, sizeof (struct combo))))
-    {
-        c->p[0] = coords[0];
-        c->p[1] = coords[1];
-        c->p[2] = coords[2];
-        c->next = combo;
-        combo   = c;
-
-        *output_data = c->p;
-    }
-}
-*/
-/*---------------------------------------------------------------------------*/
 
 static void tess_stroke(vector_t points, int first, int last, GLUtesselator *T)
 {
@@ -411,16 +384,6 @@ static void tess_glyph(struct glyph *glyph, GLUtesselator *T)
             }
     }
     gluTessEndPolygon(T);
-
-    /* Release all combined vertices generated during tesselation. */
-    /*
-    while (combo)
-    {
-        struct combo *temp = combo;
-        combo = combo->next;
-        free(temp);
-    }
-    */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -487,7 +450,7 @@ static void line_glyph(struct glyph *glyph, GLdouble O)
 
 /*---------------------------------------------------------------------------*/
 
-void init_font(int i, GLdouble O)
+static void init_font(int i, GLdouble O)
 {
     if (F(i)->state == 0)
     {
@@ -503,7 +466,6 @@ void init_font(int i, GLdouble O)
             int j;
 
             gluTessCallback(T, GLU_TESS_BEGIN,   (_GLUfuncptr) glBegin);
-/*          gluTessCallback(T, GLU_TESS_COMBINE, (_GLUfuncptr) combine); */
             gluTessCallback(T, GLU_TESS_VERTEX,  (_GLUfuncptr) glVertex3dv);
             gluTessCallback(T, GLU_TESS_END,     (_GLUfuncptr) glEnd);
 
@@ -539,7 +501,7 @@ void init_font(int i, GLdouble O)
     }
 }
 
-void fini_font(int i)
+static void fini_font(int i)
 {
     if (F(i)->state == 1)
     {

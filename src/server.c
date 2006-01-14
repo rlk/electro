@@ -71,7 +71,7 @@ static int   head_sensor  = 0;
 
 /*---------------------------------------------------------------------------*/
 
-void grab(int b)
+static void grab(int b)
 {
     if (server_grab)
     {
@@ -201,7 +201,7 @@ void send_user_event(const char *str)
     SDL_PushEvent(&e);
 }
 
-int recv_user_event(SDL_UserEvent *e)
+static int recv_user_event(SDL_UserEvent *e)
 {
     if (e->data1)
     {
@@ -212,8 +212,6 @@ int recv_user_event(SDL_UserEvent *e)
 }
 
 /*---------------------------------------------------------------------------*/
-
-int which = 0;
 
 static int server_loop(void)
 {
@@ -362,7 +360,7 @@ static int is_script(const char *argp)
         return 0;
 }
 
-void parse_options(int argc, char *argv[])
+static void parse_options(int argc, char *argv[])
 {
     int i, c = 1;
 
@@ -412,7 +410,7 @@ void parse_options(int argc, char *argv[])
             add_argument(c++, argv[i]);
 }
 
-void parse_scripts(int argc, char *argv[])
+static void parse_scripts(int argc, char *argv[])
 {
     int i;
 

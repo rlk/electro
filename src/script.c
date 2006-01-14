@@ -140,7 +140,7 @@ static int E_isentity(lua_State *L, int i)
 
 static void E_pushentity(lua_State *L, int id)
 {
-    if (id <= 0 || entity_type(id) == 0)
+    if (id <= 0 || get_entity_type(id) == 0)
         lua_pushnil(L);
     else
         E_pushuserdata(L, USERDATA_ENTITY, id);
@@ -244,7 +244,7 @@ static void E_type_error(const char *type, lua_State *L, int i)
     if (lua_isuserdata(L, i))
         switch (E_tousertype(L, i))
         {
-        case USERDATA_ENTITY: got = entity_name(E_toentity(L, i)); break;
+        case USERDATA_ENTITY: got = get_entity_name(E_toentity(L, i)); break;
         case USERDATA_SOUND:  got = "sound";   break;
         case USERDATA_IMAGE:  got = "image";   break;
         case USERDATA_BRUSH:  got = "brush";   break;
@@ -271,37 +271,37 @@ static void E_arity_error(lua_State *L, int i)
 static int E_isobject(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(E_toentity(L, i)) == TYPE_OBJECT);
+        && (get_entity_type(E_toentity(L, i)) == TYPE_OBJECT);
 }
 
 static int E_issprite(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(E_toentity(L, i)) == TYPE_SPRITE);
+        && (get_entity_type(E_toentity(L, i)) == TYPE_SPRITE);
 }
 
 static int E_isstring(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(E_toentity(L, i)) == TYPE_STRING);
+        && (get_entity_type(E_toentity(L, i)) == TYPE_STRING);
 }
 
 static int E_iscamera(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(E_toentity(L, i)) == TYPE_CAMERA);
+        && (get_entity_type(E_toentity(L, i)) == TYPE_CAMERA);
 }
 
 static int E_islight(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(E_toentity(L, i)) == TYPE_LIGHT);
+        && (get_entity_type(E_toentity(L, i)) == TYPE_LIGHT);
 }
 
 static int E_isgalaxy(lua_State *L, int i)
 {
     return lua_isuserdata(L, i)
-        && (entity_type(E_toentity(L, i)) == TYPE_GALAXY);
+        && (get_entity_type(E_toentity(L, i)) == TYPE_GALAXY);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -388,7 +388,7 @@ static int E_getobject(lua_State *L, int i)
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (E_isobject(L, i))
-            return entity_data(E_toentity(L, i));
+            return get_entity_data(E_toentity(L, i));
         else
             E_type_error("object", L, i);
     }
@@ -402,7 +402,7 @@ static int E_getsprite(lua_State *L, int i)
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (E_issprite(L, i))
-            return entity_data(E_toentity(L, i));
+            return get_entity_data(E_toentity(L, i));
         else
             E_type_error("sprite", L, i);
     }
@@ -416,7 +416,7 @@ static int E_getstring(lua_State *L, int i)
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (E_isstring(L, i))
-            return entity_data(E_toentity(L, i));
+            return get_entity_data(E_toentity(L, i));
         else
             E_type_error("string", L, i);
     }
@@ -430,7 +430,7 @@ static int E_getcamera(lua_State *L, int i)
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (E_iscamera(L, i))
-            return entity_data(E_toentity(L, i));
+            return get_entity_data(E_toentity(L, i));
         else
             E_type_error("camera", L, i);
     }
@@ -444,7 +444,7 @@ static int E_getlight(lua_State *L, int i)
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (E_islight(L, i))
-            return entity_data(E_toentity(L, i));
+            return get_entity_data(E_toentity(L, i));
         else
             E_type_error("light", L, i);
     }
@@ -458,7 +458,7 @@ static int E_getgalaxy(lua_State *L, int i)
     if (1 <= -i && -i <= lua_gettop(L))
     {
         if (E_isgalaxy(L, i))
-            return entity_data(E_toentity(L, i));
+            return get_entity_data(E_toentity(L, i));
         else
             E_type_error("galaxy", L, i);
     }
@@ -2279,13 +2279,13 @@ int do_contact_script(int i, int j, const float p[3],
 void do_command(const char *command)
 {
     char buffer[MAXSTR];
-    int err;
-    int top = lua_gettop(L);
+
+    int N = lua_gettop(L);
 
     memset(buffer, 0, MAXSTR);
     strncpy(buffer, command, MAXSTR);
 
-    if ((err = lua_load(L, charreader, buffer, "Console")))
+    if (lua_load(L, charreader, buffer, "Console"))
         error("Syntax: %s", lua_tostring(L, -1));
     else
     {
@@ -2293,7 +2293,7 @@ void do_command(const char *command)
             error("Command: %s", lua_tostring(L, -1));
     }
 
-    while (lua_gettop(L) > top)
+    while (lua_gettop(L) > N)
         lua_pop(L, 1);
 }
 
@@ -2667,7 +2667,7 @@ static struct constant_def constants[] = {
     { "key_modifier_alt",          KMOD_ALT            },
 };
 
-struct constant_def keys[] = {
+static struct constant_def keys[] = {
 
     { "key_unknown",      SDLK_UNKNOWN      },
     { "key_backspace",    SDLK_BACKSPACE    },
@@ -2807,7 +2807,7 @@ struct constant_def keys[] = {
     { "key_undo",         SDLK_UNDO         },
 };
 
-void luaopen_electro(lua_State *L)
+static void luaopen_electro(lua_State *L)
 {
     int nf = sizeof (functions) / sizeof (struct function_def);
     int nc = sizeof (constants) / sizeof (struct constant_def);
@@ -2873,7 +2873,6 @@ void free_script(void)
 
 void load_script(const char *file)
 {
-    int  err;
     FILE *fp;
 
     /* Load and execute the script. */
@@ -2882,7 +2881,7 @@ void load_script(const char *file)
     {
         int top = lua_gettop(L);
 
-        if ((err = lua_load(L, filereader, fp, file)))
+        if (lua_load(L, filereader, fp, file))
             error("Loading: %s", lua_tostring(L, -1));
         else
         {

@@ -77,7 +77,7 @@ struct head
     int   S_num;
 };
 
-int parse_galaxy(const char *filename, struct galaxy *g)
+static int parse_galaxy(const char *filename, struct galaxy *g)
 {
     FILE *fp;
     int i;
@@ -109,7 +109,7 @@ int parse_galaxy(const char *filename, struct galaxy *g)
     return 0;
 }
 
-int write_galaxy(const char *filename, struct galaxy *g)
+static int write_galaxy(const char *filename, struct galaxy *g)
 {
     FILE *fp;
 
@@ -429,7 +429,7 @@ static void draw_arrays(int i)
     }
 }
 
-static void draw_galaxy(int j, int i, int f, float a)
+static void draw_galaxy(int i, int j, int f, float a)
 {
     struct galaxy *g = get_galaxy(i);
     float V[6][4];

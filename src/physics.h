@@ -87,7 +87,7 @@ void get_phys_rotation(dBodyID,       float[16]);
 void draw_phys_geom(dGeomID);
 void draw_phys_body(dBodyID);
 
-int startup_physics();
+int startup_physics(void);
 
 /*---------------------------------------------------------------------------*/
 

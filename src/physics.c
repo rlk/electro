@@ -133,18 +133,18 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
                 for (i = 0; i < n; ++i)
                 {
                     float p[3];
-                    float n[3];
+                    float v[3];
 
                     p[0] = (float) contact[i].geom.pos[0];
                     p[1] = (float) contact[i].geom.pos[1];
                     p[2] = (float) contact[i].geom.pos[2];
 
-                    n[0] = (float) contact[i].geom.normal[0];
-                    n[1] = (float) contact[i].geom.normal[1];
-                    n[2] = (float) contact[i].geom.normal[2];
+                    v[0] = (float) contact[i].geom.normal[0];
+                    v[1] = (float) contact[i].geom.normal[1];
+                    v[2] = (float) contact[i].geom.normal[2];
 
                     do_contact_script(d1->entity, d2->entity,
-                                      p, n, (float) contact[i].geom.depth);
+                                      p, v, (float) contact[i].geom.depth);
                 }
         }
     }
@@ -495,7 +495,7 @@ int get_phys_body_attr_i(dBodyID body, int p)
 {
     switch (p)
     {
-    case BODY_ATTR_GRAVITY: return dBodyGetGravityMode(body); break;
+    case BODY_ATTR_GRAVITY: return dBodyGetGravityMode(body);
     }
     return 0;
 }
@@ -588,10 +588,10 @@ int get_phys_geom_attr_i(dGeomID geom, int p)
 {
     switch (p)
     {
-    case GEOM_ATTR_CATEGORY: return dGeomGetCategoryBits(geom); break;
-    case GEOM_ATTR_COLLIDER: return dGeomGetCollideBits (geom); break;
-    case GEOM_ATTR_RESPONSE: return get_data(geom)->response;   break;
-    case GEOM_ATTR_CALLBACK: return get_data(geom)->callback;   break;
+    case GEOM_ATTR_CATEGORY: return dGeomGetCategoryBits(geom);
+    case GEOM_ATTR_COLLIDER: return dGeomGetCollideBits (geom);
+    case GEOM_ATTR_RESPONSE: return get_data(geom)->response;
+    case GEOM_ATTR_CALLBACK: return get_data(geom)->callback;
     }
     return 0;
 }
@@ -612,7 +612,7 @@ float get_phys_geom_attr_f(dGeomID geom, int p)
 /*---------------------------------------------------------------------------*/
 /* Joint functions                                                           */
 
-dJointID find_shared_joint(dBodyID body1, dBodyID body2)
+static dJointID find_shared_joint(dBodyID body1, dBodyID body2)
 {
     dJointID joint = 0;
 
@@ -701,10 +701,8 @@ float get_phys_join_attr_f(dBodyID body1, dBodyID body2, int p)
         case dParamLoStop2:
         case dParamHiStop2:
             return DEG(get_phys_joint_attr(joint, p));
-            break;
         default:
             return get_phys_joint_attr(joint, p);
-            break;
         }
 
     return 0;

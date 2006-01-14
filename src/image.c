@@ -200,14 +200,13 @@ static void decode_Y411(GLubyte *p, int w, int h)
 static void step_video(int i, int c)
 {
     struct image *p = get_image(i);
-    int n;
 
     struct header *head = (struct header *) buffer;
     GLubyte       *data =       (GLubyte *) buffer + sizeof (struct header);
 
     /* Receive an incoming subimage. */
 
-    if ((n = (int) recv(p->sock, buffer, BUFMAX, 0)) > 0 && c < 960)
+    if ((int) recv(p->sock, buffer, BUFMAX, 0) > 0 && c < 960)
     {
         /* Decode the subimage header. */
 
@@ -900,7 +899,7 @@ void step_images(void)
 {
     struct timeval zero = { 0, 0 };
 
-    int i, x = 0, m = 0, n = vecnum(image), c;
+    int i, x = 0, m = 0, n = vecnum(image);
 
     fd_set fds0;
     fd_set fds1;
@@ -927,7 +926,7 @@ void step_images(void)
     /* Handle all video socket activity. */
 
     if (m > 0)
-        while ((c = select(m, &fds1, NULL, NULL, &zero)) > 0)
+        while (select(m, &fds1, NULL, NULL, &zero) > 0)
         {
             for (i = 0; i < n; ++i)
             {

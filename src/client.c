@@ -29,6 +29,7 @@
 #include "font.h"
 #include "event.h"
 #include "entity.h"
+#include "client.h"
 
 /*---------------------------------------------------------------------------*/
 

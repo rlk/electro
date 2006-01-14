@@ -505,7 +505,7 @@ int input_console(int symbol, int unicode)
 
 /*---------------------------------------------------------------------------*/
 
-void *mirror_output(const char *format, ...)
+static void *mirror_output(const char *format, ...)
 {
     char string[MAXSTR];
     va_list args;

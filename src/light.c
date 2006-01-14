@@ -114,7 +114,7 @@ void recv_set_light_color(void)
 
 /*===========================================================================*/
 
-static void draw_light(int j, int i, int f, float a)
+static void draw_light(int i, int j, int f, float a)
 {
     struct light *l = get_light(i);
 

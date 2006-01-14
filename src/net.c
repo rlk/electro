@@ -19,6 +19,7 @@
 #include "utility.h"
 #include "socket.h"
 #include "server.h"
+#include "net.h"
 
 /*---------------------------------------------------------------------------*/
 

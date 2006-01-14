@@ -592,4 +592,7 @@ end
 
 E.set_background(0.8, 0.8, 1.0, 0.2, 0.4, 1.0)
 do_start()
-send_video_play()
+
+if socket then
+    send_video_play()
+end

@@ -827,12 +827,14 @@ function set_thrust(b)
 
     E.set_entity_flags(entity.thrust, E.entity_flag_hidden, not b)
 
-    if b then
-        E.play_sound(sound.thrust1)
-        E.loop_sound(sound.thrust2)
-    else
-        E.stop_sound(sound.thrust2)
-        E.play_sound(sound.thrust3)
+    if sound_on then
+        if b then
+            E.play_sound(sound.thrust1)
+            E.loop_sound(sound.thrust2)
+        else
+            E.stop_sound(sound.thrust2)
+            E.play_sound(sound.thrust3)
+        end
     end
 end
 

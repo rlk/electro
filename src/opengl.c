@@ -50,7 +50,7 @@ GLboolean opengl_need(const char *extension)
     char *where;
     char *space;
 
-    while (1)
+    while (start)
     {
         if ((where = strstr(start, extension)) == NULL)
             return 0;
@@ -163,6 +163,7 @@ void opengl_draw_grd(float a, float b, float c, float d)
     glPushMatrix();
     {
         glMultMatrixf(M);
+        glTranslatef(0, 0, d);
         glCallList(grd_list);
     }
     glPopMatrix();
@@ -301,7 +302,10 @@ static void init_opengl_cap(void)
         {
             for (i = 0; i < 360; i += d)
             {
+                float x = cosf(RAD(i)) * cosf(RAD(j));
+/*
                 float x = (float) (cos(RAD(i)) * cos(RAD(j)));
+*/
                 float y = (float) (sin(RAD(i)) * cos(RAD(j)));
                 float z = (float) (              sin(RAD(j)));
 
@@ -353,7 +357,7 @@ static void init_opengl_xyz(void)
 
 /*---------------------------------------------------------------------------*/
 
-void init_opengl_obj(void)
+static void init_opengl_obj(void)
 {
     box_list = glGenLists(1);
     cyl_list = glGenLists(1);
@@ -382,7 +386,7 @@ void init_opengl_obj(void)
     glEndList();
 }
 
-void fini_opengl_obj(void)
+static void fini_opengl_obj(void)
 {
     if (xyz_list && glIsList(xyz_list)) glDeleteLists(xyz_list, 1);
     if (grd_list && glIsList(grd_list)) glDeleteLists(grd_list, 1);
@@ -478,9 +482,9 @@ void init_opengl(void)
 
     if (opengl_need("GL_ARB_fragment_program"))
     {
-        GL_has_fragment_program = (glProgramStringARB
-                                && glBindProgramARB
-                                && glGenProgramsARB);
+        GL_has_fragment_program = (GLboolean) (glProgramStringARB
+                                            && glBindProgramARB
+                                            && glGenProgramsARB);
     }
 
     if (opengl_need("GL_ARB_vertex_program"))
@@ -494,14 +498,14 @@ void init_opengl(void)
         glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)
             opengl_proc("glVertexAttribPointerARB");
 
-        GL_has_vertex_program = (glProgramEnvParameter4fARB
-                              && glDisableVertexAttribArrayARB
-                              && glEnableVertexAttribArrayARB
-                              && glBindAttribLocationARB
-                              && glVertexAttribPointerARB
-                              && glProgramStringARB
-                              && glBindProgramARB
-                              && glGenProgramsARB);
+        GL_has_vertex_program = (GLboolean) (glProgramEnvParameter4fARB
+                                          && glDisableVertexAttribArrayARB
+                                          && glEnableVertexAttribArrayARB
+                                          && glBindAttribLocationARB
+                                          && glVertexAttribPointerARB
+                                          && glProgramStringARB
+                                          && glBindProgramARB
+                                          && glGenProgramsARB);
     }
 
     if (opengl_need("GL_ARB_vertex_buffer_object"))
@@ -517,11 +521,11 @@ void init_opengl(void)
         glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
             opengl_proc("glDeleteBuffersARB");
 
-        GL_has_vertex_buffer_object = (glBindBufferARB
-                                    && glGenBuffersARB
-                                    && glBufferDataARB
-                                    && glIsBufferARB
-                                    && glDeleteBuffersARB);
+        GL_has_vertex_buffer_object = (GLboolean) (glBindBufferARB
+                                               && glGenBuffersARB
+                                               && glBufferDataARB
+                                               && glIsBufferARB
+                                               && glDeleteBuffersARB);
     }
 
     if (opengl_need("GL_ARB_shader_objects"))
@@ -566,25 +570,25 @@ void init_opengl(void)
         glUniformMatrix4fvARB = (PFNGLUNIFORMMATRIX4FVARBPROC)
             opengl_proc("glUniformMatrix4fvARB");
 
-        GL_has_shader_objects = (glUseProgramObjectARB
-                              && glCreateShaderObjectARB
-                              && glCreateProgramObjectARB
-                              && glShaderSourceARB
-                              && glCompileShaderARB
-                              && glAttachObjectARB
-                              && glLinkProgramARB
-                              && glGetObjectParameterivARB
-                              && glGetInfoLogARB
-                              && glDeleteObjectARB
-                              && glGetUniformLocationARB
-                              && glUniform1iARB
-                              && glUniform1fvARB
-                              && glUniform2fvARB
-                              && glUniform3fvARB
-                              && glUniform4fvARB
-                              && glUniformMatrix2fvARB
-                              && glUniformMatrix3fvARB
-                              && glUniformMatrix4fvARB);
+        GL_has_shader_objects = (GLboolean) (glUseProgramObjectARB
+                                          && glCreateShaderObjectARB
+                                          && glCreateProgramObjectARB
+                                          && glShaderSourceARB
+                                          && glCompileShaderARB
+                                          && glAttachObjectARB
+                                          && glLinkProgramARB
+                                          && glGetObjectParameterivARB
+                                          && glGetInfoLogARB
+                                          && glDeleteObjectARB
+                                          && glGetUniformLocationARB
+                                          && glUniform1iARB
+                                          && glUniform1fvARB
+                                          && glUniform2fvARB
+                                          && glUniform3fvARB
+                                          && glUniform4fvARB
+                                          && glUniformMatrix2fvARB
+                                          && glUniformMatrix3fvARB
+                                          && glUniformMatrix4fvARB);
     }
 
     if (opengl_need("GL_ARB_multitexture"))
@@ -596,7 +600,7 @@ void init_opengl(void)
 
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
         GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
-        GL_has_multitexture = (glActiveTextureARB && GL_TRUE);
+        GL_has_multitexture = (GLboolean) glActiveTextureARB;
     }
 
     GL_has_point_sprite

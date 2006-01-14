@@ -162,7 +162,7 @@ int add_host(const char *name, int x, int y, int w, int h)
     return i;
 }
 
-int add_tile(int i, int x, int y, int w, int h)
+static int add_tile(int i, int x, int y, int w, int h)
 {
     int j = -1;
 
@@ -254,10 +254,8 @@ void sync_display(void)
 
     if (local == NULL)
     {
-        int i, j;
-
         i = add_host(DEFAULT_NAME, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-        j = add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+            add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
 
         local = (struct host *) vecget(host, i);
 
@@ -633,7 +631,7 @@ void get_display_bound(float b[6])
 
         for (i = 0; i < n; ++i)
         {
-            struct tile *T = (struct tile *) vecget(tile, i);
+            T = (struct tile *) vecget(tile, i);
 
             /* Lower left corner. */
 
@@ -852,13 +850,12 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
     const int L = (T->flags & TILE_LEFT_EYE)  ? 1 : 0;
     const int R = (T->flags & TILE_RIGHT_EYE) ? 1 : 0;
 
-	if ((L == 0 && R == 0) || (L == 1 && e == 0) || (R == 1 && e == 1))
+    if ((L == 0 && R == 0) || (L == 1 && e == 0) || (R == 1 && e == 1))
     {
         float P[3];
         float r[3];
         float u[3];
         float n[3];
-        float c[3];
         float k;
 
         float M[16];
@@ -870,17 +867,17 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
 
         /* Compute the view position. */
 
-        P[0]  = T->d[0] + p[0];
-        P[1]  = T->d[1] + p[1];
-        P[2]  = T->d[2] + p[2];
+        P[0] = T->d[0] + p[0];
+        P[1] = T->d[1] + p[1];
+        P[2] = T->d[2] + p[2];
 
         /* Optionally reflect the view position across the mirror. */
 
         if (T->flags & TILE_MIRROR)
         {
-            float k = (P[0] * T->p[0] +
-                        P[1] * T->p[1] +
-                        P[2] * T->p[2]) - T->p[3];
+            k = (P[0] * T->p[0] +
+                 P[1] * T->p[1] +
+                 P[2] * T->p[2]) - T->p[3];
 
             P[0] -= T->p[0] * k * 2;
             P[1] -= T->p[1] * k * 2;
@@ -924,10 +921,6 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
         k = n[0] * (T->o[0] - P[0]) + 
             n[1] * (T->o[1] - P[1]) +
             n[2] * (T->o[2] - P[2]);
-
-        c[0] = P[0] + n[0] * k;
-        c[1] = P[1] + n[1] * k;
-        c[2] = P[2] + n[2] * k;
 
         glMatrixMode(GL_PROJECTION);
         {
@@ -979,7 +972,7 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
         else
             glFrontFace(GL_CCW);
 
-		return 1;
+        return 1;
     }
     return 0;
 }
@@ -988,75 +981,68 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
 
 void draw_tile_background(int i, int flags)
 {
-    /* Incur this fill penalty only if necessary. */
+    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
-    if (color0[0] != CLEAR_R || color1[0] != CLEAR_R ||
-        color0[1] != CLEAR_G || color1[1] != CLEAR_G ||
-        color0[2] != CLEAR_B || color1[2] != CLEAR_B)
+    /* Compute the beginning and end of this tile's gradiant. */
+
+    float k0 = (float) (T->pix_y            - local->tot_y) / local->tot_h;
+    float k1 = (float) (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
+
+    /* Confine rendering to this tile. */
+
+    glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+    glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
+
+    /* Map the tile onto the unit cube. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, 0, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    /* Fill the tile at the far plane using the computed gradient. */
+
+    glPushAttrib(GL_ENABLE_BIT);
     {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+        float l = (T->flags & TILE_FLIP_X) ? 1.0f : 0.0f;
+        float r = (T->flags & TILE_FLIP_X) ? 0.0f : 1.0f;
+        float b = (T->flags & TILE_FLIP_Y) ? 1.0f : 0.0f;
+        float t = (T->flags & TILE_FLIP_Y) ? 0.0f : 1.0f;
 
-        /* Compute the beginning and end of this tile's gradiant. */
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_CULL_FACE);
 
-        float k0 = (float) (T->pix_y            - local->tot_y) / local->tot_h;
-        float k1 = (float) (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
+        if (flags & DRAW_VARRIER_TEXGEN)
+            set_texture_coordinates();
 
-        /* Confine rendering to this tile. */
-
-        glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
-        glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
-
-        /* Map the tile onto the unit cube. */
-
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho(0, 1, 0, 1, 0, 1);
-
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-
-        /* Fill the tile at the far plane using the computed gradient. */
-
-        glPushAttrib(GL_ENABLE_BIT);
+        glBegin(GL_QUADS);
         {
-            float l = (T->flags & TILE_FLIP_X) ? 1.0f : 0.0f;
-            float r = (T->flags & TILE_FLIP_X) ? 0.0f : 1.0f;
-            float b = (T->flags & TILE_FLIP_Y) ? 1.0f : 0.0f;
-            float t = (T->flags & TILE_FLIP_Y) ? 0.0f : 1.0f;
-
-            glDisable(GL_TEXTURE_2D);
-            glDisable(GL_CULL_FACE);
-
-            if (flags & DRAW_VARRIER_TEXGEN)
-                set_texture_coordinates();
-
-            glBegin(GL_QUADS);
-            {
-                glColor3f(color0[0] * (1 - k0) + color1[0] * k0,
-                          color0[1] * (1 - k0) + color1[1] * k0,
-                          color0[2] * (1 - k0) + color1[2] * k0);
-                glVertex3f(l, b, -1);
-                glVertex3f(r, b, -1);
+            glColor3f(color0[0] * (1 - k0) + color1[0] * k0,
+                      color0[1] * (1 - k0) + color1[1] * k0,
+                      color0[2] * (1 - k0) + color1[2] * k0);
+            glVertex3f(l, b, -1);
+            glVertex3f(r, b, -1);
                 
-                glColor3f(color0[0] * (1 - k1) + color1[0] * k1,
-                          color0[1] * (1 - k1) + color1[1] * k1,
-                          color0[2] * (1 - k1) + color1[2] * k1);
-                glVertex3f(r, t, -1);
-                glVertex3f(l, t, -1);
-            }
-            glEnd();
+            glColor3f(color0[0] * (1 - k1) + color1[0] * k1,
+                      color0[1] * (1 - k1) + color1[1] * k1,
+                      color0[2] * (1 - k1) + color1[2] * k1);
+            glVertex3f(r, t, -1);
+            glVertex3f(l, t, -1);
         }
-        glPopAttrib();
-
-        /* Revert to the previous transformation. */
-
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
+        glEnd();
     }
+    glPopAttrib();
+
+    /* Revert to the previous transformation. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 void draw_host_background(void)

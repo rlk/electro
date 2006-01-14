@@ -199,7 +199,7 @@ static void aabb_string(int i, float aabb[6])
     aabb[5] = s->aabb_cache[5];
 }
 
-static void draw_string(int j, int i, int f, float a)
+static void draw_string(int i, int j, int f, float a)
 {
     struct string *s = get_string(i);
 

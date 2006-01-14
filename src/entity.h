@@ -82,16 +82,16 @@ struct entity_func
 
 /*===========================================================================*/
 
-int         entity_data(int);
-int         entity_type(int);
-const char *entity_name(int);
+int         get_entity_data(unsigned int);
+int         get_entity_type(unsigned int);
+const char *get_entity_name(unsigned int);
 
 /*---------------------------------------------------------------------------*/
 
-void transform_camera(int);
-void transform_entity(int);
-void draw_entity_tree(int, int, float);
-int  test_entity_aabb(int);
+void transform_camera(unsigned int);
+void transform_entity(unsigned int);
+void draw_entity_tree(unsigned int, int, float);
+int  test_entity_aabb(unsigned int);
 
 /*---------------------------------------------------------------------------*/
 
@@ -99,31 +99,31 @@ int startup_entity(void);
 
 /*===========================================================================*/
 
-int  send_create_entity(int, int);
-void recv_create_entity(void);
+unsigned int send_create_entity(int, int);
+void         recv_create_entity(void);
 
-int  send_create_clone(int);
-void recv_create_clone(void);
+unsigned int send_create_clone(unsigned int);
+void         recv_create_clone(void);
 
-void send_parent_entity(int, int);
+void send_parent_entity(unsigned int, unsigned int);
 void recv_parent_entity(void);
 
-void send_delete_entity(int);
+void send_delete_entity(unsigned int);
 void recv_delete_entity(void);
 
 /*---------------------------------------------------------------------------*/
 
-void  send_set_entity_tracking (int, int, int);
-void  send_set_entity_position (int, const float[3]);
-void  send_set_entity_rotation (int, const float[3]);
-void  send_set_entity_scale    (int, const float[3]);
-void  send_set_entity_bound    (int, const float[6]);
-void  send_set_entity_basis    (int, const float[16]);
-void  send_set_entity_alpha    (int, float);
-void  send_set_entity_flags    (int, int, int);
+void  send_set_entity_tracking (unsigned int, int, int);
+void  send_set_entity_position (unsigned int, const float[3]);
+void  send_set_entity_rotation (unsigned int, const float[3]);
+void  send_set_entity_scale    (unsigned int, const float[3]);
+void  send_set_entity_bound    (unsigned int, const float[6]);
+void  send_set_entity_basis    (unsigned int, const float[16]);
+void  send_set_entity_alpha    (unsigned int, float);
+void  send_set_entity_flags    (unsigned int, int, int);
 
-void  send_move_entity(int, const float[3]);
-void  send_turn_entity(int, const float[3]);
+void  send_move_entity(unsigned int, const float[3]);
+void  send_turn_entity(unsigned int, const float[3]);
 
 /*---------------------------------------------------------------------------*/
 
@@ -136,42 +136,42 @@ void  recv_set_entity_flags   (void);
 
 /*---------------------------------------------------------------------------*/
 
-void  get_entity_position(int, float[3]);
-void  get_entity_rotation(int, float[3]);
-void  get_entity_x_vector(int, float[3]);
-void  get_entity_y_vector(int, float[3]);
-void  get_entity_z_vector(int, float[3]);
-void  get_entity_scale   (int, float[3]);
-void  get_entity_bound   (int, float[6]);
-float get_entity_alpha   (int);
-int   get_entity_flags   (int);
+void  get_entity_position(unsigned int, float[3]);
+void  get_entity_rotation(unsigned int, float[3]);
+void  get_entity_x_vector(unsigned int, float[3]);
+void  get_entity_y_vector(unsigned int, float[3]);
+void  get_entity_z_vector(unsigned int, float[3]);
+void  get_entity_scale   (unsigned int, float[3]);
+void  get_entity_bound   (unsigned int, float[6]);
+float get_entity_alpha   (unsigned int);
+int   get_entity_flags   (unsigned int);
 
 /*---------------------------------------------------------------------------*/
 
-void  set_entity_body_type(int,      int);
-void  set_entity_geom_type(int,      int, const float *);
-void  set_entity_join_type(int, int, int);
+void  set_entity_body_type(unsigned int,               int);
+void  set_entity_geom_type(unsigned int,               int, const float *);
+void  set_entity_join_type(unsigned int, unsigned int, int);
 
-void  set_entity_body_attr_i(int,      int, int);
-void  set_entity_geom_attr_i(int,      int, int);
-void  set_entity_geom_attr_f(int,      int, float);
-void  set_entity_join_attr_f(int, int, int, float);
-void  set_entity_join_attr_v(int, int, int, const float *);
+void  set_entity_body_attr_i(unsigned int,               int, int);
+void  set_entity_geom_attr_i(unsigned int,               int, int);
+void  set_entity_geom_attr_f(unsigned int,               int, float);
+void  set_entity_join_attr_f(unsigned int, unsigned int, int, float);
+void  set_entity_join_attr_v(unsigned int, unsigned int, int, const float *);
 
-int   get_entity_body_attr_i(int, int);
-void  get_entity_body_attr_v(int, int, float *);
-int   get_entity_geom_attr_i(int, int);
-float get_entity_geom_attr_f(int, int);
-float get_entity_join_attr_f(int, int, int);
-void  get_entity_join_attr_v(int, int, int, float *);
+int   get_entity_body_attr_i(unsigned int, int);
+void  get_entity_body_attr_v(unsigned int, int, float *);
+int   get_entity_geom_attr_i(unsigned int, int);
+float get_entity_geom_attr_f(unsigned int, int);
+float get_entity_join_attr_f(unsigned int, unsigned int, int);
+void  get_entity_join_attr_v(unsigned int, unsigned int, int, float *);
 
-void  add_entity_force (int, float, float, float);
-void  add_entity_torque(int, float, float, float);
+void  add_entity_force (unsigned int, float, float, float);
+void  add_entity_torque(unsigned int, float, float, float);
 
 /*---------------------------------------------------------------------------*/
 
-int   get_entity_parent(int);
-int   get_entity_child(int, int);
+unsigned int get_entity_parent(unsigned int);
+unsigned int get_entity_child (unsigned int, unsigned int);
 
 /*===========================================================================*/
 
