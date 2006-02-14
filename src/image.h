@@ -41,6 +41,7 @@ int  send_create_video(int);
 void send_delete_image(int);
 void recv_delete_image(void);
 
+void send_set_image_pixels(int, void *, int, int, int, int, int, int, int);
 void recv_set_image_pixels(void);
 
 /*---------------------------------------------------------------------------*/

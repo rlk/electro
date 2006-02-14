@@ -23,8 +23,8 @@ host[16] = E.add_host("scylla16-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[17] = E.add_host("scylla17-10.evl.uic.edu", 0, 0, 1600, 2400)
 host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
 
-E.set_host_flags(host[0], E.host_flag_full,   true);
-E.set_host_flags(host[0], E.host_flag_framed, false);
+--E.set_host_flags(host[0], E.host_flag_full,   true);
+--E.set_host_flags(host[0], E.host_flag_framed, false);
 
 -- Tile host numbers.
 
@@ -425,72 +425,25 @@ function varrier_keyboard(k, s, camera)
         end
 
         if k == E.key_F5 then
---            E.set_entity_frag_prog(scene, nil)
---            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_none,
                                 0, 0, 0, 0, 0, 0)
             return true
         end
         if k == E.key_F6 then
---            E.set_entity_frag_prog(scene, nil)
---            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
+            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
         if k == E.key_F7 then
-            E.set_entity_frag_prog(scene, "../varrier-01-frag.fp")
-            E.set_entity_vert_prog(scene, "../varrier-01-vert.vp")
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == E.key_F8 then
-            E.set_entity_frag_prog(scene, "../varrier-01-fntx.fp")
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == E.key_F9 then
-            E.set_entity_frag_prog(scene, "../varrier-01-both.fp")
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == E.key_F10 then
-            E.set_entity_frag_prog(scene, "../varrier-01-bntx.fp")
-            E.set_entity_vert_prog(scene, nil)
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_01,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == E.key_F11 then
---            E.set_entity_frag_prog(scene, nil)
---            E.set_entity_vert_prog(scene, nil)
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
-        if k == E.key_F12 then
---            E.set_entity_frag_prog(scene, nil)
---            E.set_entity_vert_prog(scene, nil)
+        if k == E.key_F8 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end
     end
     return false
-end
-
-function varrier_help()
-    E.print_console(" F5: Select mono-scopic rendering\n")
-    E.print_console(" F6: Select Varrier 0-1 fixed\n")
-    E.print_console(" F7: Select Varrier 0-1 frag/vert\n")
-    E.print_console(" F8: Select Varrier 0-1 fntx\n")
-    E.print_console(" F9: Select Varrier 0-1 both\n")
-    E.print_console("F10: Select Varrier 0-1 bntx\n")
-    E.print_console("F11: Select Varrier 1-1\n")
-    E.print_console("F12: Select Varrier 3-3\n")
 end

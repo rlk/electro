@@ -600,7 +600,7 @@ void init_opengl(void)
 
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
         GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
-        GL_has_multitexture = (GLboolean) glActiveTextureARB;
+        GL_has_multitexture = (GLboolean) (glActiveTextureARB != NULL);
     }
 
     GL_has_point_sprite

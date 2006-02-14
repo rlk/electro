@@ -1,3 +1,16 @@
+Dan needs
+    global state
+            gravity vector
+            ambient light
+            ERP
+            CFM
+            auto disable?
+    bugfix: giving BindAttribLocation not found on non-GLSL hardware?
+
+Video (and flipbook) texture on cluster displays.
+
+
+fix AABB
 new vector implementation
         improve vector traversal
 Add brief changelogs to website

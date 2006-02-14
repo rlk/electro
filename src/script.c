@@ -1688,8 +1688,8 @@ static int E_set_brush_uniform_vector(lua_State *L)
 static int E_set_brush_uniform_matrix(lua_State *L)
 {
     int N = lua_gettop(L);
-    int r;
-    int c;
+    int r = 4;
+    int c = 4;
     int i;
 
     float v[16];

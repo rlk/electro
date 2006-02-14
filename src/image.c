@@ -217,9 +217,10 @@ static void step_video(int i, int c)
         int h    = ntohs(head->h);
         int W    = ntohs(head->W);
         int H    = ntohs(head->H);
-        
-        /* If the video format changes, refresh the texture object. */
+        int b    = 3;
 
+        /* If the video format changes, refresh the texture object. */
+#ifdef SNIP
         if (p->w != W || p->h != H || p->code != code)
         {
             p->code = code;
@@ -239,6 +240,15 @@ static void step_video(int i, int c)
             fini_image(i);
             init_image(i);
         }
+#endif
+
+        /* Infer the pixel width from the FOURCC code. */
+
+        switch (code)
+        {
+        case 0x31313459: p->b = 4; break;  /* Y411 */
+        case 0x30303859: p->b = 1; break;  /* Y800 */
+        }
 
         /* Decode the incoming image data as necessary. */
 
@@ -247,8 +257,10 @@ static void step_video(int i, int c)
         case 0x31313459: decode_Y411(data, w, h); break;
         }
 
-        /* Apply the incoming subimage to the existing texture object. */
+        send_set_image_pixels(i, data, x, y, w, h, W, H, b);
 
+        /* Apply the incoming subimage to the existing texture object. */
+#ifdef SNIP
         if (p->texture)
         {
             if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
@@ -264,6 +276,7 @@ static void step_video(int i, int c)
                                 format[p->b], GL_UNSIGNED_BYTE, data);
             }
         }
+#endif
     }
 }
 
@@ -697,12 +710,77 @@ void recv_create_image(void)
     }
 }
 
-void recv_set_image_pixels(void)
+/*---------------------------------------------------------------------------*/
+
+static void set_image_pixels(int i, void *data,
+                             int x, int y, int w, int h, int W, int H, int b)
 {
-/* TODO: fix
-    int i           = recv_index();
     struct image *p = get_image(i);
 
+    /* If the video format changes, refresh the texture object. */
+
+    if (p->w != W || p->h != H || p->b != b)
+    {
+        p->w = W;
+        p->h = H;
+        p->b = b;
+
+        fini_image(i);
+        init_image(i);
+    }
+
+    /* Apply the incoming subimage to the existing texture object. */
+
+    if (p->texture)
+    {
+        if (GL_has_texture_rectangle && (NPOT(W) || NPOT(H)))
+        {
+            glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
+            glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, x, y, w, h,
+                            format[p->b], GL_UNSIGNED_BYTE, data);
+        }
+        else
+        {
+            glBindTexture  (GL_TEXTURE_2D, p->texture);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
+                            format[p->b], GL_UNSIGNED_BYTE, data);
+        }
+    }
+}
+
+
+void send_set_image_pixels(int i, void *data,
+                           int x, int y, int w, int h, int W, int H, int b)
+{
+    set_image_pixels(i, data, x, y, w, h, W, H, b);
+
+    send_event(EVENT_SET_IMAGE_PIXELS);
+    send_index(i);
+    send_index(x);
+    send_index(y);
+    send_index(w);
+    send_index(h);
+    send_index(W);
+    send_index(H);
+    send_index(b);
+    send_array(data, w * h * b, 1);
+}
+
+void recv_set_image_pixels(void)
+{
+    int i = recv_index();
+    int x = recv_index();
+    int y = recv_index();
+    int w = recv_index();
+    int h = recv_index();
+    int W = recv_index();
+    int H = recv_index();
+    int b = recv_index();
+
+    void *data;
+
+    set_image_pixels(i, data, x, y, w, h, W, H, b);
+/*
     recv_array(p->p[0], p->w * p->h * p->b, 1);
     step_texture(i);
 */

@@ -94,14 +94,14 @@ static void entity_fini_func(unsigned int i)
         entity_func[entity[i].type]->fini)
         entity_func[entity[i].type]->fini(entity[i].data);
 }
-
+/*
 static void entity_aabb_func(unsigned int i, float v[6])
 {
     if (entity_func[entity[i].type] &&
         entity_func[entity[i].type]->aabb)
         entity_func[entity[i].type]->aabb(entity[i].data, v);
 }
-
+*/
 static void entity_draw_func(unsigned int i, int f, float a)
 {
     if (entity_func[entity[i].type] &&
@@ -1145,7 +1145,7 @@ int step_entities(float dt, int head)
         p[1] = 0;
         p[2] = 0;
 
-        c += step_entity_tree(0, dt, head, p, R);
+        c += step_entity_tree(1, dt, head, p, R);
     }
 
     /* Run the physical simulation and update all entity states. */

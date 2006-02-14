@@ -9,9 +9,9 @@ ifdef MPI
 	TARG   = electro-mpi
 	CFLAGS = -O2 -Wall -DNDEBUG -DCONF_MPI
 else
-	CC     = /opt/intel/cc/9.0/bin/icc
+	CC     = cc
 	TARG   = electro
-	CFLAGS = -g -Wall -wd981 -wd869
+	CFLAGS = -g -Wall
 endif
 
 ifdef SOCKET
@@ -31,7 +31,8 @@ ifeq ($(shell uname), Darwin)
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
-	FT2_CONFIG = /usr/bin/freetype-config
+#	FT2_CONFIG = /usr/bin/freetype-config
+	FT2_CONFIG = $(HOME)/bin/freetype-config
 endif
 
 # Include Lua, if it exists.
