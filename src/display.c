@@ -223,7 +223,7 @@ void sync_display(void)
     struct host *H;
 
     assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
-    assert_mpi(MPI_Bcast(&num, 1, MPI_INTEGER, 0, MPI_COMM_WORLD));
+    assert_mpi(MPI_Bcast(&num, 1, MPI_INT, 0, MPI_COMM_WORLD));
 
     /* Broadcast all host definitions to all nodes. */
 

@@ -100,8 +100,8 @@ void sync_buffer(void)
         len  = curr->size;
         temp = curr->next;
 
-        assert_mpi(MPI_Bcast(&len, 1,   MPI_INTEGER, 0, MPI_COMM_WORLD));
-        assert_mpi(MPI_Bcast(curr, len, MPI_BYTE,    0, MPI_COMM_WORLD));
+        assert_mpi(MPI_Bcast(&len, 1,   MPI_INT,  0, MPI_COMM_WORLD));
+        assert_mpi(MPI_Bcast(curr, len, MPI_BYTE, 0, MPI_COMM_WORLD));
 
         curr->next = temp;
 
