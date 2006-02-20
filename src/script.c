@@ -1500,21 +1500,31 @@ static int E_create_image(lua_State *L)
 {
     int N = lua_gettop(L);
 
-    if (N == 6)
-        E_pushimage(L, send_create_image(L_getstring(L, -6),
-                                         L_getstring(L, -5),
-                                         L_getstring(L, -4),
-                                         L_getstring(L, -3),
-                                         L_getstring(L, -2),
-                                         L_getstring(L, -1)));
-    else
-    {
-        if (lua_isnumber(L, -1))
-            E_pushimage(L, send_create_video(L_getinteger(L, -1)));
-        else
-            E_pushimage(L, send_create_image(L_getstring(L, -1),
-                                             NULL, NULL, NULL, NULL, NULL));
-    }
+    if      (N == 8)
+        E_pushimage(L, send_create_image_ani(L_getstring (L, -8),
+                                             L_getinteger(L, -7),
+                                             L_getinteger(L, -6),
+                                             L_getinteger(L, -5),
+                                             L_getinteger(L, -4),
+                                             L_getinteger(L, -3),
+                                             L_getinteger(L, -2),
+                                             L_getinteger(L, -1)));
+    else if (N == 6)
+        E_pushimage(L, send_create_image_env(L_getstring(L, -6),
+                                             L_getstring(L, -5),
+                                             L_getstring(L, -4),
+                                             L_getstring(L, -3),
+                                             L_getstring(L, -2),
+                                             L_getstring(L, -1)));
+
+    else if (N == 1 && lua_isstring(L, -1))
+        E_pushimage(L, send_create_image_map(L_getstring(L, -1)));
+
+    else if (N == 1 && lua_isnumber(L, -1))
+        E_pushimage(L, send_create_image_udp(L_getinteger(L, -1)));
+
+    else 
+        E_pushimage(L, 0);
  
     return 1;
 }

@@ -461,24 +461,28 @@ PFNGLUNIFORM4FVARBPROC               glUniform4fvARB;
 PFNGLUNIFORMMATRIX2FVARBPROC         glUniformMatrix2fvARB;
 PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
 PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
+PFNGLCOMPRESSEDTEXIMAGE2DARBPROC     glCompressedTexImage2DARB;
 
 void init_opengl(void)
 {
+    /* Fragment and vertex program prerequisites. */
 
-   glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
-        opengl_proc("glProgramStringARB");
-    glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
-        opengl_proc("glBindProgramARB");
-    glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
-        opengl_proc("glGenProgramsARB");
-    glIsProgramARB = (PFNGLISPROGRAMARBPROC)
-        opengl_proc("glIsProgramARB");
-    glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)
-        opengl_proc("glDeleteProgramsARB");
+    glProgramStringARB             = (PFNGLPROGRAMSTRINGARBPROC)
+                           opengl_proc("glProgramStringARB");
+    glBindProgramARB              = (PFNGLBINDPROGRAMARBPROC)
+                           opengl_proc("glBindProgramARB");
+    glGenProgramsARB              = (PFNGLGENPROGRAMSARBPROC)
+                           opengl_proc("glGenProgramsARB");
+    glIsProgramARB                = (PFNGLISPROGRAMARBPROC)
+                           opengl_proc("glIsProgramARB");
+    glDeleteProgramsARB           = (PFNGLDELETEPROGRAMSARBPROC)
+                           opengl_proc("glDeleteProgramsARB");
     glProgramLocalParameter4fvARB = (PFNGLPROGRAMLOCALPARAMETER4FVARBPROC)
-        opengl_proc("glProgramLocalParameter4fvARB");
-    glProgramEnvParameter4fARB = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
-        opengl_proc("glProgramEnvParameter4fARB");
+                           opengl_proc("glProgramLocalParameter4fvARB");
+    glProgramEnvParameter4fARB    = (PFNGLPROGRAMENVPARAMETER4FARBPROC)
+                           opengl_proc("glProgramEnvParameter4fARB");
+
+    /* Fragment program support. */
 
     if (opengl_need("GL_ARB_fragment_program"))
     {
@@ -487,16 +491,18 @@ void init_opengl(void)
                                             && glGenProgramsARB);
     }
 
+    /* Vertex program support. */
+
     if (opengl_need("GL_ARB_vertex_program"))
     {
         glDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)
-            opengl_proc("glDisableVertexAttribArrayARB");
-        glEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)
-            opengl_proc("glEnableVertexAttribArrayARB");
-        glBindAttribLocationARB = (PFNGLBINDATTRIBLOCATIONARBPROC)
-            opengl_proc("glBindAttribLocationARB");
-        glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)
-            opengl_proc("glVertexAttribPointerARB");
+                               opengl_proc("glDisableVertexAttribArrayARB");
+        glEnableVertexAttribArrayARB  = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)
+                               opengl_proc("glEnableVertexAttribArrayARB");
+        glBindAttribLocationARB       = (PFNGLBINDATTRIBLOCATIONARBPROC)
+                               opengl_proc("glBindAttribLocationARB");
+        glVertexAttribPointerARB      = (PFNGLVERTEXATTRIBPOINTERARBPROC)
+                              opengl_proc("glVertexAttribPointerARB");
 
         GL_has_vertex_program = (GLboolean) (glProgramEnvParameter4fARB
                                           && glDisableVertexAttribArrayARB
@@ -508,18 +514,20 @@ void init_opengl(void)
                                           && glGenProgramsARB);
     }
 
+    /* Vertex buffer object support. */
+
     if (opengl_need("GL_ARB_vertex_buffer_object"))
     {
-        glBindBufferARB = (PFNGLBINDBUFFERARBPROC)
-            opengl_proc("glBindBufferARB");
-        glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)
-            opengl_proc("glGenBuffersARB");
-        glBufferDataARB = (PFNGLBUFFERDATAARBPROC)
-            opengl_proc("glBufferDataARB");
-        glIsBufferARB = (PFNGLISBUFFERARBPROC)
-            opengl_proc("glIsBufferARB");
+        glBindBufferARB    = (PFNGLBINDBUFFERARBPROC)
+                    opengl_proc("glBindBufferARB");
+        glGenBuffersARB    = (PFNGLGENBUFFERSARBPROC)
+                    opengl_proc("glGenBuffersARB");
+        glBufferDataARB    = (PFNGLBUFFERDATAARBPROC)
+                    opengl_proc("glBufferDataARB");
+        glIsBufferARB      = (PFNGLISBUFFERARBPROC)
+                    opengl_proc("glIsBufferARB");
         glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
-            opengl_proc("glDeleteBuffersARB");
+                    opengl_proc("glDeleteBuffersARB");
 
         GL_has_vertex_buffer_object = (GLboolean) (glBindBufferARB
                                                && glGenBuffersARB
@@ -528,47 +536,49 @@ void init_opengl(void)
                                                && glDeleteBuffersARB);
     }
 
+    /* GLSL support. */
+
     if (opengl_need("GL_ARB_shader_objects"))
     {
-        glUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)
-            opengl_proc("glUseProgramObjectARB");
-        glCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)
-            opengl_proc("glCreateShaderObjectARB");
-        glCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)
-            opengl_proc("glCreateProgramObjectARB");
-        glShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)
-            opengl_proc("glShaderSourceARB");
-        glCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)
-            opengl_proc("glCompileShaderARB");
-        glAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)
-            opengl_proc("glAttachObjectARB");
-        glLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)
-            opengl_proc("glLinkProgramARB");
+        glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)
+                           opengl_proc("glUseProgramObjectARB");
+        glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)
+                           opengl_proc("glCreateShaderObjectARB");
+        glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)
+                           opengl_proc("glCreateProgramObjectARB");
+        glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)
+                           opengl_proc("glShaderSourceARB");
+        glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)
+                           opengl_proc("glCompileShaderARB");
+        glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)
+                           opengl_proc("glAttachObjectARB");
+        glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)
+                           opengl_proc("glLinkProgramARB");
         glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)
-            opengl_proc("glGetObjectParameterivARB");
-        glGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)
-            opengl_proc("glGetInfoLogARB");
-        glDeleteObjectARB = (PFNGLDELETEOBJECTARBPROC)
-            opengl_proc("glDeleteObjectARB");
+                           opengl_proc("glGetObjectParameterivARB");
+        glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)
+                           opengl_proc("glGetInfoLogARB");
+        glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)
+                           opengl_proc("glDeleteObjectARB");
 
-        glGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)
-            opengl_proc("glGetUniformLocationARB");
-        glUniform1iARB = (PFNGLUNIFORM1IARBPROC)
-            opengl_proc("glUniform1iARB");
-        glUniform1fvARB = (PFNGLUNIFORM1FVARBPROC)
-            opengl_proc("glUniform1fvARB");
-        glUniform2fvARB = (PFNGLUNIFORM2FVARBPROC)
-            opengl_proc("glUniform2fvARB");
-        glUniform3fvARB = (PFNGLUNIFORM3FVARBPROC)
-            opengl_proc("glUniform3fvARB");
-        glUniform4fvARB = (PFNGLUNIFORM4FVARBPROC)
-            opengl_proc("glUniform4fvARB");
-        glUniformMatrix2fvARB = (PFNGLUNIFORMMATRIX2FVARBPROC)
-            opengl_proc("glUniformMatrix2fvARB");
-        glUniformMatrix3fvARB = (PFNGLUNIFORMMATRIX3FVARBPROC)
-            opengl_proc("glUniformMatrix3fvARB");
-        glUniformMatrix4fvARB = (PFNGLUNIFORMMATRIX4FVARBPROC)
-            opengl_proc("glUniformMatrix4fvARB");
+        glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)
+                           opengl_proc("glGetUniformLocationARB");
+        glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)
+                           opengl_proc("glUniform1iARB");
+        glUniform1fvARB           = (PFNGLUNIFORM1FVARBPROC)
+                           opengl_proc("glUniform1fvARB");
+        glUniform2fvARB           = (PFNGLUNIFORM2FVARBPROC)
+                           opengl_proc("glUniform2fvARB");
+        glUniform3fvARB           = (PFNGLUNIFORM3FVARBPROC)
+                           opengl_proc("glUniform3fvARB");
+        glUniform4fvARB           = (PFNGLUNIFORM4FVARBPROC)
+                           opengl_proc("glUniform4fvARB");
+        glUniformMatrix2fvARB     = (PFNGLUNIFORMMATRIX2FVARBPROC)
+                           opengl_proc("glUniformMatrix2fvARB");
+        glUniformMatrix3fvARB     = (PFNGLUNIFORMMATRIX3FVARBPROC)
+                           opengl_proc("glUniformMatrix3fvARB");
+        glUniformMatrix4fvARB     = (PFNGLUNIFORMMATRIX4FVARBPROC)
+                           opengl_proc("glUniformMatrix4fvARB");
 
         GL_has_shader_objects = (GLboolean) (glUseProgramObjectARB
                                           && glCreateShaderObjectARB
@@ -591,24 +601,39 @@ void init_opengl(void)
                                           && glUniformMatrix4fvARB);
     }
 
+    /* Multitexture support. */
+
     if (opengl_need("GL_ARB_multitexture"))
     {
         GLint TUs;
 
         glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)
-            opengl_proc("glActiveTextureARB");
+                    opengl_proc("glActiveTextureARB");
 
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
         GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
         GL_has_multitexture = (GLboolean) (glActiveTextureARB != NULL);
     }
 
-    GL_has_point_sprite
-        = opengl_need("GL_ARB_point_sprite");
-    GL_has_texture_rectangle
-        = opengl_need("GL_ARB_texture_rectangle");
-    GL_has_texture_compression
-        = opengl_need("GL_ARB_texture_compression");
+    /* Compressed texture support. */
+
+    if (opengl_need("GL_ARB_texture_compression"))
+    {
+        glCompressedTexImage2DARB = (PFNGLCOMPRESSEDTEXIMAGE2DARBPROC)
+                           opengl_proc("glCompressedTexImage2DARB");
+
+        GL_has_texture_compression = (glCompressedTexImage2DARB != NULL);
+    }
+
+    /* Miscellaneous procedureless extensions. */
+
+    GL_has_point_sprite      = (opengl_need("GL_ARB_point_sprite"));
+    GL_has_texture_rectangle = (opengl_need("GL_ARB_texture_rectangle") ||
+                                opengl_need("GL_NV_texture_rectangle"));
+
+    /* HACK */
+
+    glEnable(GL_TEXTURE_RECTANGLE_NV);
 
     init_opengl_obj();
 }

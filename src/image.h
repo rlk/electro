@@ -31,11 +31,15 @@ int startup_image(void);
 
 /*---------------------------------------------------------------------------*/
 
+int  send_create_image_udp(int);
+int  send_create_image_map(const char *);
+int  send_create_image_ani(const char *, int, int, int, int, int, int, int);
+int  send_create_image_env(const char *, const char *,
+                           const char *, const char *,
+                           const char *, const char *);
+
 int  dupe_create_image(int);
 void recv_create_image(void);
-int  send_create_image(const char *, const char *,
-                       const char *, const char *,
-                       const char *, const char *);
 
 int  send_create_video(int);
 void send_delete_image(int);

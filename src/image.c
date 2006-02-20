@@ -27,28 +27,67 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define MAX_FILE 6
+#define FLAG_NPOT 1
+#define FLAG_COMP 2
+
+#define TYPE_MAP  1
+#define TYPE_ENV  2
+#define TYPE_ANI  3
+#define TYPE_UDP  4
+
+struct image_map
+{
+    char *name;
+    void *data;
+};
+
+struct image_env
+{
+    char *name[6];
+    void *data[6];
+};
+
+struct image_ani
+{
+    char *name;
+    void *data;
+
+    int frame_0;
+    int frame_i;
+    int frame_n;
+
+    int count_a;
+    int count_b;
+};
+
+struct image_udp
+{
+    int sock;
+    int code;
+};
+
+union image_nfo
+{
+    struct image_map map;
+    struct image_env env;
+    struct image_ani ani;
+    struct image_udp udp;
+};
 
 struct image
 {
     int count;
     int state;
+    int flags;
+    int type;
 
     GLuint texture;
 
-    /* Pixel buffer attributes. */
+    int w;
+    int h;
+    int b;
 
-    int   n;
-    int   w;
-    int   h;
-    int   b;
-    void *p[MAX_FILE];
-    char *s[MAX_FILE];
-
-    /* Video socket attributes. */
-
-    SOCKET sock;
-    int    code;
+    union image_nfo nfo;
 };
 
 static vector_t image;
@@ -58,7 +97,7 @@ static GLenum format[5] = {
     GL_LUMINANCE,
     GL_LUMINANCE_ALPHA,
     GL_RGB,
-    GL_RGBA,
+    GL_RGBA
 };
 
 /*---------------------------------------------------------------------------*/
@@ -94,33 +133,6 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
-/*
-static void decode_Y411(GLubyte *p, int w, int h)
-{
-    GLuint  *dst = (GLuint  *) p + (w * h - 1) * 4;
-    GLubyte *src = (GLubyte *) p + (w * h - 1) * 6;
-
-    while (src >= p)
-    {
-        const float Ug = -0.391f * (src[0] - 128);
-        const float Ub =  2.018f * (src[0] - 128);
-        const float Y0 =  1.164f * (src[1] -  16);
-        const float Y1 =  1.164f * (src[2] -  16);
-        const float Vr =  1.596f * (src[3] - 128);
-        const float Vg = -0.813f * (src[3] - 128);
-        const float Y2 =  1.164f * (src[4] -  16);
-        const float Y3 =  1.164f * (src[5] -  16);
-        
-        dst[0] = PIXEL(byte(Y0 + Vr), byte(Y0 + Ug + Vg), byte(Y0 + Ub));
-        dst[1] = PIXEL(byte(Y1 + Vr), byte(Y1 + Ug + Vg), byte(Y1 + Ub));
-        dst[2] = PIXEL(byte(Y2 + Vr), byte(Y2 + Ug + Vg), byte(Y2 + Ub));
-        dst[3] = PIXEL(byte(Y3 + Vr), byte(Y3 + Ug + Vg), byte(Y3 + Ub));
-
-        src -= 6;
-        dst -= 4;
-    }
-}
-*/
 
 #define PIXEL(r, g, b) (0xFF000000 | ((b) << 16) | ((g) <<  8) | (r))
 
@@ -195,210 +207,7 @@ static void decode_Y411(GLubyte *p, int w, int h)
     }
 }
 
-/*---------------------------------------------------------------------------*/
-
-static void step_video(int i, int c)
-{
-    struct image *p = get_image(i);
-
-    struct header *head = (struct header *) buffer;
-    GLubyte       *data =       (GLubyte *) buffer + sizeof (struct header);
-
-    /* Receive an incoming subimage. */
-
-    if ((int) recv(p->sock, buffer, BUFMAX, 0) > 0 && c < 960)
-    {
-        /* Decode the subimage header. */
-
-        int code = ntohl(head->code);
-        int x    = ntohs(head->x);
-        int y    = ntohs(head->y);
-        int w    = ntohs(head->w);
-        int h    = ntohs(head->h);
-        int W    = ntohs(head->W);
-        int H    = ntohs(head->H);
-        int b    = 3;
-
-        /* If the video format changes, refresh the texture object. */
-#ifdef SNIP
-        if (p->w != W || p->h != H || p->code != code)
-        {
-            p->code = code;
-            p->w    = W;
-            p->h    = H;
-
-            /* Infer the pixel width from the FOURCC code. */
-
-            switch (code)
-            {
-            case 0x31313459: p->b = 4; break;  /* Y411 */
-            case 0x30303859: p->b = 1; break;  /* Y800 */
-            }
-
-            /* Flush and refresh the GL texture state. */
-
-            fini_image(i);
-            init_image(i);
-        }
-#endif
-
-        /* Infer the pixel width from the FOURCC code. */
-
-        switch (code)
-        {
-        case 0x31313459: p->b = 4; break;  /* Y411 */
-        case 0x30303859: p->b = 1; break;  /* Y800 */
-        }
-
-        /* Decode the incoming image data as necessary. */
-
-        switch (code)
-        {
-        case 0x31313459: decode_Y411(data, w, h); break;
-        }
-
-        send_set_image_pixels(i, data, x, y, w, h, W, H, b);
-
-        /* Apply the incoming subimage to the existing texture object. */
-#ifdef SNIP
-        if (p->texture)
-        {
-            if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
-            {
-                glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
-                glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, x, y, w, h,
-                                format[p->b], GL_UNSIGNED_BYTE, data);
-            }
-            else
-            {
-                glBindTexture  (GL_TEXTURE_2D, p->texture);
-                glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
-                                format[p->b], GL_UNSIGNED_BYTE, data);
-            }
-        }
-#endif
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-
-static GLuint make_video(int w, int h, int b)
-{
-    GLuint o = 0;
-
-    if (w * h * b > 0)
-    {
-        /* Create a GL texture object. */
-
-        glGenTextures(1, &o);
-
-        /* Non-power-of-two size implies texture rectangle. */
-
-        if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
-        {
-            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
-
-            glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, format[b],
-                         w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
-
-            glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
-                            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
-                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
-
-        /* A power-of-two image comprises a 2D texture map. */
-
-        else
-        {
-            glBindTexture(GL_TEXTURE_2D, o);
-
-            glTexImage2D(GL_TEXTURE_2D, 0, format[b],
-                         w, h, 0, format[b], GL_UNSIGNED_BYTE, NULL);
-
-            glTexParameteri(GL_TEXTURE_2D,
-                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D,
-                            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        }
-    }
-    return o;
-}
-
-static GLuint make_image(void *p[6], int n, int w, int h, int b)
-{
-    GLuint o = 0;
-
-    /* Create a GL texture object. */
-
-    glGenTextures(1, &o);
-
-    /* Several images comprise a cube map. */
-
-    if (n > 1)
-    {
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, o);
-
-        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, format[b],
-                          w, h, format[b], GL_UNSIGNED_BYTE, p[0]);
-        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, format[b],
-                          w, h, format[b], GL_UNSIGNED_BYTE, p[1]);
-        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, format[b],
-                          w, h, format[b], GL_UNSIGNED_BYTE, p[2]);
-        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, format[b],
-                          w, h, format[b], GL_UNSIGNED_BYTE, p[3]);
-        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, format[b],
-                          w, h, format[b], GL_UNSIGNED_BYTE, p[4]);
-        gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, format[b],
-                          w, h, format[b], GL_UNSIGNED_BYTE, p[5]);
-
-        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
-                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
-                        GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
-                        GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
-                        GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    }
-
-    /* Non-power of two size implies texture rectangle. */
-
-    else if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
-    {
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, o);
-
-        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, format[b],
-                     w, h, 0, format[b], GL_UNSIGNED_BYTE, p[0]);
-
-        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
-                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-
-    /* A single image comprises a 2D texture map. */
-
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, o);
-
-        gluBuild2DMipmaps(GL_TEXTURE_2D, format[b], w, h,
-                          format[b], GL_UNSIGNED_BYTE, p[0]);
-
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    }
-
-    return o;
-}
-
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
 static void *load_png_image(const char *filename, int *width,
                                                   int *height,
@@ -534,20 +343,28 @@ static void *load_jpg_image(const char *filename, int *width,
 
 static void *load_image(const char *filename, int *width,
                                               int *height,
-                                              int *bytes)
+                                              int *bytes,
+                                              int *flags)
 {
+    void *pixels = NULL;
+
     if (filename)
     {
         const char *ext = filename + strlen(filename) - 4;
     
         if      (strcmp(ext, ".png") == 0 || strcmp(ext, ".PNG") == 0)
-            return load_png_image(filename, width, height, bytes);
+            pixels = load_png_image(filename, width, height, bytes);
         else if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".JPG") == 0)
-            return load_jpg_image(filename, width, height, bytes);
+            pixels = load_jpg_image(filename, width, height, bytes);
         else
-            return error("Unsupported image format for '%s'", filename);
+            pixels = error("Unsupported image format for '%s'", filename);
+
+        if (NPOT(*width) || NPOT(*height))
+            *flags = FLAG_NPOT;
+        else
+            *flags = 0;
     }
-    return NULL;
+    return pixels;
 }
 
 /*===========================================================================*/
@@ -566,36 +383,288 @@ int dupe_create_image(int i)
     return i;
 }
 
-int send_create_image(const char *file_nx,
-                      const char *file_px,
-                      const char *file_ny,
-                      const char *file_py,
-                      const char *file_nz,
-                      const char *file_pz)
+/*---------------------------------------------------------------------------*/
+/* Plain ol' image map                                                       */
+
+int send_create_image_map(const char *name)
 {
-    int i, j, n = vecnum(image);
+    int i, n = vecnum(image);
 
-    /* Return the default texture on NULL. */
+    struct image *p;
 
-    if (file_nx == NULL)
+    /* Return the default image on NULL. */
+
+    if (name == NULL)
         return 0;
+
+    /* Scan the current images for an existing instance of the named file. */
+
+    for (i = 0; i < n; ++i)
+        if ((p = get_image(i))->type == TYPE_MAP)
+        {
+            if (cmpname(name, p->nfo.map.name) == 0)
+                return dupe_create_image(i);
+        }
+
+    /* Didn't find it.  It's new. */
+
+    if ((i = new_image()) >= 0)
+    {
+        p = get_image(i);
+
+        p->state = 0;
+        p->count = 1;
+        p->flags = 0;
+        p->type  = TYPE_MAP;
+
+        /* Store the name and image data. */
+
+        p->nfo.map.name = memdup(name, strlen(name) + 1, 1);
+        p->nfo.map.data = load_image(name, &p->w, &p->h, &p->b, &p->flags);
+
+        /* Send the header and data. */
+
+        send_event(EVENT_CREATE_IMAGE);
+        send_event(TYPE_MAP);
+
+        send_index(p->flags);
+        send_index(p->w);
+        send_index(p->h);
+        send_index(p->b);
+        send_array(p->nfo.map.data, p->w * p->h * p->b, 1);
+
+        return i;
+    }
+    return -1;
+}
+
+static void recv_create_image_map(void)
+{
+    /* Initialize a new map image. */
+
+    struct image *p = get_image(new_image());
+
+    p->state = 0;
+    p->count = 1;
+    p->type  = TYPE_MAP;
+
+    /* Receive the header. */
+
+    p->flags = recv_index();
+    p->w     = recv_index();
+    p->h     = recv_index();
+    p->b     = recv_index();
+
+    /* Receive the image data. */
+
+    if ((p->nfo.map.data =   malloc(p->w * p->h * p->b)))
+        recv_array(p->nfo.map.data, p->w * p->h * p->b, 1);
+}
+
+static GLuint init_image_map(struct image_map *nfo,
+                             int w, int h, int b, int flags)
+{
+    GLuint o = 0;
+    GLenum f = format[b];
+    GLenum m = GL_TEXTURE_2D;
+
+    glGenTextures(1, &o);
+
+    /* Bind the texture as power-of-two or rectangular. */
+
+    if ((flags & FLAG_NPOT) && GL_has_texture_rectangle)
+        m = GL_TEXTURE_RECTANGLE_ARB;
+
+    glBindTexture(m, o);
+
+    /* Apply pixel data in compressed or raw format. */
+
+    if ((flags & FLAG_COMP) && GL_has_texture_compression)
+        glCompressedTexImage2DARB(m, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
+                                  w, h, 0, w * h / 2, nfo->data);
+    else
+        glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
+
+    /* Enable bilinear filtering. */
+
+    glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return o;
+}
+
+static void free_image_map(struct image_map *nfo)
+{
+    /* Release the pixel data buffer and name string buffer. */
+
+    if (nfo->data) free(nfo->data);
+    if (nfo->name) free(nfo->name);
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_image_env(const char *name_nx,
+                          const char *name_px,
+                          const char *name_ny,
+                          const char *name_py,
+                          const char *name_nz,
+                          const char *name_pz)
+{
+    int f, i, j, n = vecnum(image);
+
+    struct image *p;
 
     /* Scan the current images for an existing instance of the named files. */
 
     for (i = 0; i < n; ++i)
-    {
-        struct image *p = get_image(i);
-
-        if (cmpname(file_nx, p->s[0]) == 0 &&
-            cmpname(file_px, p->s[1]) == 0 &&
-            cmpname(file_ny, p->s[2]) == 0 &&
-            cmpname(file_py, p->s[3]) == 0 &&
-            cmpname(file_nz, p->s[4]) == 0 &&
-            cmpname(file_pz, p->s[5]) == 0)
-            return dupe_create_image(i);
-    }
+        if ((p = get_image(i))->type == TYPE_ENV)
+        {
+            if (cmpname(name_nx, p->nfo.env.name[0]) == 0 &&
+                cmpname(name_px, p->nfo.env.name[1]) == 0 &&
+                cmpname(name_ny, p->nfo.env.name[2]) == 0 &&
+                cmpname(name_py, p->nfo.env.name[3]) == 0 &&
+                cmpname(name_nz, p->nfo.env.name[4]) == 0 &&
+                cmpname(name_pz, p->nfo.env.name[5]) == 0)
+                return dupe_create_image(i);
+        }
 
     /* Didn't find it.  It's new. */
+
+    if ((i = new_image()) >= 0)
+    {
+        p = get_image(i);
+
+        p->state = 0;
+        p->count = 1;
+        p->flags = 0;
+        p->type  = TYPE_ENV;
+
+        /* Note the file names. */
+
+        p->nfo.env.name[0] = memdup(name_nx, strlen(name_nx) + 1, 1);
+        p->nfo.env.name[1] = memdup(name_px, strlen(name_px) + 1, 1);
+        p->nfo.env.name[2] = memdup(name_ny, strlen(name_ny) + 1, 1);
+        p->nfo.env.name[3] = memdup(name_py, strlen(name_py) + 1, 1);
+        p->nfo.env.name[4] = memdup(name_nz, strlen(name_nz) + 1, 1);
+        p->nfo.env.name[5] = memdup(name_pz, strlen(name_pz) + 1, 1);
+
+        /* Load the image data. */
+
+        p->nfo.env.data[0] = load_image(name_nx, &p->w, &p->h, &p->b, &f);
+        p->nfo.env.data[1] = load_image(name_px, &p->w, &p->h, &p->b, &f);
+        p->nfo.env.data[2] = load_image(name_ny, &p->w, &p->h, &p->b, &f);
+        p->nfo.env.data[3] = load_image(name_py, &p->w, &p->h, &p->b, &f);
+        p->nfo.env.data[4] = load_image(name_nz, &p->w, &p->h, &p->b, &f);
+        p->nfo.env.data[5] = load_image(name_pz, &p->w, &p->h, &p->b, &f);
+        
+        p->flags = f;
+
+        /* Send the header and data. */
+
+        send_event(EVENT_CREATE_IMAGE);
+        send_event(TYPE_ENV);
+
+        send_index(p->flags);
+        send_index(p->w);
+        send_index(p->h);
+        send_index(p->b);
+
+        for (j = 0; j < 6; j++)
+            send_array(p->nfo.env.data[j], p->w * p->h * p->b, 1);
+
+        return i;
+    }
+    return -1;
+}
+
+static void recv_create_image_env(void)
+{
+    /* Initialize a new env image. */
+
+    struct image *p = get_image(new_image());
+    int j;
+
+    p->state = 0;
+    p->count = 1;
+    p->type  = TYPE_ENV;
+
+    /* Receive the header. */
+
+    p->flags = recv_index();
+    p->w     = recv_index();
+    p->h     = recv_index();
+    p->b     = recv_index();
+
+    /* Receive the image data. */
+
+    for (j = 0; j < 6; ++j)
+        if ((p->nfo.env.data[j] =   malloc(p->w * p->h * p->b)))
+            recv_array(p->nfo.env.data[j], p->w * p->h * p->b, 1);
+}
+
+static GLuint init_image_env(struct image_env *nfo,
+                             int w, int h, int b, int flags)
+{
+    GLuint o;
+
+    glGenTextures(1, &o);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, o);
+
+    /* Apply pixel data to each of the cube map faces. */
+
+    gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, format[b],
+                      w, h, format[b], GL_UNSIGNED_BYTE, nfo->data[0]);
+    gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, format[b],
+                      w, h, format[b], GL_UNSIGNED_BYTE, nfo->data[1]);
+    gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, format[b],
+                      w, h, format[b], GL_UNSIGNED_BYTE, nfo->data[2]);
+    gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, format[b],
+                      w, h, format[b], GL_UNSIGNED_BYTE, nfo->data[3]);
+    gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, format[b],
+                      w, h, format[b], GL_UNSIGNED_BYTE, nfo->data[4]);
+    gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, format[b],
+                      w, h, format[b], GL_UNSIGNED_BYTE, nfo->data[5]);
+
+    /* Enable trilinear filtering. */
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    /* Clamp all cube map sides. */
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB,
+                    GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return o;
+}
+
+static void free_image_env(struct image_env *nfo)
+{
+    int i;
+
+    /* Release all pixel data buffers and name string buffers. */
+
+    for (i = 0; i < 6; ++i)
+    {
+        if (nfo->name[i]) free(nfo->name[i]);
+        if (nfo->data[i]) free(nfo->data[i]);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_image_ani(const char *name, int w, int h, int b,
+                                            int f0, int fn, int ca, int cb)
+{
+    int i;
+
+    /* Initialize a new animated image. */
 
     if ((i = new_image()) >= 0)
     {
@@ -603,43 +672,154 @@ int send_create_image(const char *file_nx,
 
         p->state = 0;
         p->count = 1;
-        p->sock  = INVALID_SOCKET;
+        p->flags = (NPOT(w) || NPOT(h)) ? FLAG_NPOT : 0;
+        p->type  = TYPE_ANI;
 
-        /* Note the file names. */
+        p->w = w;
+        p->h = h;
+        p->b = b;
 
-        p->s[0] = file_nx ? memdup(file_nx, strlen(file_nx) + 1, 1) : NULL;
-        p->s[1] = file_px ? memdup(file_px, strlen(file_px) + 1, 1) : NULL;
-        p->s[2] = file_ny ? memdup(file_ny, strlen(file_ny) + 1, 1) : NULL;
-        p->s[3] = file_py ? memdup(file_py, strlen(file_py) + 1, 1) : NULL;
-        p->s[4] = file_nz ? memdup(file_nz, strlen(file_nz) + 1, 1) : NULL;
-        p->s[5] = file_pz ? memdup(file_pz, strlen(file_pz) + 1, 1) : NULL;
+        p->nfo.ani.frame_0 = f0;
+        p->nfo.ani.frame_i = f0;
+        p->nfo.ani.frame_n = fn;
+        p->nfo.ani.count_a = ca;
+        p->nfo.ani.count_b = cb;
 
-        /* Load and pack the images. */
+        /* HACK: recognize compressed textures as having a DXT extension. */
 
-        if ((p->p[0] = load_image(file_nx, &p->w, &p->h, &p->b))) p->n++;
-        if ((p->p[1] = load_image(file_px, &p->w, &p->h, &p->b))) p->n++;
-        if ((p->p[2] = load_image(file_ny, &p->w, &p->h, &p->b))) p->n++;
-        if ((p->p[3] = load_image(file_py, &p->w, &p->h, &p->b))) p->n++;
-        if ((p->p[4] = load_image(file_nz, &p->w, &p->h, &p->b))) p->n++;
-        if ((p->p[5] = load_image(file_pz, &p->w, &p->h, &p->b))) p->n++;
+        if (strcmp(name + strlen(name) - 3, "dxt") == 0)
+            p->flags |= FLAG_COMP;
+
+        /* Store the name and allocate a data buffer. */
+
+        p->nfo.map.name = memdup(name, strlen(name) + 1, 1);
+
+        if (p->flags & FLAG_COMP)
+            p->nfo.map.data = malloc(p->w * p->h / 2);
+        else
+            p->nfo.map.data = malloc(p->w * p->h * p->b);
+        
+        /* Send the header. */
 
         send_event(EVENT_CREATE_IMAGE);
-        send_index(p->n);
+        send_event(TYPE_ANI);
+
+        send_index(p->flags);
         send_index(p->w);
         send_index(p->h);
         send_index(p->b);
-
-        /* If any file is missing, this might reorder cubemap sides.  Meh. */
-
-        for (j = 0; j < p->n; j++)
-            send_array(p->p[j], p->w * p->h * p->b, 1);
-
-        return i;
     }
     return -1;
 }
 
-int send_create_video(int port)
+static void recv_create_image_ani(void)
+{
+    /* Initialize a new animated image. */
+
+    struct image *p = get_image(new_image());
+
+    p->state = 0;
+    p->count = 1;
+    p->type  = TYPE_ANI;
+
+    /* Receive the header. */
+
+    p->flags = recv_index();
+    p->w     = recv_index();
+    p->h     = recv_index();
+    p->b     = recv_index();
+
+    /* Allocate the image data buffer. */
+
+    if (p->flags & FLAG_COMP)
+        p->nfo.ani.data = malloc(p->w * p->h / 2);
+    else
+        p->nfo.ani.data = malloc(p->w * p->h * p->b);
+}
+
+static GLuint init_image_ani(struct image_ani *nfo,
+                             int w, int h, int b, int flags)
+{
+    GLuint o = 0;
+    GLenum m = GL_TEXTURE_2D;
+
+    glGenTextures(1, &o);
+
+    /* Bind the texture as power-of-two or rectangular. */
+
+    if ((flags & FLAG_NPOT) && GL_has_texture_rectangle)
+        m = GL_TEXTURE_RECTANGLE_ARB;
+
+    glBindTexture(m, o);
+
+    /* Enable bilinear filtering. */
+
+    glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return o;
+}
+
+static void free_image_ani(struct image_ani *nfo)
+{
+    /* Release the pixel data buffer and name string buffer. */
+
+    if (nfo->data) free(nfo->data);
+    if (nfo->name) free(nfo->name);
+}
+
+static void step_image_ani(struct image_ani *nfo, GLuint o,
+                           int w, int h, int b, int flags)
+{
+    char filename[MAXSTR];
+    FILE *fp;
+
+    sprintf(filename, nfo->name, nfo->frame_i);
+
+    if ((fp = fopen(filename, "rb")))
+    {
+        GLenum m;
+        int   sz;
+
+        /* Load compressed or raw pixel data. */
+
+        if ((flags & FLAG_COMP) && GL_has_texture_compression)
+            sz = w * h * b;
+        else
+            sz = w * h / 2;
+
+        fread(nfo->data, 1, sz, fp);
+
+        /* Bind the texture as power-of-two or rectangular. */
+
+        if ((flags & FLAG_NPOT) && GL_has_texture_rectangle)
+            m = GL_TEXTURE_RECTANGLE_ARB;
+        else
+            m = GL_TEXTURE_2D;
+
+        glBindTexture(m, o);
+
+        /* Apply the loaded pixel data as compressed or raw. */
+
+        if ((flags & FLAG_COMP) && GL_has_texture_compression)
+            glCompressedTexImage2DARB(m, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
+                                      w, h, 0, sz, nfo->data);
+        else
+            glTexImage2D(m, 0, format[b], w, h, 0, format[b],
+                         GL_UNSIGNED_BYTE, nfo->data);
+
+        /* Step the animation. */
+
+        if (nfo->frame_i < nfo->frame_n)
+            nfo->frame_i = nfo->frame_i + 1;
+        else
+            nfo->frame_i = nfo->frame_0;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+int send_create_image_udp(int port)
 {
     int i, n = 1024 * 1024 * 8;
     SOCKET s = INVALID_SOCKET;
@@ -650,12 +830,15 @@ int send_create_video(int port)
 
         p->state = 0;
         p->count = 1;
+        p->flags = 0;
+        p->type  = TYPE_UDP;
+
         p->w     = 0;
         p->h     = 0;
-        p->n     = 1;
-        p->b     = 3;
-        p->code  = 0;
-        p->sock  = INVALID_SOCKET;
+        p->b     = 0;
+
+        p->nfo.udp.code = 0;
+        p->nfo.udp.sock = INVALID_SOCKET;
 
         /* Open a UDP socket for receiving. */
 
@@ -679,7 +862,13 @@ int send_create_video(int port)
 
                 if (bind(s, (struct sockaddr *) &addr, addr_len) >= 0)
                 {
-                    p->sock = s;
+                    p->nfo.udp.sock = s;
+
+                    /* Notify the clients of the new streaming image. */
+
+                    send_event(EVENT_CREATE_IMAGE);
+                    send_event(TYPE_UDP);
+
                     return i;
                 }
                 else error("bind %d : %s", port, system_error());
@@ -691,33 +880,146 @@ int send_create_video(int port)
     return -1;
 }
 
-void recv_create_image(void)
+static void recv_create_image_udp(void)
 {
+    /* initialize a new streaming image. */
+
     struct image *p = get_image(new_image());
-    int j;
 
+    p->state = 0;
     p->count = 1;
+    p->flags = 0;
+    p->type  = TYPE_UDP;
 
-    p->n = recv_index();
-    p->w = recv_index();
-    p->h = recv_index();
-    p->b = recv_index();
+    /* Streaming images are configured on data receipt. */
 
-    for (j = 0; j < p->n; ++j)
+    p->w = 0;
+    p->h = 0;
+    p->b = 0;
+}
+
+static GLuint init_image_udp(struct image_udp *nfo,
+                             int w, int h, int b, int flags)
+{
+    GLuint o = 0;
+    GLenum f = format[b];
+    GLenum m = GL_TEXTURE_2D;
+
+    glGenTextures(1, &o);
+
+    /* Bind the texture as power-of-two or rectangular. */
+
+    if ((flags & FLAG_NPOT) && GL_has_texture_rectangle)
+        m = GL_TEXTURE_RECTANGLE_ARB;
+
+    glBindTexture(m, o);
+
+    /* Apply an empty pixel data buffer. */
+
+    glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, NULL);
+
+    /* Enable bilinear filtering. */
+
+    glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return o;
+}
+
+static void free_image_udp(struct image_udp *nfo)
+{
+}
+
+static void step_image_udp(struct image_udp *nfo,
+                           int w, int h, int b, int flags)
+{
+#ifdef SNIP
+    struct image *p = get_image(i);
+
+    struct header *head = (struct header *) buffer;
+    GLubyte       *data =       (GLubyte *) buffer + sizeof (struct header);
+
+    /* Receive an incoming subimage. */
+
+    if ((int) recv(p->sock, buffer, BUFMAX, 0) > 0)
     {
-        p->p[j] =    malloc(p->w * p->h * p->b);
-        recv_array(p->p[j], p->w * p->h * p->b, 1);
+        /* Decode the subimage header. */
+
+        int code = ntohl(head->code);
+        int x    = ntohs(head->x);
+        int y    = ntohs(head->y);
+        int w    = ntohs(head->w);
+        int h    = ntohs(head->h);
+        int W    = ntohs(head->W);
+        int H    = ntohs(head->H);
+        int b    = 3;
+
+        /* If the video format changes, refresh the texture object. */
+
+        if (p->w != W || p->h != H || p->code != code)
+        {
+            p->code = code;
+            p->w    = W;
+            p->h    = H;
+
+            /* Infer the pixel width from the FOURCC code. */
+
+            switch (code)
+            {
+            case 0x31313459: p->b = 4; break;  /* Y411 */
+            case 0x30303859: p->b = 1; break;  /* Y800 */
+            }
+
+            /* Flush and refresh the GL texture state. */
+
+            fini_image(i);
+            init_image(i);
+        }
+
+        /* Infer the pixel width from the FOURCC code. */
+
+        switch (code)
+        {
+        case 0x31313459: p->b = 4; break;  /* Y411 */
+        case 0x30303859: p->b = 1; break;  /* Y800 */
+        }
+
+        /* Decode the incoming image data as necessary. */
+
+        switch (code)
+        {
+        case 0x31313459: decode_Y411(data, w, h); break;
+        }
+
+        send_set_image_pixels(i, data, x, y, w, h, W, H, b);
+
+        /* Apply the incoming subimage to the existing texture object. */
+
+        if (p->texture)
+        {
+            if (GL_has_texture_rectangle && (NPOT(w) || NPOT(h)))
+            {
+                glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
+                glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, x, y, w, h,
+                                format[p->b], GL_UNSIGNED_BYTE, data);
+            }
+            else
+            {
+                glBindTexture  (GL_TEXTURE_2D, p->texture);
+                glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
+                                format[p->b], GL_UNSIGNED_BYTE, data);
+            }
+        }
     }
+#endif
 }
 
 /*---------------------------------------------------------------------------*/
-
+/*
 static void set_image_pixels(int i, void *data,
                              int x, int y, int w, int h, int W, int H, int b)
 {
     struct image *p = get_image(i);
-
-    /* If the video format changes, refresh the texture object. */
 
     if (p->w != W || p->h != H || p->b != b)
     {
@@ -728,8 +1030,6 @@ static void set_image_pixels(int i, void *data,
         fini_image(i);
         init_image(i);
     }
-
-    /* Apply the incoming subimage to the existing texture object. */
 
     if (p->texture)
     {
@@ -747,11 +1047,12 @@ static void set_image_pixels(int i, void *data,
         }
     }
 }
-
+*/
 
 void send_set_image_pixels(int i, void *data,
                            int x, int y, int w, int h, int W, int H, int b)
 {
+/*
     set_image_pixels(i, data, x, y, w, h, W, H, b);
 
     send_event(EVENT_SET_IMAGE_PIXELS);
@@ -764,10 +1065,12 @@ void send_set_image_pixels(int i, void *data,
     send_index(H);
     send_index(b);
     send_array(data, w * h * b, 1);
+*/
 }
 
 void recv_set_image_pixels(void)
 {
+/*
     int i = recv_index();
     int x = recv_index();
     int y = recv_index();
@@ -780,10 +1083,20 @@ void recv_set_image_pixels(void)
     void *data;
 
     set_image_pixels(i, data, x, y, w, h, W, H, b);
-/*
-    recv_array(p->p[0], p->w * p->h * p->b, 1);
-    step_texture(i);
 */
+}
+
+/*---------------------------------------------------------------------------*/
+
+void recv_create_image(void)
+{
+    switch (recv_event())
+    {
+    case TYPE_MAP: recv_create_image_map(); break;
+    case TYPE_ENV: recv_create_image_env(); break;
+    case TYPE_ANI: recv_create_image_ani(); break;
+    case TYPE_UDP: recv_create_image_udp(); break;
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -791,7 +1104,6 @@ void recv_set_image_pixels(void)
 static int free_image(int i)
 {
     struct image *p = get_image(i);
-    int j;
 
     if (i > 0)
     {
@@ -803,13 +1115,13 @@ static int free_image(int i)
             {
                 fini_image(i);
 
-                for (j = 0; j < MAX_FILE; ++j)
+                switch (p->type)
                 {
-                    if (p->s[j]) free(p->s[j]);
-                    if (p->p[j]) free(p->p[j]);
-                }
-
-                if (p->sock >= 0) close(p->sock);
+                case TYPE_MAP: free_image_map(&p->nfo.map); break;
+                case TYPE_ENV: free_image_env(&p->nfo.env); break;
+                case TYPE_ANI: free_image_ani(&p->nfo.ani); break;
+                case TYPE_UDP: free_image_udp(&p->nfo.udp); break;
+                };
 
                 memset(p, 0, sizeof (struct image));
 
@@ -838,40 +1150,42 @@ void recv_delete_image(void)
 
 void get_image_c(int i, int x, int y, unsigned char c[4])
 {
-    struct image  *p      = get_image(i);
-    unsigned char *pixels = (unsigned char *) p->p[0];
+    struct image  *p = get_image(i);
+    unsigned char *data = (unsigned char *) p->nfo.map.data;
+
+    c[0] = c[1] = c[2] = c[3] = 0xFF;
 
     /* Return a pixel in any format as RGBA format. */
 
-    if (pixels)
+    if (p->type == TYPE_MAP && data && 0 <= x && x < p->w &&
+                                       0 <= y && y < p->h)
         switch (p->b)
         {
         case 1:
-            c[0] = pixels[p->w * y + x];
-            c[1] = pixels[p->w * y + x];
-            c[2] = pixels[p->w * y + x];
+            c[0] = data[p->w * y + x];
+            c[1] = data[p->w * y + x];
+            c[2] = data[p->w * y + x];
             c[3] = 0xff;
             break;
         case 2:
-            c[0] = pixels[(p->w * y + x) * 2 + 0];
-            c[1] = pixels[(p->w * y + x) * 2 + 0];
-            c[2] = pixels[(p->w * y + x) * 2 + 0];
-            c[3] = pixels[(p->w * y + x) * 2 + 1];
+            c[0] = data[(p->w * y + x) * 2 + 0];
+            c[1] = data[(p->w * y + x) * 2 + 0];
+            c[2] = data[(p->w * y + x) * 2 + 0];
+            c[3] = data[(p->w * y + x) * 2 + 1];
             break;
         case 3:
-            c[0] = pixels[(p->w * y + x) * 3 + 0];
-            c[1] = pixels[(p->w * y + x) * 3 + 1];
-            c[2] = pixels[(p->w * y + x) * 3 + 2];
+            c[0] = data[(p->w * y + x) * 3 + 0];
+            c[1] = data[(p->w * y + x) * 3 + 1];
+            c[2] = data[(p->w * y + x) * 3 + 2];
             c[3] = 0xff;
             break;
         case 4:
-            c[0] = pixels[(p->w * y + x) * 4 + 0];
-            c[1] = pixels[(p->w * y + x) * 4 + 1];
-            c[2] = pixels[(p->w * y + x) * 4 + 2];
-            c[3] = pixels[(p->w * y + x) * 4 + 3];
+            c[0] = data[(p->w * y + x) * 4 + 0];
+            c[1] = data[(p->w * y + x) * 4 + 1];
+            c[2] = data[(p->w * y + x) * 4 + 2];
+            c[3] = data[(p->w * y + x) * 4 + 3];
             break;
         }
-    else c[0] = c[1] = c[2] = c[3] = 0xFF;
 }
 
 int get_image_w(int i)
@@ -892,12 +1206,23 @@ void init_image(int i)
 
     if (p->state == 0)
     {
-        if (p->sock != INVALID_SOCKET)
-            p->texture = make_video(p->w, p->h, p->b);
-        else
-            p->texture = make_image(p->p, p->n, p->w, p->h, p->b);
-        
-        p->state   = 1;
+        p->state = 1;
+
+        switch (p->type)
+        {
+        case TYPE_MAP:
+            p->texture = init_image_map(&p->nfo.map,
+                                         p->w, p->h, p->b, p->flags); break;
+        case TYPE_ENV:
+            p->texture = init_image_env(&p->nfo.env,
+                                         p->w, p->h, p->b, p->flags); break;
+        case TYPE_ANI:
+            p->texture = init_image_ani(&p->nfo.ani,
+                                         p->w, p->h, p->b, p->flags); break;
+        case TYPE_UDP:
+            p->texture = init_image_udp(&p->nfo.udp,
+                                         p->w, p->h, p->b, p->flags); break;
+        }
     }
 }
 
@@ -925,18 +1250,19 @@ void draw_image(int i)
 
         if (p->texture)
         {
-            GLenum t = GL_TEXTURE_2D;
+            GLenum t;
 
             /* Ensure the wrong texture unit types are disabled. */
 
-            glDisable(GL_TEXTURE_RECTANGLE_ARB);
             glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+            glDisable(GL_TEXTURE_RECTANGLE_ARB);
             glDisable(GL_TEXTURE_2D);
 
             /* Determine the right texture unit type and enable it. */
 
-            if      (p->n > 1)                 t = GL_TEXTURE_CUBE_MAP_ARB;
-            else if (NPOT(p->w) || NPOT(p->h)) t = GL_TEXTURE_RECTANGLE_ARB;
+            if      (p->type == TYPE_ENV)  t = GL_TEXTURE_CUBE_MAP_ARB;
+            else if (p->flags & FLAG_NPOT) t = GL_TEXTURE_RECTANGLE_ARB;
+            else                           t = GL_TEXTURE_2D;
             
             glEnable(t);
             glBindTexture(t, get_image(i)->texture);
@@ -977,7 +1303,7 @@ void step_images(void)
 {
     struct timeval zero = { 0, 0 };
 
-    int i, x = 0, m = 0, n = vecnum(image);
+    int i, m = 0, n = vecnum(image);
 
     fd_set fds0;
     fd_set fds1;
@@ -990,12 +1316,12 @@ void step_images(void)
     {
         struct image *p = get_image(i);
 
-        if (p->count && p->sock != INVALID_SOCKET)
+        if (p->count && p->type == TYPE_UDP)
         {
-            FD_SET(p->sock, &fds0);
+            FD_SET(p->nfo.udp.sock, &fds0);
 
-            if (m < (int) p->sock + 1)
-                m = (int) p->sock + 1;
+            if (m < (int) p->nfo.udp.sock + 1)
+                m = (int) p->nfo.udp.sock + 1;
         }
     }
 
@@ -1010,10 +1336,11 @@ void step_images(void)
             {
                 struct image *p = get_image(i);
 
-                if (p->count && p->sock != INVALID_SOCKET)
+                if (p->count && p->type == TYPE_UDP)
                 {
-                    if (FD_ISSET(p->sock, &fds1))
-                        step_video(i, x++);
+                    if (FD_ISSET(p->nfo.udp.sock, &fds1))
+                        step_image_udp(&p->nfo.udp,
+                                        p->w, p->h, p->b, p->flags);
                 }
             }
             memcpy(&fds1, &fds0, sizeof (fd_set));
@@ -1034,17 +1361,19 @@ int startup_image(void)
             {
                 struct image *p = get_image(i);
 
-                p->count   =   1;
-                p->state   =   0;
-                p->sock    =   INVALID_SOCKET;
-                p->texture =   0;
-                p->n       =   1;
-                p->w       = 128;
-                p->h       = 128;
-                p->b       =   4;
-                p->p[0]    =   malloc(128 * 128 * 4);
+                p->type    = TYPE_MAP;
+                p->count   = 1;
+                p->state   = 0;
+                p->flags   = 0;
+                p->texture = 0;
 
-                memset(p->p[0], 0xFF, 128 * 128 * 4);
+                p->w = 128;
+                p->h = 128;
+                p->b = 4;
+
+                p->nfo.map.data = malloc(128 * 128 * 4);
+
+                memset(p->nfo.map.data, 0xFF, 128 * 128 * 4);
 
                 return 1;
             }

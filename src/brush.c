@@ -242,8 +242,7 @@ static void load_brush(struct brush *b, const char *file, const char *name)
 
                     else if (strcmp(W, "map_Kd") == 0)
                     {
-                        b->image[0] = send_create_image(parse_name(L + n),
-                                                        0, 0, 0, 0, 0);
+                        b->image[0] = send_create_image_map(parse_name(L + n));
                     }
                     else if (strcmp(W, "Kd") == 0)
                     {
