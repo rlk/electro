@@ -15,18 +15,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-struct message
-{
-    unsigned int pixel_x;
-    unsigned int pixel_y;
-    unsigned int pixel_w;
-    unsigned int pixel_h;
-    unsigned int image_w;
-    unsigned int image_h;
-};
-
-/*---------------------------------------------------------------------------*/
-
 int startup_image(void);
 
 /*---------------------------------------------------------------------------*/
@@ -45,7 +33,7 @@ int  send_create_video(int);
 void send_delete_image(int);
 void recv_delete_image(void);
 
-void send_set_image_pixels(int, void *, int, int, int, int, int, int, int);
+void send_set_image_pixels(int, void *, int, int, int, int, int, int);
 void recv_set_image_pixels(void);
 
 /*---------------------------------------------------------------------------*/

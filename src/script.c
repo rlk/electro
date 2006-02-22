@@ -1517,11 +1517,11 @@ static int E_create_image(lua_State *L)
                                              L_getstring(L, -2),
                                              L_getstring(L, -1)));
 
-    else if (N == 1 && lua_isstring(L, -1))
-        E_pushimage(L, send_create_image_map(L_getstring(L, -1)));
-
     else if (N == 1 && lua_isnumber(L, -1))
         E_pushimage(L, send_create_image_udp(L_getinteger(L, -1)));
+
+    else if (N == 1 && lua_isstring(L, -1))
+        E_pushimage(L, send_create_image_map(L_getstring(L, -1)));
 
     else 
         E_pushimage(L, 0);

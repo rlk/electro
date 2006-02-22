@@ -462,6 +462,7 @@ PFNGLUNIFORMMATRIX2FVARBPROC         glUniformMatrix2fvARB;
 PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
 PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
 PFNGLCOMPRESSEDTEXIMAGE2DARBPROC     glCompressedTexImage2DARB;
+PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC  glCompressedTexSubImage2DARB;
 
 void init_opengl(void)
 {
@@ -619,21 +620,19 @@ void init_opengl(void)
 
     if (opengl_need("GL_ARB_texture_compression"))
     {
-        glCompressedTexImage2DARB = (PFNGLCOMPRESSEDTEXIMAGE2DARBPROC)
-                           opengl_proc("glCompressedTexImage2DARB");
+        glCompressedTexImage2DARB    = (PFNGLCOMPRESSEDTEXIMAGE2DARBPROC)
+                              opengl_proc("glCompressedTexImage2DARB");
+        glCompressedTexSubImage2DARB = (PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC)
+                              opengl_proc("glCompressedTexSubImage2DARB");
 
-        GL_has_texture_compression = (glCompressedTexImage2DARB != NULL);
+        GL_has_texture_compression = (glCompressedTexImage2DARB
+                                   && glCompressedTexSubImage2DARB);
     }
 
     /* Miscellaneous procedureless extensions. */
 
     GL_has_point_sprite      = (opengl_need("GL_ARB_point_sprite"));
-    GL_has_texture_rectangle = (opengl_need("GL_ARB_texture_rectangle") ||
-                                opengl_need("GL_NV_texture_rectangle"));
-
-    /* HACK */
-
-    glEnable(GL_TEXTURE_RECTANGLE_NV);
+    GL_has_texture_rectangle = (opengl_need("GL_ARB_texture_rectangle"));
 
     init_opengl_obj();
 }
