@@ -3,7 +3,8 @@ tile = { }
 
 -- 19 hosts: 1 server, 18 clients.
 
-host[0]  = E.add_host("default",                 0, 0, 1600, 1200)
+--host[0]  = E.add_host("default",                 0, 0, 1600, 1200)
+host[0]  = E.add_host("default",                 0, 0, 800, 600)
 host[1]  = E.add_host("scylla1-10.evl.uic.edu",  0, 0, 1600, 2400)
 host[2]  = E.add_host("scylla2-10.evl.uic.edu",  0, 0, 1600, 2400)
 host[3]  = E.add_host("scylla3-10.evl.uic.edu",  0, 0, 1600, 2400)
@@ -25,6 +26,7 @@ host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
 
 --E.set_host_flags(host[0], E.host_flag_full,   true);
 --E.set_host_flags(host[0], E.host_flag_framed, false);
+E.set_host_flags(host[0], E.host_flag_framed, true);
 
 -- Tile host numbers.
 
@@ -210,7 +212,7 @@ l = {
 --    pitch     angle   thickness   shift    cycle
 }
 --]]
-
+--[[
 l = {
     { 271.945865, -7.86, 0.0328, 0.0058, 0.777777 }, -- 1
     { 271.945865, -7.8, 0.0348, 0.0003, 0.777777 }, -- 2
@@ -248,6 +250,45 @@ l = {
     { 271.945865, -7.89, 0.0369, 0.0036, 0.777777 }, -- 34
     { 271.945865, -7.81, 0.0354, 0.0043, 0.777777 }, -- 35
 }
+--]]
+
+l = {
+    { 271.945865, -7.86, 0.0328, 0.0062, 0.777777 }, -- 1
+    { 271.945865, -7.8, 0.0348, 0.002, 0.777777 }, -- 2
+    { 271.945865, -7.83, 0.0339, 0.0048, 0.777777 }, -- 3
+    { 271.945865, -7.77, 0.0336, 0.0025, 0.777777 }, -- 4
+    { 271.945865, -7.73, 0.0343, 0.0043, 0.777777 }, -- 5
+    { 271.945865, -7.83, 0.0344, 0.0032, 0.777777 }, -- 6
+    { 271.945865, -7.69, 0.0352, 0.005, 0.777777 }, -- 7
+    { 271.945865, -7.77, 0.0347, 0.0061, 0.777777 }, -- 8
+    { 271.945865, -7.75, 0.034, 0.0035, 0.777777 }, -- 9
+    { 271.945865, -7.741, 0.035, 0.0034, 0.777777 }, -- 10
+    { 271.945865, -7.77, 0.0351, 0.0037, 0.777777 }, -- 11
+    { 271.945865, -7.85, 0.037, 0.0055, 0.777777 }, -- 12
+    { 271.945865, -7.8, 0.037, 0.0049, 0.777777 }, -- 13
+    { 271.945865, -7.77, 0.037, 0.004, 0.777777 }, -- 14
+    { 271.945865, -7.83, 0.0357, 0.0018, 0.777777 }, -- 15
+    { 271.945865, -7.79, 0.0338, 0.0014, 0.777777 }, -- 16
+    { 271.945865, -7.83, 0.0354, 0.0037, 0.777777 }, -- 17
+    { 271.945865, -7.75, 0.0347, 0.0072, 0.777777 }, -- 18
+    { 271.945865, -7.845, 0.03762, 0.002, 0.777777 }, -- 19
+    { 271.945865, -7.782, 0.0362, 0.0072, 0.777777 }, -- 20
+    { 271.945865, -7.89, 0.0357, 0.003, 0.777777 }, -- 21
+    { 271.945865, -7.88, 0.036, 0.0063, 0.777777 }, -- 22
+    { 271.945865, -7.8, 0.0355, 0.0033, 0.777777 }, -- 23
+    { 271.945865, -7.83, 0.0347, 0.0065, 0.777777 }, -- 24
+    { 271.945865, -7.801, 0.0354, 0.0027, 0.777777 }, -- 25
+    { 271.945865, -7.82, 0.0352, 0.0066, 0.777777 }, -- 26
+    { 271.945865, -7.77, 0.035, 0.0055, 0.777777 }, -- 27
+    { 271.945865, -7.83, 0.035, 0.0069, 0.777777 }, -- 28
+    { 271.945865, -7.88, 0.036, 0.0051, 0.777777 }, -- 29
+    { 271.945865, -7.78, 0.035, -0.0018, 0.777777 }, -- 30
+    { 271.945865, -7.73, 0.0338, 0.0047, 0.777777 }, -- 31
+    { 271.945865, -7.76, 0.036, -0.0025, 0.777777 }, -- 32
+    { 271.945865, -7.74, 0.0348, 0.0071, 0.777777 }, -- 33
+    { 271.945865, -7.89, 0.0369, 0.0028, 0.777777 }, -- 34
+    { 271.945865, -7.81, 0.0354, 0.0043, 0.777777 }, -- 35
+}
 
 -- Mirror the center tile on the server.
 
@@ -255,7 +296,8 @@ num[0] = 0
 map[0] = 0
 
 l[0] = { 271.945865, -7.750000, 0.035700,  0.0038, 0.777777 }
-w[0] = w[18]
+--w[0] = w[18]
+w[0] = { 0, 0, 800, 600 }
 v[0] = v[18]
 p[0] = p[18]
 
@@ -344,33 +386,31 @@ end
 
 function set_varrier_func(func, name)
     varrier_func = func
-    E.print_console("variable = "..name.."\n")
+    print("variable = "..name.."\n")
     return true
 end
 
 function set_varrier_diff(diff)
     varrier_diff = diff
-    E.print_console("value = "..diff.."\n")
+    print("value = "..diff.."\n")
     return true
 end
 
 function set_varrier_tile(d)
+    set_varrier_test(false)
+
     varrier_tile = varrier_tile + d
 
     if varrier_tile <  0 then varrier_tile = 35 end
     if varrier_tile > 35 then varrier_tile =  0 end
 
-    if varrier_tile == 0 then
-        E.print_console("tile = ALL\n")
-    else
-        E.print_console("tile = "..varrier_tile.."\n")
-    end
+    set_varrier_test(true)
 
     return true
 end
 
-function tog_varrier_test()
-    varrier_test = not varrier_test
+function set_varrier_test(test)
+    varrier_test = test
 
     if varrier_tile > 0 then
         E.set_tile_flags(tile[varrier_tile], E.tile_flag_test, varrier_test)
@@ -415,13 +455,14 @@ function varrier_keyboard(k, s, camera)
                 return set_varrier_func(varrier_cycle, "cycle")
             end
 
-            if k == E.key_down  then return set_varrier_value(-1) end
-            if k == E.key_up    then return set_varrier_value( 1) end
+            if k == E.key_left     then return set_varrier_value(-1) end
+            if k == E.key_right    then return set_varrier_value( 1) end
+            if k == E.key_pagedown then return set_varrier_tile (-1) end
+            if k == E.key_pageup   then return set_varrier_tile ( 1) end
 
-            if k == E.key_left  then return set_varrier_tile(-1) end
-            if k == E.key_right then return set_varrier_tile( 1) end
-
-            if k == E.key_tab   then return tog_varrier_test() end
+            if k == E.key_tab then
+                return set_varrier_test(not varrier_test)
+            end
         end
 
         if k == E.key_F5 then

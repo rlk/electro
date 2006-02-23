@@ -1042,7 +1042,11 @@ void send_set_image_pixels(int i, void *data, int code, int r, int n,
     send_index(w);
     send_index(h);
     send_index(b);
-    send_array(data, MIN(w * h * b, BUFMAX), 1);
+
+    if ((get_image(i)->flags & FLAG_COMP) && GL_has_texture_compression)
+        send_array(data, MIN(w * n / 2, BUFMAX), 1);
+    else
+        send_array(data, MIN(w * n * b, BUFMAX), 1);
 
     switch (get_image(i)->type)
     {
@@ -1061,7 +1065,10 @@ void recv_set_image_pixels(void)
     int h    = recv_index();
     int b    = recv_index();
 
-    recv_array(buffer, MIN(w * n * b, BUFMAX), 1);
+    if ((get_image(i)->flags & FLAG_COMP) && GL_has_texture_compression)
+        recv_array(buffer, MIN(w * n / 2, BUFMAX), 1);
+    else
+        recv_array(buffer, MIN(w * n * b, BUFMAX), 1);
 
     switch (get_image(i)->type)
     {

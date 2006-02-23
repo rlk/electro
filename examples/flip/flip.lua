@@ -5,10 +5,8 @@ img_n   = "/data/rlk/jule4d1K20fps/USmall.%05d.dxt"
 img_w   = 2048
 img_h   = 512
 img_b   = 3
---img_min = 0
---img_max = 4200
-img_min = 2000
-img_max = 3000
+img_min = 0
+img_max = 4200
 
 image = nil
 brush = nil
@@ -75,6 +73,9 @@ function do_timer(dt)
         E.set_entity_scale(spriteL, s, s, s)
         E.set_entity_scale(spriteR, s, s, s)
     end
+
+    E.set_entity_position(spriteL, pos_x + off_x, pos_y, pos_z + off_z)
+    E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
 
     return true
 end
