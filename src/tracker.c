@@ -10,6 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -54,6 +55,11 @@ struct sensor
     uint32_t frame;
 };
 
+struct transform
+{
+    float M[16];
+};
+
 /*---------------------------------------------------------------------------*/
 
 #ifndef _WIN32
@@ -67,6 +73,7 @@ static volatile HANDLE control_id = NULL;
 static struct tracker_header *tracker = (struct tracker_header *) (-1);
 static struct control_header *control = (struct control_header *) (-1);
 static uint32_t              *buttons = NULL;
+static struct transform      *transform = NULL;
 
 /*---------------------------------------------------------------------------*/
 
@@ -102,6 +109,21 @@ int acquire_tracker(int t_key, int c_key)
 
     if (control != (struct control_header *) (-1))
         buttons = (uint32_t *) calloc(control->but_count, sizeof (uint32_t));
+    if (tracker != (struct tracker_header *) (-1))
+    {
+        int i;
+
+        transform = (struct transform *) calloc(tracker->count,
+                                                sizeof (struct transform));
+
+        for (i = 0; i < tracker->count; ++i)
+        {
+            transform[i].M[0]  = 1.0f;
+            transform[i].M[5]  = 1.0f;
+            transform[i].M[10] = 1.0f;
+            transform[i].M[15] = 1.0f;
+        }
+    }
 
     return 1;
 }
@@ -232,6 +254,26 @@ int get_tracker_buttons(unsigned int *id, unsigned int *st)
             }
     }
     return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void set_tracker_transform(unsigned int id, float M[16])
+{
+    if (transform && tracker != (struct tracker_header *) (-1))
+    {
+        if (id < tracker->count)
+            memcpy(transform[id].M, M, 16 * sizeof (float));
+    }
+}
+
+void get_tracker_transform(unsigned int id, float M[16])
+{
+    if (transform && tracker != (struct tracker_header *) (-1))
+    {
+        if (id < tracker->count)
+            memcpy(M, transform[id].M, 16 * sizeof (float));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

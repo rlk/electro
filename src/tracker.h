@@ -31,6 +31,9 @@ int get_tracker_joystick(unsigned int, float[2]);
 
 int get_tracker_buttons(unsigned int *, unsigned int *); 
 
+void set_tracker_transform(unsigned int, float[16]);
+void get_tracker_transform(unsigned int, float[16]);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

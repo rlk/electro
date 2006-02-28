@@ -1043,13 +1043,16 @@ unsigned int get_entity_child(unsigned int i, unsigned int n)
 
 static void get_tracked_rotation(int sens, float R[16])
 {
+    float M[16];
     float r[3];
 
-    get_tracker_rotation((unsigned int) sens, r);
+    get_tracker_rotation ((unsigned int) sens, r);
+    get_tracker_transform((unsigned int) sens, M);
 
     load_rot_mat(R, 1, 0, 0, r[0]);
     mult_rot_mat(R, 0, 1, 0, r[1]);
     mult_rot_mat(R, 0, 0, 1, r[2]);
+    mult_mat_mat(R, R, M);
 }
 
 static int step_entity_tree(unsigned int i, float dt, int head,

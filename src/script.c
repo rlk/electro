@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "joystick.h"
+#include "tracker.h"
 #include "display.h"
 #include "console.h"
 #include "server.h"
@@ -2015,6 +2016,34 @@ static int E_get_display_bound(lua_State *L)
     return 6;
 }
 
+static int E_set_tracker_transform(lua_State *L)
+{
+    unsigned int id = (unsigned int) L_getinteger(L, -17);
+
+    float M[16];
+
+    M[ 0] = L_getnumber(L, -16);
+    M[ 1] = L_getnumber(L, -15);
+    M[ 2] = L_getnumber(L, -14);
+    M[ 3] = L_getnumber(L, -13);
+    M[ 4] = L_getnumber(L, -12);
+    M[ 5] = L_getnumber(L, -11);
+    M[ 6] = L_getnumber(L, -10);
+    M[ 7] = L_getnumber(L,  -9);
+    M[ 8] = L_getnumber(L,  -8);
+    M[ 9] = L_getnumber(L,  -7);
+    M[10] = L_getnumber(L,  -6);
+    M[11] = L_getnumber(L,  -5);
+    M[12] = L_getnumber(L,  -4);
+    M[13] = L_getnumber(L,  -3);
+    M[14] = L_getnumber(L,  -2);
+    M[15] = L_getnumber(L,  -1);
+
+    set_tracker_transform(id, M);
+
+    return 0;
+}
+
 /*===========================================================================*/
 /* Miscellaneous functions                                                   */
 
@@ -2530,6 +2559,7 @@ static struct function_def functions[] = {
     { "set_tile_view_offset",  E_set_tile_view_offset  },
     { "get_display_union",     E_get_display_union     },
     { "get_display_bound",     E_get_display_bound     },
+    { "set_tracker_transform", E_set_tracker_transform },
 
     /* Miscellaneous */
 
@@ -2541,8 +2571,8 @@ static struct function_def functions[] = {
     { "exit",                  E_exit                  },
     { "nuke",                  E_nuke                  },
     { "chdir",                 E_chdir                 },
-    { "popdir",                E_popdir                 },
-    { "pushdir",               E_pushdir                 },
+    { "popdir",                E_popdir                },
+    { "pushdir",               E_pushdir               },
 };
 
 static struct constant_def constants[] = {
