@@ -23,7 +23,38 @@
 #include "event.h"
 #include "image.h"
 
+/*---------------------------------------------------------------------------*/
+
 #define NPOT(n) (((n) & ((n) - 1)) != 0)
+
+static int next2(int x)
+{
+    x--;
+    x |= (x >>  1);
+    x |= (x >>  2);
+    x |= (x >>  4);
+    x |= (x >>  8);
+    x |= (x >> 16);
+    x++;
+
+    return x;
+}
+
+static GLubyte byte(int n)
+{
+/*
+    n &= (~n) >> 8;
+    n -= 256;
+    n &= ( n) >> 8;
+    n += 256;
+
+    return (GLubyte) n;
+*/
+    if (n > 255) return 255;
+    if (n <   0) return   0;
+
+    return (GLubyte) n;
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -62,7 +93,11 @@ struct image_ani
 
 struct image_udp
 {
-    int sock;
+    int      sock;
+    int      r0;
+    int      r1;
+    int      rn;
+    GLubyte *data;
 };
 
 union image_nfo
@@ -78,7 +113,6 @@ struct image
     int count;
     int state;
     int flags;
-    int dirty;
     int type;
     int code;
 
@@ -136,22 +170,11 @@ static int new_image(void)
 }
 
 /*===========================================================================*/
-/*
+
 #define PIXEL(r, g, b) (0xFF000000 | ((b) << 16) | ((g) <<  8) | (r))
 
-static GLubyte byte(int n)
+static void deY411(GLubyte *dst, GLubyte *src, int n)
 {
-    if (n > 255) return 0xFF;
-    if (n <   0) return 0x00;
-
-    return (GLubyte) (n);
-}
-
-static void decode_Y411(GLubyte *p, int w, int h)
-{
-    GLuint  *dst = (GLuint  *) p + (w * h - 1) * 4;
-    GLubyte *src = (GLubyte *) p + (w * h - 1) * 6;
-
     const int o = 16;
     const int k = 2 << o;
 
@@ -161,7 +184,9 @@ static void decode_Y411(GLubyte *p, int w, int h)
     const int Vr = (int) ( 1.596f * k);
     const int Vg = (int) (-0.813f * k);
 
-    while (src >= p)
+    int i;
+
+    for (i = 0; i < n; i += 4)
     {
         const int U  = (int) src[0] - 128;
         const int Y0 = (int) src[1] -  16;
@@ -185,31 +210,83 @@ static void decode_Y411(GLubyte *p, int w, int h)
         g = (Y0c + UVg) >> o;
         b = (Y0c + UVb) >> o;
 
-        dst[0] = PIXEL(byte(r), byte(g), byte(b));
+        ((GLuint *) dst)[0] = PIXEL(byte(r), byte(g), byte(b));
 
         r = (Y1c + UVr) >> o;
         g = (Y1c + UVg) >> o;
         b = (Y1c + UVb) >> o;
 
-        dst[1] = PIXEL(byte(r), byte(g), byte(b));
+        ((GLuint *) dst)[1] = PIXEL(byte(r), byte(g), byte(b));
 
         r = (Y2c + UVr) >> o;
         g = (Y2c + UVg) >> o;
         b = (Y2c + UVb) >> o;
 
-        dst[2] = PIXEL(byte(r), byte(g), byte(b));
+        ((GLuint *) dst)[2] = PIXEL(byte(r), byte(g), byte(b));
 
         r = (Y3c + UVr) >> o;
         g = (Y3c + UVg) >> o;
         b = (Y3c + UVb) >> o;
 
-        dst[3] = PIXEL(byte(r), byte(g), byte(b));
+        ((GLuint *) dst)[3] = PIXEL(byte(r), byte(g), byte(b));
 
-        src -= 6;
-        dst -= 4;
+        src +=  6;
+        dst += 16;
     }
 }
-*/
+
+static void deUYVY(GLubyte *dst, GLubyte *src, int n)
+{
+    const int o = 16;
+    const int k = 2 << o;
+
+    const int Yc = (int) ( 1.164f * k);
+    const int Ug = (int) (-0.391f * k);
+    const int Ub = (int) ( 2.018f * k);
+    const int Vr = (int) ( 1.596f * k);
+    const int Vg = (int) (-0.813f * k);
+
+    int i;
+
+    for (i = 0; i < n; i += 2)
+    {
+        const int U  = (int) src[0] - 128;
+        const int Y0 = (int) src[1] -  16;
+        const int V  = (int) src[2] - 128;
+        const int Y1 = (int) src[3] -  16;
+
+        const int UVr =          V * Vr;
+        const int UVg = U * Ug + V * Vg;
+        const int UVb = U * Ub;
+
+        const int Y0c = Y0 * Yc;
+        const int Y1c = Y1 * Yc;
+
+        int r, g, b;
+
+        r = (Y0c + UVr) >> o;
+        g = (Y0c + UVg) >> o;
+        b = (Y0c + UVb) >> o;
+
+        ((GLuint *) dst)[0] = PIXEL(byte(r), byte(g), byte(b));
+
+        r = (Y1c + UVr) >> o;
+        g = (Y1c + UVg) >> o;
+        b = (Y1c + UVb) >> o;
+
+        ((GLuint *) dst)[1] = PIXEL(byte(r), byte(g), byte(b));
+
+        src += 4;
+        dst += 8;
+    }
+}
+
+static GLubyte *raster(GLubyte *p, int W, int H,
+                                   int w, int h, int b, int r, int c)
+{
+    return p + b * (W * r + c);
+}
+
 /*===========================================================================*/
 
 static void *load_png_image(const char *filename, int *width,
@@ -849,7 +926,7 @@ static void step_image_ani(int i)
 
 int send_create_image_udp(int port)
 {
-    int i, n = 1024 * 1024;
+    int i, n = 8 * 1024 * 1024;
     SOCKET s = INVALID_SOCKET;
 
     if ((i = new_image()) >= 0)
@@ -934,25 +1011,23 @@ static GLuint init_image_udp(struct image_udp *nfo,
 {
     GLuint o = 0;
     GLenum f = format[b];
-    GLenum m = GL_TEXTURE_2D;
+
+    int W = next2(w);
+    int H = next2(h);
 
     glGenTextures(1, &o);
-
-    /* Bind the texture as power-of-two or rectangular. */
-
-    if ((flags & FLAG_NPOT) && GL_has_texture_rectangle)
-        m = GL_TEXTURE_RECTANGLE_ARB;
-
-    glBindTexture(m, o);
+    glBindTexture(GL_TEXTURE_2D, o);
 
     /* Apply an empty pixel data buffer. */
 
-    glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, f, W, H, 0, f, GL_UNSIGNED_BYTE, NULL);
 
-    /* Enable bilinear filtering. */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    nfo->r0 = h;
+    nfo->r1 = 0;
+    nfo->rn = 0;
 
     return o;
 }
@@ -968,9 +1043,10 @@ static void set_image_udp_pixels(int i, GLubyte *data, int code,
 {
     struct image *p = get_image(i);
 
-    GLenum m;
+    int W = next2(w);
+    int H = next2(h);
 
-    /* If the image size or type has changed, flush the OpenGL state. */
+    /* If the image size or type has changed, reinitialize. */
     
     if (p->code != code || p->w != w || p->h != h || p->b != b)
     {
@@ -979,28 +1055,75 @@ static void set_image_udp_pixels(int i, GLubyte *data, int code,
         p->h    = h;
         p->b    = b;
 
+        /* Reallocate the buffer. */
+
+        if (p->nfo.udp.data)
+            free(p->nfo.udp.data);
+
+        p->nfo.udp.data = (GLubyte *) calloc(W * H * p->b, 1);
+
+        /* Flush the OpenGL state. */
+
         fini_image(i);
         init_image(i);
     }
 
-    /* Bind the texture as power-of-two or rectangular. */
+    /* Copy the incoming data to the image buffer. */
 
-    if ((p->flags & FLAG_NPOT) && GL_has_texture_rectangle)
-        m = GL_TEXTURE_RECTANGLE_ARB;
-    else
-        m = GL_TEXTURE_2D;
+    switch (p->code)
+    {
+    case 0x31313459: /* Y411 */
+        for (i = r; i < r + n; ++i)
+            deY411(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w);
+        break;
 
-    glBindTexture(m, p->texture);
+    case 0x59565955: /* UYVY */
+        for (i = r; i < r + n; ++i)
+            deUYVY(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w);
+/*            memcpy(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w * 2);*/
+        break;
 
-    /* Apply the new pixel data as compressed or raw. */
+    case 0x41424752: /* RGB  */
+        for (i = r; i < r + n; ++i)
+            memcpy(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w * 3);
+        break;
 
-    if ((p->flags & FLAG_COMP) && GL_has_texture_compression)
-        glCompressedTexSubImage2DARB(m, 0, 0, r, w, n,
-                                     GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
-                                     w * h / 2, data);
-    else
-        glTexSubImage2D(m, 0, 0, r, w, n,
-                        format[b], GL_UNSIGNED_BYTE, data);
+    case 0x20424752: /* RGBA */
+        for (i = r; i < r + n; ++i)
+            memcpy(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w * 4);
+        break;
+    }
+
+    if (p->nfo.udp.r0 > r)
+        p->nfo.udp.r0 = r;
+
+    if (p->nfo.udp.r1 < r + n)
+        p->nfo.udp.r1 = r + n;
+
+    p->nfo.udp.rn++;
+}
+
+static void draw_image_udp(int i)
+{
+    struct image *p = get_image(i);
+
+    /* If new image data has arrived, update the texture object. */
+
+    if (p->nfo.udp.rn > 0)
+    {
+        int W = next2(p->w);
+
+        int y = p->nfo.udp.r0;
+        int h = p->nfo.udp.r1 - p->nfo.udp.r0;
+
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y, W, h,
+                        format[p->b], GL_UNSIGNED_BYTE,
+                        p->nfo.udp.data + W * y * p->b);
+
+        p->nfo.udp.r0 = p->h;
+        p->nfo.udp.r1 =    0;
+        p->nfo.udp.rn =    0;
+    }
 }
 
 static void step_image_udp(int i)
@@ -1010,9 +1133,11 @@ static void step_image_udp(int i)
     struct header *head = (struct header *) buffer;
     GLubyte       *data =       (GLubyte *) buffer + sizeof (struct header);
 
+    int size;
+
     /* Receive an incoming subimage. */
 
-    if ((int) recv(p->nfo.udp.sock, buffer, BUFMAX, 0) > 0)
+    if ((size = (int) recv(p->nfo.udp.sock, buffer, BUFMAX, 0)) > 0)
     {
         /* Decode the subimage header. */
 
@@ -1023,6 +1148,8 @@ static void step_image_udp(int i)
         int h    = ntohs(head->h);
         int b    = ntohs(head->b);
 
+/*      printf("%d %d %d %d %d %d %d\n", size, code, r, n, w, h, b);*/
+
         /* Distribute the new pixel data. */
 
         send_set_image_pixels(i, data, code, r, n, w, h, b);
@@ -1030,6 +1157,18 @@ static void step_image_udp(int i)
 }
 
 /*---------------------------------------------------------------------------*/
+
+static int buffer_size(int code, int w, int h)
+{
+    switch (code)
+    {
+    case 0x31313459: return w * h * 12 / 8; /* Y411 */
+    case 0x59565955: return w * h * 16 / 8; /* UYVY */
+    case 0x41424752: return w * h * 24 / 8; /* RGB  */
+    case 0x20424752: return w * h * 32 / 8; /* RGBA */
+    }
+    return 0;
+}
 
 void send_set_image_pixels(int i, void *data, int code, int r, int n,
                                                         int w, int h, int b)
@@ -1046,7 +1185,7 @@ void send_set_image_pixels(int i, void *data, int code, int r, int n,
     if ((get_image(i)->flags & FLAG_COMP) && GL_has_texture_compression)
         send_array(data, MIN(w * n / 2, BUFMAX), 1);
     else
-        send_array(data, MIN(w * n * b, BUFMAX), 1);
+        send_array(data, MIN(buffer_size(code, w, n), BUFMAX), 1);
 
     switch (get_image(i)->type)
     {
@@ -1068,7 +1207,7 @@ void recv_set_image_pixels(void)
     if ((get_image(i)->flags & FLAG_COMP) && GL_has_texture_compression)
         recv_array(buffer, MIN(w * n / 2, BUFMAX), 1);
     else
-        recv_array(buffer, MIN(w * n * b, BUFMAX), 1);
+        recv_array(buffer, MIN(buffer_size(code, w, n), BUFMAX), 1);
 
     switch (get_image(i)->type)
     {
@@ -1257,6 +1396,13 @@ void draw_image(int i)
             
             glEnable(t);
             glBindTexture(t, get_image(i)->texture);
+
+            /* Invoke any type-specific draw handler. */
+
+            switch (p->type)
+            {
+            case TYPE_UDP: draw_image_udp(i); break;
+            }
         }
     }
 }

@@ -85,9 +85,11 @@ void sync_buffer(void)
 {
     struct bucket *temp;
     int rank;
-    int len;
+    int size;
+    int n;
 
     assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+    assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
 
     if (rank != 0) clear_buffer();
 
@@ -95,19 +97,41 @@ void sync_buffer(void)
 
     for (curr = first; curr; curr = curr->next)
     {
+        MPI_Status s;
+
+        int p  = (rank - 1) / 2;
+        int c1 = (rank * 2) + 1;
+        int c2 = (rank * 2) + 2;
+
         /* Broadcast this bucket, preserving client 'next' links. */
 
-        len  = curr->size;
+        n    = curr->size;
         temp = curr->next;
 
-        assert_mpi(MPI_Bcast(&len, 1,   MPI_INT,  0, MPI_COMM_WORLD));
-        assert_mpi(MPI_Bcast(curr, len, MPI_BYTE, 0, MPI_COMM_WORLD));
-
+        assert_mpi(MPI_Bcast(&n,   1, MPI_INT,  0, MPI_COMM_WORLD));
+        assert_mpi(MPI_Bcast(curr, n, MPI_BYTE, 0, MPI_COMM_WORLD));
+/*
+        if (rank > 0)
+        {
+            assert_mpi(MPI_Recv(&n,   1, MPI_INT,  p,  1, MPI_COMM_WORLD, &s));
+            assert_mpi(MPI_Recv(curr, n, MPI_BYTE, p,  1, MPI_COMM_WORLD, &s));
+        }
+        if (c1 < size)
+        {
+            assert_mpi(MPI_Send(&n,   1, MPI_INT,  c1, 1, MPI_COMM_WORLD));
+            assert_mpi(MPI_Send(curr, n, MPI_BYTE, c1, 1, MPI_COMM_WORLD));
+        }
+        if (c2 < size)
+        {
+            assert_mpi(MPI_Send(&n,   1, MPI_INT,  c2, 1, MPI_COMM_WORLD));
+            assert_mpi(MPI_Send(curr, n, MPI_BYTE, c2, 1, MPI_COMM_WORLD));
+        }
+*/
         curr->next = temp;
 
         /* Loop until a non-full bucket is sent or received. */
 
-        if (len < BUCKETSZ)
+        if (n < BUCKETSZ)
             break;
 
         /* If a client is out of buckets but more are coming, allocate. */

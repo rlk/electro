@@ -56,16 +56,20 @@ function do_timer(dt)
     if stereo then
 --        s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
         s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
-        E.set_sprite_range(spriteR, 0, w, m, 0)
-        E.set_sprite_range(spriteL, 0, w, h, m)
+--        E.set_sprite_range(spriteR, 0, w, m, 0)
+--        E.set_sprite_range(spriteL, 0, w, h, m)
+
+        E.set_sprite_range(spriteR, 0.0, 0.625, 0.468, 0.000)
+        E.set_sprite_range(spriteL, 0.0, 0.625, 0.937, 0.468)
+
         E.set_entity_scale(spriteL, 2 * s, s, s)
         E.set_entity_scale(spriteR, 2 * s, s, s)
 --        E.set_entity_scale(spriteL, s / 2, s, s)
 --        E.set_entity_scale(spriteR, s / 2, s, s)
     else
         s = math.min((X1 - X0) / (x1 - x0), (Y1 - Y0) / (y1 - y0))
-        E.set_sprite_range(spriteL, 0, w, 0, h)
-        E.set_sprite_range(spriteR, 0, w, 0, h)
+        E.set_sprite_range(spriteL, 0, 1, 1, 0)
+        E.set_sprite_range(spriteR, 0, 1, 1, 0)
         E.set_entity_scale(spriteL, s, s, s)
         E.set_entity_scale(spriteR, s, s, s)
     end
@@ -100,8 +104,8 @@ function do_start()
     E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
 
     E.enable_timer(true)
---  E.set_background(0.2, 0.2, 0.2)
-    E.set_background(0, 0, 0)
+    E.set_background(0.2, 0.2, 0.2)
+--  E.set_background(0, 0, 0)
 end
 
 -------------------------------------------------------------------------------
