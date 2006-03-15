@@ -53,8 +53,6 @@ function do_start()
     E.set_entity_position(pivot, XC, YC, ZC)
 
     add_object("../data/crate.obj")
-
-    E.enable_timer(true)
 end
 
 function do_click(b, s)

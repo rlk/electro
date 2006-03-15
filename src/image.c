@@ -1080,7 +1080,6 @@ static void set_image_udp_pixels(int i, GLubyte *data, int code,
     case 0x59565955: /* UYVY */
         for (i = r; i < r + n; ++i)
             deUYVY(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w);
-/*            memcpy(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w * 2);*/
         break;
 
     case 0x41424752: /* RGB  */
@@ -1148,8 +1147,6 @@ static void step_image_udp(int i)
         int h    = ntohs(head->h);
         int b    = ntohs(head->b);
 
-/*      printf("%d %d %d %d %d %d %d\n", size, code, r, n, w, h, b);*/
-
         /* Distribute the new pixel data. */
 
         send_set_image_pixels(i, data, code, r, n, w, h, b);
@@ -1164,8 +1161,8 @@ static int buffer_size(int code, int w, int h)
     {
     case 0x31313459: return w * h * 12 / 8; /* Y411 */
     case 0x59565955: return w * h * 16 / 8; /* UYVY */
-    case 0x41424752: return w * h * 24 / 8; /* RGB  */
-    case 0x20424752: return w * h * 32 / 8; /* RGBA */
+    case 0x20424752: return w * h * 24 / 8; /* RGB  */
+    case 0x41424752: return w * h * 32 / 8; /* RGBA */
     }
     return 0;
 }

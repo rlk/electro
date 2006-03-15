@@ -653,21 +653,25 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <h2><a name="images">2.2. Images</a></h2>
 
-<p>Images are used as textures for objects, strings, and sprites.</p>
+<p>Images are used as textures for objects, strings, and sprites. A default image of 128&times;128 white pixels is always available. It may be referenced using the symbol <tt>nil</tt> in any context where an image is required.</p>
 
-<p>A default image of 128&times;128 white pixels is always available. It may be referenced using the symbol <tt>nil</tt> in any context where an image is required.</p>
+<p>Electro supports several different image types. Images of all types are created using the <a href="#create_image"><tt>create_image</tt></a> function. Image type is distinguished by argument type.</p>
 
 <dl>
 
-<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename,</i> [<i>filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>])</a><dd><p>Load a static image from the named PNG or JPEG file.</p>
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename</i>)<dd><p>Load a static image from the named PNG or JPEG file.</p>
 
-<p>If 6 image files are named then a cube map is defined. All 6 cube map images must be the same size. If the image is to applied as a cubic environment map, applications must set <a href="#brush_flag_env_map_0"><tt>brush_flag_env_map</tt></a> on any brush referencing it. <a href="#get_image_pixel">Pixel queries</a> act only on the first image of a cube map.</p>
-
-<p>A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filenames will result in the same image object.</p>
+<p>A given image file will only ever be loaded once. Calling <tt>create_image</tt> a second time with the same filename will result in the same image object.</p>
 
 <p class="note">Some hardware requires that image width and height be powers of two. If support for non-power-of-two images is available, Electro will use it. If a non-power-of-two image is used on hardware that does not support it, then the image will appear white.</p>
 
-<dt><a name="create_image_dynamic"><i>image</i> = <tt>create_image</tt>(<i>port</i>)</a><dd><p>Create a dynamic image using UDP port <i>port</i>. The UDP image protocol is <a href="image.html">documented here</a>.</p>
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>filename<sub>-x</sub>, filename<sub>+x</sub>, filename<sub>-y</sub>, filename<sub>+y</sub>, filename<sub>-z</sub>, filename<sub>+z</sub></i>)</a><dd><p>Load a set of cube map images.  All 6 cube map images must be the same size. If the image is to applied as a cubic environment map, applications must set <a href="#brush_flag_env_map_0"><tt>brush_flag_env_map</tt></a> on any brush referencing it. <a href="#get_image_pixel">Pixel queries</a> act only on the first image of a cube map.</p>
+
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>pattern, width, height, bytes, frame<sub>0</sub>, frame<sub>n</sub>, pulldown<sub>n</sub>, pulldown<sub>d</sub></i>)</a><dd><p>Create flip-book animated image.  For optimal playback performance, flip-book images are assumed to be in raw data format. Pixel sizes of 4, 3, 2, and 1 correspond to RGBA, RGB, luminance-alpha, and monochome formats, respectively. Raw DXT1-compressed RGB images are supported, and are recognized by a <tt>.dxt</tt> extension.</p>
+
+<p>The <i>pattern</i> argument gives the image file name pattern in C <tt>printf</tt> format. The <i>width</i>, <i>height</i>, and <i>bytes</i> arguments give the image and pixel size. The <i>frame<sub>0</sub></i> and <i>frame<sub>n</sub></i> arguments give the first frame number and total frame count to be applied to the file name pattern. The <i>pulldown<sub>n</sub></i> and <i>pulldown<sub>d</sub></i> give the numerator and denominator of the pulldown ratio, which may be used to adapt the playback rate of an animation to the sync rate of the display.</p>
+
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>port</i>)</a><dd><p>Create a video stream image using UDP port <i>port</i>. The UDP image protocol is <a href="image.html">documented here</a>.</p>
 
 <dt><a name="delete_image"><tt>delete_image</tt>(<i>image</i>)</a><dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
 
@@ -845,8 +849,6 @@ and sprites.</p>
 
 <dt><a name="set_tile_viewport"><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)</a><dd><p>Set the pixel area of <i>tile</i>. This defines the range of any <a href="#camera_type_orthogonal">orthogonal</a> camera used during rendering.</p>
 
-<dt><a name="set_tile_offset"><tt>set_tile_offset</tt>(<i>tile, x, y, z</i>)</a><dd><p>Set a world-space eye offset vector to be used when rendering to <i>tile</i>. Tile view offset behaves just as <a href="#set_camera_offset">camera view offset</a>, but is applied on a per-tile basis rather than a per-camera basis. This may be used to specify a non-default view position vector, but it is especially useful with an untracked stereo display such as a side-by-side GeoWall configuration, where the stereo effect depends not upon a stereo camera mode, but upon a pair of tiles rendered from distinct viewpoints.</p>
-
 <dt><a name="set_tile_mirror"><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)</a><dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustum to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <a href="#tile_flag_mirror"><tt>tile_flag_mirror</tt></a> option.</p>
 
 <dt><a name="set_tile_flags"><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)</a><dd><p>Set or clear tile flags on <i>tile</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state.</p>
@@ -873,6 +875,25 @@ and sprites.</p>
 <dt><a name="get_display_union"><i>x, y, w, h</i> = <tt>get_display_union</tt>()</a><dd><p>Return the total pixel size of the display. The return values <i>x, y, w, h</i> give the position, width, and height of the rectangle of available pixels. This is the union of the viewports of all <a href="#add_tile">tile</a> definitions. This information is often useful when positioning entities in view of an <a href="#camera_type_orthogonal">orthogonal</a> camera, or configuring a scene to match the aspect ratio of a display.</p>
 
 <dt><a name="get_display_bound"><i>min<sub>x</sub>, min<sub>y</sub>, min<sub>z</sub>, max<sub>x</sub>, max<sub>y</sub>, max<sub>z</sub></i> = <tt>get_display_bound</tt>()</a><dd><p>Return the axis-aligned bounding box of the entire display, in world coordinates. This information is useful when positioning entities in view of a <a href="#camera_type_perspective">perspective</a> camera.</p>
+
+</dl>
+
+<h3>2.6.4. Tracking</h3>
+<dl>
+
+<dt><a name="set_tracker_transform"><tt>set_tracker_transform</tt>(<i>index, m<sub>0</sub>, m<sub>1</sub>, ... m<sub>15</sub></i>)<dd><p>Set a transform to be applied to tracker sensor <i>index</i>. The 4&times;4 transform matrix is given in column-major order:</p>
+
+<table border="0">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<tr><td>m<sub>0</sub><td>m<sub>4</sub><td>m<sub>8</sub><td>m<sub>12</sub>
+<tr><td>m<sub>1</sub><td>m<sub>5</sub><td>m<sub>9</sub><td>m<sub>13</sub>
+<tr><td>m<sub>2</sub><td>m<sub>6</sub><td>m<sub>10</sub><td>m<sub>14</sub>
+<tr><td>m<sub>3</sub><td>m<sub>7</sub><td>m<sub>11</sub><td>m<sub>15</sub>
+</table>
 
 </dl>
 

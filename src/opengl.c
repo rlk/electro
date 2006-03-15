@@ -416,6 +416,7 @@ void init_opengl(void)
     GL_has_texture_compression  = opengl_need("GL_ARB_texture_compression");
     GL_has_texture_rectangle    = opengl_need("GL_ARB_texture_rectangle");
     GL_has_multitexture         = opengl_need("GL_ARB_multitexture");
+    GL_has_shader_objects       = opengl_need("GL_ARB_shader_objects");
 
     glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
     GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
@@ -684,7 +685,7 @@ GLfloat opengl_perf(GLfloat *all)
 static void opengl_object_error(const char *tag, GLhandleARB H)
 {
     char *s;
-    int   l;
+    GLint l;
 
     glGetObjectParameterivARB(H, GL_OBJECT_INFO_LOG_LENGTH_ARB, &l);
 
@@ -699,13 +700,20 @@ static void opengl_object_error(const char *tag, GLhandleARB H)
 GLhandleARB opengl_shader_object(GLenum type, const char *text)
 {
     GLhandleARB H = glCreateShaderObjectARB(type);
-    int p;
+    GLint p;
 
     glShaderSourceARB(H, 1, &text, NULL);
     glCompileShaderARB(H);
 
     glGetObjectParameterivARB(H, GL_OBJECT_COMPILE_STATUS_ARB,  &p);
-    if (p == 0) opengl_object_error("Compiler Status", H);
+
+    if (p == 0)
+    {
+        if (type == GL_VERTEX_SHADER_ARB)
+            opengl_object_error("Vertex Shader", H);
+        else
+            opengl_object_error("Fragment Shader", H);
+    }
 
     return H;
 }
@@ -713,7 +721,7 @@ GLhandleARB opengl_shader_object(GLenum type, const char *text)
 GLhandleARB opengl_program_object(GLhandleARB vert_shad, GLhandleARB frag_shad)
 {
     GLhandleARB H = glCreateProgramObjectARB();
-    int p;
+    GLint p;
 
     glBindAttribLocationARB(H, 6, "tangent");
     glBindAttribLocationARB(H, 7, "bitangent");
@@ -724,7 +732,7 @@ GLhandleARB opengl_program_object(GLhandleARB vert_shad, GLhandleARB frag_shad)
     glLinkProgramARB(H);
 
     glGetObjectParameterivARB(H, GL_OBJECT_LINK_STATUS_ARB, &p);
-    if (p == 0) opengl_object_error("Linker Status", H);
+    if (p == 0) opengl_object_error("Program Linker", H);
 
     return H;
 }

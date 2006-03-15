@@ -10,7 +10,7 @@ void main()
     vec3  normal;
     vec3  light;
     vec4  cm =           texture2D(colormap,  gl_TexCoord[0].xy);
-    vec3  nm = normalize(texture2D(normalmap, gl_TexCoord[0].xy).xyz * 2 - 1);
+    vec3  nm = normalize(texture2D(normalmap, gl_TexCoord[0].xy).xyz * 2.0 - 1.0);
 
     float k;
 

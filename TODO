@@ -1,23 +1,15 @@
-Dan needs
-    global state
-            gravity vector
-            ambient light
-            ERP
-            CFM
-            auto disable?
-    bugfix: giving BindAttribLocation not found on non-GLSL hardware?
+remove b from video message
+implement animation pulldown
 
-Video (and flipbook) texture on cluster displays.
-
+bugfix: giving BindAttribLocation not found on non-GLSL hardware?
 
 fix AABB
 new vector implementation
         improve vector traversal
+new OBJ implementation
 Add brief changelogs to website
 YUV decode using SSE
 texture clamp
-check that RGB and RGBA video work
-work on video efficiency
 UTF-8... extra chars
 set entity rotation vectors
 global state
@@ -26,20 +18,3 @@ global state
         ERP
         CFM
         auto disable?
-Build against mesa
-OBJ
-        shading groups
-        surface extract?
-        Stronger index checking
-        extract libobj?
-        MTL texture transform?
-MIDI IO
-UDP audio?
-skeletal animation
-audio
-        multichannel
-
-tracking
-        Lua check for tracking (built-in simulator?)
-
-cwall config

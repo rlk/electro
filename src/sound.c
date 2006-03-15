@@ -443,7 +443,7 @@ int startup_sound(void)
     spec.samples  = BUFSIZE;
     spec.format   = BUFFORM;
     spec.freq     = BUFFREQ;
-/*
+
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) == 0)
     {
         if (SDL_OpenAudio(&spec, NULL) == 0)
@@ -457,7 +457,7 @@ int startup_sound(void)
         else fprintf(stderr, "%s\n", SDL_GetError());
     }
     else fprintf(stderr, "%s\n", SDL_GetError());
-*/
+
     return 1;
 }
 
