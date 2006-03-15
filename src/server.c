@@ -55,6 +55,7 @@
 
 static void server_draw(void);
 
+static int server_blank   = 0;
 static int server_grab    = 0;
 
 static int    timer_on    = 0;
@@ -136,7 +137,10 @@ static void server_draw(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     draw_host_background();
-    draw_entities();
+
+    if (server_blank == 0)
+        draw_entities();
+
     draw_console();
     server_swap();
 
@@ -238,12 +242,16 @@ static int server_loop(void)
                 dirty |= set_console_enable(!console_is_enabled());
                 break;
             case SDLK_F2:
+#ifdef CONF_MPI
+                server_blank = 1 - server_blank;
+#else
                 set_window_full(!get_window_full());
                 dirty |= init_video(get_window_w(),
                                     get_window_h(),
                                     get_window_full(),
                                     get_window_framed(),
                                     get_window_stereo());
+#endif
                 break;
             case SDLK_F3:
                 set_window_siz(-1);

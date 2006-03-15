@@ -8,7 +8,7 @@ wx = 0
 wy = 0
 wz = 0
 
-magnitude = 100
+magnitude = 1000
 
 -------------------------------------------------------------------------------
 
@@ -27,8 +27,6 @@ end
 
 function do_start()
     local x, y, w, h = E.get_display_union()
-
-    magnitude = w / 5
 
     -- Prepare star and sign brushes.
 
@@ -80,11 +78,16 @@ function do_point(x, y)
 
     elseif button == 3 then
         dx = dx + x * 0.001
+        dy = dy - y * 0.001
     elseif button == 1 then
         dz = dz + y * 0.001
     else
+        if E.get_modifier(E.key_modifier_shift) then
+            wz = wz - x * 0.001
+        else
+            wy = wy - x * 0.001
+        end
         wx = wx - y * 0.001
-        wy = wy - x * 0.001
     end
 end
 
