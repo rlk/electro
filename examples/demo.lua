@@ -3,15 +3,17 @@ joy_dev = 0
 
 -------------------------------------------------------------------------------
 
-name_text = "Electro Demos"
+name_text = "Varrier Demos"
 help_text = "Select a demo.  Press F12 to return."
 
 demo = {
-    { "Trainer",                  "trainer",   "trainer.lua"   },
-    { "Video Viewer",             "movie",     "movie.lua"     },
-    { "Hipparcos Explorer",       "vortex",    "vortex.lua"    },
---  { "NCMIR Data",               "imgplay",   "imgplay.lua"   },
-    { "Driving",                  "driving",   "driving.lua"   },
+    { "Trainer",                  "trainer",   "trainer.lua", true   },
+    { "Mars", "/DEMO/varrier/mars1/bin","mpirun -np 3 varrier", false   },
+    { "Video Viewer",             "movie",     "movie.lua", true     },
+    { "Hipparcos Explorer",       "vortex",    "vortex.lua", true    },
+--  { "NCMIR Data",               "imgplay",   "imgplay.lua", true   },
+    { "Driving",                  "driving",   "driving.lua", true   },
+    { "4D Julia",                 "flip",      "flip.lua", true   },
 }
 
 item = { }
@@ -46,9 +48,16 @@ function set_selected(d)
 end
 
 function run_selected()
-    E.nuke()
-    E.chdir(demo[selected][2])
-    dofile(demo[selected][3])
+    if demo[selected][4] then
+        E.nuke()
+        E.chdir(demo[selected][2])
+        dofile(demo[selected][3])
+    else
+        E.enable_timer(false)
+        E.pushdir(demo[selected][2])
+        os.execute(demo[selected][3])
+        E.popdir()
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -56,20 +65,17 @@ end
 time     = 0
 centered = true
 
-function do_frame()
-end
-
 function do_timer(dt)
     local jx, jy = E.get_joystick(joy_dev)
 
     time = time + dt
 
     local r = math.min(dsp_w / 3, dsp_h / 3)
-    local x = dsp_w / 2 + r * math.sin(time)
-    local y = dsp_h / 2
+    local x = r * math.sin(time)
+    local y = (dsp_y1 + dsp_y0) / 2
     local k = 10 + 3 * math.sin(time / 4)
 
-    E.set_entity_position(light, x, y, dsp_h / 2)
+    E.set_entity_position(light, x, y, dsp_z + dsp_h / 2)
     E.set_entity_scale(logo, k, k, k)
 
     if centered and jy < -0.5 then
@@ -88,6 +94,14 @@ function do_timer(dt)
 end
 
 function do_keyboard(k, s)
+    if varrier_keyboard then
+        if varrier_keyboard(k, s, camera) then
+            return true
+        end
+    end
+
+    if s then E.enable_timer(true) end
+
     if s and k == E.key_up     then set_selected(-1) end
     if s and k == E.key_down   then set_selected( 1) end
     if s and k == E.key_return then run_selected()   end
@@ -95,6 +109,7 @@ function do_keyboard(k, s)
 end
 
 function do_joystick(d, b, s)
+
     if s then
         run_selected()
     end
@@ -102,7 +117,12 @@ function do_joystick(d, b, s)
 end
 
 function do_start()
-    dsp_x, dsp_y, dsp_w, dsp_h = E.get_display_union()
+--  dsp_x, dsp_y, dsp_w, dsp_h = E.get_display_union()
+    dsp_x0, dsp_y0, dsp_z0, dsp_x1, dsp_y1, dsp_z1 = E.get_display_bound()
+
+    dsp_w = dsp_x1 - dsp_x0
+    dsp_h = dsp_y1 - dsp_x0
+    dsp_z = (dsp_z1 + dsp_z0) / 2
 
     local H = 0
     local W = 0
@@ -127,12 +147,15 @@ function do_start()
 
     E.set_background(0, 0.5, 0, 0, 0, 0)
 
-    camera = E.create_camera(E.camera_type_orthogonal)
+--  camera = E.create_camera(E.camera_type_orthogonal)
+    camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_positional)
     menu   = E.create_pivot()
 
     E.parent_entity(light, camera)
     E.parent_entity(menu,  light)
+
+    E.set_entity_flags(config, E.entity_flag_hidden, true)
 
     -- Find the maximum width and height of all menu items.
 
@@ -155,7 +178,8 @@ function do_start()
     k = math.min(0.60 * dsp_w / W, 0.50 * dsp_h / (H * N))
 
     E.set_entity_scale(menu, k, k, k)
-    E.set_entity_position(menu, dsp_w / 2, 3 * dsp_h / 4, 0)
+--  E.set_entity_position(menu, dsp_w / 2, 3 * dsp_h / 4, dsp_z)
+    E.set_entity_position(menu, 0, (dsp_y1 + dsp_y0) / 2 + 0.33, dsp_z)
 
     -- Position each item within the menu.
 
