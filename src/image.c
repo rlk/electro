@@ -73,6 +73,7 @@ struct image_ani
 
 struct image_udp
 {
+    int    dirty;
     int    sock;
     int    code;
     GLuint frag;
@@ -991,11 +992,12 @@ int send_create_image_udp(int port)
 
                 if (bind(s, (struct sockaddr *) &addr, addr_len) >= 0)
                 {
-                    p->nfo.udp.sock = s;
-                    p->nfo.udp.code = 0;
-                    p->nfo.udp.frag = 0;
-                    p->nfo.udp.prog = 0;
-                    p->nfo.udp.fbo  = 0;
+                    p->nfo.udp.dirty = 0;
+                    p->nfo.udp.sock  = s;
+                    p->nfo.udp.code  = 0;
+                    p->nfo.udp.frag  = 0;
+                    p->nfo.udp.prog  = 0;
+                    p->nfo.udp.fbo   = 0;
 
                     /* Notify the clients of the new streaming image. */
 
@@ -1030,11 +1032,12 @@ static void recv_create_image_udp(void)
     p->h = 0;
     p->b = 0;
 
-    p->nfo.udp.sock = INVALID_SOCKET;
-    p->nfo.udp.code = 0;
-    p->nfo.udp.frag = 0;
-    p->nfo.udp.prog = 0;
-    p->nfo.udp.fbo  = 0;
+    p->nfo.udp.sock  = INVALID_SOCKET;
+    p->nfo.udp.dirty = 0;
+    p->nfo.udp.code  = 0;
+    p->nfo.udp.frag  = 0;
+    p->nfo.udp.prog  = 0;
+    p->nfo.udp.fbo   = 0;
 }
 
 static char *yuv_text = \
@@ -1137,7 +1140,7 @@ static void draw_image_udp(int i)
 {
     struct image *p = get_image(i);
 
-    if (GL_has_framebuffer_object && GL_has_shader_objects)
+    if (p->nfo.udp.dirty && GL_has_framebuffer_object && GL_has_shader_objects)
     {
         glEnable(GL_TEXTURE_RECTANGLE_ARB);
         glBindTexture(GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
@@ -1166,10 +1169,6 @@ static void draw_image_udp(int i)
 
             glBegin(GL_POLYGON);
             {
-/*
-                int x0 = 64, x1 = p->w - 64;
-                int y0 = 64, y1 = p->h - 64;
-*/              
                 int x0 = 0, x1 = p->w;
                 int y0 = 0, y1 = p->h;
 
@@ -1195,6 +1194,8 @@ static void draw_image_udp(int i)
             glPopMatrix();
         }
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+        p->nfo.udp.dirty = 0;
     }
 }
 
