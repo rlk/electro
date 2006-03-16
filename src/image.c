@@ -27,35 +27,15 @@
 
 #define NPOT(n) (((n) & ((n) - 1)) != 0)
 
-static int next2(int x)
-{
-    x--;
-    x |= (x >>  1);
-    x |= (x >>  2);
-    x |= (x >>  4);
-    x |= (x >>  8);
-    x |= (x >> 16);
-    x++;
-
-    return x;
-}
-
+/*
 static GLubyte byte(int n)
 {
-/*
-    n &= (~n) >> 8;
-    n -= 256;
-    n &= ( n) >> 8;
-    n += 256;
-
-    return (GLubyte) n;
-*/
     if (n > 255) return 255;
     if (n <   0) return   0;
 
     return (GLubyte) n;
 }
-
+*/
 /*---------------------------------------------------------------------------*/
 
 #define FLAG_NPOT 1
@@ -93,11 +73,12 @@ struct image_ani
 
 struct image_udp
 {
-    int      sock;
-    int      r0;
-    int      r1;
-    int      rn;
-    GLubyte *data;
+    int    sock;
+    int    code;
+    GLuint frag;
+    GLuint prog;
+    GLuint back;
+    GLuint fbo;
 };
 
 union image_nfo
@@ -114,7 +95,6 @@ struct image
     int state;
     int flags;
     int type;
-    int code;
 
     GLuint texture;
 
@@ -146,7 +126,6 @@ struct header
     short n;
     short w;
     short h;
-    short b;
 };
 
 static GLubyte *buffer = NULL;
@@ -171,6 +150,52 @@ static int new_image(void)
 
 /*===========================================================================*/
 
+static void expand411(GLubyte *buf, int n)
+{
+    GLubyte *src = (GLubyte *) buf + n * 6 / 4;
+    GLuint  *dst = (GLuint  *) buf + n;
+
+    while (src >= buf)
+    {
+        const GLuint U  = (GLuint) src[0] << 8;
+        const GLuint Y0 = (GLuint) src[1];
+        const GLuint Y1 = (GLuint) src[2];
+        const GLuint V  = (GLuint) src[3] << 16;
+        const GLuint Y2 = (GLuint) src[4];
+        const GLuint Y3 = (GLuint) src[5];
+
+        dst[0] = 0xFF000000 | Y0 | U | V;
+        dst[1] = 0xFF000000 | Y1 | U | V;
+        dst[2] = 0xFF000000 | Y2 | U | V;
+        dst[3] = 0xFF000000 | Y3 | U | V;
+
+        src -= 6;
+        dst -= 4;
+    }
+}
+
+static void expand422(GLubyte *buf, int n)
+{
+    GLubyte *src = (GLubyte *) buf + n * 4 / 2;
+    GLuint  *dst = (GLuint  *) buf + n;
+
+    while (src >= buf)
+    {
+        const GLuint U  = (GLuint) src[0] << 8;
+        const GLuint Y0 = (GLuint) src[1];
+        const GLuint V  = (GLuint) src[2] << 16;
+        const GLuint Y1 = (GLuint) src[3];
+
+        dst[0] = 0xFF000000 | Y0 | U | V;
+        dst[1] = 0xFF000000 | Y1 | U | V;
+
+        src -= 4;
+        dst -= 2;
+    }
+}
+
+/*===========================================================================*/
+/*
 #define PIXEL(r, g, b) (0xFF000000 | ((b) << 16) | ((g) <<  8) | (r))
 
 static void deY411(GLubyte *dst, GLubyte *src, int n)
@@ -286,7 +311,7 @@ static GLubyte *raster(GLubyte *p, int W, int H,
 {
     return p + b * (W * r + c);
 }
-
+*/
 /*===========================================================================*/
 
 static void *load_png_image(const char *filename, int *width,
@@ -935,8 +960,7 @@ int send_create_image_udp(int port)
 
         p->state = 0;
         p->count = 1;
-        p->flags = 0;
-        p->code  = 0;
+        p->flags = FLAG_NPOT;
         p->type  = TYPE_UDP;
 
         p->w = 0;
@@ -968,6 +992,10 @@ int send_create_image_udp(int port)
                 if (bind(s, (struct sockaddr *) &addr, addr_len) >= 0)
                 {
                     p->nfo.udp.sock = s;
+                    p->nfo.udp.code = 0;
+                    p->nfo.udp.frag = 0;
+                    p->nfo.udp.prog = 0;
+                    p->nfo.udp.fbo  = 0;
 
                     /* Notify the clients of the new streaming image. */
 
@@ -994,7 +1022,6 @@ static void recv_create_image_udp(void)
     p->state = 0;
     p->count = 1;
     p->flags = 0;
-    p->code  = 0;
     p->type  = TYPE_UDP;
 
     /* Streaming images are configured on data receipt. */
@@ -1004,32 +1031,100 @@ static void recv_create_image_udp(void)
     p->b = 0;
 
     p->nfo.udp.sock = INVALID_SOCKET;
+    p->nfo.udp.code = 0;
+    p->nfo.udp.frag = 0;
+    p->nfo.udp.prog = 0;
+    p->nfo.udp.fbo  = 0;
 }
 
-static GLuint init_image_udp(struct image_udp *nfo,
-                             int w, int h, int b, int flags)
+static char *yuv_text = \
+    "uniform samplerRect rgb;                            \n"\
+
+    "void main()                                         \n"\
+    "{                                                   \n"\
+    "    const vec3 d = vec3(0.0625, 0.5000, 0.5000);    \n"\
+    "    const mat3 M = mat3(1.164,  1.164,  1.164,      \n"\
+    "                        0.000, -0.813,  1.596,      \n"\
+    "                        2.018, -0.391,  0.000);     \n"\
+
+    "    vec3 c = textureRect(rgb, gl_FragCoord.xy).rgb; \n"\
+
+    "    gl_FragColor = vec4(M * (c - d), 1.0);          \n"\
+    "}                                                   \n";
+
+static GLuint init_image_udp(struct image_udp *nfo, int w, int h)
 {
-    GLuint o = 0;
-    GLenum f = format[b];
+    GLuint fore = 0;
+    GLuint back = 0;
 
-    int W = next2(w);
-    int H = next2(h);
+    /* Generate framebuffer and texture objects. */
 
-    glGenTextures(1, &o);
-    glBindTexture(GL_TEXTURE_2D, o);
+    if (GL_has_framebuffer_object)
+        glGenFramebuffersEXT(1, &nfo->fbo);
 
-    /* Apply an empty pixel data buffer. */
+    if (GL_has_texture_rectangle)
+    {
+        /* Initialize the front color buffer. */
 
-    glTexImage2D(GL_TEXTURE_2D, 0, f, W, H, 0, f, GL_UNSIGNED_BYTE, NULL);
+        glGenTextures(1, &fore);
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fore);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, w, h, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-    nfo->r0 = h;
-    nfo->r1 = 0;
-    nfo->rn = 0;
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    return o;
+        /* Initialize the front color buffer. */
+
+        glGenTextures(1, &back);
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, back);
+
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, w, h, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                        GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        nfo->back = back;
+    }
+
+    /* Initialize the frame buffer. */
+
+    if (GL_has_framebuffer_object)
+    {
+        glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, nfo->fbo);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                  GL_COLOR_ATTACHMENT0_EXT,
+                                  GL_TEXTURE_RECTANGLE_ARB, fore, 0);
+        glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, 0);
+    }
+
+    /* Initialize a YUV-to-RGB fragment shader. */
+
+    if (GL_has_shader_objects)
+    {
+        nfo->frag = opengl_shader_object(GL_FRAGMENT_SHADER_ARB, yuv_text);
+        nfo->prog = opengl_program_object(0, nfo->frag);
+    }
+
+    return fore;
+}
+
+static void fini_image_udp(struct image_udp *nfo)
+{
+    if (nfo->prog)
+        glDeleteProgramsARB(1, &nfo->prog);
+
+    if (nfo->fbo && GL_has_framebuffer_object)
+        glDeleteFramebuffersEXT(1, &nfo->fbo);
+
+    if (nfo->prog)
+        glDeleteTextures(1, &nfo->back);
 }
 
 static void free_image_udp(struct image_udp *nfo)
@@ -1038,29 +1133,83 @@ static void free_image_udp(struct image_udp *nfo)
         close(nfo->sock);
 }
 
-static void set_image_udp_pixels(int i, GLubyte *data, int code, 
-                                 int r, int n, int w, int h, int b)
+static void draw_image_udp(int i)
 {
     struct image *p = get_image(i);
 
-    int W = next2(w);
-    int H = next2(h);
+    if (GL_has_framebuffer_object && GL_has_shader_objects)
+    {
+        glEnable(GL_TEXTURE_RECTANGLE_ARB);
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
+
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, p->nfo.udp.fbo);
+
+        glUseProgramObjectARB(p->nfo.udp.prog);
+        glUniform1iARB(glGetUniformLocationARB(p->nfo.udp.prog, "rgb"), 0);
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            glPushMatrix();
+            glLoadIdentity();
+            glOrtho(0, p->w, 0, p->h, -1, 1);
+        }
+        glMatrixMode(GL_MODELVIEW);
+        {
+            glPushMatrix();
+            glLoadIdentity();
+        }
+
+        glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+        {
+            glViewport(0, 0, p->w, p->h);
+            glScissor (0, 0, p->w, p->h);
+
+            glBegin(GL_POLYGON);
+            {
+/*
+                int x0 = 64, x1 = p->w - 64;
+                int y0 = 64, y1 = p->h - 64;
+*/              
+                int x0 = 0, x1 = p->w;
+                int y0 = 0, y1 = p->h;
+
+                glTexCoord2i(x0, y0);
+                glVertex2i  (x0, y0);
+                glTexCoord2i(x1, y0);
+                glVertex2i  (x1, y0);
+                glTexCoord2i(x1, y1);
+                glVertex2i  (x1, y1);
+                glTexCoord2i(x0, y1);
+                glVertex2i  (x0, y1);
+            }
+            glEnd();
+        }
+        glPopAttrib();
+
+        glMatrixMode(GL_PROJECTION);
+        {
+            glPopMatrix();
+        }
+        glMatrixMode(GL_MODELVIEW);
+        {
+            glPopMatrix();
+        }
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    }
+}
+
+static void set_image_udp_pixels(int i, GLubyte *data,
+                                 int code, int r, int n, int w, int h)
+{
+    struct image *p = get_image(i);
 
     /* If the image size or type has changed, reinitialize. */
     
-    if (p->code != code || p->w != w || p->h != h || p->b != b)
+    if (p->nfo.udp.code != code || p->w != w || p->h != h)
     {
-        p->code = code;
-        p->w    = w;
-        p->h    = h;
-        p->b    = b;
-
-        /* Reallocate the buffer. */
-
-        if (p->nfo.udp.data)
-            free(p->nfo.udp.data);
-
-        p->nfo.udp.data = (GLubyte *) calloc(W * H * p->b, 1);
+        p->nfo.udp.code = code;
+        p->w = w;
+        p->h = h;
 
         /* Flush the OpenGL state. */
 
@@ -1068,60 +1217,38 @@ static void set_image_udp_pixels(int i, GLubyte *data, int code,
         init_image(i);
     }
 
-    /* Copy the incoming data to the image buffer. */
+    /* Copy the incoming data to the texture object. */
 
-    switch (p->code)
+    if (GL_has_texture_rectangle)
     {
-    case 0x31313459: /* Y411 */
-        for (i = r; i < r + n; ++i)
-            deY411(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w);
-        break;
+        switch (p->nfo.udp.code)
+        {
+        case 0x31313459: /* Y411 */
+            expand411(data, w * n);
+            glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
+            glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, r, w, n,
+                            GL_RGBA, GL_UNSIGNED_BYTE, data);
+            break;
 
-    case 0x59565955: /* UYVY */
-        for (i = r; i < r + n; ++i)
-            deUYVY(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w);
-        break;
+        case 0x59565955: /* UYVY */
+            expand422(data, w * n);
+            glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
+            glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, r, w, n,
+                            GL_RGBA, GL_UNSIGNED_BYTE, data);
+            break;
 
-    case 0x41424752: /* RGB  */
-        for (i = r; i < r + n; ++i)
-            memcpy(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w * 3);
-        break;
+        case 0x41424752: /* RGB  */
+            glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
+            glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, r, w, n,
+                            GL_RGB,  GL_UNSIGNED_BYTE, data);
+            break;
 
-    case 0x20424752: /* RGBA */
-        for (i = r; i < r + n; ++i)
-            memcpy(raster(p->nfo.udp.data, W, H, w, h, b, i, 0), data, w * 4);
-        break;
-    }
-
-    if (p->nfo.udp.r0 > r)
-        p->nfo.udp.r0 = r;
-
-    if (p->nfo.udp.r1 < r + n)
-        p->nfo.udp.r1 = r + n;
-
-    p->nfo.udp.rn++;
-}
-
-static void draw_image_udp(int i)
-{
-    struct image *p = get_image(i);
-
-    /* If new image data has arrived, update the texture object. */
-
-    if (p->nfo.udp.rn > 0)
-    {
-        int W = next2(p->w);
-
-        int y = p->nfo.udp.r0;
-        int h = p->nfo.udp.r1 - p->nfo.udp.r0;
-
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y, W, h,
-                        format[p->b], GL_UNSIGNED_BYTE,
-                        p->nfo.udp.data + W * y * p->b);
-
-        p->nfo.udp.r0 = p->h;
-        p->nfo.udp.r1 =    0;
-        p->nfo.udp.rn =    0;
+        case 0x20424752: /* RGBA */
+            glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
+            glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, r, w, n,
+                            GL_RGBA, GL_UNSIGNED_BYTE, data);
+            break;
+        }
     }
 }
 
@@ -1145,11 +1272,10 @@ static void step_image_udp(int i)
         int n    = ntohs(head->n);
         int w    = ntohs(head->w);
         int h    = ntohs(head->h);
-        int b    = ntohs(head->b);
 
         /* Distribute the new pixel data. */
 
-        send_set_image_pixels(i, data, code, r, n, w, h, b);
+        send_set_image_pixels(i, data, code, r, n, w, h, 0);
     }
 }
 
@@ -1187,7 +1313,7 @@ void send_set_image_pixels(int i, void *data, int code, int r, int n,
     switch (get_image(i)->type)
     {
     case TYPE_ANI: set_image_ani_pixels(i, data, code, r, n, w, h, b); break;
-    case TYPE_UDP: set_image_udp_pixels(i, data, code, r, n, w, h, b); break;
+    case TYPE_UDP: set_image_udp_pixels(i, data, code, r, n, w, h);    break;
     }
 }
 
@@ -1209,7 +1335,7 @@ void recv_set_image_pixels(void)
     switch (get_image(i)->type)
     {
     case TYPE_ANI: set_image_ani_pixels(i, buffer, code, r, n, w, h, b); break;
-    case TYPE_UDP: set_image_udp_pixels(i, buffer, code, r, n, w, h, b); break;
+    case TYPE_UDP: set_image_udp_pixels(i, buffer, code, r, n, w, h);    break;
     }
 }
 
@@ -1347,8 +1473,7 @@ void init_image(int i)
             p->texture = init_image_ani(&p->nfo.ani,
                                          p->w, p->h, p->b, p->flags); break;
         case TYPE_UDP:
-            p->texture = init_image_udp(&p->nfo.udp,
-                                         p->w, p->h, p->b, p->flags); break;
+            p->texture = init_image_udp(&p->nfo.udp, p->w, p->h);     break;
         }
     }
 }
@@ -1359,6 +1484,15 @@ void fini_image(int i)
 
     if (p->state == 1)
     {
+        /* Invoke any type-specific finalizer. */
+
+        switch (p->type)
+        {
+        case TYPE_UDP: fini_image_udp(&p->nfo.udp); break;
+        }
+
+        /* Release the texture object. */
+
         if (glIsTexture(p->texture))
             glDeleteTextures(1, &p->texture);
 
@@ -1379,6 +1513,13 @@ void draw_image(int i)
         {
             GLenum t;
 
+            /* Invoke any type-specific draw handler. */
+
+            switch (p->type)
+            {
+            case TYPE_UDP: draw_image_udp(i); break;
+            }
+
             /* Ensure the wrong texture unit types are disabled. */
 
             glDisable(GL_TEXTURE_CUBE_MAP_ARB);
@@ -1393,13 +1534,6 @@ void draw_image(int i)
             
             glEnable(t);
             glBindTexture(t, get_image(i)->texture);
-
-            /* Invoke any type-specific draw handler. */
-
-            switch (p->type)
-            {
-            case TYPE_UDP: draw_image_udp(i); break;
-            }
         }
     }
 }
@@ -1437,7 +1571,7 @@ void step_images(void)
 {
     struct timeval zero = { 0, 0 };
 
-    int s, i, m = 0, n = vecnum(image);
+    int c = 1024, s, i, m = 0, n = vecnum(image);
 
     fd_set fds0;
     fd_set fds1;
@@ -1464,7 +1598,7 @@ void step_images(void)
     /* Handle all video socket activity. */
 
     if (m > 0)
-        while ((s = select(m, &fds1, NULL, NULL, &zero)) > 0)
+        while ((c-- > 0) && (s = select(m, &fds1, NULL, NULL, &zero)) > 0)
         {
             for (i = 0; i < n; ++i)
             {

@@ -36,6 +36,7 @@
 extern GLboolean GL_has_fragment_program;
 extern GLboolean GL_has_vertex_program;
 extern GLboolean GL_has_vertex_buffer_object;
+extern GLboolean GL_has_framebuffer_object;
 extern GLboolean GL_has_point_sprite;
 extern GLboolean GL_has_texture_rectangle;
 extern GLboolean GL_has_texture_compression;
@@ -85,6 +86,10 @@ extern PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
 extern PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
 extern PFNGLCOMPRESSEDTEXIMAGE2DARBPROC     glCompressedTexImage2DARB;
 extern PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC  glCompressedTexSubImage2DARB;
+extern PFNGLGENFRAMEBUFFERSEXTPROC          glGenFramebuffersEXT;
+extern PFNGLDELETEFRAMEBUFFERSEXTPROC       glDeleteFramebuffersEXT;
+extern PFNGLBINDFRAMEBUFFEREXTPROC          glBindFramebufferEXT;
+extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC     glFramebufferTexture2DEXT;
 #endif
 
 #ifndef GL_POINT_SPRITE_ARB

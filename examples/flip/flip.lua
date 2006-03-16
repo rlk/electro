@@ -1,7 +1,7 @@
 stereo = true
 music = nil
 
-img_n   = "/data/rlk/jule4d1K20fps/USmall.%05d.dxt"
+img_n   = "/home/evl/rlk/data/jule4d1K20fps/USmall.%05d.dxt"
 img_w   = 2048
 img_h   = 512
 img_b   = 3

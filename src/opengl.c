@@ -30,6 +30,7 @@
 GLboolean GL_has_fragment_program     = 0;
 GLboolean GL_has_vertex_program       = 0;
 GLboolean GL_has_vertex_buffer_object = 0;
+GLboolean GL_has_framebuffer_object   = 0;
 GLboolean GL_has_point_sprite         = 0;
 GLboolean GL_has_texture_rectangle    = 0;
 GLboolean GL_has_texture_compression  = 0;
@@ -464,6 +465,10 @@ PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
 PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
 PFNGLCOMPRESSEDTEXIMAGE2DARBPROC     glCompressedTexImage2DARB;
 PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC  glCompressedTexSubImage2DARB;
+PFNGLGENFRAMEBUFFERSEXTPROC          glGenFramebuffersEXT;
+PFNGLDELETEFRAMEBUFFERSEXTPROC       glDeleteFramebuffersEXT;
+PFNGLBINDFRAMEBUFFEREXTPROC          glBindFramebufferEXT;
+PFNGLFRAMEBUFFERTEXTURE2DEXTPROC     glFramebufferTexture2DEXT;
 
 void init_opengl(void)
 {
@@ -628,6 +633,23 @@ void init_opengl(void)
 
         GL_has_texture_compression = (glCompressedTexImage2DARB
                                    && glCompressedTexSubImage2DARB);
+    }
+
+    if (opengl_need("GL_EXT_framebuffer_object"))
+    {
+        glGenFramebuffersEXT          = (PFNGLGENFRAMEBUFFERSEXTPROC)
+                               opengl_proc("glGenFramebuffersEXT");
+        glDeleteFramebuffersEXT       = (PFNGLDELETEFRAMEBUFFERSEXTPROC)
+                               opengl_proc("glDeleteFramebuffersEXT");
+        glBindFramebufferEXT          = (PFNGLBINDFRAMEBUFFEREXTPROC)
+                               opengl_proc("glBindFramebufferEXT");
+        glFramebufferTexture2DEXT     = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)
+                               opengl_proc("glFramebufferTexture2DEXT");
+
+        GL_has_framebuffer_object = (glGenFramebuffersEXT
+                                  && glDeleteFramebuffersEXT
+                                  && glBindFramebufferEXT
+                                  && glFramebufferTexture2DEXT);
     }
 
     /* Miscellaneous procedureless extensions. */
