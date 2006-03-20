@@ -69,6 +69,8 @@ struct image_ani
 
     int count_a;
     int count_b;
+    int count_c;
+    int count_p;
 };
 
 struct image_udp
@@ -790,6 +792,8 @@ int send_create_image_ani(const char *name, int w, int h, int b,
         p->nfo.ani.frame_n = fn;
         p->nfo.ani.count_a = ca;
         p->nfo.ani.count_b = cb;
+        p->nfo.ani.count_c = ca - 1;
+        p->nfo.ani.count_p = 1;
 
         /* HACK: recognize compressed textures as having a DXT extension. */
 
@@ -919,32 +923,44 @@ static void step_image_ani(int i)
     char filename[MAXSTR];
     FILE *fp;
 
-    /* Build the file name from the name format and frame number. */
-
-    sprintf(filename, p->nfo.ani.name, p->nfo.ani.frame_i);
-
-    if ((fp = fopen(filename, "rb")))
+    if (p->nfo.ani.count_c-- == 0)
     {
-        /* Load compressed or raw pixel data. */
+        /* Build the file name from the name format and frame number. */
 
-        if ((p->flags & FLAG_COMP) && GL_has_texture_compression)
-            fread(p->nfo.ani.data, 1, p->w * p->h / 2, fp);
+        sprintf(filename, p->nfo.ani.name, p->nfo.ani.frame_i);
+
+        if ((fp = fopen(filename, "rb")))
+        {
+            /* Load compressed or raw pixel data. */
+
+            if ((p->flags & FLAG_COMP) && GL_has_texture_compression)
+                fread(p->nfo.ani.data, 1, p->w * p->h / 2, fp);
+            else
+                fread(p->nfo.ani.data, 1, p->w * p->h * p->b, fp);
+
+            /* Distribute the loaded pixels. */
+
+            send_set_image_pixels(i, p->nfo.ani.data, 0, 0,
+                                  p->h, p->w, p->h, p->b);
+
+            /* Advance the animation. */
+
+            if (p->nfo.ani.frame_i < p->nfo.ani.frame_n)
+                p->nfo.ani.frame_i = p->nfo.ani.frame_i + 1;
+            else
+                p->nfo.ani.frame_i = p->nfo.ani.frame_0;
+
+            fclose(fp);
+        }
+
+        /* Update the pulldown counter. */
+
+        if (p->nfo.ani.count_p == 0)
+            p->nfo.ani.count_c = p->nfo.ani.count_a - 1;
         else
-            fread(p->nfo.ani.data, 1, p->w * p->h * p->b, fp);
+            p->nfo.ani.count_c = p->nfo.ani.count_b - 1;
 
-        /* Distribute the loaded pixels. */
-
-        send_set_image_pixels(i, p->nfo.ani.data, 0, 0,
-                              p->h, p->w, p->h, p->b);
-
-        /* Advance the animation. */
-
-        if (p->nfo.ani.frame_i < p->nfo.ani.frame_n)
-            p->nfo.ani.frame_i = p->nfo.ani.frame_i + 1;
-        else
-            p->nfo.ani.frame_i = p->nfo.ani.frame_0;
-
-        fclose(fp);
+        p->nfo.ani.count_p = 1 - p->nfo.ani.count_p;
     }
 }
 
@@ -1250,6 +1266,8 @@ static void set_image_udp_pixels(int i, GLubyte *data,
                             GL_RGBA, GL_UNSIGNED_BYTE, data);
             break;
         }
+
+        p->nfo.udp.dirty = 1;
     }
 }
 
