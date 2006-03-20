@@ -74,17 +74,13 @@ static struct sound *get_sound(int i)
 
 static int new_sound(void)
 {
-    if (enabled)
-    {
-        int i, n = vecnum(sound);
+    int i, n = vecnum(sound);
 
-        for (i = 0; i < n; ++i)
-            if (get_sound(i)->data == 0)
-                return i;
+    for (i = 0; i < n; ++i)
+        if (get_sound(i)->data == 0)
+            return i;
 
-        return vecadd(sound);
-    }
-    return -1;
+    return vecadd(sound);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -287,7 +283,7 @@ int load_sound(const char *filename)
 
     OggVorbis_File vf;
 
-    if (enabled && (i = new_sound()) >= 0)
+    if ((i = new_sound()) >= 0)
     {
         struct sound *s = get_sound(i);
 
@@ -349,14 +345,11 @@ int load_sound(const char *filename)
 
 void free_sound(int i)
 {
-    if (enabled)
-    {
-        struct sound *s = get_sound(i);
+    struct sound *s = get_sound(i);
 
-        if (s->data) free(s->data);
+    if (s->data) free(s->data);
 
-        memset(s, 0, sizeof (struct sound));
-    }
+    memset(s, 0, sizeof (struct sound));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -397,46 +390,37 @@ void loop_sound(int i)
 
 void set_sound_emitter(int i, int j)
 {
-    if (enabled)
-        get_sound(i)->emitter = j;
+    get_sound(i)->emitter = j;
 }
 
 void set_sound_receiver(int j, float a)
 {
-    if (enabled)
-    {
-        receiver    = j;
-        attenuation = a;
-    }
+    receiver    = j;
+    attenuation = a;
 }
 
 void set_sound_amplitude(int i, float a)
 {
-    if (enabled)
-        get_sound(i)->amplitude = MAX(a, 0.0f);
+    get_sound(i)->amplitude = MAX(a, 0.0f);
 }
 
 void set_sound_frequency(int i, float f)
 {
-    if (enabled && 0.0f <= f)
-        get_sound(i)->frequency = MAX(f, 0.0f);
+    get_sound(i)->frequency = MAX(f, 0.0f);
 }
 
 /*---------------------------------------------------------------------------*/
 
 void nuke_sounds(void)
 {
-    if (enabled)
-    {
-        int i, n = vecnum(sound);
+    int i, n = vecnum(sound);
 
-        for (i = 0; i < n; ++i)
-            if (get_sound(i)->data)
-                free_sound(i);
-    }
+    for (i = 0; i < n; ++i)
+        if (get_sound(i)->data)
+            free_sound(i);
 }
 
-int startup_sound(void)
+int startup_sound(int enable)
 {
     spec.callback = step_sound;
     spec.channels = BUFCHAN;
@@ -444,20 +428,23 @@ int startup_sound(void)
     spec.format   = BUFFORM;
     spec.freq     = BUFFREQ;
 
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) == 0)
+    enabled = 0;
+
+    if ((mix = (struct frame *) malloc(spec.samples * sizeof (struct frame))))
     {
-        if (SDL_OpenAudio(&spec, NULL) == 0)
+        if ((sound = vecnew(32, sizeof (struct sound))))
         {
-            mix = (struct frame *) malloc(spec.samples *
-                                          sizeof (struct frame));
-
-            if ((sound = vecnew(32, sizeof (struct sound))))
-                return (enabled = 1);
+            if (enable && SDL_InitSubSystem(SDL_INIT_AUDIO) == 0)
+            {
+                if (SDL_OpenAudio(&spec, NULL) == 0)
+                {
+                    return (enabled = 1);
+                }
+                else fprintf(stderr, "%s\n", SDL_GetError());
+            }
+            else fprintf(stderr, "%s\n", SDL_GetError());
         }
-        else fprintf(stderr, "%s\n", SDL_GetError());
     }
-    else fprintf(stderr, "%s\n", SDL_GetError());
-
     return 1;
 }
 

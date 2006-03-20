@@ -20,8 +20,8 @@ function do_keyboard(k, s)
     if s then
         if k == E.key_left      then off_x = off_x - 1 / 128 end
         if k == E.key_right     then off_x = off_x + 1 / 128 end
-        if k == E.key_up        then off_y = off_y - 1 / 128 end
-        if k == E.key_down      then off_y = off_y + 1 / 128 end
+        if k == E.key_up        then off_y = off_y - 1 / 256 end
+        if k == E.key_down      then off_y = off_y + 1 / 256 end
         if k == E.key_pageup    then off_z = off_z - 1 / 32  end
         if k == E.key_pagedown  then off_z = off_z + 1 / 32  end
 
@@ -99,8 +99,8 @@ function do_start()
     E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
 
     E.enable_timer(true)
-    E.set_background(0.2, 0.2, 0.2)
---  E.set_background(0, 0, 0)
+--  E.set_background(0.2, 0.2, 0.2)
+    E.set_background(0, 0, 0)
 end
 
 -------------------------------------------------------------------------------

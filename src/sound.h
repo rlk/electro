@@ -22,7 +22,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-int startup_sound(void);
+int startup_sound(int);
 
 int  load_sound(const char *);
 void free_sound(int);

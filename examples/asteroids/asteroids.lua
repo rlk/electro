@@ -13,7 +13,7 @@
 joy_dev = 0
 
 sound_on = true
-music_on = false
+music_on = true
 stars_on = true
 
 -------------------------------------------------------------------------------

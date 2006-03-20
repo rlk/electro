@@ -62,6 +62,8 @@ print("Hello, World!")
 
 <dt><tt>-m</tt><dd><p>Grab the mouse pointer. Normally, mouse motion events are only detected while the pointer is within the Electro window. This limits the useful range of mouse motion to the size of the window. When the mouse pointer is grabbed, an application can track mouse motion over unlimited distances. This is useful to applications that implement a pointer that spans a large tiled display.</p>
 
+<dt><tt>-a</tt><dd><p>Disable audio playback. Audio processing will appear to proceed normally, but the audio hardware will remain untouched. This is useful when running on hardware without audio support, or when running Electro along side an application that requires exclusive access to the audio hardware.</p>
+
 <dt><tt>-l</tt> <i>&lt;log file&gt;</i><dd><p>Log all console output to the named file.</p>
 
 <dt><tt>-p</tt> <i>&lt;port&gt;</i><dd><p>Use the given TCP port as network console. The default is 0, and remote console access is disabled.</p>

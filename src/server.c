@@ -69,6 +69,7 @@ static char *console_log  = NULL;
 static int   tracker_key  = TRACKER_KEY;
 static int   control_key  = CONTROL_KEY;
 static int   head_sensor  = 0;
+static int   audio_state  = 1;
 
 /*---------------------------------------------------------------------------*/
 
@@ -404,7 +405,6 @@ static void parse_options(int argc, char *argv[])
 
         else if (strcmp(argv[i], "-t") == 0 && i < argc - 1)
             tracker_key = atoi(argv[++i]);
-
         else if (strcmp(argv[i], "-c") == 0 && i < argc - 1)
             control_key = atoi(argv[++i]);
 
@@ -413,6 +413,8 @@ static void parse_options(int argc, char *argv[])
 
         else if (strcmp(argv[i], "-m") == 0)
             server_grab = 1;
+        else if (strcmp(argv[i], "-a") == 0)
+            audio_state = 0;
 
         else
             add_argument(c++, argv[i]);
@@ -457,11 +459,11 @@ void server(int argc, char *argv[])
                 startup_buffer()   &&
                 startup_display()  &&
                 startup_entity()   &&
-                startup_sound()    &&
                 startup_image()    &&
                 startup_brush()    &&
                 startup_font()     &&
-                startup_net(console_port))
+                startup_net(console_port) &&
+                startup_sound(audio_state))
             {
                 acquire_tracker(tracker_key, control_key);
 

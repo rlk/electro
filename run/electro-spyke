@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export ELECTRO_CONFIG=$HOME/src/electro-current/config
+export ELECTRO_BIN=$HOME/src/electro-current
+
+$ELECTRO_BIN/electro $ELECTRO_CONFIG/varrier.lua $ELECTRO_CONFIG/spyke.lua $@
