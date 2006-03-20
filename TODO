@@ -1,5 +1,5 @@
 fix trainer
-test telecon
+texture clamp
 
 bugfix: giving BindAttribLocation not found on non-GLSL hardware?
 
@@ -8,8 +8,6 @@ new vector implementation
         improve vector traversal
 new OBJ implementation
 Add brief changelogs to website
-YUV decode using SSE
-texture clamp
 UTF-8... extra chars
 set entity rotation vectors
 global state

@@ -187,6 +187,9 @@ static void draw_sprite(int i, int j, int f, float a)
             /* Render all child entities in this coordinate system. */
 
             draw_entity_tree(j, f, a * get_entity_alpha(j));
+
+            if (GL_has_shader_objects)
+                glUseProgramObjectARB(0);
         }
     }
     glPopMatrix();

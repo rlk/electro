@@ -695,7 +695,7 @@ void send_set_brush_vert_shader(int i, const char *text)
 
     struct brush *b = get_brush(i);
 
-    send_event(EVENT_SET_BRUSH_VERT_PROG);
+    send_event(EVENT_SET_BRUSH_VERT_SHADER);
     send_index(i);
     send_index(n);
 

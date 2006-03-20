@@ -591,7 +591,12 @@ static GLuint init_image_map(struct image_map *nfo,
         glCompressedTexImage2DARB(m, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
                                   w, h, 0, w * h / 2, nfo->data);
     else
-        glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
+    {
+        if (flags & FLAG_NPOT)
+            glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
+        else
+            gluBuild2DMipmaps(m, f, w, h, f, GL_UNSIGNED_BYTE, nfo->data);
+    }
 
     /* Enable bilinear filtering. */
 
