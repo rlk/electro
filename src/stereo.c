@@ -59,16 +59,25 @@ static void get_varrier_tile(int tile, float M[16],
 
 static char *vert_00 = \
 
-    "varying float L_phase;                                          \n"\
-    "varying float R_phase;                                          \n"\
+    "uniform vec3 offset;                                        \n"\
+    "varying vec3 L_phase;                                       \n"\
+    "varying vec3 R_phase;                                       \n"\
 
-    "void main()                                                     \n"\
-    "{                                                               \n"\
-    "    L_phase = (gl_TextureMatrix[0] * gl_Vertex).x;              \n"\
-    "    R_phase = (gl_TextureMatrix[1] * gl_Vertex).x;              \n"\
+    "void main()                                                 \n"\
+    "{                                                           \n"\
+    "    vec4 dr = vec4(offset.r, 0.0, 0.0, 0.0);                \n"\
+    "    vec4 dg = vec4(offset.g, 0.0, 0.0, 0.0);                \n"\
+    "    vec4 db = vec4(offset.b, 0.0, 0.0, 0.0);                \n"\
 
-    "    gl_Position = ftransform();                                 \n"\
-    "}                                                               \n";
+    "    L_phase.r = (gl_TextureMatrix[0] * (gl_Vertex + dr)).x; \n"\
+    "    L_phase.g = (gl_TextureMatrix[0] * (gl_Vertex + dg)).x; \n"\
+    "    L_phase.b = (gl_TextureMatrix[0] * (gl_Vertex + db)).x; \n"\
+    "    R_phase.r = (gl_TextureMatrix[1] * (gl_Vertex + dr)).x; \n"\
+    "    R_phase.g = (gl_TextureMatrix[1] * (gl_Vertex + dg)).x; \n"\
+    "    R_phase.b = (gl_TextureMatrix[1] * (gl_Vertex + db)).x; \n"\
+
+    "    gl_Position = ftransform();                             \n"\
+    "}                                                           \n";
 
 static char *frag_00 = \
 
@@ -85,13 +94,10 @@ static char *frag_00 = \
     "    const vec4 L = textureRect(L_map, gl_FragCoord.xy * scale); \n"\
     "    const vec4 R = textureRect(R_map, gl_FragCoord.xy * scale); \n"\
 
-    "    float Lk = step(cycle, fract(L_phase));                     \n"\
-    "    float Rk = step(cycle, fract(R_phase));                     \n"\
-/*
-    "    float Lk = 0.5;                                             \n"\
-    "    float Rk = 0.5;                                             \n"\
-*/
-    "    gl_FragColor = L * Lk + R * Rk;                             \n"\
+    "    vec3 Lk = step(vec3(cycle), fract(L_phase));                \n"\
+    "    vec3 Rk = step(vec3(cycle), fract(R_phase));                \n"\
+
+    "    gl_FragColor = vec4(L.rgb * Lk + R.rgb * Rk, 1.0);          \n"\
     "}                                                               \n";
 
 static GLuint vert_obj;
@@ -206,7 +212,7 @@ static void init_varrier_00(const float q[2])
     }
 }
 
-static void set_line_transform(int tile, const float v[3])
+static void set_line_transform(int tile, const float v[3], float *w, float *h)
 {
     float p = get_varrier_pitch(tile);
     float a = get_varrier_angle(tile);
@@ -219,12 +225,11 @@ static void set_line_transform(int tile, const float v[3])
     float u[3];
     float r[3];
     float e[3];
-    float w, h;
     float x, y, z;
     float nn, pp, ss;
     float dx, dy;
 
-    get_varrier_tile(tile, M, C, n, &w, &h);
+    get_varrier_tile(tile, M, C, n, w, h);
     get_tile_r(tile, r);
     get_tile_u(tile, u);
 
@@ -264,7 +269,6 @@ static void set_line_transform(int tile, const float v[3])
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
         glTranslatef(dx - ss, dy, 0);        /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */
-        glScalef(0.5f * w, 0.5f * h, 1.0f);  /* Scale to feet.    */
     }
     glMatrixMode(GL_MODELVIEW);
 }
@@ -300,6 +304,8 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
         if (eye == 1)
         {
             float c = get_varrier_cycle(tile);
+            float w;
+            float h;
 
             if (GL_has_framebuffer_object)
                 glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -322,14 +328,17 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
                 glUniformLoc1i(prog_obj, "R_map", 1);
                 glUniformLoc1f(prog_obj, "cycle", c);
                 glUniformLoc2f(prog_obj, "scale", q[0], q[1]);
+                glUniformLoc3f(prog_obj, "offset", -0.000273984360677,
+                                                    0.000000000000000,
+                                                   +0.000273984360677);
             }
 
             /* Apply the linescreen transforms to the texture matrices. */
 
             glActiveTextureARB(GL_TEXTURE1);
-            set_line_transform(tile, v[1]);
+            set_line_transform(tile, v[1], &w, &h);
             glActiveTextureARB(GL_TEXTURE0);
-            set_line_transform(tile, v[0]);
+            set_line_transform(tile, v[0], &w, &h);
 
             /* Set up a transform mapping units to pixels. */
 
@@ -337,7 +346,7 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
             {
                 glPushMatrix();
                 glLoadIdentity();
-                glOrtho(-1, +1, -1, +1, -1, +1);
+                glOrtho(-w / 2, +w / 2, -h / 2, +h / 2, -1, +1);
             }
             glMatrixMode(GL_MODELVIEW);
             {
@@ -353,10 +362,10 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
 
                 glBegin(GL_POLYGON);
                 {
-                    glVertex2i(-1, -1);
-                    glVertex2i(+1, -1);
-                    glVertex2i(+1, +1);
-                    glVertex2i(-1, +1);
+                    glVertex2f(-w / 2, -h / 2);
+                    glVertex2f(+w / 2, -h / 2);
+                    glVertex2f(+w / 2, +h / 2);
+                    glVertex2f(-w / 2, +h / 2);
                 }
                 glEnd();
             }
