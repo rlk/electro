@@ -23,8 +23,9 @@
 #define STEREO_VARRIER_11 5
 #define STEREO_VARRIER_33 6
 #define STEREO_VARRIER_41 7
+#define STEREO_VARRIER_00 8
 
-int draw_pass(int, int, int, int, const float[3]);
+int draw_pass(int, int, int, int, float[2][3]);
 
 /*---------------------------------------------------------------------------*/
 

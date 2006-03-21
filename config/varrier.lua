@@ -7,6 +7,9 @@ linescreen = {
     c =   0.777777
 }
 
+h_quality = 1.0
+v_quality = 1.0
+
 -------------------------------------------------------------------------------
 
 function read_linescreen(file, screen)
@@ -40,6 +43,24 @@ function varrier_shift(d)
     return true
 end
 
+function varrier_h_quality(d)
+    if 0.0 <= h_quality + d and h_quality + d <= 1.0 then
+        h_quality = h_quality + d
+        E.set_tile_quality(tile, h_quality, v_quality)
+        print("quality", h_quality, v_quality)
+    end
+    return true
+end
+
+function varrier_v_quality(d)
+    if 0.0 <= v_quality + d and v_quality + d <= 1.0 then
+        v_quality = v_quality + d
+        E.set_tile_quality(tile, h_quality, v_quality)
+        print("quality", h_quality, v_quality)
+    end
+    return true
+end
+
 ------------------------------------------------------------------------------
 
 function varrier_keyboard(k, s, camera)
@@ -50,10 +71,15 @@ function varrier_keyboard(k, s, camera)
     if s then
         if E.get_modifier(E.key_modifier_control) then
 
-            if k == E.key_down  then return varrier_thick(-0.0001) end
-            if k == E.key_up    then return varrier_thick( 0.0001) end
-            if k == E.key_left  then return varrier_shift(-0.00005) end
-            if k == E.key_right then return varrier_shift( 0.00005) end
+            if k == E.key_down   then return varrier_thick(-0.0001) end
+            if k == E.key_up     then return varrier_thick( 0.0001) end
+            if k == E.key_left   then return varrier_shift(-0.00005) end
+            if k == E.key_right  then return varrier_shift( 0.00005) end
+
+            if k == E.key_insert then return varrier_h_quality( 0.05) end
+            if k == E.key_delete then return varrier_h_quality(-0.05) end
+            if k == E.key_home   then return varrier_v_quality( 0.05) end
+            if k == E.key_end    then return varrier_v_quality(-0.05) end
 
             if k == E.key_tab then
                 test = not test
@@ -79,6 +105,11 @@ function varrier_keyboard(k, s, camera)
         end
         if k == E.key_F8 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
+                                -dx, dy, dz, dx, dy, dz)
+            return true
+        end
+        if k == E.key_F9 then
+            E.set_camera_stereo(camera, E.stereo_mode_varrier_00,
                                 -dx, dy, dz, dx, dy, dz)
             return true
         end

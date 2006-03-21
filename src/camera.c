@@ -333,6 +333,21 @@ static int draw_tile(struct camera *c, int eye, int tile, const float d[3])
     return 0;
 }
 
+static void get_eye_pos(float d[3], struct camera *c, int eye)
+{
+    /* Compute the world-space eye position. */
+
+    d[0] = c->pos_offset[0] + c->eye_offset[eye][0] * c->view_basis[0][0]
+                            + c->eye_offset[eye][1] * c->view_basis[1][0]
+                            + c->eye_offset[eye][2] * c->view_basis[2][0];
+    d[1] = c->pos_offset[1] + c->eye_offset[eye][0] * c->view_basis[0][1]
+                            + c->eye_offset[eye][1] * c->view_basis[1][1]
+                            + c->eye_offset[eye][2] * c->view_basis[2][1];
+    d[2] = c->pos_offset[2] + c->eye_offset[eye][0] * c->view_basis[0][2]
+                            + c->eye_offset[eye][1] * c->view_basis[1][2]
+                            + c->eye_offset[eye][2] * c->view_basis[2][2];
+}
+
 static void draw_camera(int i, int j, int f, float a)
 {
     struct camera *c = get_camera(i);
@@ -342,46 +357,38 @@ static void draw_camera(int i, int j, int f, float a)
     int pass;
     int flag = f | ((c->mode == STEREO_VARRIER_01) ? DRAW_VARRIER_TEXGEN : 0);
 
-    /* Iterate over the eyes. */
+    /* Iterate over all tiles of this host. */
 
-    for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
+    for (tile = 0; tile < get_tile_count(); ++tile)
     {
-        float d[3], M[16];
+        float d[2][3];
 
-        camera_eye = eye;
+        /* Iterate over the eyes. */
 
-        /* Compute the world-space eye position. */
+        get_eye_pos(d[0], c, 0);
+        get_eye_pos(d[1], c, 1);
 
-        d[0] = c->pos_offset[0] + c->eye_offset[eye][0] * c->view_basis[0][0]
-            + c->eye_offset[eye][1] * c->view_basis[1][0]
-            + c->eye_offset[eye][2] * c->view_basis[2][0];
-        d[1] = c->pos_offset[1] + c->eye_offset[eye][0] * c->view_basis[0][1]
-            + c->eye_offset[eye][1] * c->view_basis[1][1]
-            + c->eye_offset[eye][2] * c->view_basis[2][1];
-        d[2] = c->pos_offset[2] + c->eye_offset[eye][0] * c->view_basis[0][2]
-            + c->eye_offset[eye][1] * c->view_basis[1][2]
-            + c->eye_offset[eye][2] * c->view_basis[2][2];
-
-        /* Iterate over all tiles of this host. */
-
-        for (tile = 0; tile < get_tile_count(); ++tile)
-            if (draw_tile(c, eye, tile, d))
+        for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
+        {
+            if (draw_tile(c, eye, tile, d[eye]))
             {
                 pass = 0;
 
-                glTranslatef(-d[0], -d[1], -d[2]);
+                glTranslatef(-d[eye][0], -d[eye][1], -d[eye][2]);
 
-                /* Iterate over all passes of this tile. */
+                /* Iterate over all passes of this eye and tile. */
 
                 while ((pass = draw_pass(c->mode, eye, tile, pass, d)))
                 {
                     glPushMatrix();
                     {
+                        float M[16];
+
                         /* Apply the view matrix. */
 
                         transform_camera(j);
 
-                        /* Grab the inverse view rotation for use by env maps. */
+                        /* Save the inverse view rotation for env map use. */
 
                         glGetFloatv(GL_MODELVIEW_MATRIX, M);
 
@@ -403,6 +410,7 @@ static void draw_camera(int i, int j, int f, float a)
                     glPopMatrix();
                 }
             }
+        }
     }
 }
 

@@ -1986,6 +1986,18 @@ static int E_set_tile_view_offset(lua_State *L)
     return 0;
 }
 
+static int E_set_tile_quality(lua_State *L)
+{
+    float q[4];
+
+    q[0] = L_getnumber(L, -2);
+    q[1] = L_getnumber(L, -1);
+
+    send_set_tile_quality(L_getinteger(L, -3), q);
+
+    return 0;
+}
+
 static int E_get_display_union(lua_State *L)
 {
     float b[4];
@@ -2552,6 +2564,7 @@ static struct function_def functions[] = {
     { "add_tile",              E_add_tile              },
     { "set_host_flags",        E_set_host_flags        },
     { "set_tile_flags",        E_set_tile_flags        },
+    { "set_tile_quality",      E_set_tile_quality      },
     { "set_tile_position",     E_set_tile_position     },
     { "set_tile_viewport",     E_set_tile_viewport     },
     { "set_tile_line_screen",  E_set_tile_line_screen  },
@@ -2690,6 +2703,7 @@ static struct constant_def constants[] = {
     { "stereo_mode_tile",          STEREO_TILE         },
     { "stereo_mode_quad",          STEREO_QUAD         },
     { "stereo_mode_red_blue",      STEREO_RED_BLUE     },
+    { "stereo_mode_varrier_00",    STEREO_VARRIER_00   },
     { "stereo_mode_varrier_01",    STEREO_VARRIER_01   },
     { "stereo_mode_varrier_11",    STEREO_VARRIER_11   },
     { "stereo_mode_varrier_33",    STEREO_VARRIER_33   },

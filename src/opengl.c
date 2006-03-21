@@ -303,10 +303,7 @@ static void init_opengl_cap(void)
         {
             for (i = 0; i < 360; i += d)
             {
-                float x = cosf(RAD(i)) * cosf(RAD(j));
-/*
                 float x = (float) (cos(RAD(i)) * cos(RAD(j)));
-*/
                 float y = (float) (sin(RAD(i)) * cos(RAD(j)));
                 float z = (float) (              sin(RAD(j)));
 
@@ -456,10 +453,10 @@ PFNGLGETINFOLOGARBPROC               glGetInfoLogARB;
 PFNGLDELETEOBJECTARBPROC             glDeleteObjectARB;
 PFNGLGETUNIFORMLOCATIONARBPROC       glGetUniformLocationARB;
 PFNGLUNIFORM1IARBPROC                glUniform1iARB;
-PFNGLUNIFORM1FVARBPROC               glUniform1fvARB;
-PFNGLUNIFORM2FVARBPROC               glUniform2fvARB;
-PFNGLUNIFORM3FVARBPROC               glUniform3fvARB;
-PFNGLUNIFORM4FVARBPROC               glUniform4fvARB;
+PFNGLUNIFORM1FARBPROC                glUniform1fARB;
+PFNGLUNIFORM2FARBPROC                glUniform2fARB;
+PFNGLUNIFORM3FARBPROC                glUniform3fARB;
+PFNGLUNIFORM4FARBPROC                glUniform4fARB;
 PFNGLUNIFORMMATRIX2FVARBPROC         glUniformMatrix2fvARB;
 PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
 PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
@@ -572,14 +569,14 @@ void init_opengl(void)
                            opengl_proc("glGetUniformLocationARB");
         glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)
                            opengl_proc("glUniform1iARB");
-        glUniform1fvARB           = (PFNGLUNIFORM1FVARBPROC)
-                           opengl_proc("glUniform1fvARB");
-        glUniform2fvARB           = (PFNGLUNIFORM2FVARBPROC)
-                           opengl_proc("glUniform2fvARB");
-        glUniform3fvARB           = (PFNGLUNIFORM3FVARBPROC)
-                           opengl_proc("glUniform3fvARB");
-        glUniform4fvARB           = (PFNGLUNIFORM4FVARBPROC)
-                           opengl_proc("glUniform4fvARB");
+        glUniform1fARB            = (PFNGLUNIFORM1FARBPROC)
+                           opengl_proc("glUniform1fARB");
+        glUniform2fARB            = (PFNGLUNIFORM2FARBPROC)
+                           opengl_proc("glUniform2fARB");
+        glUniform3fARB            = (PFNGLUNIFORM3FARBPROC)
+                           opengl_proc("glUniform3fARB");
+        glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)
+                           opengl_proc("glUniform4fARB");
         glUniformMatrix2fvARB     = (PFNGLUNIFORMMATRIX2FVARBPROC)
                            opengl_proc("glUniformMatrix2fvARB");
         glUniformMatrix3fvARB     = (PFNGLUNIFORMMATRIX3FVARBPROC)
@@ -599,10 +596,10 @@ void init_opengl(void)
                                           && glDeleteObjectARB
                                           && glGetUniformLocationARB
                                           && glUniform1iARB
-                                          && glUniform1fvARB
-                                          && glUniform2fvARB
-                                          && glUniform3fvARB
-                                          && glUniform4fvARB
+                                          && glUniform1fARB
+                                          && glUniform2fARB
+                                          && glUniform3fARB
+                                          && glUniform4fARB
                                           && glUniformMatrix2fvARB
                                           && glUniformMatrix3fvARB
                                           && glUniformMatrix4fvARB);

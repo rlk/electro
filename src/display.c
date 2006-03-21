@@ -198,6 +198,9 @@ static int add_tile(int i, int x, int y, int w, int h)
         T->varrier_shift = DEFAULT_VARRIER_SHIFT;
         T->varrier_cycle = DEFAULT_VARRIER_CYCLE;
 
+        T->quality[0] = 1.0f;
+        T->quality[1] = 1.0f;
+
         /* Include this tile in the host and in the total display. */
 
         H->tile[H->n++] = j;
@@ -391,6 +394,16 @@ void send_set_tile_view_offset(int i, const float d[3])
     send_float((T->d[2] = d[2]));
 }
 
+void send_set_tile_quality(int i, const float q[2])
+{
+    struct tile *T = (struct tile *) vecget(tile, i);
+
+    send_event(EVENT_SET_TILE_QUALITY);
+    send_index(i);
+    send_float((T->quality[0] = q[0]));
+    send_float((T->quality[1] = q[1]));
+}
+
 /*---------------------------------------------------------------------------*/
 
 void recv_set_tile_flags(void)
@@ -461,6 +474,14 @@ void recv_set_tile_view_offset(void)
     T->d[0] = recv_float();
     T->d[1] = recv_float();
     T->d[2] = recv_float();
+}
+
+void recv_set_tile_quality(void)
+{
+    struct tile *T = (struct tile *) vecget(tile, recv_index());
+
+    T->quality[0] = recv_float();
+    T->quality[1] = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -749,9 +770,25 @@ void get_tile_n(int i, float n[3])
     normalize(n);
 }
 
+void get_tile_quality(int i, float q[2])
+{
+    if (local)
+    {
+        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+
+        q[0] = T->quality[0];
+        q[1] = T->quality[1];
+    }
+    else
+    {
+        q[0] = 1.0f;
+        q[1] = 1.0f;
+    }
+}
+
 int get_tile_count(void)
 {
-	return local ? local->n : 0;
+    return local ? local->n : 0;
 }
 
 int get_tile_flags(int i)

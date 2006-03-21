@@ -91,6 +91,7 @@ enum {
     EVENT_SET_TILE_LINE_SCREEN,
     EVENT_SET_TILE_VIEW_MIRROR,
     EVENT_SET_TILE_VIEW_OFFSET,
+    EVENT_SET_TILE_QUALITY,
 };
 
 /*---------------------------------------------------------------------------*/

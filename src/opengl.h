@@ -77,10 +77,10 @@ extern PFNGLGETINFOLOGARBPROC               glGetInfoLogARB;
 extern PFNGLDELETEOBJECTARBPROC             glDeleteObjectARB;
 extern PFNGLGETUNIFORMLOCATIONARBPROC       glGetUniformLocationARB;
 extern PFNGLUNIFORM1IARBPROC                glUniform1iARB;
-extern PFNGLUNIFORM1FVARBPROC               glUniform1fvARB;
-extern PFNGLUNIFORM2FVARBPROC               glUniform2fvARB;
-extern PFNGLUNIFORM3FVARBPROC               glUniform3fvARB;
-extern PFNGLUNIFORM4FVARBPROC               glUniform4fvARB;
+extern PFNGLUNIFORM1FARBPROC                glUniform1fARB;
+extern PFNGLUNIFORM2FARBPROC                glUniform2fARB;
+extern PFNGLUNIFORM3FARBPROC                glUniform3fARB;
+extern PFNGLUNIFORM4FARBPROC                glUniform4fARB;
 extern PFNGLUNIFORMMATRIX2FVARBPROC         glUniformMatrix2fvARB;
 extern PFNGLUNIFORMMATRIX3FVARBPROC         glUniformMatrix3fvARB;
 extern PFNGLUNIFORMMATRIX4FVARBPROC         glUniformMatrix4fvARB;
@@ -107,6 +107,17 @@ typedef GLvoid (*_GLUfuncptr)(void);
 #ifdef _WIN32
 typedef GLvoid *_GLUfuncptr;
 #endif
+
+#define glUniformLoc1i(p, n, a) \
+        glUniform1iARB(glGetUniformLocationARB(p, n), a)
+#define glUniformLoc1f(p, n, a) \
+        glUniform1fARB(glGetUniformLocationARB(p, n), a)
+#define glUniformLoc2f(p, n, a, b) \
+        glUniform2fARB(glGetUniformLocationARB(p, n), a, b)
+#define glUniformLoc3f(p, n, a, b, c) \
+        glUniform3fARB(glGetUniformLocationARB(p, n), a, b, c)
+#define glUniformLoc4f(p, n, a, b, c, d) \
+        glUniform4fARB(glGetUniformLocationARB(p, n), a, b, c, d)
 
 /*---------------------------------------------------------------------------*/
 

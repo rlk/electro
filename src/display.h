@@ -89,6 +89,8 @@ struct tile
     float varrier_thick;
     float varrier_shift;
     float varrier_cycle;
+
+    float quality[2];
 };
 
 struct host
@@ -130,6 +132,7 @@ void recv_add_tile(void);
 
 void send_set_host_flags      (int, int, int);
 void send_set_tile_flags      (int, int, int);
+void send_set_tile_quality    (int, const float[2]);
 void send_set_tile_viewport   (int, int, int, int, int);
 void send_set_tile_line_screen(int, float, float, float, float, float);
 void send_set_tile_view_mirror(int, const float[4]);
@@ -139,6 +142,7 @@ void send_set_tile_position   (int, const float[3],
                                     const float[3]);
 
 void recv_set_tile_flags      (void);
+void recv_set_tile_quality    (void);
 void recv_set_tile_viewport   (void);
 void recv_set_tile_line_screen(void);
 void recv_set_tile_view_mirror(void);
@@ -169,6 +173,8 @@ void  get_tile_o(int, float[3]);
 void  get_tile_r(int, float[3]);
 void  get_tile_u(int, float[3]);
 void  get_tile_n(int, float[3]);
+
+void get_tile_quality(int, float[2]);
 
 int   get_tile_count(void);
 int   get_tile_flags(int);

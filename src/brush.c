@@ -168,19 +168,26 @@ static void use_uniform(struct brush *b, struct uniform *u)
 
         if ((L = glGetUniformLocationARB(b->shad_prog, u->name)) != -1)
         {
+            const float *k = u->vals;
+
             int r = u->rows;
             int c = u->cols;
 
-            if      (r == 0 && c == 0) glUniform1iARB(L, u->indx);
+            if      (r == 0 && c == 0)
+                glUniform1iARB(L, u->indx);
 
-            else if (r == 1 && c == 1) glUniform1fvARB(L, 1, u->vals);
-            else if (r == 1 && c == 2) glUniform2fvARB(L, 1, u->vals);
-            else if (r == 1 && c == 3) glUniform3fvARB(L, 1, u->vals);
-            else if (r == 1 && c == 4) glUniform4fvARB(L, 1, u->vals);
+            else if (r == 1 && c == 1)
+                glUniform1fARB(L, k[0]);
+            else if (r == 1 && c == 2)
+                glUniform2fARB(L, k[0], k[1]);
+            else if (r == 1 && c == 3)
+                glUniform3fARB(L, k[0], k[1], k[2]);
+            else if (r == 1 && c == 4)
+                glUniform4fARB(L, k[0], k[1], k[2], k[3]);
 
-            else if (r == 2 && c == 2) glUniformMatrix2fvARB(L, 1, 0, u->vals);
-            else if (r == 3 && c == 3) glUniformMatrix3fvARB(L, 1, 0, u->vals);
-            else if (r == 4 && c == 4) glUniformMatrix4fvARB(L, 1, 0, u->vals);
+            else if (r == 2 && c == 2) glUniformMatrix2fvARB(L, 1, 0, k);
+            else if (r == 3 && c == 3) glUniformMatrix3fvARB(L, 1, 0, k);
+            else if (r == 4 && c == 4) glUniformMatrix4fvARB(L, 1, 0, k);
         }
 
         glUseProgramObjectARB(0);
