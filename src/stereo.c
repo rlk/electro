@@ -20,6 +20,8 @@
 #include "display.h"
 #include "video.h"
 
+#define EXTENT 500
+
 /*---------------------------------------------------------------------------*/
 
 static void get_varrier_tile(int tile, float M[16],
@@ -86,8 +88,8 @@ static char *frag_00 = \
     "uniform float       cycle;                                      \n"\
     "uniform vec2        scale;                                      \n"\
 
-    "varying float L_phase;                                          \n"\
-    "varying float R_phase;                                          \n"\
+    "varying vec3 L_phase;                                           \n"\
+    "varying vec3 R_phase;                                           \n"\
 
     "void main()                                                     \n"\
     "{                                                               \n"\
@@ -97,7 +99,7 @@ static char *frag_00 = \
     "    vec3 Lk = step(vec3(cycle), fract(L_phase));                \n"\
     "    vec3 Rk = step(vec3(cycle), fract(R_phase));                \n"\
 
-    "    gl_FragColor = vec4(L.rgb * Lk + R.rgb * Rk, 1.0);          \n"\
+    "    gl_FragColor = vec4(max(L.rgb * Lk, R.rgb * Rk), 1.0);      \n"\
     "}                                                               \n";
 
 static GLuint vert_obj;
@@ -170,15 +172,18 @@ static void init_frame_buf(GLuint *frame,
 
     /* Initialize the frame buffer object. */
 
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, *frame);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
-                              GL_COLOR_ATTACHMENT0_EXT,
-                              GL_TEXTURE_RECTANGLE_ARB, *color, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
-                              GL_DEPTH_ATTACHMENT_EXT,
-                              GL_TEXTURE_RECTANGLE_ARB, *depth, 0);
+    opengl_push_framebuffer();
+    {
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, *frame);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                  GL_COLOR_ATTACHMENT0_EXT,
+                                  GL_TEXTURE_RECTANGLE_ARB, *color, 0);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                  GL_DEPTH_ATTACHMENT_EXT,
+                                  GL_TEXTURE_RECTANGLE_ARB, *depth, 0);
+    }
+    opengl_pop_framebuffer();
 
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 }
 
@@ -267,8 +272,8 @@ static void set_line_transform(int tile, const float v[3], float *w, float *h)
         glLoadIdentity();
 
         glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
-        glTranslatef(dx - ss, dy, 0);        /* Shift in feet.    */
         glRotatef(-a, 0, 0, 1);              /* Angle.            */
+        glTranslatef(dx - ss, dy, 0);        /* Shift in feet.    */
     }
     glMatrixMode(GL_MODELVIEW);
 }
@@ -286,7 +291,10 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
     if (pass == 0)
     {
         if (GL_has_framebuffer_object)
+        {
+            opengl_push_framebuffer();
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, frame_buf[eye]);
+        }
 
         push_quality(q);
 
@@ -300,15 +308,13 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
     if (pass == 1)
     {
         pop_quality();
+        opengl_pop_framebuffer();
 
         if (eye == 1)
         {
             float c = get_varrier_cycle(tile);
             float w;
             float h;
-
-            if (GL_has_framebuffer_object)
-                glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
             /* Bind the eye view off-screen buffers as textures. */
 
@@ -397,8 +403,6 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
 
 /*---------------------------------------------------------------------------*/
 
-#define EXTENT 500
-
 static void lines(float k)
 {
     int i;
@@ -446,7 +450,6 @@ static void draw_varrier_lines_new(int tile, const float M[16],
         glRotatef(a, 0, 0, 1);
         glTranslatef(s, 0, t);
         glScalef(1 / p, 1 / p, 1 / p);
-/*      glScalef(h, h, h); */
 
         /* Draw the line screen. */
 

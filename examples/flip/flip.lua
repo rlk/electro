@@ -85,7 +85,7 @@ function do_start()
 
     brush = E.create_brush()
     image = E.create_image(img_n, img_w, img_h, img_b,
-                           img_min, img_max, 1, 1)
+                           img_min, img_max, 3, 3)
 
     camera  = E.create_camera(E.camera_type_perspective)
     spriteL = E.create_sprite(brush)

@@ -903,13 +903,17 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
         float p3[3];
 
         /* Compute the view position. */
-
+/*
         P[0] = T->d[0] + p[0];
         P[1] = T->d[1] + p[1];
         P[2] = T->d[2] + p[2];
+*/
+        P[0] = p[0];
+        P[1] = p[1];
+        P[2] = p[2];
 
         /* Optionally reflect the view position across the mirror. */
-
+/*
         if (T->flags & TILE_MIRROR)
         {
             k = (P[0] * T->p[0] +
@@ -920,7 +924,7 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
             P[1] -= T->p[1] * k * 2;
             P[2] -= T->p[2] * k * 2;
         }
-
+*/
         /* Compute the screen corners. */
 
         p0[0] = T->o[0];
@@ -993,13 +997,14 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
 
             load_inv(I, M);
             glMultMatrixf(I);
+
+            /* Move the apex of the frustum to the origin. */
+
+            glTranslatef(-p[0], -p[1], -p[2]);
         }
         glMatrixMode(GL_MODELVIEW);
 
-        /* Apply the tile offset. */
-
         glLoadIdentity();
-        glTranslatef(-T->d[0], -T->d[1], -T->d[2]);
 
         /* Rewind polygons if necessary. */
 

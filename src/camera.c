@@ -370,12 +370,14 @@ static void draw_camera(int i, int j, int f, float a)
 
         for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
         {
+            camera_eye = eye;
+
             if (draw_tile(c, eye, tile, d[eye]))
             {
                 pass = 0;
-
+/*
                 glTranslatef(-d[eye][0], -d[eye][1], -d[eye][2]);
-
+*/
                 /* Iterate over all passes of this eye and tile. */
 
                 while ((pass = draw_pass(c->mode, eye, tile, pass, d)))

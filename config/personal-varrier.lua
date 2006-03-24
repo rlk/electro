@@ -1,6 +1,9 @@
 linescreen_file = "/DEMO/varrier/varrier_configs/linescreen_setup.txt"
 read_linescreen(linescreen_file, "screen1")
 
+-- HACK
+linescreen.s = 0.00007
+
 W =  2.0000
 H =  1.1250
 D =  2.0000

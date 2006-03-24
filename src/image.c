@@ -1121,11 +1121,14 @@ static GLuint init_image_udp(struct image_udp *nfo, int w, int h)
 
     if (GL_has_framebuffer_object)
     {
-        glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, nfo->fbo);
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
-                                  GL_COLOR_ATTACHMENT0_EXT,
-                                  GL_TEXTURE_RECTANGLE_ARB, fore, 0);
-        glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, 0);
+        opengl_push_framebuffer();
+        {
+            glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, nfo->fbo);
+            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                      GL_COLOR_ATTACHMENT0_EXT,
+                                      GL_TEXTURE_RECTANGLE_ARB, fore, 0);
+        }
+        opengl_pop_framebuffer();
     }
 
     /* Initialize a YUV-to-RGB fragment shader. */
@@ -1163,28 +1166,35 @@ static void draw_image_udp(int i)
 
     if (p->nfo.udp.dirty && GL_has_framebuffer_object && GL_has_shader_objects)
     {
-        glEnable(GL_TEXTURE_RECTANGLE_ARB);
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
-
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, p->nfo.udp.fbo);
-
-        glUseProgramObjectARB(p->nfo.udp.prog);
-        glUniform1iARB(glGetUniformLocationARB(p->nfo.udp.prog, "rgb"), 0);
-
-        glMatrixMode(GL_PROJECTION);
-        {
-            glPushMatrix();
-            glLoadIdentity();
-            glOrtho(0, p->w, 0, p->h, -1, 1);
-        }
-        glMatrixMode(GL_MODELVIEW);
-        {
-            glPushMatrix();
-            glLoadIdentity();
-        }
+        opengl_push_framebuffer();
 
         glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
         {
+            GLboolean mask[4];
+
+            glGetBooleanv(GL_COLOR_WRITEMASK, mask);
+            glColorMask(1, 1, 1, 1);
+
+            glEnable(GL_TEXTURE_RECTANGLE_ARB);
+            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
+
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, p->nfo.udp.fbo);
+
+            glUseProgramObjectARB(p->nfo.udp.prog);
+            glUniform1iARB(glGetUniformLocationARB(p->nfo.udp.prog, "rgb"), 0);
+
+            glMatrixMode(GL_PROJECTION);
+            {
+                glPushMatrix();
+                glLoadIdentity();
+                glOrtho(0, p->w, 0, p->h, -1, 1);
+            }
+            glMatrixMode(GL_MODELVIEW);
+            {
+                glPushMatrix();
+                glLoadIdentity();
+            }
+
             glViewport(0, 0, p->w, p->h);
             glScissor (0, 0, p->w, p->h);
 
@@ -1203,20 +1213,23 @@ static void draw_image_udp(int i)
                 glVertex2i  (x0, y1);
             }
             glEnd();
+
+            glMatrixMode(GL_PROJECTION);
+            {
+                glPopMatrix();
+            }
+            glMatrixMode(GL_MODELVIEW);
+            {
+                glPopMatrix();
+            }
+
+            p->nfo.udp.dirty = 0;
+
+            glColorMask(mask[0], mask[1], mask[2], mask[3]);
         }
         glPopAttrib();
 
-        glMatrixMode(GL_PROJECTION);
-        {
-            glPopMatrix();
-        }
-        glMatrixMode(GL_MODELVIEW);
-        {
-            glPopMatrix();
-        }
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-        p->nfo.udp.dirty = 0;
+        opengl_pop_framebuffer();
     }
 }
 

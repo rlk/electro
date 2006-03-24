@@ -128,12 +128,21 @@ void     *opengl_proc(const char *);
 GLboolean opengl_need(const char *);
 GLfloat   opengl_perf(GLfloat *);
 
+/*---------------------------------------------------------------------------*/
+
 void        opengl_basis_mult(float[3][3]); 
 void        opengl_basis_invt(float[3][3]); 
 GLhandleARB opengl_shader_object(GLenum, const char *);
 GLhandleARB opengl_program_object(GLhandleARB, GLhandleARB);
 GLuint      opengl_frag_prog(const char *);
 GLuint      opengl_vert_prog(const char *);
+
+/*---------------------------------------------------------------------------*/
+
+void opengl_push_framebuffer(void);
+void opengl_pop_framebuffer(void);
+
+/*---------------------------------------------------------------------------*/
 
 void      opengl_draw_xyz(float, float, float);
 void      opengl_draw_vec(float, float, float, float, float, float);

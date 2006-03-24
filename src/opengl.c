@@ -800,6 +800,25 @@ GLuint opengl_frag_prog(const char *text)
 
 /*---------------------------------------------------------------------------*/
 
+#define MAXFBO 8
+
+static GLint fbo_v[MAXFBO];
+static int   fbo_i = 0;
+
+void opengl_push_framebuffer(void)
+{
+    if (fbo_i < MAXFBO)
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, fbo_v + fbo_i++);
+}
+
+void opengl_pop_framebuffer(void)
+{
+    if (fbo_i > 0)
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo_v[--fbo_i]);
+}
+
+/*===========================================================================*/
+
 void opengl_check(const char *format, ...)
 {
 #ifndef NDEBUG
