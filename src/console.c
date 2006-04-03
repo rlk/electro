@@ -513,7 +513,7 @@ static void *mirror_output(const char *format, ...)
     /* Collapse all arguments to a single string. */
 
     va_start(args, format);
-    vsnprintf(string, MAXSTR - 1, format, args);
+    vsprintf(string, format, args);
     va_end(args);
 
     /* Send the string to the console, log, and all connected clients. */

@@ -732,8 +732,8 @@ float get_entity_join_attr_f(unsigned int i, unsigned int j, int p)
 
 void get_entity_join_attr_v(unsigned int i, unsigned int j, int p, float *v)
 {
-    return get_phys_join_attr_v((i > 1) ? entity[i].body : 0,
-                                (j > 1) ? entity[j].body : 0, p, v);
+    get_phys_join_attr_v((i > 1) ? entity[i].body : 0,
+                         (j > 1) ? entity[j].body : 0, p, v);
 }
 
 /*---------------------------------------------------------------------------*/

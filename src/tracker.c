@@ -111,7 +111,7 @@ int acquire_tracker(int t_key, int c_key)
         buttons = (uint32_t *) calloc(control->but_count, sizeof (uint32_t));
     if (tracker != (struct tracker_header *) (-1))
     {
-        int i;
+        unsigned int i;
 
         transform = (struct transform *) calloc(tracker->count,
                                                 sizeof (struct transform));

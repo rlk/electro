@@ -52,11 +52,11 @@ static struct geom_data *create_data(int entity)
         data->entity   = entity;
         data->callback = 0x00000000;
         data->response = 0xFFFFFFFF;
-        data->mass     = 1.00;
-        data->bounce   = 0.50;
+        data->mass     = (dReal) 1.00;
+        data->bounce   = (dReal) 0.50;
         data->friction = dInfinity;
-        data->soft_erp = 0.20;
-        data->soft_cfm = 0.01;
+        data->soft_erp = (dReal) 0.20;
+        data->soft_cfm = (dReal) 0.01;
     }
 
     return data;
@@ -120,7 +120,7 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
                         contact[i].surface.bounce     = bounce;
                         contact[i].surface.soft_cfm   = soft_cfm;
                         contact[i].surface.soft_erp   = soft_erp;
-                        contact[i].surface.bounce_vel = 0.10;
+                        contact[i].surface.bounce_vel = (dReal) 0.10;
 
                         c = dJointCreateContact(world, group, contact + i);
                         dJointAttach(c, b1, b2);
@@ -538,9 +538,9 @@ dGeomID set_phys_geom_type(dGeomID geom, dBodyID body,
         break;
     case dRayClass:
         transform = dCreateGeomTransform(space);
-        object    = dCreateRay(space, sqrt(v[3] * v[3] +
-                                           v[4] * v[4] +
-                                           v[5] * v[5]));
+        object    = dCreateRay(space, (dReal) sqrt(v[3] * v[3] +
+                                                   v[4] * v[4] +
+                                                   v[5] * v[5]));
         dGeomRaySet(object, v[0], v[1], v[2], v[3], v[4], v[5]);
         break;
     }
@@ -875,7 +875,7 @@ int startup_physics(void)
     space = dHashSpaceCreate(0);
     group = dJointGroupCreate(0);
 
-    dWorldSetGravity(world, 0, -9.8, 0);
+    dWorldSetGravity(world, 0, (dReal) -9.8, 0);
     dWorldSetAutoDisableFlag(world, 1);
 
     return 1;

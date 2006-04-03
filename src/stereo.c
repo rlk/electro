@@ -119,8 +119,8 @@ static void push_quality(const float q[2])
     glGetFloatv(GL_VIEWPORT, v);
 
     glPushAttrib(GL_VIEWPORT_BIT);
-    glViewport(v[0] * q[0], v[1] * q[1],
-               v[2] * q[0], v[3] * q[1]);
+    glViewport((GLint) (v[0] * q[0]), (GLint) (v[1] * q[1]),
+			   (GLint) (v[2] * q[0]), (GLint) (v[3] * q[1]));
 }
 
 static void pop_quality(void)
@@ -193,8 +193,8 @@ static void init_varrier_00(const float q[2])
 
     if (state == 0)
     {
-        int w = get_window_w() * q[0];
-        int h = get_window_h() * q[1];
+        int w = (int) (get_window_w() * q[0]);
+        int h = (int) (get_window_h() * q[1]);
 
         /* Initialize a frame buffer object for each eye. */
 
@@ -334,9 +334,9 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
                 glUniformLoc1i(prog_obj, "R_map", 1);
                 glUniformLoc1f(prog_obj, "cycle", c);
                 glUniformLoc2f(prog_obj, "scale", q[0], q[1]);
-                glUniformLoc3f(prog_obj, "offset", -0.000273984360677,
-                                                    0.000000000000000,
-                                                   +0.000273984360677);
+                glUniformLoc3f(prog_obj, "offset", -0.00027398f,
+                                                    0.00000000f,
+                                                   +0.00027398f);
             }
 
             /* Apply the linescreen transforms to the texture matrices. */
