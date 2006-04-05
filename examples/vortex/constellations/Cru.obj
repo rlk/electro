@@ -1,0 +1,10 @@
+mtllib constellation.mtl
+usemtl constellation
+v   -13.651376    +2.538919   -23.110893
+v   -49.857136    -1.044969   -84.744629
+l -2 -1 
+mtllib constellation.mtl
+usemtl constellation
+v   -53.343334    +6.936142   -97.788208
+v   -58.548519    +5.489986   -90.715454
+l -2 -1 
