@@ -912,19 +912,6 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
         P[1] = p[1];
         P[2] = p[2];
 
-        /* Optionally reflect the view position across the mirror. */
-/*
-        if (T->flags & TILE_MIRROR)
-        {
-            k = (P[0] * T->p[0] +
-                 P[1] * T->p[1] +
-                 P[2] * T->p[2]) - T->p[3];
-
-            P[0] -= T->p[0] * k * 2;
-            P[1] -= T->p[1] * k * 2;
-            P[2] -= T->p[2] * k * 2;
-        }
-*/
         /* Compute the screen corners. */
 
         p0[0] = T->o[0];

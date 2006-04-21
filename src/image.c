@@ -45,6 +45,7 @@ static GLubyte byte(int n)
 #define TYPE_ENV  2
 #define TYPE_ANI  3
 #define TYPE_UDP  4
+#define TYPE_FBO  5
 
 struct image_map
 {
@@ -479,7 +480,6 @@ static void *load_image(const char *filename, int *width,
 
 static int cmpname(const char *name1, const char *name2)
 {
-    if (name1 == NULL && name2 == NULL) return 0;
     if (name1 == NULL || name2 == NULL) return 1;
 
     return strcmp(name1, name2);
@@ -489,6 +489,46 @@ int dupe_create_image(int i)
 {
     get_image(i)->count++;
     return i;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Empty image                                                               */
+
+int send_create_image_nil(int w, int h)
+{
+    int i;
+
+    struct image *p;
+
+    if ((i = new_image()) >= 0)
+    {
+        p = get_image(i);
+
+        p->state = 0;
+        p->count = 1;
+        p->flags = (NPOT(w) || NPOT(h)) ? FLAG_NPOT : 0;
+        p->type  = TYPE_MAP;
+        p->w     = w;
+        p->h     = h;
+        p->b     = 3;
+
+        p->nfo.map.name = NULL;
+        p->nfo.map.data = malloc(p->w * p->h * p->b);
+
+        /* Send the header and data. */
+
+        send_event(EVENT_CREATE_IMAGE);
+        send_event(TYPE_MAP);
+
+        send_index(p->flags);
+        send_index(p->w);
+        send_index(p->h);
+        send_index(p->b);
+        send_array(p->nfo.map.data, p->w * p->h * p->b, 1);
+
+        return i;
+    }
+    return -1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -588,20 +628,27 @@ static GLuint init_image_map(struct image_map *nfo,
     /* Apply pixel data in compressed or raw format. */
 
     if ((flags & FLAG_COMP) && GL_has_texture_compression)
+    {
         glCompressedTexImage2DARB(m, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
                                   w, h, 0, w * h / 2, nfo->data);
+        glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
     else
     {
         if (flags & FLAG_NPOT)
+        {
             glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
+            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
         else
+        {
             gluBuild2DMipmaps(m, f, w, h, f, GL_UNSIGNED_BYTE, nfo->data);
+            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        }
     }
-
-    /* Enable bilinear filtering. */
-
-    glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     return o;
 }
@@ -1437,6 +1484,22 @@ void recv_delete_image(void)
 }
 
 /*---------------------------------------------------------------------------*/
+
+GLenum get_image_target(int i)
+{
+    if (NPOT(get_image_w(i)) || NPOT(get_image_h(i)))
+        return GL_TEXTURE_RECTANGLE_ARB;
+    else
+        return GL_TEXTURE_2D;
+}
+
+GLuint get_image_buffer(int i)
+{
+    if (i > 0)
+        return get_image(i)->texture;
+    else
+        return 0;
+}
 
 void get_image_c(int i, int x, int y, unsigned char c[4])
 {

@@ -621,6 +621,8 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><a name="set_camera_range"><tt>set_camera_range</tt>(<i>camera, near, far</i>)</a><dd><p>Set the near and far clipping planes for a camera.  The default range is (<i>0.1, 1000.0</i>) for <a href="#camera_type_perspective">perspective</a> cameras and (<i>-1000.0,+1000.0</i>) for <a href="#camera_type_orthogonal">orthogonal</a> cameras.</p>
 
+<dt><a name="set_camera_image"><tt>set_camera_image</tt>(<i>camera, image, left, right, bottom, top</i>)</a><dd><p>Set an image to be used as off-screen render target for <i>camera</i>. The <i>left</i>, <i>right</i>, <i>bottom</i>, and <i>top</i> arguments define the projection to be applied. The near and far planes of this projection are specified using <a href="#set_camera_range"><tt>set_camera_range</tt></a> and the projection is perspective or orthogonal depending on the camera type.</p>
+
 </dl>
 
 <!---------------------------------------------------------------------------->

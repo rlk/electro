@@ -46,6 +46,9 @@ void recv_set_camera_stereo(void);
 void send_set_camera_range(int, float, float);
 void recv_set_camera_range(void);
 
+void send_set_camera_image(int, int, float, float, float, float);
+void recv_set_camera_image(void);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

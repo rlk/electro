@@ -20,6 +20,7 @@ int startup_image(void);
 /*---------------------------------------------------------------------------*/
 
 int  send_create_image_udp(int);
+int  send_create_image_nil(int, int);
 int  send_create_image_map(const char *);
 int  send_create_image_ani(const char *, int, int, int, int, int, int, int);
 int  send_create_image_env(const char *, const char *,
@@ -37,6 +38,9 @@ void send_set_image_pixels(int, void *, int, int, int, int, int, int);
 void recv_set_image_pixels(void);
 
 /*---------------------------------------------------------------------------*/
+
+GLenum get_image_target(int);
+GLuint get_image_buffer(int);
 
 void get_image_c(int, int, int, unsigned char[4]);
 int  get_image_w(int);

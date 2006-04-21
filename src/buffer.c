@@ -108,25 +108,9 @@ void sync_buffer(void)
         n    = curr->size;
         temp = curr->next;
 
-        assert_mpi(MPI_Bcast(&n,   1, MPI_INT,  0, MPI_COMM_WORLD));
+        assert_mpi(MPI_Bcast(&n,   4, MPI_BYTE, 0, MPI_COMM_WORLD));
         assert_mpi(MPI_Bcast(curr, n, MPI_BYTE, 0, MPI_COMM_WORLD));
-/*
-        if (rank > 0)
-        {
-            assert_mpi(MPI_Recv(&n,   1, MPI_INT,  p,  1, MPI_COMM_WORLD, &s));
-            assert_mpi(MPI_Recv(curr, n, MPI_BYTE, p,  1, MPI_COMM_WORLD, &s));
-        }
-        if (c1 < size)
-        {
-            assert_mpi(MPI_Send(&n,   1, MPI_INT,  c1, 1, MPI_COMM_WORLD));
-            assert_mpi(MPI_Send(curr, n, MPI_BYTE, c1, 1, MPI_COMM_WORLD));
-        }
-        if (c2 < size)
-        {
-            assert_mpi(MPI_Send(&n,   1, MPI_INT,  c2, 1, MPI_COMM_WORLD));
-            assert_mpi(MPI_Send(curr, n, MPI_BYTE, c2, 1, MPI_COMM_WORLD));
-        }
-*/
+
         curr->next = temp;
 
         /* Loop until a non-full bucket is sent or received. */
