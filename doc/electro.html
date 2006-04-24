@@ -677,6 +677,8 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>port</i>)</a><dd><p>Create a video stream image using UDP port <i>port</i>. The UDP image protocol is <a href="image.html">documented here</a>.</p>
 
+<dt><a name="create_image"><i>image</i> = <tt>create_image</tt>(<i>width, height, bytes</i>)</a><dd><p>Create a blank image using of the given size and depth. A blank image may be used as a render target attached to a camera using <a href="#set_camera_image"><tt>set_camera_image</tt></a>.</p>
+
 <dt><a name="delete_image"><tt>delete_image</tt>(<i>image</i>)</a><dd><p>Delete an image and release all resources associated with it. The image may not be deleted immediately if it is referenced by an existing brush.</p>
 
 <p class="note">In general, applications should explicitly delete any images that they explicitly create. This includes the circumstance where an image is created and assigned to a brush which is subsequently deleted. In that case, the image is not automatically released because it is presumed to be directly referenced by the application. The same create/delete policy applies to <a href="#brushes">brushes</a>.</p>

@@ -410,6 +410,7 @@ void init_opengl(void)
     GL_has_fragment_program     = opengl_need("GL_ARB_fragment_program");
     GL_has_vertex_program       = opengl_need("GL_ARB_vertex_program");
     GL_has_vertex_buffer_object = opengl_need("GL_ARB_vertex_buffer_object");
+    GL_has_framebuffer_object   = opengl_need("GL_EXT_framebuffer_object");
     GL_has_point_sprite         = opengl_need("GL_ARB_point_sprite");
     GL_has_texture_compression  = opengl_need("GL_ARB_texture_compression");
     GL_has_texture_rectangle    = opengl_need("GL_ARB_texture_rectangle");

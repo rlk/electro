@@ -396,6 +396,18 @@ static void get_eye_pos(float d[3], struct camera *c, int eye)
                             + c->eye_offset[eye][2] * c->view_basis[2][2];
 }
 
+/*---------------------------------------------------------------------------*/
+
+static void draw_color(int j, int eye, int flag)
+{
+    glPushMatrix();
+    {
+        transform_camera(j);
+        test_camera(eye, flag);
+    }
+    glPopMatrix();
+}
+
 static void draw_scene(int j, int flag, float a)
 {
     glPushMatrix();
@@ -453,13 +465,22 @@ static void draw_camera(int i, int j, int f, float a)
 
         /* Render the scene to the offscreen buffer. */
 
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, c->frame);
-        glClearColor(1.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+        {
+            int w = get_image_w(c->image);
+            int h = get_image_h(c->image);
 
-        draw_scene(j, f, a);
+            glViewport(0, 0, w, h);
+            glScissor (0, 0, w, h);
 
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, c->frame);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            draw_scene(j, f, a);
+
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+        }
+        glPopAttrib();
 
         /* Revert the projection. */
 
@@ -501,10 +522,7 @@ static void draw_camera(int i, int j, int f, float a)
                     while ((pass = draw_pass(c->mode, eye, tile, pass, d)))
                     {
                         if (get_tile_flags(tile) & TILE_TEST)
-                        {
-                            transform_camera(j);
-                            test_camera(eye, flag);
-                        }
+                            draw_color(j, eye, flag);
                         else
                             draw_scene(j, flag, a);
                     }
@@ -547,6 +565,11 @@ static void init_camera(int i)
             glTexParameteri(T, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(T, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameteri(T, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+            glTexParameteri(T, GL_DEPTH_TEXTURE_MODE_ARB,
+                               GL_INTENSITY);
+            glTexParameteri(T, GL_TEXTURE_COMPARE_MODE_ARB,
+                               GL_COMPARE_R_TO_TEXTURE_ARB);
 
             /* Attach the framebuffer render targets. */
 

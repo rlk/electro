@@ -1529,8 +1529,9 @@ static int E_create_image(lua_State *L)
                                              L_getstring(L, -2),
                                              L_getstring(L, -1)));
 
-    else if (N == 2)
-        E_pushimage(L, send_create_image_nil(L_getinteger(L, -2),
+    else if (N == 3)
+        E_pushimage(L, send_create_image_nil(L_getinteger(L, -3),
+                                             L_getinteger(L, -2),
                                              L_getinteger(L, -1)));
 
     else if (N == 1 && lua_isnumber(L, -1))

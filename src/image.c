@@ -27,15 +27,6 @@
 
 #define NPOT(n) (((n) & ((n) - 1)) != 0)
 
-/*
-static GLubyte byte(int n)
-{
-    if (n > 255) return 255;
-    if (n <   0) return   0;
-
-    return (GLubyte) n;
-}
-*/
 /*---------------------------------------------------------------------------*/
 
 #define FLAG_NPOT 1
@@ -494,7 +485,7 @@ int dupe_create_image(int i)
 /*---------------------------------------------------------------------------*/
 /* Empty image                                                               */
 
-int send_create_image_nil(int w, int h)
+int send_create_image_nil(int w, int h, int b)
 {
     int i;
 
@@ -510,7 +501,7 @@ int send_create_image_nil(int w, int h)
         p->type  = TYPE_MAP;
         p->w     = w;
         p->h     = h;
-        p->b     = 3;
+        p->b     = b;
 
         p->nfo.map.name = NULL;
         p->nfo.map.data = malloc(p->w * p->h * p->b);
@@ -636,18 +627,9 @@ static GLuint init_image_map(struct image_map *nfo,
     }
     else
     {
-        if (flags & FLAG_NPOT)
-        {
-            glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
-            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
-        else
-        {
-            gluBuild2DMipmaps(m, f, w, h, f, GL_UNSIGNED_BYTE, nfo->data);
-            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        }
+        glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
+        glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
     return o;
