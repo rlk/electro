@@ -97,12 +97,6 @@ void sync_buffer(void)
 
     for (curr = first; curr; curr = curr->next)
     {
-        MPI_Status s;
-
-        int p  = (rank - 1) / 2;
-        int c1 = (rank * 2) + 1;
-        int c2 = (rank * 2) + 2;
-
         /* Broadcast this bucket, preserving client 'next' links. */
 
         n    = curr->size;

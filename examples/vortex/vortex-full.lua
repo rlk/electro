@@ -8,6 +8,7 @@ wx = 0
 wy = 0
 wz = 0
 
+show_lines = true
 magnitude = 1000
 
 -------------------------------------------------------------------------------
@@ -19,7 +20,7 @@ function reset()
     wx = 0
     wy = 0
     tz = 0
-    E.set_entity_position(camera, 0, 0, 1)
+    E.set_entity_position(camera, 0, 0, 0)
     E.set_entity_rotation(camera, 0, 0, 0)
 end
 
@@ -28,7 +29,7 @@ function constellation(name, parent)
 
     E.parent_entity(object, parent)
     E.set_entity_flags(object, E.entity_flag_line_smooth, true)
-    E.set_brush_line_width(E.get_mesh(object, 0), 2)
+    E.set_brush_line_width(E.get_mesh(object, 0), 8)
 end
 
 function do_constellations(parent)
@@ -144,6 +145,7 @@ function do_start()
     galaxy_H = E.create_galaxy("../data/galaxy_hip.gal", star_brush)
     galaxy_T = E.create_galaxy("../data/galaxy_tyc.gal", star_brush)
     sign     = E.create_sprite(sign_brush)
+    lines    = E.create_pivot()
     pointer  = E.create_pivot()
 
     E.set_galaxy_magnitude(galaxy_H, magnitude)
@@ -152,15 +154,17 @@ function do_start()
     E.parent_entity(sign,     camera)
     E.parent_entity(galaxy_H, camera)
     E.parent_entity(galaxy_T, camera)
+    E.parent_entity(lines,    camera)
 
     E.set_entity_scale(sign,  0.005, 0.005, 0.005)
     E.set_entity_flags(sign,  E.entity_flag_billboard,   true)
 
-    E.set_entity_position(camera, 0, 0, 1)
+    E.set_entity_position(camera, 0, 0, 0)
+    E.set_camera_range(camera, 1.0, 10000.0)
 
     E.set_background(0, 0, 0)
 
-    do_constellations(galaxy_H);
+    do_constellations(lines);
 
     E.enable_timer(true)
 end
@@ -238,6 +242,13 @@ function do_keyboard(k, s)
     end
 
     if s then
+         -- Tab toggles constellations
+
+        if k == E.key_tab then
+            show_lines = not show_lines
+            E.set_entity_flags(lines, E.entity_flag_hidden, not show_lines)
+        end
+
         -- Recenter the view on Return
 
         if k == E.key_return then

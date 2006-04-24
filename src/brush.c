@@ -1203,6 +1203,8 @@ int draw_brush(int i, float a)
         }
         else
         {
+            glColor4fv(d);
+
             /* Apply the material properties. */
     
             if (b->flags & BRUSH_DIFFUSE)
