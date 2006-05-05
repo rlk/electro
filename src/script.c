@@ -1335,6 +1335,12 @@ static int E_delete_edge(lua_State *L)
     return 0;
 }
 
+static int E_normal_mesh(lua_State *L)
+{
+    send_normal_mesh(E_getobject (L, -1));
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 /* Sprite functions                                                          */
 
@@ -2495,6 +2501,8 @@ static struct function_def functions[] = {
     { "delete_vert",           E_delete_vert           },
     { "delete_face",           E_delete_face           },
     { "delete_edge",           E_delete_edge           },
+
+    { "normal_mesh",           E_normal_mesh           },
 
     /* Sprite functions */
 

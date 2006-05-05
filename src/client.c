@@ -100,6 +100,8 @@ static void client_recv(void)
         case EVENT_DELETE_FACE:           recv_delete_face();           break;
         case EVENT_DELETE_EDGE:           recv_delete_edge();           break;
 
+        case EVENT_NORMAL_MESH:           recv_normal_mesh();           break;
+
         case EVENT_SET_MESH:              recv_set_mesh();              break;
         case EVENT_SET_VERT:              recv_set_vert();              break;
         case EVENT_SET_FACE:              recv_set_face();              break;

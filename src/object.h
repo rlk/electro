@@ -46,6 +46,8 @@ void send_delete_vert(int, int);
 void send_delete_face(int, int, int);
 void send_delete_edge(int, int, int);
 
+void send_normal_mesh(int);
+
 void send_set_mesh(int, int, int);
 void send_set_vert(int, int, float[3], float[3], float[2]);
 void send_set_face(int, int, int, int[3]);
@@ -62,6 +64,8 @@ void recv_delete_mesh(void);
 void recv_delete_vert(void);
 void recv_delete_face(void);
 void recv_delete_edge(void);
+
+void recv_normal_mesh(void);
 
 void recv_set_mesh(void);
 void recv_set_vert(void);

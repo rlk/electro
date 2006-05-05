@@ -744,6 +744,78 @@ static void delete_mesh(int i, int j)
 }
 
 /*---------------------------------------------------------------------------*/
+/* Object normalization                                                      */
+
+static void normal(float n[3], const float a[3],
+                               const float b[3],
+                               const float c[3])
+{
+    float u[3];
+    float v[3];
+
+    u[0] = b[0] - a[0];
+    u[1] = b[1] - a[1];
+    u[2] = b[2] - a[2];
+
+    v[0] = c[0] - a[0];
+    v[1] = c[1] - a[1];
+    v[2] = c[2] - a[2];
+
+    cross(n, u, v);
+    normalize(n);
+}
+
+static void normal_mesh(int i)
+{
+    int j;
+    int k;
+
+    float n[3];
+
+    /* Zero the normals of all vertices of this mesh. */
+
+    for (j = 0; j < get_vert_count(i); ++j)
+    {
+        struct object_vert *v = get_object_vert(i, j);
+
+        v->n[0] = 0.0f;
+        v->n[1] = 0.0f;
+        v->n[2] = 0.0f;
+    }
+
+    /* Compute and accumulate the normals of all faces of this mesh. */
+
+    for (j = 0; j < get_mesh_count(i); ++j)
+        for (k = 0; k < get_face_count(i, j); ++k)
+        {
+            struct object_face *f  = get_object_face(i, j, k);
+            struct object_vert *v0 = get_object_vert(i, f->vi[0]);
+            struct object_vert *v1 = get_object_vert(i, f->vi[1]);
+            struct object_vert *v2 = get_object_vert(i, f->vi[2]);
+
+            normal(n, v0->v, v1->v, v2->v);
+
+            v0->n[0] += n[0];
+            v0->n[1] += n[1];
+            v0->n[2] += n[2];
+
+            v1->n[0] += n[0];
+            v1->n[1] += n[1];
+            v1->n[2] += n[2];
+
+            v2->n[0] += n[0];
+            v2->n[1] += n[1];
+            v2->n[2] += n[2];
+        }
+
+    /* Normalize all computed normals. */
+
+    for (k = 0; k < get_vert_count(i); ++k)
+        normalize(get_object_vert(i, k)->n);
+}
+
+
+/*---------------------------------------------------------------------------*/
 /* Object query                                                              */
 
 int get_mesh(int i, int j)
@@ -1046,6 +1118,23 @@ void recv_delete_edge(void)
     int k = recv_index();
 
     delete_edge(i, j, k);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void send_normal_mesh(int i)
+{
+    send_event(EVENT_NORMAL_MESH);
+    send_index(i);
+
+    normal_mesh(i);
+}
+
+void recv_normal_mesh(void)
+{
+    int i = recv_index();
+
+    normal_mesh(i);
 }
 
 /*---------------------------------------------------------------------------*/
