@@ -70,8 +70,8 @@ struct image_udp
     int    dirty;
     int    sock;
     int    code;
-    GLuint frag;
-    GLuint prog;
+    GLhandleARB frag;
+    GLhandleARB prog;
     GLuint back;
     GLuint fbo;
 };
@@ -353,6 +353,7 @@ static void *load_image(const char *filename, int *width,
 
 static int cmpname(const char *name1, const char *name2)
 {
+    if (name1 == NULL && name2 == NULL) return 0;
     if (name1 == NULL || name2 == NULL) return 1;
 
     return strcmp(name1, name2);
@@ -1056,7 +1057,7 @@ static GLuint init_image_udp(struct image_udp *nfo, int w, int h)
 static void fini_image_udp(struct image_udp *nfo)
 {
     if (nfo->prog)
-        glDeleteProgramsARB(1, &nfo->prog);
+        glDeleteObjectARB(nfo->prog);
 
     if (nfo->fbo && GL_has_framebuffer_object)
         glDeleteFramebuffersEXT(1, &nfo->fbo);
@@ -1413,6 +1414,16 @@ int get_image_w(int i)
 int get_image_h(int i)
 {
     return get_image(i)->h;
+}
+
+int get_image_i(int i)
+{
+    struct image *p = get_image(i);
+
+    if (p->type == TYPE_ANI)
+        return p->nfo.ani.frame_i;
+    else
+        return 0;
 }
 
 /*===========================================================================*/

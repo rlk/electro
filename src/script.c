@@ -1544,7 +1544,7 @@ static int E_create_image(lua_State *L)
         E_pushimage(L, send_create_image_udp(L_getinteger(L, -1)));
 
     else 
-        E_pushimage(L, 0);
+        E_pushimage(L, send_create_image_map(L_getstring(L, -1)));
  
     return 1;
 }
@@ -1579,6 +1579,12 @@ static int E_get_image_size(lua_State *L)
     lua_pushnumber(L, (double) get_image_h(id));
 
     return 2;
+}
+
+static int E_get_image_frame(lua_State *L)
+{
+    lua_pushnumber(L, (double) get_image_i(E_getimage(L, -1)));
+    return 1;
 }
 
 /*===========================================================================*/
@@ -2539,6 +2545,7 @@ static struct function_def functions[] = {
     { "delete_image",          E_delete_image          },
     { "get_image_pixel",       E_get_image_pixel       },
     { "get_image_size",        E_get_image_size        },
+    { "get_image_frame",       E_get_image_frame       },
 
     /* Brush functions */
 

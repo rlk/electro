@@ -687,6 +687,8 @@ and many others. Users of other scene-graph-based libraries should find the Elec
 
 <dt><a name="get_image_size"><i>w, h</i> = <tt>get_image_size</tt>(<i>image</i>)</a><dd><p>Return the size of the image in pixels.</p>
 
+<dt><a name="get_image_frame"><i>i</i> = <tt>get_image_frame</tt>(<i>image</i>)</a><dd><p>Return the current frame number of a flip-book image. Flip-book processing is performed before callbacks are invoked, so if called in a <tt>do_timer</tt> or <tt>do_frame</tt> callback, this function will return the number of the frame to be displayed in the next update. So, if an application wishes to know when a flip-book has finished, it should test for the value <i>frame<sub>0</sub></i>.</p>
+
 </dl>
 
 <!---------------------------------------------------------------------------->

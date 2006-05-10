@@ -102,9 +102,9 @@ static char *frag_00 = \
     "    gl_FragColor = vec4(max(L.rgb * Lk, R.rgb * Rk), 1.0);      \n"\
     "}                                                               \n";
 
-static GLuint vert_obj;
-static GLuint frag_obj;
-static GLuint prog_obj;
+static GLhandleARB vert_obj;
+static GLhandleARB frag_obj;
+static GLhandleARB prog_obj;
 
 static GLuint frame_buf[2];
 static GLuint color_buf[2];

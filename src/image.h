@@ -45,6 +45,7 @@ GLuint get_image_buffer(int);
 void get_image_c(int, int, int, unsigned char[4]);
 int  get_image_w(int);
 int  get_image_h(int);
+int  get_image_i(int);
 
 /*---------------------------------------------------------------------------*/
 
