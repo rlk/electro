@@ -510,9 +510,18 @@ static GLuint init_image_map(struct image_map *nfo,
     }
     else
     {
-        glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
-        glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        if (m == GL_TEXTURE_2D)
+        {
+            gluBuild2DMipmaps(m, f, w, h, f, GL_UNSIGNED_BYTE, nfo->data);
+            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        }
+        else
+        {
+            glTexImage2D(m, 0, f, w, h, 0, f, GL_UNSIGNED_BYTE, nfo->data);
+            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
     }
 
     return o;
@@ -1076,7 +1085,9 @@ static void draw_image_udp(int i)
 {
     struct image *p = get_image(i);
 
-    if (p->nfo.udp.dirty && GL_has_framebuffer_object && GL_has_shader_objects)
+    if ((p->nfo.udp.dirty) &&
+        (p->nfo.udp.code == 0x31313459 || p->nfo.udp.code == 0x59565955) &&
+        (GL_has_framebuffer_object && GL_has_shader_objects))
     {
         opengl_push_framebuffer();
 
@@ -1184,13 +1195,13 @@ static void set_image_udp_pixels(int i, GLubyte *data,
                             GL_RGBA, GL_UNSIGNED_BYTE, data);
             break;
 
-        case 0x41424752: /* RGB  */
+        case 0x20424752: /* RGB  */
             glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
             glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, r, w, n,
                             GL_RGB,  GL_UNSIGNED_BYTE, data);
             break;
 
-        case 0x20424752: /* RGBA */
+        case 0x41424752: /* RGBA */
             glBindTexture  (GL_TEXTURE_RECTANGLE_ARB, p->texture);
             glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, r, w, n,
                             GL_RGBA, GL_UNSIGNED_BYTE, data);

@@ -99,8 +99,8 @@ function do_start()
     E.set_entity_position(spriteR, pos_x - off_x, pos_y, pos_z + off_z)
 
     E.enable_timer(true)
---  E.set_background(0.2, 0.2, 0.2)
-    E.set_background(0, 0, 0)
+    E.set_background(0.2, 0.2, 0.2)
+    E.set_background(0.0, 0.0, 0.0)
 end
 
 -------------------------------------------------------------------------------

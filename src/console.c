@@ -507,7 +507,7 @@ int input_console(int symbol, int unicode)
 
 static void *mirror_output(const char *format, ...)
 {
-    char string[MAXSTR];
+    char string[16 * 1024];
     va_list args;
 
     /* Collapse all arguments to a single string. */
