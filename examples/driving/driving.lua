@@ -27,47 +27,6 @@ category_all = category_body + category_tire + category_world
 
 -------------------------------------------------------------------------------
 
-track_host = "192.168.0.115"
-track_port = 10000
-movie_port = 2827
-
-IDM_VIDEO_PLAY        = 32775
-IDM_VIDEO_STOP        = 32777
-IDM_RECORD_FACE       = 32809
-IDM_SEND_ELECTRO      = 32872
-IDM_STOP_ELECTRO      = 32873
-IDM_RECORD_TRAIN_FACE = 32874
-
-function htonl(n)
-    local D = math.floor(math.mod(n, 2^8))
-    local C = math.floor(math.mod(n, 2^16) / 2^8)
-    local B = math.floor(math.mod(n, 2^24) / 2^16)
-    local A = math.floor(         n        / 2^24)
-
-    return string.char(A, B, C, D)
-end
-
-function htons(n)
-    local B = math.floor(math.mod(n, 2^8))
-    local A = math.floor(math.mod(n, 2^16) / 2^8)
-
-    return string.char(A, B)
-end
-
-function send_video_play()
-    local sock = socket.udp()
-
-    if sock then
-        sock:sendto(htonl(87)..
-                    htonl(1)..
-                    htonl(IDM_SEND_ELECTRO)..
-                    htonl(0)..
-                    htonl(0), track_host, track_port)
-    end
-end
-
--------------------------------------------------------------------------------
-
 function add_ramp(x, y, z, a, r)
     local ramp = E.create_object("../data/ramp.obj")
 
@@ -89,10 +48,6 @@ function add_tv(x, y, z)
     E.set_entity_geom_attr(object, E.geom_attr_category, category_world)
     E.set_entity_geom_attr(object, E.geom_attr_collider, category_all)
     E.set_entity_geom_attr(object, E.geom_attr_friction, 10)
-
-    if video then
-        E.set_brush_image(E.get_mesh(object, 1), video)
-    end
 
     E.set_entity_position(object, x, y, z)
 
@@ -391,7 +346,6 @@ function do_start()
     later  = E.create_pivot()
     sky    = E.create_object("../data/sky.obj")
 
-    video = E.create_image(2827)
     plane = E.create_object("../data/checker.obj")
     envmap = E.create_image("../data/sky_nx.png",
                             "../data/sky_px.png",
@@ -515,10 +469,6 @@ function do_keyboard(k, s)
             E.set_entity_flags(camera, E.entity_flag_wireframe, false)
             return true
         end
-        if k == E.key_F10 then
-            send_video_start()
-            return true
-        end
 
         if k == E.key_F11 then
             E.nuke()
@@ -593,6 +543,3 @@ end
 E.set_background(0.8, 0.8, 1.0, 0.2, 0.4, 1.0)
 do_start()
 
-if socket then
-    send_video_play()
-end

@@ -31,8 +31,6 @@ function add_object(i, s)
 
     E.parent_entity(object, pivot)
     E.set_entity_scale(object, s, s, s)
-
-    E.normal_mesh(object)
 end
 
 function do_start()

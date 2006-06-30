@@ -1570,7 +1570,7 @@ void step_images(void)
     {
         struct image *p = get_image(i);
 
-        if (p->count && p->type == TYPE_UDP)
+        if (p->count && p->type == TYPE_UDP && p->nfo.udp.sock >= 0)
         {
             FD_SET(p->nfo.udp.sock, &fds0);
 

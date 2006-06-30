@@ -20,19 +20,16 @@ endif
 
 #------------------------------------------------------------------------------
 
-# Under OSX assume the Fink tree is available in /sw and GL is in a framework.
-
 ifeq ($(shell uname), Darwin)
-	INCDIR = -I/sw/include
-	LIBDIR = -L/sw/lib
+	INCDIR = -I/opt/local/include
+	LIBDIR = -L/opt/local/lib
 	OGLLIB =
-	SDL_CONFIG = /sw/bin/sdl-config
-	FT2_CONFIG = /sw/lib/freetype2/bin/freetype-config
+	SDL_CONFIG = /opt/local/bin/sdl-config
+	FT2_CONFIG = /opt/local/bin/freetype-config
 else
 	OGLLIB = -lGL -lGLU
 	SDL_CONFIG = /usr/bin/sdl-config
 	FT2_CONFIG = /usr/bin/freetype-config
-#	FT2_CONFIG = $(HOME)/bin/freetype-config
 endif
 
 # Include Lua, if it exists.
