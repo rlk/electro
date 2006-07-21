@@ -513,8 +513,8 @@ static GLuint init_image_map(struct image_map *nfo,
         if (m == GL_TEXTURE_2D)
         {
             gluBuild2DMipmaps(m, f, w, h, f, GL_UNSIGNED_BYTE, nfo->data);
-            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(m, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         }
         else
         {

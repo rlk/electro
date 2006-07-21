@@ -31,6 +31,7 @@
 #include "font.h"
 #include "net.h"
 #include "event.h"
+#include "socket.h"
 #include "server.h"
 
 /*---------------------------------------------------------------------------*/
@@ -445,6 +446,11 @@ static void parse_scripts(int argc, char *argv[])
 
 void server(int argc, char *argv[])
 {
+#ifdef _WIN32
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(1, 1), &wsaData);
+#endif
+
     if (init_script())
     {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) == 0)
@@ -507,6 +513,9 @@ void server(int argc, char *argv[])
         }
         else fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
     }
+#ifdef _WIN32
+    WSACleanup();
+#endif
 }
 
 /*---------------------------------------------------------------------------*/

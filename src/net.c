@@ -117,7 +117,7 @@ static void net_loop(void)
 
     /* Check for activity on all sockets. */
 
-    if (select(n, &fds, NULL, NULL, NULL) >= 0)
+    if (select(n, &fds, NULL, NULL, NULL) > 0)
     {
         /* Check for a new connection. */
 
@@ -130,7 +130,6 @@ static void net_loop(void)
             if (conn[i] >= 0 && FD_ISSET(conn[i], &fds))
                 net_data(i);
     }
-    else error("select : %s", system_error());
 }
 
 static int net_main(void *data)

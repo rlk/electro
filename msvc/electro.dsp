@@ -220,6 +220,10 @@ SOURCE=..\src\vector.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\vec.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\video.c
 # End Source File
 # End Group
@@ -353,6 +357,10 @@ SOURCE=..\src\tracker.h
 # Begin Source File
 
 SOURCE=..\src\utility.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\vec.h
 # End Source File
 # Begin Source File
 
