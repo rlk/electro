@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "utility.h"
 #include "socket.h"
@@ -28,7 +29,18 @@
 static int    done = 0;
 static int    port = 0;
 static SOCKET sock = 0;
-static SOCKET conn[MAXCONN];
+
+/*---------------------------------------------------------------------------*/
+
+struct client
+{
+    SOCKET sock;
+
+    int  len;
+    char str[MAXSTR];
+};
+
+static struct client conn[MAXCONN];
 
 /*---------------------------------------------------------------------------*/
 
@@ -41,29 +53,29 @@ void net_send_all(const char *str)
         /* Send output to all connected clients. */
 
         for (i = 0; i < MAXCONN; ++i)
-            if (conn[i] >= 0)
-                write(conn[i], str, strlen(str));
+            if (conn[i].sock >= 0)
+                write(conn[i].sock, str, strlen(str));
     }
 }
 
 static void net_conn(void)
 {
     sockaddr_t addr;
-    socklen_t  len = sizeof (sockaddr_t);
+    socklen_t  n = sizeof (sockaddr_t);
 
     int i;
 
     /* Search for an available connection slot. */
 
     for (i = 0; i < MAXCONN; ++i)
-        if (conn[i] == -1)
+        if (conn[i].sock == -1)
             break;
 
     /* If a slot is found, accept the connection. */
 
     if (i < MAXCONN)
     {
-        if ((conn[i] = accept(sock, (struct sockaddr *) &addr, &len)) >= 0)
+        if ((conn[i].sock = accept(sock, (struct sockaddr *) &addr, &n)) >= 0)
         {
             return;
         }
@@ -75,22 +87,35 @@ static void net_conn(void)
 static void net_data(int i)
 {
     char str[MAXSTR];
-    int n;
+    int c, n;
 
     memset(str, 0, MAXSTR);
 
     /* Read an incoming command. */
 
-    if ((n = read(conn[i], str, MAXSTR)) >= 0)
+    if ((n = read(conn[i].sock, str, MAXSTR)) >= 0)
     {
-        /* Enqueue the command, or close the connection on zero. */
+        /* Accumulate the command.  Activate it on EOL. */
 
-        if (n > 0)
-            send_user_event(str);
-        else
+        for (c = 0; c < n && conn[i].len < MAXSTR; ++c)
         {
-            close(conn[i]);
-            conn[i] = -1;
+            if (isprint(str[c]))
+                conn[i].str[conn[i].len++] = str[c];
+
+            if ((str[c] == 13 || str[c] == 10) && conn[i].len > 0)
+            {
+                send_user_event(conn[i].str);
+                memset(conn[i].str, 0, MAXSTR);
+                conn[i].len = 0;
+            }
+        }
+
+        /* Close the connection on zero. */
+
+        if (n == 0)
+        {
+            close(conn[i].sock);
+            conn[i].sock = -1;
         }
     }
     else error("read : %s", system_error());
@@ -108,11 +133,11 @@ static void net_loop(void)
 
     for (i = 0; i < MAXCONN; ++i)
     {
-        if (conn[i] >= 0)
-            FD_SET(conn[i], &fds);
+        if (conn[i].sock >= 0)
+            FD_SET(conn[i].sock, &fds);
 
-        if (n < (int) conn[i] + 1)
-            n = (int) conn[i] + 1;
+        if (n < (int) conn[i].sock + 1)
+            n = (int) conn[i].sock + 1;
     }
 
     /* Check for activity on all sockets. */
@@ -127,7 +152,7 @@ static void net_loop(void)
         /* Check for data on an existing connection. */
 
         for (i = 0; i < MAXCONN; ++i)
-            if (conn[i] >= 0 && FD_ISSET(conn[i], &fds))
+            if (conn[i].sock >= 0 && FD_ISSET(conn[i].sock, &fds))
                 net_data(i);
     }
 }
@@ -139,7 +164,12 @@ static int net_main(void *data)
     /* Initialize the array of connections. */
 
     for (i = 0; i < MAXCONN; ++i)
-        conn[i] = -1;
+    {
+        conn[i].sock = -1;
+        conn[i].len  =  0;
+
+        memset(conn[i].str, 0, MAXSTR);
+    }
 
     /* Create a new TCP socket for incomming sessions. */
 

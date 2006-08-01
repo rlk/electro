@@ -22,7 +22,7 @@ offset = { 0, (p[2][2] + p[1][2]) / 2, 2.0 + p[1][3] }
 
 ------------------------------------------------------------------------------
 
-host = E.add_host("default", 0, h, w, h)
+host = E.add_host("default", 0, 0, w, h)
 tile = E.add_tile(host,      0, 0, w, h)
 
 E.set_tile_viewport(tile, 0, 0, w, h)

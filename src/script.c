@@ -550,7 +550,7 @@ static int E_get_entity_parent(lua_State *L)
 static int E_get_entity_child(lua_State *L)
 {
     int id = get_entity_child(E_getentity (L, -2),
-                            L_getinteger(L, -1));
+                              L_getinteger(L, -1));
 
     E_pushentity(L, id);
     return 1;
