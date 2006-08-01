@@ -448,7 +448,7 @@ void server(int argc, char *argv[])
 {
 #ifdef _WIN32
     WSADATA wsaData;
-    WSAStartup(MAKEWORD(1, 1), &wsaData);
+    WSAStartup(MAKEWORD(2, 0), &wsaData);
 #endif
 
     if (init_script())

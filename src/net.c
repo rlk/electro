@@ -53,7 +53,7 @@ void net_send_all(const char *str)
         /* Send output to all connected clients. */
 
         for (i = 0; i < MAXCONN; ++i)
-            if (conn[i].sock >= 0)
+            if (conn[i].sock != INVALID_SOCKET)
                 write(conn[i].sock, str, strlen(str));
     }
 }
@@ -68,7 +68,7 @@ static void net_conn(void)
     /* Search for an available connection slot. */
 
     for (i = 0; i < MAXCONN; ++i)
-        if (conn[i].sock == -1)
+        if (conn[i].sock == INVALID_SOCKET)
             break;
 
     /* If a slot is found, accept the connection. */
@@ -93,7 +93,7 @@ static void net_data(int i)
 
     /* Read an incoming command. */
 
-    if ((n = read(conn[i].sock, str, MAXSTR)) >= 0)
+    if ((n = recv(conn[i].sock, str, MAXSTR, 0)) >= 0)
     {
         /* Accumulate the command.  Activate it on EOL. */
 
@@ -133,7 +133,7 @@ static void net_loop(void)
 
     for (i = 0; i < MAXCONN; ++i)
     {
-        if (conn[i].sock >= 0)
+        if (conn[i].sock != INVALID_SOCKET)
             FD_SET(conn[i].sock, &fds);
 
         if (n < (int) conn[i].sock + 1)
@@ -152,7 +152,7 @@ static void net_loop(void)
         /* Check for data on an existing connection. */
 
         for (i = 0; i < MAXCONN; ++i)
-            if (conn[i].sock >= 0 && FD_ISSET(conn[i].sock, &fds))
+            if (conn[i].sock != INVALID_SOCKET && FD_ISSET(conn[i].sock, &fds))
                 net_data(i);
     }
 }
@@ -165,8 +165,8 @@ static int net_main(void *data)
 
     for (i = 0; i < MAXCONN; ++i)
     {
-        conn[i].sock = -1;
-        conn[i].len  =  0;
+        conn[i].sock = INVALID_SOCKET;
+        conn[i].len  = 0;
 
         memset(conn[i].str, 0, MAXSTR);
     }
@@ -179,7 +179,7 @@ static int net_main(void *data)
 
         addr.sin_family      = AF_INET;
         addr.sin_port        = htons((short) port);
-        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
         /* Bind the new socket and listen for incoming connections. */
 
