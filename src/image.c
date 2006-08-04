@@ -965,7 +965,7 @@ static void recv_create_image_udp(void)
 
     p->state = 0;
     p->count = 1;
-    p->flags = 0;
+    p->flags = FLAG_NPOT;
     p->type  = TYPE_UDP;
 
     /* Streaming images are configured on data receipt. */
@@ -1009,7 +1009,7 @@ static GLuint init_image_udp(struct image_udp *nfo, int w, int h)
 
     if (GL_has_texture_rectangle)
     {
-        /* Initialize the front color buffer. */
+        /* Initialize the back color buffer. */
 
         glGenTextures(1, &fore);
         glBindTexture(GL_TEXTURE_RECTANGLE_ARB, fore);

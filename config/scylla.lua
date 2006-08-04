@@ -3,29 +3,26 @@ tile = { }
 
 -- 19 hosts: 1 server, 18 clients.
 
---host[0]  = E.add_host("default",                 0, 0, 1600, 1200)
-host[0]  = E.add_host("default",                 0, 0, 800, 600)
-host[1]  = E.add_host("scylla1-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[2]  = E.add_host("scylla2-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[3]  = E.add_host("scylla3-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[4]  = E.add_host("scylla4-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[5]  = E.add_host("scylla5-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[6]  = E.add_host("scylla6-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[7]  = E.add_host("scylla7-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[8]  = E.add_host("scylla8-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[9]  = E.add_host("scylla9-10.evl.uic.edu",  0, 0, 1600, 2400)
-host[10] = E.add_host("scylla10-10.evl.uic.edu", 0, 0, 1600, 2400)
-host[11] = E.add_host("scylla11-10.evl.uic.edu", 0, 0, 1600, 2400)
-host[12] = E.add_host("scylla12-10.evl.uic.edu", 0, 0, 3200, 1200)
-host[13] = E.add_host("scylla13-10.evl.uic.edu", 0, 0, 3200, 1200)
-host[14] = E.add_host("scylla14-10.evl.uic.edu", 0, 0, 3200, 1200)
-host[15] = E.add_host("scylla15-10.evl.uic.edu", 0, 0, 1600, 1200)
-host[16] = E.add_host("scylla16-10.evl.uic.edu", 0, 0, 1600, 2400)
-host[17] = E.add_host("scylla17-10.evl.uic.edu", 0, 0, 1600, 2400)
-host[18] = E.add_host("scylla18-10.evl.uic.edu", 0, 0, 1600, 2400)
+host[0]  = E.add_host("default",     0, 0, 800,  600)
+host[1]  = E.add_host("scylla1-10",  0, 0, 1600, 2400)
+host[2]  = E.add_host("scylla2-10",  0, 0, 1600, 2400)
+host[3]  = E.add_host("scylla3-10",  0, 0, 1600, 2400)
+host[4]  = E.add_host("scylla4-10",  0, 0, 1600, 2400)
+host[5]  = E.add_host("scylla5-10",  0, 0, 1600, 2400)
+host[6]  = E.add_host("scylla6-10",  0, 0, 1600, 2400)
+host[7]  = E.add_host("scylla7-10",  0, 0, 1600, 2400)
+host[8]  = E.add_host("scylla8-10",  0, 0, 1600, 2400)
+host[9]  = E.add_host("scylla9-10",  0, 0, 1600, 2400)
+host[10] = E.add_host("scylla10-10", 0, 0, 1600, 2400)
+host[11] = E.add_host("scylla11-10", 0, 0, 1600, 2400)
+host[12] = E.add_host("scylla12-10", 0, 0, 3200, 1200)
+host[13] = E.add_host("scylla13-10", 0, 0, 3200, 1200)
+host[14] = E.add_host("scylla14-10", 0, 0, 3200, 1200)
+host[15] = E.add_host("scylla15-10", 0, 0, 1600, 1200)
+host[16] = E.add_host("scylla16-10", 0, 0, 1600, 2400)
+host[17] = E.add_host("scylla17-10", 0, 0, 1600, 2400)
+host[18] = E.add_host("scylla18-10", 0, 0, 1600, 2400)
 
---E.set_host_flags(host[0], E.host_flag_full,   true);
---E.set_host_flags(host[0], E.host_flag_framed, false);
 E.set_host_flags(host[0], E.host_flag_framed, true);
 
 -- Tile host numbers.
@@ -170,89 +167,7 @@ p = {
 
 -- Varrier line screen definitions.
 
-pitch = 271.945865
-
---[[ Original config
-l = {
-    { pitch, -7.860000, 0.034800,  0.0066, 0.777777 }, -- 1
-    { pitch, -7.800000, 0.035800, -0.0014, 0.777777 }, -- 2
-    { pitch, -7.830000, 0.034900,  0.0050, 0.777777 }, -- 3
-    { pitch, -7.770000, 0.034600,  0.0027, 0.777777 }, -- 4
-    { pitch, -7.730000, 0.035300,  0.0006, 0.777777 }, -- 5
-    { pitch, -7.830000, 0.035400, -0.0003, 0.777777 }, -- 6
-    { pitch, -7.690000, 0.036200,  0.0018, 0.777777 }, -- 7
-    { pitch, -7.770000, 0.035700,  0.0027, 0.777777 }, -- 8
-    { pitch, -7.750000, 0.035000,  0.0003, 0.777777 }, -- 9
-    { pitch, -7.741000, 0.035000,  0.0000, 0.777777 }, -- 10
-    { pitch, -7.770000, 0.035200,  0.0011, 0.777777 }, -- 11
-    { pitch, -7.850000, 0.035000,  0.0021, 0.777777 }, -- 12
-    { pitch, -7.800000, 0.036000,  0.0020, 0.777777 }, -- 13
-    { pitch, -7.770000, 0.036000,  0.0011, 0.777777 }, -- 14
-    { pitch, -7.830000, 0.036700,  0.0021, 0.777777 }, -- 15 !
-    { pitch, -7.790000, 0.026800,  0.0000, 0.777777 }, -- 16
-    { pitch, -7.830000, 0.036400,  0.0041, 0.777777 }, -- 17
-    { pitch, -7.750000, 0.035700,  0.0038, 0.777777 }, -- 18
-    { pitch, -7.845000, 0.038620,  0.0031, 0.777777 }, -- 19 !
-    { pitch, -7.782000, 0.037200,  0.0043, 0.777777 }, -- 20
-    { pitch, -7.890000, 0.036700,  0.0034, 0.777777 }, -- 21
-    { pitch, -7.880000, 0.037000,  0.0037, 0.777777 }, -- 22
-    { pitch, -7.800000, 0.036500,  0.0000, 0.777777 }, -- 23
-    { pitch, -7.830000, 0.035700,  0.0029, 0.777777 }, -- 24
-    { pitch, -7.801000, 0.036400, -0.0009, 0.777777 }, -- 25
-    { pitch, -7.820000, 0.036200,  0.0034, 0.777777 }, -- 26
-    { pitch, -7.770000, 0.036000,  0.0024, 0.777777 }, -- 27
-    { pitch, -7.830000, 0.036000,  0.0040, 0.777777 }, -- 28
-    { pitch, -7.880000, 0.037000,  0.0025, 0.777777 }, -- 29
-    { pitch, -7.780000, 0.036000, -0.0017, 0.777777 }, -- 30
-    { pitch, -7.730000, 0.034800,  0.0011, 0.777777 }, -- 31
-    { pitch, -7.760000, 0.037000, -0.0020, 0.777777 }, -- 32 !
-    { pitch, -7.740000, 0.035800,  0.0038, 0.777777 }, -- 33
-    { pitch, -7.890000, 0.036000,  0.0031, 0.777777 }, -- 34
-    { pitch, -7.810000, 0.036400,  0.0012, 0.777777 }  -- 35
---    pitch     angle   thickness   shift    cycle
-}
---]]
---[[
-l = {
-    { 271.945865, -7.86, 0.0328, 0.0058, 0.777777 }, -- 1
-    { 271.945865, -7.8, 0.0348, 0.0003, 0.777777 }, -- 2
-    { 271.945865, -7.83, 0.0339, 0.0038, 0.777777 }, -- 3
-    { 271.945865, -7.77, 0.0336, 0.0044, 0.777777 }, -- 4
-    { 271.945865, -7.73, 0.0343, 0.0031, 0.777777 }, -- 5
-    { 271.945865, -7.83, 0.0344, 0.0011, 0.777777 }, -- 6
-    { 271.945865, -7.69, 0.0352, 0.004, 0.777777 }, -- 7
-    { 271.945865, -7.77, 0.0347, 0.0039, 0.777777 }, -- 8
-    { 271.945865, -7.75, 0.034, 0.0022, 0.777777 }, -- 9
-    { 271.945865, -7.741, 0.035, 0.0012, 0.777777 }, -- 10
-    { 271.945865, -7.77, 0.0351, 0.0032, 0.777777 }, -- 11
-    { 271.945865, -7.85, 0.037, 0.0037, 0.777777 }, -- 12
-    { 271.945865, -7.8, 0.037, 0.0049, 0.777777 }, -- 13
-    { 271.945865, -7.77, 0.037, 0.0025, 0.777777 }, -- 14
-    { 271.945865, -7.83, 0.0357, 0.0026, 0.777777 }, -- 15
-    { 271.945865, -7.79, 0.0338, 0.0012, 0.777777 }, -- 16
-    { 271.945865, -7.83, 0.0354, 0.0046, 0.777777 }, -- 17
-    { 271.945865, -7.75, 0.0347, 0.0069, 0.777777 }, -- 18
-    { 271.945865, -7.845, 0.03762, 0.003, 0.777777 }, -- 19
-    { 271.945865, -7.782, 0.0362, 0.0071, 0.777777 }, -- 20
-    { 271.945865, -7.89, 0.0357, 0.0035, 0.777777 }, -- 21
-    { 271.945865, -7.88, 0.036, 0.0061, 0.777777 }, -- 22
-    { 271.945865, -7.8, 0.0355, 0.0017, 0.777777 }, -- 23
-    { 271.945865, -7.83, 0.0347, 0.0048, 0.777777 }, -- 24
-    { 271.945865, -7.801, 0.0354, 0.0013, 0.777777 }, -- 25
-    { 271.945865, -7.82, 0.0352, 0.0053, 0.777777 }, -- 26
-    { 271.945865, -7.77, 0.035, 0.0044, 0.777777 }, -- 27
-    { 271.945865, -7.83, 0.035, 0.0058, 0.777777 }, -- 28
-    { 271.945865, -7.88, 0.036, 0.0041, 0.777777 }, -- 29
-    { 271.945865, -7.78, 0.035, -0.0012, 0.777777 }, -- 30
-    { 271.945865, -7.73, 0.0338, 0.0045, 0.777777 }, -- 31
-    { 271.945865, -7.76, 0.036, -0.0015, 0.777777 }, -- 32
-    { 271.945865, -7.74, 0.0348, 0.0068, 0.777777 }, -- 33
-    { 271.945865, -7.89, 0.0369, 0.0036, 0.777777 }, -- 34
-    { 271.945865, -7.81, 0.0354, 0.0043, 0.777777 }, -- 35
-}
---]]
-
-l = {
+line_screen = {
     { 271.945865, -7.86, 0.0328, 0.0062, 0.777777 }, -- 1
     { 271.945865, -7.8, 0.0348, 0.002, 0.777777 }, -- 2
     { 271.945865, -7.83, 0.0339, 0.0048, 0.777777 }, -- 3
@@ -292,21 +207,16 @@ l = {
 
 -- Mirror the center tile on the server.
 
+mirror = 18
+
+w[0] = w[mirror];
+v[0] = v[mirror];
+p[0] = p[mirror];
+
+line_screen[0] = line_screen[mirror];
+
 num[0] = 0
 map[0] = 0
-
-l[0] = { 271.945865, -7.750000, 0.035700,  0.0038, 0.777777 }
---w[0] = w[18]
-w[0] = { 0, 0, 800, 600 }
-v[0] = v[18]
-p[0] = p[18]
-
-for i = 0, 35 do
---    l[i][1] = 1
---    l[i][2] = 0
---    l[i][3] = 0
---    l[i][4] = 0
-end
 
 -------------------------------------------------------------------------------
 
@@ -321,170 +231,7 @@ for i = 0, 35 do
     E.set_tile_position(tile[i], p[i][1], p[i][2], p[i][3], p[i][4],
                         p[i][5], p[i][6], p[i][7], p[i][8], p[i][9])
 
-    E.set_tile_line_screen(tile[i], l[k][1], l[k][2],
-                           l[k][3], l[k][4], l[k][5])
+    varrier_init()
 end
 
 -------------------------------------------------------------------------------
-
-function varrier_dump()
-    print("l = {")
-    for i = 1, 35 do
-        print("    { "..l[i][1]..", "..l[i][2]..", "..l[i][3]..
-                  ", "..l[i][4]..", "..l[i][5].." }, -- "..i)
-    end
-    print("}")
-end
-
-function varrier_pitch(d, i)
-    local k = map[i]
-    l[k][1] = l[k][1] + d;
-    E.set_tile_line_screen(tile[i], l[k][1], l[k][2],
-                           l[k][3], l[k][4], l[k][5])
-end
-
-function varrier_angle(d, i)
-    local k = map[i]
-    l[k][2] = l[k][2] + d;
-    E.set_tile_line_screen(tile[i], l[k][1], l[k][2],
-                           l[k][3], l[k][4], l[k][5])
-end
-
-function varrier_thick(d, i)
-    local k = map[i]
-    l[k][3] = l[k][3] + d;
-    E.set_tile_line_screen(tile[i], l[k][1], l[k][2],
-                           l[k][3], l[k][4], l[k][5])
-end
-
-function varrier_shift(d, i)
-    local k = map[i]
-    l[k][4] = l[k][4] + d;
-    E.set_tile_line_screen(tile[i], l[k][1], l[k][2],
-                           l[k][3], l[k][4], l[k][5])
-end
-
--------------------------------------------------------------------------------
-
-varrier_func = varrier_shift
-varrier_diff = 0.0001
-varrier_tile = -1
-varrier_test = false
-
-function set_varrier_value(d)
-    if varrier_tile > 0 then
-        varrier_func(d * varrier_diff, varrier_tile)
-    else
-        for i = 0, 35 do
-            varrier_func(d * varrier_diff, i)
-        end
-    end
-
-    varrier_dump()
-    return true
-end
-
-function set_varrier_func(func, name)
-    varrier_func = func
-    print("variable = "..name.."\n")
-    return true
-end
-
-function set_varrier_diff(diff)
-    varrier_diff = diff
-    print("value = "..diff.."\n")
-    return true
-end
-
-function set_varrier_tile(d)
-    set_varrier_test(false)
-
-    varrier_tile = varrier_tile + d
-
-    if varrier_tile <  0 then varrier_tile = 35 end
-    if varrier_tile > 35 then varrier_tile =  0 end
-
-    set_varrier_test(true)
-
-    return true
-end
-
-function set_varrier_test(test)
-    varrier_test = test
-
-    if varrier_tile > 0 then
-        E.set_tile_flags(tile[varrier_tile], E.tile_flag_test, varrier_test)
-    else
-        for i = 0, 35 do
-            E.set_tile_flags(tile[i], E.tile_flag_test, varrier_test)
-        end
-    end
-end
-
--------------------------------------------------------------------------------
-
-function varrier_keyboard(k, s, camera)
-    local dx =  2.50 / 12.0 * 0.5
-    local dy = -1.23 / 12.0
-    local dz =  2.00 / 12.0
-
-    if s then
-        if E.get_modifier(E.key_modifier_control) then
-            if k == E.key_1 then return set_varrier_diff(10.0) end
-            if k == E.key_2 then return set_varrier_diff(1.0) end
-            if k == E.key_3 then return set_varrier_diff(0.1) end
-            if k == E.key_4 then return set_varrier_diff(0.01) end
-            if k == E.key_5 then return set_varrier_diff(0.001) end
-            if k == E.key_6 then return set_varrier_diff(0.0001) end
-            if k == E.key_7 then return set_varrier_diff(0.00001) end
-            if k == E.key_8 then return set_varrier_diff(0.000001) end
-
-            if k == E.key_s then
-                return set_varrier_func(varrier_shift, "shift")
-            end
-            if k == E.key_t then
-                return set_varrier_func(varrier_thick, "thick")
-            end
-            if k == E.key_p then
-                return set_varrier_func(varrier_pitch, "pitch")
-            end
-            if k == E.key_a then
-                return set_varrier_func(varrier_angle, "angle")
-            end
-            if k == E.key_c then
-                return set_varrier_func(varrier_cycle, "cycle")
-            end
-
-            if k == E.key_left     then return set_varrier_value(-1) end
-            if k == E.key_right    then return set_varrier_value( 1) end
-            if k == E.key_pagedown then return set_varrier_tile (-1) end
-            if k == E.key_pageup   then return set_varrier_tile ( 1) end
-
-            if k == E.key_tab then
-                return set_varrier_test(not varrier_test)
-            end
-        end
-
-        if k == E.key_F5 then
-            E.set_camera_stereo(camera, E.stereo_mode_none,
-                                0, 0, 0, 0, 0, 0)
-            return true
-        end
-        if k == E.key_F6 then
-            E.set_camera_stereo(camera, E.stereo_mode_red_blue,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == E.key_F7 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-        if k == E.key_F8 then
-            E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
-                                -dx, dy, dz, dx, dy, dz)
-            return true
-        end
-    end
-    return false
-end

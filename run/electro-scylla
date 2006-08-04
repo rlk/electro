@@ -3,4 +3,4 @@
 export ELECTRO_CONFIG=$HOME/src/electro-current/config
 export ELECTRO_BIN=$HOME/src/electro-current
 
-mpirun -machinefile $ELECTRO_CONFIG/scylla.dat -np 19 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/scylla.lua $@
+mpirun -machinefile $ELECTRO_CONFIG/scylla.dat -np 19 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/varrier.lua $ELECTRO_CONFIG/scylla.lua $@

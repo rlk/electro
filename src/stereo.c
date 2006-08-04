@@ -118,9 +118,12 @@ static void push_quality(const float q[2])
 
     glGetFloatv(GL_VIEWPORT, v);
 
-    glPushAttrib(GL_VIEWPORT_BIT);
+    glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+
     glViewport((GLint) (v[0] * q[0]), (GLint) (v[1] * q[1]),
-			   (GLint) (v[2] * q[0]), (GLint) (v[3] * q[1]));
+               (GLint) (v[2] * q[0]), (GLint) (v[3] * q[1]));
+    glScissor ((GLint) (v[0] * q[0]), (GLint) (v[1] * q[1]),
+               (GLint) (v[2] * q[0]), (GLint) (v[3] * q[1]));
 }
 
 static void pop_quality(void)
@@ -193,8 +196,8 @@ static void init_varrier_00(const float q[2])
 
     if (state == 0)
     {
-        int w = (int) (get_window_w() * q[0]);
-        int h = (int) (get_window_h() * q[1]);
+        int w = (int) get_window_w();
+        int h = (int) get_window_h();
 
         /* Initialize a frame buffer object for each eye. */
 
