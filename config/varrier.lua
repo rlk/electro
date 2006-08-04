@@ -136,7 +136,7 @@ end
 
 -- Adjust the Varrier Combiner quality setting of all tiles.
 
-function set_varrier_quality(d)
+function set_varrier_qual(d)
     local i
 
     varrier_qual = varrier_qual + d
@@ -153,7 +153,7 @@ function set_varrier_quality(d)
     return true
 end
 
--- Cycle up or down through the set of Varrier tiles.  Index 0 denoting all.
+-- Cycle up or down through the set of Varrier tiles.  Index 0 denotes all.
 
 function set_varrier_tile(d)
     local n = table.getn(line_screen)
@@ -182,11 +182,11 @@ function varrier_keyboard(k, s, camera)
     if s then
         if E.get_modifier(E.key_modifier_control) then
 
-            if k == E.key_insert   then return varrier_quality( 0.05) end
-            if k == E.key_delete   then return varrier_quality(-0.05) end
+            if k == E.key_insert   then return set_varrier_qual( 0.05) end
+            if k == E.key_delete   then return set_varrier_qual(-0.05) end
 
-            if k == E.key_pageup   then return set_varrier_tile(-1) end
-            if k == E.key_pagedown then return set_varrier_tile( 1) end
+            if k == E.key_pageup   then return set_varrier_tile( 1) end
+            if k == E.key_pagedown then return set_varrier_tile(-1) end
 
             if k == E.key_down     then return set_varrier_thick(-0.0001) end
             if k == E.key_up       then return set_varrier_thick( 0.0001) end
@@ -256,5 +256,5 @@ function varrier_init()
         end
     end
 
-    set_varrier_quality(0)
+    set_varrier_qual(0)
 end
