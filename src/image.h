@@ -58,6 +58,8 @@ void  init_images(void);
 void  fini_images(void);
 void  step_images(void);
 
+void snap(char *);
+
 /*---------------------------------------------------------------------------*/
 
 #endif

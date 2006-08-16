@@ -27,6 +27,73 @@
 
 #define NPOT(n) (((n) & ((n) - 1)) != 0)
 
+void snap(char *filename)
+{
+    FILE       *filep  = NULL;
+    png_structp writep = NULL;
+    png_infop   infop  = NULL;
+    png_bytep  *bytep  = NULL;
+
+    int w = 2560;
+    int h = 1600;
+    int i;
+
+    unsigned char *p = NULL;
+
+    /* Initialize all PNG export data structures. */
+
+    if (!(filep = fopen(filename, "wb")))
+        return;
+    if (!(writep = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
+        return;
+    if (!(infop = png_create_info_struct(writep)))
+        return;
+
+    /* Enable the default PNG error handler. */
+
+    if (setjmp(png_jmpbuf(writep)) == 0)
+    {
+        /* Initialize the PNG header. */
+
+        png_init_io (writep, filep);
+        png_set_IHDR(writep, infop, w, h, 8,
+                     PNG_COLOR_TYPE_RGB,
+                     PNG_INTERLACE_NONE,
+                     PNG_COMPRESSION_TYPE_DEFAULT,
+                     PNG_FILTER_TYPE_DEFAULT);
+
+        /* Allocate the pixel buffer and copy pixels there. */
+
+        if ((p = (unsigned char *) malloc(w * h * 4)))
+        {
+            glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, p);
+
+            /* Allocate and initialize the row pointers. */
+
+            if ((bytep = png_malloc(writep, h * sizeof (png_bytep))))
+            {
+                for (i = 0; i < h; ++i)
+                    bytep[h - i - 1] = (png_bytep) (p + i * w * 3);
+
+                png_set_rows (writep, infop, bytep);
+
+                /* Write the PNG image file. */
+
+                png_write_info(writep, infop);
+                png_write_png (writep, infop, 0, NULL);
+
+                free(bytep);
+            }
+            free(p);
+        }
+    }
+
+    /* Release all resources. */
+
+    png_destroy_write_struct(&writep, &infop);
+    fclose(filep);
+}
+
 /*---------------------------------------------------------------------------*/
 
 #define FLAG_NPOT 1

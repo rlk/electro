@@ -1002,9 +1002,9 @@ static void free_entity(unsigned int i)
 
     entity_free_func(i);
 
-    /* Pave it. */
+    /* Release it. */
 
-    if (i > 1) memset(entity + i, 0, sizeof (struct entity));
+    vec_del(entity, sizeof (struct entity), i);
 }
 
 void send_delete_entity(unsigned int i)
