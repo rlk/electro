@@ -130,7 +130,7 @@ static unsigned int new_entity(void)
 
     if ((i = vec_add(entity, sizeof (struct entity))))
     {
-        memset(entity + i, 0, sizeof (struct entity));
+        memset(entity +i, 0, sizeof (struct entity));
         return i;
     }
 
@@ -282,11 +282,6 @@ void draw_entity_tree(unsigned int i, int f, float a)
 
                 if (entity[j].flags & FLAG_LINE_SMOOTH)
                     glEnable(GL_LINE_SMOOTH);
-
-                /* Enable Varrier texture line screen, if requested. */
-
-                if (f & DRAW_VARRIER_TEXGEN)
-                    set_texture_coordinates();
 
                 /* Draw this entity. */
 

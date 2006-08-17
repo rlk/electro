@@ -1008,7 +1008,7 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
 
 /*---------------------------------------------------------------------------*/
 
-void draw_tile_background(int i, int flags)
+void draw_tile_background(int i)
 {
     struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
 
@@ -1044,9 +1044,6 @@ void draw_tile_background(int i, int flags)
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_CULL_FACE);
-
-        if (flags & DRAW_VARRIER_TEXGEN)
-            set_texture_coordinates();
 
         glBegin(GL_QUADS);
         {
@@ -1087,89 +1084,7 @@ void draw_host_background(void)
             GL_COLOR_BUFFER_BIT);
 
     for (i = 0; i < local->n; ++i)
-        draw_tile_background(i, 0);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void set_active_texture_coordinates(const float S[4],
-                                           const float T[4],
-                                           const float R[4],
-                                           const float Q[4])
-{
-    glEnable(GL_TEXTURE_GEN_S);
-    glEnable(GL_TEXTURE_GEN_T);
-    glEnable(GL_TEXTURE_GEN_R);
-    glEnable(GL_TEXTURE_GEN_Q);
-
-#ifdef TEXGEN_EYE
-    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-    glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-
-    glTexGenfv(GL_S, GL_EYE_PLANE, S);
-    glTexGenfv(GL_T, GL_EYE_PLANE, T);
-    glTexGenfv(GL_R, GL_EYE_PLANE, R);
-    glTexGenfv(GL_Q, GL_EYE_PLANE, Q);
-#else
-    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-    glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-
-    glTexGenfv(GL_S, GL_OBJECT_PLANE, S);
-    glTexGenfv(GL_T, GL_OBJECT_PLANE, T);
-    glTexGenfv(GL_R, GL_OBJECT_PLANE, R);
-    glTexGenfv(GL_Q, GL_OBJECT_PLANE, Q);
-#endif
-}
-
-void set_texture_coordinates(void)
-{
-    if (GL_has_multitexture)
-    {
-        float P[16], M[16], X[16], S[4], T[4], R[4], Q[4];
-
-        /* Supply the product of the projection and modelview matrices as    */
-        /* plane coefficients.  This will transform vertices to normalized   */
-        /* device coordinates, which we can apply as screen-space texture    */
-        /* coordinates.                                                      */
-
-        glGetFloatv(GL_PROJECTION_MATRIX, P);
-        glGetFloatv(GL_MODELVIEW_MATRIX,  M);
-
-        mult_mat_mat(X, P, M);
-
-#ifdef TEXGEN_EYE
-        S[0] = X[0];  S[1] = X[1];  S[2] = X[2];  S[3] = X[3];
-        T[0] = X[4];  T[1] = X[5];  T[2] = X[6];  T[3] = X[7];
-        R[0] = X[8];  R[1] = X[9];  R[2] = X[10]; R[3] = X[11];
-        Q[0] = X[12]; Q[1] = X[13]; Q[2] = X[14]; Q[3] = X[15];
-#else
-        S[0] = X[0];  S[1] = X[4];  S[2] = X[8];  S[3] = X[12];
-        T[0] = X[1];  T[1] = X[5];  T[2] = X[9];  T[3] = X[13];
-        R[0] = X[2];  R[1] = X[6];  R[2] = X[10]; R[3] = X[14];
-        Q[0] = X[3];  Q[1] = X[7];  Q[2] = X[11]; Q[3] = X[15];
-#endif
-
-        if (GL_TEXTURE3_ARB < GL_max_multitexture)
-        {
-            glActiveTextureARB(GL_TEXTURE3_ARB);
-            set_active_texture_coordinates(S, T, R, Q);
-        }
-        if (GL_TEXTURE2_ARB < GL_max_multitexture)
-        {
-            glActiveTextureARB(GL_TEXTURE2_ARB);
-            set_active_texture_coordinates(S, T, R, Q);
-        }
-        if (GL_TEXTURE1_ARB < GL_max_multitexture)
-        {
-            glActiveTextureARB(GL_TEXTURE1_ARB);
-            set_active_texture_coordinates(S, T, R, Q);
-        }
-        glActiveTextureARB(GL_TEXTURE0_ARB);
-    }
+        draw_tile_background(i);
 }
 
 /*---------------------------------------------------------------------------*/

@@ -45,12 +45,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-/* Draw flags. */
-
-#define DRAW_VARRIER_TEXGEN 0x0001
-
-/*---------------------------------------------------------------------------*/
-
 #define HOST_FULL       1
 #define HOST_STEREO     2
 #define HOST_FRAMED     4
@@ -190,7 +184,7 @@ float get_varrier_cycle(int);
 void send_set_background(const float[3], const float[3]);
 void recv_set_background(void);
 
-void draw_tile_background(int, int);
+void draw_tile_background(int);
 void draw_host_background(void);
 
 void set_texture_coordinates(void);

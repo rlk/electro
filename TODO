@@ -5,11 +5,17 @@ use IBO in galaxy
 
 bugfix: giving BindAttribLocation not found on non-GLSL hardware?
 
-fix AABB
+Reconsider reference count mechanism
+MPEG2 image
+
+Terrain entity
+LOD entity
+Fix AABB
 new vector implementation
         improve vector traversal
 abstract to a library?
 new OBJ implementation
+new combiner implementation
 Add brief changelogs to website
 UTF-8... extra chars
 set entity rotation vectors

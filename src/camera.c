@@ -320,7 +320,7 @@ void recv_set_camera_image(void)
 
 /*===========================================================================*/
 
-static void test_camera(int eye, int flags)
+static void test_camera(int eye)
 {
     /* Map the tile onto the unit cube. */
 
@@ -339,9 +339,6 @@ static void test_camera(int eye, int flags)
     {
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LESS);
-
-        if (flags & DRAW_VARRIER_TEXGEN)
-            set_texture_coordinates();
 
         draw_image(0);
         
@@ -398,12 +395,12 @@ static void get_eye_pos(float d[3], struct camera *c, int eye)
 
 /*---------------------------------------------------------------------------*/
 
-static void draw_color(int j, int eye, int flag)
+static void draw_color(int j, int eye)
 {
     glPushMatrix();
     {
         transform_camera(j);
-        test_camera(eye, flag);
+        test_camera(eye);
     }
     glPopMatrix();
 }
@@ -495,8 +492,6 @@ static void draw_camera(int i, int j, int f, float a)
         int eye;
         int tile;
         int pass;
-        int flag = f | ((c->mode == STEREO_VARRIER_01) ?
-                        DRAW_VARRIER_TEXGEN : 0);
 
         /* Iterate over all tiles of this host. */
 
@@ -522,9 +517,9 @@ static void draw_camera(int i, int j, int f, float a)
                     while ((pass = draw_pass(c->mode, eye, tile, pass, d)))
                     {
                         if (get_tile_flags(tile) & TILE_TEST)
-                            draw_color(j, eye, flag);
+                            draw_color(j, eye);
                         else
-                            draw_scene(j, flag, a);
+                            draw_scene(j, f, a);
                     }
                 }
             }

@@ -19,11 +19,9 @@
 #define STEREO_TILE       1
 #define STEREO_QUAD       2
 #define STEREO_RED_BLUE   3
-#define STEREO_VARRIER_01 4
+#define STEREO_VARRIER_00 4
 #define STEREO_VARRIER_11 5
 #define STEREO_VARRIER_33 6
-#define STEREO_VARRIER_41 7
-#define STEREO_VARRIER_00 8
 
 int draw_pass(int, int, int, int, float[2][3]);
 

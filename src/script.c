@@ -2733,10 +2733,8 @@ static struct constant_def constants[] = {
     { "stereo_mode_quad",          STEREO_QUAD         },
     { "stereo_mode_red_blue",      STEREO_RED_BLUE     },
     { "stereo_mode_varrier_00",    STEREO_VARRIER_00   },
-    { "stereo_mode_varrier_01",    STEREO_VARRIER_01   },
     { "stereo_mode_varrier_11",    STEREO_VARRIER_11   },
     { "stereo_mode_varrier_33",    STEREO_VARRIER_33   },
-    { "stereo_mode_varrier_41",    STEREO_VARRIER_41   },
 
     /* Light constants */
 

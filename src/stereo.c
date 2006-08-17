@@ -519,240 +519,6 @@ static void draw_varrier_lines(int tile, const float M[16],
 
 /*---------------------------------------------------------------------------*/
 
-#define LINESZ 256
-
-static GLuint line_object[3] = { 0, 0, 0 };
-
-static void init_line_texture(int tile, int chan)
-{
-    static const GLubyte color[3][4] = {
-        { 0x00, 0xFF, 0xFF, 0x00 },
-        { 0xFF, 0x00, 0xFF, 0x00 },
-        { 0xFF, 0xFF, 0x00, 0x00 },
-    };
-
-    GLubyte *p;
-
-    /* If the requested texture object already exists, bind it. */
-
-    if (glIsTexture(line_object[chan]))
-        glBindTexture(GL_TEXTURE_2D, line_object[chan]);
-
-    else if ((p = (GLubyte *) calloc(LINESZ * 2, 4)))
-    {
-        float c = get_varrier_cycle(tile);
-        int i;
-        int j;
-
-        /* Generate a new texture object */
-
-        glGenTextures(1, line_object + chan);
-        glBindTexture(GL_TEXTURE_2D, line_object[chan]);
-
-        /* Fill it with the line screen pattern for the given channel. */
-
-        memset(p, 0xFF, LINESZ * 8);
-
-        for (i = 0; i < LINESZ * c - 1; ++i)
-            for (j = 0; j < 2; ++j)
-            {
-                p[(j * LINESZ + i) * 4 + 0] = color[chan][0];
-                p[(j * LINESZ + i) * 4 + 1] = color[chan][1];
-                p[(j * LINESZ + i) * 4 + 2] = color[chan][2];
-                p[(j * LINESZ + i) * 4 + 3] = color[chan][3];
-            }
-
-        /* Configure the texture and specify the pixel buffer. */
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, LINESZ, 2, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, p);
-        free(p);
-    }
-}
-
-static void move_line_texture(int tile, const float v[3], float px)
-{
-    float p = get_varrier_pitch(tile);
-    float a = get_varrier_angle(tile);
-    float t = get_varrier_thick(tile);
-    float s = get_varrier_shift(tile);
-
-    float M[16];
-    float C[3];
-    float n[3];
-    float u[3];
-    float r[3];
-    float e[3];
-    float w, h;
-    float x, y, z;
-    float nn, pp, ss;
-    float dx, dy;
-
-    get_varrier_tile(tile, M, C, n, &w, &h);
-    get_tile_r(tile, r);
-    get_tile_u(tile, u);
-
-    /* Find the distance to the display. */
-
-    nn = ((v[0] - C[0]) * n[0] +
-          (v[1] - C[1]) * n[1] +
-          (v[2] - C[2]) * n[2]);
-
-    /* Compute the parallax offset due to optical thickness. */
-
-    e[0] = v[0] - C[0];
-    e[1] = v[1] - C[1];
-    e[2] = v[2] - C[2];
-
-    normalize(r);
-    normalize(u);
-
-    x = e[0] * r[0] + e[1] * r[1] + e[2] * r[2];
-    y = e[0] * u[0] + e[1] * u[1] + e[2] * u[2];
-    z = e[0] * n[0] + e[1] * n[1] + e[2] * n[2];
-
-    dx = t * x / z;
-    dy = t * y / z;
-
-    /* Compute the pitch reduction due to optical thickness. */
-
-    pp = p * (nn - t) / nn;
-    ss = s;
-
-    /* Transform the line screen texture into position. */
-
-    glMatrixMode(GL_TEXTURE);
-    {
-        glLoadIdentity();
-
-        glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0,
-                                   1.0f / 800.0f, 1.0f / 600.0f, 0.0f, 0.0f);
-
-        glScalef(pp, pp, 1.0);               /* Pitch in feet.    */
-        glTranslatef(-ss + dx + px, dy, 0);  /* Shift in feet.    */
-        glRotatef(-a, 0, 0, 1);              /* Angle.            */
-        glScalef(0.5f * w, 0.5f * h, 1.0f);  /* Scale to feet.    */
-    }
-    glMatrixMode(GL_MODELVIEW);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static int stereo_varrier_01(int eye, int tile, int pass, const float v[3])
-{
-    float px = 0.00025f;
-
-    if (pass == 0)
-    {
-        if (eye == 0)
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        else
-            glClear(GL_DEPTH_BUFFER_BIT);
-
-        /* Set up the line screen texture environments. */
-
-        if (GL_has_multitexture && GL_TEXTURE3_ARB < GL_max_multitexture)
-        {
-            /* TU0 modulates the material RGB against the base texture,      */
-            /* giving the pixel RGB, and sums (and clamps) the red and       */
-            /* green line screen alpha values.                               */
-
-            glActiveTextureARB(GL_TEXTURE0_ARB);
-            glEnable(GL_TEXTURE_2D);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE0);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_TEXTURE1);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE2);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_ADD);
-
-            /* TU1 modulates the pixel RGB against the red line screen and   */
-            /* sums (and clamps) the blue linescreen alpha value with the    */
-            /* red and green alpha values.                                   */
-
-            glActiveTextureARB(GL_TEXTURE1_ARB);
-            glEnable(GL_TEXTURE_2D);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE3);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_ADD);
-            init_line_texture(tile, 0);
-            move_line_texture(tile, v, +px);
-
-            /* TU2 modulates the pixel color against the green line screen   */
-            /* and modulates the accumulated line screen alpha against the   */
-            /* material alpha value.                                         */
-
-            glActiveTextureARB(GL_TEXTURE2_ARB);
-            glEnable(GL_TEXTURE_2D);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_PRIMARY_COLOR);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
-            init_line_texture(tile, 1);
-            move_line_texture(tile, v, 0);
-
-            /* TU3 modulates the pixel color against the blue line screen    */
-            /* and modulates the accumulated line screen alpha against the   */
-            /* base texture alpha value.                                     */
-
-            glActiveTextureARB(GL_TEXTURE3_ARB);
-            glEnable(GL_TEXTURE_2D);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,      GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,      GL_TEXTURE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,      GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,    GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,    GL_TEXTURE0);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,    GL_MODULATE);
-            init_line_texture(tile, 2);
-            move_line_texture(tile, v, -px);
-
-            glActiveTextureARB(GL_TEXTURE0_ARB);
-        }
-
-        draw_tile_background(tile, DRAW_VARRIER_TEXGEN);
-
-        return 1;
-    }
-    else
-    {
-        if (GL_has_multitexture)
-        {
-            if (GL_TEXTURE3_ARB < GL_max_multitexture)
-            {
-                glActiveTextureARB(GL_TEXTURE3_ARB);
-                glDisable(GL_TEXTURE_2D);
-            }
-            if (GL_TEXTURE2_ARB < GL_max_multitexture)
-            {
-                glActiveTextureARB(GL_TEXTURE2_ARB);
-                glDisable(GL_TEXTURE_2D);
-            }
-            if (GL_TEXTURE1_ARB < GL_max_multitexture)
-            {
-                glActiveTextureARB(GL_TEXTURE1_ARB);
-                glDisable(GL_TEXTURE_2D);
-            }
-            glActiveTextureARB(GL_TEXTURE0_ARB);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        }
-    }
-    return 0;
-}
-
 static int stereo_varrier_11(int eye, int tile, int pass)
 {
     if (pass == 0)
@@ -772,7 +538,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
             glColorMask(0, 0, 0, 0);
             draw_varrier_lines_new(tile, M, c, w, h, 0);
             glColorMask(1, 1, 1, 1);
-            draw_tile_background(tile, 0);
+            draw_tile_background(tile);
         }
         else
         {
@@ -780,7 +546,7 @@ static int stereo_varrier_11(int eye, int tile, int pass)
             glColorMask(0, 0, 0, 0);
             draw_varrier_lines_new(tile, M, c, w, h, 0);
             glColorMask(1, 1, 1, 1);
-            draw_tile_background(tile, 0);
+            draw_tile_background(tile);
         }
 
         return 1;
@@ -810,7 +576,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h, +d);
         glColorMask(1, 0, 0, 0);
-        draw_tile_background(tile, 0);
+        draw_tile_background(tile);
         next = 1;
         break;
         
@@ -819,7 +585,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h,  0);
         glColorMask(0, 1, 0, 0);
-        draw_tile_background(tile, 0);
+        draw_tile_background(tile);
         next = 2;
         break;
         
@@ -828,7 +594,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
         glColorMask(0, 0, 0, 0);
         draw_varrier_lines(tile, M, c, w, h, -d);
         glColorMask(0, 0, 1, 0);
-        draw_tile_background(tile, 0);
+        draw_tile_background(tile);
         next = 3;
         break;
         
@@ -864,7 +630,7 @@ static int stereo_quad(int eye, int tile, int pass)
 
         glClear(GL_COLOR_BUFFER_BIT |
                 GL_DEPTH_BUFFER_BIT);
-        draw_tile_background(tile, 0);
+        draw_tile_background(tile);
 
         return 1;
     }
@@ -880,7 +646,7 @@ static int stereo_red_blue(int eye, int tile, int pass)
         {
             glClear(GL_COLOR_BUFFER_BIT |
                     GL_DEPTH_BUFFER_BIT);
-            draw_tile_background(tile, 0);
+            draw_tile_background(tile);
             glColorMask(1, 0, 0, 0);
         }
         else
@@ -911,7 +677,6 @@ int draw_pass(int mode, int eye, int tile, int pass, float v[2][3])
     case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
     case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);
     case STEREO_VARRIER_00: return stereo_varrier_00(eye, tile, pass, v);
-    case STEREO_VARRIER_01: return stereo_varrier_01(eye, tile, pass, v[eye]);
     case STEREO_VARRIER_11: return stereo_varrier_11(eye, tile, pass);
     case STEREO_VARRIER_33: return stereo_varrier_33(eye, tile, pass);
     }
