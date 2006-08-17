@@ -1984,33 +1984,6 @@ static int E_set_tile_line_screen(lua_State *L)
     return 0;
 }
 
-static int E_set_tile_view_mirror(lua_State *L)
-{
-    float p[4];
-
-    p[0] = L_getnumber(L, -4);
-    p[1] = L_getnumber(L, -3);
-    p[2] = L_getnumber(L, -2);
-    p[3] = L_getnumber(L, -1);
-
-    send_set_tile_view_mirror(L_getinteger(L, -5), p);
-
-    return 0;
-}
-
-static int E_set_tile_view_offset(lua_State *L)
-{
-    float d[4];
-
-    d[0] = L_getnumber(L, -3);
-    d[1] = L_getnumber(L, -2);
-    d[2] = L_getnumber(L, -1);
-
-    send_set_tile_view_offset(L_getinteger(L, -4), d);
-
-    return 0;
-}
-
 static int E_set_tile_quality(lua_State *L)
 {
     float q[4];
@@ -2597,8 +2570,6 @@ static struct function_def functions[] = {
     { "set_tile_position",     E_set_tile_position     },
     { "set_tile_viewport",     E_set_tile_viewport     },
     { "set_tile_line_screen",  E_set_tile_line_screen  },
-    { "set_tile_view_mirror",  E_set_tile_view_mirror  },
-    { "set_tile_view_offset",  E_set_tile_view_offset  },
     { "get_display_union",     E_get_display_union     },
     { "get_display_bound",     E_get_display_bound     },
     { "set_tracker_transform", E_set_tracker_transform },
@@ -2717,8 +2688,6 @@ static struct constant_def constants[] = {
 
     { "tile_flag_flip_x",          TILE_FLIP_X         },
     { "tile_flag_flip_y",          TILE_FLIP_Y         },
-    { "tile_flag_offset",          TILE_OFFSET         },
-    { "tile_flag_mirror",          TILE_MIRROR         },
     { "tile_flag_test",            TILE_TEST           },
     { "tile_flag_left_eye",        TILE_LEFT_EYE       },
     { "tile_flag_right_eye",       TILE_RIGHT_EYE      },

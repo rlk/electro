@@ -371,29 +371,6 @@ void send_set_tile_line_screen(int i, float p, float a,
     send_float((T->varrier_cycle = c));
 }
 
-void send_set_tile_view_mirror(int i, const float p[4])
-{
-    struct tile *T = (struct tile *) vecget(tile, i);
-
-    send_event(EVENT_SET_TILE_VIEW_MIRROR);
-    send_index(i);
-    send_float((T->p[0] = p[0]));
-    send_float((T->p[1] = p[1]));
-    send_float((T->p[2] = p[2]));
-    send_float((T->p[3] = p[3]));
-}
-
-void send_set_tile_view_offset(int i, const float d[3])
-{
-    struct tile *T = (struct tile *) vecget(tile, i);
-
-    send_event(EVENT_SET_TILE_VIEW_OFFSET);
-    send_index(i);
-    send_float((T->d[0] = d[0]));
-    send_float((T->d[1] = d[1]));
-    send_float((T->d[2] = d[2]));
-}
-
 void send_set_tile_quality(int i, const float q[2])
 {
     struct tile *T = (struct tile *) vecget(tile, i);
@@ -455,25 +432,6 @@ void recv_set_tile_line_screen(void)
     T->varrier_thick = recv_float();
     T->varrier_shift = recv_float();
     T->varrier_cycle = recv_float();
-}
-
-void recv_set_tile_view_mirror(void)
-{
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
-
-    T->p[0] = recv_float();
-    T->p[1] = recv_float();
-    T->p[2] = recv_float();
-    T->p[3] = recv_float();
-}
-
-void recv_set_tile_view_offset(void)
-{
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
-
-    T->d[0] = recv_float();
-    T->d[1] = recv_float();
-    T->d[2] = recv_float();
 }
 
 void recv_set_tile_quality(void)

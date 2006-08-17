@@ -14,8 +14,6 @@ p = {
     {  1.0521, 2.8136, -2.3614 },
 }
 
-offset = { 0, (p[2][2] + p[1][2]) / 2, 2.0 + p[1][3] }
-
 ------------------------------------------------------------------------------
 
 host = E.add_host("default", 0, 0, w, h)
@@ -29,8 +27,4 @@ E.set_tile_line_screen(tile, linescreen.p, linescreen.a,
                              linescreen.t, linescreen.s, linescreen.c)
 
 E.set_host_flags(host, E.host_flag_framed, false)
-
--- Uncomment this line when head tracking is disabled.
-E.set_tile_view_offset(tile, 0, 4, 0)
---E.set_tile_view_offset(tile, 0, 0, -1)
 

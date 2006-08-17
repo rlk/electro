@@ -51,11 +51,9 @@
 
 #define TILE_FLIP_X     1
 #define TILE_FLIP_Y     2
-#define TILE_OFFSET     4
-#define TILE_MIRROR     8
-#define TILE_TEST      16
-#define TILE_LEFT_EYE  32
-#define TILE_RIGHT_EYE 64
+#define TILE_TEST       4
+#define TILE_LEFT_EYE   8
+#define TILE_RIGHT_EYE 16
 
 
 struct tile
@@ -65,8 +63,6 @@ struct tile
     float o[3];                 /* World-space tile origin                   */
     float r[3];                 /* World-space tile right vector             */
     float u[3];                 /* World-space tile up vector                */
-    float d[3];                 /* World-space view offset vector            */
-    float p[4];                 /* World-space view mirror plane             */
 
     int   win_x;                /* Tile rectangle within host window         */
     int   win_y;
@@ -129,8 +125,6 @@ void send_set_tile_flags      (int, int, int);
 void send_set_tile_quality    (int, const float[2]);
 void send_set_tile_viewport   (int, int, int, int, int);
 void send_set_tile_line_screen(int, float, float, float, float, float);
-void send_set_tile_view_mirror(int, const float[4]);
-void send_set_tile_view_offset(int, const float[3]);
 void send_set_tile_position   (int, const float[3],
                                     const float[3],
                                     const float[3]);
@@ -139,8 +133,6 @@ void recv_set_tile_flags      (void);
 void recv_set_tile_quality    (void);
 void recv_set_tile_viewport   (void);
 void recv_set_tile_line_screen(void);
-void recv_set_tile_view_mirror(void);
-void recv_set_tile_view_offset(void);
 void recv_set_tile_position   (void);
 
 /*---------------------------------------------------------------------------*/

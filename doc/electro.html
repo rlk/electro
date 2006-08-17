@@ -857,13 +857,9 @@ and sprites.</p>
 
 <dt><a name="set_tile_viewport"><tt>set_tile_viewport</tt>(<i>tile, x, y, w, h</i>)</a><dd><p>Set the pixel area of <i>tile</i>. This defines the range of any <a href="#camera_type_orthogonal">orthogonal</a> camera used during rendering.</p>
 
-<dt><a name="set_tile_mirror"><tt>set_tile_mirror</tt>(<i>tile, x, y, z, d</i>)</a><dd><p>Specify a world-space plane of reflection to be applied to the view position vector when rendering to <i>tile</i>. The (<i>x, y, z</i>) arguments give the plane normal, and <i>d</i> gives the plane offset from the origin along the normal. This allows a correct view frustum to be computed on PARIS and IDesk4 systems, where the view position vector is dynamically tracked, but the reflection of a tile is viewed in a mirror. Reflection must be enabled by setting the <a href="#tile_flag_mirror"><tt>tile_flag_mirror</tt></a> option.</p>
-
 <dt><a name="set_tile_flags"><tt>set_tile_flags</tt>(<i>tile, flags, value</i>)</a><dd><p>Set or clear tile flags on <i>tile</i>. The <i>flags</i> argument gives the set of flags to be modified and <i>value</i> gives the desired state.</p>
 
 <ul>
-
-<li><a name="tile_flag_mirror"><tt>tile_flag_mirror</tt></a><p>The mirror flag enables projection of the view position vector across the plane given by <a href="#set_tile_mirror"><tt>set_tile_mirror</tt></>.</p>
 
 <li><a name="tile_flag_flip_x"><tt>tile_flag_flip_x</tt></a>
 <li><a name="tile_flag_flip_y"><tt>tile_flag_flip_y</tt></a><p>The flip flags cause the scene rendered to the tile to be flipped horizontally or vertically, respectively. This may be used to correct tiles viewed by reflection in a mirror.</p>

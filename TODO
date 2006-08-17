@@ -2,6 +2,7 @@ fix image fbo state reverting to varrier 00 fbo state
 fix trainer
 texture clamp
 use IBO in galaxy
+sprite should detect rectangular textures
 
 bugfix: giving BindAttribLocation not found on non-GLSL hardware?
 
