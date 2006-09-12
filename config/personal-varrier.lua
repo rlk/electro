@@ -1,14 +1,10 @@
 host = { }
 tile = { }
 
-W = 2.0000
-H = 1.1250
-D = 2.0000
+------------------------------------------------------------------------------
 
 w = 2560
 h = 1600
-
-------------------------------------------------------------------------------
 
 p = {
     { -1.0521, 3.1354, -1.3614 },
@@ -33,3 +29,12 @@ E.set_tile_position(tile[0],
 varrier_init()
 
 E.set_host_flags(host[0], E.host_flag_framed, false)
+
+-- This transform is necessary when using net-direct face tracking.
+-- It should be commented out when trackd is in use.
+--[[
+E.set_tracker_transform(0,  1.000,  0.000,  0.000, 0.000,
+                            0.000,  0.979,  0.199, 0.000,
+                            0.000, -0.199,  0.979, 0.000,
+                           -0.458,  5.000, -1.600, 1.000)
+]]--

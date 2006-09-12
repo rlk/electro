@@ -10,6 +10,7 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -22,6 +23,8 @@ typedef unsigned int uint32_t;
 
 #include "tracker.h"
 #include "utility.h"
+#include "matrix.h"
+#include "socket.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -55,11 +58,6 @@ struct sensor
     uint32_t frame;
 };
 
-struct transform
-{
-    float M[16];
-};
-
 /*---------------------------------------------------------------------------*/
 
 #ifndef _WIN32
@@ -73,12 +71,34 @@ static volatile HANDLE control_id = NULL;
 static struct tracker_header *tracker = (struct tracker_header *) (-1);
 static struct control_header *control = (struct control_header *) (-1);
 static uint32_t              *buttons = NULL;
-static struct transform      *transform = NULL;
 
 /*---------------------------------------------------------------------------*/
 
-int acquire_tracker(int t_key, int c_key)
+struct message
 {
+    float x;
+    float y;
+    float z;
+};
+
+static int sock = INVALID_SOCKET;
+
+/*---------------------------------------------------------------------------*/
+
+struct transform
+{
+    float M[16];
+};
+
+static struct transform *transform  = NULL;
+static int               transforms = 0;
+
+/*---------------------------------------------------------------------------*/
+
+int acquire_tracker(int t_key, int c_key, int port)
+{
+    int i;
+
     /* Acquire the tracker and controller shared memory segments. */
 
 #ifndef _WIN32
@@ -109,14 +129,41 @@ int acquire_tracker(int t_key, int c_key)
 
     if (control != (struct control_header *) (-1))
         buttons = (uint32_t *) calloc(control->but_count, sizeof (uint32_t));
-    if (tracker != (struct tracker_header *) (-1))
+
+    /* Open a UDP socket for receiving. */
+
+    if (port)
     {
-        unsigned int i;
+        if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) >= 0)
+        {
+            sockaddr_t addr;
 
-        transform = (struct transform *) calloc(tracker->count,
-                                                sizeof (struct transform));
+            /* Accept connections from any address on the given port. */
 
-        for (i = 0; i < tracker->count; ++i)
+            addr.sin_family      = AF_INET;
+            addr.sin_port        = htons((short) port);
+            addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+            /* Bind the socket to this address. */
+
+            if (bind(sock, (struct sockaddr *) &addr, sizeof (sockaddr_t))>= 0)
+            {
+                transforms = 1;
+            }
+            else error("bind %d : %s", port, system_error());
+        }
+        else error("socket : %s", system_error());
+    }
+
+    /* Initialize the tracker transform. */
+
+    if (tracker != (struct tracker_header *) (-1))
+        transforms = (int) tracker->count;
+
+    if ((transform = (struct transform *) calloc(transforms,
+                                                 sizeof (struct transform))))
+    {
+        for (i = 0; i < transforms; ++i)
         {
             transform[i].M[0]  = 1.0f;
             transform[i].M[5]  = 1.0f;
@@ -149,24 +196,32 @@ void release_tracker(void)
     tracker_id = NULL;
 #endif
 
-    if (buttons) free(buttons);
+    if (sock != INVALID_SOCKET) close(sock);
+
+    if (buttons)   free(buttons);
+    if (transform) free(transform);
 
     /* Mark everything as uninitialized. */
+
+    sock = INVALID_SOCKET;
 
     control = (struct control_header *) (-1);
     tracker = (struct tracker_header *) (-1);
 
-    buttons = NULL;
+    buttons    = NULL;
+    transform  = NULL;
+    transforms = 0;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int get_tracker_status(void)
 {
-    return ((tracker != (struct tracker_header *) (-1)));
+    return ((sock    != INVALID_SOCKET) ||
+            (tracker != (struct tracker_header *) (-1)));
 }
 
-int get_tracker_rotation(unsigned int id, float r[3])
+int get_tracker_rotation(unsigned int id, float R[16])
 {
     if (tracker != (struct tracker_header *) (-1))
     {
@@ -178,18 +233,30 @@ int get_tracker_rotation(unsigned int id, float r[3])
                 (struct sensor *)((unsigned char *) tracker
                                                   + tracker->offset
                                                   + tracker->size * id);
-            r[0] = S->r[1];   /* elevation */
-            r[1] = S->r[0];   /* azimuth   */
-            r[2] = S->r[2];   /* roll      */
+
+            /* TODO: Fix potential gimbal lock here? */
+
+            load_rot_mat(R, 1, 0, 0, S->r[1]); /* elevation */
+            mult_rot_mat(R, 0, 1, 0, S->r[0]); /* azimuth   */
+            mult_rot_mat(R, 0, 0, 1, S->r[2]); /* roll      */
+            mult_mat_mat(R, R, transform[id].M);
 
             return 1;
         }
     }
+    else load_idt(R);
+
     return 0;
 }
 
 int get_tracker_position(unsigned int id, float p[3])
 {
+    static float last_p[3] = { 0.0f, 0.0f, 0.0f };
+
+    p[0] = last_p[0];
+    p[1] = last_p[1];
+    p[2] = last_p[2];
+
     if (tracker != (struct tracker_header *) (-1))
     {
         if (id < tracker->count)
@@ -200,14 +267,57 @@ int get_tracker_position(unsigned int id, float p[3])
                 (struct sensor *)((unsigned char *) tracker
                                                   + tracker->offset
                                                   + tracker->size * id);
-            p[0] = S->p[0];
-            p[1] = S->p[1];
-            p[2] = S->p[2];
 
-            return 1;
+            if (fabs(S->p[0]) > 0.0 ||
+                fabs(S->p[1]) > 0.0 ||
+                fabs(S->p[2]) > 0.0)
+                mult_mat_pos(p, transform[id].M, S->p);
         }
     }
-    return 0;
+
+    /* Recieve messages on the tracker socket.  Return the most recent. */
+
+    if (id == 0 && sock != INVALID_SOCKET)
+    {
+        struct message mesg;
+        struct timeval zero = { 0, 0 };
+
+        fd_set fds;
+
+        FD_ZERO(&fds);
+        FD_SET(sock, &fds);
+
+        while (select(sock + 1, &fds, NULL, NULL, &zero) > 0)
+        {            
+            if (FD_ISSET(sock, &fds))
+            {
+                ssize_t s;
+
+                if ((s = recv(sock, &mesg, sizeof (struct message), 0)) ==
+                                           sizeof (struct message))
+                {
+                    float q[3];
+
+                    q[0] = net_to_host_float(mesg.x);
+                    q[1] = net_to_host_float(mesg.y);
+                    q[2] = net_to_host_float(mesg.z);
+
+                    mult_mat_pos(p, transform[id].M, q);
+                }
+            }
+
+            FD_ZERO(&fds);
+            FD_SET(sock, &fds);
+        }
+    }
+
+    /* If neither tracking source was updated, return the previous result. */
+
+    last_p[0] = p[0];
+    last_p[1] = p[1];
+    last_p[2] = p[2];
+
+    return 1;
 }
 
 int get_tracker_joystick(unsigned int id, float a[2])
@@ -260,20 +370,14 @@ int get_tracker_buttons(unsigned int *id, unsigned int *st)
 
 void set_tracker_transform(unsigned int id, float M[16])
 {
-    if (transform && tracker != (struct tracker_header *) (-1))
-    {
-        if (id < tracker->count)
-            memcpy(transform[id].M, M, 16 * sizeof (float));
-    }
+    if (transform && (int) id < transforms)
+        memcpy(transform[id].M, M, 16 * sizeof (float));
 }
 
 void get_tracker_transform(unsigned int id, float M[16])
 {
-    if (transform && tracker != (struct tracker_header *) (-1))
-    {
-        if (id < tracker->count)
-            memcpy(M, transform[id].M, 16 * sizeof (float));
-    }
+    if (transform && (int) id < transforms)
+        memcpy(M, transform[id].M, 16 * sizeof (float));
 }
 
 /*---------------------------------------------------------------------------*/

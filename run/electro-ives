@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export ELECTRO_CONFIG=/home/evl/rlk/src/electro-current/config
-export ELECTRO_BIN=/home/evl/rlk/src/electro-current
+export ELECTRO_CONFIG=/home/evl/rlk/src/electro/config
+export ELECTRO_BIN=/home/evl/rlk/src/electro
 
 $ELECTRO_BIN/electro $ELECTRO_CONFIG/varrier.lua $ELECTRO_CONFIG/personal-varrier.lua $@

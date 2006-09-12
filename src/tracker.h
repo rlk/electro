@@ -20,12 +20,12 @@
 
 /*---------------------------------------------------------------------------*/
 
-int  acquire_tracker(int, int);
+int  acquire_tracker(int, int, int);
 void release_tracker(void);
 
 int get_tracker_status(void);
 
-int get_tracker_rotation(unsigned int, float[3]);
+int get_tracker_rotation(unsigned int, float[16]);
 int get_tracker_position(unsigned int, float[3]);
 int get_tracker_joystick(unsigned int, float[2]);
 

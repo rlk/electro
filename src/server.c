@@ -67,6 +67,7 @@ static float average_fps  = 0;
 
 static int   console_port = 0;
 static char *console_log  = NULL;
+static int   tracker_port = 0;
 static int   tracker_key  = TRACKER_KEY;
 static int   control_key  = CONTROL_KEY;
 static int   head_sensor  = 0;
@@ -145,14 +146,17 @@ static void server_draw(void)
 
     draw_console();
     server_swap();
-
-/*    opengl_check("");*/
 }
 
 static void server_perf(void)
 {
+    float f = opengl_perf(&average_fps);
+
     static int fps_old = 0;
-    int        fps_new = (int) opengl_perf(&average_fps);
+
+    int fps_up  = (int) ceil (f);
+    int fps_dn  = (int) floor(f);
+    int fps_new = (fps_up - f) < (f - fps_dn) ? fps_up : fps_dn;
 
     if (fps_new != fps_old)
     {
@@ -407,10 +411,12 @@ static void parse_options(int argc, char *argv[])
         else if (strcmp(argv[i], "-l") == 0 && i < argc - 1)
             console_log  = argv[++i];
 
+        else if (strcmp(argv[i], "-n") == 0 && i < argc - 1)
+            tracker_port = atoi(argv[++i]);
         else if (strcmp(argv[i], "-t") == 0 && i < argc - 1)
-            tracker_key = atoi(argv[++i]);
+            tracker_key  = atoi(argv[++i]);
         else if (strcmp(argv[i], "-c") == 0 && i < argc - 1)
-            control_key = atoi(argv[++i]);
+            control_key  = atoi(argv[++i]);
 
         else if (strcmp(argv[i], "-h") == 0 && i < argc - 1)
             head_sensor = atoi(argv[++i]);
@@ -439,6 +445,7 @@ static void parse_scripts(int argc, char *argv[])
         else if (strcmp(argv[i], "-T") == 0) i += 2;
         else if (strcmp(argv[i], "-p") == 0) i += 1;
         else if (strcmp(argv[i], "-l") == 0) i += 1;
+        else if (strcmp(argv[i], "-n") == 0) i += 1;
         else if (strcmp(argv[i], "-t") == 0) i += 1;
         else if (strcmp(argv[i], "-c") == 0) i += 1;
         else if (strcmp(argv[i], "-h") == 0) i += 1;
@@ -474,7 +481,7 @@ void server(int argc, char *argv[])
                 startup_net(console_port) &&
                 startup_sound(audio_state))
             {
-                acquire_tracker(tracker_key, control_key);
+                acquire_tracker(tracker_key, control_key, tracker_port);
 
                 parse_scripts(argc, argv);
 

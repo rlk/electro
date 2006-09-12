@@ -899,27 +899,9 @@ void get_entity_y_vector(unsigned int i, float v[3])
 
 void get_entity_z_vector(unsigned int i, float v[3])
 {
-    /* HACK: The Flock on the Personal Varrier is oriented incorrectly,      */
-    /* placing the gimbal lock along the Y axis, instead of along the Z      */
-    /* axis where it should be.  This code resamples tracking in order to    */
-    /* recompute the Z vector from scratch.                                  */
-
-    if (FLAG(i, FLAG_TRACK_ROT) && get_tracker_status())
-    {
-        float r[3], R[16], z[3] = { 0, 0, 1 };
-
-        get_tracker_rotation((unsigned int) entity[i].track_sens, r);
-
-        load_rot_mat(R, 0, 1, 0, r[1]);
-        mult_rot_mat(R, 1, 0, 0, r[0]);
-        mult_mat_pos(v, R, z);
-    }
-    else
-    {
-        v[0] = entity[i].rotation[8];
-        v[1] = entity[i].rotation[9];
-        v[2] = entity[i].rotation[10];
-    }
+    v[0] = entity[i].rotation[8];
+    v[1] = entity[i].rotation[9];
+    v[2] = entity[i].rotation[10];
 }
 
 void get_entity_scale(unsigned int i, float v[3])
@@ -1036,20 +1018,6 @@ unsigned int get_entity_child(unsigned int i, unsigned int n)
 
 /*===========================================================================*/
 
-static void get_tracked_rotation(int sens, float R[16])
-{
-    float M[16];
-    float r[3];
-
-    get_tracker_rotation ((unsigned int) sens, r);
-    get_tracker_transform((unsigned int) sens, M);
-
-    load_rot_mat(R, 1, 0, 0, r[0]);
-    mult_rot_mat(R, 0, 1, 0, r[1]);
-    mult_rot_mat(R, 0, 0, 1, r[2]);
-    mult_mat_mat(R, R, M);
-}
-
 static int step_entity_tree(unsigned int i, float dt, int head,
                             const float view_p[3],
                             const float view_R[16])
@@ -1067,7 +1035,7 @@ static int step_entity_tree(unsigned int i, float dt, int head,
             /* Automatically track camera offsets. */
 
             get_tracker_position(head, sens_p);
-            get_tracked_rotation(head, sens_R);
+            get_tracker_rotation(head, sens_R);
 
             send_set_camera_offset(entity[i].data, sens_p, sens_R);
 
@@ -1103,7 +1071,7 @@ static int step_entity_tree(unsigned int i, float dt, int head,
 
             if (entity[i].flags & FLAG_TRACK_ROT)
             {
-                get_tracked_rotation(entity[i].track_sens, sens_R);
+                get_tracker_rotation(entity[i].track_sens, sens_R);
 
                 if (entity[i].track_mode == TRACK_WORLD)
                 {

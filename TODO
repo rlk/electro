@@ -1,3 +1,5 @@
+lua 5.1
+Resolve F5 conflict
 fix image fbo state reverting to varrier 00 fbo state
 fix trainer
 texture clamp
