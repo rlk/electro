@@ -320,7 +320,7 @@ void recv_set_camera_image(void)
 
 /*===========================================================================*/
 
-static void test_camera(int eye)
+static void test_color(int eye)
 {
     /* Map the tile onto the unit cube. */
 
@@ -349,10 +349,10 @@ static void test_camera(int eye)
             else
                 glColor3f(0.0f, 0.0f, 1.0f);
 
-            glVertex3f(0, 0, 0);
-            glVertex3f(1, 0, 0);
-            glVertex3f(1, 1, 0);
-            glVertex3f(0, 1, 0);
+            glVertex2i(0, 0);
+            glVertex2i(1, 0);
+            glVertex2i(1, 1);
+            glVertex2i(0, 1);
         }
         glEnd();
     }
@@ -366,6 +366,65 @@ static void test_camera(int eye)
     glPopMatrix();
 }
 
+static void test_ghost(int eye)
+{
+    /* Map the tile onto the unit cube. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, 0, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    /* Draw the bars. */
+
+    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+    {
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LESS);
+
+        draw_image(0);
+        
+        glTranslatef(0.5f, 0.5f, 0.0f);
+
+        if (eye == 0)
+            glRotatef(-45.0f, 0.0f, 0.0f, 1.0f);
+        else
+            glRotatef(+45.0f, 0.0f, 0.0f, 1.0f);
+
+        glScalef(1.4142135f / 16.0f,
+                 1.4142135f / 16.0f, 1.0f);
+
+        glBegin(GL_QUADS);
+        {
+            int i, n = 16;
+
+            glColor3f(1.0f, 1.0f, 1.0f);
+
+            for (i = -n; i <= n; i += 4)
+            {
+                glVertex2i(i - 1, -n);
+                glVertex2i(i + 1, -n);
+                glVertex2i(i + 1, +n);
+                glVertex2i(i - 1, +n);
+            }
+        }
+        glEnd();
+    }
+    glPopAttrib();
+
+    /* Revert to the previous transformation. */
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+/*---------------------------------------------------------------------------*/
 
 static int draw_tile(struct camera *c, int eye, int tile, const float d[3])
 {
@@ -400,7 +459,17 @@ static void draw_color(int j, int eye)
     glPushMatrix();
     {
         transform_camera(j);
-        test_camera(eye);
+        test_color(eye);
+    }
+    glPopMatrix();
+}
+
+static void draw_ghost(int j, int eye)
+{
+    glPushMatrix();
+    {
+        transform_camera(j);
+        test_ghost(eye);
     }
     glPopMatrix();
 }
@@ -516,8 +585,10 @@ static void draw_camera(int i, int j, int f, float a)
                     
                     while ((pass = draw_pass(c->mode, eye, tile, pass, d)))
                     {
-                        if (get_tile_flags(tile) & TILE_TEST)
+                        if      (get_tile_flags(tile) & TILE_TEST_COLOR)
                             draw_color(j, eye);
+                        else if (get_tile_flags(tile) & TILE_TEST_GHOST)
+                            draw_ghost(j, eye);
                         else
                             draw_scene(j, f, a);
                     }

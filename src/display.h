@@ -45,15 +45,16 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define HOST_FULL       1
-#define HOST_STEREO     2
-#define HOST_FRAMED     4
+#define HOST_FULL        1
+#define HOST_STEREO      2
+#define HOST_FRAMED      4
 
-#define TILE_FLIP_X     1
-#define TILE_FLIP_Y     2
-#define TILE_TEST       4
-#define TILE_LEFT_EYE   8
-#define TILE_RIGHT_EYE 16
+#define TILE_FLIP_X      1
+#define TILE_FLIP_Y      2
+#define TILE_TEST_COLOR  4
+#define TILE_TEST_GHOST  8
+#define TILE_LEFT_EYE   16
+#define TILE_RIGHT_EYE  32
 
 
 struct tile

@@ -2688,7 +2688,8 @@ static struct constant_def constants[] = {
 
     { "tile_flag_flip_x",          TILE_FLIP_X         },
     { "tile_flag_flip_y",          TILE_FLIP_Y         },
-    { "tile_flag_test",            TILE_TEST           },
+    { "tile_flag_test_color",      TILE_TEST_COLOR     },
+    { "tile_flag_test_ghost",      TILE_TEST_GHOST     },
     { "tile_flag_left_eye",        TILE_LEFT_EYE       },
     { "tile_flag_right_eye",       TILE_RIGHT_EYE      },
 

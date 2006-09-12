@@ -10,11 +10,11 @@
 
     To run the demos under Linux or OS X:
 
-        $ electro -f demo.lua
+        $ electro demo.lua
 
     To run the demos under Windows:
 
-        C:\> electro.exe -f demo.lua
+        C:\> electro.exe demo.lua
 
     Alternatively, drag and drop the demo.lua icon onto ELECTRO.BAT.
 
@@ -26,28 +26,28 @@
     change to the Electro examples directory, and run it as follows:
 
         $ cd /DEMO/evl/Electro/examples
-        $ electro-nico11x5 -f demo.lua
+        $ electro-nico11x5 demo.lua
 
     On yorda:
 
         $ cd /DEMO/evl/Electro/examples
-        $ electro-yorda11x5 -f demo.lua
+        $ electro-yorda11x5 demo.lua
 
     Vortex works best when Electro is allowed to capture the mouse pointer:
 
-        $ electro-nico11x5 -m -f vortex.lua
+        $ electro-nico11x5 -m vortex.lua
     or
-        $ electro-yorda11x5 -m -f vortex.lua
+        $ electro-yorda11x5 -m vortex.lua
 
 
 * Usage
 
-        ESC - Exit
-        F1  - Toggle server console display
-        F2  - Toggle server full screen display
-        F3  - Decrease server window resolution
-        F4  - Increase server window resolution
-
+        ESC    - Exit
+        F1     - Toggle server console display
+        F2     - Toggle server full screen display
+        F3     - Decrease server window resolution
+        F4     - Increase server window resolution
+        PrtScr - Screenshot "snap.png"
 
 
 * rlk@evl.uic.edu

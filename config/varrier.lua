@@ -11,9 +11,34 @@
 -- named "tile" with index 0 being the server tile and 1 through m being the m
 -- displays.
 
+-------------------------------------------------------------------------------
+
+-- Varrier configuration keys.  C- is Control.  S- is Shift.
+
+-- C-Tab                ... Cycle calibration mode / print calibration
+
+-- C-PageUp / C-PageDn  ... Select next tile / prev tile / all tiles
+-- C-Insert / C-Delete  ... Increase / decrease Combiner quality by 0.05
+
+-- C-Down   / C-Up      ... Decrease / increase line screen thick by 0.0001
+-- C-Left   / C-Right   ... Decrease / inclease line screen shift by 0.00005
+
+-- C-S-Down / C-S-Up    ... Decrease / increase line screen pitch by 0.01
+-- C-S-Left / C-S-Right ... Decrease / inclease line screen angle by 0.01
+
+-------------------------------------------------------------------------------
+
+-- F5 ... Monoscopic
+-- F6 ... Anaglyphic
+-- F7 ... Varrier 1/1
+-- F8 ... Varrier 3/3
+-- F9 ... Combiner
+
+-------------------------------------------------------------------------------
+
 varrier_tile = 0
 varrier_qual = 0.5
-varrier_test = false
+varrier_test = 0
 
 -------------------------------------------------------------------------------
 
@@ -76,7 +101,57 @@ function set_line_screen_shift(i, k)
     set_line_screen(i)
 end
 
+function set_tile_test_flags(j, n)
+
+    E.set_tile_flags(j, E.tile_flag_test_color, false)
+    E.set_tile_flags(j, E.tile_flag_test_ghost, false)
+
+    if n == 1 then
+        E.set_tile_flags(j, E.tile_flag_test_color, true)
+    end
+
+    if n == 2 then
+        E.set_tile_flags(j, E.tile_flag_test_ghost, true)
+    end
+end
+
 -------------------------------------------------------------------------------
+
+-- Adjust the pitch of one or all Varrier tiles.
+
+function set_varrier_pitch(d)
+    local i
+
+    if varrier_tile == 0 then
+        for i = 0, table.getn(line_screen) do
+            if tile[i] then
+                set_line_screen_pitch(i, d)
+            end
+        end
+    else
+        set_line_screen_pitch(varrier_tile, d)
+    end
+
+    return true
+end
+
+-- Adjust the angle of one or all Varrier tiles.
+
+function set_varrier_angle(d)
+    local i
+
+    if varrier_tile == 0 then
+        for i = 0, table.getn(line_screen) do
+            if tile[i] then
+                set_line_screen_angle(i, d)
+            end
+        end
+    else
+        set_line_screen_angle(varrier_tile, d)
+    end
+
+    return true
+end
 
 -- Adjust the optical thickness of one or all Varrier tiles.
 
@@ -121,14 +196,18 @@ function set_varrier_test(b)
 
     varrier_test = b
 
+    if varrier_test > 2 then
+        varrier_test = 0
+    end
+
     if varrier_tile == 0 then
         for i = 0, table.getn(line_screen) do
             if tile[i] then
-                E.set_tile_flags(tile[i], E.tile_flag_test, varrier_test)
+                set_tile_test_flags(tile[i], varrier_test)
             end
         end
     else
-        E.set_tile_flags(tile[varrier_tile], E.tile_flag_test, varrier_test)
+        set_tile_test_flags(tile[varrier_tile], varrier_test)
     end
 
     return true
@@ -157,15 +236,16 @@ end
 
 function set_varrier_tile(d)
     local n = table.getn(line_screen)
+    local t = varrier_test
 
-    set_varrier_test(false)
+    set_varrier_test(0)
 
     varrier_tile = varrier_tile + d
 
     if varrier_tile < 0 then varrier_tile = n end
     if varrier_tile > n then varrier_tile = 0 end
 
-    set_varrier_test(true)
+    set_varrier_test(t)
 
     return true
 end
@@ -188,16 +268,28 @@ function varrier_keyboard(k, s, camera)
             if k == E.key_pageup   then return set_varrier_tile( 1) end
             if k == E.key_pagedown then return set_varrier_tile(-1) end
 
-            if k == E.key_down     then return set_varrier_thick(-0.0001) end
-            if k == E.key_up       then return set_varrier_thick( 0.0001) end
+            if E.get_modifier(E.key_modifier_shift) then
 
-            if k == E.key_left     then return set_varrier_shift(-0.00005) end
-            if k == E.key_right    then return set_varrier_shift( 0.00005) end
+                if k == E.key_down  then return set_varrier_pitch(-0.01)  end
+                if k == E.key_up    then return set_varrier_pitch( 0.01)  end
+
+                if k == E.key_left  then return set_varrier_angle(-0.01) end
+                if k == E.key_right then return set_varrier_angle( 0.01) end
+
+            else
+
+                if k == E.key_down  then return set_varrier_thick(-0.0001)  end
+                if k == E.key_up    then return set_varrier_thick( 0.0001)  end
+
+                if k == E.key_left  then return set_varrier_shift(-0.00005) end
+                if k == E.key_right then return set_varrier_shift( 0.00005) end
+
+            end
 
             if k == E.key_tab then
-                set_varrier_test(not varrier_test)
+                set_varrier_test(varrier_test + 1)
 
-                if not varrier_test then
+                if varrier_test == 0 then
                     dump_line_screen()
                 end
 

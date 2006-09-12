@@ -277,7 +277,7 @@ static int server_loop(void)
                                     get_window_framed(),
                                     get_window_stereo());
                 break;
-            case SDLK_F5:
+            case SDLK_PRINT:
                 snap("snap.png");
                 break;
             default:
