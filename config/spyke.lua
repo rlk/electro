@@ -1,9 +1,7 @@
---dofile("varrier.lua")
+host = { }
+tile = { }
 
 ------------------------------------------------------------------------------
-
-linescreen_file = "/nfs/disk2/varrier/varrier_configs/linescreen_setup.txt"
-read_linescreen(linescreen_file, "screen5")
 
 w = 2560
 h = 1600
@@ -14,17 +12,29 @@ p = {
     {  1.0521, 2.8136, -2.3614 },
 }
 
+line_screen = {
+    [0] = { 270.807188, -7.654000, 0.016100, 0.002490, 0.777777 }
+}
+
 ------------------------------------------------------------------------------
 
-host = E.add_host("default", 0, 0, w, h)
-tile = E.add_tile(host,      0, 0, w, h)
+host[0] = E.add_host("default", 0, 0, w, h)
+tile[0] = E.add_tile(host[0],   0, 0, w, h)
 
-E.set_tile_viewport(tile, 0, 0, w, h)
-E.set_tile_position(tile, p[1][1], p[1][2], p[1][3],
+E.set_tile_viewport(tile[0], 0, 0, w, h)
+E.set_tile_position(tile[0],
+                    p[1][1], p[1][2], p[1][3],
                     p[3][1] - p[1][1], p[3][2] - p[1][2], p[3][3] - p[1][3],
                     p[2][1] - p[1][1], p[2][2] - p[1][2], p[2][3] - p[1][3])
-E.set_tile_line_screen(tile, linescreen.p, linescreen.a,
-                             linescreen.t, linescreen.s, linescreen.c)
 
-E.set_host_flags(host, E.host_flag_framed, false)
+varrier_init()
 
+E.set_host_flags(host[0], E.host_flag_framed, false)
+
+-- This transform allows the scylla IS900 tracker to be used with spyke.
+--[[
+E.set_tracker_transform(0,  0.000,  0.000, -1.000,  0.000,
+                            0.000,  1.000,  0.000,  0.000,
+                            1.000,  0.000,  0.000,  0.000,
+                            2.000,  0.000,  9.000,  1.000)
+]]--
