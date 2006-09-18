@@ -19,16 +19,17 @@
 
 /* Entity type tags. */
 
-#define TYPE_NULL   0
-#define TYPE_ROOT   1
-#define TYPE_CAMERA 2
-#define TYPE_SPRITE 3
-#define TYPE_OBJECT 4
-#define TYPE_STRING 5
-#define TYPE_GALAXY 6
-#define TYPE_LIGHT  7
-#define TYPE_PIVOT  8
-#define TYPE_COUNT  9
+#define TYPE_NULL    0
+#define TYPE_ROOT    1
+#define TYPE_CAMERA  2
+#define TYPE_SPRITE  3
+#define TYPE_OBJECT  4
+#define TYPE_STRING  5
+#define TYPE_GALAXY  6
+#define TYPE_LIGHT   7
+#define TYPE_PIVOT   8
+#define TYPE_TERRAIN 9
+#define TYPE_COUNT  10
 
 /* Entity state flags. */
 

@@ -806,16 +806,47 @@ GLuint opengl_frag_prog(const char *text)
 static GLint fbo_v[MAXFBO];
 static int   fbo_i = 0;
 
-void opengl_push_framebuffer(void)
+static void fix_point_sprite_origin(void)
 {
-    if (fbo_i < MAXFBO)
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, fbo_v + fbo_i++);
+    /* HACK: NVIDIA point sprite origin differs between FBO and window. */
+/*
+#ifdef GL_POINT_SPRITE_COORD_ORIGIN
+    GLint fbo;
+
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &fbo);
+
+    if (fbo)
+        glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT);
+    else
+        glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_UPPER_LEFT);
+#endif
+*/
+}
+
+void opengl_push_framebuffer(int fbo)
+{
+    if (GL_has_framebuffer_object)
+    {
+        if (fbo_i < MAXFBO)
+            glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, fbo_v + fbo_i++);
+
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
+
+        fix_point_sprite_origin();
+    }
 }
 
 void opengl_pop_framebuffer(void)
 {
-    if (fbo_i > 0)
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo_v[--fbo_i]);
+    if (GL_has_framebuffer_object)
+    {
+        if (fbo_i > 0)
+        {
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo_v[--fbo_i]);
+
+            fix_point_sprite_origin();
+        }
+    }
 }
 
 /*===========================================================================*/

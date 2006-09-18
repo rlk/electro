@@ -139,7 +139,7 @@ GLuint      opengl_vert_prog(const char *);
 
 /*---------------------------------------------------------------------------*/
 
-void opengl_push_framebuffer(void);
+void opengl_push_framebuffer(int);
 void opengl_pop_framebuffer(void);
 
 /*---------------------------------------------------------------------------*/

@@ -28,16 +28,18 @@ int get_rank(void);
 /*---------------------------------------------------------------------------*/
 
 void  send_array(const void *, size_t, size_t);
-void  send_index(int);
+void  send_value(int);
 void  send_event(char);
 void  send_float(float);
+void  send_index(unsigned int);
 
 /*---------------------------------------------------------------------------*/
 
-void  recv_array(void *, size_t, size_t);
-int   recv_index(void);
-char  recv_event(void);
-float recv_float(void);
+void         recv_array(void *, size_t, size_t);
+int          recv_value(void);
+char         recv_event(void);
+float        recv_float(void);
+unsigned int recv_index(void);
 
 /*---------------------------------------------------------------------------*/
 

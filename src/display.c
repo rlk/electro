@@ -20,7 +20,6 @@
 #endif
 
 #include "opengl.h"
-#include "vector.h"
 #include "utility.h"
 #include "tracker.h"
 #include "display.h"
@@ -28,19 +27,12 @@
 #include "buffer.h"
 #include "event.h"
 #include "video.h"
+#include "vec.h"
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
-#define swap(a, b) { double t; t = (a); (a) = (b); (b) = t; }
-
-static float color0[3] = { 0.1f, 0.2f, 0.4f };
-static float color1[3] = { 0.0f, 0.0f, 0.0f };
-
-/*---------------------------------------------------------------------------*/
-
-static vector_t tile;
-static vector_t host;
-
+static struct tile *tile  = NULL;
+static struct host *host  = NULL;
 static struct host *local = NULL;
 
 static int display_x = DEFAULT_X;
@@ -48,7 +40,58 @@ static int display_y = DEFAULT_Y;
 static int display_w = DEFAULT_W;
 static int display_h = DEFAULT_H;
 
+static float color0[3] = { 0.1f, 0.2f, 0.4f };
+static float color1[3] = { 0.0f, 0.0f, 0.0f };
+
 /*---------------------------------------------------------------------------*/
+
+static unsigned int new_tile(void)
+{
+    unsigned int i;
+    void        *v;
+
+    if ((i = vec_add(tile, sizeof (struct tile))))
+    {
+        memset(tile +i, 0, sizeof (struct tile));
+        return i;
+    }
+
+    if ((v = vec_gro(tile, sizeof (struct tile))))
+    {
+        tile = (struct tile *) v;
+        return new_tile();
+    }
+    return 0;
+}
+
+static unsigned int new_host(void)
+{
+    unsigned int i;
+    void        *v;
+
+    if ((i = vec_add(host, sizeof (struct host))))
+    {
+        memset(host +i, 0, sizeof (struct host));
+        return i;
+    }
+
+    if ((v = vec_gro(host, sizeof (struct host))))
+    {
+        host = (struct host *) v;
+        return new_host();
+    }
+    return 0;
+}
+
+#define chk_tile(i) vec_chk(tile, sizeof (struct tile), i)
+#define chk_host(i) vec_chk(host, sizeof (struct host), i)
+
+#define ALL_TILES(i, ii) \
+    i = ii = 0; vec_all(tile, sizeof (struct tile), &i, &ii);
+#define ALL_HOSTS(i, ii) \
+    i = ii = 0; vec_all(host, sizeof (struct host), &i, &ii);
+ 
+/*===========================================================================*/
 
 void set_window_pos(int x, int y)
 {
@@ -90,120 +133,102 @@ void set_window_siz(int d)
 
 static void bound_display(void)
 {
-    int l = 0;
-    int r = 0;
-    int b = 0;
-    int t = 0;
-    int i, n = vecnum(tile);
+    int l = INT_MAX;
+    int r = INT_MIN;
+    int b = INT_MAX;
+    int t = INT_MIN;
+
+    unsigned int i, ii;
 
     /* Compute the total pixel size of all tiles. */
 
-    if (n > 0)
+    for (ALL_TILES(i, ii))
     {
-        struct tile *T = (struct tile *) vecget(tile, 0);
-
-        l = T->pix_x;
-        r = T->pix_x + T->pix_w;
-        b = T->pix_y;
-        t = T->pix_y + T->pix_h;
+        l = MIN(l, tile[i].pix_x);
+        r = MAX(r, tile[i].pix_x + tile[i].pix_w);
+        b = MIN(b, tile[i].pix_y);
+        t = MAX(t, tile[i].pix_y + tile[i].pix_h);
     }
 
-    for (i = 0; i < vecnum(tile); ++i)
-    {
-        struct tile *T = (struct tile *) vecget(tile, i);
-
-        l = MIN(l, T->pix_x);
-        r = MAX(r, T->pix_x + T->pix_w);
-        b = MIN(b, T->pix_y);
-        t = MAX(t, T->pix_y + T->pix_h);
-    }
-
-    display_x = l;
-    display_y = b;
+    display_x =     l;
+    display_y =     b;
     display_w = r - l;
     display_h = t - b;
 
     /* Copy the total pixel size to all host configurations. */
 
-    for (i = 0; i < vecnum(host); ++i)
+    for (ALL_HOSTS(i, ii))
     {
-        struct host *H = (struct host *) vecget(host, i);
-
-        H->tot_x = display_x;
-        H->tot_y = display_y;
-        H->tot_w = display_w;
-        H->tot_h = display_h;
+        host[i].tot_x = display_x;
+        host[i].tot_y = display_y;
+        host[i].tot_w = display_w;
+        host[i].tot_h = display_h;
     }
 }
 
 /*---------------------------------------------------------------------------*/
 
-int add_host(const char *name, int x, int y, int w, int h)
+unsigned int add_host(const char *name, int x, int y, int w, int h)
 {
-    int i;
+    unsigned int i;
 
-    if ((i = vecadd(host)) >= 0)
+    if ((i = new_host()))
     {
-        struct host *H = (struct host *) vecget(host, i);
-
-        H->flags = 0;
+        host[i].flags = 0;
 
         /* Store the name for future host name searching. */
 
-        strncpy(H->name, name, MAXNAME);
+        strncpy(host[i].name, name, MAXNAME);
 
         /* The rectangle defines window size and default total display size. */
 
-        H->tot_x = H->win_x = x;
-        H->tot_y = H->win_y = y;
-        H->tot_w = H->win_w = w;
-        H->tot_h = H->win_h = h;
+        host[i].tot_x = host[i].win_x = x;
+        host[i].tot_y = host[i].win_y = y;
+        host[i].tot_w = host[i].win_w = w;
+        host[i].tot_h = host[i].win_h = h;
     }
     return i;
 }
 
-static int add_tile(int i, int x, int y, int w, int h)
+static unsigned int add_tile(unsigned int i, int x, int y, int w, int h)
 {
-    int j = -1;
-
-    if ((i < vecnum(host)) && (j = vecadd(tile)) >= 0)
+    int j = 0;
+    
+    if ((chk_host(i)) && (j = new_tile()))
     {
-        struct host *H = (struct host *) vecget(host, i);
-        struct tile *T = (struct tile *) vecget(tile, j);
-
-        T->flags = 0;
+        tile[j].flags = 0;
 
         /* The rectangle defines viewport size and default ortho projection. */
 
-        T->pix_x = T->win_x = x;
-        T->pix_y = T->win_y = y;
-        T->pix_w = T->win_w = w;
-        T->pix_h = T->win_h = h;
+        tile[j].pix_x = tile[j].win_x = x;
+        tile[j].pix_y = tile[j].win_y = y;
+        tile[j].pix_w = tile[j].win_w = w;
+        tile[j].pix_h = tile[j].win_h = h;
 
         /* Set a default display configuration. */
 
-        T->o[0] = DEFAULT_OX;
-        T->o[1] = DEFAULT_OY;
-        T->o[2] = DEFAULT_OZ;
-        T->r[0] = DEFAULT_RX;
-        T->r[1] = DEFAULT_RY;
-        T->r[2] = DEFAULT_RZ;
-        T->u[0] = DEFAULT_UX;
-        T->u[1] = DEFAULT_UY;
-        T->u[2] = DEFAULT_UZ;
+        tile[j].o[0] = DEFAULT_OX;
+        tile[j].o[1] = DEFAULT_OY;
+        tile[j].o[2] = DEFAULT_OZ;
+        tile[j].r[0] = DEFAULT_RX;
+        tile[j].r[1] = DEFAULT_RY;
+        tile[j].r[2] = DEFAULT_RZ;
+        tile[j].u[0] = DEFAULT_UX;
+        tile[j].u[1] = DEFAULT_UY;
+        tile[j].u[2] = DEFAULT_UZ;
 
-        T->varrier_pitch = DEFAULT_VARRIER_PITCH;
-        T->varrier_angle = DEFAULT_VARRIER_ANGLE;
-        T->varrier_thick = DEFAULT_VARRIER_THICK;
-        T->varrier_shift = DEFAULT_VARRIER_SHIFT;
-        T->varrier_cycle = DEFAULT_VARRIER_CYCLE;
+        tile[j].varrier_pitch = DEFAULT_VARRIER_PITCH;
+        tile[j].varrier_angle = DEFAULT_VARRIER_ANGLE;
+        tile[j].varrier_thick = DEFAULT_VARRIER_THICK;
+        tile[j].varrier_shift = DEFAULT_VARRIER_SHIFT;
+        tile[j].varrier_cycle = DEFAULT_VARRIER_CYCLE;
 
-        T->quality[0] = 1.0f;
-        T->quality[1] = 1.0f;
+        tile[j].quality[0] = 1.0f;
+        tile[j].quality[1] = 1.0f;
 
         /* Include this tile in the host and in the total display. */
 
-        H->tile[H->n++] = j;
+        host[i].tile[host[i].n++] = j;
 
         bound_display();
     }
@@ -216,7 +241,8 @@ void sync_display(void)
 {
     char name[MAXNAME];
     int  rank = 0;
-    int  i;
+
+    unsigned int i, ii;
 
 #ifdef CONF_MPI
     int num  = vecnum(host);
@@ -244,202 +270,198 @@ void sync_display(void)
     /* Search the definition list for an entry matching this host's name */
 
     if (gethostname(name, MAXNAME) == 0)
-        for (i = 0; i < vecnum(host); ++i)
-        {
-            struct host *H = (struct host *) vecget(host, i);
+        for (ALL_HOSTS(i, ii))
 
-            if (strncmp(H->name, name,         MAXNAME) == 0 ||
-                strncmp(H->name, DEFAULT_NAME, MAXNAME) == 0)
-                local = H;
-        }
+            if (strncmp(host[i].name, name,         MAXNAME) == 0 ||
+                strncmp(host[i].name, DEFAULT_NAME, MAXNAME) == 0)
+            {
+                /* Note this host for later use. */
 
-    /* If no host definition was found, use a default. */
+                local = host + i;
+
+                /* Nuke its name so it isn't matched again. */
+
+                local->name[0] = '\0';
+            }
+
+    /* If no host definition was found, create a default. */
 
     if (local == NULL)
     {
         i = add_host(DEFAULT_NAME, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
             add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
 
-        local = (struct host *) vecget(host, i);
-
+        local        = host + i;
         local->flags = HOST_FRAMED;
     }
+
+    /* Position the server window, if necessary. */
 
     if (rank || (local->flags & HOST_FRAMED) == 0)
         set_window_pos(local->win_x, local->win_y);
 }
 
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 
-int send_add_tile(int i, int x, int y, int w, int h)
+unsigned int send_add_tile(unsigned int i, int x, int y, int w, int h)
 {
     send_event(EVENT_ADD_TILE);
     send_index(i);
-    send_index(x);
-    send_index(y);
-    send_index(w);
-    send_index(h);
+    send_value(x);
+    send_value(y);
+    send_value(w);
+    send_value(h);
 
     return add_tile(i, x, y, w, h);
 }
 
 void recv_add_tile(void)
 {
-    int i = recv_index();
-    int x = recv_index();
-    int y = recv_index();
-    int w = recv_index();
-    int h = recv_index();
+    unsigned int i = recv_index();
+
+    int x = recv_value();
+    int y = recv_value();
+    int w = recv_value();
+    int h = recv_value();
 
     add_tile(i, x, y, w, h);
 }
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_host_flags(int i, int flags, int state)
+void send_set_host_flags(unsigned int i, unsigned int flags,
+                                         unsigned int state)
 {
-    struct host *H = (struct host *) vecget(host, i);
-
     /* Host flags are only used at host creation time, so there's no point   */
     /* in sending them off to already-initialized hosts.                     */
 
     if (state)
-        H->flags = H->flags | ( flags);
+        host[i].flags = host[i].flags | ( flags);
     else
-        H->flags = H->flags & (~flags);
+        host[i].flags = host[i].flags & (~flags);
 }
 
-void send_set_tile_flags(int i, int flags, int state)
+void send_set_tile_flags(unsigned int i, unsigned int flags,
+                                         unsigned int state)
 {
-    struct tile *T = (struct tile *) vecget(tile, i);
-
     send_event(EVENT_SET_TILE_FLAGS);
     send_index(i);
-    send_index(flags);
-    send_index(state);
+    send_value(flags);
+    send_value(state);
 
     if (state)
-        T->flags = T->flags | ( flags);
+        tile[i].flags = tile[i].flags | ( flags);
     else
-        T->flags = T->flags & (~flags);
+        tile[i].flags = tile[i].flags & (~flags);
 }
 
-void send_set_tile_position(int i, const float o[3],
-                                   const float r[3],
-                                   const float u[3])
+void send_set_tile_quality(unsigned int i, const float q[2])
 {
-    struct tile *T = (struct tile *) vecget(tile, i);
-
-    send_event(EVENT_SET_TILE_POSITION);
+    send_event(EVENT_SET_TILE_QUALITY);
     send_index(i);
-    send_float((T->o[0] = o[0]));
-    send_float((T->o[1] = o[1]));
-    send_float((T->o[2] = o[2]));
-    send_float((T->r[0] = r[0]));
-    send_float((T->r[1] = r[1]));
-    send_float((T->r[2] = r[2]));
-    send_float((T->u[0] = u[0]));
-    send_float((T->u[1] = u[1]));
-    send_float((T->u[2] = u[2]));
+    send_float((tile[i].quality[0] = q[0]));
+    send_float((tile[i].quality[1] = q[1]));
 }
 
-void send_set_tile_viewport(int i, int x, int y, int w, int h)
+void send_set_tile_viewport(unsigned int i, int x, int y, int w, int h)
 {
-    struct tile *T = (struct tile *) vecget(tile, i);
-
     send_event(EVENT_SET_TILE_VIEWPORT);
     send_index(i);
-    send_index((T->pix_x = x));
-    send_index((T->pix_y = y));
-    send_index((T->pix_w = w));
-    send_index((T->pix_h = h));
+    send_index((tile[i].pix_x = x));
+    send_index((tile[i].pix_y = y));
+    send_index((tile[i].pix_w = w));
+    send_index((tile[i].pix_h = h));
 
     bound_display();
 }
 
-void send_set_tile_line_screen(int i, float p, float a,
-                                      float t, float s, float c)
+void send_set_tile_position(unsigned int i, const float o[3],
+                                            const float r[3],
+                                            const float u[3])
 {
-    struct tile *T = (struct tile *) vecget(tile, i);
-
-    send_event(EVENT_SET_TILE_LINE_SCREEN);
+    send_event(EVENT_SET_TILE_POSITION);
     send_index(i);
-    send_float((T->varrier_pitch = p));
-    send_float((T->varrier_angle = a));
-    send_float((T->varrier_thick = t));
-    send_float((T->varrier_shift = s));
-    send_float((T->varrier_cycle = c));
+    send_float((tile[i].o[0] = o[0]));
+    send_float((tile[i].o[1] = o[1]));
+    send_float((tile[i].o[2] = o[2]));
+    send_float((tile[i].r[0] = r[0]));
+    send_float((tile[i].r[1] = r[1]));
+    send_float((tile[i].r[2] = r[2]));
+    send_float((tile[i].u[0] = u[0]));
+    send_float((tile[i].u[1] = u[1]));
+    send_float((tile[i].u[2] = u[2]));
 }
 
-void send_set_tile_quality(int i, const float q[2])
+void send_set_tile_linescrn(unsigned int i, float p, float a,
+                                            float t, float s, float c)
 {
-    struct tile *T = (struct tile *) vecget(tile, i);
-
-    send_event(EVENT_SET_TILE_QUALITY);
+    send_event(EVENT_SET_TILE_LINESCRN);
     send_index(i);
-    send_float((T->quality[0] = q[0]));
-    send_float((T->quality[1] = q[1]));
+    send_float((tile[i].varrier_pitch = p));
+    send_float((tile[i].varrier_angle = a));
+    send_float((tile[i].varrier_thick = t));
+    send_float((tile[i].varrier_shift = s));
+    send_float((tile[i].varrier_cycle = c));
 }
 
 /*---------------------------------------------------------------------------*/
 
 void recv_set_tile_flags(void)
 {
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
-
-    int flags = recv_index();
-    int state = recv_index();
+    unsigned int i     = recv_index();
+    unsigned int flags = recv_index();
+    unsigned int state = recv_index();
 
     if (state)
-        T->flags = T->flags | ( flags);
+        tile[i].flags = tile[i].flags | ( flags);
     else
-        T->flags = T->flags & (~flags);
-}
-
-void recv_set_tile_position(void)
-{
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
-
-    T->o[0] = recv_float();
-    T->o[1] = recv_float();
-    T->o[2] = recv_float();
-    T->r[0] = recv_float();
-    T->r[1] = recv_float();
-    T->r[2] = recv_float();
-    T->u[0] = recv_float();
-    T->u[1] = recv_float();
-    T->u[2] = recv_float();
-}
-
-void recv_set_tile_viewport(void)
-{
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
-
-    T->pix_x = recv_index();
-    T->pix_y = recv_index();
-    T->pix_w = recv_index();
-    T->pix_h = recv_index();
-
-    bound_display();
-}
-
-void recv_set_tile_line_screen(void)
-{
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
-
-    T->varrier_pitch = recv_float();
-    T->varrier_angle = recv_float();
-    T->varrier_thick = recv_float();
-    T->varrier_shift = recv_float();
-    T->varrier_cycle = recv_float();
+        tile[i].flags = tile[i].flags & (~flags);
 }
 
 void recv_set_tile_quality(void)
 {
-    struct tile *T = (struct tile *) vecget(tile, recv_index());
+    unsigned int i = recv_index();
 
-    T->quality[0] = recv_float();
-    T->quality[1] = recv_float();
+    tile[i].quality[0] = recv_float();
+    tile[i].quality[1] = recv_float();
+}
+
+void recv_set_tile_viewport(void)
+{
+    unsigned int i = recv_index();
+
+    tile[i].pix_x = recv_index();
+    tile[i].pix_y = recv_index();
+    tile[i].pix_w = recv_index();
+    tile[i].pix_h = recv_index();
+
+    bound_display();
+}
+
+void recv_set_tile_position(void)
+{
+    unsigned int i = recv_index();
+
+    tile[i].o[0] = recv_float();
+    tile[i].o[1] = recv_float();
+    tile[i].o[2] = recv_float();
+    tile[i].r[0] = recv_float();
+    tile[i].r[1] = recv_float();
+    tile[i].r[2] = recv_float();
+    tile[i].u[0] = recv_float();
+    tile[i].u[1] = recv_float();
+    tile[i].u[2] = recv_float();
+}
+
+void recv_set_tile_linescrn(void)
+{
+    unsigned int i = recv_index();
+
+    tile[i].varrier_pitch = recv_float();
+    tile[i].varrier_angle = recv_float();
+    tile[i].varrier_thick = recv_float();
+    tile[i].varrier_shift = recv_float();
+    tile[i].varrier_cycle = recv_float();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -483,7 +505,7 @@ void set_window_full(int f)
 
 void set_window_w(int w)
 {
-    int i;
+    unsigned int i;
 
     if (local)
     {
@@ -491,15 +513,15 @@ void set_window_w(int w)
 
         for (i = 0; i < local->n; ++i)
         {
-            ((struct tile *) vecget(tile, local->tile[i]))->win_w = w;
-            ((struct tile *) vecget(tile, local->tile[i]))->pix_w = w;
+            tile[local->tile[i]].win_w = w;
+            tile[local->tile[i]].pix_w = w;
         }
     }
 }
 
 void set_window_h(int h)
 {
-    int i;
+    unsigned int i;
 
     if (local)
     {
@@ -507,8 +529,8 @@ void set_window_h(int h)
 
         for (i = 0; i < local->n; ++i)
         {
-             ((struct tile *) vecget(tile, local->tile[i]))->win_h = h;
-             ((struct tile *) vecget(tile, local->tile[i]))->pix_h = h;
+            tile[local->tile[i]].win_h = h;
+            tile[local->tile[i]].pix_h = h;
         }
    }
 }
@@ -537,25 +559,22 @@ void get_display_point(float v[3], const float p[3], int x, int y)
 {
     static float last_v[3] = { 0.0f, 0.0f, 0.0f };
 
-    int i, n = vecnum(tile);
+    unsigned int i, ii;
 
     /* Search all tiles for one encompassing the given point (x, y). */
 
-    for (i = 0; i < n; ++i)
-    {
-        struct tile *T = (struct tile *) vecget(tile, i);
-
-        if (T->pix_x <= x && x < T->pix_x + T->pix_w &&
-            T->pix_y <= y && y < T->pix_y + T->pix_h)
+    for (ALL_TILES(i, ii))
+        if (tile[i].pix_x <= x && x < tile[i].pix_x + tile[i].pix_w &&
+            tile[i].pix_y <= y && y < tile[i].pix_y + tile[i].pix_h)
         {
             /* Compute the world-space vector of this point. */
 
-            const float kx =        (float) (x - T->pix_x) / T->pix_w;
-            const float ky = 1.0f - (float) (y - T->pix_y) / T->pix_h;
+            float kx =        (float) (x - tile[i].pix_x) / tile[i].pix_w;
+            float ky = 1.0f - (float) (y - tile[i].pix_y) / tile[i].pix_h;
 
-            v[0] = (T->o[0] + T->r[0] * kx + T->u[0] * ky) - p[0];
-            v[1] = (T->o[1] + T->r[1] * kx + T->u[1] * ky) - p[1];
-            v[2] = (T->o[2] + T->r[2] * kx + T->u[2] * ky) - p[2];
+            v[0] = (tile[i].o[0] + tile[i].r[0]*kx + tile[i].u[0]*ky) - p[0];
+            v[1] = (tile[i].o[1] + tile[i].r[1]*kx + tile[i].u[1]*ky) - p[1];
+            v[2] = (tile[i].o[2] + tile[i].r[2]*kx + tile[i].u[2]*ky) - p[2];
 
             normalize(v);
 
@@ -567,7 +586,6 @@ void get_display_point(float v[3], const float p[3], int x, int y)
                 
             return;
         }
-    }
 
     /* The point does not fall within a tile.  Return the previous value. */
 
@@ -596,60 +614,59 @@ void get_display_union(float b[4])
 
 void get_display_bound(float b[6])
 {
-    int i, n = vecnum(tile);
+    unsigned int i, ii, c = 0;
 
-    if (n > 0)
+    b[0] =  1e10;
+    b[1] =  1e10;
+    b[2] =  1e10;
+    b[3] = -1e10;
+    b[4] = -1e10;
+    b[5] = -1e10;
+
+    /* Compute the rectangular union of all tiles. */
+
+    for (ALL_TILES(i, ii))
     {
-        struct tile *T = (struct tile *) vecget(tile, 0);
+        /* Lower left corner. */
 
-        /* Compute the rectangular union of all tiles. */
+        b[0] = MIN(b[0], tile[i].o[0]);
+        b[1] = MIN(b[1], tile[i].o[1]);
+        b[2] = MIN(b[2], tile[i].o[2]);
+        b[3] = MAX(b[3], tile[i].o[0]);
+        b[4] = MAX(b[4], tile[i].o[1]);
+        b[5] = MAX(b[5], tile[i].o[2]);
 
-        b[0] = b[3] = T->o[0];
-        b[1] = b[4] = T->o[1];
-        b[2] = b[5] = T->o[2];
+        /* Lower right corner. */
 
-        for (i = 0; i < n; ++i)
-        {
-            T = (struct tile *) vecget(tile, i);
+        b[0] = MIN(b[0], tile[i].o[0] + tile[i].r[0]);
+        b[1] = MIN(b[1], tile[i].o[1] + tile[i].r[1]);
+        b[2] = MIN(b[2], tile[i].o[2] + tile[i].r[2]);
+        b[3] = MAX(b[3], tile[i].o[0] + tile[i].r[0]);
+        b[4] = MAX(b[4], tile[i].o[1] + tile[i].r[1]);
+        b[5] = MAX(b[5], tile[i].o[2] + tile[i].r[2]);
 
-            /* Lower left corner. */
+        /* Upper left corner. */
 
-            b[0] = MIN(b[0], T->o[0]);
-            b[1] = MIN(b[1], T->o[1]);
-            b[2] = MIN(b[2], T->o[2]);
-            b[3] = MAX(b[3], T->o[0]);
-            b[4] = MAX(b[4], T->o[1]);
-            b[5] = MAX(b[5], T->o[2]);
+        b[0] = MIN(b[0], tile[i].o[0] + tile[i].u[0]);
+        b[1] = MIN(b[1], tile[i].o[1] + tile[i].u[1]);
+        b[2] = MIN(b[2], tile[i].o[2] + tile[i].u[2]);
+        b[3] = MAX(b[3], tile[i].o[0] + tile[i].u[0]);
+        b[4] = MAX(b[4], tile[i].o[1] + tile[i].u[1]);
+        b[5] = MAX(b[5], tile[i].o[2] + tile[i].u[2]);
 
-            /* Lower right corner. */
+        /* Upper right corner. */
 
-            b[0] = MIN(b[0], T->o[0] + T->r[0]);
-            b[1] = MIN(b[1], T->o[1] + T->r[1]);
-            b[2] = MIN(b[2], T->o[2] + T->r[2]);
-            b[3] = MAX(b[3], T->o[0] + T->r[0]);
-            b[4] = MAX(b[4], T->o[1] + T->r[1]);
-            b[5] = MAX(b[5], T->o[2] + T->r[2]);
+        b[0] = MIN(b[0], tile[i].o[0] + tile[i].r[0] + tile[i].u[0]);
+        b[1] = MIN(b[1], tile[i].o[1] + tile[i].r[1] + tile[i].u[1]);
+        b[2] = MIN(b[2], tile[i].o[2] + tile[i].r[2] + tile[i].u[2]);
+        b[3] = MAX(b[3], tile[i].o[0] + tile[i].r[0] + tile[i].u[0]);
+        b[4] = MAX(b[4], tile[i].o[1] + tile[i].r[1] + tile[i].u[1]);
+        b[5] = MAX(b[5], tile[i].o[2] + tile[i].r[2] + tile[i].u[2]);
 
-            /* Upper left corner. */
-
-            b[0] = MIN(b[0], T->o[0]           + T->u[0]);
-            b[1] = MIN(b[1], T->o[1]           + T->u[1]);
-            b[2] = MIN(b[2], T->o[2]           + T->u[2]);
-            b[3] = MAX(b[3], T->o[0]           + T->u[0]);
-            b[4] = MAX(b[4], T->o[1]           + T->u[1]);
-            b[5] = MAX(b[5], T->o[2]           + T->u[2]);
-
-            /* Upper right corner. */
-
-            b[0] = MIN(b[0], T->o[0] + T->r[0] + T->u[0]);
-            b[1] = MIN(b[1], T->o[1] + T->r[1] + T->u[1]);
-            b[2] = MIN(b[2], T->o[2] + T->r[2] + T->u[2]);
-            b[3] = MAX(b[3], T->o[0] + T->r[0] + T->u[0]);
-            b[4] = MAX(b[4], T->o[1] + T->r[1] + T->u[1]);
-            b[5] = MAX(b[5], T->o[2] + T->r[2] + T->u[2]);
-        }
+        c++;
     }
-    else
+
+    if (c == 0)
     {
         /* No tiles are defined.  Return the defaults. */
 
@@ -659,18 +676,16 @@ void get_display_bound(float b[6])
         b[3] = DEFAULT_OX + DEFAULT_RX + DEFAULT_UX;
         b[4] = DEFAULT_OY + DEFAULT_RY + DEFAULT_UY;
         b[5] = DEFAULT_OZ + DEFAULT_RZ + DEFAULT_UZ;
-   }
+    }
 }
 
-void get_tile_o(int i, float o[3])
+void get_tile_o(unsigned int i, float o[3])
 {
-    if (local)
+    if (local && i < local->n)
     {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        o[0] = T->o[0];
-        o[1] = T->o[1];
-        o[2] = T->o[2];
+        o[0] = tile[local->tile[i]].o[0];
+        o[1] = tile[local->tile[i]].o[1];
+        o[2] = tile[local->tile[i]].o[2];
     }
     else
     {
@@ -680,15 +695,13 @@ void get_tile_o(int i, float o[3])
     }
 }
 
-void get_tile_r(int i, float r[3])
+void get_tile_r(unsigned int i, float r[3])
 {
-    if (local)
+    if (local && i < local->n)
     {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        r[0] = T->r[0];
-        r[1] = T->r[1];
-        r[2] = T->r[2];
+        r[0] = tile[local->tile[i]].r[0];
+        r[1] = tile[local->tile[i]].r[1];
+        r[2] = tile[local->tile[i]].r[2];
     }
     else
     {
@@ -698,15 +711,13 @@ void get_tile_r(int i, float r[3])
     }
 }
 
-void get_tile_u(int i, float u[3])
+void get_tile_u(unsigned int i, float u[3])
 {
-    if (local)
+    if (local && i < local->n)
     {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        u[0] = T->u[0];
-        u[1] = T->u[1];
-        u[2] = T->u[2];
+        u[0] = tile[local->tile[i]].u[0];
+        u[1] = tile[local->tile[i]].u[1];
+        u[2] = tile[local->tile[i]].u[2];
     }
     else
     {
@@ -716,7 +727,7 @@ void get_tile_u(int i, float u[3])
     }
 }
 
-void get_tile_n(int i, float n[3])
+void get_tile_n(unsigned int i, float n[3])
 {
     float r[3];
     float u[3];
@@ -728,14 +739,12 @@ void get_tile_n(int i, float n[3])
     normalize(n);
 }
 
-void get_tile_quality(int i, float q[2])
+void get_tile_quality(unsigned int i, float q[2])
 {
-    if (local)
+    if (local && i < local->n)
     {
-        struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
-        q[0] = T->quality[0];
-        q[1] = T->quality[1];
+        q[0] = tile[local->tile[i]].quality[0];
+        q[1] = tile[local->tile[i]].quality[1];
     }
     else
     {
@@ -744,62 +753,62 @@ void get_tile_quality(int i, float q[2])
     }
 }
 
-int get_tile_count(void)
+float get_varrier_pitch(unsigned int i)
 {
-    return local ? local->n : 0;
-}
-
-int get_tile_flags(int i)
-{
-    return local ? ((struct tile *) vecget(tile, local->tile[i]))->flags : 0;
-}
-
-float get_varrier_pitch(int i)
-{
-    if (local)
-        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_pitch;
+    if (local && i < local->n)
+        return tile[local->tile[i]].varrier_pitch;
     else
         return DEFAULT_VARRIER_PITCH;
 }
 
-float get_varrier_angle(int i)
+float get_varrier_angle(unsigned int i)
 {
-    if (local)
-        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_angle;
+    if (local && i < local->n)
+        return tile[local->tile[i]].varrier_angle;
     else
         return DEFAULT_VARRIER_ANGLE;
 }
 
-float get_varrier_thick(int i)
+float get_varrier_thick(unsigned int i)
 {
-    if (local)
-        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_thick;
+    if (local && i < local->n)
+        return tile[local->tile[i]].varrier_thick;
     else
         return DEFAULT_VARRIER_THICK;
 }
 
-float get_varrier_shift(int i)
+float get_varrier_shift(unsigned int i)
 {
-    if (local)
-        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_shift;
+    if (local && i < local->n)
+        return tile[local->tile[i]].varrier_shift;
     else
         return DEFAULT_VARRIER_SHIFT;
 }
 
-float get_varrier_cycle(int i)
+float get_varrier_cycle(unsigned int i)
 {
-    if (local)
-        return ((struct tile *) vecget(tile, local->tile[i]))->varrier_cycle;
+    if (local && i < local->n)
+        return tile[local->tile[i]].varrier_cycle;
     else
         return DEFAULT_VARRIER_CYCLE;
 }
 
+unsigned int get_tile_count(void)
+{
+    return (local) ? local->n : 0;
+}
+
+unsigned int get_tile_flags(unsigned int i)
+{
+    return (local && i < local->n) ? tile[local->tile[i]].flags : 0;
+}
+
 /*---------------------------------------------------------------------------*/
 
-int draw_ortho(int i, float N, float F)
+int draw_ortho(unsigned int i, float N, float F)
 {
-    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
-
+    struct tile *T = tile + local->tile[i];
+    
     GLdouble fL = T->pix_x;
     GLdouble fR = T->pix_x + T->pix_w;
     GLdouble fB = T->pix_y;
@@ -820,8 +829,7 @@ int draw_ortho(int i, float N, float F)
     glMatrixMode(GL_PROJECTION);
     {
         glLoadIdentity();
-        glOrtho(T->pix_x, T->pix_x + T->pix_w,
-                T->pix_y, T->pix_y + T->pix_h, N, F);
+        glOrtho(fL, fR, fB, fT, N, F);
     }
     glMatrixMode(GL_MODELVIEW);
 
@@ -838,16 +846,15 @@ int draw_ortho(int i, float N, float F)
     return 1;
 }
 
-int draw_persp(int i, float N, float F, int e, const float p[3])
+int draw_persp(unsigned int i, float N, float F, int e, const float p[3])
 {
-    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+    struct tile *T = tile + local->tile[i];
 
     const int L = (T->flags & TILE_LEFT_EYE)  ? 1 : 0;
     const int R = (T->flags & TILE_RIGHT_EYE) ? 1 : 0;
 
     if ((L == 0 && R == 0) || (L == 1 && e == 0) || (R == 1 && e == 1))
     {
-        float P[3];
         float r[3];
         float u[3];
         float n[3];
@@ -860,29 +867,19 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
         float p1[3];
         float p3[3];
 
-        /* Compute the view position. */
-/*
-        P[0] = T->d[0] + p[0];
-        P[1] = T->d[1] + p[1];
-        P[2] = T->d[2] + p[2];
-*/
-        P[0] = p[0];
-        P[1] = p[1];
-        P[2] = p[2];
-
         /* Compute the screen corners. */
 
-        p0[0] = T->o[0];
-        p0[1] = T->o[1];
-        p0[2] = T->o[2];
+        p0[0] = p[0] - T->o[0];
+        p0[1] = p[1] - T->o[1];
+        p0[2] = p[2] - T->o[2];
 
-        p1[0] = T->r[0] + p0[0];
-        p1[1] = T->r[1] + p0[1];
-        p1[2] = T->r[2] + p0[2];
+        p1[0] = p[0] - T->r[0] - T->o[0];
+        p1[1] = p[1] - T->r[1] - T->o[1];
+        p1[2] = p[2] - T->r[2] - T->o[2];
 
-        p3[0] = T->u[0] + p0[0];
-        p3[1] = T->u[1] + p0[1];
-        p3[2] = T->u[2] + p0[2];
+        p3[0] = p[0] - T->u[0] - T->o[0];
+        p3[1] = p[1] - T->u[1] - T->o[1];
+        p3[2] = p[2] - T->u[2] - T->o[2];
 
         /* Configure the viewport. */
 
@@ -904,24 +901,16 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
         normalize(u);
         normalize(n);
 
-        k = n[0] * (T->o[0] - P[0]) + 
-            n[1] * (T->o[1] - P[1]) +
-            n[2] * (T->o[2] - P[2]);
+        k = n[0] * (T->o[0] - p[0]) + 
+            n[1] * (T->o[1] - p[1]) +
+            n[2] * (T->o[2] - p[2]);
 
         glMatrixMode(GL_PROJECTION);
         {
-            double fL = N * (r[0] * (P[0] - p0[0]) +
-                             r[1] * (P[1] - p0[1]) +
-                             r[2] * (P[2] - p0[2])) / k;
-            double fR = N * (r[0] * (P[0] - p1[0]) +
-                             r[1] * (P[1] - p1[1]) +
-                             r[2] * (P[2] - p1[2])) / k;
-            double fB = N * (u[0] * (P[0] - p0[0]) +
-                             u[1] * (P[1] - p0[1]) +
-                             u[2] * (P[2] - p0[2])) / k;
-            double fT = N * (u[0] * (P[0] - p3[0]) +
-                             u[1] * (P[1] - p3[1]) +
-                             u[2] * (P[2] - p3[2])) / k;
+            double fL = N * (r[0] * p0[0] + r[1] * p0[1] + r[2] * p0[2]) / k;
+            double fR = N * (r[0] * p1[0] + r[1] * p1[1] + r[2] * p1[2]) / k;
+            double fB = N * (u[0] * p0[0] + u[1] * p0[1] + u[2] * p0[2]) / k;
+            double fT = N * (u[0] * p3[0] + u[1] * p3[1] + u[2] * p3[2]) / k;
 
             /* Flip the projection if requested. */
 
@@ -966,9 +955,9 @@ int draw_persp(int i, float N, float F, int e, const float p[3])
 
 /*---------------------------------------------------------------------------*/
 
-void draw_tile_background(int i)
+void draw_tile_background(unsigned int i)
 {
-    struct tile *T = (struct tile *) vecget(tile, local->tile[i]);
+    struct tile *T = tile + local->tile[i];
 
     /* Compute the beginning and end of this tile's gradiant. */
 
@@ -1031,12 +1020,10 @@ void draw_tile_background(int i)
 
 void draw_host_background(void)
 {
-    int i;
+    unsigned int i;
 
-    glViewport(local->win_x, local->win_y,
-               local->win_w, local->win_h);
-    glScissor (local->win_x, local->win_y,
-               local->win_w, local->win_h);
+    glViewport(local->win_x, local->win_y, local->win_w, local->win_h);
+    glScissor (local->win_x, local->win_y, local->win_w, local->win_h);
 
     glClear(GL_DEPTH_BUFFER_BIT |
             GL_COLOR_BUFFER_BIT);
@@ -1049,8 +1036,8 @@ void draw_host_background(void)
 
 int startup_display(void)
 {
-    tile = vecnew(32, sizeof (struct tile));
-    host = vecnew(32, sizeof (struct host));
+    tile = vec_new(4, sizeof (struct tile));
+    host = vec_new(4, sizeof (struct host));
 
     if (tile && host)
         return 1;

@@ -138,7 +138,7 @@ static void client_recv(void)
         case EVENT_SET_TILE_FLAGS:        recv_set_tile_flags();        break;
         case EVENT_SET_TILE_VIEWPORT:     recv_set_tile_viewport();     break;
         case EVENT_SET_TILE_POSITION:     recv_set_tile_position();     break;
-        case EVENT_SET_TILE_LINE_SCREEN:  recv_set_tile_line_screen();  break;
+        case EVENT_SET_TILE_LINESCRN:     recv_set_tile_linescrn();     break;
         case EVENT_SET_TILE_QUALITY:      recv_set_tile_quality();      break;
         }
  }

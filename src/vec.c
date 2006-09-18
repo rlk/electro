@@ -143,6 +143,21 @@ void vec_del(void *v, size_t s, unsigned int k)
 }
 
 /*---------------------------------------------------------------------------*/
+/* vecchk(v, s, i) returns false if record i is on the free list, thus it    */
+/* returns true if record i is allocated.  This operation is O(n).           */
+
+unsigned int vec_chk(void *v, size_t s, unsigned int i)
+{
+    unsigned int j;
+
+    for (j = 0; !LAST(v, s, j); j = NEXT(v, s, j))
+        if (i == j)
+            return 0;
+
+    return 1;
+}
+
+/*---------------------------------------------------------------------------*/
 /* vecall(v, s, i, j) iterates over all allocated elements of vector (v, s). */
 /* The first call should be made with i=0 and j=0.  Each call will increment */
 /* i, skipping over unused records.  j will indicate the last unused record. */

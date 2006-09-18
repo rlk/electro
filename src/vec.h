@@ -21,6 +21,7 @@ void        *vec_new(size_t, size_t);
 void        *vec_gro(void *, size_t);
 unsigned int vec_add(void *, size_t);
 void         vec_del(void *, size_t, unsigned int);
+unsigned int vec_chk(void *, size_t, unsigned int);
 unsigned int vec_all(void *, size_t, unsigned int *, unsigned int *);
 
 /*---------------------------------------------------------------------------*/

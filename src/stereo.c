@@ -175,9 +175,8 @@ static void init_frame_buf(GLuint *frame,
 
     /* Initialize the frame buffer object. */
 
-    opengl_push_framebuffer();
+    opengl_push_framebuffer(*frame);
     {
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, *frame);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
                                   GL_COLOR_ATTACHMENT0_EXT,
                                   GL_TEXTURE_RECTANGLE_ARB, *color, 0);
@@ -293,12 +292,7 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
 
     if (pass == 0)
     {
-        if (GL_has_framebuffer_object)
-        {
-            opengl_push_framebuffer();
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, frame_buf[eye]);
-        }
-
+        opengl_push_framebuffer(frame_buf[eye]);
         push_quality(q);
 
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

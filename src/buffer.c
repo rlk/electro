@@ -246,7 +246,7 @@ void send_array(const void *p, size_t n, size_t s)
     send_data(p, n * s);
 }
 
-void send_index(int i)
+void send_value(int i)
 {
     send_data(&i, sizeof (int));
 }
@@ -261,6 +261,11 @@ void send_float(float f)
     send_data(&f, sizeof (float));
 }
 
+void send_index(unsigned int i)
+{
+    send_data(&i, sizeof (unsigned int));
+}
+
 /*---------------------------------------------------------------------------*/
 
 void recv_array(void *p, size_t n, size_t s)
@@ -268,7 +273,7 @@ void recv_array(void *p, size_t n, size_t s)
     recv_data(p, n * s);
 }
 
-int recv_index(void)
+int recv_value(void)
 {
     int i;
 
@@ -290,6 +295,14 @@ float recv_float(void)
 
     recv_data(&f, sizeof (float));
     return f;
+}
+
+unsigned int recv_index(void)
+{
+    unsigned int i;
+
+    recv_data(&i, sizeof (unsigned int));
+    return i;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1975,12 +1975,12 @@ static int E_set_tile_viewport(lua_State *L)
 
 static int E_set_tile_line_screen(lua_State *L)
 {
-    send_set_tile_line_screen(L_getinteger(L, -6),
-                              L_getnumber (L, -5),
-                              L_getnumber (L, -4),
-                              L_getnumber (L, -3),
-                              L_getnumber (L, -2),
-                              L_getnumber (L, -1));
+    send_set_tile_linescrn(L_getinteger(L, -6),
+                           L_getnumber (L, -5),
+                           L_getnumber (L, -4),
+                           L_getnumber (L, -3),
+                           L_getnumber (L, -2),
+                           L_getnumber (L, -1));
     return 0;
 }
 

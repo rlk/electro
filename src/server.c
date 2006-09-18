@@ -358,6 +358,8 @@ static int server_loop(void)
         count = count + 1;
     }
 
+    /* If the timer is enabled, schedule an update event. */
+
     if (timer_on)
         send_user_event(NULL);
 

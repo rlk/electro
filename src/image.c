@@ -1109,9 +1109,8 @@ static GLuint init_image_udp(struct image_udp *nfo, int w, int h)
 
     if (GL_has_framebuffer_object)
     {
-        opengl_push_framebuffer();
+        opengl_push_framebuffer(nfo->fbo);
         {
-            glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, nfo->fbo);
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
                                       GL_COLOR_ATTACHMENT0_EXT,
                                       GL_TEXTURE_RECTANGLE_ARB, fore, 0);
@@ -1156,7 +1155,7 @@ static void draw_image_udp(int i)
         (p->nfo.udp.code == 0x31313459 || p->nfo.udp.code == 0x59565955) &&
         (GL_has_framebuffer_object && GL_has_shader_objects))
     {
-        opengl_push_framebuffer();
+        opengl_push_framebuffer(p->nfo.udp.fbo);
 
         glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
         {
@@ -1167,8 +1166,6 @@ static void draw_image_udp(int i)
 
             glEnable(GL_TEXTURE_RECTANGLE_ARB);
             glBindTexture(GL_TEXTURE_RECTANGLE_ARB, p->nfo.udp.back);
-
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, p->nfo.udp.fbo);
 
             glUseProgramObjectARB(p->nfo.udp.prog);
             glUniform1iARB(glGetUniformLocationARB(p->nfo.udp.prog, "rgb"), 0);

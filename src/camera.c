@@ -539,12 +539,12 @@ static void draw_camera(int i, int j, int f, float a)
             glViewport(0, 0, w, h);
             glScissor (0, 0, w, h);
 
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, c->frame);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            draw_scene(j, f, a);
-
-            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+            opengl_push_framebuffer(c->frame);
+            {
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                draw_scene(j, f, a);
+            }
+            opengl_pop_framebuffer();
         }
         glPopAttrib();
 
@@ -639,12 +639,15 @@ static void init_camera(int i)
 
             /* Attach the framebuffer render targets. */
 
-            glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, c->frame);
-            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
-                                      GL_COLOR_ATTACHMENT0_EXT, T, O, 0);
-            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
-                                      GL_DEPTH_ATTACHMENT_EXT, T, c->depth, 0);
-            glBindFramebufferEXT     (GL_FRAMEBUFFER_EXT, 0);
+            opengl_push_framebuffer(c->frame);
+            {
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                          GL_COLOR_ATTACHMENT0_EXT, T, O, 0);
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                          GL_DEPTH_ATTACHMENT_EXT, T,
+                                          c->depth, 0);
+            }
+            opengl_pop_framebuffer();
         }
     }
 

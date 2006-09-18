@@ -56,10 +56,9 @@
 #define TILE_LEFT_EYE   16
 #define TILE_RIGHT_EYE  32
 
-
 struct tile
 {
-    int   flags;
+    unsigned int flags;
 
     float o[3];                 /* World-space tile origin                   */
     float r[3];                 /* World-space tile right vector             */
@@ -86,11 +85,11 @@ struct tile
 
 struct host
 {
-    int  flags;
-    char name[MAXNAME];
-    int  tile[MAXTILE];
+    unsigned int flags;
 
-    int n;
+    char         name[MAXNAME];
+    unsigned int tile[MAXTILE];
+    unsigned int n;
 
     int win_x;                  /* Host window rectangle within desktop      */
     int win_y;
@@ -109,46 +108,49 @@ int startup_display(void);
 
 void sync_display(void);
 
-int  draw_ortho(int, float, float);
-int  draw_persp(int, float, float, int, const float[3]);
-
-int  add_host(const char *, int, int, int, int);
+unsigned int add_host(const char *, int, int, int, int);
 
 /*---------------------------------------------------------------------------*/
 
-int  send_add_tile(int, int, int, int, int);
-void recv_add_tile(void);
+unsigned int send_add_tile(unsigned int, int, int, int, int);
+void         recv_add_tile(void);
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_host_flags      (int, int, int);
-void send_set_tile_flags      (int, int, int);
-void send_set_tile_quality    (int, const float[2]);
-void send_set_tile_viewport   (int, int, int, int, int);
-void send_set_tile_line_screen(int, float, float, float, float, float);
-void send_set_tile_position   (int, const float[3],
-                                    const float[3],
-                                    const float[3]);
+void send_set_host_flags   (unsigned int, unsigned int, unsigned int);
+void send_set_tile_flags   (unsigned int, unsigned int, unsigned int);
+void send_set_tile_quality (unsigned int, const float[2]);
+void send_set_tile_viewport(unsigned int, int, int, int, int);
+void send_set_tile_position(unsigned int, const float[3],
+                                          const float[3],
+                                          const float[3]);
+void send_set_tile_linescrn(unsigned int, float, float,
+                                   float, float, float);
 
-void recv_set_tile_flags      (void);
-void recv_set_tile_quality    (void);
-void recv_set_tile_viewport   (void);
-void recv_set_tile_line_screen(void);
-void recv_set_tile_position   (void);
+void recv_set_tile_flags   (void);
+void recv_set_tile_quality (void);
+void recv_set_tile_viewport(void);
+void recv_set_tile_position(void);
+void recv_set_tile_linescrn(void);
 
 /*---------------------------------------------------------------------------*/
 
-void set_window_pos(int, int);
-void set_window_siz(int);
+void send_set_background(const float[3], const float[3]);
+void recv_set_background(void);
 
-void set_window_full(int);
-void set_window_w(int);
-void set_window_h(int);
-int  get_window_w(void);
-int  get_window_h(void);
-int  get_window_full(void);
-int  get_window_framed(void);
-int  get_window_stereo(void);
+/*---------------------------------------------------------------------------*/
+
+void  set_window_pos(int, int);
+void  set_window_siz(int);
+
+void  set_window_full(int);
+void  set_window_w(int);
+void  set_window_h(int);
+int   get_window_w(void);
+int   get_window_h(void);
+int   get_window_full(void);
+int   get_window_framed(void);
+int   get_window_stereo(void);
 
 /*---------------------------------------------------------------------------*/
 
@@ -156,28 +158,30 @@ void  get_display_point(float[3], const float[3], int, int);
 void  get_display_union(float[4]);
 void  get_display_bound(float[6]);
 
-void  get_tile_o(int, float[3]);
-void  get_tile_r(int, float[3]);
-void  get_tile_u(int, float[3]);
-void  get_tile_n(int, float[3]);
+void  get_tile_o(unsigned int, float[3]);
+void  get_tile_r(unsigned int, float[3]);
+void  get_tile_u(unsigned int, float[3]);
+void  get_tile_n(unsigned int, float[3]);
 
-void get_tile_quality(int, float[2]);
+void  get_tile_quality(unsigned int, float[2]);
 
-int   get_tile_count(void);
-int   get_tile_flags(int);
+float get_varrier_pitch(unsigned int);
+float get_varrier_angle(unsigned int);
+float get_varrier_thick(unsigned int);
+float get_varrier_shift(unsigned int);
+float get_varrier_cycle(unsigned int);
 
-float get_varrier_pitch(int);
-float get_varrier_angle(int);
-float get_varrier_thick(int);
-float get_varrier_shift(int);
-float get_varrier_cycle(int);
+unsigned int get_tile_count(void);
+unsigned int get_tile_flags(unsigned int);
 
 /*---------------------------------------------------------------------------*/
 
-void send_set_background(const float[3], const float[3]);
-void recv_set_background(void);
+int  draw_ortho(unsigned int, float, float);
+int  draw_persp(unsigned int, float, float, int, const float[3]);
 
-void draw_tile_background(int);
+/*---------------------------------------------------------------------------*/
+
+void draw_tile_background(unsigned int);
 void draw_host_background(void);
 
 void set_texture_coordinates(void);
