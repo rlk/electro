@@ -22,6 +22,7 @@
 #include "object.h"
 #include "string.h"
 #include "galaxy.h"
+#include "terrain.h"
 #include "light.h"
 #include "pivot.h"
 #include "image.h"
@@ -72,6 +73,7 @@ static void client_recv(void)
         case EVENT_CREATE_OBJECT:         recv_create_object();         break;
         case EVENT_CREATE_STRING:         recv_create_string();         break;
         case EVENT_CREATE_GALAXY:         recv_create_galaxy();         break;
+        case EVENT_CREATE_TERRAIN:        recv_create_terrain();        break;
         case EVENT_CREATE_LIGHT:          recv_create_light();          break;
         case EVENT_CREATE_PIVOT:          recv_create_pivot();          break;
         case EVENT_CREATE_CLONE:          recv_create_clone();          break;

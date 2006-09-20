@@ -91,6 +91,16 @@ function set_line_screen(i)
                                     line_screen[i][5])
 end
 
+function set_line_screen_pitch(i, k)
+    line_screen[i][1] = line_screen[i][1] + k
+    set_line_screen(i)
+end
+
+function set_line_screen_angle(i, k)
+    line_screen[i][2] = line_screen[i][2] + k
+    set_line_screen(i)
+end
+
 function set_line_screen_thick(i, k)
     line_screen[i][3] = line_screen[i][3] + k
     set_line_screen(i)

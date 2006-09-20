@@ -95,6 +95,7 @@ OBJS =	src/opengl.o   \
 	src/camera.o   \
 	src/stereo.o   \
 	src/galaxy.o   \
+	src/terrain.o  \
 	src/sprite.o   \
 	src/object.o   \
 	src/string.o   \

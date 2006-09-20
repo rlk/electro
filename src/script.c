@@ -39,6 +39,7 @@
 #include "object.h"
 #include "string.h"
 #include "galaxy.h"
+#include "terrain.h"
 #include "light.h"
 #include "pivot.h"
 #include "physics.h"
@@ -1041,6 +1042,15 @@ static int E_create_galaxy(lua_State *L)
     int id = send_create_galaxy(L_getstring(L, -2),
                                 E_getbrush (L, -1));
 
+    E_pushentity(L, id);
+    return 1;
+}
+
+static int E_create_terrain(lua_State *L)
+{
+    int id = send_create_terrain(L_getstring (L, -3),
+                                 L_getinteger(L, -2),
+                                 L_getinteger(L, -1));
     E_pushentity(L, id);
     return 1;
 }
@@ -2408,6 +2418,7 @@ static struct function_def functions[] = {
     { "create_object",         E_create_object         },
     { "create_string",         E_create_string         },
     { "create_galaxy",         E_create_galaxy         },
+    { "create_terrain",        E_create_terrain        },
     { "create_light",          E_create_light          },
     { "create_pivot",          E_create_pivot          },
     { "create_clone",          E_create_clone          },

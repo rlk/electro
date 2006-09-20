@@ -57,6 +57,7 @@
 #define MIN_OBJECTS  128
 #define MIN_STRINGS  128
 #define MIN_GALAXIES   4
+#define MIN_TERRAINS   2
 #define MIN_LIGHTS     8
 
 /*---------------------------------------------------------------------------*/

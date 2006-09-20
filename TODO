@@ -1,4 +1,5 @@
 lua 5.1
+Excise frag/vert prog. Port galaxy.
 fix image fbo state reverting to varrier 00 fbo state
 fix trainer
 texture clamp
