@@ -62,6 +62,8 @@ extern PFNGLDELETEPROGRAMSARBPROC           glDeleteProgramsARB;
 extern PFNGLBINDBUFFERARBPROC               glBindBufferARB;
 extern PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
 extern PFNGLBUFFERDATAARBPROC               glBufferDataARB;
+extern PFNGLMAPBUFFERARBPROC                glMapBufferARB;
+extern PFNGLUNMAPBUFFERARBPROC              glUnmapBufferARB;
 extern PFNGLISBUFFERARBPROC                 glIsBufferARB;
 extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;

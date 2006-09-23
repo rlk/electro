@@ -18,7 +18,7 @@ line_screen = {
 
 ------------------------------------------------------------------------------
 
-host[0] = E.add_host("default", 0, 0, w, h)
+host[0] = E.add_host("default", w, 0, w, h)
 tile[0] = E.add_tile(host[0],   0, 0, w, h)
 
 E.set_tile_viewport(tile[0], 0, 0, w, h)

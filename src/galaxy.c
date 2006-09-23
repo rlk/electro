@@ -257,7 +257,7 @@ int send_create_galaxy(const char *filename, int j)
             g->count = 1;
             g->brush = dupe_create_brush(j);
 
-            /* Pack the object header. */
+            /* Pack the galaxy header. */
 
             send_event(EVENT_CREATE_GALAXY);
             send_index(g->brush);

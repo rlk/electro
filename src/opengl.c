@@ -439,6 +439,8 @@ PFNGLDELETEPROGRAMSARBPROC           glDeleteProgramsARB;
 PFNGLBINDBUFFERARBPROC               glBindBufferARB;
 PFNGLGENBUFFERSARBPROC               glGenBuffersARB;
 PFNGLBUFFERDATAARBPROC               glBufferDataARB;
+PFNGLMAPBUFFERARBPROC                glMapBufferARB;
+PFNGLUNMAPBUFFERARBPROC              glUnmapBufferARB;
 PFNGLISBUFFERARBPROC                 glIsBufferARB;
 PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
 PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
@@ -529,6 +531,10 @@ void init_opengl(void)
                     opengl_proc("glGenBuffersARB");
         glBufferDataARB    = (PFNGLBUFFERDATAARBPROC)
                     opengl_proc("glBufferDataARB");
+        glMapBufferARB     = (PFNGLMAPBUFFERARBPROC)
+                    opengl_proc("glMapBufferARB");
+        glUnmapBufferARB   = (PFNGLUNMAPBUFFERARBPROC)
+                    opengl_proc("glUnapBufferARB");
         glIsBufferARB      = (PFNGLISBUFFERARBPROC)
                     opengl_proc("glIsBufferARB");
         glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
