@@ -1048,7 +1048,8 @@ static int E_create_galaxy(lua_State *L)
 
 static int E_create_terrain(lua_State *L)
 {
-    int id = send_create_terrain(L_getstring (L, -3),
+    int id = send_create_terrain(L_getstring (L, -4),
+                                 L_getinteger(L, -3),
                                  L_getinteger(L, -2),
                                  L_getinteger(L, -1));
     E_pushentity(L, id);

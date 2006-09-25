@@ -534,7 +534,7 @@ void init_opengl(void)
         glMapBufferARB     = (PFNGLMAPBUFFERARBPROC)
                     opengl_proc("glMapBufferARB");
         glUnmapBufferARB   = (PFNGLUNMAPBUFFERARBPROC)
-                    opengl_proc("glUnapBufferARB");
+                    opengl_proc("glUnmapBufferARB");
         glIsBufferARB      = (PFNGLISBUFFERARBPROC)
                     opengl_proc("glIsBufferARB");
         glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)

@@ -21,7 +21,7 @@ struct entity_func *startup_terrain(void);
 
 /*---------------------------------------------------------------------------*/
 
-int  send_create_terrain(const char *, int, int);
+int  send_create_terrain(const char *, int, int, int);
 void recv_create_terrain(void);
 
 void clone_terrain(int);
