@@ -39,14 +39,15 @@ function do_start()
 
 --  E.parent_entity(E.create_terrain("megr008.raw",  2880,  1440, 90), pivot)
 --  E.parent_entity(E.create_terrain("megr016.raw",  5760,  2880, 90), pivot)
-    E.parent_entity(E.create_terrain("megr032.raw", 11520,  5760, 90), pivot)
+--  E.parent_entity(E.create_terrain("megr032.raw", 11520,  5760, 90), pivot)
+    E.parent_entity(E.create_terrain("megr032.raw", 11520,  5760, 45), pivot)
 --  E.parent_entity(E.create_terrain("megr064.raw", 23040, 11520, 90), pivot)
     
-    E.set_camera_range(camera, 1, 100)
+    E.set_camera_range(camera, 100, 20000000)
 
     E.set_entity_position(light,  4.0, 8.0, 6.0)
     E.set_entity_position(pivot,  XC,  YC,  ZC)
-    E.set_entity_position(camera, 0.0, 0.0, 24.0)
+    E.set_entity_position(camera, 0.0, 0.0, 5000000.0)
 
     E.set_entity_tracking(wand, 1, E.tracking_mode_local)
     E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
@@ -57,7 +58,7 @@ end
 
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
-    local s = 4
+    local s = 1000000
 
     if joy_x < -0.1 or 0.1 < joy_x then
         E.turn_entity(camera, 0, -joy_x * dt * 90, 0)

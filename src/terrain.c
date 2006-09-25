@@ -26,6 +26,8 @@
 
 #define OFFSET(i) ((char *) NULL + (i))
 
+static int count;
+
 /*---------------------------------------------------------------------------*/
 
 struct vertex
@@ -33,6 +35,19 @@ struct vertex
     float v[3];
     float n[3];
     float t[2];
+};
+
+struct page
+{
+    float x;
+    float y;
+    float w;
+    float h;
+
+    GLuint vbo;
+
+    int next;
+    int prev;
 };
 
 struct terrain
@@ -44,11 +59,16 @@ struct terrain
     int    w;
     int    h;
     int    n;
+    int    m;
     int    o;
+    float  bias;
 
-    GLuint vbo;
     GLuint ibo;
 
+    int head;
+    int tail;
+
+    struct page   *cache;
     struct vertex *scratch;
 };
 
@@ -104,40 +124,91 @@ static void get_normal(float n[3], const float a[3],
     normalize(n);
 }
 
-static void get_bounds(float v[4][3], const float M[16],
-                       float x, float y, float w, float h, float r)
+static void get_bounds(float b[6], float x, float y, float w, float h, float r)
 {
-    float a[4][4];
-    float b[4][4];
+    float u[4][4];
 
-    get_vertex(a[0], x,     y,     r);
-    get_vertex(a[1], x + w, y,     r);
-    get_vertex(a[2], x + w, y + h, r);
-    get_vertex(a[3], x,     y + h, r);
+    get_vertex(u[0], x,     y,     r);
+    get_vertex(u[1], x + w, y,     r);
+    get_vertex(u[2], x + w, y + h, r);
+    get_vertex(u[3], x,     y + h, r);
 
-    mult_mat_vec(b[0], M, a[0]);
-    mult_mat_vec(b[1], M, a[1]);
-    mult_mat_vec(b[2], M, a[2]);
-    mult_mat_vec(b[3], M, a[3]);
-
-    v[0][0] = b[0][0] / b[0][3];
-    v[0][1] = b[0][1] / b[0][3];
-    v[0][2] = b[0][2] / b[0][3];
-
-    v[1][0] = b[1][0] / b[1][3];
-    v[1][1] = b[1][1] / b[1][3];
-    v[1][2] = b[1][2] / b[1][3];
-
-    v[2][0] = b[2][0] / b[2][3];
-    v[2][1] = b[2][1] / b[2][3];
-    v[2][2] = b[2][2] / b[2][3];
-
-    v[3][0] = b[3][0] / b[3][3];
-    v[3][1] = b[3][1] / b[3][3];
-    v[3][2] = b[3][2] / b[3][3];
+    b[0] = MIN(MIN(u[0][0], u[1][0]), MIN(u[2][0], u[3][0]));
+    b[1] = MIN(MIN(u[0][1], u[1][1]), MIN(u[2][1], u[3][1]));
+    b[2] = MIN(MIN(u[0][2], u[1][2]), MIN(u[2][2], u[3][2]));
+    b[3] = MAX(MAX(u[0][0], u[1][0]), MAX(u[2][0], u[3][0]));
+    b[4] = MAX(MAX(u[0][1], u[1][1]), MAX(u[2][1], u[3][1]));
+    b[5] = MAX(MAX(u[0][2], u[1][2]), MAX(u[2][2], u[3][2]));
 }
 
 /*---------------------------------------------------------------------------*/
+
+static GLuint init_vbo(int n, const struct vertex *data)
+{
+    GLuint vbo;
+    GLsizei N = n * n * sizeof (struct vertex);
+
+    glGenBuffersARB(1, &vbo);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB, N, data, GL_STATIC_DRAW_ARB);
+
+    opengl_check("init_vbo");
+    return vbo;
+}
+
+static GLuint init_ibo(int n, const GLushort *data)
+{
+    GLuint ibo;
+    GLsizei N = (n - 1) * n * 2 * sizeof (GLushort);
+
+    glGenBuffersARB(1, &ibo);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ibo);
+    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, N, data, GL_STATIC_DRAW_ARB);
+
+    opengl_check("init_ibo");
+    return ibo;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int search_cache(int i, float x, float y, float w, float h)
+{
+    int j;
+
+    for (j = terrain[i].head; j >= 0; j = terrain[i].cache[j].next)
+        if (terrain[i].cache[j].x == x &&
+            terrain[i].cache[j].y == y &&
+            terrain[i].cache[j].w == w &&
+            terrain[i].cache[j].h == h)
+            return j;
+
+    return -1;
+}
+
+static struct page *init_cache(int n, int m)
+{
+    struct page *buf;
+
+    if ((buf = (struct page *) malloc(m * sizeof (struct page))))
+    {
+        int i;
+
+        for (i = 0; i < m; ++i)
+        {
+            buf[i].x = 0.0f;
+            buf[i].y = 0.0f;
+            buf[i].w = 0.0f;
+            buf[i].h = 0.0f;
+
+            buf[i].vbo = init_vbo(n, NULL);
+
+            buf[i].next = (i == m - 1) ? -1 : i + 1;
+            buf[i].prev = (i == 0    ) ? -1 : i - 1;
+        }
+    }
+
+    return buf;
+}
 
 static struct vertex *init_scratch(int n)
 {
@@ -204,33 +275,34 @@ static GLushort *init_indices(int n)
 
 /*---------------------------------------------------------------------------*/
 
-static GLuint init_vbo(int n, const struct vertex *data)
+static void load_scratch(int i, float x, float y, float w, float h)
 {
-    GLuint vbo;
-    GLsizei N = n * n * sizeof (struct vertex);
+    int j, r, c, n = terrain[i].n;
 
-    glGenBuffersARB(1, &vbo);
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, N, data, GL_STATIC_DRAW_ARB);
+    struct vertex *buf = terrain[i].scratch;
 
-    opengl_check("init_vbo");
-    return vbo;
+    for (j = 0, r = 0; r < n; ++r)
+        for (c = 0; c < n; ++c, ++j)
+        {
+            float X = x + w * c / n;
+            float Y = y + h * r / n;
+
+            float v[4];
+
+            get_vertex(v, X, Y, terrain[i].o);
+
+            buf[j].v[0] = v[0];
+            buf[j].v[1] = v[1];
+            buf[j].v[2] = v[2];
+
+            buf[j].n[0] = 0.0f;
+            buf[j].n[1] = 1.0f;
+            buf[j].n[2] = 0.0f;
+
+            buf[j].t[0] = X / 360.0f;
+            buf[j].t[1] = Y / 180.0f;
+        }
 }
-
-static GLuint init_ibo(int n, const GLushort *data)
-{
-    GLuint ibo;
-    GLsizei N = (n - 1) * n * 2 * sizeof (GLushort);
-
-    glGenBuffersARB(1, &ibo);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ibo);
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, N, data, GL_STATIC_DRAW_ARB);
-
-    opengl_check("init_ibo");
-    return ibo;
-}
-
-/*---------------------------------------------------------------------------*/
 
 static short *load_terrain(const char *filename, int w, int h)
 {
@@ -295,8 +367,9 @@ int send_create_terrain(const char *filename, int w, int h, int n)
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
+            terrain[i].m     = 128;
             terrain[i].o     = 3396000;
-            terrain[i].o     = 8;
+            terrain[i].bias  = 0.5f;
 
             /* Pack the header and data. */
 
@@ -304,6 +377,7 @@ int send_create_terrain(const char *filename, int w, int h, int n)
             send_value(terrain[i].w);
             send_value(terrain[i].h);
             send_value(terrain[i].n);
+            send_value(terrain[i].m);
 
             send_value(l);
             send_array(filename, l + 1, 1);
@@ -327,6 +401,7 @@ void recv_create_terrain(void)
         int w = recv_value();
         int h = recv_value();
         int n = recv_value();
+        int m = recv_value();
         int l = recv_value();
 
         recv_array(filename, l + 1, 1);
@@ -339,6 +414,7 @@ void recv_create_terrain(void)
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
+            terrain[i].m     = m;
 
             /* Encapsulate this object in an entity. */
 
@@ -353,14 +429,16 @@ static void init_terrain(int i)
 {
     if (terrain[i].state == 0)
     {
-        struct vertex *scratch = init_scratch(terrain[i].n);
-        GLushort      *indices = init_indices(terrain[i].n);
+        GLushort *indices  = init_indices(terrain[i].n);
+        terrain[i].scratch = init_scratch(terrain[i].n);
 
-        terrain[i].vbo = init_vbo(terrain[i].n, scratch);
-        terrain[i].ibo = init_ibo(terrain[i].n, indices);
+        terrain[i].ibo   = init_ibo  (terrain[i].n, indices);
+        terrain[i].cache = init_cache(terrain[i].n, terrain[i].m);
+
+        terrain[i].head = 0;
+        terrain[i].tail = terrain[i].m - 1;
 
         free(indices);
-        free(scratch);
 
         terrain[i].state  = 1;
     }
@@ -375,74 +453,161 @@ static void fini_terrain(int i)
 }
 
 /*---------------------------------------------------------------------------*/
-#ifdef SNIP
-static void draw_data(GLuint vbo, GLuint ibo, GLsizei n)
+
+static void draw_data(GLuint vbo, GLsizei n)
 {
     GLsizei N = (n - 1) * n * 2;
     GLsizei S = sizeof (struct vertex);
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB,         vbo);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ibo);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
 
     glVertexPointer  (3, GL_FLOAT, S, OFFSET(0));
     glNormalPointer  (   GL_FLOAT, S, OFFSET(12));
     glTexCoordPointer(2, GL_FLOAT, S, OFFSET(24));
 
     /* Draw filled polygons. */
-
+/*
     glEnable(GL_CULL_FACE);
     glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
-
+*/
     /* Draw wire frame. */
 
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
-    glColor3f(1.0f, 1.0f, 0.0f);
+/*  glColor3f(1.0f, 1.0f, 0.0f); */
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
 }
-#endif
+
 /*---------------------------------------------------------------------------*/
 
-static float len(const float a[3], const float b[3])
+static float get_value(float b[6], const float M[16], float bias)
 {
-    return sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
+    float u[8][4];
+    float v[8][4];
+    float c[4];
+    float k;
+
+    u[0][0] = b[0]; u[0][1] = b[1]; u[0][2] = b[2]; u[0][3] = 1.0f;
+    u[1][0] = b[3]; u[1][1] = b[1]; u[1][2] = b[2]; u[1][3] = 1.0f;
+    u[2][0] = b[0]; u[2][1] = b[4]; u[2][2] = b[2]; u[2][3] = 1.0f;
+    u[3][0] = b[3]; u[3][1] = b[4]; u[3][2] = b[2]; u[3][3] = 1.0f;
+    u[4][0] = b[0]; u[4][1] = b[1]; u[4][2] = b[5]; u[4][3] = 1.0f;
+    u[5][0] = b[3]; u[5][1] = b[1]; u[5][2] = b[5]; u[5][3] = 1.0f;
+    u[6][0] = b[0]; u[6][1] = b[4]; u[6][2] = b[5]; u[6][3] = 1.0f;
+    u[7][0] = b[3]; u[7][1] = b[4]; u[7][2] = b[5]; u[7][3] = 1.0f;
+
+    mult_mat_vec(v[0], M, u[0]);
+    mult_mat_vec(v[1], M, u[1]);
+    mult_mat_vec(v[2], M, u[2]);
+    mult_mat_vec(v[3], M, u[3]);
+    mult_mat_vec(v[4], M, u[4]);
+    mult_mat_vec(v[5], M, u[5]);
+    mult_mat_vec(v[6], M, u[6]);
+    mult_mat_vec(v[7], M, u[7]);
+
+    v[0][0] /= v[0][3];
+    v[1][0] /= v[1][3];
+    v[2][0] /= v[2][3];
+    v[3][0] /= v[3][3];
+    v[4][0] /= v[4][3];
+    v[5][0] /= v[5][3];
+    v[6][0] /= v[6][3];
+    v[7][0] /= v[7][3];
+
+    v[0][1] /= v[0][3];
+    v[1][1] /= v[1][3];
+    v[2][1] /= v[2][3];
+    v[3][1] /= v[3][3];
+    v[4][1] /= v[4][3];
+    v[5][1] /= v[5][3];
+    v[6][1] /= v[6][3];
+    v[7][1] /= v[7][3];
+
+    c[0] = MIN(v[1][0], v[0][0]);
+    c[0] = MIN(v[2][0], c[0]);
+    c[0] = MIN(v[3][0], c[0]);
+    c[0] = MIN(v[4][0], c[0]);
+    c[0] = MIN(v[5][0], c[0]);
+    c[0] = MIN(v[6][0], c[0]);
+    c[0] = MIN(v[7][0], c[0]);
+
+    c[1] = MIN(v[1][1], v[0][1]);
+    c[1] = MIN(v[2][1], c[1]);
+    c[1] = MIN(v[3][1], c[1]);
+    c[1] = MIN(v[4][1], c[1]);
+    c[1] = MIN(v[5][1], c[1]);
+    c[1] = MIN(v[6][1], c[1]);
+    c[1] = MIN(v[7][1], c[1]);
+
+    c[2] = MAX(v[1][0], v[0][0]);
+    c[2] = MAX(v[2][0], c[2]);
+    c[2] = MAX(v[3][0], c[2]);
+    c[2] = MAX(v[4][0], c[2]);
+    c[2] = MAX(v[5][0], c[2]);
+    c[2] = MAX(v[6][0], c[2]);
+    c[2] = MAX(v[7][0], c[2]);
+
+    c[3] = MAX(v[1][1], v[0][1]);
+    c[3] = MAX(v[2][1], c[3]);
+    c[3] = MAX(v[3][1], c[3]);
+    c[3] = MAX(v[4][1], c[3]);
+    c[3] = MAX(v[5][1], c[3]);
+    c[3] = MAX(v[6][1], c[3]);
+    c[3] = MAX(v[7][1], c[3]);
+
+    k = MAX(fabs(c[0] - c[2]), fabs(c[1] - c[3])) * bias;
+
+    return k;
 }
 
-static float get_value(float v[4][3])
+static void draw_page(int i, float x, float y, float w, float h)
 {
-    float km;
+    int j;
 
-    float k0 = len(v[0], v[1]);
-    float k1 = len(v[1], v[2]);
-    float k2 = len(v[2], v[3]);
-    float k3 = len(v[3], v[0]);
+    /* Search for this page in the page cache. */
 
-    km = MAX(k1, k0);
-    km = MAX(k2, km);
-    km = MAX(k3, km);
+    if ((j = search_cache(i, x, y, w, h)) == -1)
+    {
+        struct page *cache = terrain[i].cache;
 
-    return km * 2.0f;
+        int prev = cache[terrain[i].tail].prev;
+
+        /* This is a new page.  Promote the oldest cache line. */
+
+        cache[cache[terrain[i].tail].prev].next = -1;
+
+        cache[terrain[i].head].prev = terrain[i].tail;
+        cache[terrain[i].tail].next = terrain[i].head;
+        cache[terrain[i].tail].prev = -1;
+
+        terrain[i].head = terrain[i].tail;
+        terrain[i].tail = prev;
+
+        /* Initialize this cache line's VBO to the given area. */
+
+        j = terrain[i].head;
+
+        printf("cache %3d gets %8.3f %8.3f %8.3f %8.3f\n", j, x, y, w, h);
+
+        load_scratch(i, x, y, w, h);
+
+        terrain[i].cache[j].x = x;
+        terrain[i].cache[j].y = y;
+        terrain[i].cache[j].w = w;
+        terrain[i].cache[j].h = h;
+
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, terrain[i].cache[j].vbo);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                        terrain[i].n * terrain[i].n * sizeof (struct vertex),
+                        terrain[i].scratch, GL_STATIC_DRAW_ARB);
+    }
+
+    draw_data(terrain[i].cache[j].vbo, terrain[i].n);
 }
 
-static int is_visible(float v[4][3])
-{
-    const float k = 1.0f;
-
-    /* This must use the AABB of the verts, not the verts themselves. */
-
-    if (v[0][0] < -k && v[1][0] < -k && v[2][0] < -k && v[3][0] < -k) return 0;
-    if (v[0][1] < -k && v[1][1] < -k && v[2][1] < -k && v[3][1] < -k) return 0;
-
-    if (v[0][0] >  k && v[1][0] >  k && v[2][0] >  k && v[3][0] >  k) return 0;
-    if (v[0][1] >  k && v[1][1] >  k && v[2][1] >  k && v[3][1] >  k) return 0;
-
-    return 1;
-}
-
-static int count;
-
+/*
 static void draw_page(int i, float x, float y, float w, float h)
 {
     float v[4][4], n[3];
@@ -457,7 +622,6 @@ static void draw_page(int i, float x, float y, float w, float h)
     else
         get_normal(n, v[3], v[0], v[1]);
 
-/*    glBegin(GL_QUADS);*/
     glBegin(GL_LINE_LOOP);
     {
         glNormal3fv(n);
@@ -471,26 +635,28 @@ static void draw_page(int i, float x, float y, float w, float h)
 
     count++;
 }
+*/
 
 /*---------------------------------------------------------------------------*/
 
-#define MAXPAGE 4096
+#define MAXAREA 4096
 
-struct page
+struct area
 {
     float x;
     float y;
     float w;
     float h;
+    int   d;
 };
 
-static struct page queue[MAXPAGE];
+static struct area queue[MAXAREA];
 static int         queue_b;
 static int         queue_e;
 
-static void enqueue_page(float x, float y, float w, float h)
+static void enqueue_area(float x, float y, float w, float h, int d)
 {
-    int queue_n = (queue_b + 1) % MAXPAGE;
+    int queue_n = (queue_b + 1) % MAXAREA;
 
     if (queue_n != queue_e)
     {
@@ -498,13 +664,14 @@ static void enqueue_page(float x, float y, float w, float h)
         queue[queue_b].y = y;
         queue[queue_b].w = w;
         queue[queue_b].h = h;
+        queue[queue_b].d = d;
 
         queue_b = queue_n;
     }
-/*  else fprintf(stderr, "terrain page queue overflow\n"); */
+    else fprintf(stderr, "terrain area queue overflow\n");
 }
 
-static int dequeue_page(float *x, float *y, float *w, float *h)
+static int dequeue_area(float *x, float *y, float *w, float *h, int *d)
 {
     if (queue_e != queue_b)
     {
@@ -512,8 +679,9 @@ static int dequeue_page(float *x, float *y, float *w, float *h)
         *y = queue[queue_e].y;
         *w = queue[queue_e].w;
         *h = queue[queue_e].h;
+        *d = queue[queue_e].d;
 
-        queue_e = (queue_e + 1) % MAXPAGE;
+        queue_e = (queue_e + 1) % MAXAREA;
 
         return 1;
     }
@@ -522,17 +690,21 @@ static int dequeue_page(float *x, float *y, float *w, float *h)
 
 /*---------------------------------------------------------------------------*/
 
-static void do_stuff(const float M[16], int i, float p, float t)
+static void draw_areas(float V[6][4], const float M[16],
+                       int i, float p, float t)
 {
-    float v[4][3], x, y, w, h, k;
+    float b[6], x, y, w, h;
+    int d;
 
-    while (dequeue_page(&x, &y, &w, &h))
+    while (dequeue_area(&x, &y, &w, &h, &d))
     {
-        get_bounds(v, M, x, y, w, h, terrain[i].o);
+        get_bounds(b, x, y, w, h, terrain[i].o);
 
-        if (is_visible(v) && (k = get_value(v)) > 0.0f)
+        if (test_frustum(V, b) >= 0)
         {
-            if (k < 1.0f)
+            float k = get_value(b, M, terrain[i].bias);
+
+            if (d > 0 && k < 1.0f)
                 glColor4f(0.8f, 0.8f, 0.8f, (k - 0.5f) * 2.0f);
             else
                 glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
@@ -549,10 +721,10 @@ static void do_stuff(const float M[16], int i, float p, float t)
                 float y0 = (p < ym) ? y : ym;
                 float y1 = (p < ym) ? ym : y;
 
-                enqueue_page(x0, y0, w / 2, h / 2);
-                enqueue_page(x1, y0, w / 2, h / 2);
-                enqueue_page(x0, y1, w / 2, h / 2);
-                enqueue_page(x1, y1, w / 2, h / 2);
+                enqueue_area(x0, y0, w / 2, h / 2, d + 1);
+                enqueue_area(x1, y0, w / 2, h / 2, d + 1);
+                enqueue_area(x0, y1, w / 2, h / 2, d + 1);
+                enqueue_area(x1, y1, w / 2, h / 2, d + 1);
             }
         }
     }
@@ -564,7 +736,7 @@ static void draw_terrain(int i, int j, int f, float a)
 
     glPushMatrix();
     {
-        float P[16], M[16], X[16], v[3];
+        float V[6][4], P[16], M[16], X[16], v[3];
         float t;
         float p;
 
@@ -579,6 +751,7 @@ static void draw_terrain(int i, int j, int f, float a)
 
         mult_mat_mat(X, P, M);
 
+        get_viewfrust(V);
         get_viewpoint(v);
         normalize(v);
 
@@ -592,37 +765,42 @@ static void draw_terrain(int i, int j, int f, float a)
         glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         {
-/*
+            float y0 = (p < 90.0f) ?  0.0f : 90.0f;
+            float y1 = (p < 90.0f) ? 90.0f :  0.0f;
+
+            float x0 = fmod(floor(t / 90.0f) * 90.0f + 180.0f, 360.0f);
+            float x1 = fmod(floor(t / 90.0f) * 90.0f +  90.0f, 360.0f);
+            float x2 = fmod(floor(t / 90.0f) * 90.0f + 270.0f, 360.0f);
+            float x3 = fmod(floor(t / 90.0f) * 90.0f +   0.0f, 360.0f);
+
             glEnableClientState(GL_VERTEX_ARRAY);
             glEnableClientState(GL_NORMAL_ARRAY);
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-*/
+
+            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, terrain[i].ibo);
+
             glEnable(GL_COLOR_MATERIAL);
             glEnable(GL_CULL_FACE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             glDisable(GL_DEPTH_TEST);
-/*
-            enqueue_page(  0.0f,  0.0f, 90.0f, 90.0f);
-            enqueue_page( 90.0f,  0.0f, 90.0f, 90.0f);
-            enqueue_page(180.0f,  0.0f, 90.0f, 90.0f);
-            enqueue_page(270.0f,  0.0f, 90.0f, 90.0f);
-*/
-            enqueue_page(  0.0f, 90.0f, 90.0f, 90.0f);
-/*
-            enqueue_page( 90.0f, 90.0f, 90.0f, 90.0f);
-            enqueue_page(180.0f, 90.0f, 90.0f, 90.0f);
-            enqueue_page(270.0f, 90.0f, 90.0f, 90.0f);
-*/
-            count = 0;
-            do_stuff(X, i, p, t);
-            printf("%d\n", count);
 
-/*
+            enqueue_area(x0, y0, 90.0f, 90.0f, 0);
+            enqueue_area(x1, y0, 90.0f, 90.0f, 0);
+            enqueue_area(x2, y0, 90.0f, 90.0f, 0);
+            enqueue_area(x3, y0, 90.0f, 90.0f, 0);
+            enqueue_area(x0, y1, 90.0f, 90.0f, 0);
+            enqueue_area(x1, y1, 90.0f, 90.0f, 0);
+            enqueue_area(x2, y1, 90.0f, 90.0f, 0);
+            enqueue_area(x3, y1, 90.0f, 90.0f, 0);
+
+            count = 0;
+            draw_areas(V, X, i, p, t);
+/*          printf("%d\n", count); */
+
             glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-*/
         }
         glPopClientAttrib();
         glPopAttrib();
