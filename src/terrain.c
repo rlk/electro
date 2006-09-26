@@ -41,8 +41,7 @@ struct page
 {
     float x;
     float y;
-    float w;
-    float h;
+    float a;
 
     GLuint vbo;
 
@@ -62,11 +61,17 @@ struct terrain
     int    m;
     int    o;
     float  bias;
+    float  magn;
 
     GLuint ibo;
+    GLuint tex[4][2];
 
     int head;
     int tail;
+
+    short *base_p;
+    int    base_w;
+    int    base_h;
 
     struct page   *cache;
     struct vertex *scratch;
@@ -97,48 +102,73 @@ static unsigned int new_terrain(void)
 
 /*===========================================================================*/
 
-static void get_vertex(float v[4], float x, float y, float r)
+static void get_vertex(float v[3], float x, float y, float r)
 {
     v[0] = sin(RAD(x)) * sin(RAD(y)) * r;
     v[1] =              -cos(RAD(y)) * r;
     v[2] = cos(RAD(x)) * sin(RAD(y)) * r;
-    v[3] = 1.0f;
 }
 
-static void get_normal(float n[3], const float a[3],
-                                   const float b[3],
-                                   const float c[3])
+static void get_normal(float n[3], float v[7][3])
 {
-    float x[3];
-    float y[3];
+    float d[7][3];
+    float t[7][3];
 
-    x[0] = b[0] - a[0];
-    x[1] = b[1] - a[1];
-    x[2] = b[2] - a[2];
+    float k = 0.7071067812f;
 
-    y[0] = c[0] - a[0];
-    y[1] = c[1] - a[1];
-    y[2] = c[2] - a[2];
+    int i;
 
-    cross(n, x, y);
+    n[0] = n[1] = n[2] = 0.0f;
+
+    for (i = 1; i < 7; ++i)
+    {
+        d[i][0] = v[i][0] - v[0][0];
+        d[i][1] = v[i][1] - v[0][1];
+        d[i][2] = v[i][2] - v[0][2];
+    }
+    
+    cross(t[1], d[1], d[2]);
+    cross(t[2], d[2], d[3]);
+    cross(t[3], d[3], d[4]);
+    cross(t[4], d[4], d[5]);
+    cross(t[5], d[5], d[6]);
+    cross(t[6], d[6], d[1]);
+
+    n[0] = t[1][0] + t[2][0] * k + t[3][0] + t[4][0] + t[5][0] * k + t[6][0];
+    n[1] = t[1][1] + t[2][1] * k + t[3][1] + t[4][1] + t[5][1] * k + t[6][1];
+    n[2] = t[1][2] + t[2][2] * k + t[3][2] + t[4][2] + t[5][2] * k + t[6][2];
+
     normalize(n);
 }
 
-static void get_bounds(float b[6], float x, float y, float w, float h, float r)
+static void get_bounds(int i, float b[6], float x, float y, float a)
 {
-    float u[4][4];
+    float u[8][3];
+    int j;
 
-    get_vertex(u[0], x,     y,     r);
-    get_vertex(u[1], x + w, y,     r);
-    get_vertex(u[2], x + w, y + h, r);
-    get_vertex(u[3], x,     y + h, r);
+    int cx = (int) ((x + a / 2) * terrain[i].base_w / 360.0f);
+    int cy = (int) ((y + a / 2) * terrain[i].base_h / 180.0f);
 
-    b[0] = MIN(MIN(u[0][0], u[1][0]), MIN(u[2][0], u[3][0]));
-    b[1] = MIN(MIN(u[0][1], u[1][1]), MIN(u[2][1], u[3][1]));
-    b[2] = MIN(MIN(u[0][2], u[1][2]), MIN(u[2][2], u[3][2]));
-    b[3] = MAX(MAX(u[0][0], u[1][0]), MAX(u[2][0], u[3][0]));
-    b[4] = MAX(MAX(u[0][1], u[1][1]), MAX(u[2][1], u[3][1]));
-    b[5] = MAX(MAX(u[0][2], u[1][2]), MAX(u[2][2], u[3][2]));
+    short o = terrain[i].base_p[cy * terrain[i].base_w + cx];
+
+    get_vertex(u[0], x,     y,     terrain[i].o + o * terrain[i].magn);
+    get_vertex(u[1], x + a, y,     terrain[i].o + o * terrain[i].magn);
+    get_vertex(u[2], x + a, y + a, terrain[i].o + o * terrain[i].magn);
+    get_vertex(u[3], x,     y + a, terrain[i].o + o * terrain[i].magn);
+
+    b[0] = b[3] = u[0][0];
+    b[1] = b[4] = u[0][1];
+    b[2] = b[5] = u[0][2];
+
+    for (j = 1; j < 4; ++j)
+    {
+        b[0] = MIN(b[0], u[j][0]);
+        b[1] = MIN(b[1], u[j][1]);
+        b[2] = MIN(b[2], u[j][2]);
+        b[3] = MAX(b[3], u[j][0]);
+        b[4] = MAX(b[4], u[j][1]);
+        b[5] = MAX(b[5], u[j][2]);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -146,7 +176,7 @@ static void get_bounds(float b[6], float x, float y, float w, float h, float r)
 static GLuint init_vbo(int n, const struct vertex *data)
 {
     GLuint vbo;
-    GLsizei N = n * n * sizeof (struct vertex);
+    GLsizei N = (n + 1) * (n + 1) * sizeof (struct vertex);
 
     glGenBuffersARB(1, &vbo);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
@@ -159,7 +189,7 @@ static GLuint init_vbo(int n, const struct vertex *data)
 static GLuint init_ibo(int n, const GLushort *data)
 {
     GLuint ibo;
-    GLsizei N = (n - 1) * n * 2 * sizeof (GLushort);
+    GLsizei N = n * (n + 1) * 2 * sizeof (GLushort);
 
     glGenBuffersARB(1, &ibo);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ibo);
@@ -169,17 +199,53 @@ static GLuint init_ibo(int n, const GLushort *data)
     return ibo;
 }
 
+static GLuint init_texture(const char *filename, int w, int h)
+{
+    GLuint   tex = 0;
+    GLubyte *buf;
+    FILE    *fp;
+
+    if ((buf = (GLubyte *) malloc(8 * (w / 4) * (h / 4))))
+    {
+        if ((fp = fopen(filename, "rb")))
+        {
+            fread(buf, 1, 8 * (w / 4) * (h / 4), fp);
+            fclose(fp);
+        }
+
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR);
+
+        glTexParameterf(GL_TEXTURE_1D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+        glCompressedTexImage2DARB(GL_TEXTURE_2D, 0,
+                                  GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
+                                  w, h, 0, 8 * (w / 4) * (h / 4), buf);
+
+        free(buf);
+    }
+
+    return tex;
+}
+
 /*---------------------------------------------------------------------------*/
 
-static int search_cache(int i, float x, float y, float w, float h)
+static int search_cache(int i, float x, float y, float a)
 {
     int j;
 
     for (j = terrain[i].head; j >= 0; j = terrain[i].cache[j].next)
         if (terrain[i].cache[j].x == x &&
             terrain[i].cache[j].y == y &&
-            terrain[i].cache[j].w == w &&
-            terrain[i].cache[j].h == h)
+            terrain[i].cache[j].a == a)
             return j;
 
     return -1;
@@ -197,8 +263,7 @@ static struct page *init_cache(int n, int m)
         {
             buf[i].x = 0.0f;
             buf[i].y = 0.0f;
-            buf[i].w = 0.0f;
-            buf[i].h = 0.0f;
+            buf[i].a = 0.0f;
 
             buf[i].vbo = init_vbo(n, NULL);
 
@@ -212,14 +277,16 @@ static struct page *init_cache(int n, int m)
 
 static struct vertex *init_scratch(int n)
 {
+    size_t sz = (n + 1) * (n + 1) * sizeof (struct vertex);
+
     struct vertex *buf;
 
-    if ((buf = (struct vertex *) malloc(n * n * sizeof (struct vertex))))
+    if ((buf = (struct vertex *) malloc(sz)))
     {
         int i, r, c;
 
-        for (i = 0, r = 0; r < n; ++r)
-            for (c = 0; c < n; ++c, ++i)
+        for (i = 0, r = 0; r <= n; ++r)
+            for (c = 0; c <= n; ++c, ++i)
             {
                 buf[i].v[0] =  (float) c;
                 buf[i].v[1] =  (float) 0;
@@ -239,30 +306,32 @@ static struct vertex *init_scratch(int n)
 
 static GLushort *init_indices(int n)
 {
+    size_t sz = n * (n + 1) * 2 * sizeof (GLushort);
+
     GLushort *buf;
 
-    if ((buf = (GLushort *) malloc((n - 1) * n * 2 * sizeof (GLushort))))
+    if ((buf = (GLushort *) malloc(sz)))
     {
         int i, r, c;
 
-        for (i = 0, r = 0; r < n - 1; ++r)
+        for (i = 0, r = 0; r < n; ++r)
             if ((r & 1) == 0)
             {
-                for (c = 0; c < n; ++c)  /* Even-numbered row. */
+                for (c = 0; c <= n; ++c)  /* Even-numbered row. */
                 {
-                    GLushort A = (r    ) * n + c;
-                    GLushort B = (r + 1) * n + c;
+                    GLushort A = (r + 1) * (n + 1) + c;
+                    GLushort B = (r    ) * (n + 1) + c;
 
-                    buf[i++] = B;
                     buf[i++] = A;
+                    buf[i++] = B;
                 }
             }
             else
             {
-                for (c = 0; c < n; ++c)  /* Odd-numbered row. */
+                for (c = 0; c <= n; ++c)  /* Odd-numbered row. */
                 {
-                    GLushort A = (r    ) * n + (n - c - 1);
-                    GLushort B = (r + 1) * n + (n - c - 1);
+                    GLushort A = (r    ) * (n + 1) + (n - c);
+                    GLushort B = (r + 1) * (n + 1) + (n - c);
 
                     buf[i++] = A;
                     buf[i++] = B;
@@ -275,36 +344,84 @@ static GLushort *init_indices(int n)
 
 /*---------------------------------------------------------------------------*/
 
-static void load_scratch(int i, float x, float y, float w, float h)
+static void load_scratch(int i, float x, float y, float a)
 {
-    int j, r, c, n = terrain[i].n;
+    int j, r, c;
 
     struct vertex *buf = terrain[i].scratch;
 
-    for (j = 0, r = 0; r < n; ++r)
-        for (c = 0; c < n; ++c, ++j)
+    /* Determine the proper mipmap level for an area of the given size. */
+
+    short *P = terrain[i].p;
+    int    W = terrain[i].w;
+    int    H = terrain[i].h;
+    int    d = 0;
+
+    float s0 = fmod(x, 90.0f) / 90.f;
+    float t0 = fmod(y, 90.0f) / 90.f;
+
+    while ((360.0f / W) < (a / terrain[i].n))
+    {
+        P += W * H;
+        W /= 2;
+        H /= 2;
+        d += 1;
+    }
+
+    /* Compute vertex positions from raw data.*/
+
+    for (j = 0, r = 0; r <= terrain[i].n; ++r)
+        for (c = 0; c <= terrain[i].n; ++c, ++j)
         {
-            float X = x + w * c / n;
-            float Y = y + h * r / n;
+            float da = a / terrain[i].n;
 
-            float v[4];
+            float X = x + da * c;
+            float Y = y + da * r;
+            float s = terrain[i].magn;
 
-            get_vertex(v, X, Y, terrain[i].o);
+            int cc = (int) (X * W / 360.0f);
+            int rr = (int) (Y * H / 180.0f);
 
-            buf[j].v[0] = v[0];
-            buf[j].v[1] = v[1];
-            buf[j].v[2] = v[2];
+            int cL = (cc - 1) % W;
+            int cR = (cc + 1) % W;
+            int rB = MAX(rr - 1, 0);
+            int rT = MIN(rr + 1, H);
 
-            buf[j].n[0] = 0.0f;
-            buf[j].n[1] = 1.0f;
-            buf[j].n[2] = 0.0f;
+            float r0 = terrain[i].o + s * P[rr * W + cc];
+            float r1 = terrain[i].o + s * P[rr * W + cR];
+            float r2 = terrain[i].o + s * P[rT * W + cR];
+            float r3 = terrain[i].o + s * P[rT * W + cc];
+            float r4 = terrain[i].o + s * P[rr * W + cL];
+            float r5 = terrain[i].o + s * P[rB * W + cL];
+            float r6 = terrain[i].o + s * P[rB * W + cc];
 
-            buf[j].t[0] = X / 360.0f;
-            buf[j].t[1] = Y / 180.0f;
+            float v[7][3];
+            float n[3];
+
+            get_vertex(v[0], X,      Y,      r0);
+            get_vertex(v[1], X + da, Y,      r1);
+            get_vertex(v[2], X + da, Y + da, r2);
+            get_vertex(v[3], X,      Y + da, r3);
+            get_vertex(v[4], X - da, Y,      r4);
+            get_vertex(v[5], X - da, Y - da, r5);
+            get_vertex(v[6], X,      Y - da, r6);
+
+            get_normal(n, v);
+
+            buf[j].v[0] = v[0][0];
+            buf[j].v[1] = v[0][1];
+            buf[j].v[2] = v[0][2];
+
+            buf[j].n[0] = n[0];
+            buf[j].n[1] = n[1];
+            buf[j].n[2] = n[2];
+
+            buf[j].t[0] =        (s0 + da * c / 90.0f);
+            buf[j].t[1] = 1.0f - (t0 + da * r / 90.0f);
         }
 }
 
-static short *load_terrain(const char *filename, int w, int h)
+int load_terrain(int i, const char *filename, int w, int h)
 {
     FILE *fp;
     short *p;
@@ -324,7 +441,7 @@ static short *load_terrain(const char *filename, int w, int h)
             fclose(fp);
         }
 
-        /* Generate box-filtered mipmaps. */
+        /* Generate mipmaps. */
 
         while (W > 0 && H > 0 && (W & 1) == 0 && (H & 1) == 0)
         {
@@ -335,19 +452,35 @@ static short *load_terrain(const char *filename, int w, int h)
             for (r = 0; r < H; ++r)
                 for (c = 0; c < W; ++c)
                 {
+#ifdef MINFILTER
+                    short ka = S[(r * 2    ) * W * 2 + (c * 2    )];
+                    short kb = S[(r * 2    ) * W * 2 + (c * 2 + 1)];
+                    short kc = S[(r * 2 + 1) * W * 2 + (c * 2    )];
+                    short kd = S[(r * 2 + 1) * W * 2 + (c * 2 + 1)];
+
+                    D[r * W + c] = MIN(MIN(ka, kb), MIN(kc, kd));
+#else
                     int ka = (int) S[(r * 2    ) * W * 2 + (c * 2    )];
                     int kb = (int) S[(r * 2    ) * W * 2 + (c * 2 + 1)];
                     int kc = (int) S[(r * 2 + 1) * W * 2 + (c * 2    )];
                     int kd = (int) S[(r * 2 + 1) * W * 2 + (c * 2 + 1)];
 
                     D[r * W + c] = (short) ((ka + kb + kc + kd) / 4);
+#endif
                 }
 
             S = D;
         }
-    }
 
-    return p;
+        terrain[i].p = p;
+
+        terrain[i].base_p = D;
+        terrain[i].base_w = W;
+        terrain[i].base_h = H;
+
+        return 1;
+    }
+    return 0;
 }
 
 /*===========================================================================*/
@@ -361,15 +494,16 @@ int send_create_terrain(const char *filename, int w, int h, int n)
     {
         /* If the file exists and is successfully loaded... */
 
-        if ((terrain[i].p = load_terrain(filename, w, h)))
+        if (load_terrain(i, filename, w, h))
         {
             terrain[i].count = 1;
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
-            terrain[i].m     = 128;
+            terrain[i].m     = 256;
             terrain[i].o     = 3396000;
             terrain[i].bias  = 0.5f;
+            terrain[i].magn  = 2.0f;
 
             /* Pack the header and data. */
 
@@ -408,13 +542,16 @@ void recv_create_terrain(void)
 
         /* HACK: Clients load data from disk instead of broadcast. */
 
-        if ((terrain[i].p = load_terrain(filename, w, h)))
+        if (load_terrain(i, filename, w, h))
         {
             terrain[i].count = 1;
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
             terrain[i].m     = m;
+            terrain[i].o     = 3396000;
+            terrain[i].bias  = 0.5f;
+            terrain[i].magn  = 10.0f;
 
             /* Encapsulate this object in an entity. */
 
@@ -429,18 +566,27 @@ static void init_terrain(int i)
 {
     if (terrain[i].state == 0)
     {
-        GLushort *indices  = init_indices(terrain[i].n);
-        terrain[i].scratch = init_scratch(terrain[i].n);
+        GLushort *indices;
 
-        terrain[i].ibo   = init_ibo  (terrain[i].n, indices);
-        terrain[i].cache = init_cache(terrain[i].n, terrain[i].m);
-
-        terrain[i].head = 0;
-        terrain[i].tail = terrain[i].m - 1;
-
+        indices    = init_indices(terrain[i].n);
+        terrain[i].ibo = init_ibo(terrain[i].n, indices);
         free(indices);
 
-        terrain[i].state  = 1;
+        terrain[i].scratch = init_scratch(terrain[i].n);
+        terrain[i].cache   = init_cache  (terrain[i].n, terrain[i].m);
+
+        terrain[i].tail    = terrain[i].m - 1;
+        terrain[i].head    = 0;
+        terrain[i].state   = 1;
+
+        terrain[i].tex[0][0] = init_texture("mars2.dxt", 4096, 4096);
+        terrain[i].tex[1][0] = init_texture("mars3.dxt", 4096, 4096);
+        terrain[i].tex[2][0] = init_texture("mars0.dxt", 4096, 4096);
+        terrain[i].tex[3][0] = init_texture("mars1.dxt", 4096, 4096);
+        terrain[i].tex[0][1] = init_texture("mars6.dxt", 4096, 4096);
+        terrain[i].tex[1][1] = init_texture("mars7.dxt", 4096, 4096);
+        terrain[i].tex[2][1] = init_texture("mars4.dxt", 4096, 4096);
+        terrain[i].tex[3][1] = init_texture("mars5.dxt", 4096, 4096);
     }
 }
 
@@ -456,7 +602,7 @@ static void fini_terrain(int i)
 
 static void draw_data(GLuint vbo, GLsizei n)
 {
-    GLsizei N = (n - 1) * n * 2;
+    GLsizei N = n * (n + 1) * 2;
     GLsizei S = sizeof (struct vertex);
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
@@ -467,18 +613,21 @@ static void draw_data(GLuint vbo, GLsizei n)
 
     /* Draw filled polygons. */
 /*
+    glEnable(GL_LIGHTING);
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
 */
+    glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
+
     /* Draw wire frame. */
 /*
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     glColor3f(1.0f, 1.0f, 0.0f);
-*/
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
+*/
 }
 
 /*---------------------------------------------------------------------------*/
@@ -563,13 +712,13 @@ static float get_value(float b[6], const float M[16], float bias)
     return k;
 }
 
-static void draw_page(int i, float x, float y, float w, float h)
+static void draw_page(int i, float x, float y, float a)
 {
-    int j;
+    int j, n = terrain[i].n;
 
     /* Search for this page in the page cache. */
 
-    if ((j = search_cache(i, x, y, w, h)) == -1)
+    if ((j = search_cache(i, x, y, a)) == -1)
     {
         struct page *cache = terrain[i].cache;
 
@@ -590,18 +739,17 @@ static void draw_page(int i, float x, float y, float w, float h)
 
         j = terrain[i].head;
 
-        printf("cache %3d gets %8.3f %8.3f %8.3f %8.3f\n", j, x, y, w, h);
+        printf("cache %3d gets %8.3f %8.3f %8.3f\n", j, x, y, a);
 
-        load_scratch(i, x, y, w, h);
+        load_scratch(i, x, y, a);
 
         terrain[i].cache[j].x = x;
         terrain[i].cache[j].y = y;
-        terrain[i].cache[j].w = w;
-        terrain[i].cache[j].h = h;
+        terrain[i].cache[j].a = a;
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, terrain[i].cache[j].vbo);
         glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-                        terrain[i].n * terrain[i].n * sizeof (struct vertex),
+                        (n + 1) * (n + 1) * sizeof (struct vertex),
                         terrain[i].scratch, GL_STATIC_DRAW_ARB);
     }
 
@@ -618,16 +766,15 @@ struct area
 {
     float x;
     float y;
-    float w;
-    float h;
-    int   d;
+    float a;
+    GLuint o;
 };
 
 static struct area queue[MAXAREA];
 static int         queue_b;
 static int         queue_e;
 
-static void enqueue_area(float x, float y, float w, float h, int d)
+static void enqueue_area(float x, float y, float a, GLuint o)
 {
     int queue_n = (queue_b + 1) % MAXAREA;
 
@@ -635,24 +782,22 @@ static void enqueue_area(float x, float y, float w, float h, int d)
     {
         queue[queue_b].x = x;
         queue[queue_b].y = y;
-        queue[queue_b].w = w;
-        queue[queue_b].h = h;
-        queue[queue_b].d = d;
+        queue[queue_b].a = a;
+        queue[queue_b].o = o;
 
         queue_b = queue_n;
     }
     else fprintf(stderr, "terrain area queue overflow\n");
 }
 
-static int dequeue_area(float *x, float *y, float *w, float *h, int *d)
+static int dequeue_area(float *x, float *y, float *a, GLuint *o)
 {
     if (queue_e != queue_b)
     {
         *x = queue[queue_e].x;
         *y = queue[queue_e].y;
-        *w = queue[queue_e].w;
-        *h = queue[queue_e].h;
-        *d = queue[queue_e].d;
+        *a = queue[queue_e].a;
+        *o = queue[queue_e].o;
 
         queue_e = (queue_e + 1) % MAXAREA;
 
@@ -666,39 +811,64 @@ static int dequeue_area(float *x, float *y, float *w, float *h, int *d)
 static void draw_areas(float V[6][4], const float M[16],
                        int i, float p, float t)
 {
-    float b[6], x, y, w, h;
-    int d;
+    float b[6], x, y, a;
+    GLuint o;
 
-    while (dequeue_area(&x, &y, &w, &h, &d))
+    while (dequeue_area(&x, &y, &a, &o))
     {
-        get_bounds(b, x, y, w, h, terrain[i].o);
+        get_bounds(i, b, x, y, a);
 
         if (test_frustum(V, b) >= 0)
         {
             float k = get_value(b, M, terrain[i].bias);
 
+            if (k > 1.0f && a > 1.0f)
+            {
+                float xm = x + a / 2;
+                float ym = y + a / 2;
+
+                float x0 = (t > xm) ? x : xm;
+                float x1 = (t > xm) ? xm : x;
+                float y0 = (p > ym) ? y : ym;
+                float y1 = (p > ym) ? ym : y;
+
+                enqueue_area(x0, y0, a / 2, o);
+                enqueue_area(x1, y0, a / 2, o);
+                enqueue_area(x0, y1, a / 2, o);
+                enqueue_area(x1, y1, a / 2, o);
+            }
+            else
+            {
+/*              glColor4f(0.8f, 0.8f, 0.8f, 1.0f); */
+                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                glBindTexture(GL_TEXTURE_2D, o);
+
+                draw_page(i, x, y, a);
+            }
+/*
             if (d > 0 && k < 1.0f)
                 glColor4f(0.8f, 0.8f, 0.8f, (k - 0.5f) * 2.0f);
             else
                 glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
 
-            draw_page(i, x, y, w, h);
+            draw_page(i, x, y, a);
 
-            if (k > 1.0f && w > 1.0f)
+            if (k > 1.0f && a > 1.0f)
             {
-                float xm = x + w / 2;
-                float ym = y + h / 2;
+                float xm = x + a / 2;
+                float ym = y + a / 2;
 
-                float x0 = (t < xm) ? x : xm;
-                float x1 = (t < xm) ? xm : x;
-                float y0 = (p < ym) ? y : ym;
-                float y1 = (p < ym) ? ym : y;
+                float x0 = (t > xm) ? x : xm;
+                float x1 = (t > xm) ? xm : x;
+                float y0 = (p > ym) ? y : ym;
+                float y1 = (p > ym) ? ym : y;
 
-                enqueue_area(x0, y0, w / 2, h / 2, d + 1);
-                enqueue_area(x1, y0, w / 2, h / 2, d + 1);
-                enqueue_area(x0, y1, w / 2, h / 2, d + 1);
-                enqueue_area(x1, y1, w / 2, h / 2, d + 1);
+                enqueue_area(x0, y0, a / 2, d + 1);
+                enqueue_area(x1, y0, a / 2, d + 1);
+                enqueue_area(x0, y1, a / 2, d + 1);
+                enqueue_area(x1, y1, a / 2, d + 1);
             }
+*/
         }
     }
 }
@@ -709,9 +879,12 @@ static void draw_terrain(int i, int j, int f, float a)
 
     glPushMatrix();
     {
-        float V[6][4], P[16], M[16], X[16], v[3];
+        float V[6][4], P[16], M[16], X[16], v[3], x[3];
         float t;
         float p;
+
+        int look_n;
+        int look_e;
 
         /* Apply the local coordinate system transformation. */
 
@@ -740,44 +913,63 @@ static void draw_terrain(int i, int j, int f, float a)
 
         if (t < 0) t += 360.0f;
 
+        /* Determine which cardinal direction the viewer is looking. */
+
+        cross(x, v, V[4]);
+
+        look_n = (V[4][1] > 0.0f) ? 1 : 0;
+        look_e = (x[1]    > 0.0f) ? 1 : 0;
+
         /* Draw. */
 
         glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         {
-            float y0 = (p < 90.0f) ?  0.0f : 90.0f;
-            float y1 = (p < 90.0f) ? 90.0f :  0.0f;
+            float y0 = (p > 90.0f) ?  0.0f : 90.0f;
+            float y1 = (p > 90.0f) ? 90.0f :  0.0f;
 
             float x0 = fmod(floor(t / 90.0f) * 90.0f + 180.0f, 360.0f);
             float x1 = fmod(floor(t / 90.0f) * 90.0f +  90.0f, 360.0f);
             float x2 = fmod(floor(t / 90.0f) * 90.0f + 270.0f, 360.0f);
             float x3 = fmod(floor(t / 90.0f) * 90.0f +   0.0f, 360.0f);
 
+            int t0 = (int) (y0 / 90.0f);
+            int t1 = (int) (y1 / 90.0f);
+
+            int s0 = (int) (x0 / 90.0f);
+            int s1 = (int) (x1 / 90.0f);
+            int s2 = (int) (x2 / 90.0f);
+            int s3 = (int) (x3 / 90.0f);
+
             glEnableClientState(GL_VERTEX_ARRAY);
             glEnableClientState(GL_NORMAL_ARRAY);
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, terrain[i].ibo);
-
             glEnable(GL_COLOR_MATERIAL);
+            glEnable(GL_TEXTURE_2D);
             glEnable(GL_CULL_FACE);
+/*
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-/*          glDisable(GL_DEPTH_TEST); */
+            glDisable(GL_DEPTH_TEST);
+*/
 
-            enqueue_area(x0, y0, 90.0f, 90.0f, 0);
-            enqueue_area(x1, y0, 90.0f, 90.0f, 0);
-            enqueue_area(x2, y0, 90.0f, 90.0f, 0);
-            enqueue_area(x3, y0, 90.0f, 90.0f, 0);
-            enqueue_area(x0, y1, 90.0f, 90.0f, 0);
-            enqueue_area(x1, y1, 90.0f, 90.0f, 0);
-            enqueue_area(x2, y1, 90.0f, 90.0f, 0);
-            enqueue_area(x3, y1, 90.0f, 90.0f, 0);
+            enqueue_area(x0, y0, 90.0f, terrain[i].tex[s0][t0]);
+            enqueue_area(x1, y0, 90.0f, terrain[i].tex[s1][t0]);
+            enqueue_area(x2, y0, 90.0f, terrain[i].tex[s2][t0]);
+            enqueue_area(x3, y0, 90.0f, terrain[i].tex[s3][t0]);
+            enqueue_area(x0, y1, 90.0f, terrain[i].tex[s0][t1]);
+            enqueue_area(x1, y1, 90.0f, terrain[i].tex[s1][t1]);
+            enqueue_area(x2, y1, 90.0f, terrain[i].tex[s2][t1]);
+            enqueue_area(x3, y1, 90.0f, terrain[i].tex[s3][t1]);
 
             count = 0;
+
+            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, terrain[i].ibo);
             draw_areas(V, X, i, p, t);
-            printf("%d\n", count);
+
+/*          printf("%d\n", count); */
 
             glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);

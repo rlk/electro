@@ -31,14 +31,14 @@ static int tst_plane(const float V[4], const float b[6])
 
     /* Test all 8 points of the bounding box against this plane. */
 
-    if (k00 + k11 + k22 + V[3] >= 0) c++;
-    if (k00 + k11 + k52 + V[3] >= 0) c++;
-    if (k00 + k41 + k22 + V[3] >= 0) c++;
-    if (k00 + k41 + k52 + V[3] >= 0) c++;
-    if (k30 + k11 + k22 + V[3] >= 0) c++;
-    if (k30 + k11 + k52 + V[3] >= 0) c++;
-    if (k30 + k41 + k22 + V[3] >= 0) c++;
-    if (k30 + k41 + k52 + V[3] >= 0) c++;
+    if (k00 + k11 + k22 + V[3] > 0) c++;
+    if (k00 + k11 + k52 + V[3] > 0) c++;
+    if (k00 + k41 + k22 + V[3] > 0) c++;
+    if (k00 + k41 + k52 + V[3] > 0) c++;
+    if (k30 + k11 + k22 + V[3] > 0) c++;
+    if (k30 + k11 + k52 + V[3] > 0) c++;
+    if (k30 + k41 + k22 + V[3] > 0) c++;
+    if (k30 + k41 + k52 + V[3] > 0) c++;
 
     /* Return the number of points in front of the plane. */
 

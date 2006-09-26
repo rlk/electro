@@ -35,7 +35,7 @@ int quad_stereo_status(void)
 
 static void init_options(void)
 {
-    GLfloat a[4] = { 0.2f, 0.2f, 0.2f, 0.0f };
+    GLfloat a[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_TEXTURE_2D);
