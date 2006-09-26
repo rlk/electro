@@ -468,14 +468,15 @@ static void draw_data(GLuint vbo, GLsizei n)
     /* Draw filled polygons. */
 /*
     glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
 */
     /* Draw wire frame. */
-
+/*
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
-/*  glColor3f(1.0f, 1.0f, 0.0f); */
-
+    glColor3f(1.0f, 1.0f, 0.0f);
+*/
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
 }
@@ -605,37 +606,9 @@ static void draw_page(int i, float x, float y, float w, float h)
     }
 
     draw_data(terrain[i].cache[j].vbo, terrain[i].n);
-}
-
-/*
-static void draw_page(int i, float x, float y, float w, float h)
-{
-    float v[4][4], n[3];
-
-    get_vertex(v[0], x,     y,     terrain[i].o);
-    get_vertex(v[1], x + w, y,     terrain[i].o);
-    get_vertex(v[2], x + w, y + h, terrain[i].o);
-    get_vertex(v[3], x,     y + h, terrain[i].o);
-
-    if (y == 0)
-        get_normal(n, v[0], v[2], v[3]);
-    else
-        get_normal(n, v[3], v[0], v[1]);
-
-    glBegin(GL_LINE_LOOP);
-    {
-        glNormal3fv(n);
-
-        glVertex3fv(v[0]);
-        glVertex3fv(v[1]);
-        glVertex3fv(v[2]);
-        glVertex3fv(v[3]);
-    }
-    glEnd();
 
     count++;
 }
-*/
 
 /*---------------------------------------------------------------------------*/
 
@@ -753,6 +726,13 @@ static void draw_terrain(int i, int j, int f, float a)
 
         get_viewfrust(V);
         get_viewpoint(v);
+
+        /* Set the far clipping plane to the center of the planet.  Neat! */
+
+        V[5][3] = 0.0f;
+
+        /* Determine the viewpoint in cylindrical coordinates. */
+
         normalize(v);
 
         t = DEG(atan2(v[0], v[2]));
@@ -784,7 +764,7 @@ static void draw_terrain(int i, int j, int f, float a)
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            glDisable(GL_DEPTH_TEST);
+/*          glDisable(GL_DEPTH_TEST); */
 
             enqueue_area(x0, y0, 90.0f, 90.0f, 0);
             enqueue_area(x1, y0, 90.0f, 90.0f, 0);
@@ -797,7 +777,7 @@ static void draw_terrain(int i, int j, int f, float a)
 
             count = 0;
             draw_areas(V, X, i, p, t);
-/*          printf("%d\n", count); */
+            printf("%d\n", count);
 
             glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
