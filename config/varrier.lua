@@ -239,6 +239,8 @@ function set_varrier_qual(d)
         end
     end
 
+    print("quality", varrier_qual)
+    
     return true
 end
 
@@ -265,9 +267,6 @@ end
 -- Process a Varrier keyboard event.
 
 function varrier_keyboard(k, s, camera)
-    local dx = 2.50 / 12.0 * 0.5
-    local dy = 0
-    local dz = 0
 
     if s then
         if E.get_modifier(E.key_modifier_control) then
@@ -314,22 +313,24 @@ function varrier_keyboard(k, s, camera)
         end
         if k == E.key_F6 then
             E.set_camera_stereo(camera, E.stereo_mode_red_blue,
-                                -dx, dy, dz, dx, dy, dz)
+                                -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
             return true
         end
+--[[
         if k == E.key_F7 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
-                                -dx, dy, dz, dx, dy, dz)
+                                -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
             return true
         end
         if k == E.key_F8 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_33,
-                                -dx, dy, dz, dx, dy, dz)
+                                -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
             return true
         end
+]]--
         if k == E.key_F9 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_00,
-                                -dx, dy, dz, dx, dy, dz)
+                                -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
             return true
         end
     else

@@ -68,6 +68,7 @@ function do_start()
     pivot  = E.create_pivot()
     wand   = E.create_pivot()
     hand   = E.create_pivot()
+    head   = E.create_pivot()
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
@@ -78,6 +79,10 @@ function do_start()
 
     E.set_entity_position(light,  0.0,  8.0,  8.0)
     E.set_entity_position(pivot,  XC,   YC,   ZC)
+
+    E.set_entity_tracking(head, 0, E.tracking_mode_local)
+    E.set_entity_flags   (head, E.entity_flag_track_pos, true)
+    E.set_entity_flags   (head, E.entity_flag_track_rot, true)
 
     E.set_entity_tracking(hand, 1, E.tracking_mode_world)
     E.set_entity_flags   (hand, E.entity_flag_track_pos, true)
@@ -102,9 +107,9 @@ function do_timer(dt)
 
     if joy_y < -0.1 or 0.1 < joy_y then
         mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
-        E.move_entity(camera, -mov_x * joy_y * dt * s,
-                              -mov_y * joy_y * dt * s,
-                              -mov_z * joy_y * dt * s)
+        E.move_entity(camera, mov_x * joy_y * dt * s,
+                              mov_y * joy_y * dt * s,
+                              mov_z * joy_y * dt * s)
     else
         E.turn_entity(camera, 0, -pan_x * dt * 90, 0)
 

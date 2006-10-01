@@ -233,12 +233,18 @@ int get_tracker_rotation(unsigned int id, float R[16])
                 (struct sensor *)((unsigned char *) tracker
                                                   + tracker->offset
                                                   + tracker->size * id);
-
+#define REORDER 1
             /* TODO: Fix potential gimbal lock here? */
 
+#ifdef REORDER
+            load_rot_mat(R, 0, 1, 0, S->r[0]); /* azimuth   */
+            mult_rot_mat(R, 1, 0, 0, S->r[1]); /* elevation */
+            mult_rot_mat(R, 0, 0, 1, S->r[2]); /* roll      */
+#else
             load_rot_mat(R, 1, 0, 0, S->r[1]); /* elevation */
             mult_rot_mat(R, 0, 1, 0, S->r[0]); /* azimuth   */
             mult_rot_mat(R, 0, 0, 1, S->r[2]); /* roll      */
+#endif
             mult_mat_mat(R, R, transform[id].M);
 
             return 1;

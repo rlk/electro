@@ -158,9 +158,13 @@ function do_start()
 
     E.set_entity_scale(sign,  0.005, 0.005, 0.005)
     E.set_entity_flags(sign,  E.entity_flag_billboard,   true)
+    E.set_entity_flags(galaxy_T, E.entity_flag_ballboard,   true)
 
     E.set_entity_position(camera, 0, 0, 0)
     E.set_camera_range(camera, 1.0, 10000.0)
+
+    local Ts=1000
+    E.set_entity_scale(galaxy_T, Ts, Ts, Ts)
 
     E.set_background(0, 0, 0)
 

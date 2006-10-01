@@ -31,6 +31,8 @@
 
 /*===========================================================================*/
 
+static int host_count = 0;
+
 static struct tile *tile  = NULL;
 static struct host *host  = NULL;
 static struct host *local = NULL;
@@ -186,6 +188,8 @@ unsigned int add_host(const char *name, int x, int y, int w, int h)
         host[i].tot_y = host[i].win_y = y;
         host[i].tot_w = host[i].win_w = w;
         host[i].tot_h = host[i].win_h = h;
+
+        host_count++;
     }
     return i;
 }
@@ -245,17 +249,22 @@ void sync_display(void)
     unsigned int i, ii;
 
 #ifdef CONF_MPI
-    int num  = vecnum(host);
-    int siz  = vecsiz(host);
     int j;
 
-    struct host *H;
-
     assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
-    assert_mpi(MPI_Bcast(&num, 1, MPI_INT, 0, MPI_COMM_WORLD));
+    assert_mpi(MPI_Bcast(&host_count, 1, MPI_INT, 0, MPI_COMM_WORLD));
 
     /* Broadcast all host definitions to all nodes. */
 
+    for (i = 1; i <= host_count; i++)
+        if ((j = (rank) ? new_host() : i))
+        {
+            assert_mpi(MPI_Bcast(host + i, sizeof (struct host),
+                                 MPI_BYTE, 0, MPI_COMM_WORLD));
+
+            if (rank) host[i].n = 0;
+        }
+/*
     for (i = 0; i < num; i++)
         if ((j = (rank) ? vecadd(host) : i) >= 0)
         {
@@ -265,6 +274,7 @@ void sync_display(void)
 
             if (rank) H->n = 0;
         }
+*/
 #endif
 
     /* Search the definition list for an entry matching this host's name */
@@ -1038,6 +1048,8 @@ int startup_display(void)
 {
     tile = vec_new(4, sizeof (struct tile));
     host = vec_new(4, sizeof (struct host));
+
+    host_count = 0;
 
     if (tile && host)
         return 1;

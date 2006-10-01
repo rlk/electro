@@ -36,14 +36,15 @@
 #define FLAG_HIDDEN        0x0001
 #define FLAG_WIREFRAME     0x0002
 #define FLAG_BILLBOARD     0x0004
-#define FLAG_BOUNDED       0x0008
-#define FLAG_LINE_SMOOTH   0x0010
-#define FLAG_LEFT_EYE      0x0020
-#define FLAG_RIGHT_EYE     0x0040
-#define FLAG_TRACK_POS     0x0080
-#define FLAG_TRACK_ROT     0x0100
-#define FLAG_VISIBLE_GEOM  0x0200
-#define FLAG_VISIBLE_BODY  0x0400
+#define FLAG_BALLBOARD     0x0008
+#define FLAG_BOUNDED       0x0010
+#define FLAG_LINE_SMOOTH   0x0020
+#define FLAG_LEFT_EYE      0x0040
+#define FLAG_RIGHT_EYE     0x0080
+#define FLAG_TRACK_POS     0x0100
+#define FLAG_TRACK_ROT     0x0200
+#define FLAG_VISIBLE_GEOM  0x0400
+#define FLAG_VISIBLE_BODY  0x0800
 
 /* Entity tracking modes. */
 

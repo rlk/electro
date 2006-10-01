@@ -2607,6 +2607,7 @@ static struct constant_def constants[] = {
     { "entity_flag_hidden",        FLAG_HIDDEN         },
     { "entity_flag_wireframe",     FLAG_WIREFRAME      },
     { "entity_flag_billboard",     FLAG_BILLBOARD      },
+    { "entity_flag_ballboard",     FLAG_BALLBOARD      },
     { "entity_flag_bounded",       FLAG_BOUNDED        },
     { "entity_flag_line_smooth",   FLAG_LINE_SMOOTH    },
     { "entity_flag_left_eye",      FLAG_LEFT_EYE       },

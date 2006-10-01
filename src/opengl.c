@@ -815,7 +815,7 @@ static int   fbo_i = 0;
 static void fix_point_sprite_origin(void)
 {
     /* HACK: NVIDIA point sprite origin differs between FBO and window. */
-/*
+
 #ifdef GL_POINT_SPRITE_COORD_ORIGIN
     GLint fbo;
 
@@ -826,7 +826,6 @@ static void fix_point_sprite_origin(void)
     else
         glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_UPPER_LEFT);
 #endif
-*/
 }
 
 void opengl_push_framebuffer(int fbo)

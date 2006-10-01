@@ -28,6 +28,9 @@
 
 static int count;
 
+#define DEFAULT_BIAS 0.5f
+#define DEFAULT_MAGN 2.0f
+
 /*---------------------------------------------------------------------------*/
 
 struct vertex
@@ -379,13 +382,13 @@ static void load_scratch(int i, float x, float y, float a)
             float Y = y + da * r;
             float s = terrain[i].magn;
 
-            int cc = (int) (X * W / 360.0f);
-            int rr = (int) (Y * H / 180.0f);
+            int cc =            (int) (X * W / 360.0f);
+            int rr = MIN(H - 1, (int) (Y * H / 180.0f));
 
-            int cL = (cc - 1) % W;
-            int cR = (cc + 1) % W;
-            int rB = MAX(rr - 1, 0);
-            int rT = MIN(rr + 1, H);
+            int cL = (cc - 1 <  0) ? (cc - 1 + W) : (cc - 1);
+            int cR = (cc + 1 >= W) ? (cc + 1 - W) : (cc + 1);
+            int rB = (rr - 1 <  0) ?            0 : (rr - 1);
+            int rT = (rr + 1 >= H) ?        H - 1 : (rr + 1);
 
             float r0 = terrain[i].o + s * P[rr * W + cc];
             float r1 = terrain[i].o + s * P[rr * W + cR];
@@ -500,10 +503,10 @@ int send_create_terrain(const char *filename, int w, int h, int n)
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
-            terrain[i].m     = 256;
+            terrain[i].m     = 4096;
             terrain[i].o     = 3396000;
-            terrain[i].bias  = 0.5f;
-            terrain[i].magn  = 2.0f;
+            terrain[i].bias  = DEFAULT_BIAS;
+            terrain[i].magn  = DEFAULT_MAGN;
 
             /* Pack the header and data. */
 
@@ -550,8 +553,8 @@ void recv_create_terrain(void)
             terrain[i].n     = n;
             terrain[i].m     = m;
             terrain[i].o     = 3396000;
-            terrain[i].bias  = 0.5f;
-            terrain[i].magn  = 10.0f;
+            terrain[i].bias  = DEFAULT_BIAS;
+            terrain[i].magn  = DEFAULT_MAGN;
 
             /* Encapsulate this object in an entity. */
 
@@ -707,7 +710,8 @@ static float get_value(float b[6], const float M[16], float bias)
     c[3] = MAX(v[6][1], c[3]);
     c[3] = MAX(v[7][1], c[3]);
 
-    k = MAX(fabs(c[0] - c[2]), fabs(c[1] - c[3])) * bias;
+/*  k = MAX(fabs(c[0] - c[2]), fabs(c[1] - c[3])) * bias; */
+    k = 0.5f * (fabs(c[0] - c[2]) + fabs(c[1] - c[3])) * bias;
 
     return k;
 }
@@ -738,8 +742,6 @@ static void draw_page(int i, float x, float y, float a)
         /* Initialize this cache line's VBO to the given area. */
 
         j = terrain[i].head;
-
-        printf("cache %3d gets %8.3f %8.3f %8.3f\n", j, x, y, a);
 
         load_scratch(i, x, y, a);
 
@@ -822,7 +824,7 @@ static void draw_areas(float V[6][4], const float M[16],
         {
             float k = get_value(b, M, terrain[i].bias);
 
-            if (k > 1.0f && a > 1.0f)
+            if (k > 1.0f && a > 360.0f * terrain[i].n / terrain[i].w)
             {
                 float xm = x + a / 2;
                 float ym = y + a / 2;
@@ -839,7 +841,6 @@ static void draw_areas(float V[6][4], const float M[16],
             }
             else
             {
-/*              glColor4f(0.8f, 0.8f, 0.8f, 1.0f); */
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glBindTexture(GL_TEXTURE_2D, o);
 
@@ -902,7 +903,7 @@ static void draw_terrain(int i, int j, int f, float a)
 
         /* Set the far clipping plane to the center of the planet.  Neat! */
 
-        V[5][3] = 0.0f;
+/*      V[5][3] = 0.0f; */
 
         /* Determine the viewpoint in cylindrical coordinates. */
 

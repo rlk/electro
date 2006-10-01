@@ -214,6 +214,20 @@ void transform_entity(unsigned int i)
         glLoadMatrixf(M);
     }
 
+    if (entity[i].flags & FLAG_BALLBOARD)
+    {
+        float M[16];
+
+        glGetFloatv(GL_MODELVIEW_MATRIX, M);
+
+        M[12] = 0;
+        M[13] = 0;
+        M[14] = 0;
+        M[15] = 1;
+
+        glLoadMatrixf(M);
+    }
+
     /* Scale. */
 
     glScalef(entity[i].scale[0],

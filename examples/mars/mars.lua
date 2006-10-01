@@ -1,16 +1,39 @@
+--[[
+DATA_S = "/data/evl/rlk/megr032.raw"
+DATA_W = 11520
+DATA_H = 5760
+DATA_N = 45
+]]--
+
+DATA_S = "/data/evl/rlk/megr064.raw"
+DATA_W = 23040
+DATA_H = 11520
+DATA_N = 45
+
+--[[
+DATA_S = "/data/evl/rlk/megr128.raw"
+DATA_W = 46080
+DATA_H = 23040
+DATA_N = 45
+]]--
+
+-------------------------------------------------------------------------------
+
 tumble = false
 scale  = false
 turn   = false
 
 zoom  = 0.0001
 rot_x = 25.2
-rot_y = 0
+rot_y = 180
 rot_d = 0
 pan_x = 0
 pan_y = 0
 pan_z = 0
 
-magnitude = 100
+init_z = 1000
+
+magnitude = 500
 
 X0 = 0
 Y0 = 0
@@ -24,6 +47,75 @@ ZC = 0
 
 -------------------------------------------------------------------------------
 
+function speed()
+    local cx, cy, cz = E.get_entity_position(camera)
+    return (math.sqrt(cx * cx + cy * cy + cz * cz) - 300) / 300
+end
+
+fly = false
+
+fly_px = 0
+fly_py = 0
+fly_pz = 0
+
+fly_xx = 0
+fly_xy = 0
+fly_xz = 0
+
+fly_yx = 0
+fly_yy = 0
+fly_yz = 0
+
+fly_zx = 0
+fly_zy = 0
+fly_zz = 0
+
+function fly_begin()
+    fly_px, fly_py, fly_pz = E.get_entity_position(wand)
+    fly_xx, fly_xy, fly_xz = E.get_entity_x_vector(wand)
+    fly_yx, fly_yy, fly_yz = E.get_entity_y_vector(wand)
+    fly_zx, fly_zy, fly_zz = E.get_entity_z_vector(wand)
+
+    fly = true
+end
+
+function fly_step(dt)
+    if fly then
+        local px, py, pz = E.get_entity_position(wand)
+        local xx, xy, xz = E.get_entity_x_vector(wand)
+        local yx, yy, yz = E.get_entity_y_vector(wand)
+        local zx, zy, zz = E.get_entity_z_vector(wand)
+        
+        local tspeed = 150.0 * speed()
+        local rspeed =  50.0
+
+        local dx = (px - fly_px) * dt * tspeed;
+        local dy = (py - fly_py) * dt * tspeed;
+        local dz = (pz - fly_pz) * dt * tspeed;
+
+        local vx = fly_zx - zx
+        local vy = fly_zy - zy
+        local vz = fly_zz - zz
+
+        local wx = fly_yx - yx
+        local wy = fly_yy - yy
+        local wz = fly_yz - yz
+
+        dX = (vx * fly_xx + vy * fly_xy + vz * fly_xz) * dt * rspeed
+        dY = (vx * fly_yx + vy * fly_yy + vz * fly_yz) * dt * rspeed
+        dZ = (wx * fly_xx + wy * fly_xy + wz * fly_xz) * dt * rspeed
+
+        E.move_entity(camera, dx, dy, dz)
+        E.turn_entity(camera, dX, dY, dZ)
+    end
+end
+
+function fly_end()
+    fly = false
+end
+
+-------------------------------------------------------------------------------
+
 function do_start()
     X0, Y0, Z0, X1, Y1, Z1 = E.get_display_bound()
 
@@ -32,57 +124,77 @@ function do_start()
     ZC = (Z0 + Z1) / 2
 
     local star_brush = E.create_brush()
-    E.set_brush_frag_prog(star_brush, "../data/star.fp")
-    E.set_brush_vert_prog(star_brush, "../data/star.vp")
+    E.set_brush_frag_prog(star_brush, "star.fp")
+    E.set_brush_vert_prog(star_brush, "star.vp")
 
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
+    back   = E.create_light(E.light_type_directional)
     pivot  = E.create_pivot()
     wand   = E.create_pivot()
+    head   = E.create_pivot()
     galaxy = E.create_galaxy("../data/galaxy_hip.gal", star_brush)
 
     E.parent_entity(light,  camera)
     E.parent_entity(galaxy, camera)
-    E.parent_entity(pivot,  light)
+    E.parent_entity(back,   light)
+    E.parent_entity(pivot,  back)
     E.parent_entity(wand,   light)
 
---  E.parent_entity(E.create_terrain("megr008.raw",  2880,  1440, 90), pivot)
---  E.parent_entity(E.create_terrain("megr016.raw",  5760,  2880, 90), pivot)
---  E.parent_entity(E.create_terrain("megr032.raw", 11520,  5760, 90), pivot)
-    E.parent_entity(E.create_terrain("megr032.raw", 11520,  5760, 45), pivot)
---  E.parent_entity(E.create_terrain("megr064.raw", 23040, 11520, 45), pivot)
---  E.parent_entity(E.create_terrain("megr064.raw", 23040, 11520, 90), pivot)
+    E.parent_entity(E.create_terrain(DATA_S, DATA_W, DATA_H, DATA_N), pivot)
     
     E.set_galaxy_magnitude(galaxy, magnitude)
-    E.set_camera_range(camera, 10, 10000)
+    E.set_camera_range(camera, 1, 10000)
 
-    E.set_entity_position(light,  1.0, 0.0, 1.0)
-    E.set_entity_position(pivot,  XC,  YC,  ZC)
-    E.set_entity_position(camera, 0.0, 0.0, 1000.0)
+    E.set_entity_position(light,  1.0,  0.0,  1.0)
+    E.set_entity_position(back,  -1.0,  0.0, -1.0)
+    E.set_entity_position(pivot,  XC, YC, ZC)
+    E.set_entity_position(camera, 0.0, 0.0, init_z)
     E.set_entity_rotation(pivot, rot_x, rot_y, 0)
     E.set_entity_scale   (pivot, zoom, zoom, zoom)
+
+    E.set_light_color(back, 0.2, 0.3, 0.5)
+
+    E.set_entity_flags(galaxy, E.entity_flag_ballboard, true)
+--  E.set_entity_flags(galaxy, E.entity_flag_billboard, true)
 
     E.set_entity_tracking(wand, 1, E.tracking_mode_local)
     E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
     E.set_entity_flags   (wand, E.entity_flag_track_rot, true)
 
+    E.set_entity_tracking(head, 0, E.tracking_mode_local)
+    E.set_entity_flags   (head, E.entity_flag_track_pos, true)
+
     E.enable_timer(true)
+end
+
+function do_joystick(d, b, s)
+    if s then
+        fly_begin()
+    else
+        fly_end()
+    end
 end
 
 function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
-    local s = 100
+    local s = 100 * speed()
 
-    if joy_x < -0.1 or 0.1 < joy_x then
-        E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
+    fly_step(dt)
+
+    if joy_x < -0.1 or 0.1 < joy_x or 
+       joy_y < -0.1 or 0.1 < joy_y  then
+        E.turn_entity(camera, -joy_y * dt * 90, -joy_x * dt * 90, 0)
     end
 
+--[[
     if joy_y < -0.1 or 0.1 < joy_y then
         mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
-        E.move_entity(camera, -mov_x * joy_y * dt * s,
-                              -mov_y * joy_y * dt * s,
-                              -mov_z * joy_y * dt * s)
+        E.move_entity(camera, mov_x * joy_y * dt * s,
+                              mov_y * joy_y * dt * s,
+                              mov_z * joy_y * dt * s)
     else
+]]--
         mov_x, mov_y, mov_z = E.get_entity_x_vector(wand)
         E.move_entity(camera, -mov_x * pan_x * dt * s,
                               -mov_y * pan_x * dt * s,
@@ -97,14 +209,18 @@ function do_timer(dt)
         E.move_entity(camera, -mov_x * pan_z * dt * s,
                               -mov_y * pan_z * dt * s,
                               -mov_z * pan_z * dt * s)
-    end
+--  end
 
     if rot_d < 0 or 0 < rot_d then
         rot_y = rot_y + rot_d * dt * 10
         E.set_entity_rotation(pivot, rot_x, rot_y, 0)
     end
 
-    E.set_entity_position(galaxy, E.get_entity_position(camera));
+
+    local cx, cy, cz = E.get_entity_position(camera)
+    local d = math.sqrt(cx * cx + cy * cy + cz * cz)
+    
+    E.set_camera_range(camera, 0.1, d + 10000)
 
     return true
 end
@@ -166,7 +282,7 @@ function do_keyboard(k, s)
         if k == E.key_return then
             E.set_entity_rotation(pivot,  0.0, 0.0, 0.0)
             E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
-            E.set_entity_position(camera, 0.0, 0.0, 5000000.0)
+            E.set_entity_position(camera, 0.0, 0.0, init_z)
             rot_x = 0
             rot_y = 0
             pan_x = 0

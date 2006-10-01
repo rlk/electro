@@ -433,7 +433,7 @@ static void draw_galaxy(int i, int j, int f, float a)
 {
     struct galaxy *g = get_galaxy(i);
     float V[6][4];
-    float p[4];
+    float p[4] = { 0.0, 0.0, 0.0, 1.0 };
 
     init_galaxy(i);
 
