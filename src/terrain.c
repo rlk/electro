@@ -72,9 +72,8 @@ struct terrain
     int head;
     int tail;
 
-    short *base_p;
-    int    base_w;
-    int    base_h;
+    short *min;
+    short *max;
 
     struct page   *cache;
     struct vertex *scratch;
@@ -149,21 +148,26 @@ static void get_bounds(int i, float b[6], float x, float y, float a)
     float u[8][3];
     int j;
 
-    int cx = (int) ((x + a / 2) * terrain[i].base_w / 360.0f);
-    int cy = (int) ((y + a / 2) * terrain[i].base_h / 180.0f);
+    int cx = (int) (x + a / 2);
+    int cy = (int) (y + a / 2);
 
-    short o = terrain[i].base_p[cy * terrain[i].base_w + cx];
+    short min = terrain[i].min[360 * cy + cx];
+    short max = terrain[i].max[360 * cy + cx];
 
-    get_vertex(u[0], x,     y,     terrain[i].o + o * terrain[i].magn);
-    get_vertex(u[1], x + a, y,     terrain[i].o + o * terrain[i].magn);
-    get_vertex(u[2], x + a, y + a, terrain[i].o + o * terrain[i].magn);
-    get_vertex(u[3], x,     y + a, terrain[i].o + o * terrain[i].magn);
+    get_vertex(u[0], x,     y,     terrain[i].o + min * terrain[i].magn);
+    get_vertex(u[1], x + a, y,     terrain[i].o + min * terrain[i].magn);
+    get_vertex(u[2], x + a, y + a, terrain[i].o + min * terrain[i].magn);
+    get_vertex(u[3], x,     y + a, terrain[i].o + min * terrain[i].magn);
+    get_vertex(u[4], x,     y,     terrain[i].o + max * terrain[i].magn);
+    get_vertex(u[5], x + a, y,     terrain[i].o + max * terrain[i].magn);
+    get_vertex(u[6], x + a, y + a, terrain[i].o + max * terrain[i].magn);
+    get_vertex(u[7], x,     y + a, terrain[i].o + max * terrain[i].magn);
 
     b[0] = b[3] = u[0][0];
     b[1] = b[4] = u[0][1];
     b[2] = b[5] = u[0][2];
 
-    for (j = 1; j < 4; ++j)
+    for (j = 1; j < 8; ++j)
     {
         b[0] = MIN(b[0], u[j][0]);
         b[1] = MIN(b[1], u[j][1]);
@@ -477,9 +481,32 @@ int load_terrain(int i, const char *filename, int w, int h)
 
         terrain[i].p = p;
 
-        terrain[i].base_p = D;
-        terrain[i].base_w = W;
-        terrain[i].base_h = H;
+        /* Compute the min and max caches. */
+
+        if ((terrain[i].min = (short *) malloc(360 * 180 * sizeof (short))) &&
+            (terrain[i].max = (short *) malloc(360 * 180 * sizeof (short))))
+        {
+            for (r = 0; r < 180; ++r)
+                for (c = 0; c < 360; ++c)
+                {
+                    terrain[i].min[360 * r + c] =  32767;
+                    terrain[i].max[360 * r + c] = -32768;
+                }
+
+            for (r = 0; r < h; ++r)
+                for (c = 0; c < w; ++c)
+                {
+                    int R = 180 * r / h;
+                    int C = 360 * c / w;
+
+                    short h = terrain[i].p[r * w + c];
+
+                    if (terrain[i].min[360 * R + C] >= h)
+                        terrain[i].min[360 * R + C]  = h;
+                    if (terrain[i].max[360 * R + C] <= h)
+                        terrain[i].max[360 * R + C]  = h;
+                }
+        }
 
         return 1;
     }
@@ -949,12 +976,6 @@ static void draw_terrain(int i, int j, int f, float a)
             glEnable(GL_COLOR_MATERIAL);
             glEnable(GL_TEXTURE_2D);
             glEnable(GL_CULL_FACE);
-/*
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            glDisable(GL_DEPTH_TEST);
-*/
 
             enqueue_area(x0, y0, 90.0f, terrain[i].tex[s0][t0]);
             enqueue_area(x1, y0, 90.0f, terrain[i].tex[s1][t0]);
@@ -970,7 +991,7 @@ static void draw_terrain(int i, int j, int f, float a)
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, terrain[i].ibo);
             draw_areas(V, X, i, p, t);
 
-/*          printf("%d\n", count); */
+            printf("%d\n", count);
 
             glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);

@@ -1,3 +1,4 @@
+-- 32-degree-per-pixel data
 --[[
 DATA_S = "/data/evl/rlk/megr032.raw"
 DATA_W = 11520
@@ -5,11 +6,14 @@ DATA_H = 5760
 DATA_N = 45
 ]]--
 
+-- 64-degree-per-pixel data
+
 DATA_S = "/data/evl/rlk/megr064.raw"
 DATA_W = 23040
 DATA_H = 11520
 DATA_N = 45
 
+-- 128-degree-per-pixel data
 --[[
 DATA_S = "/data/evl/rlk/megr128.raw"
 DATA_W = 46080
@@ -280,14 +284,14 @@ function do_keyboard(k, s)
 
     if s then
         if k == E.key_return then
-            E.set_entity_rotation(pivot,  0.0, 0.0, 0.0)
-            E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
-            E.set_entity_position(camera, 0.0, 0.0, init_z)
-            rot_x = 0
-            rot_y = 0
+            rot_x = 25.2
+            rot_y = 180
             pan_x = 0
             pan_y = 0
             pan_z = 0
+            E.set_entity_rotation(pivot, rot_x, rot_y, 0.0)
+            E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
+            E.set_entity_position(camera, 0.0, 0.0, init_z)
             return true
         end
 
