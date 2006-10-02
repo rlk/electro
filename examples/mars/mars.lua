@@ -1,21 +1,20 @@
 -- 32-degree-per-pixel data
 --[[
-DATA_S = "/data/evl/rlk/megr032.raw"
+DATA_S = "/data2/evl/rlk/megr032.raw"
 DATA_W = 11520
 DATA_H = 5760
 DATA_N = 45
 ]]--
-
 -- 64-degree-per-pixel data
 
-DATA_S = "/data/evl/rlk/megr064.raw"
+DATA_S = "/data2/evl/rlk/megr064.raw"
 DATA_W = 23040
 DATA_H = 11520
 DATA_N = 45
 
 -- 128-degree-per-pixel data
 --[[
-DATA_S = "/data/evl/rlk/megr128.raw"
+DATA_S = "/data2/evl/rlk/megr128.raw"
 DATA_W = 46080
 DATA_H = 23040
 DATA_N = 45
@@ -34,6 +33,11 @@ rot_d = 0
 pan_x = 0
 pan_y = 0
 pan_z = 0
+
+jx = 0
+jy = 0
+jz = 0
+jw = 0
 
 init_z = 1000
 
@@ -181,39 +185,43 @@ function do_joystick(d, b, s)
 end
 
 function do_timer(dt)
-    local joy_x, joy_y = E.get_joystick(0)
+    local joy_x, joy_y = E.get_joystick(0, 0, 1)
+    local joy_z, joy_w = E.get_joystick(0, 3, 4)
+
     local s = 100 * speed()
+    local k = 0.0
+    local n = 32
+
+    local dr =  90 * dt
+    local dp = 100 * dt * speed()
 
     fly_step(dt)
 
-    if joy_x < -0.1 or 0.1 < joy_x or 
-       joy_y < -0.1 or 0.1 < joy_y  then
-        E.turn_entity(camera, -joy_y * dt * 90, -joy_x * dt * 90, 0)
-    end
+    jx = ((n - 1) * jx + joy_x) / n
+    jy = ((n - 1) * jy + joy_y) / n
+    jz = ((n - 1) * jz + joy_z) / n
+    jw = ((n - 1) * jw + joy_w) / n
 
---[[
-    if joy_y < -0.1 or 0.1 < joy_y then
-        mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
-        E.move_entity(camera, mov_x * joy_y * dt * s,
-                              mov_y * joy_y * dt * s,
-                              mov_z * joy_y * dt * s)
-    else
-]]--
-        mov_x, mov_y, mov_z = E.get_entity_x_vector(wand)
-        E.move_entity(camera, -mov_x * pan_x * dt * s,
-                              -mov_y * pan_x * dt * s,
-                              -mov_z * pan_x * dt * s)
+    E.turn_entity(camera, 0, -jx * dr, 0)
+    E.move_entity(camera, 0, 0,  jy * dp)
+    E.turn_entity(camera, 0, 0, -jz * dr)
+    E.turn_entity(camera,  jw * dr, 0, 0)
 
-        mov_x, mov_y, mov_z = E.get_entity_y_vector(wand)
-        E.move_entity(camera, -mov_x * pan_y * dt * s,
-                              -mov_y * pan_y * dt * s,
-                              -mov_z * pan_y * dt * s)
 
-        mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
-        E.move_entity(camera, -mov_x * pan_z * dt * s,
-                              -mov_y * pan_z * dt * s,
-                              -mov_z * pan_z * dt * s)
---  end
+    mov_x, mov_y, mov_z = E.get_entity_x_vector(wand)
+    E.move_entity(camera, -mov_x * pan_x * dt * s,
+                          -mov_y * pan_x * dt * s,
+                          -mov_z * pan_x * dt * s)
+
+    mov_x, mov_y, mov_z = E.get_entity_y_vector(wand)
+    E.move_entity(camera, -mov_x * pan_y * dt * s,
+                          -mov_y * pan_y * dt * s,
+                          -mov_z * pan_y * dt * s)
+
+    mov_x, mov_y, mov_z = E.get_entity_z_vector(wand)
+    E.move_entity(camera, -mov_x * pan_z * dt * s,
+                          -mov_y * pan_z * dt * s,
+                          -mov_z * pan_z * dt * s)
 
     if rot_d < 0 or 0 < rot_d then
         rot_y = rot_y + rot_d * dt * 10
@@ -245,28 +253,19 @@ end
 
 function do_point(dx, dy)
     if tumble then
---      rot_x = rot_x + 0.25 * dy / zoom
         rot_y = rot_y + 2500 * dx * zoom
-
---      if rot_x >  90.0 then rot_x =  90 end
---      if rot_x < -90.0 then rot_x = -90 end
-
         E.set_entity_rotation(pivot, rot_x, rot_y, 0)
-
         return true
     end
 
     if turn then
         E.turn_entity(camera, -dy, -dx, 0)
-
         return true
     end
 
     if scale then
         zoom = zoom + dy / 500000
-
         E.set_entity_scale(pivot, zoom, zoom, zoom)
-
         return true
     end
 

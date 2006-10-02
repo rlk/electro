@@ -530,7 +530,7 @@ int send_create_terrain(const char *filename, int w, int h, int n)
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
-            terrain[i].m     = 4096;
+            terrain[i].m     = 2048;
             terrain[i].o     = 3396000;
             terrain[i].bias  = DEFAULT_BIAS;
             terrain[i].magn  = DEFAULT_MAGN;
@@ -991,7 +991,7 @@ static void draw_terrain(int i, int j, int f, float a)
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, terrain[i].ibo);
             draw_areas(V, X, i, p, t);
 
-            printf("%d\n", count);
+/*          printf("%d\n", count); */
 
             glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
