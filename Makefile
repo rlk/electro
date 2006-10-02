@@ -13,7 +13,8 @@ ifdef MPI
 else
 	CC     = cc
 	TARG   = electro
-	CFLAGS = -O2 -Wall
+#	CFLAGS = -O2 -Wall
+	CFLAGS = -O3 -ffast-math -Wall
 #	CFLAGS = -g -Wall
 endif
 

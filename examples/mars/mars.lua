@@ -1,10 +1,12 @@
 -- 32-degree-per-pixel data
+
 --[[
 DATA_S = "/data2/evl/rlk/megr032.raw"
 DATA_W = 11520
 DATA_H = 5760
 DATA_N = 45
 ]]--
+
 -- 64-degree-per-pixel data
 
 DATA_S = "/data2/evl/rlk/megr064.raw"

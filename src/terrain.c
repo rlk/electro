@@ -28,7 +28,7 @@
 
 static int count;
 
-#define DEFAULT_BIAS 0.5f
+#define DEFAULT_BIAS 1.0f
 #define DEFAULT_MAGN 2.0f
 
 /*---------------------------------------------------------------------------*/
@@ -111,6 +111,24 @@ static void get_vertex(float v[3], float x, float y, float r)
     v[2] = cos(RAD(x)) * sin(RAD(y)) * r;
 }
 
+static void get_normal(float n[3], float v[3][3])
+{
+    float d[2][3];
+
+    d[0][0] = v[1][0] - v[0][0];
+    d[0][1] = v[1][1] - v[0][1];
+    d[0][2] = v[1][2] - v[0][2];
+    
+    d[1][0] = v[2][0] - v[0][0];
+    d[1][1] = v[2][1] - v[0][1];
+    d[1][2] = v[2][2] - v[0][2];
+    
+    cross(n, d[0], d[1]);
+
+    normalize(n);
+}
+
+/*
 static void get_normal(float n[3], float v[7][3])
 {
     float d[7][3];
@@ -142,6 +160,7 @@ static void get_normal(float n[3], float v[7][3])
 
     normalize(n);
 }
+*/
 
 static void get_bounds(int i, float b[6], float x, float y, float a)
 {
@@ -388,7 +407,7 @@ static void load_scratch(int i, float x, float y, float a)
 
             int cc =            (int) (X * W / 360.0f);
             int rr = MIN(H - 1, (int) (Y * H / 180.0f));
-
+/*
             int cL = (cc - 1 <  0) ? (cc - 1 + W) : (cc - 1);
             int cR = (cc + 1 >= W) ? (cc + 1 - W) : (cc + 1);
             int rB = (rr - 1 <  0) ?            0 : (rr - 1);
@@ -412,6 +431,20 @@ static void load_scratch(int i, float x, float y, float a)
             get_vertex(v[4], X - da, Y,      r4);
             get_vertex(v[5], X - da, Y - da, r5);
             get_vertex(v[6], X,      Y - da, r6);
+*/
+            int cR = (cc + 1 >= W) ? (cc + 1 - W) : (cc + 1);
+            int rT = (rr + 1 >= H) ?        H - 1 : (rr + 1);
+
+            float r0 = terrain[i].o + s * P[rr * W + cc];
+            float r1 = terrain[i].o + s * P[rr * W + cR];
+            float r2 = terrain[i].o + s * P[rT * W + cc];
+
+            float v[3][3];
+            float n[3];
+
+            get_vertex(v[0], X,      Y,      r0);
+            get_vertex(v[1], X + da, Y,      r1);
+            get_vertex(v[2], X,      Y + da, r2);
 
             get_normal(n, v);
 
@@ -907,12 +940,9 @@ static void draw_terrain(int i, int j, int f, float a)
 
     glPushMatrix();
     {
-        float V[6][4], P[16], M[16], X[16], v[3], x[3];
+        float V[6][4], P[16], M[16], X[16], v[3];
         float t;
         float p;
-
-        int look_n;
-        int look_e;
 
         /* Apply the local coordinate system transformation. */
 
@@ -940,13 +970,6 @@ static void draw_terrain(int i, int j, int f, float a)
         p = DEG(acos(-v[1]));
 
         if (t < 0) t += 360.0f;
-
-        /* Determine which cardinal direction the viewer is looking. */
-
-        cross(x, v, V[4]);
-
-        look_n = (V[4][1] > 0.0f) ? 1 : 0;
-        look_e = (x[1]    > 0.0f) ? 1 : 0;
 
         /* Draw. */
 
