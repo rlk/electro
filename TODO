@@ -1,19 +1,25 @@
-lua 5.1
+lua 5.1 / nix luasocket dep
+unfuck terrain
+package mars cdrom
+vortex with mars navigation
+Euler transform order option
+compressed texture image flag
+Query OpenGL extensions string.
 Excise frag/vert prog. Port galaxy.
-fix image fbo state reverting to varrier 00 fbo state
-fix trainer
+set entity rotation vectors
+MPEG2 image
+Fix AABB
+
 texture clamp
-use IBO in galaxy
 sprite should detect rectangular textures
+    set_sprite_range documentation for rect
+fix image fbo state reverting to varrier 00 fbo state
 
 bugfix: giving BindAttribLocation not found on non-GLSL hardware?
 
-Reconsider reference count mechanism
-MPEG2 image
 
-Terrain entity
 LOD entity
-Fix AABB
+Reconsider reference count mechanism
 new vector implementation
         improve vector traversal
 abstract to a library?
@@ -21,7 +27,7 @@ new OBJ implementation
 new combiner implementation
 Add brief changelogs to website
 UTF-8... extra chars
-set entity rotation vectors
+fix trainer
 global state
         gravity vector
         ambient light

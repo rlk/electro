@@ -304,6 +304,8 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
 
     if (pass == 1)
     {
+        opengl_set_fence();
+
         pop_quality();
         opengl_pop_framebuffer();
 

@@ -129,7 +129,7 @@ static int server_tick(void)
 static void server_swap(void)
 {
 #ifdef CONF_MPI
-    glFinish();
+    opengl_get_fence();
     assert_mpi(MPI_Barrier(MPI_COMM_WORLD));
 #endif
     SDL_GL_SwapBuffers();

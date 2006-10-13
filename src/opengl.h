@@ -33,6 +33,7 @@
 
 /*---------------------------------------------------------------------------*/
 
+extern GLboolean GL_has_fence;
 extern GLboolean GL_has_fragment_program;
 extern GLboolean GL_has_vertex_program;
 extern GLboolean GL_has_vertex_buffer_object;
@@ -47,6 +48,9 @@ extern GLboolean GL_has_multitexture;
 extern GLenum    GL_max_multitexture;
 
 #ifndef __APPLE__
+extern PFNGLGENFENCESNVPROC                 glGenFencesNV;
+extern PFNGLSETFENCENVPROC                  glSetFenceNV;
+extern PFNGLFINISHFENCENVPROC               glFinishFenceNV;
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 extern PFNGLBINDATTRIBLOCATIONARBPROC       glBindAttribLocationARB;
@@ -154,6 +158,9 @@ void      opengl_draw_cap(float, float);
 void      opengl_draw_sph(float);
 
 /*---------------------------------------------------------------------------*/
+
+void opengl_set_fence(void);
+void opengl_get_fence(void);
 
 void opengl_check(const char *, ...);
 

@@ -27,15 +27,16 @@
 
 /*---------------------------------------------------------------------------*/
 
-GLboolean GL_has_fragment_program     = 0;
-GLboolean GL_has_vertex_program       = 0;
-GLboolean GL_has_vertex_buffer_object = 0;
-GLboolean GL_has_framebuffer_object   = 0;
-GLboolean GL_has_point_sprite         = 0;
-GLboolean GL_has_texture_rectangle    = 0;
-GLboolean GL_has_texture_compression  = 0;
-GLboolean GL_has_shader_objects       = 0;
-GLboolean GL_has_multitexture         = 0;
+GLboolean GL_has_fence                = GL_FALSE;
+GLboolean GL_has_fragment_program     = GL_FALSE;
+GLboolean GL_has_vertex_program       = GL_FALSE;
+GLboolean GL_has_vertex_buffer_object = GL_FALSE;
+GLboolean GL_has_framebuffer_object   = GL_FALSE;
+GLboolean GL_has_point_sprite         = GL_FALSE;
+GLboolean GL_has_texture_rectangle    = GL_FALSE;
+GLboolean GL_has_texture_compression  = GL_FALSE;
+GLboolean GL_has_shader_objects       = GL_FALSE;
+GLboolean GL_has_multitexture         = GL_FALSE;
 GLenum    GL_max_multitexture         = 0;
 
 /*---------------------------------------------------------------------------*/
@@ -401,6 +402,8 @@ static void fini_opengl_obj(void)
 
 /*===========================================================================*/
 
+static GLuint fence = 0;
+
 #ifdef __APPLE__
 
 void init_opengl(void)
@@ -425,6 +428,9 @@ void init_opengl(void)
 
 #else
 
+PFNGLGENFENCESNVPROC                 glGenFencesNV;
+PFNGLSETFENCENVPROC                  glSetFenceNV;
+PFNGLFINISHFENCENVPROC               glFinishFenceNV;
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB;
 PFNGLBINDATTRIBLOCATIONARBPROC       glBindAttribLocationARB;
@@ -656,12 +662,30 @@ void init_opengl(void)
                                   && glFramebufferTexture2DEXT);
     }
 
+    /* Fence support */
+
+    if (opengl_need("GL_NV_fence"))
+    {
+        glGenFencesNV                  = (PFNGLGENFENCESNVPROC)
+                               opengl_proc("glGenFencesNV");
+        glSetFenceNV                  = (PFNGLSETFENCENVPROC)
+                               opengl_proc("glSetFenceNV");
+        glFinishFenceNV               = (PFNGLFINISHFENCENVPROC)
+                               opengl_proc("glFinishFenceNV");
+
+        GL_has_fence = (glSetFenceNV
+                     && glFinishFenceNV);
+    }
+
     /* Miscellaneous procedureless extensions. */
 
     GL_has_point_sprite      = (opengl_need("GL_ARB_point_sprite"));
     GL_has_texture_rectangle = (opengl_need("GL_ARB_texture_rectangle"));
 
     init_opengl_obj();
+
+    if (GL_has_fence)
+        glGenFencesNV(1, &fence);
 }
 
 #endif
@@ -855,6 +879,22 @@ void opengl_pop_framebuffer(void)
 }
 
 /*===========================================================================*/
+
+void opengl_set_fence(void)
+{
+    if (GL_has_fence)
+        glSetFenceNV(fence, GL_ALL_COMPLETED_NV);
+}
+
+void opengl_get_fence(void)
+{
+    if (GL_has_fence)
+        glFinishFenceNV(fence);
+    else
+        glFinish();
+}
+
+/*---------------------------------------------------------------------------*/
 
 void opengl_check(const char *format, ...)
 {

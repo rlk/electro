@@ -595,6 +595,11 @@ static void draw_camera(int i, int j, int f, float a)
                 }
             }
         }
+
+        /* HACK */
+
+        if (c->mode != STEREO_VARRIER_00)
+            opengl_set_fence();
     }
 }
 
