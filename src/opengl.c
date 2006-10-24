@@ -475,6 +475,7 @@ PFNGLGENFRAMEBUFFERSEXTPROC          glGenFramebuffersEXT;
 PFNGLDELETEFRAMEBUFFERSEXTPROC       glDeleteFramebuffersEXT;
 PFNGLBINDFRAMEBUFFEREXTPROC          glBindFramebufferEXT;
 PFNGLFRAMEBUFFERTEXTURE2DEXTPROC     glFramebufferTexture2DEXT;
+PFNGLPOINTPARAMETERINVPROC           glPointParameteriNV;
 
 void init_opengl(void)
 {
@@ -678,6 +679,9 @@ void init_opengl(void)
                      && glFinishFenceNV);
     }
 
+    glPointParameteriNV = (PFNGLPOINTPARAMETERINVPROC)
+                 opengl_proc("glPointParameteriNV");
+
     /* Miscellaneous procedureless extensions. */
 
     GL_has_point_sprite      = (opengl_need("GL_ARB_point_sprite"));
@@ -846,10 +850,13 @@ static void fix_point_sprite_origin(void)
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &fbo);
 
-    if (fbo)
-        glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT);
-    else
-        glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_UPPER_LEFT);
+    if (glPointParameteriNV)
+    {
+        if (fbo)
+            glPointParameteriNV(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT);
+        else
+            glPointParameteriNV(GL_POINT_SPRITE_COORD_ORIGIN, GL_UPPER_LEFT);
+    }
 #endif
 }
 

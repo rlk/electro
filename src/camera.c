@@ -587,7 +587,7 @@ static void draw_camera(int i, int j, int f, float a)
 
         /* Iterate over all tiles of this host. */
 
-        for (tile = 0; tile < get_tile_count(); ++tile)
+        for (tile = 0; tile < (int) get_tile_count(); ++tile)
         {
             float d[2][3];
 

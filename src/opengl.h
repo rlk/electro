@@ -96,6 +96,8 @@ extern PFNGLGENFRAMEBUFFERSEXTPROC          glGenFramebuffersEXT;
 extern PFNGLDELETEFRAMEBUFFERSEXTPROC       glDeleteFramebuffersEXT;
 extern PFNGLBINDFRAMEBUFFEREXTPROC          glBindFramebufferEXT;
 extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC     glFramebufferTexture2DEXT;
+extern PFNGLPOINTPARAMETERINVPROC           glPointParameteriNV;
+
 #endif
 
 #ifndef GL_POINT_SPRITE_ARB

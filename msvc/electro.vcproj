@@ -666,6 +666,12 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\src\terrain.c">
+			</File>
+			<File
+				RelativePath="..\src\terrain.h">
+			</File>
+			<File
 				RelativePath="..\src\tracker.c">
 				<FileConfiguration
 					Name="Debug|Win32">

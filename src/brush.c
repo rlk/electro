@@ -243,7 +243,7 @@ static void load_brush(struct brush *b, const char *file, const char *name)
                     /* If we found our material, parse until the next one. */
 
                     if (!strcmp(W, "newmtl"))
-                        return;
+                        break;
 
                     /* Parse this material's properties. */
 

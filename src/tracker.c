@@ -305,7 +305,7 @@ int get_tracker_position(unsigned int id, float p[3])
         {            
             if (FD_ISSET(sock, &fds))
             {
-                ssize_t s;
+                int s;
 
                 if ((s = recv(sock, &mesg, sizeof (struct message), 0)) ==
                                            sizeof (struct message))
