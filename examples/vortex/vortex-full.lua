@@ -9,19 +9,85 @@ wy = 0
 wz = 0
 
 show_lines = true
-magnitude = 1000
+magnitude = 500
+track = true
+
+-------------------------------------------------------------------------------
+
+fly = false
+
+fly_px = 0
+fly_py = 0
+fly_pz = 0
+
+fly_xx = 0
+fly_xy = 0
+fly_xz = 0
+
+fly_yx = 0
+fly_yy = 0
+fly_yz = 0
+
+fly_zx = 0
+fly_zy = 0
+fly_zz = 0
+
+function fly_begin()
+    fly_px, fly_py, fly_pz = E.get_entity_position(wand)
+    fly_xx, fly_xy, fly_xz = E.get_entity_x_vector(wand)
+    fly_yx, fly_yy, fly_yz = E.get_entity_y_vector(wand)
+    fly_zx, fly_zy, fly_zz = E.get_entity_z_vector(wand)
+
+    fly = true
+end
+
+function fly_step(dt)
+    if fly then
+        local px, py, pz = E.get_entity_position(wand)
+        local xx, xy, xz = E.get_entity_x_vector(wand)
+        local yx, yy, yz = E.get_entity_y_vector(wand)
+        local zx, zy, zz = E.get_entity_z_vector(wand)
+        
+        local tspeed =  10.0
+        local rspeed =  50.0
+
+        local dx = (px - fly_px) * dt * tspeed;
+        local dy = (py - fly_py) * dt * tspeed;
+        local dz = (pz - fly_pz) * dt * tspeed;
+
+        local vx = fly_zx - zx
+        local vy = fly_zy - zy
+        local vz = fly_zz - zz
+
+        local wx = fly_yx - yx
+        local wy = fly_yy - yy
+        local wz = fly_yz - yz
+
+        dX =  (vx * fly_yx + vy * fly_yy + vz * fly_yz) * dt * rspeed
+        dY = -(vx * fly_xx + vy * fly_xy + vz * fly_xz) * dt * rspeed
+        dZ =  (wx * fly_xx + wy * fly_xy + wz * fly_xz) * dt * rspeed
+
+        E.move_entity(camera, dx, dy, dz)
+        E.turn_entity(camera, dX, dY, dZ)
+    end
+end
+
+function fly_end()
+    fly = false
+end
 
 -------------------------------------------------------------------------------
 
 function reset()
+    local x, y, z = E.get_entity_position(head)
     dx = 0
     dy = 0
     dz = 0
     wx = 0
     wy = 0
     tz = 0
-    E.set_entity_position(camera, 0, 0, 0)
-    E.set_entity_rotation(camera, 0, 0, 0)
+    E.set_entity_position(camera, -x, -y, -z + 3)
+    E.set_entity_rotation(camera, 0,  0, 0)
 end
 
 function constellation(name, parent)
@@ -130,9 +196,13 @@ function do_start()
 
     -- Prepare star and sign brushes.
 
-    local star_brush = E.create_brush()
-    E.set_brush_frag_prog(star_brush, "../data/star.fp")
-    E.set_brush_vert_prog(star_brush, "../data/star.vp")
+    local star_n_brush = E.create_brush()
+    E.set_brush_frag_prog(star_n_brush, "../data/star.fp")
+    E.set_brush_vert_prog(star_n_brush, "../data/star.vp")
+
+    local star_f_brush = E.create_brush()
+    E.set_brush_frag_prog(star_f_brush, "../data/star.fp")
+    E.set_brush_vert_prog(star_f_brush, "../data/star.vp")
 
     local sign_image = E.create_image("../data/sunsign.png")
     local sign_brush = E.create_brush()
@@ -142,11 +212,12 @@ function do_start()
     -- Build the scene graph.
 
     camera   = E.create_camera(E.camera_type_perspective)
-    galaxy_H = E.create_galaxy("../data/galaxy_hip.gal", star_brush)
-    galaxy_T = E.create_galaxy("../data/galaxy_tyc.gal", star_brush)
+    galaxy_H = E.create_galaxy("../data/galaxy_hip.gal", star_n_brush)
+    galaxy_T = E.create_galaxy("../data/galaxy_tyc.gal", star_f_brush)
     sign     = E.create_sprite(sign_brush)
     lines    = E.create_pivot()
-    pointer  = E.create_pivot()
+    head     = E.create_pivot()
+    wand     = E.create_pivot()
 
     E.set_galaxy_magnitude(galaxy_H, magnitude)
     E.set_galaxy_magnitude(galaxy_T, magnitude)
@@ -155,22 +226,29 @@ function do_start()
     E.parent_entity(galaxy_H, camera)
     E.parent_entity(galaxy_T, camera)
     E.parent_entity(lines,    camera)
+    E.parent_entity(wand,     camera)
 
-    E.set_entity_scale(sign,  0.005, 0.005, 0.005)
-    E.set_entity_flags(sign,  E.entity_flag_billboard,   true)
-    E.set_entity_flags(galaxy_T, E.entity_flag_ballboard,   true)
+    E.set_entity_scale(sign,     0.0050, 0.0050, 0.0050)
+    E.set_entity_flags(sign,     E.entity_flag_billboard, true)
+    E.set_entity_scale(galaxy_T, 1000.0, 1000.0, 1000.0)
+    E.set_entity_flags(galaxy_T, E.entity_flag_ballboard, true)
+
+    E.set_entity_tracking(wand, 1, E.tracking_mode_local)
+    E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
+    E.set_entity_flags   (wand, E.entity_flag_track_rot, true)
+
+    E.set_entity_tracking(head, 0, E.tracking_mode_local)
+    E.set_entity_flags   (head, E.entity_flag_track_pos, true)
 
     E.set_entity_position(camera, 0, 0, 0)
     E.set_camera_range(camera, 1.0, 10000.0)
-
-    local Ts=1000
-    E.set_entity_scale(galaxy_T, Ts, Ts, Ts)
 
     E.set_background(0, 0, 0)
 
     do_constellations(lines);
 
     E.enable_timer(true)
+    reset()
 end
 
 function do_point(x, y)
@@ -203,33 +281,61 @@ function do_click(b, s)
 end
 
 function do_timer(dt)
-    local x, y, z
+    local joy_x, joy_y = E.get_joystick(0)
+    local s = 8
 
-    -- If braking, nullify all velocities.
-
-    if braking then
-        local k = 1.0 - dt * 2.0
-
-        dx = dx * k
-        dy = dy * k
-        dz = dz * k
-        wx = wx * k
-        wy = wy * k
-        wz = wz * k
+    if joy_x < -0.1 or 0.1 < joy_x then
+        E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
+    end
+    if joy_y < -0.1 or 0.1 < joy_y then
+        E.turn_entity(camera, -joy_y * dt * 90, 0, 0)
     end
 
-    -- Apply all velocities to the camera.
+    if track then
+        fly_step(dt)
+    else
 
-    E.turn_entity(camera, wx, wy, wz);
-    E.move_entity(camera, dx, dy, dz);
+        -- If braking, nullify all velocities.
 
-    -- Center the Tycho data set about the camera
+        if braking then
+            local k = 1.0 - dt * 2.0
 
-    x, y, z = E.get_entity_position(camera);
+            dx = dx * k
+            dy = dy * k
+            dz = dz * k
+            wx = wx * k
+            wy = wy * k
+            wz = wz * k
+        end
 
-    E.set_entity_position(galaxy_T, x, y, z);
+        -- Apply all velocities to the camera.
 
+        E.turn_entity(camera, wx, wy, wz);
+        E.move_entity(camera, dx, dy, dz);
+
+    end
     return true
+end
+
+function do_joystick(d, b, s)
+    if b == 3 then
+        if s then
+            fly_begin()
+        else
+            fly_end()
+        end
+    end
+    if b == 1 then
+        if s then
+            reset()
+        end
+    end
+    if b == 2 then
+        if s then
+            show_lines = not show_lines
+            E.set_entity_flags(lines, E.entity_flag_hidden, not show_lines)
+        end
+    end
 end
 
 function do_keyboard(k, s)
@@ -266,6 +372,9 @@ function do_keyboard(k, s)
             E.chdir("..")
             dofile("demo.lua")
         end
+
+        if k == E.key_1 then track = true  end
+        if k == E.key_2 then track = false end
 
         return true
     end

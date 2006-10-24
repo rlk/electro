@@ -28,7 +28,8 @@
 
 static int count;
 
-#define DEFAULT_BIAS 1.0f
+#define DEFAULT_SIZE 2048
+#define DEFAULT_BIAS 0.5f
 #define DEFAULT_MAGN 2.0f
 
 /*---------------------------------------------------------------------------*/
@@ -563,7 +564,7 @@ int send_create_terrain(const char *filename, int w, int h, int n)
             terrain[i].w     = w;
             terrain[i].h     = h;
             terrain[i].n     = n;
-            terrain[i].m     = 2048;
+            terrain[i].m     = DEFAULT_SIZE;
             terrain[i].o     = 3396000;
             terrain[i].bias  = DEFAULT_BIAS;
             terrain[i].magn  = DEFAULT_MAGN;

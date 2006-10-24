@@ -88,6 +88,7 @@ static int sock = INVALID_SOCKET;
 struct transform
 {
     float M[16];
+    int   a[3];
 };
 
 static struct transform *transform  = NULL;
@@ -169,6 +170,10 @@ int acquire_tracker(int t_key, int c_key, int port)
             transform[i].M[5]  = 1.0f;
             transform[i].M[10] = 1.0f;
             transform[i].M[15] = 1.0f;
+
+            transform[i].a[0] = 1;
+            transform[i].a[1] = 0;
+            transform[i].a[2] = 2;
         }
     }
 
@@ -227,26 +232,29 @@ int get_tracker_rotation(unsigned int id, float R[16])
     {
         if (id < tracker->count)
         {
+            float axis[3][3] = {
+                { 0, 1, 0 },
+                { 1, 0, 0 },
+                { 0, 0, 1 },
+            };
+
+            int a0 = transform[id].a[0];
+            int a1 = transform[id].a[1];
+            int a2 = transform[id].a[2];
+
             /* Return the rotation of sensor ID. */
 
             struct sensor *S =
                 (struct sensor *)((unsigned char *) tracker
                                                   + tracker->offset
                                                   + tracker->size * id);
-#define REORDER 1
+
             /* TODO: Fix potential gimbal lock here? */
 
-#ifdef REORDER
-            load_rot_mat(R, 0, 1, 0, S->r[0]); /* azimuth   */
-            mult_rot_mat(R, 1, 0, 0, S->r[1]); /* elevation */
-            mult_rot_mat(R, 0, 0, 1, S->r[2]); /* roll      */
-#else
-            load_rot_mat(R, 1, 0, 0, S->r[1]); /* elevation */
-            mult_rot_mat(R, 0, 1, 0, S->r[0]); /* azimuth   */
-            mult_rot_mat(R, 0, 0, 1, S->r[2]); /* roll      */
-#endif
+            load_rot_mat(R, axis[a0][0], axis[a0][1], axis[a0][2], S->r[a0]);
+            mult_rot_mat(R, axis[a1][0], axis[a1][1], axis[a1][2], S->r[a1]);
+            mult_rot_mat(R, axis[a2][0], axis[a2][1], axis[a2][2], S->r[a2]);
             mult_mat_mat(R, R, transform[id].M);
-
             return 1;
         }
     }
@@ -374,16 +382,22 @@ int get_tracker_buttons(unsigned int *id, unsigned int *st)
 
 /*---------------------------------------------------------------------------*/
 
-void set_tracker_transform(unsigned int id, float M[16])
+void set_tracker_transform(unsigned int id, float M[16], int a[3])
 {
     if (transform && (int) id < transforms)
+    {
         memcpy(transform[id].M, M, 16 * sizeof (float));
+        memcpy(transform[id].a, a,  3 * sizeof (int));
+    }
 }
 
-void get_tracker_transform(unsigned int id, float M[16])
+void get_tracker_transform(unsigned int id, float M[16], int a[3])
 {
     if (transform && (int) id < transforms)
+    {
         memcpy(M, transform[id].M, 16 * sizeof (float));
+        memcpy(a, transform[id].a,  3 * sizeof (int));
+    }
 }
 
 /*---------------------------------------------------------------------------*/

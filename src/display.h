@@ -53,8 +53,9 @@
 #define TILE_FLIP_Y      2
 #define TILE_TEST_COLOR  4
 #define TILE_TEST_GHOST  8
-#define TILE_LEFT_EYE   16
-#define TILE_RIGHT_EYE  32
+#define TILE_LOCAL_ROT  16
+#define TILE_LEFT_EYE   32
+#define TILE_RIGHT_EYE  64
 
 struct tile
 {

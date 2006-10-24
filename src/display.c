@@ -356,8 +356,8 @@ void send_set_tile_flags(unsigned int i, unsigned int flags,
 {
     send_event(EVENT_SET_TILE_FLAGS);
     send_index(i);
-    send_value(flags);
-    send_value(state);
+    send_index(flags);
+    send_index(state);
 
     if (state)
         tile[i].flags = tile[i].flags | ( flags);

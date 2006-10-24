@@ -2039,28 +2039,40 @@ static int E_get_display_bound(lua_State *L)
 
 static int E_set_tracker_transform(lua_State *L)
 {
-    unsigned int id = (unsigned int) L_getinteger(L, -17);
+    int N = lua_gettop(L);
+
+    unsigned int id = (unsigned int) L_getinteger(L, -N);
 
     float M[16];
+    int   a[3];
 
-    M[ 0] = L_getnumber(L, -16);
-    M[ 1] = L_getnumber(L, -15);
-    M[ 2] = L_getnumber(L, -14);
-    M[ 3] = L_getnumber(L, -13);
-    M[ 4] = L_getnumber(L, -12);
-    M[ 5] = L_getnumber(L, -11);
-    M[ 6] = L_getnumber(L, -10);
-    M[ 7] = L_getnumber(L,  -9);
-    M[ 8] = L_getnumber(L,  -8);
-    M[ 9] = L_getnumber(L,  -7);
-    M[10] = L_getnumber(L,  -6);
-    M[11] = L_getnumber(L,  -5);
-    M[12] = L_getnumber(L,  -4);
-    M[13] = L_getnumber(L,  -3);
-    M[14] = L_getnumber(L,  -2);
-    M[15] = L_getnumber(L,  -1);
+    get_tracker_transform(id, M, a);
 
-    set_tracker_transform(id, M);
+    M[ 0] = L_getnumber(L, -N +  1);
+    M[ 1] = L_getnumber(L, -N +  2);
+    M[ 2] = L_getnumber(L, -N +  3);
+    M[ 3] = L_getnumber(L, -N +  4);
+    M[ 4] = L_getnumber(L, -N +  5);
+    M[ 5] = L_getnumber(L, -N +  6);
+    M[ 6] = L_getnumber(L, -N +  7);
+    M[ 7] = L_getnumber(L, -N +  8);
+    M[ 8] = L_getnumber(L, -N +  9);
+    M[ 9] = L_getnumber(L, -N + 10);
+    M[10] = L_getnumber(L, -N + 11);
+    M[11] = L_getnumber(L, -N + 12);
+    M[12] = L_getnumber(L, -N + 13);
+    M[13] = L_getnumber(L, -N + 14);
+    M[14] = L_getnumber(L, -N + 15);
+    M[15] = L_getnumber(L, -N + 16);
+    
+    if (N >= 20)
+    {
+        a[0] = L_getinteger(L, -N + 17);
+        a[1] = L_getinteger(L, -N + 18);
+        a[2] = L_getinteger(L, -N + 19);
+    }
+
+    set_tracker_transform(id, M, a);
 
     return 0;
 }
@@ -2705,6 +2717,7 @@ static struct constant_def constants[] = {
     { "tile_flag_test_ghost",      TILE_TEST_GHOST     },
     { "tile_flag_left_eye",        TILE_LEFT_EYE       },
     { "tile_flag_right_eye",       TILE_RIGHT_EYE      },
+    { "tile_flag_local_rot",       TILE_LOCAL_ROT      },
 
     /* Camera constants */
 

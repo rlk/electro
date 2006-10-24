@@ -1,7 +1,7 @@
--- 32-degree-per-pixel data
 
+-- 32-degree-per-pixel data
 --[[
-DATA_S = "/data2/evl/rlk/megr032.raw"
+DATA_S = "/data2/rlk/megr032.raw"
 DATA_W = 11520
 DATA_H = 5760
 DATA_N = 45
@@ -9,7 +9,7 @@ DATA_N = 45
 
 -- 64-degree-per-pixel data
 
-DATA_S = "/data2/evl/rlk/megr064.raw"
+DATA_S = "/data2/rlk/megr064.raw"
 DATA_W = 23040
 DATA_H = 11520
 DATA_N = 45
@@ -56,6 +56,17 @@ YC = 0
 ZC = 0
 
 -------------------------------------------------------------------------------
+
+function reset()
+    rot_x = 25.2
+    rot_y = 180
+    pan_x = 0
+    pan_y = 0
+    pan_z = 0
+    E.set_entity_rotation(pivot, rot_x, rot_y, 0.0)
+    E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
+    E.set_entity_position(camera, 0.0, 0.0, init_z)
+end
 
 function speed()
     local cx, cy, cz = E.get_entity_position(camera)
@@ -111,9 +122,9 @@ function fly_step(dt)
         local wy = fly_yy - yy
         local wz = fly_yz - yz
 
-        dX = (vx * fly_xx + vy * fly_xy + vz * fly_xz) * dt * rspeed
-        dY = (vx * fly_yx + vy * fly_yy + vz * fly_yz) * dt * rspeed
-        dZ = (wx * fly_xx + wy * fly_xy + wz * fly_xz) * dt * rspeed
+        dX =  (vx * fly_yx + vy * fly_yy + vz * fly_yz) * dt * rspeed
+        dY = -(vx * fly_xx + vy * fly_xy + vz * fly_xz) * dt * rspeed
+        dZ =  (wx * fly_xx + wy * fly_xy + wz * fly_xz) * dt * rspeed
 
         E.move_entity(camera, dx, dy, dz)
         E.turn_entity(camera, dX, dY, dZ)
@@ -179,10 +190,17 @@ function do_start()
 end
 
 function do_joystick(d, b, s)
-    if s then
-        fly_begin()
-    else
-        fly_end()
+    if b == 1 then
+        if s then
+            reset()
+        end
+    end
+    if b == 3 then
+        if s then
+            fly_begin()
+        else
+            fly_end()
+        end
     end
 end
 
@@ -204,12 +222,12 @@ function do_timer(dt)
     jz = ((n - 1) * jz + joy_z) / n
     jw = ((n - 1) * jw + joy_w) / n
 
+--[[
     E.turn_entity(camera, 0, -jx * dr, 0)
     E.move_entity(camera, 0, 0,  jy * dp)
     E.turn_entity(camera, 0, 0, -jz * dr)
     E.turn_entity(camera,  jw * dr, 0, 0)
-
-
+]]--
     mov_x, mov_y, mov_z = E.get_entity_x_vector(wand)
     E.move_entity(camera, -mov_x * pan_x * dt * s,
                           -mov_y * pan_x * dt * s,
@@ -224,11 +242,14 @@ function do_timer(dt)
     E.move_entity(camera, -mov_x * pan_z * dt * s,
                           -mov_y * pan_z * dt * s,
                           -mov_z * pan_z * dt * s)
+--[[
+    E.move_entity(camera, mov_x * jy * dp,
+                          mov_y * jy * dp,
+                          mov_z * jy * dp)
+]]--
+    rot_y = rot_y + (jx + rot_d) * dt * 10
 
-    if rot_d < 0 or 0 < rot_d then
-        rot_y = rot_y + rot_d * dt * 10
-        E.set_entity_rotation(pivot, rot_x, rot_y, 0)
-    end
+    E.set_entity_rotation(pivot, rot_x, rot_y, 0)
 
 
     local cx, cy, cz = E.get_entity_position(camera)
@@ -285,14 +306,7 @@ function do_keyboard(k, s)
 
     if s then
         if k == E.key_return then
-            rot_x = 25.2
-            rot_y = 180
-            pan_x = 0
-            pan_y = 0
-            pan_z = 0
-            E.set_entity_rotation(pivot, rot_x, rot_y, 0.0)
-            E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
-            E.set_entity_position(camera, 0.0, 0.0, init_z)
+            reset()
             return true
         end
 

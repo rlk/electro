@@ -375,8 +375,8 @@ for i = 0, 65 do
     E.set_tile_viewport(tile[i], v[i][1], v[i][2], v[i][3], v[i][4])
     E.set_tile_position(tile[i], p[i][1], p[i][2], p[i][3], p[i][4],
                         p[i][5], p[i][6], p[i][7], p[i][8], p[i][9])
-
-    varrier_init()
 end
+
+varrier_init()
 
 -------------------------------------------------------------------------------

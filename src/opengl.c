@@ -673,7 +673,8 @@ void init_opengl(void)
         glFinishFenceNV               = (PFNGLFINISHFENCENVPROC)
                                opengl_proc("glFinishFenceNV");
 
-        GL_has_fence = (glSetFenceNV
+        GL_has_fence = (glGenFencesNV
+                     && glSetFenceNV
                      && glFinishFenceNV);
     }
 

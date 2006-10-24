@@ -39,6 +39,7 @@
 varrier_tile = 0
 varrier_qual = 0.5
 varrier_test = 0
+varrier_lrot = false
 
 -------------------------------------------------------------------------------
 
@@ -199,6 +200,23 @@ function set_varrier_shift(d)
     return true
 end
 
+-- Toggle the local rotation flag for all tiles.
+
+function set_varrier_lrot(b)
+    local i
+
+    varrier_lrot = b
+
+    for i = 0, table.getn(line_screen) do
+        if tile[i] then
+            E.set_tile_flags(tile[i], E.tile_flag_local_rot, varrier_lrot)
+        end
+    end
+    print(varrier_lrot)
+
+    return true
+end
+
 -- Toggle the test state of one or all Varrier tiles.
 
 function set_varrier_test(b)
@@ -295,6 +313,11 @@ function varrier_keyboard(k, s, camera)
 
             end
 
+            if k == E.key_space then
+                set_varrier_lrot(not varrier_lrot)
+                return true
+            end
+
             if k == E.key_tab then
                 set_varrier_test(varrier_test + 1)
 
@@ -316,7 +339,6 @@ function varrier_keyboard(k, s, camera)
                                 -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
             return true
         end
---[[
         if k == E.key_F7 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_11,
                                 -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
@@ -327,7 +349,7 @@ function varrier_keyboard(k, s, camera)
                                 -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)
             return true
         end
-]]--
+
         if k == E.key_F9 then
             E.set_camera_stereo(camera, E.stereo_mode_varrier_00,
                                 -eye_x, eye_y, eye_z, eye_x, eye_y, eye_z)

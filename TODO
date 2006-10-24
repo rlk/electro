@@ -1,3 +1,5 @@
+spherical aberation correction (snells law) on combiner
+
 lua 5.1 / nix luasocket dep
 unfuck terrain
 package mars cdrom

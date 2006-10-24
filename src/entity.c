@@ -191,9 +191,18 @@ void transform_entity(unsigned int i)
 {
     /* Translation. */
 
-    glTranslatef(entity[i].position[0],
-                 entity[i].position[1],
-                 entity[i].position[2]);
+    if (entity[i].flags & FLAG_BALLBOARD)
+    {
+        float p[3];
+
+        get_camera_pos(p);
+
+        glTranslatef(p[0], p[1], p[2]);
+    }
+    else
+        glTranslatef(entity[i].position[0],
+                     entity[i].position[1],
+                     entity[i].position[2]);
 
     /* Rotation. */
 
@@ -213,7 +222,7 @@ void transform_entity(unsigned int i)
 
         glLoadMatrixf(M);
     }
-
+/*
     if (entity[i].flags & FLAG_BALLBOARD)
     {
         float M[16];
@@ -227,6 +236,7 @@ void transform_entity(unsigned int i)
 
         glLoadMatrixf(M);
     }
+*/
 
     /* Scale. */
 

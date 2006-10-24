@@ -347,7 +347,7 @@ static void test_color(int eye)
             if (eye == 0)
                 glColor3f(0.0f, 1.0f, 0.0f);
             else
-                glColor3f(0.0f, 0.0f, 1.0f);
+                glColor3f(1.0f, 0.0f, 1.0f);
 
             glVertex2i(0, 0);
             glVertex2i(1, 0);
@@ -437,19 +437,42 @@ static int draw_tile(struct camera *c, int eye, int tile, const float d[3])
     return 0;
 }
 
-static void get_eye_pos(float d[3], struct camera *c, int eye)
+static void get_eye_pos(float d[3], struct camera *c, int eye, int tile)
 {
     /* Compute the world-space eye position. */
 
-    d[0] = c->pos_offset[0] + c->eye_offset[eye][0] * c->view_basis[0][0]
-                            + c->eye_offset[eye][1] * c->view_basis[1][0]
-                            + c->eye_offset[eye][2] * c->view_basis[2][0];
-    d[1] = c->pos_offset[1] + c->eye_offset[eye][0] * c->view_basis[0][1]
-                            + c->eye_offset[eye][1] * c->view_basis[1][1]
-                            + c->eye_offset[eye][2] * c->view_basis[2][1];
-    d[2] = c->pos_offset[2] + c->eye_offset[eye][0] * c->view_basis[0][2]
-                            + c->eye_offset[eye][1] * c->view_basis[1][2]
-                            + c->eye_offset[eye][2] * c->view_basis[2][2];
+    if (get_tile_flags(tile) & TILE_LOCAL_ROT)
+    {
+        float r[3];
+        float u[3];
+        float n[3];
+
+        get_tile_r(tile, r);
+        get_tile_u(tile, u);
+        get_tile_n(tile, n);
+
+        d[0] = c->pos_offset[0] + c->eye_offset[eye][0] * r[0]
+                                + c->eye_offset[eye][1] * u[0]
+                                + c->eye_offset[eye][2] * n[0];
+        d[1] = c->pos_offset[1] + c->eye_offset[eye][0] * r[1]
+                                + c->eye_offset[eye][1] * u[1]
+                                + c->eye_offset[eye][2] * n[1];
+        d[2] = c->pos_offset[2] + c->eye_offset[eye][0] * r[2]
+                                + c->eye_offset[eye][1] * u[2]
+                                + c->eye_offset[eye][2] * n[2];
+    }
+    else
+    {
+        d[0] = c->pos_offset[0] + c->eye_offset[eye][0] * c->view_basis[0][0]
+                                + c->eye_offset[eye][1] * c->view_basis[1][0]
+                                + c->eye_offset[eye][2] * c->view_basis[2][0];
+        d[1] = c->pos_offset[1] + c->eye_offset[eye][0] * c->view_basis[0][1]
+                                + c->eye_offset[eye][1] * c->view_basis[1][1]
+                                + c->eye_offset[eye][2] * c->view_basis[2][1];
+        d[2] = c->pos_offset[2] + c->eye_offset[eye][0] * c->view_basis[0][2]
+                                + c->eye_offset[eye][1] * c->view_basis[1][2]
+                                + c->eye_offset[eye][2] * c->view_basis[2][2];
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -570,8 +593,8 @@ static void draw_camera(int i, int j, int f, float a)
 
             /* Iterate over the eyes. */
 
-            get_eye_pos(d[0], c, 0);
-            get_eye_pos(d[1], c, 1);
+            get_eye_pos(d[0], c, 0, tile);
+            get_eye_pos(d[1], c, 1, tile);
 
             for (eye = 0; eye < (c->mode ? 2 : 1); ++eye)
             {
