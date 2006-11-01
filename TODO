@@ -2,8 +2,6 @@ spherical aberation correction (snells law) on combiner
 
 lua 5.1 / nix luasocket dep
 unfuck terrain
-package mars cdrom
-vortex with mars navigation
 Euler transform order option
 compressed texture image flag
 Query OpenGL extensions string.
