@@ -296,6 +296,7 @@ static int stereo_varrier_00(int eye, int tile, int pass, float v[2][3])
         push_quality(q);
 
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        draw_tile_background(tile);
 
         return 1;
     }

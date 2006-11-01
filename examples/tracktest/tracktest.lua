@@ -2,26 +2,22 @@
 -------------------------------------------------------------------------------
 
 function do_start()
-    X0, Y0, Z0, X1, Y1, Z1 = E.get_display_bound()
-
-    XC = (X0 + X1) / 2
-    YC = (Y0 + Y1) / 2
-    ZC = (Z0 + Z1) / 2
 
     camera = E.create_camera(E.camera_type_perspective)
     light  = E.create_light(E.light_type_directional)
     pivot  = E.create_pivot()
     wand   = E.create_pivot()
-    hand   = E.create_object("../data/axes.lua")
     head   = E.create_pivot()
+    hand   = E.create_object("../data/axes.obj")
+    floor  = E.create_object("../data/checker.obj")
 
     E.parent_entity(light, camera)
     E.parent_entity(pivot, light)
     E.parent_entity(wand,  light)
     E.parent_entity(hand,  light)
     
-    E.set_entity_position(light,  0.0,  8.0,  8.0)
-    E.set_entity_position(pivot,  XC,   YC,   ZC)
+    E.set_entity_position(light, 0.0, 8.0, 8.0)
+    E.set_entity_scale   (floor, 4.0, 4.0, 4.0)
 
     E.set_entity_tracking(head, 0, E.tracking_mode_local)
     E.set_entity_flags   (head, E.entity_flag_track_pos, true)
@@ -35,7 +31,7 @@ function do_start()
     E.set_entity_flags   (wand, E.entity_flag_track_pos, true)
     E.set_entity_flags   (wand, E.entity_flag_track_rot, true)
 
-    E.parent_entity(E.create_object("../data/checker.obj", pivot)
+    E.parent_entity(floor, pivot)
 
     E.enable_timer(true)
 end
@@ -68,22 +64,17 @@ function do_keyboard(k, s)
         end
     end
 
-    if s then
-        if k == E.key_return then
-            E.set_entity_rotation(pivot,  0.0, 0.0, 0.0)
-            E.set_entity_position(camera, 0.0, 0.0, 0.0)
-            E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
-            rot_x = 0
-            rot_y = 0
-            pan_x = 0
-            pan_y = 0
-            pan_z = 0
-            return true
-        end
+    if s and k == E.key_return then
+        E.set_entity_rotation(pivot,  0.0, 0.0, 0.0)
+        E.set_entity_position(camera, 0.0, 0.0, 0.0)
+        E.set_entity_rotation(camera, 0.0, 0.0, 0.0)
+        return true
+    end
 
     return false
 end
 
 -------------------------------------------------------------------------------
 
+E.set_background(0.1, 0.2, 0.4, 0.8, 0.8, 1.0)
 do_start()

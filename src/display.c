@@ -977,28 +977,28 @@ void draw_tile_background(unsigned int i)
 
     /* Confine rendering to this tile. */
 
-    glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
-    glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
-
-    /* Map the tile onto the unit cube. */
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0, 1, 0, 1, 0, 1);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    /* Fill the tile at the far plane using the computed gradient. */
-
     glPushAttrib(GL_ENABLE_BIT);
     {
         float l = (T->flags & TILE_FLIP_X) ? 1.0f : 0.0f;
         float r = (T->flags & TILE_FLIP_X) ? 0.0f : 1.0f;
         float b = (T->flags & TILE_FLIP_Y) ? 1.0f : 0.0f;
         float t = (T->flags & TILE_FLIP_Y) ? 0.0f : 1.0f;
+/*
+        glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
+        glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
+*/
+        /* Map the tile onto the unit cube. */
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, 1, 0, 1, 0, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        /* Fill the tile at the far plane using the computed gradient. */
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_CULL_FACE);
@@ -1018,15 +1018,15 @@ void draw_tile_background(unsigned int i)
             glVertex3f(l, t, -1);
         }
         glEnd();
+
+        /* Revert to the previous transformation. */
+
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
     }
     glPopAttrib();
-
-    /* Revert to the previous transformation. */
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
 }
 
 void draw_host_background(void)
