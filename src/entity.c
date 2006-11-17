@@ -145,6 +145,18 @@ static unsigned int new_entity(void)
 
 /*===========================================================================*/
 
+int get_entity_index(void *p)
+{
+    return ((struct entity *) p - entity);
+}
+
+void *get_entity_point(int i)
+{
+    return (void *) (entity + i);
+}
+
+/*---------------------------------------------------------------------------*/
+
 int get_entity_data(unsigned int i)
 {
     return entity[i].data;

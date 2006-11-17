@@ -131,13 +131,12 @@ static void E_pushuserdata(lua_State *L, int type, int data)
 
 static int E_toentity(lua_State *L, int i)
 {
-    return E_touserdata(L, i);
+    return get_entity_index(lua_touserdata(L, i));
 }
 
 static int E_isentity(lua_State *L, int i)
 {
-    return ((lua_isuserdata(L, i)) &&
-              (E_tousertype(L, i) == USERDATA_ENTITY));
+    return (lua_type(L, i) == LUA_TLIGHTUSERDATA);
 }
 
 static void E_pushentity(lua_State *L, int id)
@@ -145,7 +144,7 @@ static void E_pushentity(lua_State *L, int id)
     if (id <= 0 || get_entity_type(id) == 0)
         lua_pushnil(L);
     else
-        E_pushuserdata(L, USERDATA_ENTITY, id);
+        lua_pushlightuserdata(L, get_entity_point(id));
 }
 
 /*---------------------------------------------------------------------------*/

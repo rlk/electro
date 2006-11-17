@@ -85,6 +85,9 @@ struct entity_func
 
 /*===========================================================================*/
 
+int   get_entity_index(void *);
+void *get_entity_point(int);
+
 int         get_entity_data(unsigned int);
 int         get_entity_type(unsigned int);
 const char *get_entity_name(unsigned int);
