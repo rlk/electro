@@ -533,7 +533,10 @@ static int E_delete_entity(lua_State *L)
 
 static int E_create_clone(lua_State *L)
 {
-    int id = send_create_clone(E_getentity(L, -1));
+/*  int id = send_create_clone(E_getentity(L, -1)); */
+
+    int i = E_getentity(L, -1);
+    int id = send_create_clone(i);
 
     E_pushentity(L, id);
     return 1;

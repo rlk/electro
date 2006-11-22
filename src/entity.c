@@ -147,12 +147,16 @@ static unsigned int new_entity(void)
 
 int get_entity_index(void *p)
 {
-    return ((struct entity *) p - entity);
+    // HACK: Don't cast pointers to integers.
+
+    return (int) ((size_t) p);
 }
 
 void *get_entity_point(int i)
 {
-    return (void *) (entity + i);
+    // HACK: Don't cast integers to pointers.
+
+    return (void *) ((size_t) i);
 }
 
 /*---------------------------------------------------------------------------*/
