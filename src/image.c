@@ -924,12 +924,17 @@ static void step_image_ani(int i)
 
         if ((fp = fopen(filename, "rb")))
         {
+            size_t sz;
+
             /* Load compressed or raw pixel data. */
 
             if ((p->flags & FLAG_COMP) && GL_has_texture_compression)
-                fread(p->nfo.ani.data, 1, p->w * p->h / 2, fp);
+                sz = p->w * p->h / 2;
             else
-                fread(p->nfo.ani.data, 1, p->w * p->h * p->b, fp);
+                sz = p->w * p->h * p->b;
+             
+            if (fread(p->nfo.ani.data, 1, sz, fp) < sz)
+                error("'%s' load trucated", filename);
 
             /* Distribute the loaded pixels. */
 

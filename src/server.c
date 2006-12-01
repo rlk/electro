@@ -487,6 +487,11 @@ void server(int argc, char *argv[])
 
                 parse_scripts(argc, argv);
 
+                /* Run one loop of buffer sync to broadcast the config. */
+
+                send_event(EVENT_NULL);
+                sync_buffer();
+
                 sync_display();
 
                 if (init_video(get_window_w(),

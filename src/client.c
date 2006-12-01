@@ -136,6 +136,9 @@ static void client_recv(void)
         case EVENT_SET_BACKGROUND:        recv_set_background();        break;
         case EVENT_SET_FONT:              recv_set_font();              break;
 
+        case EVENT_ADD_HOST:              recv_add_host();              break;
+        case EVENT_SET_HOST_FLAGS:        recv_set_host_flags();        break;
+
         case EVENT_ADD_TILE:              recv_add_tile();              break;
         case EVENT_SET_TILE_FLAGS:        recv_set_tile_flags();        break;
         case EVENT_SET_TILE_VIEWPORT:     recv_set_tile_viewport();     break;
@@ -156,7 +159,7 @@ static void client_swap(void)
     SDL_GL_SwapBuffers();
 }
 
-static void client_draw(void)
+void client_draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -203,6 +206,10 @@ void client(void)
             startup_font()    &&
             startup_entity())
         {
+            /* Run one loop of buffer sync to recieve the config. */
+
+            client_recv();
+
             sync_display();
 
             if (init_video(get_window_w(),

@@ -106,8 +106,13 @@ void path_push(const char *path)
 {
     if (path_index < MAXPATH)
     {
-        getcwd(path_stack[path_index++], MAXSTR);
-        chdir(path);
+        if (getcwd(path_stack[path_index], MAXSTR))
+        {
+            path_index++;
+
+            if (chdir(path))
+                error("Change to '%s' failed", path);
+        }
     }
     else error("Directory stack overflow");
 }
@@ -115,7 +120,12 @@ void path_push(const char *path)
 void path_pop(void)
 {
     if (path_index > 0)
-        chdir(path_stack[--path_index]);
+    {
+        path_index--;
+
+        if (chdir(path_stack[path_index]))
+            error("Change to '%s' failed", path_stack[path_index]);
+    }
     else
         error("Directory stack underflow");
 }
@@ -163,7 +173,8 @@ void *load_file(const char *filename, const char *mode, size_t *size)
             if ((fp = open_file(filename, mode)))
             {
                 if ((ptr = calloc(buf.st_size + 1, 1)))
-                    fread(ptr, 1, buf.st_size, fp);
+                    if (fread(ptr, 1, buf.st_size, fp) < buf.st_size)
+                        error("'%s': Load truncated", filename);
 
                 if (size)
                    *size = buf.st_size;

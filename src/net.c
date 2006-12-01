@@ -48,13 +48,14 @@ void net_send_all(const char *str)
 {
     if (port)
     {
-        int i;
+        int i, n = (int) strlen(str);
 
         /* Send output to all connected clients. */
 
         for (i = 0; i < MAXCONN; ++i)
             if (conn[i].sock != INVALID_SOCKET)
-                write(conn[i].sock, str, strlen(str));
+                if ((int) write(conn[i].sock, str, n) < n)
+                    error("Network write truncated");
     }
 }
 

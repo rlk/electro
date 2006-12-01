@@ -22,6 +22,8 @@ LOD entity
 Reconsider reference count mechanism
 new vector implementation
         improve vector traversal
+        should be able to provide count
+        should be able to confirm index allocation
 abstract to a library?
 new OBJ implementation
 new combiner implementation

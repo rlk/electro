@@ -109,9 +109,10 @@ int startup_display(void);
 
 void sync_display(void);
 
-unsigned int add_host(const char *, int, int, int, int);
-
 /*---------------------------------------------------------------------------*/
+
+unsigned int send_add_host(const char *, int, int, int, int);
+void         recv_add_host(void);
 
 unsigned int send_add_tile(unsigned int, int, int, int, int);
 void         recv_add_tile(void);
@@ -120,6 +121,7 @@ void         recv_add_tile(void);
 
 void send_set_host_flags   (unsigned int, unsigned int, unsigned int);
 void send_set_tile_flags   (unsigned int, unsigned int, unsigned int);
+
 void send_set_tile_quality (unsigned int, const float[2]);
 void send_set_tile_viewport(unsigned int, int, int, int, int);
 void send_set_tile_position(unsigned int, const float[3],
@@ -128,6 +130,7 @@ void send_set_tile_position(unsigned int, const float[3],
 void send_set_tile_linescrn(unsigned int, float, float,
                                    float, float, float);
 
+void recv_set_host_flags   (void);
 void recv_set_tile_flags   (void);
 void recv_set_tile_quality (void);
 void recv_set_tile_viewport(void);

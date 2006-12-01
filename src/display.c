@@ -32,11 +32,11 @@
 
 /*===========================================================================*/
 
-static int host_count = 0;
-
 static struct tile *tile  = NULL;
 static struct host *host  = NULL;
-static struct host *local = NULL;
+
+static struct tile  default_tile;
+static struct host  current_host;
 
 static int display_x = DEFAULT_X;
 static int display_y = DEFAULT_Y;
@@ -94,6 +94,16 @@ static unsigned int new_host(void)
 #define ALL_HOSTS(i, ii) \
     i = ii = 0; vec_all(host, sizeof (struct host), &i, &ii);
  
+/*---------------------------------------------------------------------------*/
+
+static struct tile *get_tile(unsigned int i)
+{
+    if (i < current_host.n)
+        return tile + current_host.tile[i];
+    else
+        return &default_tile;
+}
+
 /*===========================================================================*/
 
 void set_window_pos(int x, int y)
@@ -178,6 +188,7 @@ unsigned int add_host(const char *name, int x, int y, int w, int h)
     if ((i = new_host()))
     {
         host[i].flags = 0;
+        host[i].n     = 0;
 
         /* Store the name for future host name searching. */
 
@@ -189,8 +200,6 @@ unsigned int add_host(const char *name, int x, int y, int w, int h)
         host[i].tot_y = host[i].win_y = y;
         host[i].tot_w = host[i].win_w = w;
         host[i].tot_h = host[i].win_h = h;
-
-        host_count++;
     }
     return i;
 }
@@ -201,7 +210,9 @@ static unsigned int add_tile(unsigned int i, int x, int y, int w, int h)
     
     if ((chk_host(i)) && (j = new_tile()))
     {
-        tile[j].flags = 0;
+        /* Set a default display configuration. */
+
+        tile[j] = default_tile;
 
         /* The rectangle defines viewport size and default ortho projection. */
 
@@ -209,27 +220,6 @@ static unsigned int add_tile(unsigned int i, int x, int y, int w, int h)
         tile[j].pix_y = tile[j].win_y = y;
         tile[j].pix_w = tile[j].win_w = w;
         tile[j].pix_h = tile[j].win_h = h;
-
-        /* Set a default display configuration. */
-
-        tile[j].o[0] = DEFAULT_OX;
-        tile[j].o[1] = DEFAULT_OY;
-        tile[j].o[2] = DEFAULT_OZ;
-        tile[j].r[0] = DEFAULT_RX;
-        tile[j].r[1] = DEFAULT_RY;
-        tile[j].r[2] = DEFAULT_RZ;
-        tile[j].u[0] = DEFAULT_UX;
-        tile[j].u[1] = DEFAULT_UY;
-        tile[j].u[2] = DEFAULT_UZ;
-
-        tile[j].varrier_pitch = DEFAULT_VARRIER_PITCH;
-        tile[j].varrier_angle = DEFAULT_VARRIER_ANGLE;
-        tile[j].varrier_thick = DEFAULT_VARRIER_THICK;
-        tile[j].varrier_shift = DEFAULT_VARRIER_SHIFT;
-        tile[j].varrier_cycle = DEFAULT_VARRIER_CYCLE;
-
-        tile[j].quality[0] = 1.0f;
-        tile[j].quality[1] = 1.0f;
 
         /* Include this tile in the host and in the total display. */
 
@@ -241,7 +231,7 @@ static unsigned int add_tile(unsigned int i, int x, int y, int w, int h)
 }
 
 /*---------------------------------------------------------------------------*/
-
+#ifdef SNIP
 void sync_display(void)
 {
     char name[MAXNAME];
@@ -265,17 +255,6 @@ void sync_display(void)
 
             if (rank) host[i].n = 0;
         }
-/*
-    for (i = 0; i < num; i++)
-        if ((j = (rank) ? vecadd(host) : i) >= 0)
-        {
-            H = (struct host *) vecget(host, i);
-
-            assert_mpi(MPI_Bcast(H, siz, MPI_BYTE, 0, MPI_COMM_WORLD));
-
-            if (rank) H->n = 0;
-        }
-*/
 #endif
 
     /* Search the definition list for an entry matching this host's name */
@@ -292,27 +271,152 @@ void sync_display(void)
 
                 /* Nuke its name so it isn't matched again. */
 
-                local->name[0] = '\0';
+                fprintf(stderr, "%d used %s %d\n", rank, current.name, i);
+
+                current.name[0] = '\0';
             }
 
     /* If no host definition was found, create a default. */
 
     if (local == NULL)
     {
-        i = add_host(DEFAULT_NAME, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
-            add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+        i = add_host(DEFAULT_NAME, default.X, default.Y, default.W, default.H);
+            add_tile(i,            default.X, default.Y, default.W, default.H);
 
         local        = host + i;
-        local->flags = HOST_FRAMED;
+        current.flags = HOST_FRAMED;
     }
 
     /* Position the server window, if necessary. */
 
-    if (rank || (local->flags & HOST_FRAMED) == 0)
-        set_window_pos(local->win_x, local->win_y);
+    if (rank || (current.flags & HOST_FRAMED) == 0)
+        set_window_pos(current.win_x, current.win_y);
+}
+#endif
+
+int find_display(const char *name)
+{
+    unsigned int i, ii;
+
+    /* Find a host definition for the given name.  Mark it as used. */
+
+    for (ALL_HOSTS(i, ii))
+        if (strncmp(host[i].name, name, MAXNAME) == 0)
+        {
+            host[i].name[0] = '\0';
+            return i;
+        }
+
+    /* Find a default host definition specification.  Mark it as used. */
+
+    for (ALL_HOSTS(i, ii))
+        if (strncmp(host[i].name, DEFAULT_NAME, MAXNAME) == 0)
+        {
+            host[i].name[0] = '\0';
+            return i;
+        }
+
+    /* Return 0 upon failure. */
+
+    return 0;
+}
+
+void sync_display(void)
+{
+#ifdef CONF_MPI
+    MPI_Status stat;
+    int        rank = 0;
+    int        size = 0;
+#endif
+
+    char name[MAXNAME];
+    int  i = 0;
+
+    gethostname(name, MAXNAME);
+
+#ifdef CONF_MPI
+
+    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+    assert_mpi(MPI_Comm_size(MPI_COMM_WORLD, &size));
+
+    if (rank)
+    {
+        /* Send the name to the root, recieve the host index. */
+
+        MPI_Send(name, MAXNAME, MPI_BYTE, 0,0, MPI_COMM_WORLD);
+        MPI_Recv(&i,   4,       MPI_BYTE, 0,0, MPI_COMM_WORLD, &stat);
+    }
+    else
+    {
+        int j, k;
+
+        /* Find a host definition for the root. */
+
+        i = find_display(name);
+
+        /* Recieve a name from each client, send a host definition index. */
+
+        for (j = 1; j < size; ++j)
+        {
+            MPI_Recv(name, MAXNAME, MPI_BYTE, j,0, MPI_COMM_WORLD, &stat);
+            k = find_display(name);
+            MPI_Send(&k,   4,       MPI_BYTE, j,0, MPI_COMM_WORLD);
+        }
+    }
+
+#endif
+
+    /* If no host definition was found, create a default. */
+
+    if (i == 0)
+    {
+        i = add_host(DEFAULT_NAME, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+            add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+    }
+
+    /* Note the indexed host definition as current. */
+
+    current_host = host[i];
+
+    /* Position the server window, if necessary. */
+
+    if (rank || (current_host.flags & HOST_FRAMED) == 0)
+        set_window_pos(current_host.win_x, current_host.win_y);
 }
 
 /*===========================================================================*/
+
+unsigned int send_add_host(const char *name, int x, int y, int w, int h)
+{
+    int n = strlen(name) + 1;
+
+    send_event(EVENT_ADD_HOST);
+    send_value(n);
+    send_value(x);
+    send_value(y);
+    send_value(w);
+    send_value(h);
+    send_array(name, n, 1);
+
+    return add_host(name, x, y, w, h);
+}
+
+void recv_add_host(void)
+{
+    char name[MAXNAME];
+
+    int n = recv_value();
+    int x = recv_value();
+    int y = recv_value();
+    int w = recv_value();
+    int h = recv_value();
+
+    recv_array(name, n, 1);
+
+    add_host(name, x, y, w, h);
+}
+
+/*---------------------------------------------------------------------------*/
 
 unsigned int send_add_tile(unsigned int i, int x, int y, int w, int h)
 {
@@ -343,8 +447,10 @@ void recv_add_tile(void)
 void send_set_host_flags(unsigned int i, unsigned int flags,
                                          unsigned int state)
 {
-    /* Host flags are only used at host creation time, so there's no point   */
-    /* in sending them off to already-initialized hosts.                     */
+    send_event(EVENT_SET_HOST_FLAGS);
+    send_index(i);
+    send_index(flags);
+    send_index(state);
 
     if (state)
         host[i].flags = host[i].flags | ( flags);
@@ -416,6 +522,18 @@ void send_set_tile_linescrn(unsigned int i, float p, float a,
 }
 
 /*---------------------------------------------------------------------------*/
+
+void recv_set_host_flags(void)
+{
+    unsigned int i     = recv_index();
+    unsigned int flags = recv_index();
+    unsigned int state = recv_index();
+
+    if (state)
+        host[i].flags = host[i].flags | ( flags);
+    else
+        host[i].flags = host[i].flags & (~flags);
+}
 
 void recv_set_tile_flags(void)
 {
@@ -505,28 +623,22 @@ void recv_set_background(void)
 
 void set_window_full(int f)
 {
-    if (local)
-    {
-        if (f)
-            local->flags |= ( HOST_FULL);
-        else
-            local->flags &= (~HOST_FULL);
-    }
+    if (f)
+        current_host.flags |= ( HOST_FULL);
+    else
+        current_host.flags &= (~HOST_FULL);
 }
 
 void set_window_w(int w)
 {
     unsigned int i;
 
-    if (local)
-    {
-        local->win_w = w;
+    current_host.win_w = w;
 
-        for (i = 0; i < local->n; ++i)
-        {
-            tile[local->tile[i]].win_w = w;
-            tile[local->tile[i]].pix_w = w;
-        }
+    for (i = 0; i < current_host.n; ++i)
+    {
+        tile[current_host.tile[i]].win_w = w;
+        tile[current_host.tile[i]].pix_w = w;
     }
 }
 
@@ -534,34 +646,31 @@ void set_window_h(int h)
 {
     unsigned int i;
 
-    if (local)
-    {
-        local->win_h = h;
+    current_host.win_h = h;
 
-        for (i = 0; i < local->n; ++i)
-        {
-            tile[local->tile[i]].win_h = h;
-            tile[local->tile[i]].pix_h = h;
-        }
-   }
+    for (i = 0; i < current_host.n; ++i)
+    {
+        tile[current_host.tile[i]].win_h = h;
+        tile[current_host.tile[i]].pix_h = h;
+    }
 }
 
-int get_window_w(void) { return local ? local->win_w : DEFAULT_W; }
-int get_window_h(void) { return local ? local->win_h : DEFAULT_H; }
+int get_window_w(void) { return current_host.win_w; }
+int get_window_h(void) { return current_host.win_h; }
 
 int get_window_full(void)
 {
-    return local ? ((local->flags & HOST_FULL)   ? 1 : 0) : 0;
+    return ((current_host.flags & HOST_FULL)   ? 1 : 0);
 }
 
 int get_window_stereo(void)
 {
-    return local ? ((local->flags & HOST_STEREO) ? 1 : 0) : 0;
+    return ((current_host.flags & HOST_STEREO) ? 1 : 0);
 }
 
 int get_window_framed(void)
 {
-    return local ? ((local->flags & HOST_FRAMED) ? 1 : 0) : 1;
+    return ((current_host.flags & HOST_FRAMED) ? 1 : 0);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -607,20 +716,10 @@ void get_display_point(float v[3], const float p[3], int x, int y)
 
 void get_display_union(float b[4])
 {
-    if (local)
-    {
-        b[0] = (float) local->tot_x;
-        b[1] = (float) local->tot_y;
-        b[2] = (float) local->tot_w;
-        b[3] = (float) local->tot_h;
-    }
-    else
-    {
-        b[0] = (float) display_x;
-        b[1] = (float) display_y;
-        b[2] = (float) display_w;
-        b[3] = (float) display_h;
-    }
+    b[0] = (float) current_host.tot_x;
+    b[1] = (float) current_host.tot_y;
+    b[2] = (float) current_host.tot_w;
+    b[3] = (float) current_host.tot_h;
 }
 
 void get_display_bound(float b[6])
@@ -681,61 +780,42 @@ void get_display_bound(float b[6])
     {
         /* No tiles are defined.  Return the defaults. */
 
-        b[0] = DEFAULT_OX;
-        b[1] = DEFAULT_OY;
-        b[2] = DEFAULT_OZ;
-        b[3] = DEFAULT_OX + DEFAULT_RX + DEFAULT_UX;
-        b[4] = DEFAULT_OY + DEFAULT_RY + DEFAULT_UY;
-        b[5] = DEFAULT_OZ + DEFAULT_RZ + DEFAULT_UZ;
+        b[0] = default_tile.o[0];
+        b[1] = default_tile.o[1];
+        b[2] = default_tile.o[2];
+        b[3] = default_tile.o[0] + default_tile.r[0] + default_tile.u[0];
+        b[4] = default_tile.o[1] + default_tile.r[1] + default_tile.u[1];
+        b[5] = default_tile.o[2] + default_tile.r[2] + default_tile.u[2];
     }
 }
 
+/*---------------------------------------------------------------------------*/
+
 void get_tile_o(unsigned int i, float o[3])
 {
-    if (local && i < local->n)
-    {
-        o[0] = tile[local->tile[i]].o[0];
-        o[1] = tile[local->tile[i]].o[1];
-        o[2] = tile[local->tile[i]].o[2];
-    }
-    else
-    {
-        o[0] = DEFAULT_OX;
-        o[1] = DEFAULT_OY;
-        o[2] = DEFAULT_OZ;
-    }
+    struct tile *T = get_tile(i);
+
+    o[0] = T->o[0];
+    o[1] = T->o[1];
+    o[2] = T->o[2];
 }
 
 void get_tile_r(unsigned int i, float r[3])
 {
-    if (local && i < local->n)
-    {
-        r[0] = tile[local->tile[i]].r[0];
-        r[1] = tile[local->tile[i]].r[1];
-        r[2] = tile[local->tile[i]].r[2];
-    }
-    else
-    {
-        r[0] = DEFAULT_RX;
-        r[1] = DEFAULT_RY;
-        r[2] = DEFAULT_RZ;
-    }
+    struct tile *T = get_tile(i);
+
+    r[0] = T->r[0];
+    r[1] = T->r[1];
+    r[2] = T->r[2];
 }
 
 void get_tile_u(unsigned int i, float u[3])
 {
-    if (local && i < local->n)
-    {
-        u[0] = tile[local->tile[i]].u[0];
-        u[1] = tile[local->tile[i]].u[1];
-        u[2] = tile[local->tile[i]].u[2];
-    }
-    else
-    {
-        u[0] = DEFAULT_UX;
-        u[1] = DEFAULT_UY;
-        u[2] = DEFAULT_UZ;
-    }
+    struct tile *T = get_tile(i);
+
+    u[0] = T->u[0];
+    u[1] = T->u[1];
+    u[2] = T->u[2];
 }
 
 void get_tile_n(unsigned int i, float n[3])
@@ -752,73 +832,52 @@ void get_tile_n(unsigned int i, float n[3])
 
 void get_tile_quality(unsigned int i, float q[2])
 {
-    if (local && i < local->n)
-    {
-        q[0] = tile[local->tile[i]].quality[0];
-        q[1] = tile[local->tile[i]].quality[1];
-    }
-    else
-    {
-        q[0] = 1.0f;
-        q[1] = 1.0f;
-    }
+    struct tile *T = get_tile(i);
+
+    q[0] = T->quality[0];
+    q[1] = T->quality[1];
 }
 
 float get_varrier_pitch(unsigned int i)
 {
-    if (local && i < local->n)
-        return tile[local->tile[i]].varrier_pitch;
-    else
-        return DEFAULT_VARRIER_PITCH;
+    return get_tile(i)->varrier_pitch;
 }
 
 float get_varrier_angle(unsigned int i)
 {
-    if (local && i < local->n)
-        return tile[local->tile[i]].varrier_angle;
-    else
-        return DEFAULT_VARRIER_ANGLE;
+    return get_tile(i)->varrier_angle;
 }
 
 float get_varrier_thick(unsigned int i)
 {
-    if (local && i < local->n)
-        return tile[local->tile[i]].varrier_thick;
-    else
-        return DEFAULT_VARRIER_THICK;
+    return get_tile(i)->varrier_thick;
 }
 
 float get_varrier_shift(unsigned int i)
 {
-    if (local && i < local->n)
-        return tile[local->tile[i]].varrier_shift;
-    else
-        return DEFAULT_VARRIER_SHIFT;
+    return get_tile(i)->varrier_shift;
 }
 
 float get_varrier_cycle(unsigned int i)
 {
-    if (local && i < local->n)
-        return tile[local->tile[i]].varrier_cycle;
-    else
-        return DEFAULT_VARRIER_CYCLE;
+    return get_tile(i)->varrier_cycle;
 }
 
 unsigned int get_tile_count(void)
 {
-    return (local) ? local->n : 0;
+    return current_host.n;
 }
 
 unsigned int get_tile_flags(unsigned int i)
 {
-    return (local && i < local->n) ? tile[local->tile[i]].flags : 0;
+    return get_tile(i)->flags;
 }
 
 /*---------------------------------------------------------------------------*/
 
 int draw_ortho(unsigned int i, float N, float F)
 {
-    struct tile *T = tile + local->tile[i];
+    struct tile *T = get_tile(i);
     
     GLdouble fL = T->pix_x;
     GLdouble fR = T->pix_x + T->pix_w;
@@ -859,7 +918,7 @@ int draw_ortho(unsigned int i, float N, float F)
 
 int draw_persp(unsigned int i, float N, float F, int e, const float p[3])
 {
-    struct tile *T = tile + local->tile[i];
+    struct tile *T = get_tile(i);
 
     const int L = (T->flags & TILE_LEFT_EYE)  ? 1 : 0;
     const int R = (T->flags & TILE_RIGHT_EYE) ? 1 : 0;
@@ -968,12 +1027,14 @@ int draw_persp(unsigned int i, float N, float F, int e, const float p[3])
 
 void draw_tile_background(unsigned int i)
 {
-    struct tile *T = tile + local->tile[i];
+    struct tile *T = get_tile(i);
 
     /* Compute the beginning and end of this tile's gradiant. */
 
-    float k0 = (float) (T->pix_y            - local->tot_y) / local->tot_h;
-    float k1 = (float) (T->pix_y + T->pix_h - local->tot_y) / local->tot_h;
+    float k0 = (float) (T->pix_y            - current_host.tot_y) /
+                                              current_host.tot_h;
+    float k1 = (float) (T->pix_y + T->pix_h - current_host.tot_y) /
+                                              current_host.tot_h;
 
     /* Confine rendering to this tile. */
 
@@ -983,10 +1044,7 @@ void draw_tile_background(unsigned int i)
         float r = (T->flags & TILE_FLIP_X) ? 0.0f : 1.0f;
         float b = (T->flags & TILE_FLIP_Y) ? 1.0f : 0.0f;
         float t = (T->flags & TILE_FLIP_Y) ? 0.0f : 1.0f;
-/*
-        glViewport(T->win_x, T->win_y, T->win_w, T->win_h);
-        glScissor (T->win_x, T->win_y, T->win_w, T->win_h);
-*/
+
         /* Map the tile onto the unit cube. */
 
         glMatrixMode(GL_PROJECTION);
@@ -1033,13 +1091,15 @@ void draw_host_background(void)
 {
     unsigned int i;
 
-    glViewport(local->win_x, local->win_y, local->win_w, local->win_h);
-    glScissor (local->win_x, local->win_y, local->win_w, local->win_h);
+    glViewport(current_host.win_x, current_host.win_y,
+               current_host.win_w, current_host.win_h);
+    glScissor (current_host.win_x, current_host.win_y,
+               current_host.win_w, current_host.win_h);
 
     glClear(GL_DEPTH_BUFFER_BIT |
             GL_COLOR_BUFFER_BIT);
 
-    for (i = 0; i < local->n; ++i)
+    for (i = 0; i < current_host.n; ++i)
         draw_tile_background(i);
 }
 
@@ -1047,10 +1107,50 @@ void draw_host_background(void)
 
 int startup_display(void)
 {
+    /* Initialize the host and tile config structures. */
+
     tile = vec_new(4, sizeof (struct tile));
     host = vec_new(4, sizeof (struct host));
 
-    host_count = 0;
+    /* Initialize the default tile config. */
+
+    default_tile.flags = 0;
+
+    default_tile.o[0]  = DEFAULT_OX;
+    default_tile.o[1]  = DEFAULT_OY;
+    default_tile.o[2]  = DEFAULT_OZ;
+
+    default_tile.r[0]  = DEFAULT_RX;
+    default_tile.r[1]  = DEFAULT_RY;
+    default_tile.r[2]  = DEFAULT_RZ;
+
+    default_tile.u[0]  = DEFAULT_UX;
+    default_tile.u[1]  = DEFAULT_UY;
+    default_tile.u[2]  = DEFAULT_UZ;
+
+    default_tile.win_x = default_tile.pix_x = DEFAULT_X;
+    default_tile.win_y = default_tile.pix_y = DEFAULT_Y;
+    default_tile.win_w = default_tile.pix_w = DEFAULT_W;
+    default_tile.win_h = default_tile.pix_h = DEFAULT_H;
+
+    default_tile.varrier_pitch = DEFAULT_VARRIER_PITCH;
+    default_tile.varrier_angle = DEFAULT_VARRIER_ANGLE;
+    default_tile.varrier_thick = DEFAULT_VARRIER_THICK;
+    default_tile.varrier_shift = DEFAULT_VARRIER_SHIFT;
+    default_tile.varrier_cycle = DEFAULT_VARRIER_CYCLE;
+
+    default_tile.quality[0] = 1.0f;
+    default_tile.quality[1] = 1.0f;
+
+    /* Initialize the default host config. */
+
+    current_host.flags = HOST_FRAMED;
+    current_host.n     = 0;
+
+    current_host.win_x = current_host.tot_x = DEFAULT_X;
+    current_host.win_y = current_host.tot_y = DEFAULT_Y;
+    current_host.win_w = current_host.tot_w = DEFAULT_W;
+    current_host.win_h = current_host.tot_h = DEFAULT_H;
 
     if (tile && host)
         return 1;

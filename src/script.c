@@ -271,37 +271,37 @@ static void E_arity_error(lua_State *L, int i)
 
 static int E_isobject(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i)
+    return E_isentity(L, i)
         && (get_entity_type(E_toentity(L, i)) == TYPE_OBJECT);
 }
 
 static int E_issprite(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i)
+    return E_isentity(L, i)
         && (get_entity_type(E_toentity(L, i)) == TYPE_SPRITE);
 }
 
 static int E_isstring(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i)
+    return E_isentity(L, i)
         && (get_entity_type(E_toentity(L, i)) == TYPE_STRING);
 }
 
 static int E_iscamera(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i)
+    return E_isentity(L, i)
         && (get_entity_type(E_toentity(L, i)) == TYPE_CAMERA);
 }
 
 static int E_islight(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i)
+    return E_isentity(L, i)
         && (get_entity_type(E_toentity(L, i)) == TYPE_LIGHT);
 }
 
 static int E_isgalaxy(lua_State *L, int i)
 {
-    return lua_isuserdata(L, i)
+    return E_isentity(L, i)
         && (get_entity_type(E_toentity(L, i)) == TYPE_GALAXY);
 }
 
@@ -1917,11 +1917,11 @@ static int E_print_console(lua_State *L)
 
 static int E_add_host(lua_State *L)
 {
-    int i = add_host(L_getstring (L, -5),
-                     L_getinteger(L, -4),
-                     L_getinteger(L, -3),
-                     L_getinteger(L, -2),
-                     L_getinteger(L, -1));
+    int i = send_add_host(L_getstring (L, -5),
+                          L_getinteger(L, -4),
+                          L_getinteger(L, -3),
+                          L_getinteger(L, -2),
+                          L_getinteger(L, -1));
 
     lua_pushnumber(L, i);
     return 1;
@@ -2198,7 +2198,11 @@ static int E_popdir(lua_State *L)
 
 static int E_chdir(lua_State *L)
 {
-    chdir(L_getstring(L, -1));
+    const char *path = L_getstring(L, -1);
+
+    if (chdir(path))
+        error("Change to '%s' failed", path);
+
     return 0;
 }
 

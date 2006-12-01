@@ -236,7 +236,11 @@ static GLuint init_texture(const char *filename, int w, int h)
     {
         if ((fp = fopen(filename, "rb")))
         {
-            fread(buf, 1, 8 * (w / 4) * (h / 4), fp);
+            size_t sz = 8 * (w / 4) * (h / 4);
+
+            if (fread(buf, 1, sz, fp) < sz)
+                error("'%s' load truncated", filename);
+
             fclose(fp);
         }
 
@@ -478,7 +482,11 @@ int load_terrain(int i, const char *filename, int w, int h)
 
         if ((fp = fopen(filename, "rb")))
         {
-            fread(p, sizeof (short), w * h, fp);
+            size_t sz = w * h;
+
+            if (fread(p, sizeof (short), sz, fp) < sz)
+                error("'%s' load truncated", filename);
+
             fclose(fp);
         }
 
