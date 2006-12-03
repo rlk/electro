@@ -157,7 +157,7 @@ static int E_toimage(lua_State *L, int i)
 
 static int E_isimage(lua_State *L, int i)
 {
-    return ((lua_isuserdata(L, i)) &&
+    return ((lua_type(L, i) == LUA_TUSERDATA) &&
               (E_tousertype(L, i) == USERDATA_IMAGE));
 }
 
@@ -179,7 +179,7 @@ static int E_tobrush(lua_State *L, int i)
 
 static int E_isbrush(lua_State *L, int i)
 {
-    return ((lua_isuserdata(L, i)) &&
+    return ((lua_type(L, i) == LUA_TUSERDATA) &&
               (E_tousertype(L, i) == USERDATA_BRUSH));
 }
 
@@ -203,7 +203,7 @@ static int E_tosound(lua_State *L, int i)
 
 static int E_issound(lua_State *L, int i)
 {
-    return ((lua_isuserdata(L, i)) &&
+    return ((lua_type(L, i) == LUA_TUSERDATA) &&
               (E_tousertype(L, i) == USERDATA_SOUND));
 }
 
@@ -242,15 +242,18 @@ static void E_type_error(const char *type, lua_State *L, int i)
     const char *name = lua_tostring(L, lua_upvalueindex(1));
     const char *got;
 
-    if (lua_isuserdata(L, i))
+    if      (lua_type(L, i) == LUA_TLIGHTUSERDATA)
+        got = get_entity_name(E_toentity(L, i));
+
+    else if (lua_type(L, i) == LUA_TUSERDATA)
         switch (E_tousertype(L, i))
         {
-        case USERDATA_ENTITY: got = get_entity_name(E_toentity(L, i)); break;
         case USERDATA_SOUND:  got = "sound";   break;
         case USERDATA_IMAGE:  got = "image";   break;
         case USERDATA_BRUSH:  got = "brush";   break;
         default:              got = "unknown"; break;
         }
+
     else
         got = lua_typename(L, lua_type(L, i));
 

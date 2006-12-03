@@ -605,10 +605,15 @@ static int stereo_varrier_33(int eye, int tile, int pass)
 
 /*---------------------------------------------------------------------------*/
 
-static int stereo_none(int pass)
+static int stereo_none(int tile, int pass)
 {
     if (pass == 0)
+    {
+        glClear(GL_COLOR_BUFFER_BIT |
+                GL_DEPTH_BUFFER_BIT);
+        draw_tile_background(tile);
         return 1;
+    }
     else
         return 0;
 }
@@ -668,8 +673,8 @@ int draw_pass(int mode, int eye, int tile, int pass, float v[2][3])
 
     switch (mode)
     {
-    case STEREO_NONE:       return stereo_none(pass);
-    case STEREO_TILE:       return stereo_none(pass);
+    case STEREO_NONE:       return stereo_none(tile, pass);
+    case STEREO_TILE:       return stereo_none(tile, pass);
 
     case STEREO_QUAD:       return stereo_quad      (eye, tile, pass);
     case STEREO_RED_BLUE:   return stereo_red_blue  (eye, tile, pass);

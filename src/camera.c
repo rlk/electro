@@ -85,6 +85,11 @@ static int new_camera(void)
 
 /*---------------------------------------------------------------------------*/
 
+int camera_onscreen(int i)
+{
+    return (get_camera(i)->image == 0);
+}
+
 int get_camera_eye(void)
 {
     return camera_eye;

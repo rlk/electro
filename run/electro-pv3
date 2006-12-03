@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export ELECTRO_CONFIG=/home/evl/rlk/src/electro-current/config
+export ELECTRO_BIN=/home/evl/rlk/src/electro-current
+
+mpirun -machinefile $ELECTRO_CONFIG/pv3.dat -np 2 $ELECTRO_BIN/electro-mpi $ELECTRO_CONFIG/varrier.lua $ELECTRO_CONFIG/pv3.lua $@

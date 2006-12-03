@@ -231,68 +231,6 @@ static unsigned int add_tile(unsigned int i, int x, int y, int w, int h)
 }
 
 /*---------------------------------------------------------------------------*/
-#ifdef SNIP
-void sync_display(void)
-{
-    char name[MAXNAME];
-    int  rank = 0;
-
-    unsigned int i, ii;
-
-#ifdef CONF_MPI
-    int j;
-
-    assert_mpi(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
-    assert_mpi(MPI_Bcast(&host_count, 1, MPI_INT, 0, MPI_COMM_WORLD));
-
-    /* Broadcast all host definitions to all nodes. */
-
-    for (i = 1; i <= host_count; i++)
-        if ((j = (rank) ? new_host() : i))
-        {
-            assert_mpi(MPI_Bcast(host + i, sizeof (struct host),
-                                 MPI_BYTE, 0, MPI_COMM_WORLD));
-
-            if (rank) host[i].n = 0;
-        }
-#endif
-
-    /* Search the definition list for an entry matching this host's name */
-
-    if (gethostname(name, MAXNAME) == 0)
-        for (ALL_HOSTS(i, ii))
-
-            if (strncmp(host[i].name, name,         MAXNAME) == 0 ||
-                strncmp(host[i].name, DEFAULT_NAME, MAXNAME) == 0)
-            {
-                /* Note this host for later use. */
-
-                local = host + i;
-
-                /* Nuke its name so it isn't matched again. */
-
-                fprintf(stderr, "%d used %s %d\n", rank, current.name, i);
-
-                current.name[0] = '\0';
-            }
-
-    /* If no host definition was found, create a default. */
-
-    if (local == NULL)
-    {
-        i = add_host(DEFAULT_NAME, default.X, default.Y, default.W, default.H);
-            add_tile(i,            default.X, default.Y, default.W, default.H);
-
-        local        = host + i;
-        current.flags = HOST_FRAMED;
-    }
-
-    /* Position the server window, if necessary. */
-
-    if (rank || (current.flags & HOST_FRAMED) == 0)
-        set_window_pos(current.win_x, current.win_y);
-}
-#endif
 
 int find_display(const char *name)
 {
@@ -325,9 +263,9 @@ void sync_display(void)
 {
 #ifdef CONF_MPI
     MPI_Status stat;
-    int        rank = 0;
     int        size = 0;
 #endif
+    int        rank = 0;
 
     char name[MAXNAME];
     int  i = 0;
@@ -372,6 +310,8 @@ void sync_display(void)
     {
         i = add_host(DEFAULT_NAME, DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
             add_tile(i,            DEFAULT_X, DEFAULT_Y, DEFAULT_W, DEFAULT_H);
+
+        host[i].flags = HOST_FRAMED;
     }
 
     /* Note the indexed host definition as current. */

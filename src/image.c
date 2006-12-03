@@ -98,6 +98,7 @@ void snap(char *filename)
 
 #define FLAG_NPOT 1
 #define FLAG_COMP 2
+#define FLAG_NMIP 4
 
 #define TYPE_MAP  1
 #define TYPE_ENV  2
@@ -447,7 +448,7 @@ int send_create_image_nil(int w, int h, int b)
 
         p->state = 0;
         p->count = 1;
-        p->flags = (NPOT(w) || NPOT(h)) ? FLAG_NPOT : 0;
+        p->flags = FLAG_NMIP | ((NPOT(w) || NPOT(h)) ? FLAG_NPOT : 0);
         p->type  = TYPE_MAP;
         p->w     = w;
         p->h     = h;
@@ -577,7 +578,7 @@ static GLuint init_image_map(struct image_map *nfo,
     }
     else
     {
-        if (m == GL_TEXTURE_2D)
+        if (m == GL_TEXTURE_2D && (flags & FLAG_NMIP) == 0)
         {
             gluBuild2DMipmaps(m, f, w, h, f, GL_UNSIGNED_BYTE, nfo->data);
             glTexParameteri(m, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);

@@ -1071,7 +1071,7 @@ static int step_entity_tree(unsigned int i, float dt, int head,
         float R[16], sens_R[16];
         float p[3],  sens_p[3];
 
-        if (entity[i].type == TYPE_CAMERA)
+        if (entity[i].type == TYPE_CAMERA && camera_onscreen(entity[i].data))
         {
             /* Automatically track camera offsets. */
 
