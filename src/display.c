@@ -656,10 +656,17 @@ void get_display_point(float v[3], const float p[3], int x, int y)
 
 void get_display_union(float b[4])
 {
+/*
     b[0] = (float) current_host.tot_x;
     b[1] = (float) current_host.tot_y;
     b[2] = (float) current_host.tot_w;
     b[3] = (float) current_host.tot_h;
+*/
+    b[0] = (float) display_x;
+    b[1] = (float) display_y;
+    b[2] = (float) display_w;
+    b[3] = (float) display_h;
+
 }
 
 void get_display_bound(float b[6])
