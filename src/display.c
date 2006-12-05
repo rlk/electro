@@ -301,6 +301,9 @@ void sync_display(void)
             MPI_Send(&k,   4,       MPI_BYTE, j,0, MPI_COMM_WORLD);
         }
     }
+#else
+
+    i = find_display(name);
 
 #endif
 

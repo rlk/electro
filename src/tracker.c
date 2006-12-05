@@ -288,13 +288,13 @@ int get_tracker_position(unsigned int id, float p[3])
                 fabs(S->p[1]) > 0.0 ||
                 fabs(S->p[2]) > 0.0)
             {
-                /*
                 mult_mat_pos(p, transform[id].M, S->p);
-                */
 
+                /*
                 p[0] = S->p[0];
                 p[1] = S->p[1];
                 p[2] = S->p[2];
+                */
             }
         }
     }
