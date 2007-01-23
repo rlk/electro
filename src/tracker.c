@@ -254,9 +254,12 @@ int get_tracker_rotation(unsigned int id, float R[16])
             load_rot_mat(R, axis[a0][0], axis[a0][1], axis[a0][2], S->r[a0]);
             mult_rot_mat(R, axis[a1][0], axis[a1][1], axis[a1][2], S->r[a1]);
             mult_rot_mat(R, axis[a2][0], axis[a2][1], axis[a2][2], S->r[a2]);
-
-            mult_mat_mat(R, R, transform[id].M);
-
+/*
+            mult_mat_mat(R, transform[id].M, R);
+            printf("x   %f %f %f\n", R[0], R[1], R[2]);
+            printf("y   %f %f %f\n", R[4], R[5], R[6]);
+            printf("z   %f %f %f\n", R[8], R[9], R[10]);
+*/
             return 1;
         }
     }
@@ -289,8 +292,8 @@ int get_tracker_position(unsigned int id, float p[3])
                 fabs(S->p[2]) > 0.0)
             {
                 mult_mat_pos(p, transform[id].M, S->p);
-
                 /*
+                printf("pos %f %f %f\n", p[0], p[1], p[2]);
                 p[0] = S->p[0];
                 p[1] = S->p[1];
                 p[2] = S->p[2];

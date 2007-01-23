@@ -102,13 +102,15 @@ static char *frag_00 = \
     "    gl_FragColor = vec4(max(L.rgb * Lk, R.rgb * Rk), 1.0);      \n"\
     "}                                                               \n";
 
-static GLhandleARB vert_obj;
-static GLhandleARB frag_obj;
-static GLhandleARB prog_obj;
+static GLhandleARB vert_obj = 0;
+static GLhandleARB frag_obj = 0;
+static GLhandleARB prog_obj = 0;
 
-static GLuint frame_buf[2];
-static GLuint color_buf[2];
-static GLuint depth_buf[2];
+static float  currq[2] = { 0.0f, 0.0f };
+
+static GLuint frame_buf[2] = { 0, 0 };
+static GLuint color_buf[2] = { 0, 0 };
+static GLuint depth_buf[2] = { 0, 0 };
 
 static void push_quality(const float q[2])
 {
@@ -137,6 +139,10 @@ static void init_frame_buf(GLuint *frame,
                            GLuint *color,
                            GLuint *depth, int w, int h)
 {
+    if (*frame) glDeleteFramebuffersEXT(1, frame);
+    if (*depth) glDeleteTextures       (1, depth);
+    if (*color) glDeleteTextures       (1, color);
+
     /* Generate frame buffer and render buffer objects. */
 
     glGenFramebuffersEXT(1, frame);
@@ -193,10 +199,10 @@ static void init_varrier_00(const float q[2])
 {
     static int state = 0;
 
-    if (state == 0)
+    if (state == 0 || q[0] != currq[0] || q[1] != currq[1])
     {
-        int w = (int) get_window_w();
-        int h = (int) get_window_h();
+        int w = (int) get_window_w() * q[0];
+        int h = (int) get_window_h() * q[1];
 
         /* Initialize a frame buffer object for each eye. */
 
@@ -215,7 +221,9 @@ static void init_varrier_00(const float q[2])
             prog_obj = opengl_program_object(vert_obj, frag_obj);
         }
 
-        state = 1;
+        currq[0] = q[0];
+        currq[1] = q[1];
+        state    = 1;
     }
 }
 
