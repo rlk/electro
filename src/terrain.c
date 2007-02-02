@@ -32,6 +32,10 @@ static int count;
 #define DEFAULT_BIAS 0.5f
 #define DEFAULT_MAGN 2.0f
 
+/* NOTE: This code includes a great many hard-coded values that apply only   */
+/* to the Mars MOLA height map and color map.  This should be generalized,   */
+/* but probably won't be, as it is made obsolete by another application.     */
+
 /*---------------------------------------------------------------------------*/
 
 struct vertex
@@ -128,40 +132,6 @@ static void get_normal(float n[3], float v[3][3])
 
     normalize(n);
 }
-
-/*
-static void get_normal(float n[3], float v[7][3])
-{
-    float d[7][3];
-    float t[7][3];
-
-    float k = 0.7071067812f;
-
-    int i;
-
-    n[0] = n[1] = n[2] = 0.0f;
-
-    for (i = 1; i < 7; ++i)
-    {
-        d[i][0] = v[i][0] - v[0][0];
-        d[i][1] = v[i][1] - v[0][1];
-        d[i][2] = v[i][2] - v[0][2];
-    }
-    
-    cross(t[1], d[1], d[2]);
-    cross(t[2], d[2], d[3]);
-    cross(t[3], d[3], d[4]);
-    cross(t[4], d[4], d[5]);
-    cross(t[5], d[5], d[6]);
-    cross(t[6], d[6], d[1]);
-
-    n[0] = t[1][0] + t[2][0] * k + t[3][0] + t[4][0] + t[5][0] * k + t[6][0];
-    n[1] = t[1][1] + t[2][1] * k + t[3][1] + t[4][1] + t[5][1] * k + t[6][1];
-    n[2] = t[1][2] + t[2][2] * k + t[3][2] + t[4][2] + t[5][2] * k + t[6][2];
-
-    normalize(n);
-}
-*/
 
 static void get_bounds(int i, float b[6], float x, float y, float a)
 {
@@ -412,31 +382,7 @@ static void load_scratch(int i, float x, float y, float a)
 
             int cc =            (int) (X * W / 360.0f);
             int rr = MIN(H - 1, (int) (Y * H / 180.0f));
-/*
-            int cL = (cc - 1 <  0) ? (cc - 1 + W) : (cc - 1);
-            int cR = (cc + 1 >= W) ? (cc + 1 - W) : (cc + 1);
-            int rB = (rr - 1 <  0) ?            0 : (rr - 1);
-            int rT = (rr + 1 >= H) ?        H - 1 : (rr + 1);
 
-            float r0 = terrain[i].o + s * P[rr * W + cc];
-            float r1 = terrain[i].o + s * P[rr * W + cR];
-            float r2 = terrain[i].o + s * P[rT * W + cR];
-            float r3 = terrain[i].o + s * P[rT * W + cc];
-            float r4 = terrain[i].o + s * P[rr * W + cL];
-            float r5 = terrain[i].o + s * P[rB * W + cL];
-            float r6 = terrain[i].o + s * P[rB * W + cc];
-
-            float v[7][3];
-            float n[3];
-
-            get_vertex(v[0], X,      Y,      r0);
-            get_vertex(v[1], X + da, Y,      r1);
-            get_vertex(v[2], X + da, Y + da, r2);
-            get_vertex(v[3], X,      Y + da, r3);
-            get_vertex(v[4], X - da, Y,      r4);
-            get_vertex(v[5], X - da, Y - da, r5);
-            get_vertex(v[6], X,      Y - da, r6);
-*/
             int cR = (cc + 1 >= W) ? (cc + 1 - W) : (cc + 1);
             int rT = (rr + 1 >= H) ?        H - 1 : (rr + 1);
 
@@ -684,22 +630,8 @@ static void draw_data(GLuint vbo, GLsizei n)
     glTexCoordPointer(2, GL_FLOAT, S, OFFSET(24));
 
     /* Draw filled polygons. */
-/*
-    glEnable(GL_LIGHTING);
-    glEnable(GL_CULL_FACE);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-*/
-    glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
 
-    /* Draw wire frame. */
-/*
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-    glColor3f(1.0f, 1.0f, 0.0f);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLE_STRIP, N, GL_UNSIGNED_SHORT, OFFSET(0));
-*/
 }
 
 /*---------------------------------------------------------------------------*/
@@ -915,30 +847,6 @@ static void draw_areas(float V[6][4], const float M[16],
 
                 draw_page(i, x, y, a);
             }
-/*
-            if (d > 0 && k < 1.0f)
-                glColor4f(0.8f, 0.8f, 0.8f, (k - 0.5f) * 2.0f);
-            else
-                glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
-
-            draw_page(i, x, y, a);
-
-            if (k > 1.0f && a > 1.0f)
-            {
-                float xm = x + a / 2;
-                float ym = y + a / 2;
-
-                float x0 = (t > xm) ? x : xm;
-                float x1 = (t > xm) ? xm : x;
-                float y0 = (p > ym) ? y : ym;
-                float y1 = (p > ym) ? ym : y;
-
-                enqueue_area(x0, y0, a / 2, d + 1);
-                enqueue_area(x1, y0, a / 2, d + 1);
-                enqueue_area(x0, y1, a / 2, d + 1);
-                enqueue_area(x1, y1, a / 2, d + 1);
-            }
-*/
         }
     }
 }
@@ -967,7 +875,8 @@ static void draw_terrain(int i, int j, int f, float a)
         get_viewfrust(V);
         get_viewpoint(v);
 
-        /* Set the far clipping plane to the center of the planet.  Neat! */
+        /* Set the far clipping plane to the center of the planet. */
+        /* TODO: fix */
 
 /*      V[5][3] = 0.0f; */
 

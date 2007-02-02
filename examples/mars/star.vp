@@ -20,22 +20,23 @@ OUTPUT ocol   = result.color;
 
 # Normalize the star position.
 
-DP3    temp.w, ipos, ipos;
-RSQ    temp.w, temp.w;
-MUL    temp.xyz, temp.w, ipos;
-MOV    temp.w, 0.01;
+#DP3    temp.w, ipos, ipos;
+#RSQ    temp.w, temp.w;
+#MUL    temp.xyz, temp.w, ipos;
+#MUL    temp.xyz, temp, 10000;
+#MOV    temp.w, 1;
 
 # Transform the star position.
 
-DP4    opos.x, mvp[0], temp;
-DP4    opos.y, mvp[1], temp;
-DP4    opos.z, mvp[2], temp;
-DP4    opos.w, mvp[3], temp;
+#DP4    opos.x, mvp[0], temp;
+#DP4    opos.y, mvp[1], temp;
+#DP4    opos.z, mvp[2], temp;
+#DP4    opos.w, mvp[3], temp;
 
-#DP4    opos.x, mvp[0], ipos;
-#DP4    opos.y, mvp[1], ipos;
-#DP4    opos.z, mvp[2], ipos;
-#DP4    opos.w, mvp[3], ipos;
+DP4    opos.x, mvp[0], ipos;
+DP4    opos.y, mvp[1], ipos;
+DP4    opos.z, mvp[2], ipos;
+DP4    opos.w, mvp[3], ipos;
 
 # Compute the distance (squared) from the viewpoint to the star.
 

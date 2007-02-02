@@ -95,7 +95,7 @@ function constellation(name, parent)
 
     E.parent_entity(object, parent)
     E.set_entity_flags(object, E.entity_flag_line_smooth, true)
-    E.set_brush_line_width(E.get_mesh(object, 0), 8)
+    E.set_brush_line_width(E.get_mesh(object, 0), 4)
 end
 
 function do_constellations(parent)
