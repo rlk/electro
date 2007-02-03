@@ -6,9 +6,9 @@
 -------------------------------------------------------------------------------
 -- Data configuration
 
-DATA_S = "/home/evl/rlk/data/megr032.raw"
-DATA_W = 11520
-DATA_H = 5760
+DATA_S = "/home/rlk/megr016.raw"
+DATA_W = 5760
+DATA_H = 5760 / 2
 
 -- 64-degree-per-pixel data
 -- DATA_S = "/data2/rlk/megr064.raw"
@@ -31,11 +31,14 @@ MODE = "joy2"
 -------------------------------------------------------------------------------
 -- Default configuration
 
-ROT_X  = 25.2     -- Initial X rotation (degrees)
-ROT_Y  = 180      -- Initial Y rotation (degrees)
+ROT_X  = 25.2     -- Initial X rotation (degrees) (the axial tilt of Mars)
+ROT_Y  = 90       -- Initial Y rotation (degrees) (Mariner Valley up front)
 POS_Z  = 10000000 -- Initial Z distance (meters)
 MAG    = 200      -- Star magnitude     (pixels)
+LPF    = 16       -- Input low-pass-filter coefficient
 
+MIN_ALT = 3450000
+MAX_ALT = 4450000
 
 --=============================================================================
 -- Global state
@@ -56,7 +59,7 @@ function speed()
     local cx, cy, cz = E.get_entity_position(camera)
     local d = math.sqrt(cx * cx + cy * cy + cz * cz)
 
-    return (d - 3300000) / 3300000
+    return 2000000 * (d - 3300000) / 3300000
 end
 
 function range()
@@ -92,7 +95,7 @@ function mode.mouse.reset()
 end
 
 function mode.mouse.timer(dt)
-    local dp = 2500000 * speed() * dt
+    local dp = speed() * dt
 
     E.move_entity(camera, mode.mouse.dx * dp,
                           mode.mouse.dy * dp,
@@ -148,22 +151,35 @@ end
 -------------------------------------------------------------------------------
 -- 2-axis joystick flight model
 
-mode.joy2.pitch = 0
-mode.joy2.roll  = 0
-mode.joy2.yaw   = 0
-mode.joy2.gas   = 0
+mode.joy2.p0 =  0
+mode.joy2.r0 =  0
+mode.joy2.p1 =  0
+mode.joy2.r1 =  0
+mode.joy2.v0 =  0
+mode.joy2.v1 =  0
+mode.joy2.tx = -1
+mode.joy2.ty =  0
+mode.joy2.tz =  0
+
+-- Store the planet tangent vector
 
 function mode.joy2.reset()
     rot_x = ROT_X
     rot_y = ROT_Y
 
-    mode.joy2.pitch = 0
-    mode.joy2.roll  = 0
-    mode.joy2.yaw   = 0
+    mode.joy2.p0 =  0
+    mode.joy2.r0 =  0
+    mode.joy2.p1 =  0
+    mode.joy2.r1 =  0
+    mode.joy2.v0 =  0
+    mode.joy2.v1 =  0
+    mode.joy2.tx = -1
+    mode.joy2.ty =  0
+    mode.joy2.tz =  0
 
-    E.set_entity_rotation(pivot,  ROT_X, ROT_Y,   0.0)
-    E.set_entity_rotation(camera,   0.0,   0.0,   0.0)
-    E.set_entity_position(camera,   0.0,   0.0, POS_Z)
+    E.set_entity_rotation(pivot, ROT_X, ROT_Y, 0.0)
+    E.set_entity_position(camera,  0,  0, (MIN_ALT + MAX_ALT) / 2)
+    E.set_entity_rotation(camera, 90,  0, -90)
 
     return true
 end
@@ -171,20 +187,111 @@ end
 function mode.joy2.joystick(d, b, s)
     if b == 0 then
         if s then
-            mode.joy2.gas = 1
+            mode.joy2.v1 = 1
         else
-            mode.joy2.gas = 0
+            mode.joy2.v1 = 0
         end
+    end
+    if b == 1 then
+        mode.joy2.reset()
     end
 end
 
+function mode.joy2.tangent()
+    -- Compute the planet tanget given the current position and orientation.
+
+    local nx, ny, nz = E.get_entity_position(camera)
+    local zx, zy, zz = E.get_entity_z_vector(camera)
+    local d = math.sqrt(nx * nx + ny * ny + nz * nz)
+
+    nx = nx / d
+    ny = ny / d
+    nz = nz / d
+
+    local bx = ny * zz - nz * zy
+    local by = nz * zx - nx * zz
+    local bz = nx * zy - ny * zx
+
+    local tx = by * nz - bz * ny
+    local ty = bz * nx - bx * nz
+    local tz = bx * ny - by * nx
+
+    return tx, ty, tz
+end
+
 function mode.joy2.timer(dt)
-    local joy_x, joy_y = E.get_joystick(0, 0, 1)
 
+    -- Compute the planet normal and current altitude.
 
-    E.set_entity_rotation(camera, mode.joy2.pitch,
-                                  mode.joy2.yaw,
-                                  mode.joy2.roll)
+    local nx, ny, nz = E.get_entity_position(camera)
+    local d = math.sqrt(nx * nx + ny * ny + nz * nz)
+
+    nx = nx / d
+    ny = ny / d
+    nz = nz / d
+
+    -- Apply the joystick input to the target pitch and roll.
+
+    local jx, jy = E.get_joystick(0, 0, 1)
+
+    mode.joy2.p1 = mode.joy2.p1 + 30 * jy * dt
+    mode.joy2.r1 = mode.joy2.r1 - 30 * jx * dt
+
+    -- Clamp the target pitch and roll.
+
+    if mode.joy2.p1 >  45 then mode.joy2.p1 =  45 end
+    if mode.joy2.p1 < -45 then mode.joy2.p1 = -45 end
+    if mode.joy2.r1 >  45 then mode.joy2.r1 =  45 end
+    if mode.joy2.r1 < -45 then mode.joy2.r1 = -45 end
+
+    -- Avoid the minimum and maximum altitudes.
+
+    if d < MIN_ALT and mode.joy2.p1 < 0 then mode.joy2.p1 = 0 end
+    if d > MAX_ALT and mode.joy2.p1 > 0 then mode.joy2.p1 = 0 end
+
+    -- If the input is centered then level out slowly.
+
+    if -0.1 < jx and jx < 0.1 then
+       mode.joy2.r1 = mode.joy2.r1 * (1 - 0.50 * dt)
+   end
+   if  -0.1 < jy and jy < 0.1 then
+       mode.joy2.p1 = mode.joy2.p1 * (1 - 0.25 * dt)
+   end
+
+    -- Apply the low-pass-filtered inputs to the current orientation.
+
+    mode.joy2.p0 = (mode.joy2.p1 + mode.joy2.p0 * (LPF - 1)) / LPF
+    mode.joy2.r0 = (mode.joy2.r1 + mode.joy2.r0 * (LPF - 1)) / LPF
+    mode.joy2.v0 = (mode.joy2.v1 + mode.joy2.v0 * (LPF - 1)) / LPF
+
+    -- Temporarily orient the camera parallel to the surface of the planet.
+
+    local tx = mode.joy2.tx
+    local ty = mode.joy2.ty
+    local tz = mode.joy2.tz
+
+    local bx = ny * tz - nz * ty
+    local by = nz * tx - nx * tz
+    local bz = nx * ty - ny * tx
+
+    E.set_entity_basis(camera, bx, by, bz, nx, ny, nz, tx, ty, tz)
+
+    -- Apply yaw with rate relative to current roll.
+
+    E.turn_entity(camera, 0, mode.joy2.r0 * dt, 0)
+
+    -- Update the tangent with the new heading.
+
+    mode.joy2.tx, mode.joy2.ty, mode.joy2.tz = mode.joy2.tangent()
+
+    -- Set the camera orientation.
+
+    E.turn_entity(camera, 0, 0, mode.joy2.r0)
+    E.turn_entity(camera, mode.joy2.p0, 0, 0)
+
+    -- Move the camera
+
+    E.move_entity(camera, 0, 0, -mode.joy2.v0 * dt * speed())
 end
 
 -------------------------------------------------------------------------------
@@ -222,12 +329,11 @@ function mode.joy4.timer(dt)
     local joy_x, joy_y = E.get_joystick(0, 3, 4)
     local joy_z, joy_w = E.get_joystick(0, 0, 1)
 
-    local s = 100 * speed()
     local k = 0.0
     local n = 32
 
     local dr =      90 * dt
-    local dp = 1000000 * dt * speed()
+    local dp = speed() * dt
 
     mode.joy4.jx = ((n - 1) * mode.joy4.jx + joy_x) / n
     mode.joy4.jy = ((n - 1) * mode.joy4.jy + joy_y) / n
@@ -292,8 +398,8 @@ function mode.wand.timer(dt)
         local yx, yy, yz = E.get_entity_y_vector(wand)
         local zx, zy, zz = E.get_entity_z_vector(wand)
         
-        local dp = dt * 1500000.0 * speed()
-        local dr = dt *      50.0
+        local dp = dt * speed()
+        local dr = dt * 50.0
 
         local dx = (px - mode.wand.px) * dp;
         local dy = (py - mode.wand.py) * dp;

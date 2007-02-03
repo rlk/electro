@@ -597,6 +597,31 @@ static int E_set_entity_rotation(lua_State *L)
     return 0;
 }
 
+static int E_set_entity_basis(lua_State *L)
+{
+    float M[16];
+
+    M[ 0] = L_getnumber(L, -9);
+    M[ 1] = L_getnumber(L, -8);
+    M[ 2] = L_getnumber(L, -7);
+    M[ 3] = 0.0f;
+    M[ 4] = L_getnumber(L, -6);
+    M[ 5] = L_getnumber(L, -5);
+    M[ 6] = L_getnumber(L, -4);
+    M[ 7] = 0.0f;
+    M[ 8] = L_getnumber(L, -3);
+    M[ 9] = L_getnumber(L, -2);
+    M[10] = L_getnumber(L, -1);
+    M[11] = 0.0f;
+    M[12] = 0.0f;
+    M[13] = 0.0f;
+    M[14] = 0.0f;
+    M[15] = 0.0f;
+
+    send_set_entity_basis(E_getentity(L, -10), M);
+    return 0;
+}
+
 static int E_set_entity_scale(lua_State *L)
 {
     float s[3];
@@ -2456,6 +2481,7 @@ static struct function_def functions[] = {
     { "set_entity_tracking",   E_set_entity_tracking   },
     { "set_entity_position",   E_set_entity_position   },
     { "set_entity_rotation",   E_set_entity_rotation   },
+    { "set_entity_basis",      E_set_entity_basis      },
     { "set_entity_scale",      E_set_entity_scale      },
     { "set_entity_alpha",      E_set_entity_alpha      },
     { "set_entity_flags",      E_set_entity_flags      },
