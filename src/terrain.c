@@ -111,9 +111,9 @@ static unsigned int new_terrain(void)
 
 static void get_vertex(float v[3], float x, float y, float r)
 {
-    v[0] = sin(RAD(x)) * sin(RAD(y)) * r;
-    v[1] =              -cos(RAD(y)) * r;
-    v[2] = cos(RAD(x)) * sin(RAD(y)) * r;
+    v[0] = (float) (sin(RAD(x)) * sin(RAD(y)) * r);
+    v[1] = (float) (             -cos(RAD(y)) * r);
+    v[2] = (float) (cos(RAD(x)) * sin(RAD(y)) * r);
 }
 
 static void get_normal(float n[3], float v[3][3])
@@ -358,8 +358,8 @@ static void load_scratch(int i, float x, float y, float a)
     int    H = terrain[i].h;
     int    d = 0;
 
-    float s0 = fmod(x, 90.0f) / 90.f;
-    float t0 = fmod(y, 90.0f) / 90.f;
+    float s0 = (float) (fmod(x, 90.0f) / 90.0);
+    float t0 = (float) (fmod(y, 90.0f) / 90.0);
 
     while ((360.0f / W) < (a / terrain[i].n))
     {
@@ -712,7 +712,7 @@ static float get_value(float b[6], const float M[16], float bias)
     c[3] = MAX(v[7][1], c[3]);
 
 /*  k = MAX(fabs(c[0] - c[2]), fabs(c[1] - c[3])) * bias; */
-    k = 0.5f * (fabs(c[0] - c[2]) + fabs(c[1] - c[3])) * bias;
+    k = 0.5f * (float) (fabs(c[0] - c[2]) + fabs(c[1] - c[3])) * bias;
 
     return k;
 }
@@ -884,8 +884,8 @@ static void draw_terrain(int i, int j, int f, float a)
 
         normalize(v);
 
-        t = DEG(atan2(v[0], v[2]));
-        p = DEG(acos(-v[1]));
+        t = (float) DEG(atan2(v[0], v[2]));
+        p = (float) DEG(acos(-v[1]));
 
         if (t < 0) t += 360.0f;
 
@@ -897,10 +897,10 @@ static void draw_terrain(int i, int j, int f, float a)
             float y0 = (p > 90.0f) ?  0.0f : 90.0f;
             float y1 = (p > 90.0f) ? 90.0f :  0.0f;
 
-            float x0 = fmod(floor(t / 90.0f) * 90.0f + 180.0f, 360.0f);
-            float x1 = fmod(floor(t / 90.0f) * 90.0f +  90.0f, 360.0f);
-            float x2 = fmod(floor(t / 90.0f) * 90.0f + 270.0f, 360.0f);
-            float x3 = fmod(floor(t / 90.0f) * 90.0f +   0.0f, 360.0f);
+            float x0 = (float) fmod(floor(t / 90.0f) * 90.0 + 180.0, 360.0);
+            float x1 = (float) fmod(floor(t / 90.0f) * 90.0 +  90.0, 360.0);
+            float x2 = (float) fmod(floor(t / 90.0f) * 90.0 + 270.0, 360.0);
+            float x3 = (float) fmod(floor(t / 90.0f) * 90.0 +   0.0, 360.0);
 
             int t0 = (int) (y0 / 90.0f);
             int t1 = (int) (y1 / 90.0f);

@@ -166,7 +166,7 @@ static void server_perf(void)
         sprintf(buf, "%s (%d FPS)", TITLE, fps_new);
         SDL_WM_SetCaption(buf, buf);
 
-        printf("%d\n", fps_new);
+/*      printf("%d\n", fps_new); */
 
         fps_old = fps_new;
     }

@@ -6,14 +6,14 @@
 -------------------------------------------------------------------------------
 -- Data configuration
 
-DATA_S = "/home/rlk/megr016.raw"
-DATA_W = 5760
-DATA_H = 5760 / 2
+-- DATA_S = "c:\\rlk\\megr016.raw"
+-- DATA_W = 5760
+-- DATA_H = 5760 / 2
 
 -- 64-degree-per-pixel data
--- DATA_S = "/data2/rlk/megr064.raw"
--- DATA_W = 23040
--- DATA_H = 11520
+DATA_S = "c:\\electro-840\\examples\\mars\\megr064.raw"
+DATA_W = 23040
+DATA_H = 11520
 
 -------------------------------------------------------------------------------
 -- Interaction mode configuration
@@ -23,8 +23,8 @@ DATA_H = 5760 / 2
 --     joy4   Full 4-axis joystick
 --     wand   Full 6 degree-of-freedom tracker
 
--- MODE = "mouse"
-MODE = "joy2"
+MODE = "mouse"
+-- MODE = "joy2"
 -- MODE = "joy4"
 -- MODE = "wand"
 

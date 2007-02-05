@@ -173,7 +173,7 @@ void *load_file(const char *filename, const char *mode, size_t *size)
             if ((fp = open_file(filename, mode)))
             {
                 if ((ptr = calloc(buf.st_size + 1, 1)))
-                    if (fread(ptr, 1, buf.st_size, fp) < buf.st_size)
+                    if ((off_t) fread(ptr, 1, buf.st_size, fp) < buf.st_size)
                         error("'%s': Load truncated", filename);
 
                 if (size)

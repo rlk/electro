@@ -201,8 +201,8 @@ static void init_varrier_00(const float q[2])
 
     if (state == 0 || q[0] != currq[0] || q[1] != currq[1])
     {
-        int w = (int) get_window_w() * q[0];
-        int h = (int) get_window_h() * q[1];
+        int w = (int) (get_window_w() * q[0]);
+        int h = (int) (get_window_h() * q[1]);
 
         /* Initialize a frame buffer object for each eye. */
 
