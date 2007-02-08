@@ -41,10 +41,9 @@ static void init_options(void)
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
-/*  glEnable(GL_CULL_FACE); */
+    glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
 
-    glDisable(GL_CULL_FACE);
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, a);
     glLightModeli (GL_LIGHT_MODEL_COLOR_CONTROL,
                    GL_SEPARATE_SPECULAR_COLOR);
