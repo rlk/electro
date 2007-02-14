@@ -25,8 +25,7 @@ void release_tracker(void);
 
 int get_tracker_status(void);
 
-int get_tracker_rotation(unsigned int, float[16]);
-int get_tracker_position(unsigned int, float[3]);
+int get_tracker_sensor  (unsigned int, float[3], float[16]);
 int get_tracker_joystick(unsigned int, float[2]);
 
 int get_tracker_buttons(unsigned int *, unsigned int *); 

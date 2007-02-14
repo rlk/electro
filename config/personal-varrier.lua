@@ -10,11 +10,17 @@ tile = { }
 
 w = 2560
 h = 1600
-
+--[[
 p = {
     { -1.0521, 3.1354, -1.3614 },
     { -1.0521, 4.4531, -1.3614 },
     {  1.0521, 3.1354, -1.3614 },
+}
+]]--
+p = {
+    { -1.0521, 3.1354, -1.3614 - 2.333 },
+    { -1.0521, 4.4531, -1.3614 - 2.333 },
+    {  1.0521, 3.1354, -1.3614 - 2.333 },
 }
 
 line_screen = {
@@ -35,6 +41,7 @@ varrier_init()
 
 E.set_host_flags(host[0], E.host_flag_framed, false)
 
+------------------------------------------------------------------------------
 -- This transform is necessary when using net-direct face tracking.
 -- It should be commented out when trackd is in use.
 --[[
@@ -43,3 +50,36 @@ E.set_tracker_transform(0,  1.000,  0.000,  0.000, 0.000,
                             0.000, -0.199,  0.979, 0.000,
                            -0.458,  5.000, -1.600, 1.000)
 ]]--
+
+------------------------------------------------------------------------------
+-- This transform is necessary when using net-direct TrackIR
+-- It should be commented out when trackd is in use.
+
+L = -304.3
+R =  343.5
+B = -300.0
+T =  300.0
+N =  1366
+F =  2247
+
+M00 =  (2 * N) / (R - L)
+M01 =  0
+M02 =  0
+M03 =  0
+M10 =  0
+M11 =  (2 * N) / (T - B)
+M12 =  0
+M13 =  0
+M20 =  (R + L) / (R - L)
+M21 =  (T + B) / (T - B)
+M22 = -(F + N) / (F - N)
+M23 = -1
+M30 =  0
+M31 =  0
+M32 = -(2 * F * N) / (F - N)
+M33 =  0
+
+E.set_tracker_transform(0, M00, M01, M02, M03,
+                           M10, M11, M12, M13,
+                           M20, M21, M22, M23,
+                           M30, M31, M32, M33)

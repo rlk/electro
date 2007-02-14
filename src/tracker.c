@@ -79,6 +79,9 @@ struct message
     float x;
     float y;
     float z;
+    float rx;
+    float ry;
+    float rz;
 };
 
 static int sock = INVALID_SOCKET;
@@ -88,6 +91,7 @@ static int sock = INVALID_SOCKET;
 struct transform
 {
     float M[16];
+    float I[16];
     int   a[3];
 };
 
@@ -166,10 +170,8 @@ int acquire_tracker(int t_key, int c_key, int port)
     {
         for (i = 0; i < transforms; ++i)
         {
-            transform[i].M[0]  = 1.0f;
-            transform[i].M[5]  = 1.0f;
-            transform[i].M[10] = 1.0f;
-            transform[i].M[15] = 1.0f;
+            load_idt(transform[i].M);
+            load_idt(transform[i].I);
 
             transform[i].a[0] = 1;
             transform[i].a[1] = 0;
@@ -220,85 +222,73 @@ void release_tracker(void)
 
 /*---------------------------------------------------------------------------*/
 
+static void transform_rotation(float R[16], float r[3], int id)
+{
+    float axis[3][3] = {
+        { 0, 1, 0 },
+        { 1, 0, 0 },
+        { 0, 0, 1 },
+    };
+
+    int a0 = transform[id].a[0];
+    int a1 = transform[id].a[1];
+    int a2 = transform[id].a[2];
+
+    /* TODO: Fix potential gimbal lock here? */
+
+    load_rot_mat(R, axis[a0][0], axis[a0][1], axis[a0][2], r[a0]);
+    mult_rot_mat(R, axis[a1][0], axis[a1][1], axis[a1][2], r[a1]);
+    mult_rot_mat(R, axis[a2][0], axis[a2][1], axis[a2][2], r[a2]);
+
+    mult_mat_mat(R, transform[id].M, R);
+}
+
+static void transform_position(float P[3], float p[3], int id)
+{
+    float t[4];
+    float q[4];
+
+    q[0] = p[0];
+    q[1] = p[1];
+    q[2] = p[2];
+    q[3] = 1.0f;
+
+    mult_mat_vec(t, transform[id].M, q);
+
+    P[0] = -t[0] / t[3];
+    P[1] =  t[1] / t[3];
+    P[2] =  t[2] / t[3];
+}
+
+/*---------------------------------------------------------------------------*/
+
 int get_tracker_status(void)
 {
     return ((sock    != INVALID_SOCKET) ||
             (tracker != (struct tracker_header *) (-1)));
 }
 
-int get_tracker_rotation(unsigned int id, float R[16])
+int get_tracker_sensor(unsigned int id, float p[3], float R[16])
 {
+    static float last_p[ 3];
+    static float last_R[16];
+
+    /* Check for an active tracker. */
+
     if (tracker != (struct tracker_header *) (-1))
     {
         if (id < tracker->count)
         {
-            float axis[3][3] = {
-                { 0, 1, 0 },
-                { 1, 0, 0 },
-                { 0, 0, 1 },
-            };
-
-            int a0 = transform[id].a[0];
-            int a1 = transform[id].a[1];
-            int a2 = transform[id].a[2];
-
-            /* Return the rotation of sensor ID. */
+            /* Return the rotation and orientation of sensor ID. */
 
             struct sensor *S =
                 (struct sensor *)((unsigned char *) tracker
                                                   + tracker->offset
                                                   + tracker->size * id);
+            transform_rotation(R, S->r, id);
+            transform_position(p, S->p, id);
 
-            /* TODO: Fix potential gimbal lock here? */
-
-            load_rot_mat(R, axis[a0][0], axis[a0][1], axis[a0][2], S->r[a0]);
-            mult_rot_mat(R, axis[a1][0], axis[a1][1], axis[a1][2], S->r[a1]);
-            mult_rot_mat(R, axis[a2][0], axis[a2][1], axis[a2][2], S->r[a2]);
-/*
-            mult_mat_mat(R, transform[id].M, R);
-            printf("x   %f %f %f\n", R[0], R[1], R[2]);
-            printf("y   %f %f %f\n", R[4], R[5], R[6]);
-            printf("z   %f %f %f\n", R[8], R[9], R[10]);
-*/
             return 1;
-        }
-    }
-    else load_idt(R);
-
-    return 0;
-}
-
-int get_tracker_position(unsigned int id, float p[3])
-{
-    static float last_p[3] = { 0.0f, 0.0f, 0.0f };
-
-    p[0] = last_p[0];
-    p[1] = last_p[1];
-    p[2] = last_p[2];
-
-    if (tracker != (struct tracker_header *) (-1))
-    {
-        if (id < tracker->count)
-        {
-            /* Return the position of sensor ID. */
-
-            struct sensor *S =
-                (struct sensor *)((unsigned char *) tracker
-                                                  + tracker->offset
-                                                  + tracker->size * id);
-
-            if (fabs(S->p[0]) > 0.0 ||
-                fabs(S->p[1]) > 0.0 ||
-                fabs(S->p[2]) > 0.0)
-            {
-                mult_mat_pos(p, transform[id].M, S->p);
-                /*
-                printf("pos %f %f %f\n", p[0], p[1], p[2]);
-                p[0] = S->p[0];
-                p[1] = S->p[1];
-                p[2] = S->p[2];
-                */
-            }
         }
     }
 
@@ -309,42 +299,74 @@ int get_tracker_position(unsigned int id, float p[3])
         struct message mesg;
         struct timeval zero = { 0, 0 };
 
+        int count = 0;
+
         fd_set fds;
 
         FD_ZERO(&fds);
         FD_SET(sock, &fds);
 
         while (select(sock + 1, &fds, NULL, NULL, &zero) > 0)
-        {            
+        {
             if (FD_ISSET(sock, &fds))
             {
-                int s;
+                int s = recv(sock, &mesg, sizeof (struct message), 0);
 
-                if ((s = recv(sock, &mesg, sizeof (struct message), 0)) ==
-                                           sizeof (struct message))
+                if ((s >= 3 * sizeof (float)))
                 {
                     float q[3];
-
+/*
                     q[0] = net_to_host_float(mesg.x);
                     q[1] = net_to_host_float(mesg.y);
                     q[2] = net_to_host_float(mesg.z);
+*/
+                    q[0] =  mesg.x;
+                    q[1] =  mesg.y;
+                    q[2] = -mesg.z;
 
-                    mult_mat_pos(p, transform[id].M, q);
+                    transform_position(p, q, id);
+
+                    q[1] += 3.0;
+
+                    printf("%+8.3f %+8.3f %+8.3f  ", q[0], q[1], q[2]);
+                    printf("%+8.3f %+8.3f %+8.3f\n", p[0], p[1], p[2]);
+
+                    memcpy(last_p, p, 3 * sizeof (float));
+                }
+                if ((s >= 6 * sizeof (float)))
+                {
+                    float q[3];
+/*
+                    q[0] = net_to_host_float(mesg.rx);
+                    q[1] = net_to_host_float(mesg.ry);
+                    q[2] = net_to_host_float(mesg.rz);
+*/
+/*
+                    q[0] = mesg.rx;
+                    q[1] = mesg.ry;
+                    q[2] = mesg.rz;
+
+                    transform_rotation(R, q, id);
+*/
+                    load_idt(R);
+
+                    memcpy(last_R, R, 16 * sizeof (float));
                 }
             }
+
+            count++;
 
             FD_ZERO(&fds);
             FD_SET(sock, &fds);
         }
+
+        if (count) return 1;
     }
 
-    /* If neither tracking source was updated, return the previous result. */
+    memcpy(p, last_p,  3 * sizeof (float));
+    memcpy(R, last_R, 16 * sizeof (float));
 
-    last_p[0] = p[0];
-    last_p[1] = p[1];
-    last_p[2] = p[2];
-
-    return 1;
+    return 0;
 }
 
 int get_tracker_joystick(unsigned int id, float a[2])
@@ -401,6 +423,8 @@ void set_tracker_transform(unsigned int id, float M[16], int a[3])
     {
         memcpy(transform[id].M, M, 16 * sizeof (float));
         memcpy(transform[id].a, a,  3 * sizeof (int));
+
+        load_inv(transform[id].I, transform[id].M);
     }
 }
 

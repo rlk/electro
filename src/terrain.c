@@ -109,7 +109,7 @@ static unsigned int new_terrain(void)
 
 /*===========================================================================*/
 
-static void get_vertex(float v[3], float x, float y, float r)
+static void get_vertex(float v[3], double x, double y, double r)
 {
     v[0] = (float) (sin(RAD(x)) * sin(RAD(y)) * r);
     v[1] = (float) (             -cos(RAD(y)) * r);
@@ -133,7 +133,7 @@ static void get_normal(float n[3], float v[3][3])
     normalize(n);
 }
 
-static void get_bounds(int i, float b[6], float x, float y, float a)
+static float get_bounds(int i, float b[6], float x, float y, float a)
 {
     float u[8][3];
     int j;
@@ -166,6 +166,8 @@ static void get_bounds(int i, float b[6], float x, float y, float a)
         b[4] = MAX(b[4], u[j][1]);
         b[5] = MAX(b[5], u[j][2]);
     }
+
+    return (float) sin(RAD(cy));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -380,24 +382,39 @@ static void load_scratch(int i, float x, float y, float a)
             float Y = y + da * r;
             float s = terrain[i].magn;
 
-            int cc =            (int) (X * W / 360.0f);
+            int cc = MIN(W - 1, (int) (X * W / 360.0f));
             int rr = MIN(H - 1, (int) (Y * H / 180.0f));
 
             int cR = (cc + 1 >= W) ? (cc + 1 - W) : (cc + 1);
             int rT = (rr + 1 >= H) ?        H - 1 : (rr + 1);
 
-            float r0 = terrain[i].o + s * P[rr * W + cc];
-            float r1 = terrain[i].o + s * P[rr * W + cR];
-            float r2 = terrain[i].o + s * P[rT * W + cc];
+            double r0 = terrain[i].o + s * P[rr * W + cc];
+            double r1 = terrain[i].o + s * P[rr * W + cR];
+            double r2 = terrain[i].o + s * P[rT * W + cc];
 
             float v[3][3];
             float n[3];
 
-            get_vertex(v[0], X,      Y,      r0);
-            get_vertex(v[1], X + da, Y,      r1);
-            get_vertex(v[2], X,      Y + da, r2);
+            get_vertex(v[0], X, Y, r0);
 
-            get_normal(n, v);
+            if (Y > 178.0f)
+            {
+                n[0] =  0.0f;
+                n[1] = +1.0f;
+                n[2] =  0.0f;
+            }
+            else if (Y < 2.0f)
+            {
+                n[0] =  0.0f;
+                n[1] = -1.0f;
+                n[2] =  0.0f;
+            }
+            else
+            {
+                get_vertex(v[1], X + da, Y,      r1);
+                get_vertex(v[2], X,      Y + da, r2);
+                get_normal(n, v);
+            }
 
             buf[j].v[0] = v[0][0];
             buf[j].v[1] = v[0][1];
@@ -819,7 +836,7 @@ static void draw_areas(float V[6][4], const float M[16],
 
     while (dequeue_area(&x, &y, &a, &o))
     {
-        get_bounds(i, b, x, y, a);
+        float kk = get_bounds(i, b, x, y, a);
 
         if (test_frustum(V, b) >= 0)
         {

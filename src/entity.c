@@ -1075,8 +1075,7 @@ static int step_entity_tree(unsigned int i, float dt, int head,
         {
             /* Automatically track camera offsets. */
 
-            get_tracker_position(head, sens_p);
-            get_tracker_rotation(head, sens_R);
+            get_tracker_sensor(head, sens_p, sens_R);
 
             send_set_camera_offset(entity[i].data, sens_p, sens_R);
 
@@ -1088,12 +1087,12 @@ static int step_entity_tree(unsigned int i, float dt, int head,
         }
         else
         {
+            get_tracker_sensor(entity[i].track_sens, sens_p, sens_R);
+
             /* Track non-camera entity position as requested. */
 
             if (entity[i].flags & FLAG_TRACK_POS)
             {
-                get_tracker_position(entity[i].track_sens, sens_p);
-
                 if (entity[i].track_mode == TRACK_WORLD)
                 {
                     mult_mat_pos(p, view_R, sens_p);
@@ -1112,8 +1111,6 @@ static int step_entity_tree(unsigned int i, float dt, int head,
 
             if (entity[i].flags & FLAG_TRACK_ROT)
             {
-                get_tracker_rotation(entity[i].track_sens, sens_R);
-
                 if (entity[i].track_mode == TRACK_WORLD)
                 {
                     mult_mat_mat(R, view_R, sens_R);

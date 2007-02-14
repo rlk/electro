@@ -11,9 +11,14 @@
 -- DATA_H = 5760 / 2
 
 -- 64-degree-per-pixel data
-DATA_S = "c:\\electro-840\\examples\\mars\\megr064.raw"
-DATA_W = 23040
-DATA_H = 11520
+--DATA_S = "c:\\electro-840\\examples\\mars\\megr064.raw"
+--DATA_S = "/home/evl/rlk/src/megdr/megr064.raw"
+--DATA_W = 23040
+--DATA_H = 11520
+
+DATA_S = "/home/evl/rlk/src/megdr/megr016.raw"
+DATA_W = 23040 / 4
+DATA_H = 11520 / 4
 
 -------------------------------------------------------------------------------
 -- Interaction mode configuration
