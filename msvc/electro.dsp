@@ -208,6 +208,10 @@ SOURCE=..\src\string.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\terrain.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\tracker.c
 # End Source File
 # Begin Source File
@@ -216,11 +220,11 @@ SOURCE=..\src\utility.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\vector.c
+SOURCE=..\src\vec.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\vec.c
+SOURCE=..\src\vector.c
 # End Source File
 # Begin Source File
 
@@ -349,6 +353,10 @@ SOURCE=..\src\stereo.h
 # Begin Source File
 
 SOURCE=..\src\string.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\terrain.h
 # End Source File
 # Begin Source File
 

@@ -622,6 +622,11 @@ static void init_terrain(int i)
         terrain[i].tex[1][1] = init_texture("mars7.dxt", 4096, 4096);
         terrain[i].tex[2][1] = init_texture("mars4.dxt", 4096, 4096);
         terrain[i].tex[3][1] = init_texture("mars5.dxt", 4096, 4096);
+
+		glBindTexture   (GL_TEXTURE_2D,              0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
     }
 }
 
@@ -951,6 +956,7 @@ static void draw_terrain(int i, int j, int f, float a)
 
 /*          printf("%d\n", count); */
 
+			glBindTexture  (GL_TEXTURE_2D,               0);
             glBindBufferARB(GL_ARRAY_BUFFER_ARB,         0);
             glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         }
