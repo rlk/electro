@@ -22,6 +22,7 @@ XC = 0
 YC = 0
 ZC = 0
 
+
 -------------------------------------------------------------------------------
 
 function add_object(i, s)
@@ -218,5 +219,4 @@ function do_keyboard(k, s)
     return false
 end
 
-E.set_background(0, 0, 0)
 do_start()

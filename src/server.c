@@ -137,10 +137,8 @@ static void server_swap(void)
 
 static void server_draw(void)
 {
-/*
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     draw_host_background();
-*/
 
     if (server_blank == 0)
         draw_entities();

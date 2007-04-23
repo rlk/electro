@@ -616,12 +616,7 @@ static int stereo_varrier_33(int eye, int tile, int pass)
 static int stereo_none(int tile, int pass)
 {
     if (pass == 0)
-    {
-        glClear(GL_COLOR_BUFFER_BIT |
-                GL_DEPTH_BUFFER_BIT);
-        draw_tile_background(tile);
         return 1;
-    }
     else
         return 0;
 }
