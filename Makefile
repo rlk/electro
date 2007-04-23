@@ -149,29 +149,29 @@ CH= install_name_tool -change
 osxdist : $(TARG)
 	mkdir -p lib
 
-	cp    /sw/lib/libSDL-1.2.0.dylib    lib
-	cp    /sw/lib/libfreetype.6.dylib   lib
-	cp    /sw/lib/libjpeg.62.dylib      lib
-	cp    /sw/lib/libpng.3.dylib        lib
-	cp    /sw/lib/libvorbisfile.3.dylib lib
-	cp    /sw/lib/libvorbis.0.dylib     lib
-	cp    /sw/lib/libogg.0.dylib        lib
+	cp    /opt/local/lib/libSDL-1.2.0.dylib    lib
+	cp    /opt/local/lib/libfreetype.6.dylib   lib
+	cp    /opt/local/lib/libjpeg.62.dylib      lib
+	cp    /opt/local/lib/libpng.3.dylib        lib
+	cp    /opt/local/lib/libvorbisfile.3.dylib lib
+	cp    /opt/local/lib/libvorbis.0.dylib     lib
+	cp    /opt/local/lib/libogg.0.dylib        lib
 
-	$(CH) /sw/lib/libSDL-1.2.0.dylib    \
+	$(CH) /opt/local/lib/libSDL-1.2.0.dylib    \
           @executable_path/lib/libSDL-1.2.0.dylib    $(TARG)
-	$(CH) /sw/lib/libfreetype.6.dylib   \
+	$(CH) /opt/local/lib/libfreetype.6.dylib   \
           @executable_path/lib/libfreetype.6.dylib   $(TARG)
-	$(CH) /sw/lib/libjpeg.62.dylib      \
+	$(CH) /opt/local/lib/libjpeg.62.dylib      \
           @executable_path/lib/libjpeg.62.dylib      $(TARG)
-	$(CH) /sw/lib/libpng.3.dylib        \
+	$(CH) /opt/local/lib/libpng.3.dylib        \
           @executable_path/lib/libpng.3.dylib        $(TARG)
-	$(CH) /sw/lib/libvorbisfile.3.dylib \
+	$(CH) /opt/local/lib/libvorbisfile.3.dylib \
           @executable_path/lib/libvorbisfile.3.dylib $(TARG)
-	$(CH) /sw/lib/libvorbis.0.dylib     \
+	$(CH) /opt/local/lib/libvorbis.0.dylib     \
           @executable_path/lib/libvorbis.0.dylib     lib/libvorbisfile.3.dylib
-	$(CH) /sw/lib/libogg.0.dylib        \
+	$(CH) /opt/local/lib/libogg.0.dylib        \
           @executable_path/lib/libogg.0.dylib        lib/libvorbisfile.3.dylib
-	$(CH) /sw/lib/libogg.0.dylib        \
+	$(CH) /opt/local/lib/libogg.0.dylib        \
           @executable_path/lib/libogg.0.dylib        lib/libvorbis.0.dylib
 
 #------------------------------------------------------------------------------

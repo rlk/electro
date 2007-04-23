@@ -402,8 +402,6 @@ static void fini_opengl_obj(void)
 
 /*===========================================================================*/
 
-static GLuint fence = 0;
-
 #ifdef __APPLE__
 
 void init_opengl(void)
@@ -427,6 +425,8 @@ void init_opengl(void)
 }
 
 #else
+
+static GLuint fence = 0;
 
 PFNGLGENFENCESNVPROC                 glGenFencesNV;
 PFNGLSETFENCENVPROC                  glSetFenceNV;
@@ -890,15 +890,19 @@ void opengl_pop_framebuffer(void)
 
 void opengl_set_fence(void)
 {
+#ifdef GL_ALL_COMPLETED_NV
     if (GL_has_fence)
         glSetFenceNV(fence, GL_ALL_COMPLETED_NV);
+#endif
 }
 
 void opengl_get_fence(void)
 {
+#ifdef GL_ALL_COMPLETED_NV
     if (GL_has_fence)
         glFinishFenceNV(fence);
     else
+#endif
         glFinish();
 }
 

@@ -841,7 +841,7 @@ static void draw_areas(float V[6][4], const float M[16],
 
     while (dequeue_area(&x, &y, &a, &o))
     {
-        float kk = get_bounds(i, b, x, y, a);
+        /*float kk =*/ get_bounds(i, b, x, y, a);
 
         if (test_frustum(V, b) >= 0)
         {
