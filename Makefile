@@ -27,7 +27,7 @@ endif
 ifeq ($(shell uname), Darwin)
 	INCDIR = -I/opt/local/include
 	LIBDIR = -L/opt/local/lib
-	OGLLIB =
+	OGLLIB = -framework OpenGL
 	SDL_CONFIG = /opt/local/bin/sdl-config
 	FT2_CONFIG = /opt/local/bin/freetype-config
 else
