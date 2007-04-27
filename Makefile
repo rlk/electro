@@ -7,7 +7,6 @@ INSTALL_PREFIX = $(HOME)
 ifdef MPI
 	CC     = mpicc
 	TARG   = electro-mpi
-#	CFLAGS = -O3 -ffast-math -Wall -DNDEBUG -DCONF_MPI
 #	CFLAGS = -O2 -Wall -DNDEBUG -DCONF_MPI
 	CFLAGS = -g -Wall -DNDEBUG -DCONF_MPI
 else
