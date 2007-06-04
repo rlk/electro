@@ -21,9 +21,6 @@
 
 #include <lua.h>
 #include <lualib.h>
-#ifdef CONF_SOCKET
-#include <luasocket.h>
-#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -2960,17 +2957,9 @@ static void luaopen_electro(lua_State *L)
 
 int init_script(void)
 {
-    if ((L = lua_open()))
+    if ((L = luaL_newstate()))
     {
-        luaopen_io(L);
-        luaopen_base(L);
-        luaopen_math(L);
-        luaopen_table(L);
-        luaopen_debug(L);
-        luaopen_string(L);
-#ifdef CONF_SOCKET
-        luaopen_socket(L);
-#endif
+        luaL_openlibs(L);
         luaopen_electro(L);
 
         return 1;

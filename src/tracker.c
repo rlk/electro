@@ -335,8 +335,9 @@ int get_tracker_sensor(unsigned int id, float p[3], float R[16])
                 }
                 if ((s >= 6 * sizeof (float)))
                 {
-                    float q[3];
 /*
+                    float q[3];
+
                     q[0] = net_to_host_float(mesg.rx);
                     q[1] = net_to_host_float(mesg.ry);
                     q[2] = net_to_host_float(mesg.rz);

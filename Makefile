@@ -17,10 +17,6 @@ else
 	CFLAGS = -g -Wall
 endif
 
-ifdef SOCKET
-	CFLAGS += -DCONF_SOCKET
-endif
-
 #------------------------------------------------------------------------------
 
 ifeq ($(shell uname), Darwin)
@@ -56,14 +52,10 @@ CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
 
 SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
 FT2LIB = $(shell $(FT2_CONFIG) --libs)
-LUALIB = -llua -llualib
+LUALIB = -llua
 IMGLIB = -ljpeg -lpng -lz -lm
 OGGLIB = -lvorbisfile
 ODELIB = -lode -lstdc++
-
-ifdef SOCKET
-LUALIB += -lluasocket
-endif
 
 ifdef LINUX_STATIC
 SDLLIB = /home/rlk/lib/libSDL.a -lpthread
