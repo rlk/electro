@@ -255,7 +255,7 @@ static void transform_position(float P[3], float p[3], int id)
 
     mult_mat_vec(t, transform[id].M, q);
 
-    P[0] = -t[0] / t[3];
+    P[0] =  t[0] / t[3];
     P[1] =  t[1] / t[3];
     P[2] =  t[2] / t[3];
 }

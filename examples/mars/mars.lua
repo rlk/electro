@@ -16,9 +16,10 @@
 --DATA_W = 23040
 --DATA_H = 11520
 
-DATA_S = "/home/evl/rlk/src/megdr/megr016.raw"
-DATA_W = 23040 / 4
-DATA_H = 11520 / 4
+-- 64-degree-per-pixel data
+DATA_S = "/data2/rlk/megr064.raw"
+DATA_W = 23040
+DATA_H = 11520
 
 -------------------------------------------------------------------------------
 -- Interaction mode configuration
@@ -28,10 +29,10 @@ DATA_H = 11520 / 4
 --     joy4   Full 4-axis joystick
 --     wand   Full 6 degree-of-freedom tracker
 
-MODE = "mouse"
+-- MODE = "mouse"
 -- MODE = "joy2"
 -- MODE = "joy4"
--- MODE = "wand"
+MODE = "wand"
 
 -------------------------------------------------------------------------------
 -- Default configuration
