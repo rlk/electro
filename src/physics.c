@@ -92,6 +92,9 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
             struct geom_data *d1 = get_data(o1);
             struct geom_data *d2 = get_data(o2);
 
+            if (b1) dBodyEnable(b1);
+            if (b2) dBodyEnable(b2);
+
             /* Compute collision parameters from geom parameters. */
 
             dReal bounce    = MAX(d1->bounce,   d2->bounce);

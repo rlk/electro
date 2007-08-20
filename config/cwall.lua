@@ -2,11 +2,13 @@
 
 W = 10.0000
 H =  8.0000
-D =  5.0000  -- The ideal viewing position is 10' from the center.
+D = 10.0000  -- The ideal viewing position is 10' from the center.
 O =  0.2083  -- The interocular distance is 2.5".
 
-w = 2560
-h = 1024
+w = 2048
+h =  768
+
+stereo_mode = E.stereo_mode_tile
 
 ------------------------------------------------------------------------------
 
@@ -22,23 +24,13 @@ E.set_tile_position(tile[2], -W / 2, 0, -D, W, 0.0, 0.0, 0.0, H, 0.0)
 E.set_tile_viewport(tile[1], 0, 0, w / 2, h)
 E.set_tile_viewport(tile[2], 0, 0, w / 2, h)
 
-E.set_host_flags(host, E.host_flag_full, true)
+--E.set_host_flags(host, E.host_flag_full, true)
 
-E.set_tile_flags(tile[1], E.tile_flag_left_eye, true)
-E.set_tile_flags(tile[2], E.tile_flag_right_eye, true)
+--E.set_tile_flags(tile[1], E.tile_flag_left_eye, true)
+--E.set_tile_flags(tile[2], E.tile_flag_right_eye, true)
 
-E.set_tracker_transform(0,  0,  1,  0, 0,
-                           -1,  0,  0, 0,
-                            0,  0,  1, 0,
-                            0,  0,  0, 1)
-E.set_tracker_transform(1, -1,  0,  0, 0,
-                            0, -1,  0, 0,
-                            0,  0,  1, 0,
-                            0,  0,  0, 1)
-E.set_tracker_transform(2, -1,  0,  0, 0,
-                            0, -1,  0, 0,
-                            0,  0,  1, 0,
-                            0,  0,  0, 1)
+E.set_tile_flags(tile[1], E.tile_flag_right_eye, true)
+E.set_tile_flags(tile[2], E.tile_flag_left_eye, true)
 
 ------------------------------------------------------------------------------
 
