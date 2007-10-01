@@ -679,8 +679,11 @@ void init_opengl(void)
                      && glFinishFenceNV);
     }
 
-    glPointParameteriNV = (PFNGLPOINTPARAMETERINVPROC)
-                 opengl_proc("glPointParameteriNV");
+    if (opengl_need("GL_NV_point_sprite"))
+    {
+        glPointParameteriNV = (PFNGLPOINTPARAMETERINVPROC)
+                     opengl_proc("glPointParameteriNV");
+    }
 
     /* Miscellaneous procedureless extensions. */
 
