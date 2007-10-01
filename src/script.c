@@ -793,8 +793,8 @@ static int E_get_entity_alpha(lua_State *L)
 
 static int E_get_entity_flags(lua_State *L)
 {
-    int id    = E_getentity(L, -2);
-    int flags = E_getentity(L, -1);
+    int id    = E_getentity (L, -2);
+    int flags = L_getinteger(L, -1);
     int value = get_entity_flags(id);
 
     lua_pushboolean(L, (flags & value));
