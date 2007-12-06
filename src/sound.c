@@ -345,11 +345,18 @@ int load_sound(const char *filename)
 
 void free_sound(int i)
 {
-    struct sound *s = get_sound(i);
+    if (enabled)
+    {
+        struct sound *s = get_sound(i);
 
-    if (s->data) free(s->data);
+        SDL_LockAudio();
+        {
+            if (s->data) free(s->data);
 
-    memset(s, 0, sizeof (struct sound));
+            memset(s, 0, sizeof (struct sound));
+        }
+        SDL_UnlockAudio();
+    }
 }
 
 /*---------------------------------------------------------------------------*/
