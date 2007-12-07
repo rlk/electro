@@ -658,8 +658,8 @@ void set_phys_join_attr_f(dBodyID body1, dBodyID body2, int p, float f)
 
     if (joint)
     {
-        dBodyEnable(body1);
-        dBodyEnable(body2);
+        if (body1) dBodyEnable(body1);
+        if (body2) dBodyEnable(body2);
 
         switch (p)
         {
@@ -728,14 +728,20 @@ void get_phys_join_attr_v(dBodyID body1, dBodyID body2, int p, float *v)
 
 void add_phys_force(dBodyID body, float x, float y, float z)
 {
-    dBodyEnable(body);
-    dBodyAddForce(body, x, y, z);
+    if (body)
+    {
+        dBodyEnable(body);
+        dBodyAddForce(body, x, y, z);
+    }
 }
 
 void add_phys_torque(dBodyID body, float x, float y, float z)
 {
-    dBodyEnable(body);
-    dBodyAddTorque(body, x, y, z);
+    if (body)
+    {
+        dBodyEnable(body);
+        dBodyAddTorque(body, x, y, z);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
