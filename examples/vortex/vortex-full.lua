@@ -318,14 +318,14 @@ function do_timer(dt)
 end
 
 function do_joystick(d, b, s)
-    if b == 3 then
+    if b == 1 then
         if s then
             fly_begin()
         else
             fly_end()
         end
     end
-    if b == 1 then
+    if b == 3 then
         if s then
             reset()
         end

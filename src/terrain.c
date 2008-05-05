@@ -434,7 +434,8 @@ int load_terrain(int i, const char *filename, int w, int h)
     FILE *fp;
     short *p;
 
-    if ((p = (short *) malloc((w * h + w * h / 3 + 1) * sizeof (short))))
+/*  if ((p = (short *) calloc((w * h + w * h / 3 + 1), sizeof (short)))) */
+    if ((p = (short *) calloc((w * h * 2), sizeof (short))))
     {
         short *D = p;
         short *S = p;
@@ -504,12 +505,12 @@ int load_terrain(int i, const char *filename, int w, int h)
                     int R = 180 * r / h;
                     int C = 360 * c / w;
 
-                    short h = terrain[i].p[r * w + c];
+                    short k = terrain[i].p[r * w + c];
 
-                    if (terrain[i].min[360 * R + C] >= h)
-                        terrain[i].min[360 * R + C]  = h;
-                    if (terrain[i].max[360 * R + C] <= h)
-                        terrain[i].max[360 * R + C]  = h;
+                    if (terrain[i].min[360 * R + C] >= k)
+                        terrain[i].min[360 * R + C]  = k;
+                    if (terrain[i].max[360 * R + C] <= k)
+                        terrain[i].max[360 * R + C]  = k;
                 }
         }
 
