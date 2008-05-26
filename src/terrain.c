@@ -880,7 +880,7 @@ static void draw_terrain(int i, int j, int f, float a)
 
     glPushMatrix();
     {
-        float V[6][4], P[16], M[16], X[16], v[3];
+        float V[6][4], P[16], M[16], X[16], v[4];
         float t;
         float p;
 

@@ -16,10 +16,9 @@
 --DATA_W = 23040
 --DATA_H = 11520
 
--- 64-degree-per-pixel data
-DATA_S = "/data2/rlk/megr064.raw"
-DATA_W = 23040
-DATA_H = 11520
+DATA_S = "c:\\rlk\\data\\megr064.raw"
+DATA_W = 23040 / 4
+DATA_H = 11520 / 4
 
 -------------------------------------------------------------------------------
 -- Interaction mode configuration
