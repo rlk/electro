@@ -417,6 +417,9 @@ static int free_brush(int i)
                 if (b->frag) free(b->frag);
                 if (b->vert) free(b->vert);
 
+                if (b->vert_text) free(b->vert_text);
+                if (b->frag_text) free(b->frag_text);
+
                 /* Release all images. */
 
                 if (b->image[0]) send_delete_image(b->image[0]);

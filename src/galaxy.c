@@ -231,7 +231,7 @@ void prep_hip_galaxy(const char *dat_name,
 
     init_galaxy_prep(&g);
     {
-        g.S_num = star_gimme_sol(g.S);
+//      g.S_num = star_gimme_sol(g.S);
         g.S_num = prep_parse_hip(g.S, g.S_num, dat_name);
     }
     fini_galaxy_prep(&g);

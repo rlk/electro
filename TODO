@@ -1,3 +1,8 @@
+Deleting the last edge or face doesn't work.
+strings don't honor brush_flag_transparent
+
+
+
 spherical aberation correction (snells law) on combiner
 
 lua 5.1 / nix luasocket dep

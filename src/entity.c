@@ -356,18 +356,21 @@ void draw_entities(void)
 
 static void detach_entity(unsigned int i)
 {
-    int j, k, p = PAR(i);
+    if (i)
+    {
+        int j, k, p = PAR(i);
 
-    /* Remove the child from its parent's child list. */
-
-    for (j = 0, k = CAR(p); k; j = k, k = CDR(k))
-        if (k == i)
-        {
-            if (j)
-                CDR(j) = CDR(k);
-            else
-                CAR(p) = CDR(k);
-        }
+        /* Remove the child from its parent's child list. */
+        
+        for (j = 0, k = CAR(p); k; j = k, k = CDR(k))
+            if (k == i)
+            {
+                if (j)
+                    CDR(j) = CDR(k);
+                else
+                    CAR(p) = CDR(k);
+            }
+    }
 }
 
 static void attach_entity(unsigned int i, unsigned int j)

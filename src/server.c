@@ -518,6 +518,11 @@ void server(int argc, char *argv[])
                     grab(0);
                 }
 
+                nuke_entities();
+                nuke_brushes();
+                nuke_images();
+                nuke_sounds();
+
                 release_tracker();
             }
 

@@ -252,6 +252,8 @@ static void free_string(int i)
         {
             send_delete_brush(s->fill);
             send_delete_brush(s->line);
+
+            free(s->text);
             
             memset(s, 0, sizeof (struct string));
         }

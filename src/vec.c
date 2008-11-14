@@ -46,7 +46,7 @@ void *vec_new(size_t n, size_t s)
 
     /* Allocate an empty vector and initialize the free list. */
 
-    if ((v = malloc(n * s)))
+    if ((v = calloc(n * s, 1)))
     {
         for (i = 0; i < n - 1; ++i)
         {
