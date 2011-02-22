@@ -853,7 +853,7 @@ static void fix_point_sprite_origin(void)
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &fbo);
 
-    if (glPointParameteriNV)
+/*  if (glPointParameteriNV) */
     {
         if (fbo)
             glPointParameteriNV(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT);

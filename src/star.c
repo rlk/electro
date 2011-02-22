@@ -143,17 +143,15 @@ int star_parse_hip(struct star *s, FILE *fp)
             de  = RAD(de);
 
             /* Compute the position in galactic coordinates. */
-/*
             n1 =                     cos(de) * cos(ra - c1);
             n2 = sin(de) * sin(c2) + cos(de) * sin(ra - c1) * cos(c2);
             n3 = sin(de) * cos(c2) - cos(de) * sin(ra - c1) * sin(c2);
 
             l = -atan2(n1, n2) + c3;
             b =  asin(n3);
-*/
 
-            l = ra;
-            b = de;
+            /* l = ra; */
+            /* b = de; */
 
             s->pos[0] = (float) (sin(l) * cos(b) * plx);
             s->pos[1] = (float) (         sin(b) * plx);

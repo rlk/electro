@@ -2,19 +2,18 @@ INSTALL_PREFIX = $(HOME)
 
 #------------------------------------------------------------------------------
 
+CFLAGS= -Wall -DCONF_OPENNI
+
 # To build in cluster mode: "make MPI=1".
 
 ifdef MPI
-	CC     = mpicc
-	TARG   = electro-mpi
-#	CFLAGS = -O2 -Wall -DNDEBUG -DCONF_MPI
-	CFLAGS = -g -Wall -DNDEBUG -DCONF_MPI
+	CC      = mpicc
+	TARG    = electro-mpi
+	CFLAGS += -g -DNDEBUG -DCONF_MPI
 else
-	CC     = cc
-	TARG   = electro
-#	CFLAGS = -O2 -Wall
-#	CFLAGS = -O3 -ffast-math -Wall
-	CFLAGS = -g -Wall
+	CC      = cc
+	TARG    = electro
+	CFLAGS += -g
 endif
 
 #------------------------------------------------------------------------------
@@ -70,7 +69,8 @@ endif
 
 LIBS += $(LUALIB) $(ODELIB) $(SDLLIB) $(FT2LIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
-OBJS =	src/opengl.o   \
+OBJS =	src/onitcs.o   \
+	src/opengl.o   \
 	src/video.o    \
 	src/glyph.o    \
 	src/matrix.o   \
@@ -121,7 +121,7 @@ $(TARG) : $(OBJS) Makefile
 	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS)
+	rm -f $(TARG) $(OBJS) $(DEPS)
 
 distclean:
 	find . -name .svn | xargs rm -rf

@@ -220,3 +220,4 @@ function do_keyboard(k, s)
 end
 
 do_start()
+E.set_camera_stereo(camera, E.stereo_mode_tile, -O / 2, 0, 0, O / 2, 0, 0)

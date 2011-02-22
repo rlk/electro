@@ -9,7 +9,7 @@ wy = 0
 wz = 0
 
 show_lines = true
-magnitude = 500
+magnitude = 100
 track = true
 
 -------------------------------------------------------------------------------
@@ -247,6 +247,9 @@ function do_start()
 
     do_constellations(lines);
 
+    if stereo_mode then
+        E.set_camera_stereo(camera, stereo_mode, -O / 2, 0, 0, O / 2, 0, 0)
+    end
     E.enable_timer(true)
     reset()
 end

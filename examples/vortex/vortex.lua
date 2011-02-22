@@ -29,7 +29,7 @@ function do_start()
 
     camera  = E.create_camera(E.camera_type_perspective)
     galaxy  = E.create_galaxy("../data/galaxy_hip.gal", star_brush)
-    orion   = E.create_object("../data/orion.obj")
+    orion   = E.create_object("constellations/Ori.obj")
     sign    = E.create_sprite(sign_brush)
     pointer = E.create_pivot()
 
@@ -60,6 +60,7 @@ function do_start()
     E.enable_timer(true)
     
     do_keyboard(E.key_F8, true)
+    E.set_camera_stereo(camera, E.stereo_mode_tile, -O / 2, 0, 0, O / 2, 0, 0)
 end
 
 function do_timer(dt)
@@ -187,3 +188,4 @@ end
 -------------------------------------------------------------------------------
 
 do_start()
+

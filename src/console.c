@@ -522,7 +522,7 @@ static void *mirror_output(const char *format, ...)
     net_send_all(string);
 
     if (logfile)
-        fprintf(logfile, string);
+        fprintf(logfile, "%s", string);
 
     return NULL;
 }

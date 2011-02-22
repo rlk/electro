@@ -10,9 +10,236 @@
 /*    MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.   See the GNU    */
 /*    General Public License for more details.                               */
 
+/*---------------------------------------------------------------------------*/
+
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+#include "matrix.h"
+
+struct transform
+{
+    float M[16];
+    float I[16];
+    int   a[3];
+};
+
+static struct transform *transform  = NULL;
+static int               transforms = 0;
+
+/*---------------------------------------------------------------------------*/
+
+static void transform_rotation(float R[16], float r[3], int id)
+{
+    float axis[3][3] = {
+        { 0, 1, 0 },
+        { 1, 0, 0 },
+        { 0, 0, 1 },
+    };
+
+    int a0 = transform[id].a[0];
+    int a1 = transform[id].a[1];
+    int a2 = transform[id].a[2];
+
+    /* TODO: Fix potential gimbal lock here? */
+
+    load_rot_mat(R, axis[a0][0], axis[a0][1], axis[a0][2], r[a0]);
+    mult_rot_mat(R, axis[a1][0], axis[a1][1], axis[a1][2], r[a1]);
+    mult_rot_mat(R, axis[a2][0], axis[a2][1], axis[a2][2], r[a2]);
+
+    mult_mat_mat(R, transform[id].M, R);
+}
+
+static void transform_position(float P[3], float p[3], int id)
+{
+    float t[4];
+    float q[4];
+
+    q[0] = p[0];
+    q[1] = p[1];
+    q[2] = p[2];
+    q[3] = 1.0f;
+
+    mult_mat_vec(t, transform[id].M, q);
+
+    P[0] =  t[0] / t[3];
+    P[1] =  t[1] / t[3];
+    P[2] =  t[2] / t[3];
+}
+
+/*---------------------------------------------------------------------------*/
+
+void new_tracker_transforms(int n)
+{
+    transforms = n;
+
+    if ((transform = (struct transform *) calloc(n, sizeof (struct transform))))
+    {
+        int i;
+
+        for (i = 0; i < transforms; ++i)
+        {
+            load_idt(transform[i].M);
+            load_idt(transform[i].I);
+
+            transform[i].a[0] = 1;
+            transform[i].a[1] = 0;
+            transform[i].a[2] = 2;
+        }
+    }
+
+}
+
+void set_tracker_transform(unsigned int id, float M[16], int a[3])
+{
+    if (transform && (int) id < transforms)
+    {
+        memcpy(transform[id].M, M, 16 * sizeof (float));
+        memcpy(transform[id].a, a,  3 * sizeof (int));
+
+        load_inv(transform[id].I, transform[id].M);
+    }
+}
+
+void get_tracker_transform(unsigned int id, float M[16], int a[3])
+{
+    if (transform && (int) id < transforms)
+    {
+        memcpy(M, transform[id].M, 16 * sizeof (float));
+        memcpy(a, transform[id].a,  3 * sizeof (int));
+    }
+}
+
+#ifdef CONF_OPENNI  /*********************************************************/
+
+#include "onitcs.h"
+
+#define MAXPOINTS 32
+
+static onit_client *client = NULL;
+static onit_point   temp[MAXPOINTS];
+static onit_point   curr[MAXPOINTS];
+
+int acquire_tracker(int t_key, int c_key, int port)
+{
+    memset(curr, 0, MAXPOINTS * sizeof (onit_point));
+    memset(temp, 0, MAXPOINTS * sizeof (onit_point));
+
+    return (client = onit_client_init("localhost", ONIT_SERVICE)) ? 1 : 0;
+}
+
+void release_tracker(void)
+{
+    if (client)
+    {
+        onit_client_fini(client);
+        client = NULL;
+    }
+}
+
+int get_tracker_status(void)
+{
+    return client ? 1 : 0;
+}
+
+int get_tracker_sensor(unsigned int id, float p[3], float R[16])
+{
+    float q[3];
+    float x[3] = { 1.0f, 0.0f, 0.0f };
+    float y[3] = { 0.0f, 1.0f, 0.0f };
+    float z[3] = { 0.0f, 0.0f, 1.0f };
+
+    /* Copy any incoming OpenNI data to a temporary buffer. Copy confident   */
+    /* point values to the current buffer.                                   */
+
+    if (client)
+    {
+        size_t len = MAXPOINTS * sizeof (onit_point);
+        size_t siz = onit_client_recv(client, temp, len);
+
+        size_t n = siz / sizeof (onit_point);
+        size_t i;
+
+        for (i = 0; i < n; ++i)
+            if (temp[i].confidence > 0.5)
+                curr[i] = temp[i];
+    }
+
+    /* Synthesize a head sensor from the position of the head and neck.      */
+
+    if (id == 0)
+    {
+        p[0] = curr[0].world_p[0] * 0.00328084;
+        p[1] = curr[0].world_p[1] * 0.00328084;
+        p[2] = curr[0].world_p[2] * 0.00328084;
+
+        q[0] = curr[1].world_p[0] * 0.00328084;
+        q[1] = curr[1].world_p[1] * 0.00328084;
+        q[2] = curr[1].world_p[2] * 0.00328084;
+
+        y[0] = p[0] - q[0];
+        y[1] = p[1] - q[1];
+        y[2] = p[2] - q[2];
+
+        normalize(y);
+        cross(x, y, z);
+        normalize(x);
+        cross(z, x, y);
+        normalize(z);
+
+        load_idt(R);
+
+        R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
+        R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
+        R[8] = z[0]; R[9] = z[1], R[10] = z[2];
+    }
+
+    /* Synthesize a hand sensor from the position of the hand and elbow.     */
+
+    if (id == 1)
+    {
+        p[0] = curr[14].world_p[0] * 0.00328084;
+        p[1] = curr[14].world_p[1] * 0.00328084;
+        p[2] = curr[14].world_p[2] * 0.00328084;
+
+        q[0] = curr[12].world_p[0] * 0.00328084;
+        q[1] = curr[12].world_p[1] * 0.00328084;
+        q[2] = curr[12].world_p[2] * 0.00328084;
+
+        z[0] = q[0] - p[0];
+        z[1] = q[1] - p[1];
+        z[2] = q[2] - p[2];
+
+        normalize(z);
+        cross(x, y, z);
+        normalize(x);
+        cross(y, z, x);
+        normalize(y);
+
+        load_idt(R);
+
+        R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
+        R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
+        R[8] = z[0]; R[9] = z[1], R[10] = z[2];
+    }
+
+    return 0;
+}
+
+int get_tracker_joystick(unsigned int id, float a[2])
+{
+    return 0;
+}
+
+int get_tracker_buttons(unsigned int *id, unsigned int *st)
+{
+    return 0;
+}
+
+#else /* not CONF_OPENNI *****************************************************/
+
 #include <sys/types.h>
 
 #ifdef _WIN32
@@ -23,7 +250,6 @@ typedef unsigned int uint32_t;
 
 #include "tracker.h"
 #include "utility.h"
-#include "matrix.h"
 #include "socket.h"
 
 /*---------------------------------------------------------------------------*/
@@ -88,22 +314,8 @@ static int sock = INVALID_SOCKET;
 
 /*---------------------------------------------------------------------------*/
 
-struct transform
-{
-    float M[16];
-    float I[16];
-    int   a[3];
-};
-
-static struct transform *transform  = NULL;
-static int               transforms = 0;
-
-/*---------------------------------------------------------------------------*/
-
 int acquire_tracker(int t_key, int c_key, int port)
 {
-    int i;
-
     /* Acquire the tracker and controller shared memory segments. */
 
 #ifndef _WIN32
@@ -163,21 +375,7 @@ int acquire_tracker(int t_key, int c_key, int port)
     /* Initialize the tracker transform. */
 
     if (tracker != (struct tracker_header *) (-1))
-        transforms = (int) tracker->count;
-
-    if ((transform = (struct transform *) calloc(transforms,
-                                                 sizeof (struct transform))))
-    {
-        for (i = 0; i < transforms; ++i)
-        {
-            load_idt(transform[i].M);
-            load_idt(transform[i].I);
-
-            transform[i].a[0] = 1;
-            transform[i].a[1] = 0;
-            transform[i].a[2] = 2;
-        }
-    }
+        new_tracker_transforms((int) tracker->count);
 
     return 1;
 }
@@ -218,46 +416,6 @@ void release_tracker(void)
     buttons    = NULL;
     transform  = NULL;
     transforms = 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void transform_rotation(float R[16], float r[3], int id)
-{
-    float axis[3][3] = {
-        { 0, 1, 0 },
-        { 1, 0, 0 },
-        { 0, 0, 1 },
-    };
-
-    int a0 = transform[id].a[0];
-    int a1 = transform[id].a[1];
-    int a2 = transform[id].a[2];
-
-    /* TODO: Fix potential gimbal lock here? */
-
-    load_rot_mat(R, axis[a0][0], axis[a0][1], axis[a0][2], r[a0]);
-    mult_rot_mat(R, axis[a1][0], axis[a1][1], axis[a1][2], r[a1]);
-    mult_rot_mat(R, axis[a2][0], axis[a2][1], axis[a2][2], r[a2]);
-
-    mult_mat_mat(R, transform[id].M, R);
-}
-
-static void transform_position(float P[3], float p[3], int id)
-{
-    float t[4];
-    float q[4];
-
-    q[0] = p[0];
-    q[1] = p[1];
-    q[2] = p[2];
-    q[3] = 1.0f;
-
-    mult_mat_vec(t, transform[id].M, q);
-
-    P[0] =  t[0] / t[3];
-    P[1] =  t[1] / t[3];
-    P[2] =  t[2] / t[3];
 }
 
 /*---------------------------------------------------------------------------*/
@@ -416,26 +574,4 @@ int get_tracker_buttons(unsigned int *id, unsigned int *st)
     return 0;
 }
 
-/*---------------------------------------------------------------------------*/
-
-void set_tracker_transform(unsigned int id, float M[16], int a[3])
-{
-    if (transform && (int) id < transforms)
-    {
-        memcpy(transform[id].M, M, 16 * sizeof (float));
-        memcpy(transform[id].a, a,  3 * sizeof (int));
-
-        load_inv(transform[id].I, transform[id].M);
-    }
-}
-
-void get_tracker_transform(unsigned int id, float M[16], int a[3])
-{
-    if (transform && (int) id < transforms)
-    {
-        memcpy(M, transform[id].M, 16 * sizeof (float));
-        memcpy(a, transform[id].a,  3 * sizeof (int));
-    }
-}
-
-/*---------------------------------------------------------------------------*/
+#endif /* CONF_OPENNI ********************************************************/
