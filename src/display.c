@@ -1041,11 +1041,14 @@ void draw_host_background(void)
 {
     unsigned int i;
 
+    glViewport(0, 0, current_host.win_w, current_host.win_h);
+    glScissor (0, 0, current_host.win_w, current_host.win_h);
+/*
     glViewport(current_host.win_x, current_host.win_y,
                current_host.win_w, current_host.win_h);
     glScissor (current_host.win_x, current_host.win_y,
                current_host.win_w, current_host.win_h);
-
+*/
     glClear(GL_DEPTH_BUFFER_BIT |
             GL_COLOR_BUFFER_BIT);
 

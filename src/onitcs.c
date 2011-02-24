@@ -25,6 +25,7 @@ typedef int socklen_t;
 #else
 #include <stddef.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -226,7 +227,8 @@ static void sock_send_all(int *sock, int num, void *buf, size_t len)
     {
         if (sock[i] != INVALID_SOCKET)
         {
-            if (write(sock[i], buf, len) == SOCKET_ERROR)
+//          if (write(sock[i], buf, len) == SOCKET_ERROR)
+            if (send(sock[i], buf, len, MSG_NOSIGNAL) == SOCKET_ERROR)
             {
                 close(sock[i]);
                 sock[i] = INVALID_SOCKET;
@@ -270,31 +272,31 @@ void onit_server_fini(onit_server *S)
 
 void onit_server_poll(onit_server *S)
 {
-    char buf[256];
     int  sock;
     int  i;
 
     // If a new connection is pending then add it to the list.
 
-    if ((sock = sock_poll_accept(S->listen_sock)) != INVALID_SOCKET)
+    if (S->listen_sock != INVALID_SOCKET)
     {
-        for (i = 0; i < MAXCLI; ++i)
-            if (S->client_sock[i] == INVALID_SOCKET)
-            {
-                S->client_sock[i] = sock;
-                break;
-            }
+        if ((sock = sock_poll_accept(S->listen_sock)) != INVALID_SOCKET)
+        {
+            for (i = 0; i < MAXCLI; ++i)
+                if (S->client_sock[i] == INVALID_SOCKET)
+                {
+                    S->client_sock[i] = sock;
+                    break;
+                }
 
-        if (i == MAXCLI) close(sock);
+            if (i == MAXCLI) close(sock);
+        }
     }
-
-    // Detect disconnection with a dummy receive from all connected clients.
-
-    sock_recv_any(S->client_sock, MAXCLI, buf, 256);
 }
 
 void onit_server_send(onit_server *S, void *buf, size_t len)
 {
+    char tmp[256];
+    sock_recv_any(S->client_sock, MAXCLI, tmp, 256);
     sock_send_all(S->client_sock, MAXCLI, buf, len);
 }
 

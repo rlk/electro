@@ -25,6 +25,9 @@
 #include <OpenGL/glu.h>
 #define GL_GLEXT_PROTOTYPES 1
 #else
+/*
+#include </usr/share/doc/NVIDIA_GLX-1.0/include/GL/gl.h>
+*/
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif
@@ -70,7 +73,7 @@ extern PFNGLMAPBUFFERARBPROC                glMapBufferARB;
 extern PFNGLUNMAPBUFFERARBPROC              glUnmapBufferARB;
 extern PFNGLISBUFFERARBPROC                 glIsBufferARB;
 extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
-extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
+/*extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;*/
 extern PFNGLUSEPROGRAMOBJECTARBPROC         glUseProgramObjectARB;
 extern PFNGLCREATESHADEROBJECTARBPROC       glCreateShaderObjectARB;
 extern PFNGLCREATEPROGRAMOBJECTARBPROC      glCreateProgramObjectARB;

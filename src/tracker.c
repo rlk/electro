@@ -122,10 +122,23 @@ static onit_client *client = NULL;
 static onit_point   temp[MAXPOINTS];
 static onit_point   curr[MAXPOINTS];
 
+static void lpf(onit_point *d, onit_point *s)
+{
+    float k = 4.0f;
+
+    d->world_p[0] = (s->world_p[0] + d->world_p[0] * (k - 1.0f)) / k;
+    d->world_p[1] = (s->world_p[1] + d->world_p[1] * (k - 1.0f)) / k;
+    d->world_p[2] = (s->world_p[2] + d->world_p[2] * (k - 1.0f)) / k;
+    d->image_p[0] = (s->image_p[0] + d->image_p[0] * (k - 1.0f)) / k;
+    d->image_p[1] = (s->image_p[1] + d->image_p[1] * (k - 1.0f)) / k;
+}
+
 int acquire_tracker(int t_key, int c_key, int port)
 {
     memset(curr, 0, MAXPOINTS * sizeof (onit_point));
     memset(temp, 0, MAXPOINTS * sizeof (onit_point));
+
+    new_tracker_transforms(1);
 
     return (client = onit_client_init("localhost", ONIT_SERVICE)) ? 1 : 0;
 }
@@ -142,6 +155,21 @@ void release_tracker(void)
 int get_tracker_status(void)
 {
     return client ? 1 : 0;
+}
+
+void get_tracker_point(int i, float p[3])
+{
+    float t[3];
+
+    // Convert from millimeters to feet.
+
+    t[0] = curr[i].world_p[0] * 0.00328084;
+    t[1] = curr[i].world_p[1] * 0.00328084;
+    t[2] = curr[i].world_p[2] * 0.00328084;
+
+    // Apply the configuration transformation.
+
+    transform_position(p, t, 0);
 }
 
 int get_tracker_sensor(unsigned int id, float p[3], float R[16])
@@ -163,21 +191,18 @@ int get_tracker_sensor(unsigned int id, float p[3], float R[16])
         size_t i;
 
         for (i = 0; i < n; ++i)
-            if (temp[i].confidence > 0.5)
-                curr[i] = temp[i];
+            if (temp[i].confidence > 0.5 &&
+                fabs(temp[i].world_p[0]) > 0.0 &&
+                fabs(temp[i].world_p[1]) > 0.0 &&
+                fabs(temp[i].world_p[2]) > 0.0) lpf(curr + i, temp + i);
     }
 
     /* Synthesize a head sensor from the position of the head and neck.      */
 
     if (id == 0)
     {
-        p[0] = curr[0].world_p[0] * 0.00328084;
-        p[1] = curr[0].world_p[1] * 0.00328084;
-        p[2] = curr[0].world_p[2] * 0.00328084;
-
-        q[0] = curr[1].world_p[0] * 0.00328084;
-        q[1] = curr[1].world_p[1] * 0.00328084;
-        q[2] = curr[1].world_p[2] * 0.00328084;
+        get_tracker_point(0, p);
+        get_tracker_point(1, q);
 
         y[0] = p[0] - q[0];
         y[1] = p[1] - q[1];
@@ -194,19 +219,17 @@ int get_tracker_sensor(unsigned int id, float p[3], float R[16])
         R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
         R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
         R[8] = z[0]; R[9] = z[1], R[10] = z[2];
+/*
+        printf("%f %f %f\n", p[0], p[1], p[2]);
+*/
     }
 
     /* Synthesize a hand sensor from the position of the hand and elbow.     */
 
     if (id == 1)
     {
-        p[0] = curr[14].world_p[0] * 0.00328084;
-        p[1] = curr[14].world_p[1] * 0.00328084;
-        p[2] = curr[14].world_p[2] * 0.00328084;
-
-        q[0] = curr[12].world_p[0] * 0.00328084;
-        q[1] = curr[12].world_p[1] * 0.00328084;
-        q[2] = curr[12].world_p[2] * 0.00328084;
+        get_tracker_point(14, p);
+        get_tracker_point(15, q);
 
         z[0] = q[0] - p[0];
         z[1] = q[1] - p[1];

@@ -261,8 +261,8 @@ GLuint star_make_texture(void)
         for (r = 0; r < h; r++)
             for (c = 0; c < w; c++)
             {
-                double x = (double) c / (double) w - 0.5;
-                double y = (double) r / (double) h - 0.5;
+                double x = ((double) c / (double) w - 0.5) * 2.0;
+                double y = ((double) r / (double) h - 0.5);
                 double z = sqrt(x * x + y * y);
 
                 p[r * w + c] = (GLubyte) floor(exp(k * z * z) * 255.0);

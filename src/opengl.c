@@ -449,7 +449,7 @@ PFNGLMAPBUFFERARBPROC                glMapBufferARB;
 PFNGLUNMAPBUFFERARBPROC              glUnmapBufferARB;
 PFNGLISBUFFERARBPROC                 glIsBufferARB;
 PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
-PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
+/*PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;*/
 PFNGLUSEPROGRAMOBJECTARBPROC         glUseProgramObjectARB;
 PFNGLCREATESHADEROBJECTARBPROC       glCreateShaderObjectARB;
 PFNGLCREATEPROGRAMOBJECTARBPROC      glCreateProgramObjectARB;
@@ -624,10 +624,10 @@ void init_opengl(void)
     if (opengl_need("GL_ARB_multitexture"))
     {
         GLint TUs;
-
+/*
         glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)
                     opengl_proc("glActiveTextureARB");
-
+*/
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &TUs);
         GL_max_multitexture = GL_TEXTURE0_ARB +  TUs;
         GL_has_multitexture = (GLboolean) (glActiveTextureARB != NULL);

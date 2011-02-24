@@ -3,8 +3,10 @@ W =  4.21
 H =  2.37
 O =  0.2083
 
-w = 960
-h = 540
+x = 2560
+y = 0
+w = 1920
+h = 1080
 
 stereo_mode = E.stereo_mode_tile
 
@@ -12,7 +14,7 @@ stereo_mode = E.stereo_mode_tile
 
 tile = { }
 
-host    = E.add_host("default", 0, 0, w, h)
+host    = E.add_host("default", x, y, w, h)
 tile[1] = E.add_tile(host,     0, 0, w / 2, h)
 tile[2] = E.add_tile(host, w / 2, 0, w / 2, h)
 
@@ -23,10 +25,23 @@ E.set_tile_viewport(tile[1], 0, 0, w / 2, h)
 E.set_tile_viewport(tile[2], 0, 0, w / 2, h)
 
 --E.set_host_flags(host, E.host_flag_full, true)
-E.set_host_flags(host, E.host_flag_framed, true)
+--E.set_host_flags(host, E.host_flag_framed, true)
 
 E.set_tile_flags(tile[1], E.tile_flag_left_eye, true)
 E.set_tile_flags(tile[2], E.tile_flag_right_eye, true)
+
+------------------------------------------------------------------------------
+
+a = math.rad(12.0)
+c = math.cos(a)
+s = math.sin(a)
+
+E.set_tracker_transform(0,
+                        1,  0,  0,  0,
+                        0,  c,  s,  0,
+                        0, -s,  c,  0,
+                        0,  0,  0,  1,
+                        0, 1, 2)
 
 ------------------------------------------------------------------------------
 

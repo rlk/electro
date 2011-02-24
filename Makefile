@@ -36,6 +36,10 @@ ifneq ($(wildcard /usr/include/lua),)
 	INCDIR += -I/usr/include/lua
 endif
 
+ifneq ($(wildcard /usr/include/lua5.1),)
+	INCDIR += -I/usr/include/lua5.1
+endif
+
 # Use user include and lib directories if they exist.
 
 ifneq ($(wildcard $(HOME)/include),)
@@ -51,10 +55,11 @@ CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
 
 SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
 FT2LIB = $(shell $(FT2_CONFIG) --libs)
-LUALIB = -llua
+LUALIB = -llua5.1
 IMGLIB = -ljpeg -lpng -lz -lm
 OGGLIB = -lvorbisfile
-ODELIB = -lode -lstdc++
+ODELIB = -lode
+#ODELIB = -lode -lstdc++
 
 ifdef LINUX_STATIC
 SDLLIB = /home/rlk/lib/libSDL.a -lpthread

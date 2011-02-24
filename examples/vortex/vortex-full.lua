@@ -9,8 +9,8 @@ wy = 0
 wz = 0
 
 show_lines = true
-magnitude = 100
-track = true
+magnitude = 200
+track = false
 
 -------------------------------------------------------------------------------
 
