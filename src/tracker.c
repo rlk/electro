@@ -124,7 +124,7 @@ static onit_point   curr[MAXPOINTS];
 
 static void lpf(onit_point *d, onit_point *s)
 {
-    float k = 4.0f;
+    float k = 2.0f;
 
     d->world_p[0] = (s->world_p[0] + d->world_p[0] * (k - 1.0f)) / k;
     d->world_p[1] = (s->world_p[1] + d->world_p[1] * (k - 1.0f)) / k;

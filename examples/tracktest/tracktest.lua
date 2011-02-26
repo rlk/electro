@@ -41,7 +41,7 @@ function do_start()
     add_object("../data/cow.obj",  pivot, -90.0, -3.0, 0.0, -5.0, 0.3)
     add_object("../data/ball.obj", pivot,  0.0, 2.0, 0.0, -1.0, 0.8)
     add_object("../data/box.obj", pivot,  30.0, 0.0, 0.0, -8.0, 1.0)
-    add_object("../data/747.obj", pivot,  150.0, 5.0, 2.0, -7.0, 1.0)
+    add_object("../data/747.obj", pivot,  150.0, 0.0, 3.0, 1.0, 1.0)
     add_object("../data/teapot.obj", pivot, 0.0, 0.0, 0.0, -4.0, 1.5)
 
     E.set_light_color(light1, 0.8, 0.8, 0.6)

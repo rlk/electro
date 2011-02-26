@@ -8,6 +8,9 @@ y = 0
 w = 1920
 h = 1080
 
+xx = 24
+yy = 28
+
 stereo_mode = E.stereo_mode_tile
 
 ------------------------------------------------------------------------------
@@ -15,8 +18,8 @@ stereo_mode = E.stereo_mode_tile
 tile = { }
 
 host    = E.add_host("default", x, y, w, h)
-tile[1] = E.add_tile(host,     0, 0, w / 2, h)
-tile[2] = E.add_tile(host, w / 2, 0, w / 2, h)
+tile[1] = E.add_tile(host,         xx, yy, w / 2 - xx * 2, h - yy * 2)
+tile[2] = E.add_tile(host, w / 2 + xx, yy, w / 2 - xx * 2, h - yy * 2)
 
 E.set_tile_position(tile[1], -W / 2, -H, 0, W, 0.0, 0.0, 0.0, H, 0.0)
 E.set_tile_position(tile[2], -W / 2, -H, 0, W, 0.0, 0.0, 0.0, H, 0.0)

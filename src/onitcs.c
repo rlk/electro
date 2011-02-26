@@ -167,49 +167,102 @@ static int sock_poll_accept(int sock)
 
 //------------------------------------------------------------------------------
 
-static size_t sock_recv_any(int *sock, int num, void *buf, size_t len)
+static size_t sock_read_array(int sock, void *buf, size_t len)
 {
-    // Prepare a socket descriptor set including all given valid sockets.
+    unsigned short n;
 
-    int i, n, m = -1;
-    fd_set s;
-    size_t r;
+    // Read a 16-bit message length and read repeatedly until the full message
+    // is received. Break on zero or error read.
 
-    FD_ZERO(&s);
+    if ((read(sock, &n, sizeof (unsigned short))) != -1)
+    {
+        size_t t = (size_t) n < len ? (size_t) n : len;
+        size_t s = 0;
+        size_t r = 1;
+
+        for (s = 0; t > 0 && r > 0; s += r, t -= r)
+            r = read(sock, (unsigned char *) buf + s, t);
+
+        return s;
+    }
+    return 0;
+}
+
+static size_t sock_send_array(int sock, void *buf, size_t len)
+{
+    unsigned short n = (unsigned short) len;
+
+    // Send the given message preceded by its 16-bit length.
+
+    if (send(sock, &n, sizeof (unsigned short), MSG_NOSIGNAL) != SOCKET_ERROR)
+    {
+        if (send(sock, buf, len, MSG_NOSIGNAL) != SOCKET_ERROR)
+        {
+            return len;
+        }
+        else perror("send");
+    }
+    else perror("send");
+
+    return 0;
+}
+
+//------------------------------------------------------------------------------
+
+static int sock_init_set(fd_set *s, int *sock, int num)
+{
+    int i, m = -1;
+
+    // Initialize the given descriptor set with all valid entries in the given
+    // socket array.
+
+    FD_ZERO(s);
 
     for (i = 0; i < num; ++i)
     {
         if (sock[i] != INVALID_SOCKET)
         {
-            FD_SET(sock[i], &s);
+            FD_SET(sock[i], s);
             if (m < sock[i])
                 m = sock[i];
         }
     }
 
+    return m + 1;
+}
+
+static size_t sock_recv_any(int *sock, int num, void *buf, size_t len)
+{
+    int i, n, m;
+    fd_set s;
+    size_t r;
+
     // If any of sockets is readable then read the contents to the given buffer.
     // If it reads empty or error then disconnect it. Return the read size.
 
-    if ((n = select(m + 1, &s, 0, 0, &timeout)) != SOCKET_ERROR)
+    if ((m = sock_init_set(&s, sock, num)) > 0)
     {
-        for (i = 0; n && i < num; ++i)
+        if ((n = select(m, &s, 0, 0, &timeout)) != SOCKET_ERROR)
         {
-            if (sock[i] != INVALID_SOCKET)
+            for (i = 0; n && i < num; ++i)
             {
-                if (FD_ISSET(sock[i], &s))
+                if (sock[i] != INVALID_SOCKET)
                 {
-                    if ((r = read(sock[i], buf, len)))
-                        return r;
-                    else
+                    if (FD_ISSET(sock[i], &s))
                     {
-                        close(sock[i]);
-                        sock[i] = INVALID_SOCKET;
+                        if ((r = sock_read_array(sock[i], buf, len)))
+                            return r;
+                        else
+                        {
+                            close(sock[i]);
+                            sock[i] = INVALID_SOCKET;
+                        }
                     }
                 }
             }
         }
+        else perror("select");
     }
-    else perror("select");
 
     return 0;
 }
@@ -227,8 +280,7 @@ static void sock_send_all(int *sock, int num, void *buf, size_t len)
     {
         if (sock[i] != INVALID_SOCKET)
         {
-//          if (write(sock[i], buf, len) == SOCKET_ERROR)
-            if (send(sock[i], buf, len, MSG_NOSIGNAL) == SOCKET_ERROR)
+            if (sock_send_array(sock[i], buf, len) == 0)
             {
                 close(sock[i]);
                 sock[i] = INVALID_SOCKET;
