@@ -86,7 +86,7 @@ function reset()
     wx = 0
     wy = 0
     tz = 0
-    E.set_entity_position(camera, -x, -y, -z + 3)
+    E.set_entity_position(camera, -x, -y, -z)
     E.set_entity_rotation(camera, 0,  0, 0)
 end
 

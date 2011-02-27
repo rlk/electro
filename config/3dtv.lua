@@ -9,7 +9,7 @@ w = 1920
 h = 1080
 
 xx = 24
-yy = 28
+yy = 48
 
 stereo_mode = E.stereo_mode_tile
 

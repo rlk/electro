@@ -229,7 +229,7 @@ int get_tracker_sensor(unsigned int id, float p[3], float R[16])
     if (id == 1)
     {
         get_tracker_point(14, p);
-        get_tracker_point(15, q);
+        get_tracker_point(12, q);
 
         z[0] = q[0] - p[0];
         z[1] = q[1] - p[1];
