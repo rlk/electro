@@ -9,7 +9,7 @@ wy = 0
 wz = 0
 
 show_lines = true
-magnitude = 200
+magnitude = 250
 track = false
 
 -------------------------------------------------------------------------------
@@ -86,8 +86,9 @@ function reset()
     wx = 0
     wy = 0
     tz = 0
-    E.set_entity_position(camera, -x, -y, -z)
-    E.set_entity_rotation(camera, 0,  0, 0)
+    E.set_entity_position(camera, 0, 0, 0)
+--  E.set_entity_position(camera, -x, -y, -z)
+--  E.set_entity_rotation(camera, 0,  0, 0)
 end
 
 function constellation(name, parent)
@@ -255,6 +256,7 @@ function do_start()
 end
 
 function do_point(x, y)
+--[[
     if     button == 2 then
         magnitude = magnitude - y
         E.set_galaxy_magnitude(galaxy_H, magnitude)
@@ -273,27 +275,46 @@ function do_point(x, y)
         end
         wx = wx - y * 0.001
     end
+]]--
 end
 
 function do_click(b, s)
+--[[
     if s then
         button = b
     else
         button = 0
     end
+]]--
 end
 
 function do_timer(dt)
-    local joy_x, joy_y = E.get_joystick(0)
-    local s = 8
+    local joy_h, joy_f = E.get_joystick(0)
+    local joy_l, joy_x = E.get_joystick(2)
+    local joy_y, joy_r = E.get_joystick(4)
+    local s = 16.00
+    local d =  0.25
+    local r = 30.00
 
-    if joy_x < -0.1 or 0.1 < joy_x then
-        E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
+    if joy_x < -d or d < joy_x then
+        E.turn_entity(camera, 0, -joy_x * dt * r, 0)
     end
-    if joy_y < -0.1 or 0.1 < joy_y then
-        E.turn_entity(camera, -joy_y * dt * 90, 0, 0)
+    if joy_y < -d or d < joy_y then
+        E.turn_entity(camera, -joy_y * dt * r, 0, 0)
     end
-
+    if joy_l < -d or d < joy_l then
+        E.turn_entity(camera, 0, 0,  joy_l * dt * r)
+    end
+    if joy_r < -d or d < joy_r then
+        E.turn_entity(camera, 0, 0, -joy_r * dt * r)
+    end
+    if joy_f < -d or d < joy_f then
+        E.move_entity(camera, 0, 0, joy_f * dt * s)
+    end
+    if joy_h < -d or d < joy_h then
+        E.move_entity(camera, joy_h * dt * s, 0, 0)
+    end
+    
     if track then
         fly_step(dt)
     else

@@ -28,6 +28,23 @@ struct transform
 
 static struct transform *transform  = NULL;
 static int               transforms = 0;
+static int              *button     = NULL;
+static int               buttons    = 0;
+
+static float head_p[3] = { 0.0f, 0.0f, 0.0f };
+static float neck_p[3] = { 0.0f, 0.0f, 0.0f };
+static float hand_p[3] = { 0.0f, 0.0f, 0.0f };
+static float elbo_p[3] = { 0.0f, 0.0f, 0.0f };
+
+static void lpf(float *p, float *q)
+{
+    const float k = 1.0f / 2.0f;
+    const float j = 1.0f - k;
+
+    p[0] = p[0] * k + q[0] * j;
+    p[1] = p[1] * k + q[1] * j;
+    p[2] = p[2] * k + q[2] * j;
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -118,54 +135,42 @@ void get_tracker_transform(unsigned int id, float M[16], int a[3])
 
 #define MAXPOINTS 32
 
-static onit_client *client = NULL;
-static onit_point   temp[MAXPOINTS];
-static onit_point   curr[MAXPOINTS];
-
-static void lpf(onit_point *d, onit_point *s)
+int get_tracker_status(void)
 {
-    float k = 2.0f;
-
-    d->world_p[0] = (s->world_p[0] + d->world_p[0] * (k - 1.0f)) / k;
-    d->world_p[1] = (s->world_p[1] + d->world_p[1] * (k - 1.0f)) / k;
-    d->world_p[2] = (s->world_p[2] + d->world_p[2] * (k - 1.0f)) / k;
-    d->image_p[0] = (s->image_p[0] + d->image_p[0] * (k - 1.0f)) / k;
-    d->image_p[1] = (s->image_p[1] + d->image_p[1] * (k - 1.0f)) / k;
+    return onitcs_naxes() || onitcs_nbuttons() || onitcs_npoints();
 }
 
 int acquire_tracker(int t_key, int c_key, int port)
 {
-    memset(curr, 0, MAXPOINTS * sizeof (onit_point));
-    memset(temp, 0, MAXPOINTS * sizeof (onit_point));
-
     new_tracker_transforms(1);
 
-    return (client = onit_client_init("localhost", ONIT_SERVICE)) ? 1 : 0;
+    onitcs_init(0, 0, 0);
+
+    if ((buttons = onitcs_nbuttons()))
+        button = (int *) calloc(buttons, sizeof (int));
+
+    printf("ONIT %d %d %d\n", onitcs_naxes(),
+                              onitcs_nbuttons(),
+                              onitcs_npoints());
+
+    return get_tracker_status();
 }
 
 void release_tracker(void)
 {
-    if (client)
-    {
-        onit_client_fini(client);
-        client = NULL;
-    }
+    free(button);
+    onitcs_fini();
 }
 
-int get_tracker_status(void)
-{
-    return client ? 1 : 0;
-}
-
-void get_tracker_point(int i, float p[3])
+void get_tracker_point(const onit_point *P, int i, float p[3])
 {
     float t[3];
 
     // Convert from millimeters to feet.
 
-    t[0] = curr[i].world_p[0] * 0.00328084;
-    t[1] = curr[i].world_p[1] * 0.00328084;
-    t[2] = curr[i].world_p[2] * 0.00328084;
+    t[0] = P[i].world_p[0] * 0.00328084;
+    t[1] = P[i].world_p[1] * 0.00328084;
+    t[2] = P[i].world_p[2] * 0.00328084;
 
     // Apply the configuration transformation.
 
@@ -174,91 +179,119 @@ void get_tracker_point(int i, float p[3])
 
 int get_tracker_sensor(unsigned int id, float p[3], float R[16])
 {
-    float q[3];
-    float x[3] = { 1.0f, 0.0f, 0.0f };
-    float y[3] = { 0.0f, 1.0f, 0.0f };
-    float z[3] = { 0.0f, 0.0f, 1.0f };
+    onit_point *P;
 
-    /* Copy any incoming OpenNI data to a temporary buffer. Copy confident   */
-    /* point values to the current buffer.                                   */
-
-    if (client)
+    if ((P = onitcs_acquire_points()))
     {
-        size_t len = MAXPOINTS * sizeof (onit_point);
-        size_t siz = onit_client_recv(client, temp, len);
+        float a[3];
+        float b[3];
+        float x[3] = { 1.0f, 0.0f, 0.0f };
+        float y[3] = { 0.0f, 1.0f, 0.0f };
+        float z[3] = { 0.0f, 0.0f, 1.0f };
 
-        size_t n = siz / sizeof (onit_point);
-        size_t i;
+        /* Synthesize a head sensor from the position of the head and neck.   */
+        
+        if (id == 0)
+        {
+            get_tracker_point(P, 0, a);
+            get_tracker_point(P, 1, b);
 
-        for (i = 0; i < n; ++i)
-            if (temp[i].confidence > 0.5 &&
-                fabs(temp[i].world_p[0]) > 0.0 &&
-                fabs(temp[i].world_p[1]) > 0.0 &&
-                fabs(temp[i].world_p[2]) > 0.0) lpf(curr + i, temp + i);
+            lpf(head_p, a);
+            lpf(neck_p, b);
+
+            y[0] = head_p[0] - neck_p[0];
+            y[1] = head_p[1] - neck_p[1];
+            y[2] = head_p[2] - neck_p[2];
+
+            normalize(y);
+            cross(x, y, z);
+            normalize(x);
+            cross(z, x, y);
+            normalize(z);
+
+            load_idt(R);
+
+            p[0] = head_p[0];
+            p[1] = head_p[1];
+            p[2] = head_p[2];
+            R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
+            R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
+            R[8] = z[0]; R[9] = z[1], R[10] = z[2];
+        }
+
+        /* Synthesize a hand sensor from the position of the hand and elbow.  */
+
+        if (id == 1)
+        {
+            get_tracker_point(P, 14, a);
+            get_tracker_point(P, 12, b);
+
+            lpf(hand_p, a);
+            lpf(elbo_p, b);
+
+            z[0] = elbo_p[0] - hand_p[0];
+            z[1] = elbo_p[1] - hand_p[1];
+            z[2] = elbo_p[2] - hand_p[2];
+
+            normalize(z);
+            cross(x, y, z);
+            normalize(x);
+            cross(y, z, x);
+            normalize(y);
+
+            load_idt(R);
+
+            p[0] = hand_p[0];
+            p[1] = hand_p[1];
+            p[2] = hand_p[2];
+            R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
+            R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
+            R[8] = z[0]; R[9] = z[1], R[10] = z[2];
+        }
+
+        onitcs_release_points();
+        return 1;
     }
-
-    /* Synthesize a head sensor from the position of the head and neck.      */
-
-    if (id == 0)
-    {
-        get_tracker_point(0, p);
-        get_tracker_point(1, q);
-
-        y[0] = p[0] - q[0];
-        y[1] = p[1] - q[1];
-        y[2] = p[2] - q[2];
-
-        normalize(y);
-        cross(x, y, z);
-        normalize(x);
-        cross(z, x, y);
-        normalize(z);
-
-        load_idt(R);
-
-        R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
-        R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
-        R[8] = z[0]; R[9] = z[1], R[10] = z[2];
-/*
-        printf("%f %f %f\n", p[0], p[1], p[2]);
-*/
-    }
-
-    /* Synthesize a hand sensor from the position of the hand and elbow.     */
-
-    if (id == 1)
-    {
-        get_tracker_point(14, p);
-        get_tracker_point(12, q);
-
-        z[0] = q[0] - p[0];
-        z[1] = q[1] - p[1];
-        z[2] = q[2] - p[2];
-
-        normalize(z);
-        cross(x, y, z);
-        normalize(x);
-        cross(y, z, x);
-        normalize(y);
-
-        load_idt(R);
-
-        R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
-        R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
-        R[8] = z[0]; R[9] = z[1], R[10] = z[2];
-    }
-
     return 0;
 }
 
 int get_tracker_joystick(unsigned int id, float a[2])
 {
+    float *f;
+
+    if ((f = onitcs_acquire_axes()))
+    {
+        a[0] = f[id + 0];
+        a[1] = f[id + 1];
+
+        onitcs_release_axes();
+        return 1;
+    }
     return 0;
 }
 
 int get_tracker_buttons(unsigned int *id, unsigned int *st)
 {
-    return 0;
+    int  ret = 0;
+    int *d;
+
+    if ((d = onitcs_acquire_buttons()))
+    {
+        int i, n = onitcs_nbuttons();
+
+        for (i = 0; i < n; ++i)
+            if (button[i] != d[i])
+            {
+                button[i]  = d[i];
+
+                *id = i + 1;
+                *st = d[i];
+                ret = 1;
+            }
+        
+        onitcs_release_buttons();
+    }
+    return ret;
 }
 
 #else /* not CONF_OPENNI *****************************************************/

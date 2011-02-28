@@ -16,13 +16,11 @@
 
 //------------------------------------------------------------------------------
 
-#ifdef _WIN32
-#include <io.h>
-#include <winsock2.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
 
-typedef int socklen_t;
-
-#else
+/*
 #include <stddef.h>
 #include <unistd.h>
 #include <signal.h>
@@ -36,12 +34,220 @@ typedef int socklen_t;
 
 #define SOCKET_ERROR   -1
 #define INVALID_SOCKET -1
-#endif
+*/
+#include "onitcs.h"
 
 //------------------------------------------------------------------------------
 
-#include "onitcs.h"
+#define SHMERR ((struct shm_head *) (-1))
 
+struct shm_head
+{
+    int naxes;
+    int nbuttons;
+    int npoints;
+};
+
+static int              sem_id = -1;
+static int              shm_id = -1;
+static struct shm_head *shm_p  = SHMERR;
+
+//------------------------------------------------------------------------------
+
+static int ipc_ok()
+{
+    return (sem_id != -1) && (shm_id != -1) && (shm_p != SHMERR);
+}
+
+static void *shm_ptr(size_t off)
+{
+    return ipc_ok() ? ((char *) shm_p + off) : 0;
+}
+
+//------------------------------------------------------------------------------
+
+static int sem_init(int key)
+{
+    int id;
+    
+    // If the semaphores already exist, then use them with their current values.
+
+    if ((id = semget(key, 3, 0666)) >= 0)
+        return id;
+                        
+    // If they need to be created, then they need to be initialized.
+
+    if ((id = semget(key, 3, 0666 | IPC_CREAT)) >= 0)
+    {
+        semctl(id, 0, SETVAL, 1);
+        semctl(id, 1, SETVAL, 1);
+        semctl(id, 2, SETVAL, 1);
+        return id;
+    }
+    else
+        perror("semget");
+
+    return -1;
+}
+
+static void ipc_init(int key, int na, int nb, int np)
+{
+    // Initialize the semaphore and shared memory segment.
+
+    size_t size = 4096;
+
+    if ((sem_id = sem_init(key)) >= 0)
+    {
+        if ((shm_id = shmget(key, size, 0666 | IPC_CREAT)) >= 0)
+        {
+            if ((shm_p = (struct shm_head *) shmat(shm_id, 0, 0)) != SHMERR)
+            {
+                if (na || nb || np)
+                {
+                    memset(shm_p, 0, size);
+
+                    shm_p->naxes    = na;
+                    shm_p->nbuttons = nb;
+                    shm_p->npoints  = np;
+                }
+            }
+            else perror("shmat");
+        }
+        else perror("shmget");
+    }
+}
+
+static void ipc_free()
+{
+/*
+    if (shm_p  != SHMERR) shmdt(shm_p);
+    if (shm_id !=     -1) shmctl(shm_id, IPC_RMID, 0);
+    if (sem_id !=     -1) semctl(sem_id, IPC_RMID, 0);
+*/
+}
+
+static void ipc_acquire(int i)
+{
+    struct sembuf s;
+
+    s.sem_num =  i;
+    s.sem_op  = -1;
+    s.sem_flg =  0;
+
+    semop(sem_id, &s, 1);
+}
+
+static void ipc_release(int i)
+{
+    struct sembuf s;
+
+    s.sem_num =  i;
+    s.sem_op  =  1;
+    s.sem_flg =  0;
+
+    semop(sem_id, &s, 1);
+}
+
+//------------------------------------------------------------------------------
+
+static float *get_axes()
+{
+    return (float *) shm_ptr(sizeof (struct shm_head));
+}
+
+static int *get_buttons()
+{
+    return (int *) shm_ptr(sizeof (struct shm_head) +
+                           sizeof (float) * shm_p->naxes);
+}
+
+static onit_point *get_points()
+{
+    return (onit_point *) shm_ptr(sizeof (struct shm_head) +
+                                  sizeof (float) * shm_p->naxes +
+                                  sizeof (int)   * shm_p->nbuttons);
+}
+
+//------------------------------------------------------------------------------
+
+int onitcs_init(int na, int nb, int np)
+{
+    ipc_init(25670, na, nb, np);
+    return ipc_ok();
+}
+
+void onitcs_fini()
+{
+    ipc_free();
+}
+
+int onitcs_naxes()
+{
+    return ipc_ok() ? shm_p->naxes : 0;
+}
+
+int onitcs_nbuttons()
+{
+    return ipc_ok() ? shm_p->nbuttons : 0;
+}
+
+int onitcs_npoints()
+{
+    return ipc_ok() ? shm_p->npoints : 0;
+}
+
+//------------------------------------------------------------------------------
+
+float *onitcs_acquire_axes()
+{
+    if (ipc_ok())
+    {
+        ipc_acquire(0);
+        return get_axes();
+    }
+    return 0;
+}
+
+int *onitcs_acquire_buttons()
+{
+    if (ipc_ok())
+    {
+        ipc_acquire(1);
+        return get_buttons();
+    }
+    return 0;
+}
+
+onit_point *onitcs_acquire_points()
+{
+    if (ipc_ok())
+    {
+        ipc_acquire(2);
+        return get_points();
+    }
+    return 0;
+}
+
+//------------------------------------------------------------------------------
+
+void onitcs_release_axes()
+{
+    ipc_release(0);
+}
+
+void onitcs_release_buttons()
+{
+    ipc_release(1);
+}
+
+void onitcs_release_points()
+{
+    ipc_release(2);
+}
+
+//------------------------------------------------------------------------------
+
+#if 0
 #define MAXCLI 4
 
 struct onit_server
@@ -135,7 +341,7 @@ static int sock_bind_listen(const char *service)
     }
     return INVALID_SOCKET;
 }
-
+*/
 //------------------------------------------------------------------------------
 
 static int sock_poll_accept(int sock)
@@ -380,5 +586,5 @@ size_t onit_client_recv(onit_client *C, void *buf, size_t len)
 {
     return sock_recv_any(&C->server_sock, 1, buf, len);
 }
-
+#endif // 0
 //------------------------------------------------------------------------------

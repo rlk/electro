@@ -15,6 +15,34 @@
 
 //------------------------------------------------------------------------------
 
+struct onit_point
+{
+    float confidence;
+    float world_p[3];
+    float image_p[2];
+};
+
+typedef struct onit_point onit_point;
+
+//------------------------------------------------------------------------------
+
+int         onitcs_init(int, int, int);
+void        onitcs_fini();
+
+int         onitcs_naxes   ();
+int         onitcs_nbuttons();
+int         onitcs_npoints ();
+
+float      *onitcs_acquire_axes   ();
+int        *onitcs_acquire_buttons();
+onit_point *onitcs_acquire_points ();
+
+void        onitcs_release_axes   ();
+void        onitcs_release_buttons();
+void        onitcs_release_points ();
+
+//------------------------------------------------------------------------------
+#if 0
 #define ONIT_SERVICE "25670"
 
 struct onit_point
@@ -40,7 +68,7 @@ void         onit_server_send(onit_server *, void *, size_t);
 onit_client *onit_client_init(const char *, const char *);
 void         onit_client_fini(onit_client *);
 size_t       onit_client_recv(onit_client *, void *, size_t);
-
+#endif // 0
 //------------------------------------------------------------------------------
 
 #endif

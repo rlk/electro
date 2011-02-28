@@ -38,22 +38,22 @@ function do_start()
     local X0, Y0, Z0, X1, Y1, Z1 = E.get_display_bound()
     local scl = (X1 - X0) / 10.0
 
-    add_object("../data/cow.obj",  pivot, -90.0, -3.0, 0.0, -5.0, 0.3)
-    add_object("../data/ball.obj", pivot,  0.0, 2.0, 0.0, -1.0, 0.8)
-    add_object("../data/box.obj", pivot,  30.0, 0.0, 0.0, -8.0, 1.0)
-    add_object("../data/747.obj", pivot,  150.0, 0.0, 3.0, 1.0, 1.0)
-    add_object("../data/axes.obj", pivot,  60.0, -2.5, 0.5, 0.0, 1.5)
-    add_object("../data/teapot.obj", pivot, 0.0, 0.0, 0.0, -4.0, 1.5)
+    add_object("../data/cow.obj",    pivot, -90.0, -3.0, 0.0, -1.0, 0.3)
+    add_object("../data/ball.obj",   pivot,   0.0,  2.0, 0.0,  2.0, 0.8)
+    add_object("../data/box.obj",    pivot,  30.0,  0.0, 0.0, -3.0, 1.0)
+    add_object("../data/747.obj",    pivot, 150.0,  0.0, 3.0,  5.0, 1.0)
+    add_object("../data/axes.obj",   pivot,  60.0, -2.5, 0.5,  4.0, 1.5)
+    add_object("../data/teapot.obj", pivot,   0.0,  0.0, 0.0,  0.0, 1.5)
 
     E.set_light_color(light1, 0.8, 0.8, 0.6)
     E.set_light_color(light2, 0.6, 0.8, 0.8)
 
     E.set_entity_position(light1,  8.0, 7.0, 5.0)
     E.set_entity_position(light2, -8.0, 5.0, 7.0)
-    E.set_entity_position(floor, 0.0, 0.0, -5.0)
+    E.set_entity_position(floor, 0.0, 0.0, 0.0)
     E.set_entity_scale   (hand,  0.5, 0.5, 1.0)
     E.set_entity_scale   (pivot, scl, scl, scl)
-    E.set_entity_position(pivot, 0.0,  Y0, 0.0)
+    E.set_entity_position(pivot, 0.0,  Y0, -2.0)
 
     E.set_entity_tracking(head_L, 0, E.tracking_mode_local)
     E.set_entity_flags   (head_L, E.entity_flag_track_pos, true)
@@ -82,18 +82,19 @@ function do_timer(dt)
     local joy_x, joy_y = E.get_joystick(0)
 
     local speed    = 8.0
-    local deadzone = 0.1
+    local deadzone = 0.25
 
     if joy_x < -deadzone or deadzone < joy_x then
-        E.turn_entity(camera, 0, -joy_x * dt * 90, 0)
+        E.turn_entity(pivot, 0, -joy_x * dt * 90, 0)
     end
-
+--[[
     if joy_y < -deadzone or deadzone < joy_y then
         local mov_x, mov_y, mov_z = E.get_entity_z_vector(wand_L)
         E.move_entity(camera, mov_x * joy_y * dt * speed,
                               mov_y * joy_y * dt * speed,
                               mov_z * joy_y * dt * speed)
     end
+    --]]
 --[[
     print("head_L = ", E.get_entity_position(head_L))
     print("head_W = ", E.get_entity_position(head_W))
