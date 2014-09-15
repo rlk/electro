@@ -2,7 +2,7 @@ INSTALL_PREFIX = $(HOME)
 
 #------------------------------------------------------------------------------
 
-CFLAGS= -Wall -DCONF_OPENNI
+CFLAGS= -Wall -DdDOUBLE
 
 # To build in cluster mode: "make MPI=1".
 
@@ -74,8 +74,7 @@ endif
 
 LIBS += $(LUALIB) $(ODELIB) $(SDLLIB) $(FT2LIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
 
-OBJS =	src/onitcs.o   \
-	src/opengl.o   \
+OBJS =	src/opengl.o   \
 	src/video.o    \
 	src/glyph.o    \
 	src/matrix.o   \

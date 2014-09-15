@@ -28,23 +28,6 @@ struct transform
 
 static struct transform *transform  = NULL;
 static int               transforms = 0;
-static int              *button     = NULL;
-static int               buttons    = 0;
-
-static float head_p[3] = { 0.0f, 0.0f, 0.0f };
-static float neck_p[3] = { 0.0f, 0.0f, 0.0f };
-static float hand_p[3] = { 0.0f, 0.0f, 0.0f };
-static float elbo_p[3] = { 0.0f, 0.0f, 0.0f };
-
-static void lpf(float *p, float *q)
-{
-    const float k = 1.0f / 2.0f;
-    const float j = 1.0f - k;
-
-    p[0] = p[0] * k + q[0] * j;
-    p[1] = p[1] * k + q[1] * j;
-    p[2] = p[2] * k + q[2] * j;
-}
 
 /*---------------------------------------------------------------------------*/
 
@@ -129,172 +112,7 @@ void get_tracker_transform(unsigned int id, float M[16], int a[3])
     }
 }
 
-#ifdef CONF_OPENNI  /*********************************************************/
-
-#include "onitcs.h"
-
-#define MAXPOINTS 32
-
-int get_tracker_status(void)
-{
-    return onitcs_naxes() || onitcs_nbuttons() || onitcs_npoints();
-}
-
-int acquire_tracker(int t_key, int c_key, int port)
-{
-    new_tracker_transforms(1);
-
-    onitcs_init(0, 0, 0);
-
-    if ((buttons = onitcs_nbuttons()))
-        button = (int *) calloc(buttons, sizeof (int));
-
-    printf("ONIT %d %d %d\n", onitcs_naxes(),
-                              onitcs_nbuttons(),
-                              onitcs_npoints());
-
-    return get_tracker_status();
-}
-
-void release_tracker(void)
-{
-    free(button);
-    onitcs_fini();
-}
-
-void get_tracker_point(const onit_point *P, int i, float p[3])
-{
-    float t[3];
-
-    // Convert from millimeters to feet.
-
-    t[0] = P[i].world_p[0] * 0.00328084;
-    t[1] = P[i].world_p[1] * 0.00328084;
-    t[2] = P[i].world_p[2] * 0.00328084;
-
-    // Apply the configuration transformation.
-
-    transform_position(p, t, 0);
-}
-
-int get_tracker_sensor(unsigned int id, float p[3], float R[16])
-{
-    onit_point *P;
-
-    if ((P = onitcs_acquire_points()))
-    {
-        float a[3];
-        float b[3];
-        float x[3] = { 1.0f, 0.0f, 0.0f };
-        float y[3] = { 0.0f, 1.0f, 0.0f };
-        float z[3] = { 0.0f, 0.0f, 1.0f };
-
-        /* Synthesize a head sensor from the position of the head and neck.   */
-        
-        if (id == 0)
-        {
-            get_tracker_point(P, 0, a);
-            get_tracker_point(P, 1, b);
-
-            lpf(head_p, a);
-            lpf(neck_p, b);
-
-            y[0] = head_p[0] - neck_p[0];
-            y[1] = head_p[1] - neck_p[1];
-            y[2] = head_p[2] - neck_p[2];
-
-            normalize(y);
-            cross(x, y, z);
-            normalize(x);
-            cross(z, x, y);
-            normalize(z);
-
-            load_idt(R);
-
-            p[0] = head_p[0];
-            p[1] = head_p[1];
-            p[2] = head_p[2];
-            R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
-            R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
-            R[8] = z[0]; R[9] = z[1], R[10] = z[2];
-        }
-
-        /* Synthesize a hand sensor from the position of the hand and elbow.  */
-
-        if (id == 1)
-        {
-            get_tracker_point(P, 14, a);
-            get_tracker_point(P, 12, b);
-
-            lpf(hand_p, a);
-            lpf(elbo_p, b);
-
-            z[0] = elbo_p[0] - hand_p[0];
-            z[1] = elbo_p[1] - hand_p[1];
-            z[2] = elbo_p[2] - hand_p[2];
-
-            normalize(z);
-            cross(x, y, z);
-            normalize(x);
-            cross(y, z, x);
-            normalize(y);
-
-            load_idt(R);
-
-            p[0] = hand_p[0];
-            p[1] = hand_p[1];
-            p[2] = hand_p[2];
-            R[0] = x[0]; R[1] = x[1], R[ 2] = x[2];
-            R[4] = y[0]; R[5] = y[1], R[ 6] = y[2];
-            R[8] = z[0]; R[9] = z[1], R[10] = z[2];
-        }
-
-        onitcs_release_points();
-        return 1;
-    }
-    return 0;
-}
-
-int get_tracker_joystick(unsigned int id, float a[2])
-{
-    float *f;
-
-    if ((f = onitcs_acquire_axes()))
-    {
-        a[0] = f[id + 0];
-        a[1] = f[id + 1];
-
-        onitcs_release_axes();
-        return 1;
-    }
-    return 0;
-}
-
-int get_tracker_buttons(unsigned int *id, unsigned int *st)
-{
-    int  ret = 0;
-    int *d;
-
-    if ((d = onitcs_acquire_buttons()))
-    {
-        int i, n = onitcs_nbuttons();
-
-        for (i = 0; i < n; ++i)
-            if (button[i] != d[i])
-            {
-                button[i]  = d[i];
-
-                *id = i + 1;
-                *st = d[i];
-                ret = 1;
-            }
-        
-        onitcs_release_buttons();
-    }
-    return ret;
-}
-
-#else /* not CONF_OPENNI *****************************************************/
+/*---------------------------------------------------------------------------*/
 
 #include <sys/types.h>
 
@@ -591,7 +409,7 @@ int get_tracker_joystick(unsigned int id, float a[2])
         float *p = (float *) ((unsigned char *) control + control->val_offset);
 
         /* Return valuators ID and ID + 1. */
-        
+
         if (id < control->val_count - 1)
         {
             a[0] = +(*(p + id + 0));
@@ -618,7 +436,7 @@ int get_tracker_buttons(unsigned int *id, unsigned int *st)
             if (buttons[i] != *p)
             {
                 /* Update the cache and return the button ID and state. */
-            
+
                 buttons[i]  = *p;
 
                 *id =  i + 1;
@@ -629,5 +447,3 @@ int get_tracker_buttons(unsigned int *id, unsigned int *st)
     }
     return 0;
 }
-
-#endif /* CONF_OPENNI ********************************************************/
