@@ -1,78 +1,69 @@
-INSTALL_PREFIX = $(HOME)
 
-#------------------------------------------------------------------------------
-
-CFLAGS= -Wall -DdDOUBLE
+OPTS= -Wall
 
 # To build in cluster mode: "make MPI=1".
 
 ifdef MPI
-	CC      = mpicc
-	TARG    = electro-mpi
-	CFLAGS += -g -DNDEBUG -DCONF_MPI
+	CC    = mpicc -DNDEBUG -DCONF_MPI
+	TARG  = electro-mpi
 else
-	CC      = cc
-	TARG    = electro
-	CFLAGS += -g
+	CC    = cc
+	TARG  = electro
 endif
 
 #------------------------------------------------------------------------------
+# Determine the target platform.
 
-ifeq ($(shell uname), Darwin)
-	INCDIR = -I/opt/local/include
-	LIBDIR = -L/opt/local/lib
-	OGLLIB = -framework OpenGL
-	SDL_CONFIG = /opt/local/bin/sdl-config
-	FT2_CONFIG = /opt/local/bin/freetype-config
-else
-	OGLLIB = -lGL -lGLU
-	SDL_CONFIG = /usr/bin/sdl-config
-	FT2_CONFIG = /usr/bin/freetype-config
-endif
-
-# Include Lua, if it exists.
-
-ifneq ($(wildcard /usr/include/lua),)
-	INCDIR += -I/usr/include/lua
-endif
-
-ifneq ($(wildcard /usr/include/lua5.1),)
-	INCDIR += -I/usr/include/lua5.1
-endif
-
-# Use user include and lib directories if they exist.
-
-ifneq ($(wildcard $(HOME)/include),)
-	INCDIR += -I$(HOME)/include
-endif
-ifneq ($(wildcard $(HOME)/lib),)
-	LIBDIR += -L$(HOME)/lib
+ifeq      ($(shell uname), Darwin)
+	ISMACOS = true
+else ifeq ($(shell uname), Linux)
+	ISLINUX = true
+else ifeq ($(shell uname), MINGW32_NT-6.1)
+	ISMINGW = true
 endif
 
 #------------------------------------------------------------------------------
+# Configure the system libraries.
 
-CFLAGS += $(shell $(SDL_CONFIG) --cflags) $(shell $(FT2_CONFIG) --cflags)
+ifdef ISMACOS
+	SYSLIBS = -framework OpenGL \
+ 		  -framework IOKit \
+		  -framework Cocoa \
+ 		  -framework Carbon \
+ 		  -framework CoreAudio \
+ 		  -framework AudioUnit \
+ 		  -framework AudioToolbox \
+ 		  -framework ForceFeedback \
+ 		  -framework ApplicationServices
+	LIBPATH = /usr/local/lib/ /opt/local/lib/ /usr/lib/
+endif
 
-SDLLIB = $(shell $(SDL_CONFIG) --libs) -lSDLmain
-FT2LIB = $(shell $(FT2_CONFIG) --libs)
-LUALIB = -llua5.1
-IMGLIB = -ljpeg -lpng -lz -lm
-OGGLIB = -lvorbisfile
-ODELIB = -lode
-#ODELIB = -lode -lstdc++
+ifdef ISLINUX
+	SYSLIBS = -lGL -lGLU
+	LIBPATH = /usr/local/lib/ /usr/lib/ /usr/lib/x86_64-linux-gnu/
+endif
 
-ifdef LINUX_STATIC
-SDLLIB = /home/rlk/lib/libSDL.a -lpthread
-FT2LIB = /usr/lib/libfreetype.a
-LUALIB = /usr/lib/liblua.a /usr/lib/liblualib.a /usr/lib/libluasocket.a
-IMGLIB = /usr/lib/libjpeg.a /usr/lib/libpng.a /usr/lib/libz.a
-OGGLIB = /usr/lib/libvorbisfile.a /usr/lib/libvorbis.a /usr/lib/libogg.a
-ODELIB = /usr/lib/libode.a -lstdc++
+ifdef ISMINGW
+	OPTS    += -static -DGLEW_STATIC
+#	SYSLIBS += -mwindows
+	SYSLIBS += -lopengl32 -lole32 -loleaut32 -lws2_32 -lversion -luuid -lwinmm -limm32 -lgdi32 -luser32 -lkernel32 -lcomctl32
+	LIBS    += -lmingw32
+	LIBPATH  = C:/MinGW/lib/
 endif
 
 #------------------------------------------------------------------------------
+# Configure the dependencies
 
-LIBS += $(LUALIB) $(ODELIB) $(SDLLIB) $(FT2LIB) $(IMGLIB) $(OGGLIB) $(OGLLIB)
+PKG_CONFIG = $(firstword $(wildcard /usr/local/bin/pkg-config \
+			                  /usr/bin/pkg-config) \
+			                           pkg-config)
+
+PKGS = lua5.1 vorbisfile libpng ode freetype2 sdl zlib
+
+OPTS += $(sort $(shell $(PKG_CONFIG) --cflags $(PKGS)))
+LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg $(SYSLIBS)
+
+#------------------------------------------------------------------------------
 
 OBJS =	src/opengl.o   \
 	src/video.o    \
@@ -116,58 +107,16 @@ DEPS= $(OBJS:.o=.d)
 #------------------------------------------------------------------------------
 
 %.d : %.c
-	$(CC) $(CFLAGS) $(INCDIR) -MM -MF $@ -MT $*.o $< > /dev/null
+	$(CC) $(OPTS) -MM -MG -MF $@ -MT $*.o $<
 
 %.o : %.c Makefile
-	$(CC) $(CFLAGS) $(INCDIR) -c -o $@ $<
+	$(CC) $(OPTS) -c -o $@ $<
 
 $(TARG) : $(OBJS) Makefile
-	$(CC) $(CFLAGS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
+	$(CC) $(OPTS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
 clean :
 	rm -f $(TARG) $(OBJS) $(DEPS)
-
-distclean:
-	find . -name .svn | xargs rm -rf
-	rm -f $(DEPS)
-
-install : $(TARG)
-	mkdir -p $(INSTALL_PREFIX)/bin
-	mkdir -p $(INSTALL_PREFIX)/config
-	cp $(TARG) $(INSTALL_PREFIX)/bin
-	cp config/* $(INSTALL_PREFIX)/config
-
-#------------------------------------------------------------------------------
-
-CH= install_name_tool -change
-
-osxdist : $(TARG)
-	mkdir -p lib
-
-	cp    /opt/local/lib/libSDL-1.2.0.dylib    lib
-	cp    /opt/local/lib/libfreetype.6.dylib   lib
-	cp    /opt/local/lib/libjpeg.62.dylib      lib
-	cp    /opt/local/lib/libpng.3.dylib        lib
-	cp    /opt/local/lib/libvorbisfile.3.dylib lib
-	cp    /opt/local/lib/libvorbis.0.dylib     lib
-	cp    /opt/local/lib/libogg.0.dylib        lib
-
-	$(CH) /opt/local/lib/libSDL-1.2.0.dylib    \
-          @executable_path/lib/libSDL-1.2.0.dylib    $(TARG)
-	$(CH) /opt/local/lib/libfreetype.6.dylib   \
-          @executable_path/lib/libfreetype.6.dylib   $(TARG)
-	$(CH) /opt/local/lib/libjpeg.62.dylib      \
-          @executable_path/lib/libjpeg.62.dylib      $(TARG)
-	$(CH) /opt/local/lib/libpng.3.dylib        \
-          @executable_path/lib/libpng.3.dylib        $(TARG)
-	$(CH) /opt/local/lib/libvorbisfile.3.dylib \
-          @executable_path/lib/libvorbisfile.3.dylib $(TARG)
-	$(CH) /opt/local/lib/libvorbis.0.dylib     \
-          @executable_path/lib/libvorbis.0.dylib     lib/libvorbisfile.3.dylib
-	$(CH) /opt/local/lib/libogg.0.dylib        \
-          @executable_path/lib/libogg.0.dylib        lib/libvorbisfile.3.dylib
-	$(CH) /opt/local/lib/libogg.0.dylib        \
-          @executable_path/lib/libogg.0.dylib        lib/libvorbis.0.dylib
 
 #------------------------------------------------------------------------------
 
