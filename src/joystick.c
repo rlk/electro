@@ -27,7 +27,7 @@ int startup_joystick(void)
 {
     int i, n = SDL_NumJoysticks();
 
-    for (i = 0; i < n && MAXJOY; ++i)
+    for (i = 0; i < n && i < MAXJOY; ++i)
         joy[i] = SDL_JoystickOpen(i);
 
     return 1;
