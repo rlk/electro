@@ -1,2 +1,5 @@
 *.d
+*.o
+electro
+electro-mpi
 
