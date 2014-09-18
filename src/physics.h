@@ -67,10 +67,9 @@ void    get_phys_join_attr_v(dBodyID, dBodyID, int, float *);
 
 /*---------------------------------------------------------------------------*/
 
-void new_phys_mass(dBodyID, float[3]);
-void add_phys_mass(dBodyID, dGeomID, const float[3], const float[16]);
-void mov_phys_mass(dBodyID, dGeomID, const float[3], const float[16]);
-void end_phys_mass(dBodyID, float[3]);
+void new_phys_mass(dMass *);
+void add_phys_mass(dMass *, dGeomID, const float[3], const float[16]);
+void end_phys_mass(dMass *, dBodyID, float[3]);
 
 /*---------------------------------------------------------------------------*/
 

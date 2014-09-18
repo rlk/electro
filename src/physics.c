@@ -114,7 +114,7 @@ static void callback(void *data, dGeomID o1, dGeomID o2)
                         dGeomGetClass(contact[0].geom.g2) != dRayClass)
                     {
                         dJointID c;
-                
+
                         contact[i].surface.mode = dContactBounce
                                                 | dContactSoftCFM
                                                 | dContactSoftERP;
@@ -174,18 +174,18 @@ static void set_rotation(dMatrix3 D, const float S[16])
 
 static void get_rotation(float D[16], const dMatrix3 S)
 {
-    D[0]  = (float) S[0]; 
-    D[1]  = (float) S[4]; 
+    D[0]  = (float) S[0];
+    D[1]  = (float) S[4];
     D[2]  = (float) S[8];
-    D[3]  = (float)    0; 
-    D[4]  = (float) S[1]; 
-    D[5]  = (float) S[5]; 
-    D[6]  = (float) S[9]; 
-    D[7]  = (float)    0; 
-    D[8]  = (float) S[2];  
-    D[9]  = (float) S[6];  
-    D[10] = (float) S[10]; 
-    D[11] = (float)    0; 
+    D[3]  = (float)    0;
+    D[4]  = (float) S[1];
+    D[5]  = (float) S[5];
+    D[6]  = (float) S[9];
+    D[7]  = (float)    0;
+    D[8]  = (float) S[2];
+    D[9]  = (float) S[6];
+    D[10] = (float) S[10];
+    D[11] = (float)    0;
     D[12] = (float)    0;
     D[13] = (float)    0;
     D[14] = (float)    0;
@@ -195,17 +195,130 @@ static void get_rotation(float D[16], const dMatrix3 S)
 /*---------------------------------------------------------------------------*/
 /* Body mass accumulation functions                                          */
 
+#if 1
+
+void new_phys_mass(dMass *mass)
+{
+    /* Zero the mass in preparation for mass accumulation. */
+
+    dMassSetZero(mass);
+}
+
+void add_phys_mass(dMass *mass, dGeomID geom, const float p[3],
+                                              const float r[16])
+{
+    dVector3 v;
+    dMatrix3 M;
+    dReal  rad;
+    dReal  len;
+    dMass  add;
+
+    if (dGeomGetClass(geom) != dPlaneClass)
+    {
+        dReal m = get_data(geom)->mass;
+
+        /* Create a new mass for the given geom. */
+
+        switch (dGeomGetClass(geom))
+        {
+        case dBoxClass:
+            dGeomBoxGetLengths(geom, v);
+            dMassSetBoxTotal(&add, m, v[0], v[1], v[2]);
+            break;
+
+        case dSphereClass:
+            rad = dGeomSphereGetRadius(geom);
+            dMassSetSphereTotal(&add, m, rad);
+            break;
+
+        case dCapsuleClass:
+            dGeomCapsuleGetParams(geom, &rad, &len);
+            dMassSetCapsuleTotal(&add, m, 3, rad, len);
+            break;
+
+        default:
+            dMassSetZero(&add);
+            break;
+        }
+
+        /* Transform the geom mass to the given position and rotation. */
+
+        if (p)
+        {
+            dGeomSetOffsetPosition(geom, p[0], p[1], p[2]);
+            dMassTranslate        (&add, p[0], p[1], p[2]);
+        }
+        if (r)
+        {
+            set_rotation(M, r);
+            dGeomSetOffsetRotation(geom, M);
+            dMassRotate           (&add, M);
+        }
+
+        /* Accumulate the new mass with the body's existing mass. */
+
+        dMassAdd(mass, &add);
+    }
+}
+
+#if 0
+void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
+                                               const float r[16])
+{
+    dMatrix3 M;
+    dMass mass;
+
+    set_rotation(M, r);
+
+    /* If the geom has a body, assume it is a geom transform. */
+
+    if (body)
+    {
+        dGeomID object = dGeomTransformGetGeom(geom);
+
+        /* Move the geom so that the body's center of mass is at the origin. */
+
+        dBodyGetMass(body, &mass);
+        dGeomSetRotation(object, M);
+        dGeomSetPosition(object, p[0] - mass.c[0],
+                                 p[1] - mass.c[1],
+                                 p[2] - mass.c[2]);
+    }
+    else
+    {
+        /* If the geom has no body, make sure we don't try to move a plane. */
+
+        if (dGeomGetClass(geom) != dPlaneClass)
+        {
+            dGeomSetRotation(geom, M);
+            dGeomSetPosition(geom, p[0], p[1], p[2]);
+        }
+    }
+}
+#endif
+
+void end_phys_mass(dMass *mass, dBodyID body, float center[3])
+{
+    /* Translate the center of mass to the origin. */
+
+    dMassTranslate(mass, -mass->c[0], -mass->c[1], -mass->c[2]);
+
+    center[0] = -mass->c[0];
+    center[1] = -mass->c[1];
+    center[2] = -mass->c[2];
+
+    dBodySetMass(body, mass);
+}
+
+#else
+
 void new_phys_mass(dBodyID body, float v[3])
 {
     dMass mass;
 
     /* Zero the body's mass in preparation for mass accumulation. */
 
-/*  dMassSetZero(&mass); */
-
-    /* Due to ODE assertion, start with a tiny sphere instead of zero. */
-
-    dMassSetSphereTotal(&mass, 0.1, 0.1);
+    dMassSetZero(&mass);
     dBodySetMass(body, &mass);
 
     v[0] = v[1] = v[2] = 0;
@@ -319,6 +432,7 @@ void end_phys_mass(dBodyID body, float v[3])
     dBodySetMass(body, &mass);
 }
 
+#endif
 /*---------------------------------------------------------------------------*/
 /* Joint operation type switchers                                            */
 
@@ -521,15 +635,13 @@ int get_phys_body_attr_i(dBodyID body, int p)
 dGeomID set_phys_geom_type(dGeomID geom, dBodyID body,
                            int i, int t, const float *v)
 {
-    dGeomID transform = 0;
-    dGeomID object    = 0;
-
-    /* Destroy the old geom, its transform, and its data. */
+    /* Destroy the old geom and its data. */
 
     if (geom)
     {
         free(dGeomGetData(geom));
         dGeomDestroy(geom);
+        geom = 0;
     }
 
     /* Create a new geom of the required type. */
@@ -537,43 +649,34 @@ dGeomID set_phys_geom_type(dGeomID geom, dBodyID body,
     switch (t)
     {
     case dSphereClass:
-        transform = dCreateGeomTransform(space);
-        object    = dCreateSphere(0, v[0]);
+        geom = dCreateSphere(space, v[0]);
         break;
     case dCapsuleClass:
-        transform = dCreateGeomTransform(space);
-        object    = dCreateCapsule(0, v[0], v[1]);
+        geom = dCreateCapsule(space, v[0], v[1]);
         break;
     case dBoxClass:
-        transform = dCreateGeomTransform(space);
-        object    = dCreateBox(0, v[0], v[1], v[2]);
+        geom = dCreateBox(space, v[0], v[1], v[2]);
         break;
     case dPlaneClass:
-        object    = dCreatePlane(space, v[0], v[1], v[2], v[3]);
+        geom = dCreatePlane(space, v[0], v[1], v[2], v[3]);
         break;
     case dRayClass:
-        transform = dCreateGeomTransform(space);
-        object    = dCreateRay(space, (dReal) sqrt(v[3] * v[3] +
-                                                   v[4] * v[4] +
-                                                   v[5] * v[5]));
-        dGeomRaySet(object, v[0], v[1], v[2], v[3], v[4], v[5]);
+        geom = dCreateRay(space, (dReal) sqrt(v[3] * v[3] +
+                                              v[4] * v[4] +
+                                              v[5] * v[5]));
+        dGeomRaySet(geom, v[0], v[1], v[2], v[3], v[4], v[5]);
         break;
     }
 
-    /* Assign geom data and encapsulate the new geom in a transform. */
+    /* Assign geom data and attach it to the body. */
 
-    if (object)
-        dGeomSetData(object, create_data(i));
-
-    if (transform && object)
+    if (geom)
     {
-        dGeomTransformSetCleanup(transform, 1);
-        dGeomTransformSetGeom(transform, object);
-        dGeomSetData(transform, dGeomGetData(object));
-        dGeomSetBody(transform, body);
+        dGeomSetData(geom, create_data(i));
+        dGeomSetBody(geom, body);
     }
 
-    return transform ? transform : object;
+    return geom;
 }
 
 void set_phys_geom_attr_i(dGeomID geom, int p, int i)
@@ -853,14 +956,12 @@ void draw_phys_geom(dGeomID geom)
             draw_phys_plane(geom);
         else
         {
-            dGeomID object = dGeomTransformGetGeom(geom);
-
-            switch (dGeomGetClass(object))
+            switch (dGeomGetClass(geom))
             {
-            case dBoxClass:     draw_phys_box      (object); break;
-            case dSphereClass:  draw_phys_sphere   (object); break;
-            case dCapsuleClass: draw_phys_ccylinder(object); break;
-            case dRayClass:     draw_phys_ray      (object); break;
+                case dBoxClass:     draw_phys_box      (geom); break;
+                case dSphereClass:  draw_phys_sphere   (geom); break;
+                case dCapsuleClass: draw_phys_ccylinder(geom); break;
+                case dRayClass:     draw_phys_ray      (geom); break;
             }
         }
     }
@@ -892,6 +993,8 @@ void draw_phys_body(dBodyID body)
 
 int startup_physics(void)
 {
+    dInitODE();
+
     world = dWorldCreate();
     space = dHashSpaceCreate(0);
     group = dJointGroupCreate(0);

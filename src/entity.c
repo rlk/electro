@@ -66,6 +66,7 @@ struct entity
     float   center[3];
     dBodyID body;
     dGeomID geom;
+    dMass   mass;
 };
 
 static struct entity      *entity;
@@ -261,10 +262,11 @@ void transform_entity(unsigned int i)
              entity[i].scale[2]);
 
     /* Center of mass. */
-
-    glTranslatef(-entity[i].center[0],
-                 -entity[i].center[1],
-                 -entity[i].center[2]);
+#if 0
+    glTranslatef(entity[i].center[0],
+                 entity[i].center[1],
+                 entity[i].center[2]);
+#endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -296,7 +298,7 @@ int test_entity_aabb(unsigned int i)
 void draw_entity_tree(unsigned int i, int f, float a)
 {
     unsigned int j;
-    
+
     /* Traverse the hierarchy.  Iterate the child list of this entity. */
 
     for (j = CAR(i); j; j = CDR(j))
@@ -361,7 +363,7 @@ static void detach_entity(unsigned int i)
         int j, k, p = PAR(i);
 
         /* Remove the child from its parent's child list. */
-        
+
         for (j = 0, k = CAR(p); k; j = k, k = CDR(k))
             if (k == i)
             {
@@ -387,23 +389,25 @@ static void attach_entity(unsigned int i, unsigned int j)
 
 /*===========================================================================*/
 
-static void center_geom_entity(dBodyID body, unsigned int i, unsigned int d)
+static void center_geom_entity(dMass *mass, unsigned int i, unsigned int d)
 {
+#if 0
     unsigned int j;
 
-    /* Move the body's center of mass to the origin. */
+    /* Reposition the geom to move the center of mass to the origin. */
 
     if (entity[i].geom && d)
-        mov_phys_mass(body, entity[i].geom, entity[i].position,
+        mov_phys_mass(mass, entity[i].geom, entity[i].position,
                                             entity[i].rotation);
 
     /* Continue traversing the hierarchy. */
 
     for (j = CAR(i); j; j = CDR(j))
         center_geom_entity(body, j, d + 1);
+#endif
 }
 
-static void remass_geom_entity(dBodyID body, unsigned int i, unsigned int d)
+static void remass_geom_entity(dMass *mass, unsigned int i, unsigned int d)
 {
     unsigned int j;
 
@@ -412,16 +416,16 @@ static void remass_geom_entity(dBodyID body, unsigned int i, unsigned int d)
     if (entity[i].geom)
     {
         if (d)
-            add_phys_mass(body, entity[i].geom, entity[i].position,
+            add_phys_mass(mass, entity[i].geom, entity[i].position,
                                                 entity[i].rotation);
         else
-            add_phys_mass(body, entity[i].geom, NULL, NULL);
+            add_phys_mass(mass, entity[i].geom, NULL, NULL);
     }
 
     /* Continue traversing the hierarchy. */
 
     for (j = CAR(i); j; j = CDR(j))
-        remass_geom_entity(body, j, d + 1);
+        remass_geom_entity(mass, j, d + 1);
 }
 
 static void remass_body_entity(unsigned int i, unsigned int j)
@@ -430,12 +434,12 @@ static void remass_body_entity(unsigned int i, unsigned int j)
 
     if (i)
     {
-        new_phys_mass(entity[i].body, entity[i].center);
+        new_phys_mass(&entity[i].mass);
 
-        remass_geom_entity(entity[i].body, i, 0);
-        center_geom_entity(entity[i].body, i, 0);
+        remass_geom_entity(&entity[i].mass, i, 0);
+        center_geom_entity(&entity[i].mass, i, 0);
 
-        end_phys_mass(entity[i].body, entity[i].center);
+        end_phys_mass(&entity[i].mass, entity[i].body, entity[i].center);
     }
     else center_geom_entity(0, j, 1);
 }
@@ -479,7 +483,7 @@ unsigned int send_create_entity(int type, int data)
     {
         send_index(type);
         send_index(data);
-    
+
         create_entity(i, type, data);
 
         return i;
