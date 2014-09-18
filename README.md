@@ -1,42 +1,21 @@
 # Electro
 
+Electro is an application development environment designed for use on cluster-driven tiled displays, virtual reality systems, and desktop workstations. Electro is based on the MPI process model and is bound to the Lua programming language. With support for 3D graphics, 2D graphics, audio, networking, and input handling, Electro provides an easy-to-use scripting system for interactive applications spanning multiple hosts and a variety of displays.
 
-## Running on PCs
+## Running
 
-The run scripts take a list of Lua files as parameters.  Each file
-is executed in turn.  Here, the demo menu is used as an example:
+The executable takes a list of Lua files as parameters.  Each file
+is executed in turn.  Here, the Asteroids game is used as an example:
 
-To run the demos under Linux or OS X:
+To run Asteroids under Linux or OS X:
 
-    $ electro demo.lua
+    $ electro asteroids.lua
 
-To run the demos under Windows:
+To run the asteroidss under Windows:
 
-    C:\> electro.exe demo.lua
+    C:\> electro.exe asteroids.lua
 
-Alternatively, drag and drop the demo.lua icon onto ELECTRO.BAT.
-
-
-## Running on clusters
-
-Each cluster has an associated run script.  To run the demos on nico,
-make sure that "/DEMO/evl/Electro/bin" is included in your PATH,
-change to the Electro examples directory, and run it as follows:
-
-    $ cd /DEMO/evl/Electro/examples
-    $ electro-nico11x5 demo.lua
-
-On yorda:
-
-    $ cd /DEMO/evl/Electro/examples
-    $ electro-yorda11x5 demo.lua
-
-Vortex works best when Electro is allowed to capture the mouse pointer:
-
-    $ electro-nico11x5 -m vortex.lua
-or
-    $ electro-yorda11x5 -m vortex.lua
-
+Alternatively, drag and drop the asteroids.lua icon onto ELECTRO.BAT.
 
 ## Usage
 
