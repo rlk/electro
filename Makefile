@@ -26,7 +26,8 @@ endif
 # Configure the system libraries.
 
 ifdef ISMACOS
-	SYSLIBS = -framework OpenGL \
+	SYSLIBS = -lstdc++ \
+		  -framework OpenGL \
  		  -framework IOKit \
 		  -framework Cocoa \
  		  -framework Carbon \
@@ -35,6 +36,7 @@ ifdef ISMACOS
  		  -framework AudioToolbox \
  		  -framework ForceFeedback \
  		  -framework ApplicationServices
+ 	OPTS   += -Wno-deprecated-declarations
 	LIBPATH = /usr/local/lib/ /opt/local/lib/ /usr/lib/
 endif
 
@@ -58,10 +60,10 @@ PKG_CONFIG = $(firstword $(wildcard /usr/local/bin/pkg-config \
 			                  /usr/bin/pkg-config) \
 			                           pkg-config)
 
-PKGS = lua5.1 vorbisfile libpng ode freetype2 sdl zlib
+PKGS = vorbisfile libpng ode freetype2 sdl zlib
 
 OPTS += $(sort $(shell $(PKG_CONFIG) --cflags $(PKGS)))
-LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg $(SYSLIBS)
+LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg -llua $(SYSLIBS)
 
 #------------------------------------------------------------------------------
 

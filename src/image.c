@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <jpeglib.h>
 #include <png.h>
 
@@ -277,7 +278,7 @@ static void *load_png_image(const char *filename, int *width,
 
     if (!(readp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))
         return error("Failure creating PNG read struct '%s'", filename);
-        
+
     if (!(infop = png_create_info_struct(readp)))
         return error("Failure creating PNG info struct '%s'", filename);
 
@@ -293,7 +294,7 @@ static void *load_png_image(const char *filename, int *width,
         png_read_png(readp, infop,
                      PNG_TRANSFORM_STRIP_16 |
                      PNG_TRANSFORM_PACKING, NULL);
-        
+
         /* Extract and check image properties. */
 
         w = (int) png_get_image_width (readp, infop);
@@ -401,7 +402,7 @@ static void *load_image(const char *filename, int *width,
     if (filename)
     {
         const char *ext = filename + strlen(filename) - 4;
-    
+
         if      (strcmp(ext, ".png") == 0 || strcmp(ext, ".PNG") == 0)
             pixels = load_png_image(filename, width, height, bytes);
         else if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".JPG") == 0)
@@ -658,7 +659,7 @@ int send_create_image_env(const char *name_nx,
         p->nfo.env.data[3] = load_image(name_py, &p->w, &p->h, &p->b, &f);
         p->nfo.env.data[4] = load_image(name_nz, &p->w, &p->h, &p->b, &f);
         p->nfo.env.data[5] = load_image(name_pz, &p->w, &p->h, &p->b, &f);
-        
+
         p->flags = f;
 
         /* Send the header and data. */
@@ -802,7 +803,7 @@ int send_create_image_ani(const char *name, int w, int h, int b,
             p->nfo.map.data = (GLubyte *) calloc(p->w * p->h / 2, 1);
         else
             p->nfo.map.data = (GLubyte *) calloc(p->w * p->h * p->b, 1);
-        
+
         /* Send the header. */
 
         send_event(EVENT_CREATE_IMAGE);
@@ -933,7 +934,7 @@ static void step_image_ani(int i)
                 sz = p->w * p->h / 2;
             else
                 sz = p->w * p->h * p->b;
-             
+
             if (fread(p->nfo.ani.data, 1, sz, fp) < sz)
                 error("'%s' load trucated", filename);
 
@@ -1232,7 +1233,7 @@ static void set_image_udp_pixels(int i, GLubyte *data,
     struct image *p = get_image(i);
 
     /* If the image size or type has changed, reinitialize. */
-    
+
     if (p->nfo.udp.code != code || p->w != w || p->h != h)
     {
         p->nfo.udp.code = code;
@@ -1587,7 +1588,7 @@ void draw_image(int i)
             if      (p->type == TYPE_ENV)  t = GL_TEXTURE_CUBE_MAP_ARB;
             else if (p->flags & FLAG_NPOT) t = GL_TEXTURE_RECTANGLE_ARB;
             else                           t = GL_TEXTURE_2D;
-            
+
             glEnable(t);
             glBindTexture(t, get_image(i)->texture);
         }
