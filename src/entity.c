@@ -410,7 +410,7 @@ static void remass_geom_entity(dMass *mass, unsigned int i, unsigned int d)
         remass_geom_entity(mass, j, d + 1);
 }
 
-static void remass_body_entity(unsigned int i)
+static void remass_body_entity(unsigned int i, unsigned int j)
 {
     /* Compute a body's moment of inertia by adding all child geom masses. */
 
@@ -424,6 +424,7 @@ static void remass_body_entity(unsigned int i)
                        entity[i].body,
                        entity[i].center);
     }
+    else remass_geom_entity(&entity[i].mass, j, 1);
 }
 
 static int find_body_entity(unsigned int i)
@@ -509,7 +510,7 @@ void recv_parent_entity(void)
 static void update_entity_position(unsigned int i)
 {
     if (entity[i].geom)
-        remass_body_entity(find_body_entity(i));
+        remass_body_entity(find_body_entity(i), i);
     if (entity[i].body)
         set_phys_position(entity[i].body,
                           entity[i].center,
@@ -519,7 +520,7 @@ static void update_entity_position(unsigned int i)
 static void update_entity_rotation(unsigned int i)
 {
     if (entity[i].geom)
-        remass_body_entity(find_body_entity(i));
+        remass_body_entity(find_body_entity(i), i);
     if (entity[i].body)
         set_phys_rotation(entity[i].body, entity[i].rotation);
 }

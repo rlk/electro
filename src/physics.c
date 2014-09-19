@@ -211,6 +211,8 @@ void add_phys_mass(dMass *mass, dGeomID geom, const float p[3],
     dReal  len;
     dMass  add;
 
+    if (r) set_rotation(M, r);
+
     if (dGeomGetClass(geom) != dPlaneClass)
     {
         dReal m = get_data(geom)->mass;
@@ -239,18 +241,25 @@ void add_phys_mass(dMass *mass, dGeomID geom, const float p[3],
             break;
         }
 
-        /* Transform the geom mass to the given position and rotation. */
+        /* Transform the geom and mass to the given position and rotation. */
 
-        if (p)
+        if(dGeomGetBody(geom))
         {
-            dGeomSetOffsetPosition(geom, p[0], p[1], p[2]);
-            dMassTranslate        (&add, p[0], p[1], p[2]);
+            if (p)
+            {
+                dGeomSetOffsetPosition(geom, p[0], p[1], p[2]);
+                dMassTranslate        (&add, p[0], p[1], p[2]);
+            }
+            if (r)
+            {
+                dGeomSetOffsetRotation(geom, M);
+                dMassRotate           (&add, M);
+            }
         }
-        if (r)
+        else
         {
-            set_rotation(M, r);
-            dGeomSetOffsetRotation(geom, M);
-            dMassRotate           (&add, M);
+            if (p) dGeomSetPosition(geom, p[0], p[1], p[2]);
+            if (r) dGeomSetRotation(geom, M);
         }
 
         /* Accumulate the new mass with the body's existing mass. */
