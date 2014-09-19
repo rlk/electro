@@ -121,7 +121,7 @@ function add_compound()
     local part1  = E.create_pivot()
     local part2  = E.create_pivot()
     local part3  = E.create_pivot()
-    
+
     E.parent_entity(object, pivot)
     E.parent_entity(part1, object)
     E.parent_entity(part2, object)
@@ -170,9 +170,12 @@ function add_car()
     base = E.create_pivot()
     body = E.create_object("../data/body.obj")
     W[1] = E.create_object("../data/tire.obj")
-    W[2] = E.create_clone(W[1])
-    W[3] = E.create_clone(W[1])
-    W[4] = E.create_clone(W[1])
+    W[2] = E.create_object("../data/tire.obj")
+    W[3] = E.create_object("../data/tire.obj")
+    W[4] = E.create_object("../data/tire.obj")
+    -- W[2] = E.create_clone(W[1])
+    -- W[3] = E.create_clone(W[1])
+    -- W[4] = E.create_clone(W[1])
 
     -- Swap some of the body materials to add a chrome effect.
 
@@ -218,7 +221,7 @@ function add_car()
     E.set_entity_geom_type(W[4], E.geom_type_sphere, rad)
 
     E.set_entity_geom_attr(base, E.geom_attr_mass, 5.0)
-    E.set_entity_geom_attr(body, E.geom_attr_mass, 0.0)
+    E.set_entity_geom_attr(body, E.geom_attr_mass, 0.1)
     E.set_entity_geom_attr(W[1], E.geom_attr_mass, 0.1)
     E.set_entity_geom_attr(W[2], E.geom_attr_mass, 0.1)
     E.set_entity_geom_attr(W[3], E.geom_attr_mass, 0.1)
@@ -250,7 +253,7 @@ function add_car()
     E.set_entity_joint_attr(base, W[4], E.joint_attr_axis_2, 1, 0, 0)
 
     -- Soften the suspension a little.
-    
+
     local erp = 0.80
     local cfm = 0.05
 
@@ -375,9 +378,9 @@ function do_start()
     E.set_brush_flags(E.get_mesh(sky, 0), E.brush_flag_unlit,     true)
     E.set_brush_flags(E.get_mesh(sky, 0), E.brush_flag_sky_map_0, true)
 
-    add_ramp(0, 0, 0, 10, 0)
-    add_ramp(32, 0, 10, 30, 0)
-    add_ramp(-32, 0, -10, -15, 180)
+    -- add_ramp(0, 0, 0, 10, 0)
+    -- add_ramp(32, 0, 10, 30, 0)
+    -- add_ramp(-32, 0, -10, -15, 180)
 
     add_tv(-4, 0.75, -20)
     add_tv(-2, 0.75, -20)
@@ -415,9 +418,6 @@ function do_joystick(d, b, s)
             end
             if b == 4 then
                 add_car()
-            end
-            if b == 5 then
-                add_thing()
             end
         else
             if b == 1 then

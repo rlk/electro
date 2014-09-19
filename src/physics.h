@@ -76,15 +76,15 @@ void end_phys_mass(dMass *, dBodyID, float[3]);
 void add_phys_force (dBodyID, float, float, float);
 void add_phys_torque(dBodyID, float, float, float);
 
-void set_phys_position(dBodyID, const float[3]);
-void set_phys_rotation(dBodyID, const float[16]);
-void get_phys_position(dBodyID,       float[3]);
-void get_phys_rotation(dBodyID,       float[16]);
+void set_phys_position(dBodyID, const float *, const float *);
+void get_phys_position(dBodyID, const float *,       float *);
+void set_phys_rotation(dBodyID, const float *);
+void get_phys_rotation(dBodyID,       float *);
 
 /*---------------------------------------------------------------------------*/
 
 void draw_phys_geom(dGeomID);
-void draw_phys_body(dBodyID);
+void draw_phys_body(dBodyID, const float[3]);
 
 int startup_physics(void);
 

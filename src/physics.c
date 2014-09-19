@@ -195,8 +195,6 @@ static void get_rotation(float D[16], const dMatrix3 S)
 /*---------------------------------------------------------------------------*/
 /* Body mass accumulation functions                                          */
 
-#if 1
-
 void new_phys_mass(dMass *mass)
 {
     /* Zero the mass in preparation for mass accumulation. */
@@ -261,178 +259,19 @@ void add_phys_mass(dMass *mass, dGeomID geom, const float p[3],
     }
 }
 
-#if 0
-void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
-                                               const float r[16])
-{
-    dMatrix3 M;
-    dMass mass;
-
-    set_rotation(M, r);
-
-    /* If the geom has a body, assume it is a geom transform. */
-
-    if (body)
-    {
-        dGeomID object = dGeomTransformGetGeom(geom);
-
-        /* Move the geom so that the body's center of mass is at the origin. */
-
-        dBodyGetMass(body, &mass);
-        dGeomSetRotation(object, M);
-        dGeomSetPosition(object, p[0] - mass.c[0],
-                                 p[1] - mass.c[1],
-                                 p[2] - mass.c[2]);
-    }
-    else
-    {
-        /* If the geom has no body, make sure we don't try to move a plane. */
-
-        if (dGeomGetClass(geom) != dPlaneClass)
-        {
-            dGeomSetRotation(geom, M);
-            dGeomSetPosition(geom, p[0], p[1], p[2]);
-        }
-    }
-}
-#endif
-
 void end_phys_mass(dMass *mass, dBodyID body, float center[3])
 {
     /* Translate the center of mass to the origin. */
 
-    dMassTranslate(mass, -mass->c[0], -mass->c[1], -mass->c[2]);
+    center[0] = mass->c[0];
+    center[1] = mass->c[1];
+    center[2] = mass->c[2];
 
-    center[0] = -mass->c[0];
-    center[1] = -mass->c[1];
-    center[2] = -mass->c[2];
+    dMassTranslate(mass, -mass->c[0], -mass->c[1], -mass->c[2]);
 
     dBodySetMass(body, mass);
 }
 
-#else
-
-void new_phys_mass(dBodyID body, float v[3])
-{
-    dMass mass;
-
-    /* Zero the body's mass in preparation for mass accumulation. */
-
-    dMassSetZero(&mass);
-    dBodySetMass(body, &mass);
-
-    v[0] = v[1] = v[2] = 0;
-}
-
-void add_phys_mass(dBodyID body, dGeomID geom, const float p[3],
-                                               const float r[16])
-{
-    dVector3  v;
-    dMatrix3  M;
-    dReal   rad;
-    dReal   len;
-    dMass mass1;
-    dMass mass2;
-
-    if (dGeomGetClass(geom) != dPlaneClass)
-    {
-        dGeomID object = dGeomTransformGetGeom(geom);
-        dReal   m      = get_data(geom)->mass;
-
-        /* Create a new mass for the given geom. */
-
-        switch (dGeomGetClass(object))
-        {
-        case dBoxClass:
-            dGeomBoxGetLengths(object, v);
-            dMassSetBoxTotal(&mass2, m, v[0], v[1], v[2]);
-            break;
-
-        case dSphereClass:
-            rad = dGeomSphereGetRadius(object);
-            dMassSetSphereTotal(&mass2, m, rad);
-            break;
-
-        case dCapsuleClass:
-            dGeomCapsuleGetParams(object, &rad, &len);
-            dMassSetCapsuleTotal(&mass2, m, 3, rad, len);
-            break;
-
-        default:
-            dMassSetZero(&mass2);
-            break;
-        }
-
-        /* Transform the geom mass to the given position and rotation. */
-
-        if (p)
-            dMassTranslate(&mass2, p[0], p[1], p[2]);
-        if (r)
-        {
-            set_rotation(M, r);
-            dMassRotate(&mass2, M);
-        }
-
-        /* Accumulate the new mass with the body's existing mass. */
-
-        dBodyGetMass(body, &mass1);
-        dMassAdd(&mass1, &mass2);
-        dBodySetMass(body, &mass1);
-    }
-}
-
-void mov_phys_mass(dBodyID body, dGeomID geom, const float p[3],
-                                               const float r[16])
-{
-    dMatrix3 M;
-    dMass mass;
-
-    set_rotation(M, r);
-
-    /* If the geom has a body, assume it is a geom transform. */
-
-    if (body)
-    {
-        dGeomID object = dGeomTransformGetGeom(geom);
-
-        /* Move the geom so that the body's center of mass is at the origin. */
-
-        dBodyGetMass(body, &mass);
-        dGeomSetRotation(object, M);
-        dGeomSetPosition(object, p[0] - mass.c[0],
-                                 p[1] - mass.c[1],
-                                 p[2] - mass.c[2]);
-    }
-    else
-    {
-        /* If the geom has no body, make sure we don't try to move a plane. */
-
-        if (dGeomGetClass(geom) != dPlaneClass)
-        {
-            dGeomSetRotation(geom, M);
-            dGeomSetPosition(geom, p[0], p[1], p[2]);
-        }
-    }
-}
-
-void end_phys_mass(dBodyID body, float v[3])
-{
-    dMass mass;
-
-    /* Translate the center of mass to the origin. */
-
-    dBodyGetMass(body, &mass);
-
-    v[0] = (float) mass.c[0];
-    v[1] = (float) mass.c[1];
-    v[2] = (float) mass.c[2];
-
-    dMassTranslate(&mass, -mass.c[0], -mass.c[1], -mass.c[2]);
-
-    dBodySetMass(body, &mass);
-}
-
-#endif
 /*---------------------------------------------------------------------------*/
 /* Joint operation type switchers                                            */
 
@@ -862,19 +701,33 @@ void add_phys_torque(dBodyID body, float x, float y, float z)
 /*---------------------------------------------------------------------------*/
 /* Position and rotation accessors                                           */
 
-void set_phys_position(dBodyID body, const float p[3])
+void set_phys_position(dBodyID body, const float *c, const float *p)
 {
-    dBodySetPosition(body, p[0], p[1], p[2]);
+    if (c)
+        dBodySetPosition(body, p[0] + c[0],
+                               p[1] + c[1],
+                               p[2] + c[2]);
+    else
+        dBodySetPosition(body, p[0], p[1], p[2]);
 }
 
-void get_phys_position(dBodyID body, float p[3])
+void get_phys_position(dBodyID body, const float *c, float *p)
 {
-    p[0] = (float) dBodyGetPosition(body)[0];
-    p[1] = (float) dBodyGetPosition(body)[1];
-    p[2] = (float) dBodyGetPosition(body)[2];
+    if (c)
+    {
+        p[0] = (float) (dBodyGetPosition(body)[0] - c[0]);
+        p[1] = (float) (dBodyGetPosition(body)[1] - c[1]);
+        p[2] = (float) (dBodyGetPosition(body)[2] - c[2]);
+    }
+    else
+    {
+        p[0] = (float) (dBodyGetPosition(body)[0]);
+        p[1] = (float) (dBodyGetPosition(body)[1]);
+        p[2] = (float) (dBodyGetPosition(body)[2]);
+    }
 }
 
-void set_phys_rotation(dBodyID body, const float r[16])
+void set_phys_rotation(dBodyID body, const float *r)
 {
     dMatrix3 R;
 
@@ -882,7 +735,7 @@ void set_phys_rotation(dBodyID body, const float r[16])
     dBodySetRotation(body, R);
 }
 
-void get_phys_rotation(dBodyID body, float r[16])
+void get_phys_rotation(dBodyID body, float *r)
 {
     get_rotation(r, dBodyGetRotation(body));
 }
@@ -970,7 +823,7 @@ void draw_phys_geom(dGeomID geom)
 
 /*---------------------------------------------------------------------------*/
 
-void draw_phys_body(dBodyID body)
+void draw_phys_body(dBodyID body, const float c[3])
 {
     dMass mass;
 
@@ -982,9 +835,7 @@ void draw_phys_body(dBodyID body)
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
 
-        opengl_draw_xyz((float) mass.c[0],
-                        (float) mass.c[1],
-                        (float) mass.c[2]);
+        opengl_draw_xyz(c[0], c[1], c[2]);
     }
     glPopAttrib();
 }
@@ -1000,7 +851,7 @@ int startup_physics(void)
     group = dJointGroupCreate(0);
 
     dWorldSetGravity(world, 0, (dReal) -9.8, 0);
-    dWorldSetAutoDisableFlag(world, 1);
+    // dWorldSetAutoDisableFlag(world, 1);
 
     return 1;
 }
