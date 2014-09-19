@@ -2,30 +2,34 @@
 <html>
 <head>
   <style type="text/css">
-    body   { text-align:   justify;
+    body   { font-family: sans-serif;
+             text-align:   justify;
+             line-height: 150%;
              margin-right: 12%;
              margin-left:  12%; }
     h1     { margin-left: -12%; }
     h2     { margin-left:  -9%; }
     h3     { margin-left:  -6%; }
     h4     { margin-left:  -3%; }
+    h5     { margin-left:  -0%; }
     dt     { background: #EEEEEE; padding: 0.5em; }
+    dt.dep { background: #FFDDDD; padding: 0.5em; }
     pre    { background: #FFFFCC; padding: 1.0em; }
     p.note { background: #CCFFFF; padding: 1.0em; }
   </style>
-  <title>Electro Example</title>
+  <title>Electro</title>
 </head>
 <body>
 
-<!---------------------------------------------------------------------------->
+<!-- ====================================================================== -->
 
-<pre style="font-size:3em; font-weight:bold; padding: 0.25em">
+<pre style="font-size:3em; line-height:1em; font-weight:bold; padding: 0.25em">
   |||
   O o  Electro
    -
 </pre>
 
-<!---------------------------------------------------------------------------->
+<!-- ====================================================================== -->
 
 <h1> Example </h1>
 
@@ -221,7 +225,7 @@ end
 
 <p>Finally, we initialize the puzzle to an unknown state by calling the random move generator several times. That is all there is to it.</p>
 
-<!---------------------------------------------------------------------------->
+<!-- ====================================================================== -->
 
 <h2> The full source of the Fifteen Puzzle example </h2>
 
@@ -402,6 +406,6 @@ end
 do_start()
 </pre>
 
-<!---------------------------------------------------------------------------->
+<!-- ====================================================================== -->
 
-<p class="note" style="text-align: right"><i> rlk (at) evl.uic.edu </i></p>
+<p class="note" style="text-align: right"><i> kooima (at) csc.lsu.edu </i></p>
