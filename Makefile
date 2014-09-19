@@ -1,5 +1,5 @@
 
-OPTS= -Wall
+OPTS= -Wall -g
 
 # To build in cluster mode: "make MPI=1".
 
@@ -37,12 +37,10 @@ ifdef ISMACOS
  		  -framework ForceFeedback \
  		  -framework ApplicationServices
  	OPTS   += -Wno-deprecated-declarations
-	LIBPATH = /usr/local/lib/ /opt/local/lib/ /usr/lib/
 endif
 
 ifdef ISLINUX
 	SYSLIBS = -lGL -lGLU
-	LIBPATH = /usr/local/lib/ /usr/lib/ /usr/lib/x86_64-linux-gnu/
 endif
 
 ifdef ISMINGW
@@ -50,7 +48,6 @@ ifdef ISMINGW
 #	SYSLIBS += -mwindows
 	SYSLIBS += -lopengl32 -lole32 -loleaut32 -lws2_32 -lversion -luuid -lwinmm -limm32 -lgdi32 -luser32 -lkernel32 -lcomctl32
 	LIBS    += -lmingw32
-	LIBPATH  = C:/MinGW/lib/
 endif
 
 #------------------------------------------------------------------------------
@@ -60,10 +57,10 @@ PKG_CONFIG = $(firstword $(wildcard /usr/local/bin/pkg-config \
 			                  /usr/bin/pkg-config) \
 			                           pkg-config)
 
-PKGS = vorbisfile libpng ode freetype2 sdl zlib
+PKGS = vorbisfile libpng ode freetype2 sdl zlib lua5.1
 
 OPTS += $(sort $(shell $(PKG_CONFIG) --cflags $(PKGS)))
-LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg -llua $(SYSLIBS)
+LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg $(SYSLIBS)
 
 #------------------------------------------------------------------------------
 
