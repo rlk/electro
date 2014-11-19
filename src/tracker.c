@@ -342,7 +342,7 @@ int get_tracker_sensor(unsigned int id, float p[3], float R[16])
         {
             if (FD_ISSET(sock, &fds))
             {
-                int s = recv(sock, &mesg, sizeof (struct message), 0);
+                int s = recv(sock, (void *) &mesg, sizeof (struct message), 0);
 
                 if ((s >= 3 * sizeof (float)))
                 {
