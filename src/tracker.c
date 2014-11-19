@@ -199,16 +199,16 @@ int acquire_tracker(int t_key, int c_key, int port)
     if ((control_id = shmget(c_key, sizeof (struct control_header), 0)) >= 0)
         control = (struct control_header *) shmat(control_id, 0, 0);
 #else
-    char shmkey[256];
+    wchar_t shmkey[256];
 
-    sprintf(shmkey, "%d", t_key);
+    swprintf(shmkey, 256, L"%d", t_key);
     if ((tracker_id = OpenFileMapping(FILE_MAP_WRITE, FALSE, shmkey)))
         tracker = (struct tracker_header *)
                     MapViewOfFile(tracker_id, FILE_MAP_WRITE, 0, 0, 0);
     else
         tracker = (struct tracker_header *) (-1);
 
-    sprintf(shmkey, "%d", c_key);
+    swprintf(shmkey, 256, L"%d", c_key);
     if ((control_id = OpenFileMapping(FILE_MAP_WRITE, FALSE, shmkey)))
         control = (struct control_header *)
                     MapViewOfFile(control_id, FILE_MAP_WRITE, 0, 0, 0);
