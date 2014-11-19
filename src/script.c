@@ -1713,7 +1713,7 @@ static int E_set_brush_frag_shader(lua_State *L)
     int id           = E_getbrush (L, -2);
     const char *file = L_getstring(L, -1);
 
-    char *text = load_file(file, "r", NULL);
+    char *text = load_file(file, "rb", NULL);
 
     send_set_brush_frag_shader(id, text);
     if (text) free(text);
@@ -1726,7 +1726,7 @@ static int E_set_brush_vert_shader(lua_State *L)
     int id           = E_getbrush (L, -2);
     const char *file = L_getstring(L, -1);
 
-    char *text = load_file(file, "r", NULL);
+    char *text = load_file(file, "rb", NULL);
 
     send_set_brush_vert_shader(id, text);
     if (text) free(text);
@@ -1787,7 +1787,7 @@ static int E_set_brush_frag_prog(lua_State *L)
     int id           = E_getbrush (L, -2);
     const char *file = L_getstring(L, -1);
 
-    char *text = load_file(file, "r", NULL);
+    char *text = load_file(file, "rb", NULL);
 
     send_set_brush_frag_prog(id, text);
     if (text) free(text);
@@ -1800,7 +1800,7 @@ static int E_set_brush_vert_prog(lua_State *L)
     int id           = E_getbrush (L, -2);
     const char *file = L_getstring(L, -1);
 
-    char *text = load_file(file, "r", NULL);
+    char *text = load_file(file, "rb", NULL);
 
     send_set_brush_vert_prog(id, text);
     if (text) free(text);
