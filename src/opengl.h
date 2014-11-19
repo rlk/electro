@@ -73,7 +73,7 @@ extern PFNGLMAPBUFFERARBPROC                glMapBufferARB;
 extern PFNGLUNMAPBUFFERARBPROC              glUnmapBufferARB;
 extern PFNGLISBUFFERARBPROC                 glIsBufferARB;
 extern PFNGLDELETEBUFFERSARBPROC            glDeleteBuffersARB;
-/*extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;*/
+extern PFNGLACTIVETEXTUREARBPROC            glActiveTextureARB;
 extern PFNGLUSEPROGRAMOBJECTARBPROC         glUseProgramObjectARB;
 extern PFNGLCREATESHADEROBJECTARBPROC       glCreateShaderObjectARB;
 extern PFNGLCREATEPROGRAMOBJECTARBPROC      glCreateProgramObjectARB;
