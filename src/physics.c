@@ -272,9 +272,9 @@ void end_phys_mass(dMass *mass, dBodyID body, float center[3])
 {
     /* Translate the center of mass to the origin. */
 
-    center[0] = mass->c[0];
-    center[1] = mass->c[1];
-    center[2] = mass->c[2];
+    center[0] = (float) mass->c[0];
+    center[1] = (float) mass->c[1];
+    center[2] = (float) mass->c[2];
 
     dMassTranslate(mass, -mass->c[0], -mass->c[1], -mass->c[2]);
 
