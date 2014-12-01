@@ -133,7 +133,7 @@ $(TARG) : $(OBJS) Makefile
 	$(CC) $(OPTS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS) $(DEPS)
+	rm -rf $(TARG) $(OBJS) $(DEPS) dist
 
 #------------------------------------------------------------------------------
 
@@ -141,6 +141,14 @@ dist : $(TARG)
 	rm   -rf dist/electro
 	mkdir -p dist/electro
 
+	cp $(TARG)     dist/electro
+	cp README.md   dist/electro
+	cp LICENSE.md  dist/electro
+	cp -r doc      dist/electro
+	cp -r examples dist/electro
+
 #------------------------------------------------------------------------------
 
+ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
+endif

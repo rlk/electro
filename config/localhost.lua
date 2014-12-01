@@ -11,10 +11,10 @@ gap   = 100
 
 -- 4 hosts: 1 server, 3 client
 
-host[1]  = E.add_host("ghost1",           0,           0, hsize, vsize)
-host[2]  = E.add_host("ghost1", hsize + gap,           0, hsize, vsize)
-host[3]  = E.add_host("ghost1",           0, vsize + gap, hsize, vsize)
-host[4]  = E.add_host("ghost1", hsize + gap, vsize + gap, hsize, vsize)
+host[1]  = E.add_host("default",           0,           0, hsize, vsize)
+host[2]  = E.add_host("default", hsize + gap,           0, hsize, vsize)
+host[3]  = E.add_host("default",           0, vsize + gap, hsize, vsize)
+host[4]  = E.add_host("default", hsize + gap, vsize + gap, hsize, vsize)
 
 -- Tile host numbers.
 

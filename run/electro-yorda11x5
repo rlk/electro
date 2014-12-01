@@ -1,8 +1,0 @@
-#!/bin/sh
-
-#export ELECTRO_CONFIG=/DEMO/evl/Electro/config
-#export ELECTRO_BIN=/DEMO/evl/Electro/bin
-export ELECTRO_CONFIG=/home/evl/rlk/src/electro-current/config
-export ELECTRO_BIN=/home/evl/rlk/src/electro-current
-
-mpirun -machinefile $ELECTRO_CONFIG/yorda11x5.dat -np 29 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/11x5.lua $@
