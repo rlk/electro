@@ -1,6 +1,0 @@
-#!/bin/sh
-
-export ELECTRO_CONFIG=$HOME/Projects/electro/config
-export ELECTRO_BIN=$HOME/Projects/electro
-
-mpirun -machinefile $ELECTRO_CONFIG/localhost.dat -np 4 $ELECTRO_BIN/electro-mpi $ELECTRO_CONFIG/localhost.lua $@

@@ -4,8 +4,7 @@ Electro is an application development environment designed for use on cluster-dr
 
 ## Running
 
-The executable takes a list of Lua files as parameters.  Each file
-is executed in turn.  Here, the Asteroids game is used as an example:
+The executable takes a list of Lua files as parameters.  Each file is executed in turn.  Here, the Asteroids game is used as an example:
 
 To run Asteroids under Linux or OS X:
 

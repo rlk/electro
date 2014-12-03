@@ -1,5 +1,5 @@
 
-OPTS= -Wall -g
+OPTS= -Wall -O2
 
 # To build in cluster mode: "make MPI=1".
 
@@ -36,7 +36,7 @@ ifdef ISMACOS
  		  -framework AudioToolbox \
  		  -framework ForceFeedback \
  		  -framework ApplicationServices
- 	OPTS   += -Wno-deprecated-declarations
+ 	OPTS   += -Wno-deprecated-declarations -mmacosx-version-min=10.5
 endif
 
 ifdef ISLINUX
@@ -57,10 +57,28 @@ PKG_CONFIG = $(firstword $(wildcard /usr/local/bin/pkg-config \
 			                  /usr/bin/pkg-config) \
 			                           pkg-config)
 
-PKGS = vorbisfile libpng ode freetype2 sdl zlib lua5.1
+PKGS = vorbisfile libpng ode freetype2 sdl zlib
 
 OPTS += $(sort $(shell $(PKG_CONFIG) --cflags $(PKGS)))
-LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg $(SYSLIBS)
+
+
+ifdef DYNAMIC
+	LIBS += $(shell $(PKG_CONFIG) --libs $(PKGS)) -ljpeg -llua $(SYSLIBS)
+else
+	LPATH = /usr/local/lib/
+	LIBS += $(firstword $(wildcard $(addsuffix libfreetype.a,   $(LPATH))) -lfreetype)
+	LIBS += $(firstword $(wildcard $(addsuffix libjpeg.a,       $(LPATH))) -ljpeg)
+	LIBS += $(firstword $(wildcard $(addsuffix libvorbisfile.a, $(LPATH))) -lvorbisfile)
+	LIBS += $(firstword $(wildcard $(addsuffix libvorbis.a,     $(LPATH))) -lvorbis)
+	LIBS += $(firstword $(wildcard $(addsuffix libogg.a,        $(LPATH))) -logg)
+	LIBS += $(firstword $(wildcard $(addsuffix libode.a,        $(LPATH))) -lode)
+	LIBS += $(firstword $(wildcard $(addsuffix libpng.a,        $(LPATH))) -lpng)
+	LIBS += $(firstword $(wildcard $(addsuffix liblua.a,        $(LPATH))) -llua)
+	LIBS += $(firstword $(wildcard $(addsuffix libz.a,          $(LPATH))) -lz)
+	LIBS += $(firstword $(wildcard $(addsuffix libSDL.a,        $(LPATH))) -lSDL)
+	LIBS += $(firstword $(wildcard $(addsuffix libSDLmain.a,    $(LPATH))) -lSDLmain)
+	LIBS += $(SYSLIBS)
+endif
 
 #------------------------------------------------------------------------------
 
@@ -115,8 +133,22 @@ $(TARG) : $(OBJS) Makefile
 	$(CC) $(OPTS) -o $(TARG) $(OBJS) $(LIBDIR) $(LIBS)
 
 clean :
-	rm -f $(TARG) $(OBJS) $(DEPS)
+	rm -rf $(TARG) $(OBJS) $(DEPS) dist
 
 #------------------------------------------------------------------------------
 
+dist : $(TARG)
+	rm   -rf dist/electro
+	mkdir -p dist/electro
+
+	cp $(TARG)     dist/electro
+	cp README.md   dist/electro
+	cp LICENSE.md  dist/electro
+	cp -r doc      dist/electro
+	cp -r examples dist/electro
+
+#------------------------------------------------------------------------------
+
+ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
+endif

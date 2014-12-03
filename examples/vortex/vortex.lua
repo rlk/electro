@@ -44,7 +44,7 @@ function do_start()
     E.set_entity_flags(orion,  E.entity_flag_line_smooth, true)
     E.set_entity_flags(sign,   E.entity_flag_billboard,   true)
 
-    E.set_entity_position(camera, 0, -3.5, 0)
+    E.set_entity_position(camera, 0, 0, 0)
 
     E.set_brush_flags(E.get_mesh(orion, 0), E.brush_flag_unlit, true)
     E.set_brush_line_width(E.get_mesh(orion, 0), 8)
@@ -58,9 +58,6 @@ function do_start()
     E.set_background(0, 0, 0)
 
     E.enable_timer(true)
-    
-    do_keyboard(E.key_F8, true)
-    E.set_camera_stereo(camera, E.stereo_mode_tile, -O / 2, 0, 0, O / 2, 0, 0)
 end
 
 function do_timer(dt)
@@ -81,7 +78,7 @@ function do_timer(dt)
         if joy[2] < -dead or dead < joy[2] then
             E.turn_entity(camera,  45 * joy[2] * dt, 0, 0)
         end
-        
+
     else
         -- Map the arrow keys on to joystick input.
 
@@ -160,16 +157,8 @@ function do_keyboard(k, s)
         -- Recenter the view on Return
 
         if k == E.key_return then
-            E.set_entity_position(camera, 0, -3.5, 0)
-            E.set_entity_rotation(camera, 0,    0, 0)
-        end
-
-        -- Return to the demo menu on F12
-
-        if k == E.key_F12 then
-            E.nuke()
-            E.chdir("..")
-            dofile("demo.lua")
+            E.set_entity_position(camera, 0, 0, 0)
+            E.set_entity_rotation(camera, 0, 0, 0)
         end
 
         return true

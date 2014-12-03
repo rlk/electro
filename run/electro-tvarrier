@@ -1,6 +1,0 @@
-#!/bin/sh
-
-export ELECTRO_CONFIG=/home/varrier/rlk/src/electro-current/config
-export ELECTRO_BIN=/home/varrier/rlk/src/electro-current
-
-mpirun -machinefile $ELECTRO_CONFIG/tvarrier.dat -np 4 $ELECTRO_BIN/electro-mpi -f $ELECTRO_CONFIG/tvarrier.lua $@
